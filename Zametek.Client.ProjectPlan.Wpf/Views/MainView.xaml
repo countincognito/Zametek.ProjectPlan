@@ -196,64 +196,29 @@
                             </xcad:LayoutAnchorable>
                         </xcad:LayoutAnchorablePane>
 
-                        <!--<xcad:LayoutAnchorablePane>
-                            <xcad:LayoutAnchorable ContentId="Resources"
-                                               Title="{x:Static local:Properties.Resources.Label_ResourcesViewTitle}"
-                                               CanHide="False"
-                                               CanClose="False">
-                                <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanResourcesRegion}" />
-                            </xcad:LayoutAnchorable>
-                            
-                            <xcad:LayoutAnchorable ContentId="ScheduledActivities"
-                                               Title="{x:Static local:Properties.Resources.Label_ScheduledActivitiesViewTitle}"
-                                               CanHide="False"
-                                               CanClose="False">
-                                <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanScheduledActivitiesRegion}" />
-                            </xcad:LayoutAnchorable>
 
-                            <xcad:LayoutAnchorable ContentId="Metrics"
-                                               Title="{x:Static local:Properties.Resources.Label_MetricsViewTitle}"
-                                               CanHide="False"
-                                               CanClose="False">
-                                <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanMetricsRegion}" />
-                            </xcad:LayoutAnchorable>
+                    </xcad:LayoutPanel>
 
-                            <xcad:LayoutAnchorable ContentId="Projects"
-                                               Title="{x:Static local:Properties.Resources.Label_ProjectsViewTitle}"
-                                               CanHide="False"
-                                               CanClose="False">
-                                <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanProjectsRegion}" />
-                            </xcad:LayoutAnchorable>
-                        </xcad:LayoutAnchorablePane>-->
-            </xcad:LayoutPanel>
 
-            <!--<xcad:LayoutAnchorablePane>
-                        <xcad:LayoutAnchorable ContentId="Graphs"
-                                               Title="{x:Static local:Properties.Resources.Label_GraphsViewTitle}"
-                                               CanHide="False"
-                                               CanClose="False">
-                            <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanGraphsRegion}" />
-                        </xcad:LayoutAnchorable>
-                    </xcad:LayoutAnchorablePane>-->
-            </xcad:LayoutPanel>
+                </xcad:LayoutPanel>
             </xcad:LayoutRoot>
-            </xcad:DockingManager>
+        </xcad:DockingManager>
 
-            <DockPanel.Style>
-                <Style TargetType="DockPanel">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding Path=IsBusy, Mode=OneWay}" Value="True">
-                            <Setter Property="ForceCursor" Value="True"/>
-                            <Setter Property="Cursor" Value="Wait"/>
-                            <Setter Property="IsEnabled" Value="False"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding Path=IsBusy, Mode=OneWay}" Value="False">
-                            <Setter Property="ForceCursor" Value="False"/>
-                            <Setter Property="Cursor" Value="Arrow"/>
-                            <Setter Property="IsEnabled" Value="True"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </DockPanel.Style>
-        </DockPanel>
+        <DockPanel.Style>
+            <Style TargetType="DockPanel">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Path=IsBusy, Mode=OneWay}" Value="True">
+                        <Setter Property="ForceCursor" Value="True"/>
+                        <Setter Property="Cursor" Value="Wait"/>
+                        <Setter Property="IsEnabled" Value="False"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Path=IsBusy, Mode=OneWay}" Value="False">
+                        <Setter Property="ForceCursor" Value="False"/>
+                        <Setter Property="Cursor" Value="Arrow"/>
+                        <Setter Property="IsEnabled" Value="True"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </DockPanel.Style>
+    </DockPanel>
 </UserControl>
