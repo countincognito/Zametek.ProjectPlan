@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.4</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj" />
+    <ProjectReference Include="..\Zametek.Common.Project\Zametek.Common.Project.csproj" />
+  </ItemGroup>
+
+</Project>
