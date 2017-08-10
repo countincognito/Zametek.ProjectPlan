@@ -13,7 +13,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Access.ProjectPlan"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Engine.ProjectPlan", "Zametek.Engine.ProjectPlan\Zametek.Engine.ProjectPlan.csproj", "{FECA9612-A4AF-45DB-8EEA-A9D5090602FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Manager.ProjectPlan", "Zametek.Manager.ProjectPlan\Zametek.Manager.ProjectPlan.csproj", "{9737882D-E514-44D6-9724-B8C59E802AD5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Manager.ProjectPlan", "Zametek.Manager.ProjectPlan\Zametek.Manager.ProjectPlan.csproj", "{9737882D-E514-44D6-9724-B8C59E802AD5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Client.ProjectPlan.Wpf", "Zametek.Client.ProjectPlan.Wpf\Zametek.Client.ProjectPlan.Wpf.csproj", "{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Client.ProjectPlan.Wpf.Shell", "Zametek.Client.ProjectPlan.Wpf.Shell\Zametek.Client.ProjectPlan.Wpf.Shell.csproj", "{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +49,14 @@ Global
 		{9737882D-E514-44D6-9724-B8C59E802AD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9737882D-E514-44D6-9724-B8C59E802AD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9737882D-E514-44D6-9724-B8C59E802AD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
