@@ -7,7 +7,7 @@
     <ProjectGuid>{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>Zametek.Client.ProjectPlan.Wpf.Shell</RootNamespace>
-    <AssemblyName>Zametek.Client.ProjectPlan.Wpf.Shell</AssemblyName>
+    <AssemblyName>ProjectPlan</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -37,6 +37,9 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Zametek.Client.ProjectPlan.Wpf.Shell.App</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Images\zpp.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Autofac, Version=4.6.1.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
@@ -144,6 +147,9 @@
       <Project>{9737882d-e514-44d6-9724-b8c59e802ad5}</Project>
       <Name>Zametek.Manager.ProjectPlan</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\zpp.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
