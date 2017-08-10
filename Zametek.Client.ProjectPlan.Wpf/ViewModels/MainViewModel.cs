@@ -889,7 +889,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             {
                 if (ShowDates)
                 {
-                    return m_DateTimeCalculator.AddDays(ProjectStart, days).ToString("dd/MM/yyyy");
+                    return m_DateTimeCalculator.AddDays(ProjectStart, days).ToString("d");
                 }
                 return days.ToString();
             }
@@ -1565,7 +1565,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                             Minimum = minValue,
                             Maximum = maxValue,
                             Title = Properties.Resources.Label_TimeAxisTitle,
-                            StringFormat = "dd/MM/yyyy"
+                            StringFormat = "d"
                         };
                     }
                     else

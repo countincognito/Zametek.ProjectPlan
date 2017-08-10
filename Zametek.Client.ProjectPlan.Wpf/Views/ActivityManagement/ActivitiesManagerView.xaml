@@ -631,7 +631,7 @@
                                                                                HorizontalAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
-                                                                               Text="{Binding Path=EarliestStartDateTime, Mode=OneWay, StringFormat={}{0:dd/MM/yyyy}}"/>
+                                                                               Text="{Binding Path=EarliestStartDateTime, Mode=OneWay, StringFormat={}{0:d}}"/>
                                                                 </DataTemplate>
                                                             </Setter.Value>
                                                         </Setter>
@@ -701,7 +701,7 @@
                                                                                HorizontalAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
-                                                                               Text="{Binding Path=LatestStartDateTime, Mode=OneWay, StringFormat={}{0:dd/MM/yyyy}}"/>
+                                                                               Text="{Binding Path=LatestStartDateTime, Mode=OneWay, StringFormat={}{0:d}}"/>
                                                                 </DataTemplate>
                                                             </Setter.Value>
                                                         </Setter>
@@ -771,7 +771,7 @@
                                                                                HorizontalAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
-                                                                               Text="{Binding Path=EarliestFinishDateTime, Mode=OneWay, StringFormat={}{0:dd/MM/yyyy}}"/>
+                                                                               Text="{Binding Path=EarliestFinishDateTime, Mode=OneWay, StringFormat={}{0:d}}"/>
                                                                 </DataTemplate>
                                                             </Setter.Value>
                                                         </Setter>
@@ -841,7 +841,7 @@
                                                                                HorizontalAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
-                                                                               Text="{Binding Path=LatestFinishDateTime, Mode=OneWay, StringFormat={}{0:dd/MM/yyyy}}"/>
+                                                                               Text="{Binding Path=LatestFinishDateTime, Mode=OneWay, StringFormat={}{0:d}}"/>
                                                                 </DataTemplate>
                                                             </Setter.Value>
                                                         </Setter>
@@ -1112,7 +1112,7 @@
                                                                                Margin="0"
                                                                                Padding="3"
                                                                                Background="Khaki"
-                                                                               Text="{Binding Path=MinimumEarliestStartDateTime, Mode=OneWay, StringFormat={}{0:dd/MM/yyyy}}">
+                                                                               Text="{Binding Path=MinimumEarliestStartDateTime, Mode=OneWay, StringFormat={}{0:d}}">
                                                                         <TextBlock.Style>
                                                                             <Style TargetType="{x:Type TextBlock}">
                                                                                 <Style.Triggers>
@@ -1145,7 +1145,7 @@
                                                                                          ShowButtonSpinner="False"
                                                                                          ShowDropDownButton="True"
                                                                                          Format="Custom"
-                                                                                         FormatString="dd/MM/yyyy"
+                                                                                         FormatString="d"
                                                                                          IsTabStop="True"
                                                                                          VerticalAlignment="Center"
                                                                                          VerticalContentAlignment="Center"

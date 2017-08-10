@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Globalization;
 using System.Windows;
+using System.Windows.Markup;
 
 namespace Zametek.Client.ProjectPlan.Wpf.Shell
 {
@@ -40,6 +42,11 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            FrameworkElement.LanguageProperty.OverrideMetadata(
+              typeof(FrameworkElement),
+              new FrameworkPropertyMetadata(
+                  XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
+
             m_Bootstrapper = new Bootstrapper();
             RunApplication();
             ShutdownMode = ShutdownMode.OnMainWindowClose;
