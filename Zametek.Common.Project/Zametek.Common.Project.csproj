@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
-    <PackageReference Include="Zametek.Maths.Graphs.Primitives" Version="1.0.1" />
+    <PackageReference Include="Zametek.Maths.Graphs.Primitives" Version="1.0.2" />
   </ItemGroup>
 
 </Project>
