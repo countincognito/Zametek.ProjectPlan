@@ -328,6 +328,7 @@
     <Compile Include="Utilities\FileDialogService.cs" />
     <Compile Include="Utilities\LocalizedDescriptionAttribute.cs" />
     <Compile Include="Utilities\OpenSave.cs" />
+    <Compile Include="Utilities\PrismExtensions.cs" />
     <Compile Include="ViewModels\ActivityManagement\DependenciesStringValidationRule.cs" />
     <Compile Include="ViewModels\ActivityManagement\ManagedActivityViewModel.cs" />
     <Compile Include="ViewModels\ActivityManagement\ResourceSelectorViewModel.cs" />
