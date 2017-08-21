@@ -1682,13 +1682,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void DispatchNotification(string title, object content)
         {
-            m_EventService.Invoke(() =>
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = title,
-                        Content = content
-                    }));
+            m_NotificationInteractionRequest.Raise(
+                new Notification
+                {
+                    Title = title,
+                    Content = content
+                });
         }
 
         #endregion
