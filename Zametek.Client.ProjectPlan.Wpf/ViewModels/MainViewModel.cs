@@ -1680,6 +1680,17 @@ namespace Zametek.Client.ProjectPlan.Wpf
             });
         }
 
+        private void DispatchNotification(string title, object content)
+        {
+            m_EventService.Invoke(() =>
+                m_NotificationInteractionRequest.Raise(
+                    new Notification
+                    {
+                        Title = title,
+                        Content = content
+                    }));
+        }
+
         #endregion
 
         #region Public Methods
@@ -1711,12 +1722,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     string filename = m_FileDialogService.Filename;
                     if (string.IsNullOrWhiteSpace(filename))
                     {
-                        m_NotificationInteractionRequest.Raise(
-                            new Notification
-                            {
-                                Title = Properties.Resources.Title_Error,
-                                Content = Properties.Resources.Message_EmptyFilename
-                            });
+                        DispatchNotification(Properties.Resources.Title_Error, Properties.Resources.Message_EmptyFilename);
                     }
                     else
                     {
@@ -1729,12 +1735,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = Properties.Resources.Title_Error,
-                        Content = ex.Message
-                    });
+                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
             }
             finally
             {
@@ -1757,12 +1758,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     string filename = m_FileDialogService.Filename;
                     if (string.IsNullOrWhiteSpace(filename))
                     {
-                        m_NotificationInteractionRequest.Raise(
-                            new Notification
-                            {
-                                Title = Properties.Resources.Title_Error,
-                                Content = Properties.Resources.Message_EmptyFilename
-                            });
+                        DispatchNotification(Properties.Resources.Title_Error, Properties.Resources.Message_EmptyFilename);
                     }
                     else
                     {
@@ -1775,12 +1771,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = Properties.Resources.Title_Error,
-                        Content = ex.Message
-                    });
+                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
             }
             finally
             {
@@ -1816,12 +1807,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     string filename = m_FileDialogService.Filename;
                     if (string.IsNullOrWhiteSpace(filename))
                     {
-                        m_NotificationInteractionRequest.Raise(
-                            new Notification
-                            {
-                                Title = Properties.Resources.Title_Error,
-                                Content = Properties.Resources.Message_EmptyFilename
-                            });
+                        DispatchNotification(Properties.Resources.Title_Error, Properties.Resources.Message_EmptyFilename);
                     }
                     else
                     {
@@ -1840,12 +1826,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = Properties.Resources.Title_Error,
-                        Content = ex.Message
-                    });
+                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
             }
             finally
             {
@@ -1876,12 +1857,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = Properties.Resources.Title_Error,
-                        Content = ex.Message
-                    });
+                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
             }
             finally
             {
@@ -1923,12 +1899,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = Properties.Resources.Title_Error,
-                        Content = ex.Message
-                    });
+                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
             }
             finally
             {
@@ -1964,12 +1935,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = Properties.Resources.Title_Error,
-                        Content = ex.Message
-                    });
+                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
             }
             finally
             {
@@ -1987,12 +1953,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = Properties.Resources.Title_Error,
-                        Content = ex.Message
-                    });
+                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
             }
             finally
             {
@@ -2015,12 +1976,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = Properties.Resources.Title_Error,
-                        Content = ex.Message
-                    });
+                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
             }
             finally
             {
@@ -2059,12 +2015,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = Properties.Resources.Title_Error,
-                        Content = ex.Message
-                    });
+                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
             }
             finally
             {
@@ -2102,12 +2053,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = Properties.Resources.Title_Error,
-                        Content = ex.Message
-                    });
+                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
             }
             finally
             {
@@ -2132,12 +2078,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = Properties.Resources.Title_Error,
-                        Content = ex.Message
-                    });
+                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
             }
             finally
             {
@@ -2160,12 +2101,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     string filename = m_FileDialogService.Filename;
                     if (string.IsNullOrWhiteSpace(filename))
                     {
-                        m_NotificationInteractionRequest.Raise(
-                            new Notification
-                            {
-                                Title = Properties.Resources.Title_Error,
-                                Content = Properties.Resources.Message_EmptyFilename
-                            });
+                        DispatchNotification(Properties.Resources.Title_Error, Properties.Resources.Message_EmptyFilename);
                     }
                     else
                     {
@@ -2176,12 +2112,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                m_NotificationInteractionRequest.Raise(
-                    new Notification
-                    {
-                        Title = Properties.Resources.Title_Error,
-                        Content = ex.Message
-                    });
+                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
             }
             finally
             {
