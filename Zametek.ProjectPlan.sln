@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+VisualStudioVersion = 15.0.26730.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Common.Project", "Zametek.Common.Project\Zametek.Common.Project.csproj", "{C94518D7-10FC-4B55-8749-2B7317CF9AAB}"
 EndProject
@@ -18,6 +18,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Client.ProjectPlan.Wpf", "Zametek.Client.ProjectPlan.Wpf\Zametek.Client.ProjectPlan.Wpf.csproj", "{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Client.ProjectPlan.Wpf.Shell", "Zametek.Client.ProjectPlan.Wpf.Shell\Zametek.Client.ProjectPlan.Wpf.Shell.csproj", "{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Zametek.Setup", "Zametek.Setup\Zametek.Setup.vdproj", "{4F68D500-ECDE-4264-8BE1-A883DDC400DB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,8 +59,15 @@ Global
 		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F68D500-ECDE-4264-8BE1-A883DDC400DB}.Debug|Any CPU.ActiveCfg = Debug
+		{4F68D500-ECDE-4264-8BE1-A883DDC400DB}.Debug|Any CPU.Build.0 = Debug
+		{4F68D500-ECDE-4264-8BE1-A883DDC400DB}.Release|Any CPU.ActiveCfg = Release
+		{4F68D500-ECDE-4264-8BE1-A883DDC400DB}.Release|Any CPU.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {55169D4C-5329-4E00-8CDE-32A672466357}
 	EndGlobalSection
 EndGlobal
