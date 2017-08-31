@@ -1721,7 +1721,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     string filename = m_FileDialogService.Filename;
                     if (string.IsNullOrWhiteSpace(filename))
                     {
-                        DispatchNotification(Properties.Resources.Title_Error, Properties.Resources.Message_EmptyFilename);
+                        DispatchNotification(
+                            Properties.Resources.Title_Error,
+                            Properties.Resources.Message_EmptyFilename);
                     }
                     else
                     {
@@ -1734,7 +1736,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
             }
             finally
             {
@@ -1757,7 +1761,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     string filename = m_FileDialogService.Filename;
                     if (string.IsNullOrWhiteSpace(filename))
                     {
-                        DispatchNotification(Properties.Resources.Title_Error, Properties.Resources.Message_EmptyFilename);
+                        DispatchNotification(
+                            Properties.Resources.Title_Error,
+                            Properties.Resources.Message_EmptyFilename);
                     }
                     else
                     {
@@ -1770,7 +1776,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
             }
             finally
             {
@@ -1806,7 +1814,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     string filename = m_FileDialogService.Filename;
                     if (string.IsNullOrWhiteSpace(filename))
                     {
-                        DispatchNotification(Properties.Resources.Title_Error, Properties.Resources.Message_EmptyFilename);
+                        DispatchNotification(
+                            Properties.Resources.Title_Error,
+                            Properties.Resources.Message_EmptyFilename);
                     }
                     else
                     {
@@ -1825,7 +1835,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
             }
             finally
             {
@@ -1856,7 +1868,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
             }
             finally
             {
@@ -1898,7 +1912,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
             }
             finally
             {
@@ -1934,7 +1950,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
             }
             finally
             {
@@ -1952,7 +1970,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
             }
             finally
             {
@@ -1975,7 +1995,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
             }
             finally
             {
@@ -2014,7 +2036,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
             }
             finally
             {
@@ -2052,7 +2076,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
             }
             finally
             {
@@ -2077,7 +2103,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
             }
             finally
             {
@@ -2100,7 +2128,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     string filename = m_FileDialogService.Filename;
                     if (string.IsNullOrWhiteSpace(filename))
                     {
-                        DispatchNotification(Properties.Resources.Title_Error, Properties.Resources.Message_EmptyFilename);
+                        DispatchNotification(
+                            Properties.Resources.Title_Error,
+                            Properties.Resources.Message_EmptyFilename);
                     }
                     else
                     {
@@ -2111,7 +2141,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             catch (Exception ex)
             {
-                DispatchNotification(Properties.Resources.Title_Error, ex.Message);
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
             }
             finally
             {

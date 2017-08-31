@@ -42,8 +42,8 @@
     <Reference Include="CsvHelper, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
       <HintPath>..\packages\CsvHelper.2.16.3.0\lib\net45\CsvHelper.dll</HintPath>
     </Reference>
-    <Reference Include="FluentDateTime, Version=1.13.0.0, Culture=neutral, PublicKeyToken=6ccbc613702e6c71, processorArchitecture=MSIL">
-      <HintPath>..\packages\FluentDateTime.1.13.0\lib\NET35\FluentDateTime.dll</HintPath>
+    <Reference Include="FluentDateTime, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluentDateTime.1.14.0\lib\net452\FluentDateTime.dll</HintPath>
     </Reference>
     <Reference Include="GraphX.PCL.Common, Version=2.3.6.0, Culture=neutral, PublicKeyToken=a6cdb671d651b60a, processorArchitecture=MSIL">
       <HintPath>..\packages\GraphX.2.3.6.0\lib\net40-client\GraphX.PCL.Common.dll</HintPath>
@@ -278,8 +278,8 @@
     <Reference Include="Xceed.Wpf.Toolkit, Version=3.1.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <HintPath>..\packages\Extended.Wpf.Toolkit.3.1\lib\net40\Xceed.Wpf.Toolkit.dll</HintPath>
     </Reference>
-    <Reference Include="Zametek.Maths.Graphs.Compilers, Version=1.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Zametek.Maths.Graphs.Compilers.1.0.3\lib\netstandard1.4\Zametek.Maths.Graphs.Compilers.dll</HintPath>
+    <Reference Include="Zametek.Maths.Graphs.Compilers, Version=1.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Zametek.Maths.Graphs.Compilers.1.0.4\lib\netstandard1.4\Zametek.Maths.Graphs.Compilers.dll</HintPath>
     </Reference>
     <Reference Include="Zametek.Maths.Graphs.Primitives, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Zametek.Maths.Graphs.Primitives.1.0.2\lib\netstandard1.4\Zametek.Maths.Graphs.Primitives.dll</HintPath>

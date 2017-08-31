@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.10
+VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Common.Project", "Zametek.Common.Project\Zametek.Common.Project.csproj", "{C94518D7-10FC-4B55-8749-2B7317CF9AAB}"
 EndProject
@@ -19,7 +19,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Client.ProjectPlan.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Client.ProjectPlan.Wpf.Shell", "Zametek.Client.ProjectPlan.Wpf.Shell\Zametek.Client.ProjectPlan.Wpf.Shell.csproj", "{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Zametek.Setup", "Zametek.Setup\Zametek.Setup.vdproj", "{4F68D500-ECDE-4264-8BE1-A883DDC400DB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{634E47B4-5589-4674-A220-14D6203BB179}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "installer", "installer", "{DE811A33-0D54-49C8-9732-6EC759832990}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Zametek.ProjectPlan.Setup", "Zametek.ProjectPlan.Setup\Zametek.ProjectPlan.Setup.vdproj", "{93E0CAC1-9122-44CD-AB88-B909F102FE76}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,13 +63,22 @@ Global
 		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4F68D500-ECDE-4264-8BE1-A883DDC400DB}.Debug|Any CPU.ActiveCfg = Debug
-		{4F68D500-ECDE-4264-8BE1-A883DDC400DB}.Debug|Any CPU.Build.0 = Debug
-		{4F68D500-ECDE-4264-8BE1-A883DDC400DB}.Release|Any CPU.ActiveCfg = Release
-		{4F68D500-ECDE-4264-8BE1-A883DDC400DB}.Release|Any CPU.Build.0 = Release
+		{93E0CAC1-9122-44CD-AB88-B909F102FE76}.Debug|Any CPU.ActiveCfg = Debug
+		{93E0CAC1-9122-44CD-AB88-B909F102FE76}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C94518D7-10FC-4B55-8749-2B7317CF9AAB} = {634E47B4-5589-4674-A220-14D6203BB179}
+		{B2B2A9A6-BE16-43F6-A623-FA40CCF97853} = {634E47B4-5589-4674-A220-14D6203BB179}
+		{65D15656-91AA-4571-87BE-60EB877283D7} = {634E47B4-5589-4674-A220-14D6203BB179}
+		{A0292825-7185-4328-BDB5-60C9399ABC5B} = {634E47B4-5589-4674-A220-14D6203BB179}
+		{FECA9612-A4AF-45DB-8EEA-A9D5090602FB} = {634E47B4-5589-4674-A220-14D6203BB179}
+		{9737882D-E514-44D6-9724-B8C59E802AD5} = {634E47B4-5589-4674-A220-14D6203BB179}
+		{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0} = {634E47B4-5589-4674-A220-14D6203BB179}
+		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D} = {634E47B4-5589-4674-A220-14D6203BB179}
+		{93E0CAC1-9122-44CD-AB88-B909F102FE76} = {DE811A33-0D54-49C8-9732-6EC759832990}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55169D4C-5329-4E00-8CDE-32A672466357}
