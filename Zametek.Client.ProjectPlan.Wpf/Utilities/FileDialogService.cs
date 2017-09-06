@@ -16,7 +16,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             dlg.InitialDirectory = initialDirectory;
             dlg.DefaultExt = associatedFileExtension;
-            dlg.Filter = string.Format("{0} | *.{1}", associatedFileType, associatedFileExtension);
+            dlg.Filter = string.Format("{0} | *{1}", associatedFileType, associatedFileExtension);
             DialogResult result = dlg.ShowDialog();
             FileInfo fileInfo = null;
             DirectoryInfo directoryInfo = null;

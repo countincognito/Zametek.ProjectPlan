@@ -280,12 +280,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
-        private async void OpenProjectPlanFile(string fileName = null)
+        private async void OpenProjectPlanFile()
         {
-            await DoOpenProjectPlanFileAsync(fileName);
+            await DoOpenProjectPlanFileAsync();
         }
 
-        private bool CanOpenProjectPlanFile(string fileName = null)
+        private bool CanOpenProjectPlanFile()
         {
             return true;
         }
@@ -516,7 +516,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             OpenProjectPlanFileCommand =
                 InternalOpenProjectPlanFileCommand =
-                    new DelegateCommand<string>(OpenProjectPlanFile, CanOpenProjectPlanFile);
+                    new DelegateCommand(OpenProjectPlanFile, CanOpenProjectPlanFile);
             SaveProjectPlanFileCommand =
                 InternalSaveProjectPlanFileCommand =
                     new DelegateCommand(SaveProjectPlanFile, CanSaveProjectPlanFile);
@@ -1694,63 +1694,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Public Methods
 
-        public async Task DoOpenProjectPlanFileAsync(string fileName = null)
-        {
-            try
-            {
-                IsBusy = true;
-                if (IsProjectUpdated)
-                {
-                    var confirmation = new Confirmation()
-                    {
-                        Title = Properties.Resources.Title_UnsavedChanges,
-                        Content = Properties.Resources.Message_UnsavedChanges
-                    };
-                    m_ConfirmationInteractionRequest.Raise(confirmation);
-                    if (!confirmation.Confirmed)
-                    {
-                        return;
-                    }
-                }
-                string filename = fileName;
-                if (string.IsNullOrWhiteSpace(filename))
-                {
-                    string directory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                    if (m_FileDialogService.ShowOpenDialog(
-                            directory,
-                            Properties.Resources.Filter_OpenProjectPlanFileType,
-                            Properties.Resources.Filter_OpenProjectPlanFileExtension) == DialogResult.OK)
-                    {
-                        filename = m_FileDialogService.Filename;
-                    }
-                }
-                if (string.IsNullOrWhiteSpace(filename))
-                {
-                    DispatchNotification(
-                        Properties.Resources.Title_Error,
-                        Properties.Resources.Message_EmptyFilename);
-                }
-                else
-                {
-                    ProjectPlanDto projectPlan = await OpenProjectPlanDtoAsync(filename);
-                    ProcessProjectPlanDto(projectPlan);
-                    IsProjectUpdated = false;
-                    ProjectTitle = Path.GetFileNameWithoutExtension(filename);
-                }
-            }
-            catch (Exception ex)
-            {
-                DispatchNotification(
-                    Properties.Resources.Title_Error,
-                    ex.Message);
-            }
-            finally
-            {
-                IsBusy = false;
-                RaiseCanExecuteChangedAllCommands();
-            }
-        }
-
         public async Task DoSaveProjectPlanFileAsync()
         {
             try
@@ -2339,6 +2282,63 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get;
             private set;
+        }
+
+        public async Task DoOpenProjectPlanFileAsync(string fileName = null)
+        {
+            try
+            {
+                IsBusy = true;
+                if (IsProjectUpdated)
+                {
+                    var confirmation = new Confirmation
+                    {
+                        Title = Properties.Resources.Title_UnsavedChanges,
+                        Content = Properties.Resources.Message_UnsavedChanges
+                    };
+                    m_ConfirmationInteractionRequest.Raise(confirmation);
+                    if (!confirmation.Confirmed)
+                    {
+                        return;
+                    }
+                }
+                string filename = fileName;
+                if (string.IsNullOrWhiteSpace(filename))
+                {
+                    string directory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    if (m_FileDialogService.ShowOpenDialog(
+                            directory,
+                            Properties.Resources.Filter_OpenProjectPlanFileType,
+                            Properties.Resources.Filter_OpenProjectPlanFileExtension) == DialogResult.OK)
+                    {
+                        filename = m_FileDialogService.Filename;
+                    }
+                }
+                if (string.IsNullOrWhiteSpace(filename))
+                {
+                    DispatchNotification(
+                        Properties.Resources.Title_Error,
+                        Properties.Resources.Message_EmptyFilename);
+                }
+                else
+                {
+                    ProjectPlanDto projectPlan = await OpenProjectPlanDtoAsync(filename);
+                    ProcessProjectPlanDto(projectPlan);
+                    IsProjectUpdated = false;
+                    ProjectTitle = Path.GetFileNameWithoutExtension(filename);
+                }
+            }
+            catch (Exception ex)
+            {
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+                RaiseCanExecuteChangedAllCommands();
+            }
         }
 
         public void ResetProject()

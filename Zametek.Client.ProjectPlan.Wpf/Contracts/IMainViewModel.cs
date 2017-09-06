@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -94,6 +95,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             get;
         }
 
+        Task DoOpenProjectPlanFileAsync(string fileName = null);
         void ResetProject();
     }
 }

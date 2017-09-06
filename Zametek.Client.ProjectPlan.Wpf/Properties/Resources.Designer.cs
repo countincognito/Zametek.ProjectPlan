@@ -19,7 +19,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -61,7 +61,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to mpp.
+        ///   Looks up a localized string similar to .mpp.
         /// </summary>
         public static string Filter_ImportMicrosoftProjectFileExtension {
             get {
@@ -79,7 +79,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to zpp.
+        ///   Looks up a localized string similar to .zpp.
         /// </summary>
         public static string Filter_OpenProjectPlanFileExtension {
             get {
@@ -97,7 +97,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to csv.
+        ///   Looks up a localized string similar to .csv.
         /// </summary>
         public static string Filter_SaveCsvFileExtension {
             get {
@@ -115,7 +115,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to graphml.
+        ///   Looks up a localized string similar to .graphml.
         /// </summary>
         public static string Filter_SaveGraphMLFileExtension {
             get {
@@ -133,7 +133,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to zpp.
+        ///   Looks up a localized string similar to .zpp.
         /// </summary>
         public static string Filter_SaveProjectPlanFileExtension {
             get {

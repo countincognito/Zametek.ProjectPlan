@@ -99,22 +99,24 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
             //Application.Current.MainWindow = (ShellView)Shell;
             Application.Current.MainWindow.Show();
 
-            //check if started with filename param
-            var args = Environment.GetCommandLineArgs();
-            if (args.Length > 1 && File.Exists(args[1]) && Path.GetExtension(args[1]) == ".zpp")
-            {
-                var mainView = Container.Resolve<IMainViewModel>();
-                mainView.OpenProjectPlanFileCommand.Execute(args[1]);
-            }
-
             // Create any core application services here.
 
         }
 
-        public override void Run(bool runWithDefaultConfiguration)
+        public override async void Run(bool runWithDefaultConfiguration)
         {
             base.Run(runWithDefaultConfiguration);
             Application.Current.MainWindow.Activate();
+
+            //check if started with filename param
+            string[] args = Environment.GetCommandLineArgs();
+            if (args.Length > 1
+                && File.Exists(args[1])
+                && string.CompareOrdinal(Path.GetExtension(args[1]), Wpf.Properties.Resources.Filter_OpenProjectPlanFileExtension) == 0)
+            {
+                var mainView = Container.Resolve<IMainViewModel>();
+                await mainView.DoOpenProjectPlanFileAsync(args[1]);
+            }
         }
 
         #endregion
