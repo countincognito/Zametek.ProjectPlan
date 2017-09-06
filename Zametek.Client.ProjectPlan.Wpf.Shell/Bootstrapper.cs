@@ -3,6 +3,7 @@ using Prism.Autofac;
 using Prism.Modularity;
 using Prism.Regions;
 using System;
+using System.IO;
 using System.Windows;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
@@ -97,6 +98,14 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
             //base.InitializeShell();
             //Application.Current.MainWindow = (ShellView)Shell;
             Application.Current.MainWindow.Show();
+
+            //check if started with filename param
+            var args = Environment.GetCommandLineArgs();
+            if (args.Length > 1 && File.Exists(args[1]) && Path.GetExtension(args[1]) == ".zpp")
+            {
+                var mainView = Container.Resolve<IMainViewModel>();
+                mainView.OpenProjectPlanFileCommand.Execute(args[1]);
+            }
 
             // Create any core application services here.
 

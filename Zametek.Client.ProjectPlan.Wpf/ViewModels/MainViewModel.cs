@@ -280,12 +280,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
-        private async void OpenProjectPlanFile()
+        private async void OpenProjectPlanFile(string fileName = null)
         {
-            await DoOpenProjectPlanFileAsync();
+            await DoOpenProjectPlanFileAsync(fileName);
         }
 
-        private bool CanOpenProjectPlanFile()
+        private bool CanOpenProjectPlanFile(string fileName = null)
         {
             return true;
         }
@@ -516,7 +516,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             OpenProjectPlanFileCommand =
                 InternalOpenProjectPlanFileCommand =
-                    new DelegateCommand(OpenProjectPlanFile, CanOpenProjectPlanFile);
+                    new DelegateCommand<string>(OpenProjectPlanFile, CanOpenProjectPlanFile);
             SaveProjectPlanFileCommand =
                 InternalSaveProjectPlanFileCommand =
                     new DelegateCommand(SaveProjectPlanFile, CanSaveProjectPlanFile);
@@ -1694,7 +1694,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Public Methods
 
-        public async Task DoOpenProjectPlanFileAsync()
+        public async Task DoOpenProjectPlanFileAsync(string fileName = null)
         {
             try
             {
@@ -1712,26 +1712,30 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         return;
                     }
                 }
-                string directory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                if (m_FileDialogService.ShowOpenDialog(
-                    directory,
-                    Properties.Resources.Filter_OpenProjectPlanFileType,
-                    Properties.Resources.Filter_OpenProjectPlanFileExtension) == DialogResult.OK)
+                string filename = fileName;
+                if (string.IsNullOrWhiteSpace(filename))
                 {
-                    string filename = m_FileDialogService.Filename;
-                    if (string.IsNullOrWhiteSpace(filename))
+                    string directory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    if (m_FileDialogService.ShowOpenDialog(
+                            directory,
+                            Properties.Resources.Filter_OpenProjectPlanFileType,
+                            Properties.Resources.Filter_OpenProjectPlanFileExtension) == DialogResult.OK)
                     {
-                        DispatchNotification(
-                            Properties.Resources.Title_Error,
-                            Properties.Resources.Message_EmptyFilename);
+                        filename = m_FileDialogService.Filename;
                     }
-                    else
-                    {
-                        ProjectPlanDto projectPlan = await OpenProjectPlanDtoAsync(filename);
-                        ProcessProjectPlanDto(projectPlan);
-                        IsProjectUpdated = false;
-                        ProjectTitle = Path.GetFileNameWithoutExtension(filename);
-                    }
+                }
+                if (string.IsNullOrWhiteSpace(filename))
+                {
+                    DispatchNotification(
+                        Properties.Resources.Title_Error,
+                        Properties.Resources.Message_EmptyFilename);
+                }
+                else
+                {
+                    ProjectPlanDto projectPlan = await OpenProjectPlanDtoAsync(filename);
+                    ProcessProjectPlanDto(projectPlan);
+                    IsProjectUpdated = false;
+                    ProjectTitle = Path.GetFileNameWithoutExtension(filename);
                 }
             }
             catch (Exception ex)
