@@ -21,6 +21,7 @@ using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using Zametek.Client.ProjectPlan.Wpf.Utilities;
 using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -1699,7 +1700,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             try
             {
                 IsBusy = true;
-                string directory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string directory = AppSettings.LastUsedFolder;
                 if (m_FileDialogService.ShowSaveDialog(
                     directory,
                     Properties.Resources.Filter_SaveProjectPlanFileType,
@@ -1718,6 +1719,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         await SaveProjectPlanDtoAsync(projectPlan, filename);
                         IsProjectUpdated = false;
                         ProjectTitle = Path.GetFileNameWithoutExtension(filename);
+                        AppSettings.LastUsedFolder = Path.GetDirectoryName(filename);
                     }
                 }
             }
@@ -1752,7 +1754,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         return;
                     }
                 }
-                string directory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string directory = AppSettings.LastUsedFolder;
                 if (m_FileDialogService.ShowOpenDialog(
                     directory,
                     Properties.Resources.Filter_ImportMicrosoftProjectFileType,
@@ -1777,6 +1779,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         {
                             await RunCompileAsync();
                         }
+                        AppSettings.LastUsedFolder = Path.GetDirectoryName(filename);
                     }
                 }
             }
@@ -2066,7 +2069,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             try
             {
                 IsBusy = true;
-                string directory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string directory = AppSettings.LastUsedFolder;
                 if (m_FileDialogService.ShowSaveDialog(
                     directory,
                     Properties.Resources.Filter_SaveCsvFileType,
@@ -2083,6 +2086,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     {
                         DataTable dataTable = await BuildChartDataTableAsync();
                         await DoExportDataTableToCsvAsync(dataTable, filename);
+                        AppSettings.LastUsedFolder = Path.GetDirectoryName(filename);
                     }
                 }
             }
@@ -2305,7 +2309,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 string filename = fileName;
                 if (string.IsNullOrWhiteSpace(filename))
                 {
-                    string directory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    string directory = AppSettings.LastUsedFolder;
                     if (m_FileDialogService.ShowOpenDialog(
                             directory,
                             Properties.Resources.Filter_OpenProjectPlanFileType,
@@ -2326,6 +2330,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     ProcessProjectPlanDto(projectPlan);
                     IsProjectUpdated = false;
                     ProjectTitle = Path.GetFileNameWithoutExtension(filename);
+                    AppSettings.LastUsedFolder = Path.GetDirectoryName(filename);
                 }
             }
             catch (Exception ex)

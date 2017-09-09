@@ -7,6 +7,7 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Forms;
+using Zametek.Client.ProjectPlan.Wpf.Utilities;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -108,7 +109,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             try
             {
-                string directory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string directory = AppSettings.LastUsedFolder;
                 if (m_FileDialogService.ShowSaveDialog(
                     directory,
                     Properties.Resources.Filter_SaveGraphMLFileType,
@@ -130,6 +131,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                                 filename,
                                 ViewModel.ExportArrowGraphToDiagram(
                                     ArrowGraphAreaCtrl.ToDiagramArrowGraphDto()));
+                            AppSettings.LastUsedFolder = Path.GetDirectoryName(filename);
                         }
                     }
                 }

@@ -324,6 +324,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Utilities\AppSettings.cs" />
     <Compile Include="Utilities\DateTimeCalculator.cs" />
     <Compile Include="Utilities\DateTimeCalculatorMode.cs" />
     <Compile Include="Utilities\EnumBindingSourceExtension.cs" />
