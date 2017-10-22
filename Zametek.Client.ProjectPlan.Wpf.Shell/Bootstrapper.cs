@@ -43,6 +43,8 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
                 .As<IDateTimeCalculator>();
             builder.RegisterType<FileDialogService>()
                 .As<IFileDialogService>();
+            builder.RegisterType<AppSettingService>()
+                .As<IAppSettingService>();
 
             builder.RegisterType<GraphProcessingEngine>()
                 .As<IGraphProcessingEngine>().SingleInstance();

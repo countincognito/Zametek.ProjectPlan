@@ -21,7 +21,6 @@ using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
-using Zametek.Client.ProjectPlan.Wpf.Utilities;
 using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -57,6 +56,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private int m_ChartOutputWidth;
         private int m_ChartOutputHeight;
 
+        private static string s_DefaultProjectTitle = Properties.Resources.Label_DefaultTitle;
+
         private double? m_CriticalityRisk;
         private double? m_FibonacciRisk;
         private double? m_ActivityRisk;
@@ -71,6 +72,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private readonly IProjectManager m_ProjectManager;
         private readonly ISettingManager m_SettingManager;
         private readonly IFileDialogService m_FileDialogService;
+        private readonly IAppSettingService m_AppSettingService;
         private readonly IEventAggregator m_EventService;
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
         private readonly InteractionRequest<Confirmation> m_ConfirmationInteractionRequest;
@@ -89,11 +91,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
             IProjectManager projectManager,
             ISettingManager settingManager,
             IFileDialogService fileDialogService,
+            IAppSettingService appSettingService,
             IEventAggregator eventService)
         {
             m_ProjectManager = projectManager ?? throw new ArgumentNullException(nameof(projectManager));
             m_SettingManager = settingManager ?? throw new ArgumentNullException(nameof(settingManager));
             m_FileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
+            m_AppSettingService = appSettingService ?? throw new ArgumentNullException(nameof(appSettingService));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
             m_Lock = new object();
             m_VertexGraphCompiler = VertexGraphCompiler<int, IDependentActivity<int>>.Create();
@@ -113,7 +117,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
             ResetProject();
 
-            ProjectTitle = string.Empty;
             ShowDates = false;
             UseBusinessDaysWithoutPublishing = true;
             AutoCompile = true;
@@ -1700,7 +1703,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             try
             {
                 IsBusy = true;
-                string directory = AppSettings.LastUsedFolder;
+                string directory = m_AppSettingService.ProjectPlanFolder;
                 if (m_FileDialogService.ShowSaveDialog(
                     directory,
                     Properties.Resources.Filter_SaveProjectPlanFileType,
@@ -1719,7 +1722,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         await SaveProjectPlanDtoAsync(projectPlan, filename);
                         IsProjectUpdated = false;
                         ProjectTitle = Path.GetFileNameWithoutExtension(filename);
-                        AppSettings.LastUsedFolder = Path.GetDirectoryName(filename);
+                        m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
                     }
                 }
             }
@@ -1754,7 +1757,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         return;
                     }
                 }
-                string directory = AppSettings.LastUsedFolder;
+                string directory = m_AppSettingService.ProjectPlanFolder;
                 if (m_FileDialogService.ShowOpenDialog(
                     directory,
                     Properties.Resources.Filter_ImportMicrosoftProjectFileType,
@@ -1779,7 +1782,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         {
                             await RunCompileAsync();
                         }
-                        AppSettings.LastUsedFolder = Path.GetDirectoryName(filename);
+                        m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
                     }
                 }
             }
@@ -2069,7 +2072,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             try
             {
                 IsBusy = true;
-                string directory = AppSettings.LastUsedFolder;
+                string directory = m_AppSettingService.ProjectPlanFolder;
                 if (m_FileDialogService.ShowSaveDialog(
                     directory,
                     Properties.Resources.Filter_SaveCsvFileType,
@@ -2086,7 +2089,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     {
                         DataTable dataTable = await BuildChartDataTableAsync();
                         await DoExportDataTableToCsvAsync(dataTable, filename);
-                        AppSettings.LastUsedFolder = Path.GetDirectoryName(filename);
+                        m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
                     }
                 }
             }
@@ -2288,7 +2291,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set;
         }
 
-        public async Task DoOpenProjectPlanFileAsync(string fileName = null)
+        public async Task DoOpenProjectPlanFileAsync()
+        {
+            await DoOpenProjectPlanFileAsync(string.Empty);
+        }
+
+        public async Task DoOpenProjectPlanFileAsync(string fileName)
         {
             try
             {
@@ -2309,13 +2317,17 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 string filename = fileName;
                 if (string.IsNullOrWhiteSpace(filename))
                 {
-                    string directory = AppSettings.LastUsedFolder;
+                    string directory = m_AppSettingService.ProjectPlanFolder;
                     if (m_FileDialogService.ShowOpenDialog(
                             directory,
                             Properties.Resources.Filter_OpenProjectPlanFileType,
                             Properties.Resources.Filter_OpenProjectPlanFileExtension) == DialogResult.OK)
                     {
                         filename = m_FileDialogService.Filename;
+                    }
+                    else
+                    {
+                        return;
                     }
                 }
                 if (string.IsNullOrWhiteSpace(filename))
@@ -2330,7 +2342,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     ProcessProjectPlanDto(projectPlan);
                     IsProjectUpdated = false;
                     ProjectTitle = Path.GetFileNameWithoutExtension(filename);
-                    AppSettings.LastUsedFolder = Path.GetDirectoryName(filename);
+                    m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
                 }
             }
             catch (Exception ex)
@@ -2382,7 +2394,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 ProjectStartWithoutPublishing = DateTime.UtcNow.BeginningOfDay();
                 IsProjectUpdated = false;
-                ProjectTitle = string.Empty;
+                ProjectTitle = s_DefaultProjectTitle;
 
                 HasStaleOutputs = false;
             }

@@ -405,4 +405,7 @@
   <data name="Title_UnsavedChanges" xml:space="preserve">
     <value>Project has unsaved changes</value>
   </data>
+  <data name="Label_DefaultTitle" xml:space="preserve">
+    <value>Untitled</value>
+  </data>
 </root>

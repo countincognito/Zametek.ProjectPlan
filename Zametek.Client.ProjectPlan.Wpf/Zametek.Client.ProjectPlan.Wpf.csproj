@@ -300,6 +300,7 @@
     <Compile Include="Contracts\IArrowGraphManagerViewModel.cs" />
     <Compile Include="Contracts\IArrowGraphSettingsManagerViewModel.cs" />
     <Compile Include="Contracts\IDateTimeCalculator.cs" />
+    <Compile Include="Contracts\IAppSettingService.cs" />
     <Compile Include="Contracts\IFileDialogService.cs" />
     <Compile Include="Contracts\IMainViewModel.cs" />
     <Compile Include="Contracts\IMetricsManagerViewModel.cs" />
@@ -324,6 +325,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Utilities\AppSettingService.cs" />
     <Compile Include="Utilities\AppSettings.cs" />
     <Compile Include="Utilities\DateTimeCalculator.cs" />
     <Compile Include="Utilities\DateTimeCalculatorMode.cs" />

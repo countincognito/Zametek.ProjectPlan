@@ -26,12 +26,12 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string LastUsedFolder {
+        public string ProjectPlanFolder {
             get {
-                return ((string)(this["LastUsedFolder"]));
+                return ((string)(this["ProjectPlanFolder"]));
             }
             set {
-                this["LastUsedFolder"] = value;
+                this["ProjectPlanFolder"] = value;
             }
         }
     }

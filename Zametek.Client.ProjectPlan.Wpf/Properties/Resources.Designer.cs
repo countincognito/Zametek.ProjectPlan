@@ -304,6 +304,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Untitled.
+        /// </summary>
+        public static string Label_DefaultTitle {
+            get {
+                return ResourceManager.GetString("Label_DefaultTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Label_DeleteManagedActivity {

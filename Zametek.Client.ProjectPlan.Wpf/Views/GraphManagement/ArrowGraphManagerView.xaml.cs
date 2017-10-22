@@ -7,7 +7,6 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Forms;
-using Zametek.Client.ProjectPlan.Wpf.Utilities;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -18,6 +17,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private bool m_IsActive;
         private readonly IFileDialogService m_FileDialogService;
+        private readonly IAppSettingService m_AppSettingService;
         private readonly IEventAggregator m_EventService;
         private SubscriptionToken m_ArrowGraphGeneratedSubscriptionToken;
 
@@ -28,9 +28,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
         public ArrowGraphManagerView(
             IArrowGraphManagerViewModel viewModel,
             IFileDialogService fileDialogService,
+            IAppSettingService appSettingService,
             IEventAggregator eventService)
         {
             m_FileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
+            m_AppSettingService = appSettingService ?? throw new ArgumentNullException(nameof(appSettingService));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
             InitializeComponent();
             ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -109,7 +111,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             try
             {
-                string directory = AppSettings.LastUsedFolder;
+                string directory = m_AppSettingService.ProjectPlanFolder;
                 if (m_FileDialogService.ShowSaveDialog(
                     directory,
                     Properties.Resources.Filter_SaveGraphMLFileType,
@@ -131,7 +133,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                                 filename,
                                 ViewModel.ExportArrowGraphToDiagram(
                                     ArrowGraphAreaCtrl.ToDiagramArrowGraphDto()));
-                            AppSettings.LastUsedFolder = Path.GetDirectoryName(filename);
+                            m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
                         }
                     }
                 }

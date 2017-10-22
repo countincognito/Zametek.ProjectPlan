@@ -1,22 +1,21 @@
 ﻿using System;
-using Zametek.Client.ProjectPlan.Wpf.Properties;
 
-namespace Zametek.Client.ProjectPlan.Wpf.Utilities
+namespace Zametek.Client.ProjectPlan.Wpf
 {
     public static class AppSettings
     {
-        public static string LastUsedFolder
+        public static string ProjectPlanFolder
         {
             get
             {
-                return string.IsNullOrWhiteSpace(Settings.Default.LastUsedFolder)
+                return string.IsNullOrWhiteSpace(Properties.Settings.Default.ProjectPlanFolder)
                     ? Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
-                    : Settings.Default.LastUsedFolder;
+                    : Properties.Settings.Default.ProjectPlanFolder;
             }
             set
             {
-                Settings.Default.LastUsedFolder = value;
-                Settings.Default.Save();
+                Properties.Settings.Default.ProjectPlanFolder = value;
+                Properties.Settings.Default.Save();
             }
         }
     }
