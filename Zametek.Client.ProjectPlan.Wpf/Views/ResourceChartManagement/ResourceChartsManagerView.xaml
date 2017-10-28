@@ -17,8 +17,8 @@
                     Height="25" Width="100"
                     VerticalAlignment="Center"
                     VerticalContentAlignment="Center"
-                    Command="{Binding Path=ExportChartToCsvCommand, Mode=OneWay}"
-                    Content="{x:Static local:Properties.Resources.Label_ExportChartToCsv}"/>
+                    Command="{Binding Path=ExportResourceChartToCsvCommand, Mode=OneWay}"
+                    Content="{x:Static local:Properties.Resources.Label_ExportResourceChartToCsv}"/>
 
             <CheckBox DockPanel.Dock="Right"
                       IsTabStop="True"
@@ -26,13 +26,13 @@
                       Height="25"
                       VerticalAlignment="Center"
                       VerticalContentAlignment="Center"
-                      IsChecked="{Binding Path=ExportChartAsCosts, Mode=TwoWay}"/>
+                      IsChecked="{Binding Path=ExportResourceChartAsCosts, Mode=TwoWay}"/>
 
             <Label DockPanel.Dock="Right"
                    IsTabStop="False"
                    VerticalAlignment="Center"
                    VerticalContentAlignment="Center"
-                   Content="{x:Static local:Properties.Resources.Label_ExportChartAsCosts}"
+                   Content="{x:Static local:Properties.Resources.Label_ExportResourceChartAsCosts}"
                    Height="25"
                    Margin="11,0,0,0"/>
 
@@ -42,11 +42,11 @@
                     Height="25" Width="110"
                     VerticalAlignment="Center"
                     VerticalContentAlignment="Center"
-                    Command="{Binding Path=CopyChartToClipboardCommand, Mode=OneWay}"
-                    Content="{x:Static local:Properties.Resources.Label_CopyChartToClipboard}"/>
+                    Command="{Binding Path=CopyResourceChartToClipboardCommand, Mode=OneWay}"
+                    Content="{x:Static local:Properties.Resources.Label_CopyResourceChartToClipboard}"/>
 
             <xctk:IntegerUpDown DockPanel.Dock="Right"
-                                Value="{Binding Path=ChartOutputWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Value="{Binding Path=ResourceChartOutputWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 VerticalAlignment="Stretch"
                                 VerticalContentAlignment="Center"
                                 HorizontalAlignment="Stretch"
@@ -67,7 +67,7 @@
                    Margin="7,0,0,0"/>
 
             <xctk:IntegerUpDown DockPanel.Dock="Right"
-                                Value="{Binding Path=ChartOutputHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Value="{Binding Path=ResourceChartOutputHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 VerticalAlignment="Stretch"
                                 VerticalContentAlignment="Center"
                                 HorizontalAlignment="Stretch"
@@ -90,7 +90,7 @@
             <Grid/>
         </DockPanel>
 
-        <oxy:PlotView Model="{Binding Path=ChartPlotModel, Mode=OneWay}"
+        <oxy:PlotView Model="{Binding Path=ResourceChartPlotModel, Mode=OneWay}"
                       BorderThickness="2">
             <oxy:PlotView.Style>
                 <Style TargetType="{x:Type oxy:PlotView}"

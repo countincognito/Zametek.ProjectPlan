@@ -8,6 +8,28 @@ namespace Zametek.Client.ProjectPlan.Wpf
         PlotModel EarnedValueChartPlotModel
         {
             get;
-        }        
+        }
+
+        int EarnedValueChartOutputWidth
+        {
+            get;
+            set;
+        }
+
+        int EarnedValueChartOutputHeight
+        {
+            get;
+            set;
+        }
+
+        ICommand CopyEarnedValueChartToClipboardCommand
+        {
+            get;
+        }
+
+        ICommand ExportEarnedValueChartToCsvCommand
+        {
+            get;
+        }
     }
 }

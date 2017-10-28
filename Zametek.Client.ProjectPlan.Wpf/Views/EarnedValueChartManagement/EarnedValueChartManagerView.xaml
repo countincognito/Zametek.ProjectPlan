@@ -8,17 +8,100 @@
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <oxy:PlotView Model="{Binding Path=EarnedValueChartPlotModel, Mode=OneWay}"
-                  BorderThickness="2">
-        <oxy:PlotView.Style>
-            <Style TargetType="{x:Type oxy:PlotView}"
+    <DockPanel Margin="7">
+
+        <DockPanel DockPanel.Dock="Bottom"
+                   Margin="0,11,0,0">
+            <Button DockPanel.Dock="Right"
+                    IsTabStop="True"
+                    Margin="11,0,0,0"
+                    Height="25" Width="100"
+                    VerticalAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding Path=ExportEarnedValueChartToCsvCommand, Mode=OneWay}"
+                    Content="{x:Static local:Properties.Resources.Label_ExportEarnedValueChartToCsv}"/>
+
+            <Button DockPanel.Dock="Right"
+                    IsTabStop="True"
+                    Margin="11,0,0,0"
+                    Height="25" Width="110"
+                    VerticalAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding Path=CopyEarnedValueChartToClipboardCommand, Mode=OneWay}"
+                    Content="{x:Static local:Properties.Resources.Label_CopyEarnedValueChartToClipboard}"/>
+
+            <xctk:IntegerUpDown DockPanel.Dock="Right"
+                                Value="{Binding Path=EarnedValueChartOutputWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                VerticalAlignment="Stretch"
+                                VerticalContentAlignment="Center"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Right"
+                                IsTabStop="True"
+                                Margin="7,0,0,0"
+                                Height="25"
+                                Width="55"
+                                Minimum="100"
+                                Maximum="2000"/>
+
+            <Label DockPanel.Dock="Right"
+                   IsTabStop="False"
+                   VerticalAlignment="Center"
+                   VerticalContentAlignment="Center"
+                   Content="{x:Static local:Properties.Resources.Label_Width}"
+                   Height="25"
+                   Margin="7,0,0,0"/>
+
+            <xctk:IntegerUpDown DockPanel.Dock="Right"
+                                Value="{Binding Path=EarnedValueChartOutputHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                VerticalAlignment="Stretch"
+                                VerticalContentAlignment="Center"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Right"
+                                IsTabStop="True"
+                                Margin="7,0,0,0"
+                                Height="25"
+                                Width="55"
+                                Minimum="100"
+                                Maximum="2000"/>
+
+            <Label DockPanel.Dock="Right"
+                   IsTabStop="False"
+                   VerticalAlignment="Center"
+                   VerticalContentAlignment="Center"
+                   Content="{x:Static local:Properties.Resources.Label_Height}"
+                   Height="25"
+                   Margin="7,0,0,0"/>
+
+            <Grid/>
+        </DockPanel>
+
+        <oxy:PlotView Model="{Binding Path=EarnedValueChartPlotModel, Mode=OneWay}"
+                      BorderThickness="2">
+            <oxy:PlotView.Style>
+                <Style TargetType="{x:Type oxy:PlotView}"
                    BasedOn="{StaticResource {x:Type oxy:PlotView}}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Path=HasStaleOutputs, Mode=OneWay}" Value="True">
+                            <Setter Property="BorderBrush" Value="Red"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </oxy:PlotView.Style>
+        </oxy:PlotView>
+
+        <DockPanel.Style>
+            <Style TargetType="DockPanel">
                 <Style.Triggers>
-                    <DataTrigger Binding="{Binding Path=HasStaleOutputs, Mode=OneWay}" Value="True">
-                        <Setter Property="BorderBrush" Value="Red"/>
+                    <DataTrigger Binding="{Binding Path=IsBusy, Mode=OneWay}" Value="True">
+                        <Setter Property="ForceCursor" Value="True"/>
+                        <Setter Property="Cursor" Value="Wait"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Path=IsBusy, Mode=OneWay}" Value="False">
+                        <Setter Property="ForceCursor" Value="False"/>
+                        <Setter Property="Cursor" Value="Arrow"/>
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
-        </oxy:PlotView.Style>
-    </oxy:PlotView>
+        </DockPanel.Style>
+    </DockPanel>
 </UserControl>

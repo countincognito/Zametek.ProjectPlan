@@ -50,12 +50,17 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private bool m_HasCompilationErrors;
         private bool m_HasStaleArrowGraph;
         private bool m_HasStaleOutputs;
-        private IList<Series> m_SeriesSet;
-        private bool m_ExportChartAsCosts;
-        private PlotModel m_ChartPlotModel;
-        private int m_ChartOutputWidth;
-        private int m_ChartOutputHeight;
-        private PlotModel m_EarnedValueChartPlotModel;        
+
+        private IList<ResourceSeries> m_ResourceChartSeriesSet;
+        private bool m_ExportResourceChartAsCosts;
+        private PlotModel m_ResourceChartPlotModel;
+        private int m_ResourceChartOutputWidth;
+        private int m_ResourceChartOutputHeight;
+
+        private IList<EarnedValuePoint> m_EarnedValueChartPointSet;
+        private PlotModel m_EarnedValueChartPlotModel;
+        private int m_EarnedValueChartOutputWidth;
+        private int m_EarnedValueChartOutputHeight;
 
         private static string s_DefaultProjectTitle = Properties.Resources.Label_DefaultTitle;
 
@@ -111,12 +116,15 @@ namespace Zametek.Client.ProjectPlan.Wpf
             Activities = new ObservableCollection<ManagedActivityViewModel>();
             SelectedActivities = new ObservableCollection<ManagedActivityViewModel>();
             ResourceDtos = new List<ResourceDto>();
-            m_SeriesSet = new List<Series>();
-            ChartPlotModel = null;
-            ChartOutputWidth = 1000;
-            ChartOutputHeight = 500;
-            EarnedValueChartPlotModel = null;            
-            
+            m_ResourceChartSeriesSet = new List<ResourceSeries>();
+            ResourceChartPlotModel = null;
+            ResourceChartOutputWidth = 1000;
+            ResourceChartOutputHeight = 500;
+            m_EarnedValueChartPointSet = new List<EarnedValuePoint>();
+            EarnedValueChartPlotModel = null;
+            EarnedValueChartOutputWidth = 1000;
+            EarnedValueChartOutputHeight = 500;
+
             ResetProject();
 
             ShowDates = false;
@@ -463,54 +471,105 @@ namespace Zametek.Client.ProjectPlan.Wpf
             return !HasCompilationErrors;
         }
 
-        public DelegateCommandBase InternalCopyChartToClipboardCommand
+        public DelegateCommandBase InternalCopyResourceChartToClipboardCommand
         {
             get;
             private set;
         }
 
-        private void CopyChartToClipboard()
+        private void CopyResourceChartToClipboard()
         {
             lock (m_Lock)
             {
-                if (CanCopyChartToClipboard())
+                if (CanCopyResourceChartToClipboard())
                 {
                     var pngExporter = new OxyPlot.Wpf.PngExporter
                     {
-                        Width = ChartOutputWidth,
-                        Height = ChartOutputHeight,
+                        Width = ResourceChartOutputWidth,
+                        Height = ResourceChartOutputHeight,
                         Background = OxyColors.White
                     };
-                    BitmapSource bitmap = pngExporter.ExportToBitmap(ChartPlotModel);
+                    BitmapSource bitmap = pngExporter.ExportToBitmap(ResourceChartPlotModel);
                     System.Windows.Clipboard.SetImage(bitmap);
                 }
             }
         }
 
-        private bool CanCopyChartToClipboard()
+        private bool CanCopyResourceChartToClipboard()
         {
             lock (m_Lock)
             {
-                return ChartPlotModel != null;
+                return ResourceChartPlotModel != null;
             }
         }
 
-        public DelegateCommandBase InternalExportChartToCsvCommand
+        public DelegateCommandBase InternalExportResourceChartToCsvCommand
         {
             get;
             private set;
         }
 
-        private async void ExportChartToCsv()
+        private async void ExportResourceChartToCsv()
         {
-            await DoExportChartToCsvAsync();
+            await DoExportResourceChartToCsvAsync();
         }
 
-        private bool CanExportChartToCsv()
+        private bool CanExportResourceChartToCsv()
         {
             lock (m_Lock)
             {
-                return m_SeriesSet.Any();
+                return m_ResourceChartSeriesSet.Any();
+            }
+        }
+
+        public DelegateCommandBase InternalCopyEarnedValueChartToClipboardCommand
+        {
+            get;
+            private set;
+        }
+
+        private void CopyEarnedValueChartToClipboard()
+        {
+            lock (m_Lock)
+            {
+                if (CanCopyEarnedValueChartToClipboard())
+                {
+                    var pngExporter = new OxyPlot.Wpf.PngExporter
+                    {
+                        Width = EarnedValueChartOutputWidth,
+                        Height = EarnedValueChartOutputHeight,
+                        Background = OxyColors.White
+                    };
+                    BitmapSource bitmap = pngExporter.ExportToBitmap(EarnedValueChartPlotModel);
+                    System.Windows.Clipboard.SetImage(bitmap);
+                }
+            }
+        }
+
+        private bool CanCopyEarnedValueChartToClipboard()
+        {
+            lock (m_Lock)
+            {
+                return EarnedValueChartPlotModel != null;
+            }
+        }
+
+        public DelegateCommandBase InternalExportEarnedValueChartToCsvCommand
+        {
+            get;
+            private set;
+        }
+
+        private async void ExportEarnedValueChartToCsv()
+        {
+            await DoExportEarnedValueChartToCsvAsync();
+        }
+
+        private bool CanExportEarnedValueChartToCsv()
+        {
+            lock (m_Lock)
+            {
+                return m_EarnedValueChartPointSet.Any();
             }
         }
 
@@ -552,12 +611,18 @@ namespace Zametek.Client.ProjectPlan.Wpf
             GenerateArrowGraphCommand =
                 InternalGenerateArrowGraphCommand =
                     new DelegateCommand(GenerateArrowGraph, CanGenerateArrowGraph);
-            CopyChartToClipboardCommand =
-                InternalCopyChartToClipboardCommand =
-                    new DelegateCommand(CopyChartToClipboard, CanCopyChartToClipboard);
-            ExportChartToCsvCommand =
-                InternalExportChartToCsvCommand =
-                    new DelegateCommand(ExportChartToCsv, CanExportChartToCsv);
+            CopyResourceChartToClipboardCommand =
+                InternalCopyResourceChartToClipboardCommand =
+                    new DelegateCommand(CopyResourceChartToClipboard, CanCopyResourceChartToClipboard);
+            ExportResourceChartToCsvCommand =
+                InternalExportResourceChartToCsvCommand =
+                    new DelegateCommand(ExportResourceChartToCsv, CanExportResourceChartToCsv);
+            CopyEarnedValueChartToClipboardCommand =
+                InternalCopyEarnedValueChartToClipboardCommand =
+                    new DelegateCommand(CopyEarnedValueChartToClipboard, CanCopyEarnedValueChartToClipboard);
+            ExportEarnedValueChartToCsvCommand =
+                InternalExportEarnedValueChartToCsvCommand =
+                    new DelegateCommand(ExportEarnedValueChartToCsv, CanExportEarnedValueChartToCsv);
         }
 
         private void RaiseCanExecuteChangedAllCommands()
@@ -572,8 +637,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
             InternalAddManagedActivityCommand.RaiseCanExecuteChanged();
             InternalRemoveManagedActivityCommand.RaiseCanExecuteChanged();
             InternalGenerateArrowGraphCommand.RaiseCanExecuteChanged();
-            InternalCopyChartToClipboardCommand.RaiseCanExecuteChanged();
-            InternalExportChartToCsvCommand.RaiseCanExecuteChanged();
+            InternalCopyResourceChartToClipboardCommand.RaiseCanExecuteChanged();
+            InternalExportResourceChartToCsvCommand.RaiseCanExecuteChanged();
+            InternalCopyEarnedValueChartToClipboardCommand.RaiseCanExecuteChanged();
+            InternalExportEarnedValueChartToCsvCommand.RaiseCanExecuteChanged();
         }
 
         private void SubscribeToEvents()
@@ -715,7 +782,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 CalculateGraphMetrics();
 
                 SetResourceChartSeriesSet();
-                SetChartPlotModel();
+                SetResourceChartPlotModel();
+                SetEarnedValueChartPointSet();
                 SetEarnedValueChartPlotModel();
                 CalculateCosts();
                 HasStaleOutputs = false;
@@ -783,7 +851,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     return;
                 }
-                IList<Series> seriesSet = m_SeriesSet;
+                IList<ResourceSeries> seriesSet = m_ResourceChartSeriesSet;
                 if (seriesSet != null
                     && seriesSet.Any())
                 {
@@ -1348,7 +1416,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 ClearGraphMetricProperties();
 
                 SetResourceChartSeriesSet();
-                SetChartPlotModel();
+                SetResourceChartPlotModel();
+                SetEarnedValueChartPointSet();
                 SetEarnedValueChartPlotModel();
                 CalculateCosts();
 
@@ -1418,7 +1487,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             lock (m_Lock)
             {
                 IList<IResourceSchedule<int>> resourceSchedules = GraphCompilation?.ResourceSchedules;
-                var seriesSet = new List<Series>();
+                var seriesSet = new List<ResourceSeries>();
                 if (resourceSchedules != null
                     && resourceSchedules.Any())
                 {
@@ -1426,11 +1495,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     var indirectResourceIdsToIgnore = new HashSet<int>();
                     int finishTime = resourceSchedules.Max(x => x.FinishTime);
                     int spareResourceCount = 1;
-                    var scheduledSeriesSet = new List<Series>();
+                    var scheduledSeriesSet = new List<ResourceSeries>();
                     for (int resourceIndex = 0; resourceIndex < resourceSchedules.Count; resourceIndex++)
                     {
                         IResourceSchedule<int> resourceSchedule = resourceSchedules[resourceIndex];
-                        var series = new Series()
+                        var series = new ResourceSeries()
                         {
                             Values = resourceSchedule.ActivityAllocation.Select(x => x ? 1 : 0).ToList()
                         };
@@ -1465,12 +1534,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                     // Now add the remaining resources that are indirect costs, but
                     // sort them separately and add them to the front of the list.
-                    var unscheduledSeriesSet = new List<Series>();
+                    var unscheduledSeriesSet = new List<ResourceSeries>();
                     IEnumerable<ResourceDto> indirectResources =
                         ResourceDtos.Where(x => !indirectResourceIdsToIgnore.Contains(x.Id) && x.InterActivityAllocationType == InterActivityAllocationType.Indirect);
                     foreach (ResourceDto resourceDto in indirectResources)
                     {
-                        var series = new Series()
+                        var series = new ResourceSeries()
                         {
                             InterActivityAllocationType = resourceDto.InterActivityAllocationType,
                             Values = new List<int>(Enumerable.Repeat(1, finishTime))
@@ -1496,30 +1565,30 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     seriesSet.AddRange(scheduledSeriesSet.OrderBy(x => x.DisplayOrder));
                 }
 
-                m_SeriesSet.Clear();
-                foreach (Series series in seriesSet)
+                m_ResourceChartSeriesSet.Clear();
+                foreach (ResourceSeries series in seriesSet)
                 {
-                    m_SeriesSet.Add(series);
+                    m_ResourceChartSeriesSet.Add(series);
                 }
             }
         }
 
-        private void SetChartPlotModel()
+        private void SetResourceChartPlotModel()
         {
             lock (m_Lock)
             {
-                IList<Series> seriesSet = m_SeriesSet;
+                IList<ResourceSeries> seriesSet = m_ResourceChartSeriesSet;
                 PlotModel plotModel = null;
                 if (seriesSet != null
                     && seriesSet.Any())
                 {
                     plotModel = new PlotModel();
-                    plotModel.Axes.Add(BuildXAxis());
-                    plotModel.Axes.Add(BuildYAxis());
+                    plotModel.Axes.Add(BuildResourceChartXAxis());
+                    plotModel.Axes.Add(BuildResourceChartYAxis());
                     plotModel.LegendPlacement = LegendPlacement.Outside;
                     plotModel.LegendPosition = LegendPosition.RightMiddle;
                     var total = new List<int>();
-                    foreach (Series series in seriesSet)
+                    foreach (ResourceSeries series in seriesSet)
                     {
                         if (series != null)
                         {
@@ -1541,19 +1610,19 @@ namespace Zametek.Client.ProjectPlan.Wpf
                                 {
                                     total.Add(0);
                                 }
-                                areaSeries.Points.Add(new DataPoint(CalculateXValue(i), total[i]));
+                                areaSeries.Points.Add(new DataPoint(CalculateChartTimeXValue(i), total[i]));
                                 total[i] += j;
-                                areaSeries.Points2.Add(new DataPoint(CalculateXValue(i), total[i]));
+                                areaSeries.Points2.Add(new DataPoint(CalculateChartTimeXValue(i), total[i]));
                             }
                             plotModel.Series.Add(areaSeries);
                         }
                     }
                 }
-                ChartPlotModel = plotModel;
+                ResourceChartPlotModel = plotModel;
             }
         }
 
-        private Axis BuildXAxis()
+        private Axis BuildResourceChartXAxis()
         {
             lock (m_Lock)
             {
@@ -1563,8 +1632,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     && resourceSchedules.Any())
                 {
                     int finishTime = resourceSchedules.Max(x => x.FinishTime);
-                    double minValue = CalculateXValue(0);
-                    double maxValue = CalculateXValue(finishTime);
+                    double minValue = CalculateChartTimeXValue(0);
+                    double maxValue = CalculateChartTimeXValue(finishTime);
                     if (ShowDates)
                     {
                         axis = new DateTimeAxis
@@ -1595,7 +1664,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        private static Axis BuildYAxis()
+        private static Axis BuildResourceChartYAxis()
         {
             return new LinearAxis
             {
@@ -1604,83 +1673,17 @@ namespace Zametek.Client.ProjectPlan.Wpf
             };
         }
 
-        private double CalculateXValue(int input)
+        private Task<DataTable> BuildResourceChartDataTableAsync()
         {
-            lock (m_Lock)
-            {
-                double output = input;
-                if (ShowDates)
-                {
-                    output = DateTimeAxis.ToDouble(m_DateTimeCalculator.AddDays(ProjectStart, input));
-                }
-                return output;
-            }
+            return Task.Run(() => BuildResourceChartDataTable());
         }
 
-        private void SetEarnedValueChartPlotModel()
-        {
-            var earnedValue = EarnedValue(Activities);
-            if (earnedValue.Length == 0)
-                return;
-
-            var lineSeries = new LineSeries();
-            lineSeries.Points.Add(new DataPoint(0, 0));
-            foreach (var point in earnedValue)
-            {
-                lineSeries.Points.Add(new DataPoint(Convert.ToDouble(point.Time), point.Percentage * 100));
-            }
-
-            PlotModel earnedValuePlotModel = new PlotModel();
-            earnedValuePlotModel.Axes.Add(new LinearAxis()
-            {
-                Position = AxisPosition.Bottom,
-                MinorStep = 1,
-                Minimum = 0,
-                Maximum = earnedValue.Last().Time,
-                Title = Properties.Resources.Label_EarnedValueTimeAxisTitle
-            });
-            earnedValuePlotModel.Axes.Add(new LinearAxis()
-            {
-                Position = AxisPosition.Left,
-                Minimum = 0,
-                Maximum = 100,
-                Title = Properties.Resources.Label_EarnedValuePercentageAxisTitle
-            });
-
-            earnedValuePlotModel.LegendPlacement = LegendPlacement.Outside;
-            earnedValuePlotModel.LegendPosition = LegendPosition.RightMiddle;           
-            earnedValuePlotModel.Series.Add(lineSeries);
-            EarnedValueChartPlotModel = earnedValuePlotModel;
-        }
-
-        private static EarnedValuePoint[] EarnedValue(IEnumerable<ManagedActivityViewModel> activities)
-        {
-            var earnedValue = new List<EarnedValuePoint>();
-            var activitiesByEft = activities.OrderBy(o => o.EarliestFinishTime).ToList();
-            double totalTime = activitiesByEft.Select(s => s.Duration).Sum();
-            for (int i = 0; i < activitiesByEft.Count; i++)
-            {
-                if (activitiesByEft[i].EarliestFinishTime.HasValue)
-                    earnedValue.Add(new EarnedValuePoint()
-                    {
-                        Time = activitiesByEft[i].EarliestFinishTime.Value,
-                        Percentage = activitiesByEft.Take(i + 1).Select(s => s.Duration).Sum() / totalTime
-                    });
-            }
-            return earnedValue.ToArray();
-        }
-
-        private Task<DataTable> BuildChartDataTableAsync()
-        {
-            return Task.Run(() => BuildChartDataTable());
-        }
-
-        private DataTable BuildChartDataTable()
+        private DataTable BuildResourceChartDataTable()
         {
             lock (m_Lock)
             {
                 var table = new DataTable();
-                IList<Series> seriesSet = m_SeriesSet.OrderBy(x => x.DisplayOrder).ToList();
+                IList<ResourceSeries> seriesSet = m_ResourceChartSeriesSet.OrderBy(x => x.DisplayOrder).ToList();
                 if (seriesSet != null
                     && seriesSet.Any())
                 {
@@ -1701,11 +1704,182 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         {
                             FormatScheduleOutput(timeIndex)
                         };
-                        rowData.AddRange(seriesSet.Select(x => x.Values[timeIndex] * (ExportChartAsCosts ? x.UnitCost : 1)).Cast<object>());
+                        rowData.AddRange(seriesSet.Select(x => x.Values[timeIndex] * (ExportResourceChartAsCosts ? x.UnitCost : 1)).Cast<object>());
                         table.Rows.Add(rowData.ToArray());
                     }
                 }
                 return table;
+            }
+        }
+
+        private void SetEarnedValueChartPointSet()
+        {
+            lock (m_Lock)
+            {
+                IList<IDependentActivity<int>> dependentActivities =
+                    GraphCompilation.DependentActivities
+                    .Select(x => (IDependentActivity<int>)x.WorkingCopy())
+                    .OrderBy(x => x.EarliestFinishTime.GetValueOrDefault())
+                    .ThenBy(x => x.EarliestStartTime.GetValueOrDefault())
+                    .ToList();
+                var pointSet = new List<EarnedValuePoint>();
+                if (!HasCompilationErrors
+                    && dependentActivities.Any()
+                    && dependentActivities.All(x => x.EarliestFinishTime.HasValue))
+                {
+                    pointSet.Add(new EarnedValuePoint
+                    {
+                        Time = 0,
+                        EarnedValue = 0,
+                        EarnedValuePercentage = 0.0
+                    });
+
+                    double totalTime = Convert.ToDouble(dependentActivities.Sum(s => s.Duration));
+                    int runningTotal = 0;
+                    foreach (IDependentActivity<int> activity in dependentActivities)
+                    {
+                        runningTotal += activity.Duration;
+                        double percentage = (runningTotal / totalTime) * 100.0;
+                        int time = activity.EarliestFinishTime.GetValueOrDefault();
+                        pointSet.Add(new EarnedValuePoint
+                        {
+                            Time = time,
+                            EarnedValue = runningTotal,
+                            EarnedValuePercentage = percentage
+                        });
+                    }
+                }
+
+                m_EarnedValueChartPointSet.Clear();
+                foreach (EarnedValuePoint point in pointSet)
+                {
+                    m_EarnedValueChartPointSet.Add(point);
+                }
+            }
+        }
+
+        private void SetEarnedValueChartPlotModel()
+        {
+            lock (m_Lock)
+            {
+                IList<EarnedValuePoint> pointSet = m_EarnedValueChartPointSet;
+                PlotModel plotModel = null;
+                if (pointSet != null
+                    && pointSet.Any())
+                {
+                    plotModel = new PlotModel();
+                    plotModel.Axes.Add(BuildEarnedValueChartXAxis());
+                    plotModel.Axes.Add(BuildEarnedValueChartYAxis());
+                    plotModel.LegendPlacement = LegendPlacement.Outside;
+                    plotModel.LegendPosition = LegendPosition.RightMiddle;
+
+                    var lineSeries = new LineSeries();
+                    foreach (EarnedValuePoint point in pointSet)
+                    {
+                        lineSeries.Points.Add(new DataPoint(CalculateChartTimeXValue(point.Time), point.EarnedValuePercentage));
+                    }
+                    plotModel.Series.Add(lineSeries);
+                }
+                EarnedValueChartPlotModel = plotModel;
+            }
+        }
+
+        private Axis BuildEarnedValueChartXAxis()
+        {
+            lock (m_Lock)
+            {
+                IList<IDependentActivity<int>> dependentActivities = GraphCompilation?.DependentActivities;
+                Axis axis = null;
+                if (dependentActivities != null
+                    && dependentActivities.Any())
+                {
+                    int finishTime = dependentActivities.Max(x => x.EarliestFinishTime.GetValueOrDefault());
+                    double minValue = CalculateChartTimeXValue(0);
+                    double maxValue = CalculateChartTimeXValue(finishTime);
+                    if (ShowDates)
+                    {
+                        axis = new DateTimeAxis
+                        {
+                            Position = AxisPosition.Bottom,
+                            Minimum = minValue,
+                            Maximum = maxValue,
+                            Title = Properties.Resources.Label_TimeAxisTitle,
+                            StringFormat = "d"
+                        };
+                    }
+                    else
+                    {
+                        axis = new LinearAxis
+                        {
+                            Position = AxisPosition.Bottom,
+                            Minimum = minValue,
+                            Maximum = maxValue,
+                            Title = Properties.Resources.Label_TimeAxisTitle
+                        };
+                    }
+                }
+                else
+                {
+                    axis = new LinearAxis();
+                }
+                return axis;
+            }
+        }
+
+        private static Axis BuildEarnedValueChartYAxis()
+        {
+            return new LinearAxis
+            {
+                Position = AxisPosition.Left,
+                Minimum = 0.0,
+                Maximum = 100.0,
+                Title = Properties.Resources.Label_EarnedValuePercentageAxisTitle
+            };
+        }
+
+        private Task<DataTable> BuildEarnedValueChartDataTableAsync()
+        {
+            return Task.Run(() => BuildEarnedValueChartDataTable());
+        }
+
+        private DataTable BuildEarnedValueChartDataTable()
+        {
+            lock (m_Lock)
+            {
+                var table = new DataTable();
+                IList<EarnedValuePoint> pointSet = m_EarnedValueChartPointSet;
+                if (pointSet != null
+                    && pointSet.Any())
+                {
+                    table.Columns.Add(new DataColumn(Properties.Resources.Label_TimeAxisTitle));
+                    table.Columns.Add(new DataColumn(Properties.Resources.Label_EarnedValueTitle));
+                    table.Columns.Add(new DataColumn(Properties.Resources.Label_EarnedValuePercentageAxisTitle));
+
+                    foreach (EarnedValuePoint point in pointSet)
+                    {
+                        var rowData = new List<object>
+                        {
+                            FormatScheduleOutput(point.Time),
+                            point.EarnedValue,
+                            point.EarnedValuePercentage
+                        };
+                        table.Rows.Add(rowData.ToArray());
+                    }
+                }
+                return table;
+            }
+        }
+
+        private double CalculateChartTimeXValue(int input)
+        {
+            lock (m_Lock)
+            {
+                double output = input;
+                if (ShowDates)
+                {
+                    output = DateTimeAxis.ToDouble(m_DateTimeCalculator.AddDays(ProjectStart, input));
+                }
+                return output;
             }
         }
 
@@ -2124,7 +2298,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public async Task DoExportChartToCsvAsync()
+        public async Task DoExportResourceChartToCsvAsync()
         {
             try
             {
@@ -2144,7 +2318,46 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     }
                     else
                     {
-                        DataTable dataTable = await BuildChartDataTableAsync();
+                        DataTable dataTable = await BuildResourceChartDataTableAsync();
+                        await DoExportDataTableToCsvAsync(dataTable, filename);
+                        m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+                RaiseCanExecuteChangedAllCommands();
+            }
+        }
+
+        public async Task DoExportEarnedValueChartToCsvAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                string directory = m_AppSettingService.ProjectPlanFolder;
+                if (m_FileDialogService.ShowSaveDialog(
+                    directory,
+                    Properties.Resources.Filter_SaveCsvFileType,
+                    Properties.Resources.Filter_SaveCsvFileExtension) == DialogResult.OK)
+                {
+                    string filename = m_FileDialogService.Filename;
+                    if (string.IsNullOrWhiteSpace(filename))
+                    {
+                        DispatchNotification(
+                            Properties.Resources.Title_Error,
+                            Properties.Resources.Message_EmptyFilename);
+                    }
+                    else
+                    {
+                        DataTable dataTable = await BuildEarnedValueChartDataTableAsync();
                         await DoExportDataTableToCsvAsync(dataTable, filename);
                         m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
                     }
@@ -2221,7 +2434,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 RaisePropertyChanged(nameof(ShowDates));
                 RaisePropertyChanged(nameof(ShowDays));
                 SetCompilationOutput();
-                SetChartPlotModel();
+                SetResourceChartPlotModel();
+                SetEarnedValueChartPlotModel();
             }
         }
 
@@ -2445,8 +2659,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 ArrowGraphData = GenerateArrowGraphData(ArrowGraphDto);
                 HasStaleArrowGraph = false;
 
-                m_SeriesSet.Clear();
-                ChartPlotModel = null;
+                m_ResourceChartSeriesSet.Clear();
+                ResourceChartPlotModel = null;
+                m_EarnedValueChartPointSet.Clear();
                 EarnedValueChartPlotModel = null;
                 ClearCostProperties();
 
@@ -2554,7 +2769,45 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 RaisePropertyChanged(nameof(EarnedValueChartPlotModel));
             }
         }
-        
+
+        public int EarnedValueChartOutputWidth
+        {
+            get
+            {
+                return m_EarnedValueChartOutputWidth;
+            }
+            set
+            {
+                m_EarnedValueChartOutputWidth = value;
+                RaisePropertyChanged(nameof(EarnedValueChartOutputWidth));
+            }
+        }
+
+        public int EarnedValueChartOutputHeight
+        {
+            get
+            {
+                return m_EarnedValueChartOutputHeight;
+            }
+            set
+            {
+                m_EarnedValueChartOutputHeight = value;
+                RaisePropertyChanged(nameof(EarnedValueChartOutputHeight));
+            }
+        }
+
+        public ICommand CopyEarnedValueChartToClipboardCommand
+        {
+            get;
+            private set;
+        }
+
+        public ICommand ExportEarnedValueChartToCsvCommand
+        {
+            get;
+            private set;
+        }
+
         #endregion
 
         #region IMetricsManagerViewModel Members
@@ -2680,78 +2933,78 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region IResourceChartsManagerViewModel Members
 
-        public bool ExportChartAsCosts
+        public bool ExportResourceChartAsCosts
         {
             get
             {
-                return m_ExportChartAsCosts;
+                return m_ExportResourceChartAsCosts;
             }
             set
             {
-                m_ExportChartAsCosts = value;
-                RaisePropertyChanged(nameof(ExportChartAsCosts));
+                m_ExportResourceChartAsCosts = value;
+                RaisePropertyChanged(nameof(ExportResourceChartAsCosts));
             }
         }
 
-        public PlotModel ChartPlotModel
+        public PlotModel ResourceChartPlotModel
         {
             get
             {
-                return m_ChartPlotModel;
+                return m_ResourceChartPlotModel;
             }
             private set
             {
                 lock (m_Lock)
                 {
-                    m_ChartPlotModel = value;
+                    m_ResourceChartPlotModel = value;
                 }
-                RaisePropertyChanged(nameof(ChartPlotModel));
+                RaisePropertyChanged(nameof(ResourceChartPlotModel));
             }
         }
 
-        public int ChartOutputWidth
+        public int ResourceChartOutputWidth
         {
             get
             {
-                return m_ChartOutputWidth;
+                return m_ResourceChartOutputWidth;
             }
             set
             {
-                m_ChartOutputWidth = value;
-                RaisePropertyChanged(nameof(ChartOutputWidth));
+                m_ResourceChartOutputWidth = value;
+                RaisePropertyChanged(nameof(ResourceChartOutputWidth));
             }
         }
 
-        public int ChartOutputHeight
+        public int ResourceChartOutputHeight
         {
             get
             {
-                return m_ChartOutputHeight;
+                return m_ResourceChartOutputHeight;
             }
             set
             {
-                m_ChartOutputHeight = value;
-                RaisePropertyChanged(nameof(ChartOutputHeight));
+                m_ResourceChartOutputHeight = value;
+                RaisePropertyChanged(nameof(ResourceChartOutputHeight));
             }
         }
 
-        public ICommand CopyChartToClipboardCommand
+        public ICommand CopyResourceChartToClipboardCommand
         {
             get;
             private set;
         }
 
-        public ICommand ExportChartToCsvCommand
+        public ICommand ExportResourceChartToCsvCommand
         {
             get;
             private set;
         }
 
         #endregion
-        
+
         #region Private Types
 
-        private class Series
+        private class ResourceSeries
         {
             public string Title { get; set; }
             public InterActivityAllocationType InterActivityAllocationType { get; set; }
@@ -2764,7 +3017,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
         public class EarnedValuePoint
         {
             public int Time { get; set; }
-            public double Percentage { get; set; }
+            public int EarnedValue { get; set; }
+            public double EarnedValuePercentage { get; set; }
         }
 
         #endregion

@@ -5,35 +5,35 @@ namespace Zametek.Client.ProjectPlan.Wpf
 {
     public interface IResourceChartsManagerViewModel
     {
-        bool ExportChartAsCosts
+        bool ExportResourceChartAsCosts
         {
             get;
             set;
         }
 
-        PlotModel ChartPlotModel
+        PlotModel ResourceChartPlotModel
         {
             get;
         }
 
-        int ChartOutputWidth
-        {
-            get;
-            set;
-        }
-
-        int ChartOutputHeight
+        int ResourceChartOutputWidth
         {
             get;
             set;
         }
 
-        ICommand CopyChartToClipboardCommand
+        int ResourceChartOutputHeight
+        {
+            get;
+            set;
+        }
+
+        ICommand CopyResourceChartToClipboardCommand
         {
             get;
         }
 
-        ICommand ExportChartToCsvCommand
+        ICommand ExportResourceChartToCsvCommand
         {
             get;
         }

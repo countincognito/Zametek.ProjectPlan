@@ -270,9 +270,18 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Chart to Clipboard.
         /// </summary>
-        public static string Label_CopyChartToClipboard {
+        public static string Label_CopyEarnedValueChartToClipboard {
             get {
-                return ResourceManager.GetString("Label_CopyChartToClipboard", resourceCulture);
+                return ResourceManager.GetString("Label_CopyEarnedValueChartToClipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chart to Clipboard.
+        /// </summary>
+        public static string Label_CopyResourceChartToClipboard {
+            get {
+                return ResourceManager.GetString("Label_CopyResourceChartToClipboard", resourceCulture);
             }
         }
         
@@ -412,7 +421,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to % Earned Value.
+        ///   Looks up a localized string similar to Earned Value (%).
         /// </summary>
         public static string Label_EarnedValuePercentageAxisTitle {
             get {
@@ -421,11 +430,11 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Days worked.
+        ///   Looks up a localized string similar to Earned Value.
         /// </summary>
-        public static string Label_EarnedValueTimeAxisTitle {
+        public static string Label_EarnedValueTitle {
             get {
-                return ResourceManager.GetString("Label_EarnedValueTimeAxisTitle", resourceCulture);
+                return ResourceManager.GetString("Label_EarnedValueTitle", resourceCulture);
             }
         }
         
@@ -439,20 +448,11 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Export as costs:.
-        /// </summary>
-        public static string Label_ExportChartAsCosts {
-            get {
-                return ResourceManager.GetString("Label_ExportChartAsCosts", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Export To CSV.
         /// </summary>
-        public static string Label_ExportChartToCsv {
+        public static string Label_ExportEarnedValueChartToCsv {
             get {
-                return ResourceManager.GetString("Label_ExportChartToCsv", resourceCulture);
+                return ResourceManager.GetString("Label_ExportEarnedValueChartToCsv", resourceCulture);
             }
         }
         
@@ -462,6 +462,24 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Label_ExportGraphML {
             get {
                 return ResourceManager.GetString("Label_ExportGraphML", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export as costs:.
+        /// </summary>
+        public static string Label_ExportResourceChartAsCosts {
+            get {
+                return ResourceManager.GetString("Label_ExportResourceChartAsCosts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export To CSV.
+        /// </summary>
+        public static string Label_ExportResourceChartToCsv {
+            get {
+                return ResourceManager.GetString("Label_ExportResourceChartToCsv", resourceCulture);
             }
         }
         

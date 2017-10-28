@@ -186,7 +186,7 @@
   <data name="Label_Compile" xml:space="preserve">
     <value>Compile</value>
   </data>
-  <data name="Label_CopyChartToClipboard" xml:space="preserve">
+  <data name="Label_CopyResourceChartToClipboard" xml:space="preserve">
     <value>Chart to Clipboard</value>
   </data>
   <data name="Label_CriticalityRisk" xml:space="preserve">
@@ -231,10 +231,10 @@
   <data name="Label_ExplicitTarget" xml:space="preserve">
     <value>Explicit Target</value>
   </data>
-  <data name="Label_ExportChartAsCosts" xml:space="preserve">
+  <data name="Label_ExportResourceChartAsCosts" xml:space="preserve">
     <value>Export as costs:</value>
   </data>
-  <data name="Label_ExportChartToCsv" xml:space="preserve">
+  <data name="Label_ExportResourceChartToCsv" xml:space="preserve">
     <value>Export To CSV</value>
   </data>
   <data name="Label_ExportGraphML" xml:space="preserve">
@@ -412,9 +412,15 @@
     <value>Earned Value Chart</value>
   </data>
   <data name="Label_EarnedValuePercentageAxisTitle" xml:space="preserve">
-    <value>% Earned Value</value>
+    <value>Earned Value (%)</value>
   </data>
-  <data name="Label_EarnedValueTimeAxisTitle" xml:space="preserve">
-    <value>Days worked</value>
+  <data name="Label_CopyEarnedValueChartToClipboard" xml:space="preserve">
+    <value>Chart to Clipboard</value>
+  </data>
+  <data name="Label_EarnedValueTitle" xml:space="preserve">
+    <value>Earned Value</value>
+  </data>
+  <data name="Label_ExportEarnedValueChartToCsv" xml:space="preserve">
+    <value>Export To CSV</value>
   </data>
 </root>
