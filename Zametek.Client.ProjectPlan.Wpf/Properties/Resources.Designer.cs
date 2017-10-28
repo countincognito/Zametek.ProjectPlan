@@ -403,6 +403,33 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Earned Value Chart.
+        /// </summary>
+        public static string Label_EarnedValueChartsViewTitle {
+            get {
+                return ResourceManager.GetString("Label_EarnedValueChartsViewTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to % Earned Value.
+        /// </summary>
+        public static string Label_EarnedValuePercentageAxisTitle {
+            get {
+                return ResourceManager.GetString("Label_EarnedValuePercentageAxisTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Days worked.
+        /// </summary>
+        public static string Label_EarnedValueTimeAxisTitle {
+            get {
+                return ResourceManager.GetString("Label_EarnedValueTimeAxisTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit Target.
         /// </summary>
         public static string Label_ExplicitTarget {

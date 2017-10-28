@@ -408,4 +408,13 @@
   <data name="Label_DefaultTitle" xml:space="preserve">
     <value>Untitled</value>
   </data>
+  <data name="Label_EarnedValueChartsViewTitle" xml:space="preserve">
+    <value>Earned Value Chart</value>
+  </data>
+  <data name="Label_EarnedValuePercentageAxisTitle" xml:space="preserve">
+    <value>% Earned Value</value>
+  </data>
+  <data name="Label_EarnedValueTimeAxisTitle" xml:space="preserve">
+    <value>Days worked</value>
+  </data>
 </root>

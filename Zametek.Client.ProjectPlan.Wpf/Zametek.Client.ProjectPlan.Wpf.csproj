@@ -304,6 +304,7 @@
     <Compile Include="Contracts\IFileDialogService.cs" />
     <Compile Include="Contracts\IMainViewModel.cs" />
     <Compile Include="Contracts\IMetricsManagerViewModel.cs" />
+    <Compile Include="Contracts\IEarnedValueChartsManagerViewModel.cs" />
     <Compile Include="Contracts\IResourceChartsManagerViewModel.cs" />
     <Compile Include="Contracts\IResourceSettingsManagerViewModel.cs" />
     <Compile Include="Converters\ColorFormatToColorConverter.cs" />
@@ -360,6 +361,9 @@
       <DependentUpon>ArrowGraphSettingsManagerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\BindingProxy.cs" />
+    <Compile Include="Views\EarnedValueChartManagement\EarnedValueChartManagerView.xaml.cs">
+      <DependentUpon>EarnedValueChartManagerView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\GraphManagement\ArrowGraphArea.cs" />
     <Compile Include="Views\GraphManagement\ArrowGraphGXLogicCore.cs" />
     <Compile Include="Views\GraphManagement\ArrowGraphLayoutAlgorithm.cs" />
@@ -406,6 +410,10 @@
     <Page Include="Views\ArrowGraphSettingsManagement\ArrowGraphSettingsManagerView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\EarnedValueChartManagement\EarnedValueChartManagerView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\GraphManagement\ArrowGraphManagerView.xaml">
       <Generator>MSBuild:Compile</Generator>

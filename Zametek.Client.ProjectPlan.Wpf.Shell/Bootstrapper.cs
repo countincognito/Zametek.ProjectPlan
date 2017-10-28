@@ -62,6 +62,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
                 .As<IActivitiesManagerViewModel>()
                 .As<IArrowGraphManagerViewModel>()
                 .As<IResourceChartsManagerViewModel>()
+                .As<IEarnedValueChartsManagerViewModel>()
                 .SingleInstance();
 
             base.ConfigureContainerBuilder(builder);

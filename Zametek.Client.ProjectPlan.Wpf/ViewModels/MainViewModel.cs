@@ -29,7 +29,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.Client.ProjectPlan.Wpf
 {
     public class MainViewModel
-        : BindableBase, IMainViewModel, IActivitiesManagerViewModel, IArrowGraphManagerViewModel, IMetricsManagerViewModel, IResourceChartsManagerViewModel
+        : BindableBase, IMainViewModel, IActivitiesManagerViewModel, IArrowGraphManagerViewModel, IMetricsManagerViewModel, IResourceChartsManagerViewModel, IEarnedValueChartsManagerViewModel
     {
         #region Fields
 
@@ -55,6 +55,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private PlotModel m_ChartPlotModel;
         private int m_ChartOutputWidth;
         private int m_ChartOutputHeight;
+        private PlotModel m_EarnedValueChartPlotModel;        
 
         private static string s_DefaultProjectTitle = Properties.Resources.Label_DefaultTitle;
 
@@ -114,7 +115,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
             ChartPlotModel = null;
             ChartOutputWidth = 1000;
             ChartOutputHeight = 500;
-
+            EarnedValueChartPlotModel = null;            
+            
             ResetProject();
 
             ShowDates = false;
@@ -714,6 +716,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 SetResourceChartSeriesSet();
                 SetChartPlotModel();
+                SetEarnedValueChartPlotModel();
                 CalculateCosts();
                 HasStaleOutputs = false;
             }
@@ -1346,6 +1349,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 SetResourceChartSeriesSet();
                 SetChartPlotModel();
+                SetEarnedValueChartPlotModel();
                 CalculateCosts();
 
                 HasStaleArrowGraph = projectPlanDto.HasStaleArrowGraph;
@@ -1611,6 +1615,59 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 }
                 return output;
             }
+        }
+
+        private void SetEarnedValueChartPlotModel()
+        {
+            var earnedValue = EarnedValue(Activities);
+            if (earnedValue.Length == 0)
+                return;
+
+            var lineSeries = new LineSeries();
+            lineSeries.Points.Add(new DataPoint(0, 0));
+            foreach (var point in earnedValue)
+            {
+                lineSeries.Points.Add(new DataPoint(Convert.ToDouble(point.Time), point.Percentage * 100));
+            }
+
+            PlotModel earnedValuePlotModel = new PlotModel();
+            earnedValuePlotModel.Axes.Add(new LinearAxis()
+            {
+                Position = AxisPosition.Bottom,
+                MinorStep = 1,
+                Minimum = 0,
+                Maximum = earnedValue.Last().Time,
+                Title = Properties.Resources.Label_EarnedValueTimeAxisTitle
+            });
+            earnedValuePlotModel.Axes.Add(new LinearAxis()
+            {
+                Position = AxisPosition.Left,
+                Minimum = 0,
+                Maximum = 100,
+                Title = Properties.Resources.Label_EarnedValuePercentageAxisTitle
+            });
+
+            earnedValuePlotModel.LegendPlacement = LegendPlacement.Outside;
+            earnedValuePlotModel.LegendPosition = LegendPosition.RightMiddle;           
+            earnedValuePlotModel.Series.Add(lineSeries);
+            EarnedValueChartPlotModel = earnedValuePlotModel;
+        }
+
+        private static EarnedValuePoint[] EarnedValue(IEnumerable<ManagedActivityViewModel> activities)
+        {
+            var earnedValue = new List<EarnedValuePoint>();
+            var activitiesByEft = activities.OrderBy(o => o.EarliestFinishTime).ToList();
+            double totalTime = activitiesByEft.Select(s => s.Duration).Sum();
+            for (int i = 0; i < activitiesByEft.Count; i++)
+            {
+                if (activitiesByEft[i].EarliestFinishTime.HasValue)
+                    earnedValue.Add(new EarnedValuePoint()
+                    {
+                        Time = activitiesByEft[i].EarliestFinishTime.Value,
+                        Percentage = activitiesByEft.Take(i + 1).Select(s => s.Duration).Sum() / totalTime
+                    });
+            }
+            return earnedValue.ToArray();
         }
 
         private Task<DataTable> BuildChartDataTableAsync()
@@ -2390,6 +2447,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 m_SeriesSet.Clear();
                 ChartPlotModel = null;
+                EarnedValueChartPlotModel = null;
                 ClearCostProperties();
 
                 ProjectStartWithoutPublishing = DateTime.UtcNow.BeginningOfDay();
@@ -2477,6 +2535,26 @@ namespace Zametek.Client.ProjectPlan.Wpf
             return m_ProjectManager.ExportArrowGraphToDiagram(diagramArrowGraphDto);
         }
 
+        #endregion
+
+        #region IEarnedValueChartsManagerViewModel Members
+
+        public PlotModel EarnedValueChartPlotModel
+        {
+            get
+            {
+                return m_EarnedValueChartPlotModel;
+            }
+            private set
+            {
+                lock (m_Lock)
+                {
+                    m_EarnedValueChartPlotModel = value;
+                }
+                RaisePropertyChanged(nameof(EarnedValueChartPlotModel));
+            }
+        }
+        
         #endregion
 
         #region IMetricsManagerViewModel Members
@@ -2670,7 +2748,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         #endregion
-
+        
         #region Private Types
 
         private class Series
@@ -2681,6 +2759,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             public ColorFormatDto ColorFormatDto { get; set; }
             public double UnitCost { get; set; }
             public int DisplayOrder { get; set; }
+        }
+
+        public class EarnedValuePoint
+        {
+            public int Time { get; set; }
+            public double Percentage { get; set; }
         }
 
         #endregion
