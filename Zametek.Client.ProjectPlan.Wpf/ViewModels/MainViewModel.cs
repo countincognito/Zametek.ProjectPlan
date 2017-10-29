@@ -1730,6 +1730,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     pointSet.Add(new EarnedValuePoint
                     {
                         Time = 0,
+                        ActivityId = string.Empty,
+                        ActivityName = string.Empty,
                         EarnedValue = 0,
                         EarnedValuePercentage = 0.0
                     });
@@ -1744,6 +1746,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         pointSet.Add(new EarnedValuePoint
                         {
                             Time = time,
+                            ActivityId = activity.Id.ToString(),
+                            ActivityName = activity.Name,
                             EarnedValue = runningTotal,
                             EarnedValuePercentage = percentage
                         });
@@ -1852,6 +1856,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     && pointSet.Any())
                 {
                     table.Columns.Add(new DataColumn(Properties.Resources.Label_TimeAxisTitle));
+                    table.Columns.Add(new DataColumn(Properties.Resources.Label_Id));
+                    table.Columns.Add(new DataColumn(Properties.Resources.Label_ActivityName));
                     table.Columns.Add(new DataColumn(Properties.Resources.Label_EarnedValueTitle));
                     table.Columns.Add(new DataColumn(Properties.Resources.Label_EarnedValuePercentageAxisTitle));
 
@@ -1860,6 +1866,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         var rowData = new List<object>
                         {
                             FormatScheduleOutput(point.Time),
+                            point.ActivityId,
+                            point.ActivityName,
                             point.EarnedValue,
                             point.EarnedValuePercentage
                         };
@@ -2752,64 +2760,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #endregion
 
-        #region IEarnedValueChartsManagerViewModel Members
-
-        public PlotModel EarnedValueChartPlotModel
-        {
-            get
-            {
-                return m_EarnedValueChartPlotModel;
-            }
-            private set
-            {
-                lock (m_Lock)
-                {
-                    m_EarnedValueChartPlotModel = value;
-                }
-                RaisePropertyChanged(nameof(EarnedValueChartPlotModel));
-            }
-        }
-
-        public int EarnedValueChartOutputWidth
-        {
-            get
-            {
-                return m_EarnedValueChartOutputWidth;
-            }
-            set
-            {
-                m_EarnedValueChartOutputWidth = value;
-                RaisePropertyChanged(nameof(EarnedValueChartOutputWidth));
-            }
-        }
-
-        public int EarnedValueChartOutputHeight
-        {
-            get
-            {
-                return m_EarnedValueChartOutputHeight;
-            }
-            set
-            {
-                m_EarnedValueChartOutputHeight = value;
-                RaisePropertyChanged(nameof(EarnedValueChartOutputHeight));
-            }
-        }
-
-        public ICommand CopyEarnedValueChartToClipboardCommand
-        {
-            get;
-            private set;
-        }
-
-        public ICommand ExportEarnedValueChartToCsvCommand
-        {
-            get;
-            private set;
-        }
-
-        #endregion
-
         #region IMetricsManagerViewModel Members
 
         public double? CriticalityRisk
@@ -3002,6 +2952,64 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #endregion
 
+        #region IEarnedValueChartsManagerViewModel Members
+
+        public PlotModel EarnedValueChartPlotModel
+        {
+            get
+            {
+                return m_EarnedValueChartPlotModel;
+            }
+            private set
+            {
+                lock (m_Lock)
+                {
+                    m_EarnedValueChartPlotModel = value;
+                }
+                RaisePropertyChanged(nameof(EarnedValueChartPlotModel));
+            }
+        }
+
+        public int EarnedValueChartOutputWidth
+        {
+            get
+            {
+                return m_EarnedValueChartOutputWidth;
+            }
+            set
+            {
+                m_EarnedValueChartOutputWidth = value;
+                RaisePropertyChanged(nameof(EarnedValueChartOutputWidth));
+            }
+        }
+
+        public int EarnedValueChartOutputHeight
+        {
+            get
+            {
+                return m_EarnedValueChartOutputHeight;
+            }
+            set
+            {
+                m_EarnedValueChartOutputHeight = value;
+                RaisePropertyChanged(nameof(EarnedValueChartOutputHeight));
+            }
+        }
+
+        public ICommand CopyEarnedValueChartToClipboardCommand
+        {
+            get;
+            private set;
+        }
+
+        public ICommand ExportEarnedValueChartToCsvCommand
+        {
+            get;
+            private set;
+        }
+
+        #endregion
+
         #region Private Types
 
         private class ResourceSeries
@@ -3017,6 +3025,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
         public class EarnedValuePoint
         {
             public int Time { get; set; }
+            public string ActivityId { get; set; }
+            public string ActivityName { get; set; }
             public int EarnedValue { get; set; }
             public double EarnedValuePercentage { get; set; }
         }
