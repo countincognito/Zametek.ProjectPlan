@@ -855,10 +855,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 if (seriesSet != null
                     && seriesSet.Any())
                 {
-                    DirectCost = seriesSet.Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Direct).Sum(x => x.Values.Sum(y => x.UnitCost));
-                    IndirectCost = seriesSet.Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect).Sum(x => x.Values.Sum(y => x.UnitCost));
-                    OtherCost = seriesSet.Where(x => x.InterActivityAllocationType == InterActivityAllocationType.None).Sum(x => x.Values.Sum(y => x.UnitCost));
-                    TotalCost = seriesSet.Sum(x => x.Values.Sum(y => x.UnitCost));
+                    DirectCost = seriesSet.Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Direct).Sum(x => x.Values.Sum(y => y * x.UnitCost));
+                    IndirectCost = seriesSet.Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect).Sum(x => x.Values.Sum(y => y * x.UnitCost));
+                    OtherCost = seriesSet.Where(x => x.InterActivityAllocationType == InterActivityAllocationType.None).Sum(x => x.Values.Sum(y => y * x.UnitCost));
+                    TotalCost = seriesSet.Sum(x => x.Values.Sum(y => y * x.UnitCost));
                 }
             }
         }
