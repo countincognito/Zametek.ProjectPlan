@@ -343,6 +343,8 @@
     <Compile Include="ViewModels\ArrowGraphSettingsManagement\ArrowGraphSettingsManagerConfirmation.cs" />
     <Compile Include="ViewModels\ArrowGraphSettingsManagement\ArrowGraphSettingsManagerViewModel.cs" />
     <Compile Include="ViewModels\ArrowGraphSettingsManagement\ManagedActivitySeverityViewModel.cs" />
+    <Compile Include="ViewModels\CoreViewModel.cs" />
+    <Compile Include="ViewModels\PropertyChangedPubSubViewModel.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphData.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphEdge.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphVertex.cs" />

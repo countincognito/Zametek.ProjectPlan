@@ -38,7 +38,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_Resource.Name = value;
-                RaisePropertyChanged(nameof(Name));
+                RaisePropertyChanged();
             }
         }
 
@@ -51,7 +51,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_Resource.IsExplicitTarget = value;
-                RaisePropertyChanged(nameof(IsExplicitTarget));
+                RaisePropertyChanged();
             }
         }
 
@@ -64,7 +64,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_Resource.InterActivityAllocationType = value;
-                RaisePropertyChanged(nameof(InterActivityAllocationType));
+                RaisePropertyChanged();
             }
         }
 
@@ -77,7 +77,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_Resource.UnitCost = value;
-                RaisePropertyChanged(nameof(UnitCost));
+                RaisePropertyChanged();
             }
         }
 
@@ -90,7 +90,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_Resource.DisplayOrder = value;
-                RaisePropertyChanged(nameof(DisplayOrder));
+                RaisePropertyChanged();
             }
         }
 
@@ -103,7 +103,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_Resource.ColorFormat = value;
-                RaisePropertyChanged(nameof(ColorFormat));
+                RaisePropertyChanged();
             }
         }
 

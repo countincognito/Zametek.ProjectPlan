@@ -71,7 +71,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_ProjectStart = value;
-                RaisePropertyChanged(nameof(ProjectStart));
+                RaisePropertyChanged();
                 RaisePropertyChanged(nameof(EarliestStartDateTime));
                 RaisePropertyChanged(nameof(LatestStartDateTime));
                 RaisePropertyChanged(nameof(EarliestFinishDateTime));
@@ -114,7 +114,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 UpdatedDependencies.Clear();
                 UpdatedDependencies.UnionWith(updatedDependencies);
                 HasUpdatedDependencies = true;
-                RaisePropertyChanged(nameof(DependenciesString));
+                RaisePropertyChanged();
             }
         }
 
@@ -132,7 +132,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_HasUpdatedDependencies = value;
-                RaisePropertyChanged(nameof(HasUpdatedDependencies));
+                RaisePropertyChanged();
                 RaisePropertyChanged(nameof(Dependencies));
                 RaisePropertyChanged(nameof(DependenciesString));
             }
@@ -271,7 +271,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_DependentActivity.Name = value;
-                RaisePropertyChanged(nameof(Name));
+                RaisePropertyChanged();
             }
         }
 
@@ -286,7 +286,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_DependentActivity.TargetResourceOperator = value;
-                RaisePropertyChanged(nameof(TargetResourceOperator));
+                RaisePropertyChanged();
             }
         }
 
@@ -305,7 +305,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     value = 0;
                 }
                 m_DependentActivity.Duration = value;
-                RaisePropertyChanged(nameof(Duration));
+                RaisePropertyChanged();
                 RaisePropertyChanged(nameof(IsDummy));
                 RaisePropertyChanged(nameof(IsCritical));
                 RaisePropertyChanged(nameof(EarliestFinishTime));
@@ -328,7 +328,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_DependentActivity.FreeSlack = value;
-                RaisePropertyChanged(nameof(FreeSlack));
+                RaisePropertyChanged();
                 RaisePropertyChanged(nameof(InterferingSlack));
                 RaisePropertyChanged(nameof(DependenciesString));
                 RaisePropertyChanged(nameof(ResourceDependenciesString));
@@ -348,7 +348,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_DependentActivity.EarliestStartTime = value;
-                RaisePropertyChanged(nameof(EarliestStartTime));
+                RaisePropertyChanged();
                 RaisePropertyChanged(nameof(EarliestStartDateTime));
                 RaisePropertyChanged(nameof(EarliestFinishTime));
                 RaisePropertyChanged(nameof(EarliestFinishDateTime));
@@ -373,7 +373,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_DependentActivity.LatestFinishTime = value;
-                RaisePropertyChanged(nameof(LatestFinishTime));
+                RaisePropertyChanged();
                 RaisePropertyChanged(nameof(LatestFinishDateTime));
                 RaisePropertyChanged(nameof(LatestStartTime));
                 RaisePropertyChanged(nameof(LatestStartDateTime));
@@ -398,7 +398,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     value = 0;
                 }
                 m_DependentActivity.MinimumFreeSlack = value;
-                RaisePropertyChanged(nameof(MinimumFreeSlack));
+                RaisePropertyChanged();
             }
         }
 
@@ -415,7 +415,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     value = 0;
                 }
                 m_DependentActivity.MinimumEarliestStartTime = value;
-                RaisePropertyChanged(nameof(MinimumEarliestStartTime));
+                RaisePropertyChanged();
                 CalculateMinimumEarliestStartDateTime();
                 RaisePropertyChanged(nameof(MinimumEarliestStartDateTime));
             }
@@ -438,7 +438,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     value = value.GetValueOrDefault().Date + ProjectStart.TimeOfDay;
                 }
                 m_DependentActivity.MinimumEarliestStartDateTime = value;
-                RaisePropertyChanged(nameof(MinimumEarliestStartDateTime));
+                RaisePropertyChanged();
                 CalculateMinimumEarliestStartTime();
                 RaisePropertyChanged(nameof(MinimumEarliestStartTime));
             }

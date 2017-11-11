@@ -220,7 +220,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 if (notification != null)
                 {
                     notification.DisableResources = value;
-                    RaisePropertyChanged(nameof(DisableResources));
+                    RaisePropertyChanged();
                     RaisePropertyChanged(nameof(ActivateResources));
                 }
             }

@@ -48,7 +48,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_FocusedProperty = value;
-                RaisePropertyChanged(nameof(FocusedProperty));
+                RaisePropertyChanged();
             }
         }
 

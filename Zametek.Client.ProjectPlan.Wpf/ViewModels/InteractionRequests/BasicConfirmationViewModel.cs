@@ -76,7 +76,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_Confirmation = value as IConfirmation;
-                RaisePropertyChanged(nameof(Notification));
+                RaisePropertyChanged();
                 RaisePropertyChanged(nameof(Content));
             }
         }

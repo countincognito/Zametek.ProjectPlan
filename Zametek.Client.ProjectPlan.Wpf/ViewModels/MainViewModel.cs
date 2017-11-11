@@ -29,7 +29,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.Client.ProjectPlan.Wpf
 {
     public class MainViewModel
-        : BindableBase, IMainViewModel, IActivitiesManagerViewModel, IArrowGraphManagerViewModel, IMetricsManagerViewModel, IResourceChartsManagerViewModel, IEarnedValueChartsManagerViewModel
+        : PropertyChangedPubSubViewModel, IMainViewModel, IActivitiesManagerViewModel, IArrowGraphManagerViewModel, IMetricsManagerViewModel, IResourceChartsManagerViewModel, IEarnedValueChartsManagerViewModel
     {
         #region Fields
 
@@ -46,7 +46,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private double? m_OtherCost;
         private double? m_TotalCost;
         private bool m_IsBusy;
-        private string m_CompilationOutput;
+        //private string m_CompilationOutput;
         private bool m_HasCompilationErrors;
         private bool m_HasStaleArrowGraph;
         private bool m_HasStaleOutputs;
@@ -89,6 +89,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private SubscriptionToken m_ProjectStartUpdatedPayloadToken;
         private SubscriptionToken m_UseBusinessDaysUpdatedPayloadToken;
 
+
+
+
+        private readonly CoreViewModel m_CoreViewModel;
+
+
+
         #endregion
 
         #region Ctors
@@ -99,6 +106,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             IFileDialogService fileDialogService,
             IAppSettingService appSettingService,
             IEventAggregator eventService)
+            : base(eventService)
         {
             m_ProjectManager = projectManager ?? throw new ArgumentNullException(nameof(projectManager));
             m_SettingManager = settingManager ?? throw new ArgumentNullException(nameof(settingManager));
@@ -106,6 +114,14 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_AppSettingService = appSettingService ?? throw new ArgumentNullException(nameof(appSettingService));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
             m_Lock = new object();
+
+
+
+            m_CoreViewModel = new CoreViewModel(eventService);
+
+
+
+
             m_VertexGraphCompiler = VertexGraphCompiler<int, IDependentActivity<int>>.Create();
             m_NotificationInteractionRequest = new InteractionRequest<Notification>();
             m_ConfirmationInteractionRequest = new InteractionRequest<Confirmation>();
@@ -130,8 +146,22 @@ namespace Zametek.Client.ProjectPlan.Wpf
             ShowDates = false;
             UseBusinessDaysWithoutPublishing = true;
             AutoCompile = true;
+
+
+
+
+
+
+
+
             InitializeCommands();
             SubscribeToEvents();
+
+
+
+
+
+            SubscribePropertyChanged(nameof(CompilationOutput), ThreadOption.BackgroundThread);
         }
 
         #endregion
@@ -152,7 +182,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     HasStaleArrowGraph = true;
                 }
-                RaisePropertyChanged(nameof(HasStaleOutputs));
+                RaisePropertyChanged();
             }
         }
 
@@ -199,7 +229,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_IsBusy = value;
-                RaisePropertyChanged(nameof(IsBusy));
+                RaisePropertyChanged();
             }
         }
 
@@ -213,13 +243,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get
             {
-                return m_CompilationOutput;
+                return m_CoreViewModel.CompilationOutput;
             }
-            private set
-            {
-                m_CompilationOutput = value;
-                RaisePropertyChanged(nameof(CompilationOutput));
-            }
+            //private set
+            //{
+            //    m_CompilationOutput = value;
+            //    RaisePropertyChanged();
+            //}
         }
 
         public bool HasCompilationErrors
@@ -231,7 +261,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_HasCompilationErrors = value;
-                RaisePropertyChanged(nameof(HasCompilationErrors));
+                RaisePropertyChanged();
             }
         }
 
@@ -800,7 +830,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             lock (m_Lock)
             {
                 GraphCompilation<int, IDependentActivity<int>> graphCompilation = GraphCompilation;
-                CompilationOutput = string.Empty;
+                m_CoreViewModel.CompilationOutput = string.Empty;
                 HasCompilationErrors = false;
                 if (graphCompilation == null)
                 {
@@ -838,7 +868,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     output.Insert(0, $@">{Properties.Resources.Message_CompilationErrors}");
                 }
 
-                CompilationOutput = output.ToString();
+                m_CoreViewModel.CompilationOutput = output.ToString();
             }
         }
 
@@ -2397,7 +2427,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_ProjectTitle = value;
-                RaisePropertyChanged(nameof(ProjectTitle));
+                RaisePropertyChanged();
             }
         }
 
@@ -2410,7 +2440,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_IsProjectUpdated = value;
-                RaisePropertyChanged(nameof(IsProjectUpdated));
+                RaisePropertyChanged();
             }
         }
 
@@ -2439,7 +2469,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     m_ShowDates = value;
                 }
-                RaisePropertyChanged(nameof(ShowDates));
+                RaisePropertyChanged();
                 RaisePropertyChanged(nameof(ShowDays));
                 SetCompilationOutput();
                 SetResourceChartPlotModel();
@@ -2472,7 +2502,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     m_AutoCompile = value;
                 }
-                RaisePropertyChanged(nameof(AutoCompile));
+                RaisePropertyChanged();
             }
         }
 
@@ -2485,7 +2515,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_DirectCost = value;
-                RaisePropertyChanged(nameof(DirectCost));
+                RaisePropertyChanged();
             }
         }
 
@@ -2498,7 +2528,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_IndirectCost = value;
-                RaisePropertyChanged(nameof(IndirectCost));
+                RaisePropertyChanged();
             }
         }
 
@@ -2511,7 +2541,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_OtherCost = value;
-                RaisePropertyChanged(nameof(OtherCost));
+                RaisePropertyChanged();
             }
         }
 
@@ -2524,7 +2554,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_TotalCost = value;
-                RaisePropertyChanged(nameof(TotalCost));
+                RaisePropertyChanged();
             }
         }
 
@@ -2721,7 +2751,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_HasStaleArrowGraph = value;
-                RaisePropertyChanged(nameof(HasStaleArrowGraph));
+                RaisePropertyChanged();
             }
         }
 
@@ -2771,7 +2801,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_CriticalityRisk = value;
-                RaisePropertyChanged(nameof(CriticalityRisk));
+                RaisePropertyChanged();
             }
         }
 
@@ -2784,7 +2814,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_FibonacciRisk = value;
-                RaisePropertyChanged(nameof(FibonacciRisk));
+                RaisePropertyChanged();
             }
         }
 
@@ -2797,7 +2827,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_ActivityRisk = value;
-                RaisePropertyChanged(nameof(ActivityRisk));
+                RaisePropertyChanged();
             }
         }
 
@@ -2810,7 +2840,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_ActivityRiskWithStdDevCorrection = value;
-                RaisePropertyChanged(nameof(ActivityRiskWithStdDevCorrection));
+                RaisePropertyChanged();
             }
         }
 
@@ -2823,7 +2853,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_GeometricCriticalityRisk = value;
-                RaisePropertyChanged(nameof(GeometricCriticalityRisk));
+                RaisePropertyChanged();
             }
         }
 
@@ -2836,7 +2866,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_GeometricFibonacciRisk = value;
-                RaisePropertyChanged(nameof(GeometricFibonacciRisk));
+                RaisePropertyChanged();
             }
         }
 
@@ -2849,7 +2879,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_GeometricActivityRisk = value;
-                RaisePropertyChanged(nameof(GeometricActivityRisk));
+                RaisePropertyChanged();
             }
         }
 
@@ -2862,7 +2892,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_CyclomaticComplexity = value;
-                RaisePropertyChanged(nameof(CyclomaticComplexity));
+                RaisePropertyChanged();
             }
         }
 
@@ -2875,7 +2905,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set
             {
                 m_DurationManMonths = value;
-                RaisePropertyChanged(nameof(DurationManMonths));
+                RaisePropertyChanged();
             }
         }
 
@@ -2892,7 +2922,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_ExportResourceChartAsCosts = value;
-                RaisePropertyChanged(nameof(ExportResourceChartAsCosts));
+                RaisePropertyChanged();
             }
         }
 
@@ -2908,7 +2938,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     m_ResourceChartPlotModel = value;
                 }
-                RaisePropertyChanged(nameof(ResourceChartPlotModel));
+                RaisePropertyChanged();
             }
         }
 
@@ -2921,7 +2951,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_ResourceChartOutputWidth = value;
-                RaisePropertyChanged(nameof(ResourceChartOutputWidth));
+                RaisePropertyChanged();
             }
         }
 
@@ -2934,7 +2964,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_ResourceChartOutputHeight = value;
-                RaisePropertyChanged(nameof(ResourceChartOutputHeight));
+                RaisePropertyChanged();
             }
         }
 
@@ -2966,7 +2996,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     m_EarnedValueChartPlotModel = value;
                 }
-                RaisePropertyChanged(nameof(EarnedValueChartPlotModel));
+                RaisePropertyChanged();
             }
         }
 
@@ -2979,7 +3009,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_EarnedValueChartOutputWidth = value;
-                RaisePropertyChanged(nameof(EarnedValueChartOutputWidth));
+                RaisePropertyChanged();
             }
         }
 
@@ -2992,7 +3022,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_EarnedValueChartOutputHeight = value;
-                RaisePropertyChanged(nameof(EarnedValueChartOutputHeight));
+                RaisePropertyChanged();
             }
         }
 

@@ -86,7 +86,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_Notification = value;
-                RaisePropertyChanged(nameof(Notification));
+                RaisePropertyChanged();
                 RaisePropertyChanged(nameof(Content));
             }
         }

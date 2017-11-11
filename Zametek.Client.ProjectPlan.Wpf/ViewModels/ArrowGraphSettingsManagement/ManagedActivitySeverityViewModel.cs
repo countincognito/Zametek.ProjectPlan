@@ -35,7 +35,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_ActivitySeverity.SlackLimit = value;
-                RaisePropertyChanged(nameof(SlackLimit));
+                RaisePropertyChanged();
             }
         }
 
@@ -48,7 +48,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_ActivitySeverity.CriticalityWeight = value;
-                RaisePropertyChanged(nameof(CriticalityWeight));
+                RaisePropertyChanged();
             }
         }
 
@@ -61,7 +61,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_ActivitySeverity.FibonacciWeight = value;
-                RaisePropertyChanged(nameof(FibonacciWeight));
+                RaisePropertyChanged();
             }
         }
 
@@ -74,7 +74,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_ActivitySeverity.ColorFormat = value;
-                RaisePropertyChanged(nameof(ColorFormat));
+                RaisePropertyChanged();
             }
         }
 

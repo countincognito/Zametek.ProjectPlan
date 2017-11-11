@@ -44,7 +44,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_Name = value;
-                RaisePropertyChanged(nameof(Name));
+                RaisePropertyChanged();
                 RaisePropertyChanged(nameof(DisplayName));
             }
         }
@@ -60,7 +60,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_IsSelected = value;
-                RaisePropertyChanged(nameof(IsSelected));
+                RaisePropertyChanged();
             }
         }
 
