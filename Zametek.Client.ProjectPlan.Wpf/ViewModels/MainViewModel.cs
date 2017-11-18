@@ -161,7 +161,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
 
 
-            SubscribePropertyChanged(nameof(CompilationOutput), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.CompilationOutput), ThreadOption.BackgroundThread);
         }
 
         #endregion
