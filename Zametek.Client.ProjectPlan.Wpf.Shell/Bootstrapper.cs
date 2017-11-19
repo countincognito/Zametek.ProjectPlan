@@ -57,6 +57,10 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
             builder.RegisterType<SettingManager>()
                 .As<ISettingManager>().SingleInstance();
 
+            builder.RegisterType<CoreViewModel>()
+                .As<ICoreViewModel>()
+                .SingleInstance();
+
             builder.RegisterType<MainViewModel>()
                 .As<IMainViewModel>()
                 .As<IActivitiesManagerViewModel>()

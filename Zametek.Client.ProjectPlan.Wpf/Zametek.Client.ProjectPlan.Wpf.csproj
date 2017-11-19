@@ -302,9 +302,11 @@
     <Compile Include="Contracts\IDateTimeCalculator.cs" />
     <Compile Include="Contracts\IAppSettingService.cs" />
     <Compile Include="Contracts\IFileDialogService.cs" />
+    <Compile Include="Contracts\ICoreViewModel.cs" />
     <Compile Include="Contracts\IMainViewModel.cs" />
     <Compile Include="Contracts\IMetricsManagerViewModel.cs" />
     <Compile Include="Contracts\IEarnedValueChartsManagerViewModel.cs" />
+    <Compile Include="Contracts\IPropertyChangedPubSubViewModel.cs" />
     <Compile Include="Contracts\IResourceChartsManagerViewModel.cs" />
     <Compile Include="Contracts\IResourceSettingsManagerViewModel.cs" />
     <Compile Include="Converters\ColorFormatToColorConverter.cs" />

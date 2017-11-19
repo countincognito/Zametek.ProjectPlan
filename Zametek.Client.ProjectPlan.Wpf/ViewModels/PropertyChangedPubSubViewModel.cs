@@ -10,14 +10,13 @@ using System.Runtime.CompilerServices;
 namespace Zametek.Client.ProjectPlan.Wpf
 {
     public abstract class PropertyChangedPubSubViewModel
-        : BindableBase
+        : BindableBase, IPropertyChangedPubSubViewModel
     {
         #region Fields
 
         private readonly IEventAggregator m_EventService;
-        private readonly Guid m_InstanceId;
         private readonly HashSet<string> m_ReadablePropertyNames;
-        private readonly ConditionalWeakTable<PropertyChangedPubSubViewModel, Dictionary<string, HashSet<string>>> m_SourceSubscribedPropertyNames;
+        private readonly ConditionalWeakTable<IPropertyChangedPubSubViewModel, Dictionary<string, HashSet<string>>> m_SourceSubscribedPropertyNames;
 
         #endregion
 
@@ -27,7 +26,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
             // Provides a unique ID for a given instance.
-            m_InstanceId = Guid.NewGuid();
+            InstanceId = Guid.NewGuid();
             // The list of readable properties on the object.
             m_ReadablePropertyNames =
                 new HashSet<string>(
@@ -36,43 +35,22 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     .Where(x => x.CanRead)
                     .Select(x => x.Name));
             // Look up for specific instances to which this object is subscribed.
-            m_SourceSubscribedPropertyNames = new ConditionalWeakTable<PropertyChangedPubSubViewModel, Dictionary<string, HashSet<string>>>();
-        }
-
-        #endregion
-
-        #region Properties
-
-        public Guid InstanceId
-        {
-            get
-            {
-                return m_InstanceId;
-            }
+            m_SourceSubscribedPropertyNames = new ConditionalWeakTable<IPropertyChangedPubSubViewModel, Dictionary<string, HashSet<string>>>();
         }
 
         #endregion
 
         #region Public Methods
 
-        public bool ContainsReadableProperty(string propertyName)
-        {
-            if (string.IsNullOrWhiteSpace(propertyName))
-            {
-                throw new ArgumentNullException(nameof(propertyName));
-            }
-            return m_ReadablePropertyNames.Contains(propertyName);
-        }
-
         public SubscriptionToken SubscribePropertyChanged(
-            PropertyChangedPubSubViewModel source,
+            IPropertyChangedPubSubViewModel source,
             string propertyName)
         {
             return SubscribePropertyChanged(source, propertyName, propertyName);
         }
 
         public SubscriptionToken SubscribePropertyChanged(
-            PropertyChangedPubSubViewModel source,
+            IPropertyChangedPubSubViewModel source,
             string propertyName,
             ThreadOption threadOption)
         {
@@ -80,7 +58,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         public SubscriptionToken SubscribePropertyChanged(
-            PropertyChangedPubSubViewModel source,
+            IPropertyChangedPubSubViewModel source,
             string propertyName,
             bool keepSubscriberReferenceAlive)
         {
@@ -88,7 +66,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         public SubscriptionToken SubscribePropertyChanged(
-            PropertyChangedPubSubViewModel source,
+            IPropertyChangedPubSubViewModel source,
             string sourcePropertyName,
             string targetPropertyName)
         {
@@ -96,7 +74,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         public SubscriptionToken SubscribePropertyChanged(
-            PropertyChangedPubSubViewModel source,
+            IPropertyChangedPubSubViewModel source,
             string sourcePropertyName,
             string targetPropertyName,
             ThreadOption threadOption)
@@ -105,7 +83,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         public SubscriptionToken SubscribePropertyChanged(
-            PropertyChangedPubSubViewModel source,
+            IPropertyChangedPubSubViewModel source,
             string sourcePropertyName,
             string targetPropertyName,
             bool keepSubscriberReferenceAlive)
@@ -114,7 +92,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         public SubscriptionToken SubscribePropertyChanged(
-            PropertyChangedPubSubViewModel source,
+            IPropertyChangedPubSubViewModel source,
             string sourcePropertyName,
             string targetPropertyName,
             ThreadOption threadOption,
@@ -178,7 +156,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         protected void SubscriptionAction(PropertyChangedPubSubPayload payload)
         {
-            PropertyChangedPubSubViewModel source;
+            IPropertyChangedPubSubViewModel source;
             if (!payload.Source.TryGetTarget(out source))
             {
                 return;
@@ -206,7 +184,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         protected bool SubscriptionFilter(PropertyChangedPubSubPayload payload)
         {
-            PropertyChangedPubSubViewModel source;
+            IPropertyChangedPubSubViewModel source;
             if (!payload.Source.TryGetTarget(out source))
             {
                 return false;
@@ -238,7 +216,25 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             base.OnPropertyChanged(args);
             m_EventService.GetEvent<PubSubEvent<PropertyChangedPubSubPayload>>()
-                .Publish(new PropertyChangedPubSubPayload(args.PropertyName, new WeakReference<PropertyChangedPubSubViewModel>(this)));
+                .Publish(new PropertyChangedPubSubPayload(args.PropertyName, new WeakReference<IPropertyChangedPubSubViewModel>(this)));
+        }
+
+        #endregion
+
+        #region IPropertyChangedPubSubViewModel Members
+
+        public Guid InstanceId
+        {
+            get;
+        }
+
+        public bool ContainsReadableProperty(string propertyName)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+            {
+                throw new ArgumentNullException(nameof(propertyName));
+            }
+            return m_ReadablePropertyNames.Contains(propertyName);
         }
 
         #endregion
@@ -249,7 +245,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             #region Ctors
 
-            public PropertyChangedPubSubPayload(string propertyName, WeakReference<PropertyChangedPubSubViewModel> source)
+            public PropertyChangedPubSubPayload(string propertyName, WeakReference<IPropertyChangedPubSubViewModel> source)
             {
                 PropertyName = propertyName;
                 Source = source ?? throw new ArgumentNullException(nameof(source));
@@ -264,7 +260,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 get;
             }
 
-            public WeakReference<PropertyChangedPubSubViewModel> Source
+            public WeakReference<IPropertyChangedPubSubViewModel> Source
             {
                 get;
             }

@@ -46,7 +46,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private double? m_OtherCost;
         private double? m_TotalCost;
         private bool m_IsBusy;
-        //private string m_CompilationOutput;
         private bool m_HasCompilationErrors;
         private bool m_HasStaleArrowGraph;
         private bool m_HasStaleOutputs;
@@ -75,6 +74,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private double? m_DurationManMonths;
 
         private readonly IDateTimeCalculator m_DateTimeCalculator;
+        private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectManager m_ProjectManager;
         private readonly ISettingManager m_SettingManager;
         private readonly IFileDialogService m_FileDialogService;
@@ -89,18 +89,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private SubscriptionToken m_ProjectStartUpdatedPayloadToken;
         private SubscriptionToken m_UseBusinessDaysUpdatedPayloadToken;
 
-
-
-
-        private readonly CoreViewModel m_CoreViewModel;
-
-
-
         #endregion
 
         #region Ctors
 
         public MainViewModel(
+            ICoreViewModel coreViewModel,
             IProjectManager projectManager,
             ISettingManager settingManager,
             IFileDialogService fileDialogService,
@@ -108,19 +102,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
             IEventAggregator eventService)
             : base(eventService)
         {
+            m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel)); ;
             m_ProjectManager = projectManager ?? throw new ArgumentNullException(nameof(projectManager));
             m_SettingManager = settingManager ?? throw new ArgumentNullException(nameof(settingManager));
             m_FileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
             m_AppSettingService = appSettingService ?? throw new ArgumentNullException(nameof(appSettingService));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
             m_Lock = new object();
-
-
-
-            m_CoreViewModel = new CoreViewModel(eventService);
-
-
-
 
             m_VertexGraphCompiler = VertexGraphCompiler<int, IDependentActivity<int>>.Create();
             m_NotificationInteractionRequest = new InteractionRequest<Notification>();
@@ -129,9 +117,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_ResourceSettingsManagerInteractionRequest = new InteractionRequest<ResourceSettingsManagerConfirmation>();
             m_ArrowGraphSettingsManagerInteractionRequest = new InteractionRequest<ArrowGraphSettingsManagerConfirmation>();
             m_DateTimeCalculator = new DateTimeCalculator();
-            Activities = new ObservableCollection<ManagedActivityViewModel>();
             SelectedActivities = new ObservableCollection<ManagedActivityViewModel>();
-            ResourceDtos = new List<ResourceDto>();
             m_ResourceChartSeriesSet = new List<ResourceSeries>();
             ResourceChartPlotModel = null;
             ResourceChartOutputWidth = 1000;
@@ -147,21 +133,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             UseBusinessDaysWithoutPublishing = true;
             AutoCompile = true;
 
-
-
-
-
-
-
-
             InitializeCommands();
             SubscribeToEvents();
 
-
-
-
-
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.CompilationOutput), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.Activities), nameof(Activities), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.CompilationOutput), nameof(CompilationOutput), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasCompilationErrors), nameof(HasCompilationErrors), ThreadOption.BackgroundThread);
         }
 
         #endregion
@@ -233,42 +210,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public GraphCompilation<int, IDependentActivity<int>> GraphCompilation
-        {
-            get;
-            private set;
-        }
+        public string CompilationOutput => m_CoreViewModel.CompilationOutput;
 
-        public string CompilationOutput
-        {
-            get
-            {
-                return m_CoreViewModel.CompilationOutput;
-            }
-            //private set
-            //{
-            //    m_CompilationOutput = value;
-            //    RaisePropertyChanged();
-            //}
-        }
+        public bool HasCompilationErrors => m_CoreViewModel.HasCompilationErrors;
 
-        public bool HasCompilationErrors
-        {
-            get
-            {
-                return m_HasCompilationErrors;
-            }
-            private set
-            {
-                m_HasCompilationErrors = value;
-                RaisePropertyChanged();
-            }
-        }
-
-        public ObservableCollection<ManagedActivityViewModel> Activities
-        {
-            get;
-        }
+        public ObservableCollection<ManagedActivityViewModel> Activities => m_CoreViewModel.Activities;
 
         public ObservableCollection<ManagedActivityViewModel> SelectedActivities
         {
@@ -285,23 +231,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 }
                 return null;
             }
-        }
-
-        public bool DisableResources
-        {
-            get;
-            set;
-        }
-
-        public IList<ResourceDto> ResourceDtos
-        {
-            get;
-        }
-
-        public MetricsDto MetricsDto
-        {
-            get;
-            private set;
         }
 
         public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
@@ -729,7 +658,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             {
                 foreach (ManagedActivityViewModel activity in Activities)
                 {
-                    activity.SetTargetResources(ResourceDtos.Select(x => x.Copy()));
+                    activity.SetTargetResources(m_CoreViewModel.ResourceDtos.Select(x => x.Copy()));
                 }
             }
         }
