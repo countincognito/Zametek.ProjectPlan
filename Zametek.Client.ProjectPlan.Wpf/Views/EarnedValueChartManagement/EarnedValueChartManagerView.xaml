@@ -6,8 +6,27 @@
              xmlns:local="clr-namespace:Zametek.Client.ProjectPlan.Wpf"
              xmlns:oxy="http://oxyplot.org/wpf"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+             xmlns:prism="http://prismlibrary.com/"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
+    <i:Interaction.Triggers>
+        <prism:InteractionRequestTrigger SourceObject="{Binding Path=NotificationInteractionRequest, Mode=OneWay}">
+            <prism:PopupWindowAction IsModal="True"
+                                     CenterOverAssociatedObject="True">
+                <prism:PopupWindowAction.WindowStyle>
+                    <Style TargetType="{x:Type Window}">
+                        <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+                        <Setter Property="ResizeMode" Value="NoResize"/>
+                    </Style>
+                </prism:PopupWindowAction.WindowStyle>
+                <prism:PopupWindowAction.WindowContent>
+                    <local:BasicNotificationView />
+                </prism:PopupWindowAction.WindowContent>
+            </prism:PopupWindowAction>
+        </prism:InteractionRequestTrigger>
+    </i:Interaction.Triggers>
+
     <DockPanel Margin="7">
 
         <DockPanel DockPanel.Dock="Bottom"
@@ -79,7 +98,7 @@
                       BorderThickness="2">
             <oxy:PlotView.Style>
                 <Style TargetType="{x:Type oxy:PlotView}"
-                   BasedOn="{StaticResource {x:Type oxy:PlotView}}">
+                       BasedOn="{StaticResource {x:Type oxy:PlotView}}">
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding Path=HasStaleOutputs, Mode=OneWay}" Value="True">
                             <Setter Property="BorderBrush" Value="Red"/>

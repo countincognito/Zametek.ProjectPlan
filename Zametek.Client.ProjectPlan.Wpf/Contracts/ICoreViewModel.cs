@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using Zametek.Common.Project;
-using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -10,69 +6,25 @@ namespace Zametek.Client.ProjectPlan.Wpf
     public interface ICoreViewModel
         : IPropertyChangedPubSubViewModel
     {
-        ObservableCollection<ManagedActivityViewModel> Activities
-        {
-            get;
-        }
-
-        bool DisableResources
+        DateTime ProjectStart
         {
             get;
             set;
         }
 
-        IList<ResourceDto> ResourceDtos
-        {
-            get;
-        }
-
-        MetricsDto MetricsDto
+        bool ShowDates
         {
             get;
             set;
         }
 
-        //string ProjectTitle
-        //{
-        //    get;
-        //}
-
-        //bool IsProjectUpdated
-        //{
-        //    get;
-        //}
-
-        //DateTime ProjectStart
-        //{
-        //    get;
-        //    set;
-        //}
-
-        //bool ShowDates
-        //{
-        //    get;
-        //    set;
-        //}
-
-        //bool UseBusinessDays
-        //{
-        //    get;
-        //    set;
-        //}
-
-        //bool AutoCompile
-        //{
-        //    get;
-        //    set;
-        //}
-
-        GraphCompilation<int, IDependentActivity<int>> GraphCompilation
+        bool UseBusinessDays
         {
             get;
             set;
         }
 
-        string CompilationOutput
+        bool HasStaleOutputs
         {
             get;
             set;
@@ -84,6 +36,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
-        //void ResetProject();
+        GraphCompilation<int, IDependentActivity<int>> GraphCompilation
+        {
+            get;
+            set;
+        }
     }
 }

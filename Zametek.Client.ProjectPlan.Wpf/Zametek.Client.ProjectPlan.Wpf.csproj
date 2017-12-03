@@ -311,6 +311,7 @@
     <Compile Include="Contracts\IResourceSettingsManagerViewModel.cs" />
     <Compile Include="Converters\ColorFormatToColorConverter.cs" />
     <Compile Include="Events\ArrowGraphGeneratedPayload.cs" />
+    <Compile Include="Events\GraphCompiledPayload.cs" />
     <Compile Include="Events\ManagedActivityUpdatedPayload.cs" />
     <Compile Include="Events\ManagedResourcesUpdatedPayload.cs" />
     <Compile Include="Events\ProjectStartUpdatedPayload.cs" />
@@ -330,6 +331,7 @@
     </Compile>
     <Compile Include="Utilities\AppSettingService.cs" />
     <Compile Include="Utilities\AppSettings.cs" />
+    <Compile Include="Utilities\ChartHelper.cs" />
     <Compile Include="Utilities\DateTimeCalculator.cs" />
     <Compile Include="Utilities\DateTimeCalculatorMode.cs" />
     <Compile Include="Utilities\EnumBindingSourceExtension.cs" />
@@ -346,6 +348,7 @@
     <Compile Include="ViewModels\ArrowGraphSettingsManagement\ArrowGraphSettingsManagerViewModel.cs" />
     <Compile Include="ViewModels\ArrowGraphSettingsManagement\ManagedActivitySeverityViewModel.cs" />
     <Compile Include="ViewModels\CoreViewModel.cs" />
+    <Compile Include="ViewModels\EarnedValueChartsManagement\EarnedValueChartsManagerViewModel.cs" />
     <Compile Include="ViewModels\PropertyChangedPubSubViewModel.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphData.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphEdge.cs" />

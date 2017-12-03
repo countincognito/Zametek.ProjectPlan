@@ -1,8 +1,5 @@
 ﻿using Prism.Events;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using Zametek.Common.Project;
-using Zametek.Common.ProjectPlan;
+using System;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -12,8 +9,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
     {
         #region Fields
 
-        private string m_CompilationOutput;
+        private readonly object m_Lock;
+        private DateTime m_ProjectStart;
+        private bool m_ShowDates;
+        private bool m_UseBusinessDays;
+        private bool m_HasStaleOutputs;
         private bool m_HasCompilationErrors;
+        private GraphCompilation<int, IDependentActivity<int>> m_GraphCompilation;
 
         #endregion
 
@@ -22,61 +24,73 @@ namespace Zametek.Client.ProjectPlan.Wpf
         public CoreViewModel(IEventAggregator eventService)
             : base(eventService)
         {
-            Activities = new ObservableCollection<ManagedActivityViewModel>();
-            ResourceDtos = new List<ResourceDto>();
+            m_Lock = new object();
         }
 
         #endregion
 
-        #region ICoreViewModel Members
+        #region Properties
 
-        public ObservableCollection<ManagedActivityViewModel> Activities
-        {
-            get;
-        }
-
-        public bool DisableResources
-        {
-            get;
-            set;
-        }
-
-        public IList<ResourceDto> ResourceDtos
-        {
-            get;
-        }
-
-        public MetricsDto MetricsDto
-        {
-            get;
-            set;
-        }
-
-
-
-
-
-
-
-
-
-
-
-        public GraphCompilation<int, IDependentActivity<int>> GraphCompilation
-        {
-            get;
-            set;
-        }
-
-        public string CompilationOutput
+        public DateTime ProjectStart
         {
             get
             {
-                return m_CompilationOutput;
+                return m_ProjectStart;
             }
             set
             {
-                m_CompilationOutput = value;
+                lock (m_Lock)
+                {
+                    m_ProjectStart = value;
+                }
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool ShowDates
+        {
+            get
+            {
+                return m_ShowDates;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ShowDates = value;
+                }
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool UseBusinessDays
+        {
+            get
+            {
+                return m_UseBusinessDays;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_UseBusinessDays = value;
+                }
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool HasStaleOutputs
+        {
+            get
+            {
+                return m_HasStaleOutputs;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_HasStaleOutputs = value;
+                }
                 RaisePropertyChanged();
             }
         }
@@ -89,7 +103,26 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             set
             {
-                m_HasCompilationErrors = value;
+                lock (m_Lock)
+                {
+                    m_HasCompilationErrors = value;
+                }
+                RaisePropertyChanged();
+            }
+        }
+
+        public GraphCompilation<int, IDependentActivity<int>> GraphCompilation
+        {
+            get
+            {
+                return m_GraphCompilation;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_GraphCompilation = value;
+                }
                 RaisePropertyChanged();
             }
         }
