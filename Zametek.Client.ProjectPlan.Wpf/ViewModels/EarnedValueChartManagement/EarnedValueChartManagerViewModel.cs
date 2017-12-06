@@ -17,8 +17,8 @@ using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
-    public class EarnedValueChartsManagerViewModel
-        : PropertyChangedPubSubViewModel, IEarnedValueChartsManagerViewModel
+    public class EarnedValueChartManagerViewModel
+        : PropertyChangedPubSubViewModel, IEarnedValueChartManagerViewModel
     {
         #region Fields
 
@@ -43,7 +43,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Ctors
 
-        public EarnedValueChartsManagerViewModel(
+        public EarnedValueChartManagerViewModel(
             ICoreViewModel coreViewModel,
             IFileDialogService fileDialogService,
             IAppSettingService appSettingService,
@@ -402,7 +402,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #endregion
 
-        #region IEarnedValueChartsManagerViewModel Members
+        #region IEarnedValueChartManagerViewModel Members
 
         public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
 

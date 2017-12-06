@@ -305,9 +305,9 @@
     <Compile Include="Contracts\ICoreViewModel.cs" />
     <Compile Include="Contracts\IMainViewModel.cs" />
     <Compile Include="Contracts\IMetricsManagerViewModel.cs" />
-    <Compile Include="Contracts\IEarnedValueChartsManagerViewModel.cs" />
+    <Compile Include="Contracts\IEarnedValueChartManagerViewModel.cs" />
     <Compile Include="Contracts\IPropertyChangedPubSubViewModel.cs" />
-    <Compile Include="Contracts\IResourceChartsManagerViewModel.cs" />
+    <Compile Include="Contracts\IResourceChartManagerViewModel.cs" />
     <Compile Include="Contracts\IResourceSettingsManagerViewModel.cs" />
     <Compile Include="Converters\ColorFormatToColorConverter.cs" />
     <Compile Include="Events\ArrowGraphGeneratedPayload.cs" />
@@ -348,7 +348,7 @@
     <Compile Include="ViewModels\ArrowGraphSettingsManagement\ArrowGraphSettingsManagerViewModel.cs" />
     <Compile Include="ViewModels\ArrowGraphSettingsManagement\ManagedActivitySeverityViewModel.cs" />
     <Compile Include="ViewModels\CoreViewModel.cs" />
-    <Compile Include="ViewModels\EarnedValueChartsManagement\EarnedValueChartsManagerViewModel.cs" />
+    <Compile Include="ViewModels\EarnedValueChartManagement\EarnedValueChartManagerViewModel.cs" />
     <Compile Include="ViewModels\PropertyChangedPubSubViewModel.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphData.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphEdge.cs" />
@@ -357,6 +357,7 @@
     <Compile Include="ViewModels\InteractionRequests\BasicNotificationViewModel.cs" />
     <Compile Include="ViewModels\InteractionRequests\ValidationBaseViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\ResourceChartManagement\ResourceChartManagerViewModel.cs" />
     <Compile Include="ViewModels\ResourceSettingsManagement\ManagedResourceViewModel.cs" />
     <Compile Include="ViewModels\ResourceSettingsManagement\ResourceSettingsManagerConfirmation.cs" />
     <Compile Include="ViewModels\ResourceSettingsManagement\ResourceSettingsManagerViewModel.cs" />
@@ -387,8 +388,8 @@
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\ResourceChartManagement\ResourceChartsManagerView.xaml.cs">
-      <DependentUpon>ResourceChartsManagerView.xaml</DependentUpon>
+    <Compile Include="Views\ResourceChartManagement\ResourceChartManagerView.xaml.cs">
+      <DependentUpon>ResourceChartManagerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ResourceManagement\ResourceSettingsManagerView.xaml.cs">
       <DependentUpon>ResourceSettingsManagerView.xaml</DependentUpon>
@@ -438,7 +439,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\ResourceChartManagement\ResourceChartsManagerView.xaml">
+    <Page Include="Views\ResourceChartManagement\ResourceChartManagerView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

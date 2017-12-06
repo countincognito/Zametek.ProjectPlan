@@ -1,10 +1,26 @@
 ﻿using OxyPlot;
+using Prism.Interactivity.InteractionRequest;
 using System.Windows.Input;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
-    public interface IResourceChartsManagerViewModel
+    public interface IResourceChartManagerViewModel
     {
+        IInteractionRequest NotificationInteractionRequest
+        {
+            get;
+        }
+
+        bool IsBusy
+        {
+            get;
+        }
+
+        bool HasStaleOutputs
+        {
+            get;
+        }
+
         bool ExportResourceChartAsCosts
         {
             get;

@@ -4,7 +4,7 @@ using System.Windows.Input;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
-    public interface IEarnedValueChartsManagerViewModel
+    public interface IEarnedValueChartManagerViewModel
     {
         IInteractionRequest NotificationInteractionRequest
         {

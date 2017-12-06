@@ -192,7 +192,7 @@
                                                    Title="{x:Static local:Properties.Resources.Label_ResourceChartsViewTitle}"
                                                    CanHide="False"
                                                    CanClose="False">
-                                <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanResourceChartsRegion}" />
+                                <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanResourceChartRegion}" />
                             </xcad:LayoutAnchorable>
                             <xcad:LayoutAnchorable ContentId="EarnedValueChart"
                                                    Title="{x:Static local:Properties.Resources.Label_EarnedValueChartsViewTitle}"

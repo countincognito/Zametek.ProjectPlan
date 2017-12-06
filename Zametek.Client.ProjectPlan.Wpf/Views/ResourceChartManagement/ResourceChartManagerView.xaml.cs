@@ -3,7 +3,7 @@ using Prism;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
-    public partial class ResourceChartsManagerView
+    public partial class ResourceChartManagerView
         : IActiveAware
     {
         #region Fields
@@ -14,7 +14,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Ctors
 
-        public ResourceChartsManagerView(IResourceChartsManagerViewModel viewModel)
+        public ResourceChartManagerView(IResourceChartManagerViewModel viewModel)
         {
             InitializeComponent();
             ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -24,11 +24,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Properties
 
-        public IResourceChartsManagerViewModel ViewModel
+        public IResourceChartManagerViewModel ViewModel
         {
             get
             {
-                return DataContext as IResourceChartsManagerViewModel;
+                return DataContext as IResourceChartManagerViewModel;
             }
             set
             {

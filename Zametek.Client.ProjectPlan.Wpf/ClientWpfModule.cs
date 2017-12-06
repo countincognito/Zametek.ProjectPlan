@@ -30,7 +30,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanMainRegion, typeof(MainView));
             m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanActivitiesRegion, typeof(ActivitiesManagerView));
             m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanArrowGraphRegion, typeof(ArrowGraphManagerView));
-            m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanResourceChartsRegion, typeof(ResourceChartsManagerView));
+            m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanResourceChartRegion, typeof(ResourceChartManagerView));
             m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanEarnedValueChartRegion, typeof(EarnedValueChartManagerView));
         }
 

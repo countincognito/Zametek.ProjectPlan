@@ -5,7 +5,7 @@
         public const string ProjectPlanMainRegion = @"ProjectPlanMainRegion";
         public const string ProjectPlanActivitiesRegion = @"ProjectPlanActivitiesRegion";
         public const string ProjectPlanArrowGraphRegion = @"ProjectPlanArrowGraphRegion";
-        public const string ProjectPlanResourceChartsRegion = @"ProjectPlanResourceChartsRegion";
+        public const string ProjectPlanResourceChartRegion = @"ProjectPlanResourceChartRegion";
         public const string ProjectPlanEarnedValueChartRegion = @"ProjectPlanEarnedValueChartRegion";
     }
 }

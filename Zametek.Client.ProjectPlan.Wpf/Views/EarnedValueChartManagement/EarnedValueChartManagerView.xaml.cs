@@ -14,7 +14,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Ctors
 
-        public EarnedValueChartManagerView(IEarnedValueChartsManagerViewModel viewModel)
+        public EarnedValueChartManagerView(IEarnedValueChartManagerViewModel viewModel)
         {
             InitializeComponent();
             ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -24,11 +24,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Properties
 
-        public IEarnedValueChartsManagerViewModel ViewModel
+        public IEarnedValueChartManagerViewModel ViewModel
         {
             get
             {
-                return DataContext as IEarnedValueChartsManagerViewModel;
+                return DataContext as IEarnedValueChartManagerViewModel;
             }
             set
             {
