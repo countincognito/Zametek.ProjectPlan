@@ -242,6 +242,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                     var lineSeries = new LineSeries();
                     m_DateTimeCalculator.UseBusinessDays(m_CoreViewModel.UseBusinessDays);
+
                     foreach (EarnedValuePoint point in pointSet)
                     {
                         lineSeries.Points.Add(
@@ -268,6 +269,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     m_DateTimeCalculator.UseBusinessDays(m_CoreViewModel.UseBusinessDays);
                     double minValue = ChartHelper.CalculateChartTimeXValue(0, ShowDates, ProjectStart, m_DateTimeCalculator);
                     double maxValue = ChartHelper.CalculateChartTimeXValue(finishTime, ShowDates, ProjectStart, m_DateTimeCalculator);
+
                     if (ShowDates)
                     {
                         axis = new DateTimeAxis
@@ -330,6 +332,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     table.Columns.Add(new DataColumn(Properties.Resources.Label_EarnedValuePercentageAxisTitle));
 
                     m_DateTimeCalculator.UseBusinessDays(m_CoreViewModel.UseBusinessDays);
+
                     foreach (EarnedValuePoint point in pointSet)
                     {
                         var rowData = new List<object>

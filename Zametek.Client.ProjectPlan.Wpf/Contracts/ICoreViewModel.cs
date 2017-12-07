@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using Zametek.Common.Project;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -37,6 +39,35 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         GraphCompilation<int, IDependentActivity<int>> GraphCompilation
+        {
+            get;
+            set;
+        }
+
+        IList<ResourceDto> ResourceDtos
+        {
+            get;
+        }
+
+        double? DirectCost
+        {
+            get;
+            set;
+        }
+
+        double? IndirectCost
+        {
+            get;
+            set;
+        }
+
+        double? OtherCost
+        {
+            get;
+            set;
+        }
+
+        double? TotalCost
         {
             get;
             set;

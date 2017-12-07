@@ -1,5 +1,7 @@
 ﻿using Prism.Events;
 using System;
+using System.Collections.Generic;
+using Zametek.Common.Project;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -16,6 +18,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private bool m_HasStaleOutputs;
         private bool m_HasCompilationErrors;
         private GraphCompilation<int, IDependentActivity<int>> m_GraphCompilation;
+        private double? m_DirectCost;
+        private double? m_IndirectCost;
+        private double? m_OtherCost;
+        private double? m_TotalCost;
 
         #endregion
 
@@ -25,6 +31,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             : base(eventService)
         {
             m_Lock = new object();
+            ResourceDtos = new List<ResourceDto>();
         }
 
         #endregion
@@ -123,6 +130,63 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     m_GraphCompilation = value;
                 }
+                RaisePropertyChanged();
+            }
+        }
+
+        public IList<ResourceDto> ResourceDtos
+        {
+            get;
+        }
+
+        public double? DirectCost
+        {
+            get
+            {
+                return m_DirectCost;
+            }
+            set
+            {
+                m_DirectCost = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public double? IndirectCost
+        {
+            get
+            {
+                return m_IndirectCost;
+            }
+            set
+            {
+                m_IndirectCost = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public double? OtherCost
+        {
+            get
+            {
+                return m_OtherCost;
+            }
+            set
+            {
+                m_OtherCost = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public double? TotalCost
+        {
+            get
+            {
+                return m_TotalCost;
+            }
+            set
+            {
+                m_TotalCost = value;
                 RaisePropertyChanged();
             }
         }

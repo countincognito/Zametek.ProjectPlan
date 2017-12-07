@@ -1,14 +1,9 @@
-﻿using CsvHelper;
-using FluentDateTime;
+﻿using FluentDateTime;
 using net.sf.mpxj.MpxjUtilities;
 using net.sf.mpxj.reader;
-using OxyPlot;
-using OxyPlot.Axes;
-using OxyPlot.Series;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Interactivity.InteractionRequest;
-using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -20,7 +15,6 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
 using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -38,13 +32,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private string m_ProjectTitle;
         private bool m_IsProjectUpdated;
         private bool m_AutoCompile;
-        private double? m_DirectCost;
-        private double? m_IndirectCost;
-        private double? m_OtherCost;
-        private double? m_TotalCost;
         private bool m_IsBusy;
         private string m_CompilationOutput;
-        private bool m_HasCompilationErrors;
         private bool m_HasStaleArrowGraph;
 
         private static string s_DefaultProjectTitle = Properties.Resources.Label_DefaultTitle;
@@ -105,7 +94,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_ArrowGraphSettingsManagerInteractionRequest = new InteractionRequest<ArrowGraphSettingsManagerConfirmation>();
             Activities = new ObservableCollection<ManagedActivityViewModel>();
             SelectedActivities = new ObservableCollection<ManagedActivityViewModel>();
-            ResourceDtos = new List<ResourceDto>();
 
             ResetProject();
 
@@ -117,9 +105,14 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ProjectStart), nameof(ProjectStart), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ShowDates), nameof(ShowDates), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ShowDates), nameof(ShowDays), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.UseBusinessDays), nameof(UseBusinessDays), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasStaleOutputs), nameof(HasStaleOutputs), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasCompilationErrors), nameof(HasCompilationErrors), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.DirectCost), nameof(DirectCost), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IndirectCost), nameof(IndirectCost), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.OtherCost), nameof(OtherCost), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.TotalCost), nameof(TotalCost), ThreadOption.BackgroundThread);
         }
 
         #endregion
@@ -199,7 +192,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             private set
             {
-                lock(m_Lock)
+                lock (m_Lock)
                 {
                     m_CoreViewModel.GraphCompilation = value;
                 }
@@ -223,12 +216,15 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get
             {
-                return m_HasCompilationErrors;
+                return m_CoreViewModel.HasCompilationErrors;
             }
             private set
             {
-                m_HasCompilationErrors = value;
-                RaisePropertyChanged(nameof(HasCompilationErrors));
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.HasCompilationErrors = value;
+                }
+                RaisePropertyChanged();
             }
         }
 
@@ -260,10 +256,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
-        public IList<ResourceDto> ResourceDtos
-        {
-            get;
-        }
+        public IList<ResourceDto> ResourceDtos => m_CoreViewModel.ResourceDtos;
 
         public MetricsDto MetricsDto
         {
@@ -665,8 +658,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 SetCompilationOutput();
                 CalculateMetrics();
                 CalculateGraphMetrics();
-
-                CalculateCosts();
+                
                 HasStaleOutputs = false;
             }
         }
@@ -723,39 +715,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             PublishGraphCompiledPayload();
         }
-
-        private void CalculateCosts()
-        {
-            lock (m_Lock)
-            {
-                ClearCostProperties();
-                if (HasCompilationErrors)
-                {
-                    return;
-                }
-                IList<ResourceSeries> seriesSet = m_ResourceChartSeriesSet;
-                if (seriesSet != null
-                    && seriesSet.Any())
-                {
-                    DirectCost = seriesSet.Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Direct).Sum(x => x.Values.Sum(y => y * x.UnitCost));
-                    IndirectCost = seriesSet.Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect).Sum(x => x.Values.Sum(y => y * x.UnitCost));
-                    OtherCost = seriesSet.Where(x => x.InterActivityAllocationType == InterActivityAllocationType.None).Sum(x => x.Values.Sum(y => y * x.UnitCost));
-                    TotalCost = seriesSet.Sum(x => x.Values.Sum(y => y * x.UnitCost));
-                }
-            }
-        }
-
-        private void ClearCostProperties()
-        {
-            lock (m_Lock)
-            {
-                DirectCost = null;
-                IndirectCost = null;
-                OtherCost = null;
-                TotalCost = null;
-            }
-        }
-
+        
         private string BuildCircularDependenciesErrorMessage(IList<CircularDependency<int>> circularDependencies)
         {
             if (circularDependencies == null)
@@ -1290,8 +1250,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 SetCompilationOutput();
                 CalculateMetrics();
                 ClearGraphMetricProperties();
-
-                CalculateCosts();
+                
                 HasStaleArrowGraph = projectPlanDto.HasStaleArrowGraph;
                 HasStaleOutputs = projectPlanDto.HasStaleOutputs;
             }
@@ -1790,8 +1749,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     m_CoreViewModel.ShowDates = value;
                 }
-                RaisePropertyChanged(nameof(ShowDates));
-                RaisePropertyChanged(nameof(ShowDays));
+                RaisePropertyChanged();
                 SetCompilationOutput();
             }
         }
@@ -1825,57 +1783,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public double? DirectCost
-        {
-            get
-            {
-                return m_DirectCost;
-            }
-            private set
-            {
-                m_DirectCost = value;
-                RaisePropertyChanged(nameof(DirectCost));
-            }
-        }
+        public double? DirectCost => m_CoreViewModel.DirectCost;
 
-        public double? IndirectCost
-        {
-            get
-            {
-                return m_IndirectCost;
-            }
-            private set
-            {
-                m_IndirectCost = value;
-                RaisePropertyChanged(nameof(IndirectCost));
-            }
-        }
+        public double? IndirectCost => m_CoreViewModel.IndirectCost;
 
-        public double? OtherCost
-        {
-            get
-            {
-                return m_OtherCost;
-            }
-            private set
-            {
-                m_OtherCost = value;
-                RaisePropertyChanged(nameof(OtherCost));
-            }
-        }
+        public double? OtherCost => m_CoreViewModel.OtherCost;
 
-        public double? TotalCost
-        {
-            get
-            {
-                return m_TotalCost;
-            }
-            private set
-            {
-                m_TotalCost = value;
-                RaisePropertyChanged(nameof(TotalCost));
-            }
-        }
+        public double? TotalCost => m_CoreViewModel.TotalCost;
 
         public ICommand OpenProjectPlanFileCommand
         {
@@ -2015,8 +1929,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 ArrowGraphDto = null;
                 ArrowGraphData = GenerateArrowGraphData(ArrowGraphDto);
                 HasStaleArrowGraph = false;
-
-                ClearCostProperties();
 
                 ProjectStartWithoutPublishing = DateTime.UtcNow.BeginningOfDay();
                 IsProjectUpdated = false;

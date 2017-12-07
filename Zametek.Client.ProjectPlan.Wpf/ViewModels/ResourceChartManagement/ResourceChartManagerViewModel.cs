@@ -26,7 +26,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private readonly object m_Lock;
         private bool m_IsBusy;
-        private IList<ResourceSeries> m_ResourceChartPointSet;
+        private IList<ResourceSeries> m_ResourceChartSeriesSet;
         private bool m_ExportResourceChartAsCosts;
         private PlotModel m_ResourceChartPlotModel;
         private int m_ResourceChartOutputWidth;
@@ -63,7 +63,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
             m_NotificationInteractionRequest = new InteractionRequest<Notification>();
 
-            //m_EarnedValueChartPointSet = new List<EarnedValuePoint>();
+            m_ResourceChartSeriesSet = new List<ResourceSeries>();
             ResourceChartPlotModel = null;
             ResourceChartOutputWidth = 1000;
             ResourceChartOutputHeight = 500;
@@ -85,6 +85,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private bool HasCompilationErrors => m_CoreViewModel.HasCompilationErrors;
 
         private GraphCompilation<int, IDependentActivity<int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
+
+        private IList<ResourceDto> ResourceDtos => m_CoreViewModel.ResourceDtos;
 
         #endregion
 
@@ -212,6 +214,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     {
                         SetResourceChartSeriesSet();
                         SetResourceChartPlotModel();
+                        CalculateCosts();
                     }, ThreadOption.BackgroundThread);
         }
 
@@ -245,6 +248,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         series.InterActivityAllocationType = InterActivityAllocationType.None;
                         var stringBuilder = new StringBuilder();
                         IResource<int> resource = resourceSchedule.Resource;
+
                         if (resource != null)
                         {
                             series.InterActivityAllocationType = resource.InterActivityAllocationType;
@@ -276,6 +280,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     var unscheduledSeriesSet = new List<ResourceSeries>();
                     IEnumerable<ResourceDto> indirectResources =
                         ResourceDtos.Where(x => !indirectResourceIdsToIgnore.Contains(x.Id) && x.InterActivityAllocationType == InterActivityAllocationType.Indirect);
+
                     foreach (ResourceDto resourceDto in indirectResources)
                     {
                         var series = new ResourceSeries()
@@ -310,6 +315,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     m_ResourceChartSeriesSet.Add(series);
                 }
             }
+            RaiseCanExecuteChangedAllCommands();
         }
 
         private void SetResourceChartPlotModel()
@@ -326,7 +332,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     plotModel.Axes.Add(BuildResourceChartYAxis());
                     plotModel.LegendPlacement = LegendPlacement.Outside;
                     plotModel.LegendPosition = LegendPosition.RightMiddle;
+
                     var total = new List<int>();
+                    m_DateTimeCalculator.UseBusinessDays(m_CoreViewModel.UseBusinessDays);
+
                     foreach (ResourceSeries series in seriesSet)
                     {
                         if (series != null)
@@ -375,8 +384,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     && resourceSchedules.Any())
                 {
                     int finishTime = resourceSchedules.Max(x => x.FinishTime);
+                    m_DateTimeCalculator.UseBusinessDays(m_CoreViewModel.UseBusinessDays);
                     double minValue = ChartHelper.CalculateChartTimeXValue(0, ShowDates, ProjectStart, m_DateTimeCalculator);
                     double maxValue = ChartHelper.CalculateChartTimeXValue(finishTime, ShowDates, ProjectStart, m_DateTimeCalculator);
+
                     if (ShowDates)
                     {
                         axis = new DateTimeAxis
@@ -439,6 +450,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         table.Columns.Add(column);
                     }
 
+                    m_DateTimeCalculator.UseBusinessDays(m_CoreViewModel.UseBusinessDays);
+
                     // Pivot the series values.
                     int valueCount = seriesSet.Max(x => x.Values.Count);
                     for (int timeIndex = 0; timeIndex < valueCount; timeIndex++)
@@ -452,6 +465,45 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     }
                 }
                 return table;
+            }
+        }
+
+        private void CalculateCosts()
+        {
+            lock (m_Lock)
+            {
+                ClearCostProperties();
+                if (HasCompilationErrors)
+                {
+                    return;
+                }
+                IList<ResourceSeries> seriesSet = m_ResourceChartSeriesSet;
+                if (seriesSet != null
+                    && seriesSet.Any())
+                {
+                    DirectCost = seriesSet
+                        .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
+                        .Sum(x => x.Values.Sum(y => y * x.UnitCost));
+                    IndirectCost = seriesSet
+                        .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
+                        .Sum(x => x.Values.Sum(y => y * x.UnitCost));
+                    OtherCost = seriesSet
+                        .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.None)
+                        .Sum(x => x.Values.Sum(y => y * x.UnitCost));
+                    TotalCost = seriesSet
+                        .Sum(x => x.Values.Sum(y => y * x.UnitCost));
+                }
+            }
+        }
+
+        private void ClearCostProperties()
+        {
+            lock (m_Lock)
+            {
+                DirectCost = null;
+                IndirectCost = null;
+                OtherCost = null;
+                TotalCost = null;
             }
         }
 
@@ -540,6 +592,58 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set
             {
                 m_ResourceChartOutputHeight = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public double? DirectCost
+        {
+            get
+            {
+                return m_CoreViewModel.DirectCost;
+            }
+            private set
+            {
+                m_CoreViewModel.DirectCost = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public double? IndirectCost
+        {
+            get
+            {
+                return m_CoreViewModel.IndirectCost;
+            }
+            private set
+            {
+                m_CoreViewModel.IndirectCost = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public double? OtherCost
+        {
+            get
+            {
+                return m_CoreViewModel.OtherCost;
+            }
+            private set
+            {
+                m_CoreViewModel.OtherCost = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public double? TotalCost
+        {
+            get
+            {
+                return m_CoreViewModel.TotalCost;
+            }
+            private set
+            {
+                m_CoreViewModel.TotalCost = value;
                 RaisePropertyChanged();
             }
         }

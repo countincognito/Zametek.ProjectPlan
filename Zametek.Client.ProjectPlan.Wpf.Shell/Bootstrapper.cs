@@ -45,8 +45,6 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
                 .As<IFileDialogService>();
             builder.RegisterType<AppSettingService>()
                 .As<IAppSettingService>();
-            builder.RegisterType<DateTimeCalculator>()
-                .As<IDateTimeCalculator>();
 
             builder.RegisterType<GraphProcessingEngine>()
                 .As<IGraphProcessingEngine>().SingleInstance();
@@ -67,11 +65,14 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
                 .As<IEarnedValueChartManagerViewModel>()
                 .SingleInstance();
 
+            builder.RegisterType<ResourceChartManagerViewModel>()
+                .As<IResourceChartManagerViewModel>()
+                .SingleInstance();
+
             builder.RegisterType<MainViewModel>()
                 .As<IMainViewModel>()
                 .As<IActivitiesManagerViewModel>()
                 .As<IArrowGraphManagerViewModel>()
-                .As<IResourceChartManagerViewModel>()
                 .SingleInstance();
 
             base.ConfigureContainerBuilder(builder);
