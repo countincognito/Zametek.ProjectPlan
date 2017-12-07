@@ -6,6 +6,28 @@ namespace Zametek.Common.Project
 {
     public static class DtoExtensions
     {
+        private static Random _Rnd;
+
+        static DtoExtensions()
+        {
+            _Rnd = new Random();
+        }
+
+        public static ColorFormatDto Randomize(this ColorFormatDto colorFormatDto)
+        {
+            if (colorFormatDto == null)
+            {
+                throw new ArgumentNullException(nameof(colorFormatDto));
+            }
+            Byte[] b = new Byte[4];
+            _Rnd.NextBytes(b);
+            colorFormatDto.A = b[0];
+            colorFormatDto.R = b[1];
+            colorFormatDto.G = b[2];
+            colorFormatDto.B = b[3];
+            return colorFormatDto;
+        }
+
         public static ColorFormatDto Copy(this ColorFormatDto colorFormatDto)
         {
             if (colorFormatDto == null)

@@ -269,7 +269,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         }
 
                         series.Title = stringBuilder.ToString();
-                        series.ColorFormatDto = resource != null && colorFormatLookup.ContainsKey(resource.Id) ? colorFormatLookup[resource.Id].Copy() : new ColorFormatDto();
+                        series.ColorFormatDto = resource != null && colorFormatLookup.ContainsKey(resource.Id) ? colorFormatLookup[resource.Id].Copy() : new ColorFormatDto().Randomize();
                         series.UnitCost = resource?.UnitCost ?? 0;
                         series.DisplayOrder = resource?.DisplayOrder ?? 0;
                         scheduledSeriesSet.Add(series);
@@ -299,7 +299,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         }
 
                         series.Title = stringBuilder.ToString();
-                        series.ColorFormatDto = resourceDto.ColorFormat != null ? resourceDto.ColorFormat.Copy() : new ColorFormatDto();
+                        series.ColorFormatDto = resourceDto.ColorFormat != null ? resourceDto.ColorFormat.Copy() : new ColorFormatDto().Randomize();
                         series.UnitCost = resourceDto.UnitCost;
                         series.DisplayOrder = resourceDto.DisplayOrder;
                         unscheduledSeriesSet.Add(series);
