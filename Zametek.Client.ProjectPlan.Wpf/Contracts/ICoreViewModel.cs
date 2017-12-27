@@ -49,6 +49,24 @@ namespace Zametek.Client.ProjectPlan.Wpf
             get;
         }
 
+        ArrowGraphSettingsDto ArrowGraphSettingsDto
+        {
+            get;
+            set;
+        }
+
+        int? CyclomaticComplexity
+        {
+            get;
+            set;
+        }
+
+        int? Duration
+        {
+            get;
+            set;
+        }
+
         double? DirectCost
         {
             get;

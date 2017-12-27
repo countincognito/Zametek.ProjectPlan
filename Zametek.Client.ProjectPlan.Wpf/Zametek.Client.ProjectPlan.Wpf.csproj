@@ -349,6 +349,7 @@
     <Compile Include="ViewModels\ArrowGraphSettingsManagement\ManagedActivitySeverityViewModel.cs" />
     <Compile Include="ViewModels\CoreViewModel.cs" />
     <Compile Include="ViewModels\EarnedValueChartManagement\EarnedValueChartManagerViewModel.cs" />
+    <Compile Include="ViewModels\MetricsManagement\MetricsManagerViewModel.cs" />
     <Compile Include="ViewModels\PropertyChangedPubSubViewModel.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphData.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphEdge.cs" />
@@ -387,6 +388,9 @@
     </Compile>
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\MetricsManagement\MetricsManagerView.xaml.cs">
+      <DependentUpon>MetricsManagerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ResourceChartManagement\ResourceChartManagerView.xaml.cs">
       <DependentUpon>ResourceChartManagerView.xaml</DependentUpon>
@@ -439,6 +443,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\MetricsManagement\MetricsManagerView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\ResourceChartManagement\ResourceChartManagerView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -462,6 +470,7 @@
       <Name>Zametek.Contract.ProjectPlan</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\net.sf.mpxj-ikvm.6.1.0\build\net.sf.mpxj-ikvm.targets" Condition="Exists('..\packages\net.sf.mpxj-ikvm.6.1.0\build\net.sf.mpxj-ikvm.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

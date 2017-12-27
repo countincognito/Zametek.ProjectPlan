@@ -69,6 +69,10 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
                 .As<IResourceChartManagerViewModel>()
                 .SingleInstance();
 
+            builder.RegisterType<MetricsManagerViewModel>()
+                .As<IMetricsManagerViewModel>()
+                .SingleInstance();
+
             builder.RegisterType<MainViewModel>()
                 .As<IMainViewModel>()
                 .As<IActivitiesManagerViewModel>()

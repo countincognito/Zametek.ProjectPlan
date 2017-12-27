@@ -164,8 +164,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
                     .Subscribe(payload =>
                     {
+                        IsBusy = true;
                         SetEarnedValueChartPointSet();
                         SetEarnedValueChartPlotModel();
+                        IsBusy = false;
                     }, ThreadOption.BackgroundThread);
         }
 
@@ -179,48 +181,51 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             lock (m_Lock)
             {
-                IList<IDependentActivity<int>> dependentActivities =
-                    GraphCompilation.DependentActivities
-                    .Select(x => (IDependentActivity<int>)x.WorkingCopy())
-                    .OrderBy(x => x.EarliestFinishTime.GetValueOrDefault())
-                    .ThenBy(x => x.EarliestStartTime.GetValueOrDefault())
-                    .ToList();
-                var pointSet = new List<EarnedValuePoint>();
-                if (!HasCompilationErrors
-                    && dependentActivities.Any()
-                    && dependentActivities.All(x => x.EarliestFinishTime.HasValue))
+                IList<IDependentActivity<int>> dependentActivities = GraphCompilation?.DependentActivities;
+                if (dependentActivities != null)
                 {
-                    pointSet.Add(new EarnedValuePoint
+                    IList<IDependentActivity<int>> orderedDependentActivities = dependentActivities
+                        .Select(x => (IDependentActivity<int>)x.WorkingCopy())
+                        .OrderBy(x => x.EarliestFinishTime.GetValueOrDefault())
+                        .ThenBy(x => x.EarliestStartTime.GetValueOrDefault())
+                        .ToList();
+                    var pointSet = new List<EarnedValuePoint>();
+                    if (!HasCompilationErrors
+                        && orderedDependentActivities.Any()
+                        && orderedDependentActivities.All(x => x.EarliestFinishTime.HasValue))
                     {
-                        Time = 0,
-                        ActivityId = string.Empty,
-                        ActivityName = string.Empty,
-                        EarnedValue = 0,
-                        EarnedValuePercentage = 0.0
-                    });
-
-                    double totalTime = Convert.ToDouble(dependentActivities.Sum(s => s.Duration));
-                    int runningTotal = 0;
-                    foreach (IDependentActivity<int> activity in dependentActivities)
-                    {
-                        runningTotal += activity.Duration;
-                        double percentage = (runningTotal / totalTime) * 100.0;
-                        int time = activity.EarliestFinishTime.GetValueOrDefault();
                         pointSet.Add(new EarnedValuePoint
                         {
-                            Time = time,
-                            ActivityId = activity.Id.ToString(),
-                            ActivityName = activity.Name,
-                            EarnedValue = runningTotal,
-                            EarnedValuePercentage = percentage
+                            Time = 0,
+                            ActivityId = string.Empty,
+                            ActivityName = string.Empty,
+                            EarnedValue = 0,
+                            EarnedValuePercentage = 0.0
                         });
-                    }
-                }
 
-                m_EarnedValueChartPointSet.Clear();
-                foreach (EarnedValuePoint point in pointSet)
-                {
-                    m_EarnedValueChartPointSet.Add(point);
+                        double totalTime = Convert.ToDouble(orderedDependentActivities.Sum(s => s.Duration));
+                        int runningTotal = 0;
+                        foreach (IDependentActivity<int> activity in orderedDependentActivities)
+                        {
+                            runningTotal += activity.Duration;
+                            double percentage = (runningTotal / totalTime) * 100.0;
+                            int time = activity.EarliestFinishTime.GetValueOrDefault();
+                            pointSet.Add(new EarnedValuePoint
+                            {
+                                Time = time,
+                                ActivityId = activity.Id.ToString(),
+                                ActivityName = activity.Name,
+                                EarnedValue = runningTotal,
+                                EarnedValuePercentage = percentage
+                            });
+                        }
+                    }
+
+                    m_EarnedValueChartPointSet.Clear();
+                    foreach (EarnedValuePoint point in pointSet)
+                    {
+                        m_EarnedValueChartPointSet.Add(point);
+                    }
                 }
             }
         }

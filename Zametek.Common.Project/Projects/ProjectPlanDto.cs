@@ -18,6 +18,9 @@ namespace Zametek.Common.Project
         public List<DependentActivityDto> DependentActivities { get; set; }
         public List<ResourceScheduleDto> ResourceSchedules { get; set; }
 
+        public int CyclomaticComplexity { get; set; }
+        public int Duration { get; set; }
+
         public ArrowGraphDto ArrowGraph { get; set; }
         public bool HasStaleArrowGraph { get; set; }
 

@@ -40,26 +40,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
-        double? DirectCost
-        {
-            get;
-        }
-
-        double? IndirectCost
-        {
-            get;
-        }
-
-        double? OtherCost
-        {
-            get;
-        }
-
-        double? TotalCost
-        {
-            get;
-        }
-
         ICommand OpenProjectPlanFileCommand
         {
             get;

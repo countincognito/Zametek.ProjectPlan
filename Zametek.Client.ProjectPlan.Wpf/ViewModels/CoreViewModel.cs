@@ -18,6 +18,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private bool m_HasStaleOutputs;
         private bool m_HasCompilationErrors;
         private GraphCompilation<int, IDependentActivity<int>> m_GraphCompilation;
+        private ArrowGraphSettingsDto m_ArrowGraphSettingsDto;
+        private int? m_CyclomaticComplexity;
+        private int? m_Duration;
         private double? m_DirectCost;
         private double? m_IndirectCost;
         private double? m_OtherCost;
@@ -137,6 +140,48 @@ namespace Zametek.Client.ProjectPlan.Wpf
         public IList<ResourceDto> ResourceDtos
         {
             get;
+        }
+
+        public ArrowGraphSettingsDto ArrowGraphSettingsDto
+        {
+            get
+            {
+                return m_ArrowGraphSettingsDto;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ArrowGraphSettingsDto = value;
+                }
+                RaisePropertyChanged();
+            }
+        }
+
+        public int? CyclomaticComplexity
+        {
+            get
+            {
+                return m_CyclomaticComplexity;
+            }
+            set
+            {
+                m_CyclomaticComplexity = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public int? Duration
+        {
+            get
+            {
+                return m_Duration;
+            }
+            set
+            {
+                m_Duration = value;
+                RaisePropertyChanged();
+            }
         }
 
         public double? DirectCost

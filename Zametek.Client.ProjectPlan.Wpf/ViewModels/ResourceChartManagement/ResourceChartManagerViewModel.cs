@@ -212,9 +212,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
                     .Subscribe(payload =>
                     {
+                        IsBusy = true;
                         SetResourceChartSeriesSet();
                         SetResourceChartPlotModel();
                         CalculateCosts();
+                        IsBusy = false;
                     }, ThreadOption.BackgroundThread);
         }
 
@@ -472,7 +474,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             lock (m_Lock)
             {
-                ClearCostProperties();
+                ClearCosts();
                 if (HasCompilationErrors)
                 {
                     return;
@@ -496,7 +498,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        private void ClearCostProperties()
+        private void ClearCosts()
         {
             lock (m_Lock)
             {

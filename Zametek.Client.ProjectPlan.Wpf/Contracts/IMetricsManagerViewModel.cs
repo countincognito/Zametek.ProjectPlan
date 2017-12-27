@@ -1,8 +1,22 @@
-﻿
-namespace Zametek.Client.ProjectPlan.Wpf
+﻿namespace Zametek.Client.ProjectPlan.Wpf
 {
     public interface IMetricsManagerViewModel
     {
+        bool IsBusy
+        {
+            get;
+        }
+
+        bool HasCompilationErrors
+        {
+            get;
+        }
+
+        bool HasStaleOutputs
+        {
+            get;
+        }
+
         double? CriticalityRisk
         {
             get;
@@ -44,6 +58,26 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         double? DurationManMonths
+        {
+            get;
+        }
+
+        double? DirectCost
+        {
+            get;
+        }
+
+        double? IndirectCost
+        {
+            get;
+        }
+
+        double? OtherCost
+        {
+            get;
+        }
+
+        double? TotalCost
         {
             get;
         }

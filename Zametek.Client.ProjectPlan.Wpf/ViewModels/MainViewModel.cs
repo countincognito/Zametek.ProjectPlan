@@ -23,7 +23,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.Client.ProjectPlan.Wpf
 {
     public class MainViewModel
-        : PropertyChangedPubSubViewModel, IMainViewModel, IActivitiesManagerViewModel, IArrowGraphManagerViewModel, IMetricsManagerViewModel
+        : PropertyChangedPubSubViewModel, IMainViewModel, IActivitiesManagerViewModel, IArrowGraphManagerViewModel
     {
         #region Fields
 
@@ -37,16 +37,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private bool m_HasStaleArrowGraph;
 
         private static string s_DefaultProjectTitle = Properties.Resources.Label_DefaultTitle;
-
-        private double? m_CriticalityRisk;
-        private double? m_FibonacciRisk;
-        private double? m_ActivityRisk;
-        private double? m_ActivityRiskWithStdDevCorrection;
-        private double? m_GeometricCriticalityRisk;
-        private double? m_GeometricFibonacciRisk;
-        private double? m_GeometricActivityRisk;
-        private int? m_CyclomaticComplexity;
-        private double? m_DurationManMonths;
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectManager m_ProjectManager;
@@ -109,10 +99,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.UseBusinessDays), nameof(UseBusinessDays), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasStaleOutputs), nameof(HasStaleOutputs), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasCompilationErrors), nameof(HasCompilationErrors), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.DirectCost), nameof(DirectCost), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IndirectCost), nameof(IndirectCost), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.OtherCost), nameof(OtherCost), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.TotalCost), nameof(TotalCost), ThreadOption.BackgroundThread);
         }
 
         #endregion
@@ -258,12 +244,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public IList<ResourceDto> ResourceDtos => m_CoreViewModel.ResourceDtos;
 
-        public MetricsDto MetricsDto
-        {
-            get;
-            private set;
-        }
-
         public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
 
         public IInteractionRequest ConfirmationInteractionRequest => m_ConfirmationInteractionRequest;
@@ -273,6 +253,30 @@ namespace Zametek.Client.ProjectPlan.Wpf
         public IInteractionRequest ResourceSettingsManagerInteractionRequest => m_ResourceSettingsManagerInteractionRequest;
 
         public IInteractionRequest ArrowGraphSettingsManagerInteractionRequest => m_ArrowGraphSettingsManagerInteractionRequest;
+
+        private int? CyclomaticComplexity
+        {
+            get
+            {
+                return m_CoreViewModel.CyclomaticComplexity;
+            }
+            set
+            {
+                m_CoreViewModel.CyclomaticComplexity = value;
+            }
+        }
+
+        private int? Duration
+        {
+            get
+            {
+                return m_CoreViewModel.Duration;
+            }
+            set
+            {
+                m_CoreViewModel.Duration = value;
+            }
+        }
 
         #endregion
 
@@ -364,9 +368,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
-        private async void OpenArrowGraphSettings()
+        private void OpenArrowGraphSettings()
         {
-            await DoOpenArrowGraphSettingsAsync();
+            DoOpenArrowGraphSettings();
         }
 
         private bool CanOpenArrowGraphSettings()
@@ -650,15 +654,15 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 }
 
                 GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
+                CyclomaticComplexity = m_VertexGraphCompiler.CyclomaticComplexity;
+                Duration = m_VertexGraphCompiler.Duration;
                 IsProjectUpdated = true;
+
                 if (ArrowGraphDto != null)
                 {
                     HasStaleArrowGraph = true;
                 }
                 SetCompilationOutput();
-                CalculateMetrics();
-                CalculateGraphMetrics();
-                
                 HasStaleOutputs = false;
             }
         }
@@ -715,7 +719,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             PublishGraphCompiledPayload();
         }
-        
+
         private string BuildCircularDependenciesErrorMessage(IList<CircularDependency<int>> circularDependencies)
         {
             if (circularDependencies == null)
@@ -803,106 +807,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     output.AppendLine();
                 }
                 return output.ToString();
-            }
-        }
-
-        private async Task CalculateMetricsAsync()
-        {
-            await Task.Run(() => CalculateMetrics());
-        }
-
-        private void CalculateMetrics()
-        {
-            lock (m_Lock)
-            {
-                ClearMetricProperties();
-                if (HasCompilationErrors)
-                {
-                    return;
-                }
-                MetricsDto = m_ProjectManager.CalculateProjectMetrics(
-                    Activities.Where(x => !x.IsDummy).Select(x => (IActivity<int>)x.DependentActivity).ToList(),
-                    ArrowGraphSettingsDto?.ActivitySeverities);
-                SetMetricProperties();
-            }
-        }
-
-        private void ClearMetricProperties()
-        {
-            lock (m_Lock)
-            {
-                CriticalityRisk = null;
-                FibonacciRisk = null;
-                ActivityRisk = null;
-                ActivityRiskWithStdDevCorrection = null;
-                GeometricCriticalityRisk = null;
-                GeometricFibonacciRisk = null;
-                GeometricActivityRisk = null;
-            }
-        }
-
-        private void SetMetricProperties()
-        {
-            lock (m_Lock)
-            {
-                ClearMetricProperties();
-                MetricsDto metricsDto = MetricsDto;
-                if (metricsDto != null)
-                {
-                    CriticalityRisk = metricsDto.Criticality;
-                    FibonacciRisk = metricsDto.Fibonacci;
-                    ActivityRisk = metricsDto.Activity;
-                    ActivityRiskWithStdDevCorrection = metricsDto.ActivityStdDevCorrection;
-                    GeometricCriticalityRisk = metricsDto.GeometricCriticality;
-                    GeometricFibonacciRisk = metricsDto.GeometricFibonacci;
-                    GeometricActivityRisk = metricsDto.GeometricActivity;
-                }
-            }
-        }
-
-        private void CalculateGraphMetrics()
-        {
-            lock (m_Lock)
-            {
-                ClearGraphMetricProperties();
-                if (HasCompilationErrors)
-                {
-                    return;
-                }
-                SetGraphMetricProperties();
-            }
-        }
-
-        private void ClearGraphMetricProperties()
-        {
-            lock (m_Lock)
-            {
-                CyclomaticComplexity = null;
-                DurationManMonths = null;
-            }
-        }
-
-        private void SetGraphMetricProperties()
-        {
-            lock (m_Lock)
-            {
-                ClearGraphMetricProperties();
-                CyclomaticComplexity = m_VertexGraphCompiler.CyclomaticComplexity;
-                DurationManMonths = CalculateDurationManMonths();
-            }
-        }
-
-        private double? CalculateDurationManMonths()
-        {
-            lock (m_Lock)
-            {
-                int durationManDays = m_VertexGraphCompiler.Duration;
-                if (durationManDays == 0)
-                {
-                    return null;
-                }
-                int daysPerWeek = m_DateTimeCalculator.DaysPerWeek;
-                return durationManDays / (daysPerWeek * 52.0 / 12.0);
             }
         }
 
@@ -1239,6 +1143,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     }
                 }
 
+                CyclomaticComplexity = projectPlanDto.CyclomaticComplexity;
+                Duration = projectPlanDto.Duration;
+
                 // Compilation.
                 GraphCompilation = new GraphCompilation<int, IDependentActivity<int>>(
                     projectPlanDto.AllResourcesExplicitTargetsButNotAllActivitiesTargeted,
@@ -1248,9 +1155,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     projectPlanDto.ResourceSchedules.Select(x => DtoConverter.FromDto(x)));
 
                 SetCompilationOutput();
-                CalculateMetrics();
-                ClearGraphMetricProperties();
-                
+
                 HasStaleArrowGraph = projectPlanDto.HasStaleArrowGraph;
                 HasStaleOutputs = projectPlanDto.HasStaleOutputs;
             }
@@ -1280,6 +1185,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     MissingDependencies = GraphCompilation?.MissingDependencies != null ? GraphCompilation.MissingDependencies.ToList() : new List<int>(),
                     DependentActivities = Activities.Select(x => DtoConverter.ToDto(x)).ToList(), //GraphCompilation?.DependentActivities != null ? GraphCompilation.DependentActivities.Select(x => DtoConverter.ToDto(x)).ToList() : new List<DependentActivityDto>(),
                     ResourceSchedules = GraphCompilation?.ResourceSchedules != null ? GraphCompilation.ResourceSchedules.Select(x => DtoConverter.ToDto(x)).ToList() : new List<ResourceScheduleDto>(),
+
+                    CyclomaticComplexity = CyclomaticComplexity.GetValueOrDefault(),
+                    Duration = Duration.GetValueOrDefault(),
 
                     ArrowGraph = ArrowGraphDto != null ? ArrowGraphDto.Copy() : new ArrowGraphDto() { Edges = new List<ActivityEdgeDto>(), Nodes = new List<EventNodeDto>() },
                     HasStaleArrowGraph = HasStaleArrowGraph,
@@ -1401,10 +1309,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     {
                         MicrosoftProjectDto microsoftProjectDto = await ImportMicrosoftProjectAsync(filename);
                         ProcessMicrosoftProject(microsoftProjectDto);
-                        ClearGraphMetricProperties();
+
                         HasStaleOutputs = true;
                         IsProjectUpdated = true;
                         ProjectTitle = Path.GetFileNameWithoutExtension(filename);
+
                         if (AutoCompile)
                         {
                             await RunCompileAsync();
@@ -1503,7 +1412,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public async Task DoOpenArrowGraphSettingsAsync()
+        public void DoOpenArrowGraphSettings()
         {
             try
             {
@@ -1526,7 +1435,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     HasStaleArrowGraph = true;
                 }
-                await CalculateMetricsAsync();
             }
             catch (Exception ex)
             {
@@ -1783,14 +1691,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public double? DirectCost => m_CoreViewModel.DirectCost;
-
-        public double? IndirectCost => m_CoreViewModel.IndirectCost;
-
-        public double? OtherCost => m_CoreViewModel.OtherCost;
-
-        public double? TotalCost => m_CoreViewModel.TotalCost;
-
         public ICommand OpenProjectPlanFileCommand
         {
             get;
@@ -1919,12 +1819,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     Enumerable.Empty<IDependentActivity<int>>(),
                     Enumerable.Empty<IResourceSchedule<int>>());
 
+                CyclomaticComplexity = null;
+                Duration = null;
+
                 HasCompilationErrors = false;
                 SetCompilationOutput();
-
-                MetricsDto = null;
-                ClearMetricProperties();
-                ClearGraphMetricProperties();
 
                 ArrowGraphDto = null;
                 ArrowGraphData = GenerateArrowGraphData(ArrowGraphDto);
@@ -1984,8 +1883,17 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public ArrowGraphSettingsDto ArrowGraphSettingsDto
         {
-            get;
-            private set;
+            get
+            {
+                return m_CoreViewModel.ArrowGraphSettingsDto;
+            }
+            private set
+            {
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.ArrowGraphSettingsDto = value;
+                }
+            }
         }
 
         public ArrowGraphData ArrowGraphData
@@ -2013,127 +1921,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 throw new ArgumentNullException(nameof(diagramArrowGraphDto));
             }
             return m_ProjectManager.ExportArrowGraphToDiagram(diagramArrowGraphDto);
-        }
-
-        #endregion
-
-        #region IMetricsManagerViewModel Members
-
-        public double? CriticalityRisk
-        {
-            get
-            {
-                return m_CriticalityRisk;
-            }
-            private set
-            {
-                m_CriticalityRisk = value;
-                RaisePropertyChanged(nameof(CriticalityRisk));
-            }
-        }
-
-        public double? FibonacciRisk
-        {
-            get
-            {
-                return m_FibonacciRisk;
-            }
-            private set
-            {
-                m_FibonacciRisk = value;
-                RaisePropertyChanged(nameof(FibonacciRisk));
-            }
-        }
-
-        public double? ActivityRisk
-        {
-            get
-            {
-                return m_ActivityRisk;
-            }
-            private set
-            {
-                m_ActivityRisk = value;
-                RaisePropertyChanged(nameof(ActivityRisk));
-            }
-        }
-
-        public double? ActivityRiskWithStdDevCorrection
-        {
-            get
-            {
-                return m_ActivityRiskWithStdDevCorrection;
-            }
-            private set
-            {
-                m_ActivityRiskWithStdDevCorrection = value;
-                RaisePropertyChanged(nameof(ActivityRiskWithStdDevCorrection));
-            }
-        }
-
-        public double? GeometricCriticalityRisk
-        {
-            get
-            {
-                return m_GeometricCriticalityRisk;
-            }
-            private set
-            {
-                m_GeometricCriticalityRisk = value;
-                RaisePropertyChanged(nameof(GeometricCriticalityRisk));
-            }
-        }
-
-        public double? GeometricFibonacciRisk
-        {
-            get
-            {
-                return m_GeometricFibonacciRisk;
-            }
-            private set
-            {
-                m_GeometricFibonacciRisk = value;
-                RaisePropertyChanged(nameof(GeometricFibonacciRisk));
-            }
-        }
-
-        public double? GeometricActivityRisk
-        {
-            get
-            {
-                return m_GeometricActivityRisk;
-            }
-            private set
-            {
-                m_GeometricActivityRisk = value;
-                RaisePropertyChanged(nameof(GeometricActivityRisk));
-            }
-        }
-
-        public int? CyclomaticComplexity
-        {
-            get
-            {
-                return m_CyclomaticComplexity;
-            }
-            private set
-            {
-                m_CyclomaticComplexity = value;
-                RaisePropertyChanged(nameof(CyclomaticComplexity));
-            }
-        }
-
-        public double? DurationManMonths
-        {
-            get
-            {
-                return m_DurationManMonths;
-            }
-            private set
-            {
-                m_DurationManMonths = value;
-                RaisePropertyChanged(nameof(DurationManMonths));
-            }
         }
 
         #endregion
