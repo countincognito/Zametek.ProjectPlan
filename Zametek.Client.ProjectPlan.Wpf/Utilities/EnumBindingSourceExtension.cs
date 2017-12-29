@@ -17,7 +17,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #region Ctors
 
         public EnumBindingSourceExtension()
-        { }
+        {
+        }
 
         public EnumBindingSourceExtension(Type enumType)
         {

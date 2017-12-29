@@ -10,7 +10,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public ArrowGraphSettingsManagerViewModel()
             : base()
-        { }
+        {
+        }
 
         #endregion
 

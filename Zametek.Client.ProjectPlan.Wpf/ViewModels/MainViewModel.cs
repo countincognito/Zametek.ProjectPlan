@@ -23,23 +23,19 @@ using Zametek.Maths.Graphs;
 namespace Zametek.Client.ProjectPlan.Wpf
 {
     public class MainViewModel
-        : PropertyChangedPubSubViewModel, IMainViewModel, IActivitiesManagerViewModel, IArrowGraphManagerViewModel
+        : PropertyChangedPubSubViewModel, IMainViewModel, IActivitiesManagerViewModel
     {
         #region Fields
 
         private readonly object m_Lock;
         private readonly VertexGraphCompiler<int, IDependentActivity<int>> m_VertexGraphCompiler;
         private string m_ProjectTitle;
-        private bool m_IsProjectUpdated;
         private bool m_AutoCompile;
         private bool m_IsBusy;
-        private string m_CompilationOutput;
-        private bool m_HasStaleArrowGraph;
 
         private static string s_DefaultProjectTitle = Properties.Resources.Label_DefaultTitle;
 
         private readonly ICoreViewModel m_CoreViewModel;
-        private readonly IProjectManager m_ProjectManager;
         private readonly ISettingManager m_SettingManager;
         private readonly IFileDialogService m_FileDialogService;
         private readonly IAppSettingService m_AppSettingService;
@@ -60,7 +56,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public MainViewModel(
             ICoreViewModel coreViewModel,
-            IProjectManager projectManager,
             ISettingManager settingManager,
             IFileDialogService fileDialogService,
             IAppSettingService appSettingService,
@@ -70,7 +65,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
-            m_ProjectManager = projectManager ?? throw new ArgumentNullException(nameof(projectManager));
             m_SettingManager = settingManager ?? throw new ArgumentNullException(nameof(settingManager));
             m_FileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
             m_AppSettingService = appSettingService ?? throw new ArgumentNullException(nameof(appSettingService));
@@ -94,10 +88,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             SubscribeToEvents();
 
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ProjectStart), nameof(ProjectStart), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsProjectUpdated), nameof(IsProjectUpdated), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ShowDates), nameof(ShowDates), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ShowDates), nameof(ShowDays), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.UseBusinessDays), nameof(UseBusinessDays), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasStaleOutputs), nameof(HasStaleOutputs), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.CompilationOutput), nameof(CompilationOutput), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasCompilationErrors), nameof(HasCompilationErrors), ThreadOption.BackgroundThread);
         }
 
@@ -113,13 +109,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             private set
             {
-                m_CoreViewModel.HasStaleOutputs = value;
-                if (m_CoreViewModel.HasStaleOutputs
-                    && ArrowGraphDto != null)
+                lock (m_Lock)
                 {
-                    HasStaleArrowGraph = true;
+                    m_CoreViewModel.HasStaleOutputs = value;
                 }
-                RaisePropertyChanged(nameof(HasStaleOutputs));
             }
         }
 
@@ -189,12 +182,14 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get
             {
-                return m_CompilationOutput;
+                return m_CoreViewModel.CompilationOutput;
             }
             private set
             {
-                m_CompilationOutput = value;
-                RaisePropertyChanged(nameof(CompilationOutput));
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.CompilationOutput = value;
+                }
             }
         }
 
@@ -210,7 +205,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     m_CoreViewModel.HasCompilationErrors = value;
                 }
-                RaisePropertyChanged();
             }
         }
 
@@ -262,7 +256,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             set
             {
-                m_CoreViewModel.CyclomaticComplexity = value;
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.CyclomaticComplexity = value;
+                }
             }
         }
 
@@ -274,7 +271,25 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             set
             {
-                m_CoreViewModel.Duration = value;
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.Duration = value;
+                }
+            }
+        }
+
+        private ArrowGraphDto ArrowGraphDto
+        {
+            get
+            {
+                return m_CoreViewModel.ArrowGraphDto;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.ArrowGraphDto = value;
+                }
             }
         }
 
@@ -449,22 +464,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             return SelectedActivities.Any();
         }
 
-        private DelegateCommandBase InternalGenerateArrowGraphCommand
-        {
-            get;
-            set;
-        }
-
-        private async void GenerateArrowGraph()
-        {
-            await DoGenerateArrowGraphAsync();
-        }
-
-        private bool CanGenerateArrowGraph()
-        {
-            return !HasCompilationErrors;
-        }
-
         #endregion
 
         #region Private Methods
@@ -500,9 +499,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             RemoveManagedActivityCommand =
                 InternalRemoveManagedActivityCommand =
                     new DelegateCommand(RemoveManagedActivity, CanRemoveManagedActivity);
-            GenerateArrowGraphCommand =
-                InternalGenerateArrowGraphCommand =
-                    new DelegateCommand(GenerateArrowGraph, CanGenerateArrowGraph);
         }
 
         private void RaiseCanExecuteChangedAllCommands()
@@ -516,7 +512,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             SetSelectedManagedActivitiesCommand.RaiseCanExecuteChanged();
             InternalAddManagedActivityCommand.RaiseCanExecuteChanged();
             InternalRemoveManagedActivityCommand.RaiseCanExecuteChanged();
-            InternalGenerateArrowGraphCommand.RaiseCanExecuteChanged();
         }
 
         private void SubscribeToEvents()
@@ -573,6 +568,18 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
                 .Publish(new GraphCompiledPayload());
+        }
+
+        private void PublishArrowGraphDtoUpdatedPayload()
+        {
+            m_EventService.GetEvent<PubSubEvent<ArrowGraphDtoUpdatedPayload>>()
+                .Publish(new ArrowGraphDtoUpdatedPayload());
+        }
+
+        private void PublishArrowGraphSettingsUpdatedPayload()
+        {
+            m_EventService.GetEvent<PubSubEvent<ArrowGraphSettingsUpdatedPayload>>()
+                .Publish(new ArrowGraphSettingsUpdatedPayload());
         }
 
         private void SetActivitiesTargetResources()
@@ -658,18 +665,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 Duration = m_VertexGraphCompiler.Duration;
                 IsProjectUpdated = true;
 
-                if (ArrowGraphDto != null)
-                {
-                    HasStaleArrowGraph = true;
-                }
                 SetCompilationOutput();
                 HasStaleOutputs = false;
+                PublishGraphCompiledPayload();
             }
-        }
-
-        private async Task SetCompilationOutputAsync()
-        {
-            await Task.Run(() => SetCompilationOutput());
         }
 
         private void SetCompilationOutput()
@@ -717,7 +716,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 CompilationOutput = output.ToString();
             }
-            PublishGraphCompiledPayload();
         }
 
         private string BuildCircularDependenciesErrorMessage(IList<CircularDependency<int>> circularDependencies)
@@ -808,162 +806,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 }
                 return output.ToString();
             }
-        }
-
-        private async Task GenerateArrowGraphFromGraphCompilationAsync()
-        {
-            await Task.Run(() => GenerateArrowGraphFromGraphCompilation());
-        }
-
-        private void GenerateArrowGraphFromGraphCompilation()
-        {
-            lock (m_Lock)
-            {
-                ArrowGraphDto = null;
-                IList<IDependentActivity<int>> dependentActivities =
-                    GraphCompilation.DependentActivities
-                    .Select(x => (IDependentActivity<int>)x.WorkingCopy())
-                    .ToList();
-
-                if (!HasCompilationErrors
-                    && dependentActivities.Any())
-                {
-                    ArrowGraphCompiler<int, IDependentActivity<int>> arrowGraphCompiler = ArrowGraphCompiler<int, IDependentActivity<int>>.Create();
-                    foreach (DependentActivity<int> dependentActivity in dependentActivities)
-                    {
-                        dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
-                        dependentActivity.ResourceDependencies.Clear();
-                        arrowGraphCompiler.AddActivity(dependentActivity);
-                    }
-
-                    arrowGraphCompiler.Compile();
-                    Graph<int, IDependentActivity<int>, IEvent<int>> arrowGraph = arrowGraphCompiler.ToGraph();
-
-                    if (arrowGraph == null)
-                    {
-                        throw new InvalidOperationException("Cannot construct arrow graph");
-                    }
-                    ArrowGraphDto = DtoConverter.ToDto(arrowGraph);
-                }
-                ArrowGraphData = GenerateArrowGraphData(ArrowGraphDto);
-                DecorateArrowGraph();
-                HasStaleArrowGraph = false;
-            }
-        }
-
-        private static ArrowGraphData GenerateArrowGraphData(ArrowGraphDto arrowGraph)
-        {
-            if (arrowGraph == null
-                || arrowGraph.Nodes == null
-                || !arrowGraph.Nodes.Any()
-                || arrowGraph.Edges == null
-                || !arrowGraph.Edges.Any())
-            {
-                return null;
-            }
-            IList<EventNodeDto> nodeDtos = arrowGraph.Nodes.ToList();
-            var edgeHeadVertexLookup = new Dictionary<int, ArrowGraphVertex>();
-            var edgeTailVertexLookup = new Dictionary<int, ArrowGraphVertex>();
-            var arrowGraphVertices = new List<ArrowGraphVertex>();
-            foreach (EventNodeDto nodeDto in nodeDtos)
-            {
-                var vertex = new ArrowGraphVertex(nodeDto.Content, nodeDto.NodeType);
-                arrowGraphVertices.Add(vertex);
-                foreach (int edgeId in nodeDto.IncomingEdges)
-                {
-                    edgeHeadVertexLookup.Add(edgeId, vertex);
-                }
-                foreach (int edgeId in nodeDto.OutgoingEdges)
-                {
-                    edgeTailVertexLookup.Add(edgeId, vertex);
-                }
-            }
-
-            // Check all edges are used.
-            IList<ActivityEdgeDto> edgeDtos = arrowGraph.Edges.ToList();
-            IList<int> edgeIds = edgeDtos.Select(x => x.Content.Id).ToList();
-            if (!edgeIds.OrderBy(x => x).SequenceEqual(edgeHeadVertexLookup.Keys.OrderBy(x => x)))
-            {
-                throw new ArgumentException("List of Edge IDs and Edges referenced by head Nodes do not match");
-            }
-            if (!edgeIds.OrderBy(x => x).SequenceEqual(edgeTailVertexLookup.Keys.OrderBy(x => x)))
-            {
-                throw new ArgumentException("List of Edge IDs and Edges referenced by tail Nodes do not match");
-            }
-
-            // Check all events are used.
-            IEnumerable<long> edgeVertexLookupIds =
-                edgeHeadVertexLookup.Values.Select(x => x.ID)
-                .Union(edgeTailVertexLookup.Values.Select(x => x.ID));
-            if (!arrowGraphVertices.Select(x => x.ID).OrderBy(x => x).SequenceEqual(edgeVertexLookupIds.OrderBy(x => x)))
-            {
-                throw new ArgumentException("List of Node IDs and Edges referenced by tail Nodes do not match");
-            }
-
-            // Check Start and End nodes.
-            IEnumerable<EventNodeDto> startNodes = nodeDtos.Where(x => x.NodeType == NodeType.Start);
-            if (startNodes.Count() != 1)
-            {
-                throw new ArgumentException("Data contain more than one Start node");
-            }
-            IEnumerable<EventNodeDto> endNodes = nodeDtos.Where(x => x.NodeType == NodeType.End);
-            if (endNodes.Count() != 1)
-            {
-                throw new ArgumentException("Data contain more than one End node");
-            }
-
-            // Build the graph data.
-            var graph = new ArrowGraphData();
-            foreach (ArrowGraphVertex vertex in arrowGraphVertices)
-            {
-                graph.AddVertex(vertex);
-            }
-            foreach (ActivityEdgeDto edgeDto in edgeDtos)
-            {
-                ActivityDto activityDto = edgeDto.Content;
-                var edge = new ArrowGraphEdge(
-                    activityDto,
-                    edgeTailVertexLookup[activityDto.Id],
-                    edgeHeadVertexLookup[activityDto.Id]);
-                graph.AddEdge(edge);
-            }
-            return graph;
-        }
-
-        private void DecorateArrowGraph()
-        {
-            lock (m_Lock)
-            {
-                DecorateArrowGraphByGraphSettings(ArrowGraphData, ArrowGraphSettingsDto);
-            }
-        }
-
-        private static void DecorateArrowGraphByGraphSettings(ArrowGraphData arrowGraphData, ArrowGraphSettingsDto arrowGraphSettings)
-        {
-            if (arrowGraphData == null)
-            {
-                return;
-            }
-            if (arrowGraphSettings == null)
-            {
-                throw new ArgumentNullException(nameof(arrowGraphSettings));
-            }
-            GraphXEdgeFormatLookup edgeFormatLookup = GetEdgeFormatLookup(arrowGraphSettings);
-            foreach (ArrowGraphEdge edge in arrowGraphData.Edges)
-            {
-                edge.ForegroundHexCode = edgeFormatLookup.FindSlackColorHexCode(edge.TotalSlack);
-                edge.StrokeThickness = edgeFormatLookup.FindStrokeThickness(edge.IsCritical, edge.IsDummy);
-                edge.DashStyle = edgeFormatLookup.FindDashStyle(edge.IsCritical, edge.IsDummy);
-            }
-        }
-
-        private static GraphXEdgeFormatLookup GetEdgeFormatLookup(ArrowGraphSettingsDto arrowGraphSettingsDto)
-        {
-            if (arrowGraphSettingsDto == null)
-            {
-                throw new ArgumentNullException(nameof(arrowGraphSettingsDto));
-            }
-            return new GraphXEdgeFormatLookup(arrowGraphSettingsDto.ActivitySeverities, arrowGraphSettingsDto.EdgeTypeFormats);
         }
 
         private async Task<MicrosoftProjectDto> ImportMicrosoftProjectAsync(string filename)
@@ -1119,12 +961,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     ResourceDtos.Add(resourceDto);
                 }
 
-                // Arrow Graph.
-                ArrowGraphSettingsDto = projectPlanDto.ArrowGraphSettings;
-                ArrowGraphDto = projectPlanDto.ArrowGraph;
-                ArrowGraphData = GenerateArrowGraphData(ArrowGraphDto);
-                DecorateArrowGraph();
-
                 // Activities.
                 foreach (DependentActivityDto dependentActivityDto in projectPlanDto.DependentActivities)
                 {
@@ -1156,12 +992,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 SetCompilationOutput();
 
-                HasStaleArrowGraph = projectPlanDto.HasStaleArrowGraph;
+                // Arrow Graph.
+                ArrowGraphSettingsDto = projectPlanDto.ArrowGraphSettings;
+                ArrowGraphDto = projectPlanDto.ArrowGraph;
+
                 HasStaleOutputs = projectPlanDto.HasStaleOutputs;
             }
-            m_EventService
-                .GetEvent<PubSubEvent<ArrowGraphGeneratedPayload>>()
-                .Publish(new ArrowGraphGeneratedPayload());
+            PublishArrowGraphDtoUpdatedPayload();
         }
 
         private async Task<ProjectPlanDto> BuildProjectPlanDtoAsync()
@@ -1189,8 +1026,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     CyclomaticComplexity = CyclomaticComplexity.GetValueOrDefault(),
                     Duration = Duration.GetValueOrDefault(),
 
-                    ArrowGraph = ArrowGraphDto != null ? ArrowGraphDto.Copy() : new ArrowGraphDto() { Edges = new List<ActivityEdgeDto>(), Nodes = new List<EventNodeDto>() },
-                    HasStaleArrowGraph = HasStaleArrowGraph,
+                    ArrowGraph = ArrowGraphDto != null ? ArrowGraphDto.Copy() : new ArrowGraphDto() { Edges = new List<ActivityEdgeDto>(), Nodes = new List<EventNodeDto>(), IsStale = false },
 
                     HasStaleOutputs = HasStaleOutputs
                 };
@@ -1392,8 +1228,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     }
                     SetActivitiesTargetResources();
                 }
+
                 HasStaleOutputs = true;
                 IsProjectUpdated = true;
+
                 if (AutoCompile)
                 {
                     await RunCompileAsync();
@@ -1431,10 +1269,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     ArrowGraphSettingsDto = confirmation.ArrowGraphSettingsDto;
                 }
                 IsProjectUpdated = true;
-                if (ArrowGraphDto != null)
-                {
-                    HasStaleArrowGraph = true;
-                }
+                PublishArrowGraphSettingsUpdatedPayload();
             }
             catch (Exception ex)
             {
@@ -1476,6 +1311,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 IsBusy = true;
                 HasStaleOutputs = true;
                 IsProjectUpdated = true;
+
                 if (AutoCompile)
                 {
                     await RunCompileAsync();
@@ -1515,8 +1351,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         Activities.Add(activity);
                     }
                 }
+
                 HasStaleOutputs = true;
                 IsProjectUpdated = true;
+
                 if (AutoCompile)
                 {
                     await RunCompileAsync();
@@ -1555,8 +1393,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         }
                     }
                 }
+
                 HasStaleOutputs = true;
                 IsProjectUpdated = true;
+
                 if (AutoCompile)
                 {
                     await RunCompileAsync();
@@ -1573,30 +1413,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 SelectedActivities.Clear();
                 RaisePropertyChanged(nameof(Activities));
                 RaisePropertyChanged(nameof(SelectedActivities));
-                IsBusy = false;
-                RaiseCanExecuteChangedAllCommands();
-            }
-        }
-
-        public async Task DoGenerateArrowGraphAsync()
-        {
-            try
-            {
-                IsBusy = true;
-                await GenerateArrowGraphFromGraphCompilationAsync();
-                IsProjectUpdated = true;
-                m_EventService
-                    .GetEvent<PubSubEvent<ArrowGraphGeneratedPayload>>()
-                    .Publish(new ArrowGraphGeneratedPayload());
-            }
-            catch (Exception ex)
-            {
-                DispatchNotification(
-                    Properties.Resources.Title_Error,
-                    ex.Message);
-            }
-            finally
-            {
                 IsBusy = false;
                 RaiseCanExecuteChangedAllCommands();
             }
@@ -1623,12 +1439,15 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get
             {
-                return m_IsProjectUpdated;
+                return m_CoreViewModel.IsProjectUpdated;
             }
             private set
             {
-                m_IsProjectUpdated = value;
-                RaisePropertyChanged(nameof(IsProjectUpdated));
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.IsProjectUpdated = value;
+                }
+                RaisePropertyChanged();
             }
         }
 
@@ -1688,6 +1507,21 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     m_AutoCompile = value;
                 }
                 RaisePropertyChanged(nameof(AutoCompile));
+            }
+        }
+
+        public ArrowGraphSettingsDto ArrowGraphSettingsDto
+        {
+            get
+            {
+                return m_CoreViewModel.ArrowGraphSettingsDto;
+            }
+            private set
+            {
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.ArrowGraphSettingsDto = value;
+                }
             }
         }
 
@@ -1826,8 +1660,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 SetCompilationOutput();
 
                 ArrowGraphDto = null;
-                ArrowGraphData = GenerateArrowGraphData(ArrowGraphDto);
-                HasStaleArrowGraph = false;
 
                 ProjectStartWithoutPublishing = DateTime.UtcNow.BeginningOfDay();
                 IsProjectUpdated = false;
@@ -1835,9 +1667,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 HasStaleOutputs = false;
             }
-            m_EventService
-                .GetEvent<PubSubEvent<ArrowGraphGeneratedPayload>>()
-                .Publish(new ArrowGraphGeneratedPayload());
+            PublishArrowGraphDtoUpdatedPayload();
         }
 
         #endregion
@@ -1862,65 +1692,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get;
             private set;
-        }
-
-        #endregion
-
-        #region IArrowGraphManagerViewModel Members
-
-        public bool HasStaleArrowGraph
-        {
-            get
-            {
-                return m_HasStaleArrowGraph;
-            }
-            private set
-            {
-                m_HasStaleArrowGraph = value;
-                RaisePropertyChanged(nameof(HasStaleArrowGraph));
-            }
-        }
-
-        public ArrowGraphSettingsDto ArrowGraphSettingsDto
-        {
-            get
-            {
-                return m_CoreViewModel.ArrowGraphSettingsDto;
-            }
-            private set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.ArrowGraphSettingsDto = value;
-                }
-            }
-        }
-
-        public ArrowGraphData ArrowGraphData
-        {
-            get;
-            private set;
-        }
-
-        public ArrowGraphDto ArrowGraphDto
-        {
-            get;
-            private set;
-        }
-
-        public ICommand GenerateArrowGraphCommand
-        {
-            get;
-            private set;
-        }
-
-        public byte[] ExportArrowGraphToDiagram(DiagramArrowGraphDto diagramArrowGraphDto)
-        {
-            if (diagramArrowGraphDto == null)
-            {
-                throw new ArgumentNullException(nameof(diagramArrowGraphDto));
-            }
-            return m_ProjectManager.ExportArrowGraphToDiagram(diagramArrowGraphDto);
         }
 
         #endregion

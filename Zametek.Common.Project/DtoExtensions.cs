@@ -202,7 +202,8 @@ namespace Zametek.Common.Project
             return new ArrowGraphDto
             {
                 Edges = arrowGraphDto.Edges != null ? arrowGraphDto.Edges.Select(x => x.Copy()).ToList() : new List<ActivityEdgeDto>(),
-                Nodes = arrowGraphDto.Nodes != null ? arrowGraphDto.Nodes.Select(x => x.Copy()).ToList() : new List<EventNodeDto>()
+                Nodes = arrowGraphDto.Nodes != null ? arrowGraphDto.Nodes.Select(x => x.Copy()).ToList() : new List<EventNodeDto>(),
+                IsStale = arrowGraphDto.IsStale
             };
         }
     }

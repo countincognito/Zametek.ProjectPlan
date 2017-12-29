@@ -310,10 +310,11 @@
     <Compile Include="Contracts\IResourceChartManagerViewModel.cs" />
     <Compile Include="Contracts\IResourceSettingsManagerViewModel.cs" />
     <Compile Include="Converters\ColorFormatToColorConverter.cs" />
-    <Compile Include="Events\ArrowGraphGeneratedPayload.cs" />
+    <Compile Include="Events\ArrowGraphSettingsUpdatedPayload.cs" />
+    <Compile Include="Events\ArrowGraphDtoUpdatedPayload.cs" />
+    <Compile Include="Events\ArrowGraphDataUpdatedPayload.cs" />
     <Compile Include="Events\GraphCompiledPayload.cs" />
     <Compile Include="Events\ManagedActivityUpdatedPayload.cs" />
-    <Compile Include="Events\ManagedResourcesUpdatedPayload.cs" />
     <Compile Include="Events\ProjectStartUpdatedPayload.cs" />
     <Compile Include="Events\UseBusinessDaysUpdatedPayload.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -349,6 +350,7 @@
     <Compile Include="ViewModels\ArrowGraphSettingsManagement\ManagedActivitySeverityViewModel.cs" />
     <Compile Include="ViewModels\CoreViewModel.cs" />
     <Compile Include="ViewModels\EarnedValueChartManagement\EarnedValueChartManagerViewModel.cs" />
+    <Compile Include="ViewModels\GraphManagement\ArrowGraphManagerViewModel.cs" />
     <Compile Include="ViewModels\MetricsManagement\MetricsManagerViewModel.cs" />
     <Compile Include="ViewModels\PropertyChangedPubSubViewModel.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphData.cs" />

@@ -120,9 +120,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
 
             Dictionary<string, HashSet<string>> sourceSubscribedProperties = m_SourceSubscribedPropertyNames.GetOrCreateValue(source);
-            HashSet<string> subscribedPropertyTargets;
 
-            if (!sourceSubscribedProperties.TryGetValue(sourcePropertyName, out subscribedPropertyTargets))
+            if (!sourceSubscribedProperties.TryGetValue(sourcePropertyName, out HashSet<string> subscribedPropertyTargets))
             {
                 subscribedPropertyTargets = new HashSet<string>();
                 sourceSubscribedProperties.Add(sourcePropertyName, subscribedPropertyTargets);
@@ -156,8 +155,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         protected void SubscriptionAction(PropertyChangedPubSubPayload payload)
         {
-            IPropertyChangedPubSubViewModel source;
-            if (!payload.Source.TryGetTarget(out source))
+            if (!payload.Source.TryGetTarget(out IPropertyChangedPubSubViewModel source))
             {
                 return;
             }
@@ -169,9 +167,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
 
             Dictionary<string, HashSet<string>> sourceSubscribedProperties = m_SourceSubscribedPropertyNames.GetOrCreateValue(source);
-            HashSet<string> subscribedPropertyTargets;
 
-            if (!sourceSubscribedProperties.TryGetValue(payload.PropertyName, out subscribedPropertyTargets))
+            if (!sourceSubscribedProperties.TryGetValue(payload.PropertyName, out HashSet<string> subscribedPropertyTargets))
             {
                 return;
             }
@@ -184,8 +181,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         protected bool SubscriptionFilter(PropertyChangedPubSubPayload payload)
         {
-            IPropertyChangedPubSubViewModel source;
-            if (!payload.Source.TryGetTarget(out source))
+            if (!payload.Source.TryGetTarget(out IPropertyChangedPubSubViewModel source))
             {
                 return false;
             }
@@ -197,10 +193,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
 
             Dictionary<string, HashSet<string>> sourceSubscribedProperties = m_SourceSubscribedPropertyNames.GetOrCreateValue(source);
-            HashSet<string> subscribedPropertyTargets;
 
             // Only proceed if object is subscribed to source property name.
-            if (!sourceSubscribedProperties.TryGetValue(payload.PropertyName, out subscribedPropertyTargets))
+            if (!sourceSubscribedProperties.TryGetValue(payload.PropertyName, out HashSet<string> subscribedPropertyTargets))
             {
                 return false;
             }

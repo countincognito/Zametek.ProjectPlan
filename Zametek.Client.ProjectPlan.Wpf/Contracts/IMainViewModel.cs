@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -38,6 +39,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get;
             set;
+        }
+
+        ArrowGraphSettingsDto ArrowGraphSettingsDto
+        {
+            get;
         }
 
         ICommand OpenProjectPlanFileCommand

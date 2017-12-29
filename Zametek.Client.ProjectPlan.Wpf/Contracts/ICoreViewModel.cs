@@ -14,6 +14,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
+        bool IsProjectUpdated
+        {
+            get;
+            set;
+        }
+
         bool ShowDates
         {
             get;
@@ -39,6 +45,18 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         GraphCompilation<int, IDependentActivity<int>> GraphCompilation
+        {
+            get;
+            set;
+        }
+
+        string CompilationOutput
+        {
+            get;
+            set;
+        }
+
+        ArrowGraphDto ArrowGraphDto
         {
             get;
             set;

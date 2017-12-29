@@ -19,7 +19,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private readonly IFileDialogService m_FileDialogService;
         private readonly IAppSettingService m_AppSettingService;
         private readonly IEventAggregator m_EventService;
-        private SubscriptionToken m_ArrowGraphGeneratedSubscriptionToken;
+        private SubscriptionToken m_ArrowGraphDataUpdatedSubscriptionToken;
 
         #endregion
 
@@ -63,27 +63,24 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void SubscribeToEvents()
         {
-            m_ArrowGraphGeneratedSubscriptionToken =
-                m_EventService.GetEvent<PubSubEvent<ArrowGraphGeneratedPayload>>()
+            m_ArrowGraphDataUpdatedSubscriptionToken =
+                m_EventService.GetEvent<PubSubEvent<ArrowGraphDataUpdatedPayload>>()
                 .Subscribe(payload =>
                 {
                     ArrowGraphAreaCtrl.ClearLayout();
-                    if (payload != null)
+                    ArrowGraphData arrowGraphData = ViewModel.ArrowGraphData;
+                    if (arrowGraphData != null)
                     {
-                        ArrowGraphData arrowGraphData = ViewModel.ArrowGraphData;
-                        if (arrowGraphData != null)
-                        {
-                            ArrowGraphAreaCtrl.GenerateGraph(arrowGraphData);
-                            ResetGraph();
-                        }
+                        ArrowGraphAreaCtrl.GenerateGraph(arrowGraphData);
+                        ResetGraph();
                     }
                 }, ThreadOption.UIThread);
         }
 
         private void UnsubscribeFromEvents()
         {
-            m_EventService.GetEvent<PubSubEvent<ArrowGraphGeneratedPayload>>()
-                .Unsubscribe(m_ArrowGraphGeneratedSubscriptionToken);
+            m_EventService.GetEvent<PubSubEvent<ArrowGraphDataUpdatedPayload>>()
+                .Unsubscribe(m_ArrowGraphDataUpdatedSubscriptionToken);
         }
 
         private void ResetGraph()

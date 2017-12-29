@@ -8,5 +8,6 @@ namespace Zametek.Common.Project
     {
         public List<ActivityEdgeDto> Edges { get; set; }
         public List<EventNodeDto> Nodes { get; set; }
+        public bool IsStale { get; set; }
     }
 }

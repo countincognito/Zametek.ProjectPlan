@@ -13,11 +13,14 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private readonly object m_Lock;
         private DateTime m_ProjectStart;
+        private bool m_IsProjectUpdated;
         private bool m_ShowDates;
         private bool m_UseBusinessDays;
         private bool m_HasStaleOutputs;
         private bool m_HasCompilationErrors;
         private GraphCompilation<int, IDependentActivity<int>> m_GraphCompilation;
+        private string m_CompilationOutput;
+        private ArrowGraphDto m_ArrowGraphDto;
         private ArrowGraphSettingsDto m_ArrowGraphSettingsDto;
         private int? m_CyclomaticComplexity;
         private int? m_Duration;
@@ -52,6 +55,22 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 lock (m_Lock)
                 {
                     m_ProjectStart = value;
+                }
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool IsProjectUpdated
+        {
+            get
+            {
+                return m_IsProjectUpdated;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_IsProjectUpdated = value;
                 }
                 RaisePropertyChanged();
             }
@@ -132,6 +151,38 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 lock (m_Lock)
                 {
                     m_GraphCompilation = value;
+                }
+                RaisePropertyChanged();
+            }
+        }
+
+        public string CompilationOutput
+        {
+            get
+            {
+                return m_CompilationOutput;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_CompilationOutput = value;
+                }
+                RaisePropertyChanged();
+            }
+        }
+
+        public ArrowGraphDto ArrowGraphDto
+        {
+            get
+            {
+                return m_ArrowGraphDto;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ArrowGraphDto = value;
                 }
                 RaisePropertyChanged();
             }

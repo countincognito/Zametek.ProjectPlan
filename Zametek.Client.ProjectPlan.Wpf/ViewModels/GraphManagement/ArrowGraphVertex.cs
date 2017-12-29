@@ -18,7 +18,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #region Ctors
 
         public ArrowGraphVertex()
-        { }
+        {
+        }
 
         public ArrowGraphVertex(
             EventDto eventVertexDto,

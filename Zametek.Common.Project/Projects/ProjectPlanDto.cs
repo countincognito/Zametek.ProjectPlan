@@ -22,9 +22,7 @@ namespace Zametek.Common.Project
         public int Duration { get; set; }
 
         public ArrowGraphDto ArrowGraph { get; set; }
-        public bool HasStaleArrowGraph { get; set; }
 
         public bool HasStaleOutputs { get; set; }
-        //public VertexGraphDto VertexGraph { get; set; }
     }
 }

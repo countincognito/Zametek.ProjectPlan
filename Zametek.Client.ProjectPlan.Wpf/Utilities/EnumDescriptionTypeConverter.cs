@@ -14,7 +14,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public EnumDescriptionTypeConverter(Type type)
             : base(type)
-        { }
+        {
+        }
 
         #endregion
 
