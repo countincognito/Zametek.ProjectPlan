@@ -12,32 +12,37 @@ namespace Zametek.Client.ProjectPlan.Wpf
     {
         #region Ctors
 
-        public ResourceSettingsManagerConfirmation(
-            bool disableResources,
-            IEnumerable<ResourceDto> resources)
+        public ResourceSettingsManagerConfirmation(ResourceSettingsDto resourceSettings)
         {
-            if (resources == null)
+            if (resourceSettings == null)
             {
-                throw new ArgumentNullException(nameof(resources));
+                throw new ArgumentNullException(nameof(resourceSettings));
             }
-            DisableResources = disableResources;
+            DefaultUnitCost = resourceSettings.DefaultUnitCost;
+            AreDisabled = resourceSettings.AreDisabled;
             Resources = new ObservableCollection<ManagedResourceViewModel>();
-            SetManagedResources(resources);
+            SetManagedResources(resourceSettings.Resources);
         }
 
         #endregion
 
         #region Properties
 
-        public bool DisableResources
+        public ObservableCollection<ManagedResourceViewModel> Resources
+        {
+            get;
+        }
+
+        public double DefaultUnitCost
         {
             get;
             set;
         }
 
-        public ObservableCollection<ManagedResourceViewModel> Resources
+        public bool AreDisabled
         {
             get;
+            set;
         }
 
         public IEnumerable<ResourceDto> ResourceDtos
@@ -45,6 +50,19 @@ namespace Zametek.Client.ProjectPlan.Wpf
             get
             {
                 return Resources.Select(x => x.ResourceDto);
+            }
+        }
+
+        public ResourceSettingsDto ResourceSettingsDto
+        {
+            get
+            {
+                return new ResourceSettingsDto
+                {
+                    Resources = ResourceDtos.ToList(),
+                    DefaultUnitCost = DefaultUnitCost,
+                    AreDisabled = AreDisabled
+                };
             }
         }
 

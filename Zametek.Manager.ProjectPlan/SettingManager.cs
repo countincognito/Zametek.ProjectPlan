@@ -29,6 +29,11 @@ namespace Zametek.Manager.ProjectPlan
             return m_SettingResourceAccess.GetArrowGraphSettings();
         }
 
+        public ResourceSettingsDto GetResourceSettings()
+        {
+            return m_SettingResourceAccess.GetResourceSettings();
+        }
+
         #endregion
     }
 }

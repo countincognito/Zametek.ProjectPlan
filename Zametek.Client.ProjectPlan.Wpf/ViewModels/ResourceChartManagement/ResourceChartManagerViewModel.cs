@@ -88,7 +88,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private GraphCompilation<int, IDependentActivity<int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
 
-        private IList<ResourceDto> ResourceDtos => m_CoreViewModel.ResourceDtos;
+        private IList<ResourceDto> ResourceDtos => m_CoreViewModel.ResourceSettingsDto.Resources;
+
+        private double DefaultUnitCost => m_CoreViewModel.ResourceSettingsDto.DefaultUnitCost;
 
         #endregion
 
@@ -237,6 +239,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 if (resourceSchedules != null
                     && resourceSchedules.Any())
                 {
+                    double defaultUnitCost = DefaultUnitCost;
                     IDictionary<int, ColorFormatDto> colorFormatLookup = ResourceDtos.ToDictionary(x => x.Id, x => x.ColorFormat);
                     var indirectResourceIdsToIgnore = new HashSet<int>();
                     int finishTime = resourceSchedules.Max(x => x.FinishTime);
@@ -274,7 +277,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                         series.Title = stringBuilder.ToString();
                         series.ColorFormatDto = resource != null && colorFormatLookup.ContainsKey(resource.Id) ? colorFormatLookup[resource.Id].Copy() : new ColorFormatDto().Randomize();
-                        series.UnitCost = resource?.UnitCost ?? 0;
+                        series.UnitCost = resource?.UnitCost ?? defaultUnitCost;
                         series.DisplayOrder = resource?.DisplayOrder ?? 0;
                         scheduledSeriesSet.Add(series);
                     }

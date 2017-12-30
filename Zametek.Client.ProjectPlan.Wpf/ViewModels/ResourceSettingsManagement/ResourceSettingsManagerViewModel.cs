@@ -128,7 +128,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         Id = resourceId,
                         IsExplicitTarget = true,
                         ColorFormat = new ColorFormatDto(),
-                        UnitCost = 0.0
+                        UnitCost = DefaultUnitCost
                     }));
             RaisePropertyChanged(nameof(Resources));
             RaisePropertyChanged(nameof(SelectedResources));
@@ -194,6 +194,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             {
                 base.Notification = value;
                 RaisePropertyChanged(nameof(Resources));
+                RaisePropertyChanged(nameof(DefaultUnitCost));
                 RaisePropertyChanged(nameof(DisableResources));
                 RaisePropertyChanged(nameof(ActivateResources));
             }
@@ -203,6 +204,28 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region IResourcesManagerViewModel Members
 
+        public double DefaultUnitCost
+        {
+            get
+            {
+                var notification = (ResourceSettingsManagerConfirmation)Notification;
+                if (notification != null)
+                {
+                    return notification.DefaultUnitCost;
+                }
+                return 1.0;
+            }
+            set
+            {
+                var notification = (ResourceSettingsManagerConfirmation)Notification;
+                if (notification != null)
+                {
+                    notification.DefaultUnitCost = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
         public bool DisableResources
         {
             get
@@ -210,7 +233,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 var notification = (ResourceSettingsManagerConfirmation)Notification;
                 if (notification != null)
                 {
-                    return notification.DisableResources;
+                    return notification.AreDisabled;
                 }
                 return false;
             }
@@ -219,7 +242,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 var notification = (ResourceSettingsManagerConfirmation)Notification;
                 if (notification != null)
                 {
-                    notification.DisableResources = value;
+                    notification.AreDisabled = value;
                     RaisePropertyChanged();
                     RaisePropertyChanged(nameof(ActivateResources));
                 }

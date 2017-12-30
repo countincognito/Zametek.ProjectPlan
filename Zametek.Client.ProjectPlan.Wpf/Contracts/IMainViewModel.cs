@@ -46,6 +46,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             get;
         }
 
+        ResourceSettingsDto ResourceSettingsDto
+        {
+            get;
+        }
+
         ICommand OpenProjectPlanFileCommand
         {
             get;

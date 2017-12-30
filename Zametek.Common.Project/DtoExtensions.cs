@@ -137,6 +137,20 @@ namespace Zametek.Common.Project
             };
         }
 
+        public static ResourceSettingsDto Copy(this ResourceSettingsDto resourceSettingsDto)
+        {
+            if (resourceSettingsDto == null)
+            {
+                throw new ArgumentNullException(nameof(resourceSettingsDto));
+            }
+            return new ResourceSettingsDto
+            {
+                Resources = resourceSettingsDto.Resources != null ? resourceSettingsDto.Resources.Select(x => x.Copy()).ToList() : new List<ResourceDto>(),
+                DefaultUnitCost = resourceSettingsDto.DefaultUnitCost,
+                AreDisabled = resourceSettingsDto.AreDisabled
+            };
+        }
+
         public static ActivitySeverityDto Copy(this ActivitySeverityDto activitySeverityDto)
         {
             if (activitySeverityDto == null)

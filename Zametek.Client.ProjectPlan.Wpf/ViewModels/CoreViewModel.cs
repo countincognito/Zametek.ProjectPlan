@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using Zametek.Common.Project;
+using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -15,6 +16,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #region Fields
 
         private readonly object m_Lock;
+        private readonly ISettingManager m_SettingManager;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly VertexGraphCompiler<int, IDependentActivity<int>> m_VertexGraphCompiler;
         private DateTime m_ProjectStart;
@@ -28,6 +30,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private string m_CompilationOutput;
         private ArrowGraphDto m_ArrowGraphDto;
         private ArrowGraphSettingsDto m_ArrowGraphSettingsDto;
+        private ResourceSettingsDto m_ResourceSettingsDto;
         private int? m_CyclomaticComplexity;
         private int? m_Duration;
         private double? m_DirectCost;
@@ -42,17 +45,19 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #region Ctors
 
         public CoreViewModel(
+            ISettingManager settingManager,
             IDateTimeCalculator dateTimeCalculator,
             IEventAggregator eventService)
             : base(eventService)
         {
             m_Lock = new object();
+            m_SettingManager = settingManager ?? throw new ArgumentNullException(nameof(settingManager));
             m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
             m_VertexGraphCompiler = VertexGraphCompiler<int, IDependentActivity<int>>.Create();
             Activities = new ObservableCollection<ManagedActivityViewModel>();
-            ResourceDtos = new List<ResourceDto>();
+            ClearSettings();
         }
 
         #endregion
@@ -326,17 +331,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public bool DisableResources
-        {
-            get;
-            set;
-        }
-
-        public IList<ResourceDto> ResourceDtos
-        {
-            get;
-        }
-
         public ObservableCollection<ManagedActivityViewModel> Activities
         {
             get;
@@ -353,6 +347,22 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 lock (m_Lock)
                 {
                     m_ArrowGraphSettingsDto = value;
+                }
+                RaisePropertyChanged();
+            }
+        }
+
+        public ResourceSettingsDto ResourceSettingsDto
+        {
+            get
+            {
+                return m_ResourceSettingsDto;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ResourceSettingsDto = value;
                 }
                 RaisePropertyChanged();
             }
@@ -478,7 +488,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 var activity = new ManagedActivityViewModel(
                     dependentActivity,
                     ProjectStart,
-                    ResourceDtos,
+                    ResourceSettingsDto.Resources,
                     dateTimeCalculator,
                     m_EventService);
 
@@ -522,7 +532,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             {
                 foreach (ManagedActivityViewModel activity in Activities)
                 {
-                    activity.SetTargetResources(ResourceDtos.Select(x => x.Copy()));
+                    activity.SetTargetResources(ResourceSettingsDto.Resources.Select(x => x.Copy()));
                 }
             }
         }
@@ -569,9 +579,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 UpdateActivitiesTargetResourceDependencies();
 
                 var availableResources = new List<IResource<int>>();
-                if (!DisableResources)
+                if (!ResourceSettingsDto.AreDisabled)
                 {
-                    availableResources.AddRange(ResourceDtos.Select(x => DtoConverter.FromDto(x)));
+                    availableResources.AddRange(ResourceSettingsDto.Resources.Select(x => DtoConverter.FromDto(x)));
                 }
 
                 GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
@@ -640,6 +650,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 CompilationOutput = output.ToString();
             }
+        }
+
+        public void ClearSettings()
+        {
+            ArrowGraphSettingsDto = m_SettingManager.GetArrowGraphSettings();
+            ResourceSettingsDto = m_SettingManager.GetResourceSettings();
         }
 
         #endregion

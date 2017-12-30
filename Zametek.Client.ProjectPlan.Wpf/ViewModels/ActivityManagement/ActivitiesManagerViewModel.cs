@@ -73,8 +73,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private DateTime ProjectStart => m_CoreViewModel.ProjectStart;
 
-        private IList<ResourceDto> ResourceDtos => m_CoreViewModel.ResourceDtos;
-
         #endregion
 
         #region Commands

@@ -8,9 +8,9 @@ namespace Zametek.Common.Project
     {
         //public string Title { get; set; }
         public DateTime ProjectStart { get; set; }
-        public List<ResourceDto> Resources { get; set; }
-        public bool DisableResources { get; set; }
+
         public ArrowGraphSettingsDto ArrowGraphSettings { get; set; }
+        public ResourceSettingsDto ResourceSettings { get; set; }
 
         public bool AllResourcesExplicitTargetsButNotAllActivitiesTargeted { get; set; }
         public List<CircularDependencyDto> CircularDependencies { get; set; }

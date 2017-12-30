@@ -31,7 +31,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private static string s_DefaultProjectTitle = Properties.Resources.Label_DefaultTitle;
 
         private readonly ICoreViewModel m_CoreViewModel;
-        private readonly ISettingManager m_SettingManager;
         private readonly IFileDialogService m_FileDialogService;
         private readonly IAppSettingService m_AppSettingService;
         private readonly IEventAggregator m_EventService;
@@ -47,7 +46,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public MainViewModel(
             ICoreViewModel coreViewModel,
-            ISettingManager settingManager,
             IFileDialogService fileDialogService,
             IAppSettingService appSettingService,
             IEventAggregator eventService)
@@ -55,7 +53,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
-            m_SettingManager = settingManager ?? throw new ArgumentNullException(nameof(settingManager));
             m_FileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
             m_AppSettingService = appSettingService ?? throw new ArgumentNullException(nameof(appSettingService));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
@@ -153,23 +150,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 RaisePropertyChanged(nameof(UseBusinessDays));
             }
         }
-
-        private bool DisableResources
-        {
-            get
-            {
-                return m_CoreViewModel.DisableResources;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.DisableResources = value;
-                }
-            }
-        }
-
-        private IList<ResourceDto> ResourceDtos => m_CoreViewModel.ResourceDtos;
 
         private IList<ManagedActivityViewModel> Activities => m_CoreViewModel.Activities;
 
@@ -545,7 +525,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 // Resources.
                 foreach (ResourceDto resourceDto in microsoftProjectDto.Resources)
                 {
-                    ResourceDtos.Add(resourceDto);
+                    ResourceSettingsDto.Resources.Add(resourceDto);
                 }
                 //SetTargetResources();
 
@@ -571,11 +551,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 ProjectStartWithoutPublishing = projectPlanDto.ProjectStart;
 
                 // Resources.
-                DisableResources = projectPlanDto.DisableResources;
-                foreach (ResourceDto resourceDto in projectPlanDto.Resources)
-                {
-                    ResourceDtos.Add(resourceDto);
-                }
+                ResourceSettingsDto = projectPlanDto.ResourceSettings;
 
                 // Activities.
                 foreach (DependentActivityDto dependentActivityDto in projectPlanDto.DependentActivities)
@@ -619,8 +595,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 return new ProjectPlanDto()
                 {
                     ProjectStart = ProjectStart,
-                    Resources = ResourceDtos.Select(x => x.Copy()).ToList(),
-                    DisableResources = DisableResources,
+                    ResourceSettings = ResourceSettingsDto.Copy(),
                     ArrowGraphSettings = ArrowGraphSettingsDto.Copy(),
 
                     AllResourcesExplicitTargetsButNotAllActivitiesTargeted = GraphCompilation?.AllResourcesExplicitTargetsButNotAllActivitiesTargeted != null ? GraphCompilation.AllResourcesExplicitTargetsButNotAllActivitiesTargeted : false,
@@ -824,7 +799,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 IsBusy = true;
                 lock (m_Lock)
                 {
-                    var confirmation = new ResourceSettingsManagerConfirmation(DisableResources, ResourceDtos.Select(x => x.Copy()))
+                    var confirmation = new ResourceSettingsManagerConfirmation(ResourceSettingsDto.Copy())
                     {
                         Title = Properties.Resources.Title_ResourceSettings
                     };
@@ -833,12 +808,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     {
                         return;
                     }
-                    ResourceDtos.Clear();
-                    DisableResources = confirmation.DisableResources;
-                    foreach (ResourceDto resourceDto in confirmation.ResourceDtos)
-                    {
-                        ResourceDtos.Add(resourceDto);
-                    }
+                    ResourceSettingsDto = confirmation.ResourceSettingsDto;
                     m_CoreViewModel.UpdateActivitiesTargetResources();
                 }
 
@@ -1021,6 +991,21 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
+        public ResourceSettingsDto ResourceSettingsDto
+        {
+            get
+            {
+                return m_CoreViewModel.ResourceSettingsDto;
+            }
+            private set
+            {
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.ResourceSettingsDto = value;
+                }
+            }
+        }
+
         public ICommand OpenProjectPlanFileCommand
         {
             get;
@@ -1138,10 +1123,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 m_CoreViewModel.ClearManagedActivities();
                 //SelectedActivities.Clear();
 
-                ResourceDtos.Clear();
-                DisableResources = false;
+                m_CoreViewModel.ClearSettings();
 
-                ArrowGraphSettingsDto = m_SettingManager.GetArrowGraphSettings();
                 GraphCompilation = new GraphCompilation<int, IDependentActivity<int>>(
                     false,
                     Enumerable.Empty<CircularDependency<int>>(),

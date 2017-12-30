@@ -70,23 +70,18 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
-        bool DisableResources
-        {
-            get;
-            set;
-        }
-
-        IList<ResourceDto> ResourceDtos
-        {
-            get;
-        }
-
         ObservableCollection<ManagedActivityViewModel> Activities
         {
             get;
         }
 
         ArrowGraphSettingsDto ArrowGraphSettingsDto
+        {
+            get;
+            set;
+        }
+
+        ResourceSettingsDto ResourceSettingsDto
         {
             get;
             set;
@@ -149,5 +144,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         void RunAutoCompile();
 
         void SetCompilationOutput();
+
+        void ClearSettings();
     }
 }

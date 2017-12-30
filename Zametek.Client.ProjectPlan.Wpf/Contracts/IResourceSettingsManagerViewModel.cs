@@ -5,6 +5,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
 {
     public interface IResourceSettingsManagerViewModel
     {
+        double DefaultUnitCost
+        {
+            get;
+            set;
+        }
+
         bool DisableResources
         {
             get;

@@ -112,6 +112,16 @@ namespace Zametek.Access.ProjectPlan
             };
         }
 
+        public ResourceSettingsDto GetResourceSettings()
+        {
+            return new ResourceSettingsDto
+            {
+                Resources = new List<ResourceDto>(),
+                DefaultUnitCost = 1.0,
+                AreDisabled = false
+            };
+        }
+
         #endregion
     }
 }
