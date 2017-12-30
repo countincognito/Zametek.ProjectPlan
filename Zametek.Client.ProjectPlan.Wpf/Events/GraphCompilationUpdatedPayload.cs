@@ -1,6 +1,6 @@
 ﻿namespace Zametek.Client.ProjectPlan.Wpf
 {
-    public class UseBusinessDaysUpdatedPayload
+    public class GraphCompilationUpdatedPayload
     {
     }
 }

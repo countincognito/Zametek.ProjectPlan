@@ -51,7 +51,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
             InitializeCommands();
             SubscribeToEvents();
-            
+
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasStaleOutputs), nameof(HasStaleArrowGraph), ThreadOption.BackgroundThread);
         }
 
@@ -82,7 +82,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             set
             {
-                m_CoreViewModel.IsProjectUpdated = value;
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.IsProjectUpdated = value;
+                }
             }
         }
 
@@ -160,8 +163,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void PublishArrowGraphDataUpdatedPayload()
         {
-            m_EventService
-                .GetEvent<PubSubEvent<ArrowGraphDataUpdatedPayload>>()
+            m_EventService.GetEvent<PubSubEvent<ArrowGraphDataUpdatedPayload>>()
                 .Publish(new ArrowGraphDataUpdatedPayload());
         }
 

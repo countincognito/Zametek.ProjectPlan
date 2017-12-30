@@ -54,10 +54,23 @@
         </ControlTemplate>
     </UserControl.Resources>
 
-    <!--<UserControl.InputBindings>
-        <KeyBinding Gesture="Escape" Command="{Binding Path=CancelCommand}"/>
-    </UserControl.InputBindings>-->
-
+    <i:Interaction.Triggers>
+        <prism:InteractionRequestTrigger SourceObject="{Binding Path=NotificationInteractionRequest, Mode=OneWay}">
+            <prism:PopupWindowAction IsModal="True"
+                                     CenterOverAssociatedObject="True">
+                <prism:PopupWindowAction.WindowStyle>
+                    <Style TargetType="{x:Type Window}">
+                        <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+                        <Setter Property="ResizeMode" Value="NoResize"/>
+                    </Style>
+                </prism:PopupWindowAction.WindowStyle>
+                <prism:PopupWindowAction.WindowContent>
+                    <local:BasicNotificationView />
+                </prism:PopupWindowAction.WindowContent>
+            </prism:PopupWindowAction>
+        </prism:InteractionRequestTrigger>
+    </i:Interaction.Triggers>
+    
     <DockPanel Margin="7">
         <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanMetricsRegion}"
                         DockPanel.Dock="Top"/>

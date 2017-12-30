@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using Zametek.Common.Project;
 using Zametek.Maths.Graphs;
 
@@ -38,6 +40,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
+        bool AutoCompile
+        {
+            get;
+            set;
+        }
+
         bool HasCompilationErrors
         {
             get;
@@ -62,7 +70,18 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
+        bool DisableResources
+        {
+            get;
+            set;
+        }
+
         IList<ResourceDto> ResourceDtos
+        {
+            get;
+        }
+
+        ObservableCollection<ManagedActivityViewModel> Activities
         {
             get;
         }
@@ -108,5 +127,27 @@ namespace Zametek.Client.ProjectPlan.Wpf
             get;
             set;
         }
+
+        void AddManagedActivity();
+
+        void AddManagedActivity(IDependentActivity<int> dependentActivity);
+
+        void RemoveManagedActivities(HashSet<int> dependentActivities);
+
+        void ClearManagedActivities();
+
+        void UpdateActivitiesTargetResources();
+
+        void UpdateActivitiesTargetResourceDependencies();
+
+        void UpdateActivitiesProjectStart();
+
+        void UpdateActivitiesUseBusinessDays();
+
+        void RunCompile();
+
+        void RunAutoCompile();
+
+        void SetCompilationOutput();
     }
 }

@@ -313,8 +313,10 @@
     <Compile Include="Events\ArrowGraphSettingsUpdatedPayload.cs" />
     <Compile Include="Events\ArrowGraphDtoUpdatedPayload.cs" />
     <Compile Include="Events\ArrowGraphDataUpdatedPayload.cs" />
+    <Compile Include="Events\GraphCompilationUpdatedPayload.cs" />
     <Compile Include="Events\GraphCompiledPayload.cs" />
     <Compile Include="Events\ManagedActivityUpdatedPayload.cs" />
+    <Compile Include="Events\ShowDatesUpdatedPayload.cs" />
     <Compile Include="Events\ProjectStartUpdatedPayload.cs" />
     <Compile Include="Events\UseBusinessDaysUpdatedPayload.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -341,6 +343,7 @@
     <Compile Include="Utilities\LocalizedDescriptionAttribute.cs" />
     <Compile Include="Utilities\OpenSave.cs" />
     <Compile Include="Utilities\PrismExtensions.cs" />
+    <Compile Include="ViewModels\ActivityManagement\ActivitiesManagerViewModel.cs" />
     <Compile Include="ViewModels\ActivityManagement\DependenciesStringValidationRule.cs" />
     <Compile Include="ViewModels\ActivityManagement\ManagedActivityViewModel.cs" />
     <Compile Include="ViewModels\ActivityManagement\ResourceSelectorViewModel.cs" />
@@ -351,7 +354,7 @@
     <Compile Include="ViewModels\CoreViewModel.cs" />
     <Compile Include="ViewModels\EarnedValueChartManagement\EarnedValueChartManagerViewModel.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphManagerViewModel.cs" />
-    <Compile Include="ViewModels\MetricsManagement\MetricsManagerViewModel.cs" />
+    <Compile Include="ViewModels\MetricManagement\MetricsManagerViewModel.cs" />
     <Compile Include="ViewModels\PropertyChangedPubSubViewModel.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphData.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphEdge.cs" />
@@ -391,7 +394,7 @@
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\MetricsManagement\MetricsManagerView.xaml.cs">
+    <Compile Include="Views\MetricManagement\MetricsManagerView.xaml.cs">
       <DependentUpon>MetricsManagerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ResourceChartManagement\ResourceChartManagerView.xaml.cs">
@@ -445,7 +448,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\MetricsManagement\MetricsManagerView.xaml">
+    <Page Include="Views\MetricManagement\MetricsManagerView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

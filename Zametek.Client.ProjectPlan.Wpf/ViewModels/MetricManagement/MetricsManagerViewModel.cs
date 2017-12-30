@@ -34,7 +34,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IEventAggregator m_EventService;
 
-        private SubscriptionToken m_GraphCompiledPayloadToken;
+        private SubscriptionToken m_GraphCompilationUpdatedPayloadToken;
 
         #endregion
 
@@ -67,6 +67,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Properties
 
+        private bool UseBusinessDays => m_CoreViewModel.UseBusinessDays;
+
         private GraphCompilation<int, IDependentActivity<int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
 
         private ArrowGraphSettingsDto ArrowGraphSettingsDto => m_CoreViewModel.ArrowGraphSettingsDto;
@@ -77,8 +79,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void SubscribeToEvents()
         {
-            m_GraphCompiledPayloadToken =
-                m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
+            m_GraphCompilationUpdatedPayloadToken =
+                m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
                     .Subscribe(payload =>
                     {
                         IsBusy = true;
@@ -90,8 +92,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void UnsubscribeFromEvents()
         {
-            m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
-                .Unsubscribe(m_GraphCompiledPayloadToken);
+            m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
+                .Unsubscribe(m_GraphCompilationUpdatedPayloadToken);
         }
 
         private void CalculateRiskMetrics()
@@ -189,7 +191,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     return null;
                 }
-                m_DateTimeCalculator.UseBusinessDays(m_CoreViewModel.UseBusinessDays);
+                m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
                 int daysPerWeek = m_DateTimeCalculator.DaysPerWeek;
                 return durationManDays.GetValueOrDefault() / (daysPerWeek * 52.0 / 12.0);
             }

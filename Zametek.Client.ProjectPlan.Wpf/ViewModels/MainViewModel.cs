@@ -6,13 +6,10 @@ using Prism.Events;
 using Prism.Interactivity.InteractionRequest;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 using Zametek.Common.Project;
@@ -23,14 +20,12 @@ using Zametek.Maths.Graphs;
 namespace Zametek.Client.ProjectPlan.Wpf
 {
     public class MainViewModel
-        : PropertyChangedPubSubViewModel, IMainViewModel, IActivitiesManagerViewModel
+        : PropertyChangedPubSubViewModel, IMainViewModel
     {
         #region Fields
 
         private readonly object m_Lock;
-        private readonly VertexGraphCompiler<int, IDependentActivity<int>> m_VertexGraphCompiler;
         private string m_ProjectTitle;
-        private bool m_AutoCompile;
         private bool m_IsBusy;
 
         private static string s_DefaultProjectTitle = Properties.Resources.Label_DefaultTitle;
@@ -39,16 +34,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private readonly ISettingManager m_SettingManager;
         private readonly IFileDialogService m_FileDialogService;
         private readonly IAppSettingService m_AppSettingService;
-        private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IEventAggregator m_EventService;
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
         private readonly InteractionRequest<Confirmation> m_ConfirmationInteractionRequest;
         private readonly InteractionRequest<Confirmation> m_ProjectTitleInteractionRequest;
         private readonly InteractionRequest<ResourceSettingsManagerConfirmation> m_ResourceSettingsManagerInteractionRequest;
         private readonly InteractionRequest<ArrowGraphSettingsManagerConfirmation> m_ArrowGraphSettingsManagerInteractionRequest;
-        private SubscriptionToken m_ManagedActivityUpdatedPayloadToken;
-        private SubscriptionToken m_ProjectStartUpdatedPayloadToken;
-        private SubscriptionToken m_UseBusinessDaysUpdatedPayloadToken;
 
         #endregion
 
@@ -59,7 +50,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             ISettingManager settingManager,
             IFileDialogService fileDialogService,
             IAppSettingService appSettingService,
-            IDateTimeCalculator dateTimeCalculator,
             IEventAggregator eventService)
             : base(eventService)
         {
@@ -68,16 +58,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_SettingManager = settingManager ?? throw new ArgumentNullException(nameof(settingManager));
             m_FileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
             m_AppSettingService = appSettingService ?? throw new ArgumentNullException(nameof(appSettingService));
-            m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
-            m_VertexGraphCompiler = VertexGraphCompiler<int, IDependentActivity<int>>.Create();
+
             m_NotificationInteractionRequest = new InteractionRequest<Notification>();
             m_ConfirmationInteractionRequest = new InteractionRequest<Confirmation>();
             m_ProjectTitleInteractionRequest = new InteractionRequest<Confirmation>();
             m_ResourceSettingsManagerInteractionRequest = new InteractionRequest<ResourceSettingsManagerConfirmation>();
             m_ArrowGraphSettingsManagerInteractionRequest = new InteractionRequest<ArrowGraphSettingsManagerConfirmation>();
-            Activities = new ObservableCollection<ManagedActivityViewModel>();
-            SelectedActivities = new ObservableCollection<ManagedActivityViewModel>();
 
             ResetProject();
 
@@ -85,70 +72,16 @@ namespace Zametek.Client.ProjectPlan.Wpf
             UseBusinessDaysWithoutPublishing = true;
             AutoCompile = true;
             InitializeCommands();
-            SubscribeToEvents();
 
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ProjectStart), nameof(ProjectStart), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsProjectUpdated), nameof(IsProjectUpdated), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ShowDates), nameof(ShowDates), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ShowDates), nameof(ShowDays), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.UseBusinessDays), nameof(UseBusinessDays), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasStaleOutputs), nameof(HasStaleOutputs), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.CompilationOutput), nameof(CompilationOutput), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasCompilationErrors), nameof(HasCompilationErrors), ThreadOption.BackgroundThread);
         }
 
         #endregion
 
         #region Properties
-
-        public bool HasStaleOutputs
-        {
-            get
-            {
-                return m_CoreViewModel.HasStaleOutputs;
-            }
-            private set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.HasStaleOutputs = value;
-                }
-            }
-        }
-
-        public DateTime ProjectStartWithoutPublishing
-        {
-            get
-            {
-                return m_CoreViewModel.ProjectStart;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.ProjectStart = value;
-                }
-                IsProjectUpdated = true;
-                RaisePropertyChanged(nameof(ProjectStart));
-            }
-        }
-
-        public bool UseBusinessDaysWithoutPublishing
-        {
-            get
-            {
-                return m_CoreViewModel.UseBusinessDays;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.UseBusinessDays = value;
-                    m_DateTimeCalculator.UseBusinessDays(value);
-                }
-                RaisePropertyChanged(nameof(UseBusinessDays));
-            }
-        }
 
         public bool IsBusy
         {
@@ -163,81 +96,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public GraphCompilation<int, IDependentActivity<int>> GraphCompilation
-        {
-            get
-            {
-                return m_CoreViewModel.GraphCompilation;
-            }
-            private set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.GraphCompilation = value;
-                }
-            }
-        }
-
-        public string CompilationOutput
-        {
-            get
-            {
-                return m_CoreViewModel.CompilationOutput;
-            }
-            private set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.CompilationOutput = value;
-                }
-            }
-        }
-
-        public bool HasCompilationErrors
-        {
-            get
-            {
-                return m_CoreViewModel.HasCompilationErrors;
-            }
-            private set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.HasCompilationErrors = value;
-                }
-            }
-        }
-
-        public ObservableCollection<ManagedActivityViewModel> Activities
-        {
-            get;
-        }
-
-        public ObservableCollection<ManagedActivityViewModel> SelectedActivities
-        {
-            get;
-        }
-
-        public ManagedActivityViewModel SelectedActivity
-        {
-            get
-            {
-                if (SelectedActivities.Count == 1)
-                {
-                    return SelectedActivities.FirstOrDefault();
-                }
-                return null;
-            }
-        }
-
-        public bool DisableResources
-        {
-            get;
-            set;
-        }
-
-        public IList<ResourceDto> ResourceDtos => m_CoreViewModel.ResourceDtos;
-
         public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
 
         public IInteractionRequest ConfirmationInteractionRequest => m_ConfirmationInteractionRequest;
@@ -247,6 +105,99 @@ namespace Zametek.Client.ProjectPlan.Wpf
         public IInteractionRequest ResourceSettingsManagerInteractionRequest => m_ResourceSettingsManagerInteractionRequest;
 
         public IInteractionRequest ArrowGraphSettingsManagerInteractionRequest => m_ArrowGraphSettingsManagerInteractionRequest;
+
+        private bool HasStaleOutputs
+        {
+            get
+            {
+                return m_CoreViewModel.HasStaleOutputs;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.HasStaleOutputs = value;
+                }
+            }
+        }
+
+        private DateTime ProjectStartWithoutPublishing
+        {
+            get
+            {
+                return m_CoreViewModel.ProjectStart;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.ProjectStart = value;
+                    IsProjectUpdated = true;
+                }
+                RaisePropertyChanged(nameof(ProjectStart));
+            }
+        }
+
+        private bool UseBusinessDaysWithoutPublishing
+        {
+            get
+            {
+                return m_CoreViewModel.UseBusinessDays;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.UseBusinessDays = value;
+                }
+                RaisePropertyChanged(nameof(UseBusinessDays));
+            }
+        }
+
+        private bool DisableResources
+        {
+            get
+            {
+                return m_CoreViewModel.DisableResources;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.DisableResources = value;
+                }
+            }
+        }
+
+        private IList<ResourceDto> ResourceDtos => m_CoreViewModel.ResourceDtos;
+
+        private IList<ManagedActivityViewModel> Activities => m_CoreViewModel.Activities;
+
+        private bool HasCompilationErrors
+        {
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.HasCompilationErrors = value;
+                }
+            }
+        }
+
+        private GraphCompilation<int, IDependentActivity<int>> GraphCompilation
+        {
+            get
+            {
+                return m_CoreViewModel.GraphCompilation;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.GraphCompilation = value;
+                }
+            }
+        }
 
         private int? CyclomaticComplexity
         {
@@ -409,61 +360,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             return !IsBusy;
         }
 
-        public DelegateCommandBase SetSelectedManagedActivitiesCommand
-        {
-            get;
-            private set;
-        }
-
-        private void SetSelectedManagedActivities(SelectionChangedEventArgs args)
-        {
-            if (args?.AddedItems != null)
-            {
-                SelectedActivities.AddRange(args?.AddedItems.OfType<ManagedActivityViewModel>());
-            }
-            if (args?.RemovedItems != null)
-            {
-                foreach (var managedActivityViewModel in args?.RemovedItems.OfType<ManagedActivityViewModel>())
-                {
-                    SelectedActivities.Remove(managedActivityViewModel);
-                }
-            }
-            RaisePropertyChanged(nameof(SelectedActivity));
-            RaiseCanExecuteChangedAllCommands();
-        }
-
-        private DelegateCommandBase InternalAddManagedActivityCommand
-        {
-            get;
-            set;
-        }
-
-        private async void AddManagedActivity()
-        {
-            await DoAddManagedActivityAsync();
-        }
-
-        private bool CanAddManagedActivity()
-        {
-            return true;
-        }
-
-        private DelegateCommandBase InternalRemoveManagedActivityCommand
-        {
-            get;
-            set;
-        }
-
-        private async void RemoveManagedActivity()
-        {
-            await DoRemoveManagedActivityAsync();
-        }
-
-        private bool CanRemoveManagedActivity()
-        {
-            return SelectedActivities.Any();
-        }
-
         #endregion
 
         #region Private Methods
@@ -491,14 +387,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             CompileCommand =
                 InternalCompileCommand =
                     new DelegateCommand(Compile, CanCompile);
-            SetSelectedManagedActivitiesCommand =
-                new DelegateCommand<SelectionChangedEventArgs>(SetSelectedManagedActivities);
-            AddManagedActivityCommand =
-                InternalAddManagedActivityCommand =
-                    new DelegateCommand(AddManagedActivity, CanAddManagedActivity);
-            RemoveManagedActivityCommand =
-                InternalRemoveManagedActivityCommand =
-                    new DelegateCommand(RemoveManagedActivity, CanRemoveManagedActivity);
         }
 
         private void RaiseCanExecuteChangedAllCommands()
@@ -509,65 +397,24 @@ namespace Zametek.Client.ProjectPlan.Wpf
             InternalCloseProjectCommand.RaiseCanExecuteChanged();
             InternalOpenResourceSettingsCommand.RaiseCanExecuteChanged();
             InternalOpenArrowGraphSettingsCommand.RaiseCanExecuteChanged();
-            SetSelectedManagedActivitiesCommand.RaiseCanExecuteChanged();
-            InternalAddManagedActivityCommand.RaiseCanExecuteChanged();
-            InternalRemoveManagedActivityCommand.RaiseCanExecuteChanged();
-        }
-
-        private void SubscribeToEvents()
-        {
-            m_ManagedActivityUpdatedPayloadToken =
-                m_EventService.GetEvent<PubSubEvent<ManagedActivityUpdatedPayload>>()
-                    .Subscribe(async payload =>
-                    {
-                        IsProjectUpdated = true;
-                        await UpdateActivitiesTargetResourceDependenciesAsync();
-                        await DoAutoCompileAsync();
-                    }, ThreadOption.BackgroundThread);
-            m_ProjectStartUpdatedPayloadToken =
-                m_EventService.GetEvent<PubSubEvent<ProjectStartUpdatedPayload>>()
-                    .Subscribe(async payload =>
-                    {
-                        IsProjectUpdated = true;
-                        await UpdateActivitiesProjectStartAsync();
-                        await DoAutoCompileAsync();
-                    }, ThreadOption.BackgroundThread);
-            m_UseBusinessDaysUpdatedPayloadToken =
-                m_EventService.GetEvent<PubSubEvent<UseBusinessDaysUpdatedPayload>>()
-                    .Subscribe(async payload =>
-                    {
-                        IsProjectUpdated = true;
-                        await UpdateActivitiesUseBusinessDaysAsync();
-                        await DoAutoCompileAsync();
-                    }, ThreadOption.BackgroundThread);
-        }
-
-        private void UnsubscribeFromEvents()
-        {
-            m_EventService.GetEvent<PubSubEvent<ManagedActivityUpdatedPayload>>()
-                .Unsubscribe(m_ManagedActivityUpdatedPayloadToken);
-            m_EventService.GetEvent<PubSubEvent<ProjectStartUpdatedPayload>>()
-                .Unsubscribe(m_ProjectStartUpdatedPayloadToken);
-            m_EventService.GetEvent<PubSubEvent<UseBusinessDaysUpdatedPayload>>()
-                .Unsubscribe(m_UseBusinessDaysUpdatedPayloadToken);
         }
 
         private void PublishProjectStartUpdatedPayload()
         {
             m_EventService.GetEvent<PubSubEvent<ProjectStartUpdatedPayload>>()
-                .Publish(new ProjectStartUpdatedPayload(ProjectStart));
+                .Publish(new ProjectStartUpdatedPayload());
         }
 
         private void PublishUseBusinessDaysUpdatedPayload()
         {
             m_EventService.GetEvent<PubSubEvent<UseBusinessDaysUpdatedPayload>>()
-                .Publish(new UseBusinessDaysUpdatedPayload(UseBusinessDays));
+                .Publish(new UseBusinessDaysUpdatedPayload());
         }
 
-        private void PublishGraphCompiledPayload()
+        private void PublishShowDatesUpdatedPayload()
         {
-            m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
-                .Publish(new GraphCompiledPayload());
+            m_EventService.GetEvent<PubSubEvent<ShowDatesUpdatedPayload>>()
+                .Publish(new ShowDatesUpdatedPayload());
         }
 
         private void PublishArrowGraphDtoUpdatedPayload()
@@ -582,230 +429,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 .Publish(new ArrowGraphSettingsUpdatedPayload());
         }
 
-        private void SetActivitiesTargetResources()
+        private void PublishGraphCompilationUpdatedPayload()
         {
-            lock (m_Lock)
-            {
-                foreach (ManagedActivityViewModel activity in Activities)
-                {
-                    activity.SetTargetResources(ResourceDtos.Select(x => x.Copy()));
-                }
-            }
-        }
-
-        private async Task UpdateActivitiesTargetResourceDependenciesAsync()
-        {
-            await Task.Run(() => UpdateActivitiesTargetResourceDependencies());
-        }
-
-        private void UpdateActivitiesTargetResourceDependencies()
-        {
-            lock (m_Lock)
-            {
-                foreach (ManagedActivityViewModel activity in Activities.Where(x => x.HasUpdatedDependencies))
-                {
-                    m_VertexGraphCompiler.SetActivityDependencies(activity.Id, new HashSet<int>(activity.UpdatedDependencies));
-                    activity.UpdatedDependencies.Clear();
-                    activity.HasUpdatedDependencies = false;
-                }
-            }
-        }
-
-        private async Task UpdateActivitiesProjectStartAsync()
-        {
-            await Task.Run(() => UpdateActivitiesProjectStart());
-        }
-
-        private void UpdateActivitiesProjectStart()
-        {
-            lock (m_Lock)
-            {
-                foreach (ManagedActivityViewModel activity in Activities)
-                {
-                    activity.ProjectStart = ProjectStart;
-                }
-            }
-        }
-
-        private async Task UpdateActivitiesUseBusinessDaysAsync()
-        {
-            await Task.Run(() => UpdateActivitiesUseBusinessDays());
-        }
-
-        private void UpdateActivitiesUseBusinessDays()
-        {
-            lock (m_Lock)
-            {
-                foreach (ManagedActivityViewModel activity in Activities)
-                {
-                    activity.UseBusinessDays = UseBusinessDays;
-                }
-            }
-        }
-
-        private async Task RunCompileAsync()
-        {
-            await Task.Run(() => RunCompile());
-        }
-
-        private void RunCompile()
-        {
-            lock (m_Lock)
-            {
-                UpdateActivitiesTargetResourceDependencies();
-
-                var availableResources = new List<IResource<int>>();
-                if (!DisableResources)
-                {
-                    availableResources.AddRange(ResourceDtos.Select(x => DtoConverter.FromDto(x)));
-                }
-
-                GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
-                CyclomaticComplexity = m_VertexGraphCompiler.CyclomaticComplexity;
-                Duration = m_VertexGraphCompiler.Duration;
-                IsProjectUpdated = true;
-
-                SetCompilationOutput();
-                HasStaleOutputs = false;
-                PublishGraphCompiledPayload();
-            }
-        }
-
-        private void SetCompilationOutput()
-        {
-            lock (m_Lock)
-            {
-                GraphCompilation<int, IDependentActivity<int>> graphCompilation = GraphCompilation;
-                CompilationOutput = string.Empty;
-                HasCompilationErrors = false;
-                if (graphCompilation == null)
-                {
-                    return;
-                }
-                var output = new StringBuilder();
-
-                if (graphCompilation.AllResourcesExplicitTargetsButNotAllActivitiesTargeted)
-                {
-                    HasCompilationErrors = true;
-                    output.AppendLine($@">{Properties.Resources.Message_AllResourcesExplicitTargetsNotAllActivitiesTargeted}");
-                }
-
-                if (graphCompilation.CircularDependencies.Any())
-                {
-                    HasCompilationErrors = true;
-                    output.Append(BuildCircularDependenciesErrorMessage(graphCompilation.CircularDependencies));
-                }
-
-                if (graphCompilation.MissingDependencies.Any())
-                {
-                    HasCompilationErrors = true;
-                    output.Append(BuildMissingDependenciesErrorMessage(graphCompilation.MissingDependencies));
-                }
-
-                if (graphCompilation.ResourceSchedules.Any()
-                    && !HasCompilationErrors)
-                {
-                    output.Append(BuildActivitySchedules(graphCompilation.ResourceSchedules));
-                }
-
-                if (HasCompilationErrors)
-                {
-                    output.Insert(0, Environment.NewLine);
-                    output.Insert(0, $@">{Properties.Resources.Message_CompilationErrors}");
-                }
-
-                CompilationOutput = output.ToString();
-            }
-        }
-
-        private string BuildCircularDependenciesErrorMessage(IList<CircularDependency<int>> circularDependencies)
-        {
-            if (circularDependencies == null)
-            {
-                return string.Empty;
-            }
-            var output = new StringBuilder();
-            output.AppendLine($@">{Properties.Resources.Message_CircularDependencies}");
-            foreach (CircularDependency<int> circularDependency in circularDependencies)
-            {
-                output.AppendLine(string.Join(@" -> ", circularDependency.Dependencies));
-            }
-            return output.ToString();
-        }
-
-        private string BuildMissingDependenciesErrorMessage(IList<int> missingDependencies)
-        {
-            if (missingDependencies == null)
-            {
-                return string.Empty;
-            }
-            var output = new StringBuilder();
-            output.AppendLine($@">{Properties.Resources.Message_MissingDependencies}");
-            foreach (int missingDependency in missingDependencies)
-            {
-                IList<int> activities = Activities
-                    .Where(x => x.Dependencies.Contains(missingDependency))
-                    .Select(x => x.Id)
-                    .ToList();
-                output.AppendFormat($@"{missingDependency} -> ");
-                output.AppendLine(string.Join(@", ", activities));
-            }
-            return output.ToString();
-        }
-
-        private string BuildActivitySchedules(IList<IResourceSchedule<int>> resourceSchedules)
-        {
-            lock (m_Lock)
-            {
-                if (resourceSchedules == null)
-                {
-                    return string.Empty;
-                }
-                var output = new StringBuilder();
-                int spareResourceCount = 1;
-                for (int resourceIndex = 0; resourceIndex < resourceSchedules.Count; resourceIndex++)
-                {
-                    IResourceSchedule<int> resourceSchedule = resourceSchedules[resourceIndex];
-                    IList<IScheduledActivity<int>> scheduledActivities = resourceSchedule?.ScheduledActivities;
-                    if (scheduledActivities == null)
-                    {
-                        continue;
-                    }
-                    var stringBuilder = new StringBuilder(@">Resource");
-                    if (resourceSchedule.Resource != null)
-                    {
-                        stringBuilder.Append($@" {resourceSchedule.Resource.Id}");
-                        if (!string.IsNullOrWhiteSpace(resourceSchedule.Resource.Name))
-                        {
-                            stringBuilder.Append($@" ({resourceSchedule.Resource.Name})");
-                        }
-                    }
-                    else
-                    {
-                        stringBuilder.Append($@" {spareResourceCount}");
-                        spareResourceCount++;
-                    }
-                    output.AppendLine(stringBuilder.ToString());
-                    int previousFinishTime = 0;
-                    foreach (IScheduledActivity<int> scheduledActivity in scheduledActivities)
-                    {
-                        int startTime = scheduledActivity.StartTime;
-                        int finishTime = scheduledActivity.FinishTime;
-                        if (startTime > previousFinishTime)
-                        {
-                            string from = ChartHelper.FormatScheduleOutput(previousFinishTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-                            string to = ChartHelper.FormatScheduleOutput(startTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-                            output.AppendLine($@"*** {from} -> {to} ***");
-                        }
-                        string start = ChartHelper.FormatScheduleOutput(startTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-                        string finish = ChartHelper.FormatScheduleOutput(finishTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-                        output.AppendLine($@"Activity {scheduledActivity.Id}: {start} -> {finish}");
-                        previousFinishTime = finishTime;
-                    }
-                    output.AppendLine();
-                }
-                return output.ToString();
-            }
+            m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
+                .Publish(new GraphCompilationUpdatedPayload());
         }
 
         private async Task<MicrosoftProjectDto> ImportMicrosoftProjectAsync(string filename)
@@ -925,18 +552,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 // Activities.
                 foreach (DependentActivityDto dependentActivityDto in microsoftProjectDto.DependentActivities)
                 {
-                    var dateTimeCalculator = new DateTimeCalculator();
-                    dateTimeCalculator.UseBusinessDays(UseBusinessDays);
-                    var activity = new ManagedActivityViewModel(
-                        DtoConverter.FromDto(dependentActivityDto),
-                        ProjectStart,
-                        ResourceDtos,
-                        dateTimeCalculator,
-                        m_EventService);
-                    if (m_VertexGraphCompiler.AddActivity(activity))
-                    {
-                        Activities.Add(activity);
-                    }
+                    m_CoreViewModel.AddManagedActivity(DtoConverter.FromDto(dependentActivityDto));
                 }
             }
         }
@@ -964,19 +580,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 // Activities.
                 foreach (DependentActivityDto dependentActivityDto in projectPlanDto.DependentActivities)
                 {
-                    var activityId = m_VertexGraphCompiler.GetNextActivityId();
-                    var dateTimeCalculator = new DateTimeCalculator();
-                    dateTimeCalculator.UseBusinessDays(UseBusinessDays);
-                    var activity = new ManagedActivityViewModel(
-                        DtoConverter.FromDto(dependentActivityDto),
-                        ProjectStart,
-                        ResourceDtos,
-                        dateTimeCalculator,
-                        m_EventService);
-                    if (m_VertexGraphCompiler.AddActivity(activity))
-                    {
-                        Activities.Add(activity);
-                    }
+                    m_CoreViewModel.AddManagedActivity(DtoConverter.FromDto(dependentActivityDto));
                 }
 
                 CyclomaticComplexity = projectPlanDto.CyclomaticComplexity;
@@ -990,7 +594,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     projectPlanDto.DependentActivities.Select(x => DtoConverter.FromDto(x)),
                     projectPlanDto.ResourceSchedules.Select(x => DtoConverter.FromDto(x)));
 
-                SetCompilationOutput();
+                m_CoreViewModel.SetCompilationOutput();
 
                 // Arrow Graph.
                 ArrowGraphSettingsDto = projectPlanDto.ArrowGraphSettings;
@@ -998,6 +602,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 HasStaleOutputs = projectPlanDto.HasStaleOutputs;
             }
+
+            PublishGraphCompilationUpdatedPayload();
             PublishArrowGraphDtoUpdatedPayload();
         }
 
@@ -1020,7 +626,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     AllResourcesExplicitTargetsButNotAllActivitiesTargeted = GraphCompilation?.AllResourcesExplicitTargetsButNotAllActivitiesTargeted != null ? GraphCompilation.AllResourcesExplicitTargetsButNotAllActivitiesTargeted : false,
                     CircularDependencies = GraphCompilation?.CircularDependencies != null ? GraphCompilation.CircularDependencies.Select(x => DtoConverter.ToDto(x)).ToList() : new List<CircularDependencyDto>(),
                     MissingDependencies = GraphCompilation?.MissingDependencies != null ? GraphCompilation.MissingDependencies.ToList() : new List<int>(),
-                    DependentActivities = Activities.Select(x => DtoConverter.ToDto(x)).ToList(), //GraphCompilation?.DependentActivities != null ? GraphCompilation.DependentActivities.Select(x => DtoConverter.ToDto(x)).ToList() : new List<DependentActivityDto>(),
+                    DependentActivities = Activities.Select(x => DtoConverter.ToDto(x)).ToList(),
                     ResourceSchedules = GraphCompilation?.ResourceSchedules != null ? GraphCompilation.ResourceSchedules.Select(x => DtoConverter.ToDto(x)).ToList() : new List<ResourceScheduleDto>(),
 
                     CyclomaticComplexity = CyclomaticComplexity.GetValueOrDefault(),
@@ -1053,6 +659,16 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 throw new ArgumentException(nameof(filename));
             }
             return Task.Run(() => OpenSave.SaveJson(projectPlanDto, filename));
+        }
+
+        private async Task RunCompileAsync()
+        {
+            await Task.Run(() => m_CoreViewModel.RunCompile());
+        }
+
+        private async Task RunAutoCompileAsync()
+        {
+            await Task.Run(() => m_CoreViewModel.RunAutoCompile());
         }
 
         private void DispatchNotification(string title, object content)
@@ -1150,10 +766,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         IsProjectUpdated = true;
                         ProjectTitle = Path.GetFileNameWithoutExtension(filename);
 
-                        if (AutoCompile)
-                        {
-                            await RunCompileAsync();
-                        }
+                        await RunAutoCompileAsync();
                         m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
                     }
                 }
@@ -1226,16 +839,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     {
                         ResourceDtos.Add(resourceDto);
                     }
-                    SetActivitiesTargetResources();
+                    m_CoreViewModel.UpdateActivitiesTargetResources();
                 }
 
                 HasStaleOutputs = true;
                 IsProjectUpdated = true;
 
-                if (AutoCompile)
-                {
-                    await RunCompileAsync();
-                }
+                await RunAutoCompileAsync();
             }
             catch (Exception ex)
             {
@@ -1304,120 +914,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public async Task DoAutoCompileAsync()
-        {
-            try
-            {
-                IsBusy = true;
-                HasStaleOutputs = true;
-                IsProjectUpdated = true;
-
-                if (AutoCompile)
-                {
-                    await RunCompileAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                DispatchNotification(
-                    Properties.Resources.Title_Error,
-                    ex.Message);
-            }
-            finally
-            {
-                IsBusy = false;
-                RaiseCanExecuteChangedAllCommands();
-            }
-        }
-
-        public async Task DoAddManagedActivityAsync()
-        {
-            try
-            {
-                IsBusy = true;
-                lock (m_Lock)
-                {
-                    var activityId = m_VertexGraphCompiler.GetNextActivityId();
-                    var dateTimeCalculator = new DateTimeCalculator();
-                    dateTimeCalculator.UseBusinessDays(UseBusinessDays);
-                    var activity = new ManagedActivityViewModel(
-                        new DependentActivity<int>(activityId, 0),
-                        ProjectStart,
-                        ResourceDtos,
-                        dateTimeCalculator,
-                        m_EventService);
-                    if (m_VertexGraphCompiler.AddActivity(activity))
-                    {
-                        Activities.Add(activity);
-                    }
-                }
-
-                HasStaleOutputs = true;
-                IsProjectUpdated = true;
-
-                if (AutoCompile)
-                {
-                    await RunCompileAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                DispatchNotification(
-                    Properties.Resources.Title_Error,
-                    ex.Message);
-            }
-            finally
-            {
-                IsBusy = false;
-                RaiseCanExecuteChangedAllCommands();
-            }
-        }
-
-        public async Task DoRemoveManagedActivityAsync()
-        {
-            try
-            {
-                IsBusy = true;
-                lock (m_Lock)
-                {
-                    IEnumerable<ManagedActivityViewModel> activities = SelectedActivities.ToList();
-                    if (!activities.Any())
-                    {
-                        return;
-                    }
-                    foreach (ManagedActivityViewModel activity in activities)
-                    {
-                        if (m_VertexGraphCompiler.RemoveActivity(activity.Id))
-                        {
-                            Activities.Remove(activity);
-                        }
-                    }
-                }
-
-                HasStaleOutputs = true;
-                IsProjectUpdated = true;
-
-                if (AutoCompile)
-                {
-                    await RunCompileAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                DispatchNotification(
-                    Properties.Resources.Title_Error,
-                    ex.Message);
-            }
-            finally
-            {
-                SelectedActivities.Clear();
-                RaisePropertyChanged(nameof(Activities));
-                RaisePropertyChanged(nameof(SelectedActivities));
-                IsBusy = false;
-                RaiseCanExecuteChangedAllCommands();
-            }
-        }
-
         #endregion
 
         #region IMainViewModel Members
@@ -1476,8 +972,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     m_CoreViewModel.ShowDates = value;
                 }
+                PublishShowDatesUpdatedPayload();
                 RaisePropertyChanged();
-                SetCompilationOutput();
             }
         }
 
@@ -1498,15 +994,15 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get
             {
-                return m_AutoCompile;
+                return m_CoreViewModel.AutoCompile;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_AutoCompile = value;
+                    m_CoreViewModel.AutoCompile = value;
                 }
-                RaisePropertyChanged(nameof(AutoCompile));
+                RaisePropertyChanged();
             }
         }
 
@@ -1638,9 +1134,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             lock (m_Lock)
             {
-                Activities.Clear();
-                SelectedActivities.Clear();
-                m_VertexGraphCompiler.Reset();
+                // TODO
+                m_CoreViewModel.ClearManagedActivities();
+                //SelectedActivities.Clear();
 
                 ResourceDtos.Clear();
                 DisableResources = false;
@@ -1657,7 +1153,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 Duration = null;
 
                 HasCompilationErrors = false;
-                SetCompilationOutput();
+                m_CoreViewModel.SetCompilationOutput();
 
                 ArrowGraphDto = null;
 
@@ -1667,31 +1163,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 HasStaleOutputs = false;
             }
+
+            PublishGraphCompilationUpdatedPayload();
             PublishArrowGraphDtoUpdatedPayload();
-        }
-
-        #endregion
-
-        #region IActivityManagerViewModel Members
-
-        public bool ShowDays
-        {
-            get
-            {
-                return !ShowDates;
-            }
-        }
-
-        public ICommand AddManagedActivityCommand
-        {
-            get;
-            private set;
-        }
-
-        public ICommand RemoveManagedActivityCommand
-        {
-            get;
-            private set;
         }
 
         #endregion

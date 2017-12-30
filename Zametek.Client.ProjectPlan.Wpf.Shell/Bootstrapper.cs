@@ -77,9 +77,12 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
                 .As<IArrowGraphManagerViewModel>()
                 .SingleInstance();
 
+            builder.RegisterType<ActivitiesManagerViewModel>()
+                .As<IActivitiesManagerViewModel>()
+                .SingleInstance();
+
             builder.RegisterType<MainViewModel>()
                 .As<IMainViewModel>()
-                .As<IActivitiesManagerViewModel>()
                 .SingleInstance();
 
             base.ConfigureContainerBuilder(builder);

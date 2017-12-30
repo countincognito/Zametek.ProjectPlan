@@ -40,7 +40,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
 
-        private SubscriptionToken m_GraphCompiledPayloadToken;
+        private SubscriptionToken m_GraphCompilationUpdatedPayloadToken;
 
         #endregion
 
@@ -81,6 +81,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private DateTime ProjectStart => m_CoreViewModel.ProjectStart;
 
         private bool ShowDates => m_CoreViewModel.ShowDates;
+
+        private bool UseBusinessDays => m_CoreViewModel.UseBusinessDays;
 
         private bool HasCompilationErrors => m_CoreViewModel.HasCompilationErrors;
 
@@ -208,8 +210,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void SubscribeToEvents()
         {
-            m_GraphCompiledPayloadToken =
-                m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
+            m_GraphCompilationUpdatedPayloadToken =
+                m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
                     .Subscribe(payload =>
                     {
                         IsBusy = true;
@@ -222,8 +224,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void UnsubscribeFromEvents()
         {
-            m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
-                .Unsubscribe(m_GraphCompiledPayloadToken);
+            m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
+                .Unsubscribe(m_GraphCompilationUpdatedPayloadToken);
         }
 
         private void SetResourceChartSeriesSet()
@@ -336,7 +338,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     plotModel.LegendPosition = LegendPosition.RightMiddle;
 
                     var total = new List<int>();
-                    m_DateTimeCalculator.UseBusinessDays(m_CoreViewModel.UseBusinessDays);
+                    m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
 
                     foreach (ResourceSeries series in seriesSet)
                     {
@@ -386,7 +388,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     && resourceSchedules.Any())
                 {
                     int finishTime = resourceSchedules.Max(x => x.FinishTime);
-                    m_DateTimeCalculator.UseBusinessDays(m_CoreViewModel.UseBusinessDays);
+                    m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
                     double minValue = ChartHelper.CalculateChartTimeXValue(0, ShowDates, ProjectStart, m_DateTimeCalculator);
                     double maxValue = ChartHelper.CalculateChartTimeXValue(finishTime, ShowDates, ProjectStart, m_DateTimeCalculator);
 
@@ -452,7 +454,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         table.Columns.Add(column);
                     }
 
-                    m_DateTimeCalculator.UseBusinessDays(m_CoreViewModel.UseBusinessDays);
+                    m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
 
                     // Pivot the series values.
                     int valueCount = seriesSet.Max(x => x.Values.Count);
