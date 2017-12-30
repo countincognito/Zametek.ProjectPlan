@@ -423,4 +423,7 @@
   <data name="Label_ExportEarnedValueChartToCsv" xml:space="preserve">
     <value>Export To CSV</value>
   </data>
+  <data name="Label_DefaultUnitCost" xml:space="preserve">
+    <value>Default Unit Cost:</value>
+  </data>
 </root>

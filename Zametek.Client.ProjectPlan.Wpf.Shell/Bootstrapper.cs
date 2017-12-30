@@ -131,7 +131,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
             base.Run(runWithDefaultConfiguration);
             Application.Current.MainWindow.Activate();
 
-            //check if started with filename param
+            // Check if started with filename parameter.
             string[] args = Environment.GetCommandLineArgs();
             if (args.Length > 1
                 && File.Exists(args[1])

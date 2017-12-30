@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Prism.Interactivity.InteractionRequest;
+using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Zametek.Common.Project;
@@ -7,6 +8,31 @@ namespace Zametek.Client.ProjectPlan.Wpf
 {
     public interface IMainViewModel
     {
+        IInteractionRequest ConfirmationInteractionRequest
+        {
+            get;
+        }
+
+        IInteractionRequest NotificationInteractionRequest
+        {
+            get;
+        }
+
+        IInteractionRequest ResourceSettingsManagerInteractionRequest
+        {
+            get;
+        }
+
+        IInteractionRequest ArrowGraphSettingsManagerInteractionRequest
+        {
+            get;
+        }
+
+        bool IsBusy
+        {
+            get;
+        }
+
         string ProjectTitle
         {
             get;
@@ -87,6 +113,5 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         Task DoOpenProjectPlanFileAsync(string fileName = null);
-        void ResetProject();
     }
 }

@@ -17,7 +17,22 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
+        bool ActivateResources
+        {
+            get;
+        }
+
         ObservableCollection<ManagedResourceViewModel> Resources
+        {
+            get;
+        }
+
+        ManagedResourceViewModel SelectedResource
+        {
+            get;
+        }
+
+        ICommand SetSelectedManagedResourcesCommand
         {
             get;
         }
@@ -31,7 +46,5 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get;
         }
-
-        int GetNextResourceId();
     }
 }

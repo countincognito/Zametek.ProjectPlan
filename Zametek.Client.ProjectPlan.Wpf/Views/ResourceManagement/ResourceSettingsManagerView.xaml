@@ -86,6 +86,24 @@
                               VerticalAlignment="Center"
                               VerticalContentAlignment="Center"
                               IsChecked="{Binding Path=DisableResources, Mode=TwoWay}"/>
+
+                    <Label DockPanel.Dock="Left"
+                           IsTabStop="False"
+                           VerticalAlignment="Center"
+                           VerticalContentAlignment="Center"
+                           Content="{x:Static local:Properties.Resources.Label_DefaultUnitCost}"
+                           Height="25"
+                           Margin="0,0,7,0"/>
+
+                    <xctk:DoubleUpDown Value="{Binding Path=DefaultUnitCost, Mode=TwoWay}"
+                                       FormatString="F2"
+                                       VerticalAlignment="Stretch"
+                                       VerticalContentAlignment="Center"
+                                       HorizontalAlignment="Stretch"
+                                       HorizontalContentAlignment="Right"
+                                       Margin="0"
+                                       Increment="1.00"
+                                       Minimum="0.00"/>
                     <Grid/>
                 </DockPanel>
 

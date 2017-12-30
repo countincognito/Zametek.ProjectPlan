@@ -322,6 +322,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default Unit Cost:.
+        /// </summary>
+        public static string Label_DefaultUnitCost {
+            get {
+                return ResourceManager.GetString("Label_DefaultUnitCost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Label_DeleteManagedActivity {

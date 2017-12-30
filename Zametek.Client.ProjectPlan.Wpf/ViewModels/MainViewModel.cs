@@ -14,7 +14,6 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
-using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -79,29 +78,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #endregion
 
         #region Properties
-
-        public bool IsBusy
-        {
-            get
-            {
-                return m_IsBusy;
-            }
-            set
-            {
-                m_IsBusy = value;
-                RaisePropertyChanged(nameof(IsBusy));
-            }
-        }
-
-        public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
-
-        public IInteractionRequest ConfirmationInteractionRequest => m_ConfirmationInteractionRequest;
-
-        public IInteractionRequest ProjectTitleInteractionRequest => m_ProjectTitleInteractionRequest;
-
-        public IInteractionRequest ResourceSettingsManagerInteractionRequest => m_ResourceSettingsManagerInteractionRequest;
-
-        public IInteractionRequest ArrowGraphSettingsManagerInteractionRequest => m_ArrowGraphSettingsManagerInteractionRequest;
 
         private bool HasStaleOutputs
         {
@@ -646,6 +622,42 @@ namespace Zametek.Client.ProjectPlan.Wpf
             await Task.Run(() => m_CoreViewModel.RunAutoCompile());
         }
 
+        private void ResetProject()
+        {
+            lock (m_Lock)
+            {
+                // TODO
+                m_CoreViewModel.ClearManagedActivities();
+                //SelectedActivities.Clear();
+
+                m_CoreViewModel.ClearSettings();
+
+                GraphCompilation = new GraphCompilation<int, IDependentActivity<int>>(
+                    false,
+                    Enumerable.Empty<CircularDependency<int>>(),
+                    Enumerable.Empty<int>(),
+                    Enumerable.Empty<IDependentActivity<int>>(),
+                    Enumerable.Empty<IResourceSchedule<int>>());
+
+                CyclomaticComplexity = null;
+                Duration = null;
+
+                HasCompilationErrors = false;
+                m_CoreViewModel.SetCompilationOutput();
+
+                ArrowGraphDto = null;
+
+                ProjectStartWithoutPublishing = DateTime.UtcNow.BeginningOfDay();
+                IsProjectUpdated = false;
+                ProjectTitle = s_DefaultProjectTitle;
+
+                HasStaleOutputs = false;
+            }
+
+            PublishGraphCompilationUpdatedPayload();
+            PublishArrowGraphDtoUpdatedPayload();
+        }
+
         private void DispatchNotification(string title, object content)
         {
             m_NotificationInteractionRequest.Raise(
@@ -659,6 +671,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #endregion
 
         #region Public Methods
+
+        public async Task DoOpenProjectPlanFileAsync()
+        {
+            await DoOpenProjectPlanFileAsync(string.Empty);
+        }
 
         public async Task DoSaveProjectPlanFileAsync()
         {
@@ -888,6 +905,29 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region IMainViewModel Members
 
+        public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
+
+        public IInteractionRequest ConfirmationInteractionRequest => m_ConfirmationInteractionRequest;
+
+        public IInteractionRequest ProjectTitleInteractionRequest => m_ProjectTitleInteractionRequest;
+
+        public IInteractionRequest ResourceSettingsManagerInteractionRequest => m_ResourceSettingsManagerInteractionRequest;
+
+        public IInteractionRequest ArrowGraphSettingsManagerInteractionRequest => m_ArrowGraphSettingsManagerInteractionRequest;
+
+        public bool IsBusy
+        {
+            get
+            {
+                return m_IsBusy;
+            }
+            set
+            {
+                m_IsBusy = value;
+                RaisePropertyChanged(nameof(IsBusy));
+            }
+        }
+
         public string ProjectTitle
         {
             get
@@ -1048,11 +1088,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set;
         }
 
-        public async Task DoOpenProjectPlanFileAsync()
-        {
-            await DoOpenProjectPlanFileAsync(string.Empty);
-        }
-
         public async Task DoOpenProjectPlanFileAsync(string fileName)
         {
             try
@@ -1113,42 +1148,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 IsBusy = false;
                 RaiseCanExecuteChangedAllCommands();
             }
-        }
-
-        public void ResetProject()
-        {
-            lock (m_Lock)
-            {
-                // TODO
-                m_CoreViewModel.ClearManagedActivities();
-                //SelectedActivities.Clear();
-
-                m_CoreViewModel.ClearSettings();
-
-                GraphCompilation = new GraphCompilation<int, IDependentActivity<int>>(
-                    false,
-                    Enumerable.Empty<CircularDependency<int>>(),
-                    Enumerable.Empty<int>(),
-                    Enumerable.Empty<IDependentActivity<int>>(),
-                    Enumerable.Empty<IResourceSchedule<int>>());
-
-                CyclomaticComplexity = null;
-                Duration = null;
-
-                HasCompilationErrors = false;
-                m_CoreViewModel.SetCompilationOutput();
-
-                ArrowGraphDto = null;
-
-                ProjectStartWithoutPublishing = DateTime.UtcNow.BeginningOfDay();
-                IsProjectUpdated = false;
-                ProjectTitle = s_DefaultProjectTitle;
-
-                HasStaleOutputs = false;
-            }
-
-            PublishGraphCompilationUpdatedPayload();
-            PublishArrowGraphDtoUpdatedPayload();
         }
 
         #endregion

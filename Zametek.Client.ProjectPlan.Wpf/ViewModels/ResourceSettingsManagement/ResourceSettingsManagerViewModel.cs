@@ -26,40 +26,16 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Properties
 
-        public ManagedResourceViewModel SelectedResource
-        {
-            get
-            {
-                if (SelectedResources.Count == 1)
-                {
-                    return SelectedResources.FirstOrDefault();
-                }
-                return null;
-            }
-        }
-
         public ObservableCollection<ManagedResourceViewModel> SelectedResources
         {
             get;
-        }
-
-        public bool ActivateResources
-        {
-            get
-            {
-                return !DisableResources;
-            }
-            set
-            {
-                DisableResources = !value;
-            }
         }
 
         #endregion
 
         #region Commands
 
-        public DelegateCommandBase SetSelectedManagedResourcesCommand
+        public DelegateCommandBase InternalSetSelectedManagedResourcesCommand
         {
             get;
             private set;
@@ -159,7 +135,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private void InitializeCommands()
         {
             SetSelectedManagedResourcesCommand =
-                new DelegateCommand<SelectionChangedEventArgs>(SetSelectedManagedResources);
+                InternalSetSelectedManagedResourcesCommand =
+                    new DelegateCommand<SelectionChangedEventArgs>(SetSelectedManagedResources);
             AddManagedResourceCommand =
                 InternalAddManagedResourceCommand =
                     new DelegateCommand(AddManagedResource, CanAddManagedResource);
@@ -170,7 +147,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void RaiseCanExecuteChangedAllCommands()
         {
-            SetSelectedManagedResourcesCommand.RaiseCanExecuteChanged();
+            InternalSetSelectedManagedResourcesCommand.RaiseCanExecuteChanged();
             InternalAddManagedResourceCommand.RaiseCanExecuteChanged();
             InternalRemoveManagedResourceCommand.RaiseCanExecuteChanged();
         }
@@ -178,6 +155,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private void ClearSelectedResources()
         {
             SelectedResources.Clear();
+        }
+
+        private int GetNextResourceId()
+        {
+            return Resources.Select(x => x.Id).DefaultIfEmpty().Max() + 1;
         }
 
         #endregion
@@ -249,12 +231,38 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
+        public bool ActivateResources
+        {
+            get
+            {
+                return !DisableResources;
+            }
+        }
+
         public ObservableCollection<ManagedResourceViewModel> Resources
         {
             get
             {
                 return ((ResourceSettingsManagerConfirmation)Notification).Resources;
             }
+        }
+
+        public ManagedResourceViewModel SelectedResource
+        {
+            get
+            {
+                if (SelectedResources.Count == 1)
+                {
+                    return SelectedResources.FirstOrDefault();
+                }
+                return null;
+            }
+        }
+
+        public ICommand SetSelectedManagedResourcesCommand
+        {
+            get;
+            private set;
         }
 
         public ICommand AddManagedResourceCommand
@@ -267,11 +275,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get;
             private set;
-        }
-
-        public int GetNextResourceId()
-        {
-            return Resources.Select(x => x.Id).DefaultIfEmpty().Max() + 1;
         }
 
         #endregion
