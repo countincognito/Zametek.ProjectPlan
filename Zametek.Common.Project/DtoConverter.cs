@@ -141,6 +141,20 @@ namespace Zametek.Common.Project
                 dto.FinishTime);
         }
 
+        public static GraphCompilation<int, IDependentActivity<int>> FromDto(GraphCompilationDto dto)
+        {
+            if (dto == null)
+            {
+                throw new ArgumentNullException(nameof(dto));
+            }
+            return new GraphCompilation<int, IDependentActivity<int>>(
+                dto.AllResourcesExplicitTargetsButNotAllActivitiesTargeted,
+                dto.CircularDependencies.Select(x => FromDto(x)),
+                dto.MissingDependencies,
+                dto.DependentActivities.Select(x => FromDto(x)),
+                dto.ResourceSchedules.Select(x => FromDto(x)));
+        }
+
         #endregion
 
         #region ToDto
@@ -326,6 +340,27 @@ namespace Zametek.Common.Project
                 Duration = scheduledActivity.Duration,
                 StartTime = scheduledActivity.StartTime,
                 FinishTime = scheduledActivity.FinishTime
+            };
+        }
+
+        public static GraphCompilationDto ToDto(
+            GraphCompilation<int, IDependentActivity<int>> graphCompilation,
+            int cyclomaticComplexity,
+            int duration)
+        {
+            if (graphCompilation == null)
+            {
+                throw new ArgumentNullException(nameof(graphCompilation));
+            }
+            return new GraphCompilationDto
+            {
+                AllResourcesExplicitTargetsButNotAllActivitiesTargeted = graphCompilation.AllResourcesExplicitTargetsButNotAllActivitiesTargeted,
+                CircularDependencies = graphCompilation.CircularDependencies != null ? graphCompilation.CircularDependencies.Select(x => ToDto(x)).ToList() : new List<CircularDependencyDto>(),
+                MissingDependencies = graphCompilation.MissingDependencies != null ? graphCompilation.MissingDependencies.ToList() : new List<int>(),
+                DependentActivities = graphCompilation.DependentActivities != null ? graphCompilation.DependentActivities.Select(x => ToDto(x)).ToList() : new List<DependentActivityDto>(),
+                ResourceSchedules = graphCompilation.ResourceSchedules != null ? graphCompilation.ResourceSchedules.Select(x => ToDto(x)).ToList() : new List<ResourceScheduleDto>(),
+                CyclomaticComplexity = cyclomaticComplexity,
+                Duration = duration
             };
         }
 

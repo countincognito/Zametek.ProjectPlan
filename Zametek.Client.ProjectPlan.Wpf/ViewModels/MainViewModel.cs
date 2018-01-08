@@ -526,25 +526,20 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 // Project Start Date.
                 ProjectStartWithoutPublishing = projectPlanDto.ProjectStart;
 
-                // Resources.
-                ResourceSettingsDto = projectPlanDto.ResourceSettings;
-
                 // Activities.
                 foreach (DependentActivityDto dependentActivityDto in projectPlanDto.DependentActivities)
                 {
                     m_CoreViewModel.AddManagedActivity(DtoConverter.FromDto(dependentActivityDto));
                 }
 
-                CyclomaticComplexity = projectPlanDto.CyclomaticComplexity;
-                Duration = projectPlanDto.Duration;
+                // Resources.
+                ResourceSettingsDto = projectPlanDto.ResourceSettings;
 
                 // Compilation.
-                GraphCompilation = new GraphCompilation<int, IDependentActivity<int>>(
-                    projectPlanDto.AllResourcesExplicitTargetsButNotAllActivitiesTargeted,
-                    projectPlanDto.CircularDependencies.Select(x => DtoConverter.FromDto(x)),
-                    projectPlanDto.MissingDependencies,
-                    projectPlanDto.DependentActivities.Select(x => DtoConverter.FromDto(x)),
-                    projectPlanDto.ResourceSchedules.Select(x => DtoConverter.FromDto(x)));
+                GraphCompilation = DtoConverter.FromDto(projectPlanDto.GraphCompilation);
+
+                CyclomaticComplexity = projectPlanDto.GraphCompilation.CyclomaticComplexity;
+                Duration = projectPlanDto.GraphCompilation.Duration;
 
                 m_CoreViewModel.SetCompilationOutput();
 
@@ -571,20 +566,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 return new ProjectPlanDto()
                 {
                     ProjectStart = ProjectStart,
+                    DependentActivities = Activities.Select(x => DtoConverter.ToDto(x)).ToList(),
                     ResourceSettings = ResourceSettingsDto.Copy(),
                     ArrowGraphSettings = ArrowGraphSettingsDto.Copy(),
-
-                    AllResourcesExplicitTargetsButNotAllActivitiesTargeted = GraphCompilation?.AllResourcesExplicitTargetsButNotAllActivitiesTargeted != null ? GraphCompilation.AllResourcesExplicitTargetsButNotAllActivitiesTargeted : false,
-                    CircularDependencies = GraphCompilation?.CircularDependencies != null ? GraphCompilation.CircularDependencies.Select(x => DtoConverter.ToDto(x)).ToList() : new List<CircularDependencyDto>(),
-                    MissingDependencies = GraphCompilation?.MissingDependencies != null ? GraphCompilation.MissingDependencies.ToList() : new List<int>(),
-                    DependentActivities = Activities.Select(x => DtoConverter.ToDto(x)).ToList(),
-                    ResourceSchedules = GraphCompilation?.ResourceSchedules != null ? GraphCompilation.ResourceSchedules.Select(x => DtoConverter.ToDto(x)).ToList() : new List<ResourceScheduleDto>(),
-
-                    CyclomaticComplexity = CyclomaticComplexity.GetValueOrDefault(),
-                    Duration = Duration.GetValueOrDefault(),
-
+                    GraphCompilation = DtoConverter.ToDto(GraphCompilation, CyclomaticComplexity.GetValueOrDefault(), Duration.GetValueOrDefault()),
                     ArrowGraph = ArrowGraphDto != null ? ArrowGraphDto.Copy() : new ArrowGraphDto() { Edges = new List<ActivityEdgeDto>(), Nodes = new List<EventNodeDto>(), IsStale = false },
-
                     HasStaleOutputs = HasStaleOutputs
                 };
             }

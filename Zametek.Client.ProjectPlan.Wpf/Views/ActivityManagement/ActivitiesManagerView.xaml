@@ -135,10 +135,16 @@
                                   AutoGenerateColumns="False"
                                   BorderThickness="2"
                                   ItemsSource="{Binding Source={StaticResource ActivitiesView}}"
-                                  SelectionMode="Extended">
+                                  SelectionMode="Extended"
+                                  CanUserDeleteRows="False">
                             <DataGrid.Resources>
                                 <local:BindingProxy x:Key="ActivitiesGridProxy" Data="{Binding}"/>
                             </DataGrid.Resources>
+                            
+                            <DataGrid.InputBindings>
+                                <KeyBinding Key="Delete" Command="{Binding Path=RemoveManagedActivityCommand}" />
+                            </DataGrid.InputBindings>
+                            
                             <i:Interaction.Triggers>
                                 <i:EventTrigger EventName="SelectionChanged">
                                     <zi:EventToCommand Command="{Binding Path=SetSelectedManagedActivitiesCommand, Mode=OneWay}"

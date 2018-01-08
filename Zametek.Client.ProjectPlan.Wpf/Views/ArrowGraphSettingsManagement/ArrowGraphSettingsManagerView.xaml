@@ -61,7 +61,13 @@
                                 <DataGrid x:Name="ActivitySeveritiesGrid"
                                           AutoGenerateColumns="False"
                                           ItemsSource="{Binding Source={StaticResource ActivitySeveritiesView}}"
-                                          SelectionMode="Single">
+                                          SelectionMode="Single"
+                                          CanUserDeleteRows="False">
+
+                                    <!--<DataGrid.InputBindings>
+                                        <KeyBinding Key="Delete" Command="{Binding Path=RemoveManagedActivitySeverityCommand}" />
+                                    </DataGrid.InputBindings>-->
+
                                     <DataGrid.Columns>
                                         <DataGridTemplateColumn CanUserReorder="False"
                                                                 CanUserSort="True"

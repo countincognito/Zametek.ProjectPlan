@@ -116,7 +116,8 @@
                                           IsEnabled="{Binding Path=ActivateResources, Mode=OneWay}"
                                           ItemsSource="{Binding Source={StaticResource ResourcesView}}"
                                           SelectedItem="{Binding Path=SelectedResource, Mode=OneWay}"
-                                          SelectionMode="Single">
+                                          SelectionMode="Single"
+                                          CanUserDeleteRows="False">
                                     <DataGrid.Style>
                                         <Style>
                                             <Style.Triggers>
@@ -126,6 +127,11 @@
                                             </Style.Triggers>
                                         </Style>
                                     </DataGrid.Style>
+
+                                    <DataGrid.InputBindings>
+                                        <KeyBinding Key="Delete" Command="{Binding Path=RemoveManagedResourceCommand}" />
+                                    </DataGrid.InputBindings>
+
                                     <i:Interaction.Triggers>
                                         <i:EventTrigger EventName="SelectionChanged">
                                             <zi:EventToCommand Command="{Binding Path=SetSelectedManagedResourcesCommand, Mode=OneWay}"
