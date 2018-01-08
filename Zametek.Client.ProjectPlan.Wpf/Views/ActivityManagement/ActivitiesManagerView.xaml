@@ -78,13 +78,13 @@
         <DockPanel DockPanel.Dock="Bottom"
                    Margin="0,11,0,0">
             <Button DockPanel.Dock="Right"
-                        IsTabStop="True"
-                        Margin="7,0,0,0"
-                        Height="25" Width="75"
-                        VerticalAlignment="Center"
-                        VerticalContentAlignment="Center"
-                        Command="{Binding Path=RemoveManagedActivityCommand, Mode=OneWay}"
-                        Content="{x:Static local:Properties.Resources.Label_DeleteManagedActivity}">
+                    IsTabStop="True"
+                    Margin="7,0,0,0"
+                    Height="25" Width="75"
+                    VerticalAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding Path=RemoveManagedActivityCommand, Mode=OneWay}"
+                    Content="{x:Static local:Properties.Resources.Label_DeleteManagedActivity}">
             </Button>
 
             <Button DockPanel.Dock="Right"
@@ -150,7 +150,6 @@
                                     <zi:EventToCommand Command="{Binding Path=SetSelectedManagedActivitiesCommand, Mode=OneWay}"
                                                        PassEventArgsToCommand="True"/>
                                 </i:EventTrigger>
-                                
                             </i:Interaction.Triggers>
 
                             <DataGrid.Columns>
