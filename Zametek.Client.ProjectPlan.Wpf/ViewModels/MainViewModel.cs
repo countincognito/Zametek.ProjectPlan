@@ -526,12 +526,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 // Project Start Date.
                 ProjectStartWithoutPublishing = projectPlanDto.ProjectStart;
 
-                // Activities.
-                foreach (DependentActivityDto dependentActivityDto in projectPlanDto.DependentActivities)
-                {
-                    m_CoreViewModel.AddManagedActivity(DtoConverter.FromDto(dependentActivityDto));
-                }
-
                 // Resources.
                 ResourceSettingsDto = projectPlanDto.ResourceSettings;
 
@@ -540,6 +534,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 CyclomaticComplexity = projectPlanDto.GraphCompilation.CyclomaticComplexity;
                 Duration = projectPlanDto.GraphCompilation.Duration;
+
+                // Activities.
+                // Be sure to do this after the resources and project start date have been added.
+                foreach (DependentActivityDto dependentActivityDto in projectPlanDto.DependentActivities)
+                {
+                    m_CoreViewModel.AddManagedActivity(DtoConverter.FromDto(dependentActivityDto));
+                }
 
                 m_CoreViewModel.SetCompilationOutput();
 
