@@ -150,6 +150,7 @@
                                     <zi:EventToCommand Command="{Binding Path=SetSelectedManagedActivitiesCommand, Mode=OneWay}"
                                                        PassEventArgsToCommand="True"/>
                                 </i:EventTrigger>
+                                
                             </i:Interaction.Triggers>
 
                             <DataGrid.Columns>
