@@ -13,7 +13,7 @@ namespace Zametek.Manager.ProjectPlan
         #region Fields
 
         private readonly IGraphProcessingEngine m_GraphProcessingEngine;
-        private readonly IMetricAssessingEngine m_MetricAssessingEngine;
+        private readonly IAssessingEngine m_AssessingEngine;
 
         #endregion
 
@@ -21,17 +21,19 @@ namespace Zametek.Manager.ProjectPlan
 
         public ProjectManager(
             IGraphProcessingEngine graphProcessingEngine,
-            IMetricAssessingEngine metricAssessingEngine)
+            IAssessingEngine metricAssessingEngine)
         {
             m_GraphProcessingEngine = graphProcessingEngine ?? throw new ArgumentNullException(nameof(graphProcessingEngine));
-            m_MetricAssessingEngine = metricAssessingEngine ?? throw new ArgumentNullException(nameof(metricAssessingEngine));
+            m_AssessingEngine = metricAssessingEngine ?? throw new ArgumentNullException(nameof(metricAssessingEngine));
         }
 
         #endregion
 
         #region IProjectManager Members
 
-        public MetricsDto CalculateProjectMetrics(IList<IActivity<int>> activities, IList<ActivitySeverityDto> activitySeverityDtos)
+        public MetricsDto CalculateProjectMetrics(
+            IList<IActivity<int>> activities,
+            IList<ActivitySeverityDto> activitySeverityDtos)
         {
             if (activities == null)
             {
@@ -41,7 +43,32 @@ namespace Zametek.Manager.ProjectPlan
             {
                 throw new ArgumentNullException(nameof(activitySeverityDtos));
             }
-            return m_MetricAssessingEngine.CalculateProjectMetrics(activities, activitySeverityDtos);
+            return m_AssessingEngine.CalculateProjectMetrics(activities, activitySeverityDtos);
+        }
+
+        public IList<ResourceSeriesDto> CalculateResourceSeriesSet(
+            IList<IResourceSchedule<int>> resourceSchedules,
+            IList<ResourceDto> resources,
+            double defaultUnitCost)
+        {
+            if (resourceSchedules == null)
+            {
+                throw new ArgumentNullException(nameof(resourceSchedules));
+            }
+            if (resources == null)
+            {
+                throw new ArgumentNullException(nameof(resources));
+            }
+            return m_AssessingEngine.CalculateResourceSeriesSet(resourceSchedules, resources, defaultUnitCost);
+        }
+
+        public CostsDto CalculateProjectCosts(IList<ResourceSeriesDto> resourceSeriesSet)
+        {
+            if (resourceSeriesSet == null)
+            {
+                throw new ArgumentNullException(nameof(resourceSeriesSet));
+            }
+            return m_AssessingEngine.CalculateProjectCosts(resourceSeriesSet);
         }
 
         public byte[] ExportArrowGraphToDiagram(DiagramArrowGraphDto diagramArrowGraphDto)

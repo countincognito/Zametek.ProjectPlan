@@ -544,6 +544,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 m_CoreViewModel.SetCompilationOutput();
 
+                m_CoreViewModel.CalculateCosts();
+
                 // Arrow Graph.
                 ArrowGraphSettingsDto = projectPlanDto.ArrowGraphSettings;
                 ArrowGraphDto = projectPlanDto.ArrowGraph;

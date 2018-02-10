@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Zametek.Common.Project;
+using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -71,6 +72,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         ObservableCollection<ManagedActivityViewModel> Activities
+        {
+            get;
+        }
+
+        IList<ResourceSeriesDto> ResourceSeriesSet
         {
             get;
         }
@@ -144,6 +150,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
         void RunAutoCompile();
 
         void SetCompilationOutput();
+
+        void CalculateCosts();
 
         void ClearSettings();
     }

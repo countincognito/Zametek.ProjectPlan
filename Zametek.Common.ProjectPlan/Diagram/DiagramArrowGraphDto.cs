@@ -6,7 +6,7 @@ namespace Zametek.Common.ProjectPlan
     [Serializable]
     public class DiagramArrowGraphDto
     {
-        public IList<DiagramEdgeDto> Edges { get; set; }
-        public IList<DiagramNodeDto> Nodes { get; set; }
+        public List<DiagramEdgeDto> Edges { get; set; }
+        public List<DiagramNodeDto> Nodes { get; set; }
     }
 }

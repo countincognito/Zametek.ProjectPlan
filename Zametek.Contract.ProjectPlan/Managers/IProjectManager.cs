@@ -8,6 +8,8 @@ namespace Zametek.Contract.ProjectPlan
     public interface IProjectManager
     {
         MetricsDto CalculateProjectMetrics(IList<IActivity<int>> activities, IList<ActivitySeverityDto> activitySeverityDtos);
+        IList<ResourceSeriesDto> CalculateResourceSeriesSet(IList<IResourceSchedule<int>> resourceSchedules, IList<ResourceDto> resources, double defaultUnitCost);
+        CostsDto CalculateProjectCosts(IList<ResourceSeriesDto> resourceSeriesSet);
         byte[] ExportArrowGraphToDiagram(DiagramArrowGraphDto diagramArrowGraphDto);
     }
 }

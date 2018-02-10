@@ -48,8 +48,8 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
 
             builder.RegisterType<GraphProcessingEngine>()
                 .As<IGraphProcessingEngine>().SingleInstance();
-            builder.RegisterType<MetricAssessingEngine>()
-                .As<IMetricAssessingEngine>().SingleInstance();
+            builder.RegisterType<AssessingEngine>()
+                .As<IAssessingEngine>().SingleInstance();
             builder.RegisterType<ProjectManager>()
                 .As<IProjectManager>().SingleInstance();
             builder.RegisterType<SettingResourceAccess>()

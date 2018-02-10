@@ -6,7 +6,7 @@ namespace Zametek.Common.Project
     [Serializable]
     public class ResourceSettingsDto
     {
-        public IList<ResourceDto> Resources { get; set; }
+        public List<ResourceDto> Resources { get; set; }
         public double DefaultUnitCost { get; set; }
         public bool AreDisabled { get; set; }
     }

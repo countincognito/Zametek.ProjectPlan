@@ -185,7 +185,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 if (!HasCompilationErrors
                     && dependentActivities.Any())
                 {
-                    ArrowGraphCompiler<int, IDependentActivity<int>> arrowGraphCompiler = ArrowGraphCompiler<int, IDependentActivity<int>>.Create();
+                    var arrowGraphCompiler = ArrowGraphCompiler<int, IDependentActivity<int>>.Create();
                     foreach (DependentActivity<int> dependentActivity in dependentActivities)
                     {
                         dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);

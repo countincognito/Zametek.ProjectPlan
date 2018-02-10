@@ -9,12 +9,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
-using Zametek.Common.Project;
+using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -26,7 +25,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private readonly object m_Lock;
         private bool m_IsBusy;
-        private IList<ResourceSeries> m_ResourceChartSeriesSet;
         private bool m_ExportResourceChartAsCosts;
         private PlotModel m_ResourceChartPlotModel;
         private int m_ResourceChartOutputWidth;
@@ -63,7 +61,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
             m_NotificationInteractionRequest = new InteractionRequest<Notification>();
 
-            m_ResourceChartSeriesSet = new List<ResourceSeries>();
             ResourceChartPlotModel = null;
             ResourceChartOutputWidth = 1000;
             ResourceChartOutputHeight = 500;
@@ -88,9 +85,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private GraphCompilation<int, IDependentActivity<int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
 
-        private IList<ResourceDto> ResourceDtos => m_CoreViewModel.ResourceSettingsDto.Resources;
-
-        private double DefaultUnitCost => m_CoreViewModel.ResourceSettingsDto.DefaultUnitCost;
+        private IList<ResourceSeriesDto> ResourceSeriesSet => m_CoreViewModel.ResourceSeriesSet;
 
         #endregion
 
@@ -143,7 +138,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             lock (m_Lock)
             {
-                return m_ResourceChartSeriesSet.Any();
+                return ResourceSeriesSet.Any();
             }
         }
 
@@ -217,9 +212,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     .Subscribe(payload =>
                     {
                         IsBusy = true;
-                        SetResourceChartSeriesSet();
-                        SetResourceChartPlotModel();
-                        CalculateCosts();
+                        CalculateResourceChartPlotModel();
                         IsBusy = false;
                     }, ThreadOption.BackgroundThread);
         }
@@ -230,109 +223,14 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 .Unsubscribe(m_GraphCompilationUpdatedPayloadToken);
         }
 
-        private void SetResourceChartSeriesSet()
+        private void CalculateResourceChartPlotModel()
         {
             lock (m_Lock)
             {
-                IList<IResourceSchedule<int>> resourceSchedules = GraphCompilation?.ResourceSchedules;
-                var seriesSet = new List<ResourceSeries>();
-                if (resourceSchedules != null
-                    && resourceSchedules.Any())
-                {
-                    double defaultUnitCost = DefaultUnitCost;
-                    IDictionary<int, ColorFormatDto> colorFormatLookup = ResourceDtos.ToDictionary(x => x.Id, x => x.ColorFormat);
-                    var indirectResourceIdsToIgnore = new HashSet<int>();
-                    int finishTime = resourceSchedules.Max(x => x.FinishTime);
-                    int spareResourceCount = 1;
-                    var scheduledSeriesSet = new List<ResourceSeries>();
-                    for (int resourceIndex = 0; resourceIndex < resourceSchedules.Count; resourceIndex++)
-                    {
-                        IResourceSchedule<int> resourceSchedule = resourceSchedules[resourceIndex];
-                        var series = new ResourceSeries()
-                        {
-                            Values = resourceSchedule.ActivityAllocation.Select(x => x ? 1 : 0).ToList()
-                        };
-                        series.InterActivityAllocationType = InterActivityAllocationType.None;
-                        var stringBuilder = new StringBuilder();
-                        IResource<int> resource = resourceSchedule.Resource;
-
-                        if (resource != null)
-                        {
-                            series.InterActivityAllocationType = resource.InterActivityAllocationType;
-                            indirectResourceIdsToIgnore.Add(resource.Id);
-                            if (string.IsNullOrWhiteSpace(resource.Name))
-                            {
-                                stringBuilder.Append($@"Resource {resource.Id}");
-                            }
-                            else
-                            {
-                                stringBuilder.Append($@"{resource.Name}");
-                            }
-                        }
-                        else
-                        {
-                            stringBuilder.Append($@"Resource {spareResourceCount}");
-                            spareResourceCount++;
-                        }
-
-                        series.Title = stringBuilder.ToString();
-                        series.ColorFormatDto = resource != null && colorFormatLookup.ContainsKey(resource.Id) ? colorFormatLookup[resource.Id].Copy() : new ColorFormatDto().Randomize();
-                        series.UnitCost = resource?.UnitCost ?? defaultUnitCost;
-                        series.DisplayOrder = resource?.DisplayOrder ?? 0;
-                        scheduledSeriesSet.Add(series);
-                    }
-
-                    // Now add the remaining resources that are indirect costs, but
-                    // sort them separately and add them to the front of the list.
-                    var unscheduledSeriesSet = new List<ResourceSeries>();
-                    IEnumerable<ResourceDto> indirectResources =
-                        ResourceDtos.Where(x => !indirectResourceIdsToIgnore.Contains(x.Id) && x.InterActivityAllocationType == InterActivityAllocationType.Indirect);
-
-                    foreach (ResourceDto resourceDto in indirectResources)
-                    {
-                        var series = new ResourceSeries()
-                        {
-                            InterActivityAllocationType = resourceDto.InterActivityAllocationType,
-                            Values = new List<int>(Enumerable.Repeat(1, finishTime))
-                        };
-                        var stringBuilder = new StringBuilder();
-                        if (string.IsNullOrWhiteSpace(resourceDto.Name))
-                        {
-                            stringBuilder.Append($@"Resource {resourceDto.Id}");
-                        }
-                        else
-                        {
-                            stringBuilder.Append($@"{resourceDto.Name}");
-                        }
-
-                        series.Title = stringBuilder.ToString();
-                        series.ColorFormatDto = resourceDto.ColorFormat != null ? resourceDto.ColorFormat.Copy() : new ColorFormatDto().Randomize();
-                        series.UnitCost = resourceDto.UnitCost;
-                        series.DisplayOrder = resourceDto.DisplayOrder;
-                        unscheduledSeriesSet.Add(series);
-                    }
-
-                    seriesSet.AddRange(unscheduledSeriesSet.OrderBy(x => x.DisplayOrder));
-                    seriesSet.AddRange(scheduledSeriesSet.OrderBy(x => x.DisplayOrder));
-                }
-
-                m_ResourceChartSeriesSet.Clear();
-                foreach (ResourceSeries series in seriesSet)
-                {
-                    m_ResourceChartSeriesSet.Add(series);
-                }
-            }
-            RaiseCanExecuteChangedAllCommands();
-        }
-
-        private void SetResourceChartPlotModel()
-        {
-            lock (m_Lock)
-            {
-                IList<ResourceSeries> seriesSet = m_ResourceChartSeriesSet;
+                IList<ResourceSeriesDto> resourceSeriesSet = ResourceSeriesSet;
                 PlotModel plotModel = null;
-                if (seriesSet != null
-                    && seriesSet.Any())
+                if (resourceSeriesSet != null
+                    && resourceSeriesSet.Any())
                 {
                     plotModel = new PlotModel();
                     plotModel.Axes.Add(BuildResourceChartXAxis());
@@ -343,7 +241,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     var total = new List<int>();
                     m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
 
-                    foreach (ResourceSeries series in seriesSet)
+                    foreach (ResourceSeriesDto series in resourceSeriesSet)
                     {
                         if (series != null)
                         {
@@ -379,6 +277,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 }
                 ResourceChartPlotModel = plotModel;
             }
+            RaiseCanExecuteChangedAllCommands();
         }
 
         private Axis BuildResourceChartXAxis()
@@ -444,7 +343,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             lock (m_Lock)
             {
                 var table = new DataTable();
-                IList<ResourceSeries> seriesSet = m_ResourceChartSeriesSet.OrderBy(x => x.DisplayOrder).ToList();
+                IList<ResourceSeriesDto> seriesSet = ResourceSeriesSet.OrderBy(x => x.DisplayOrder).ToList();
                 if (seriesSet != null
                     && seriesSet.Any())
                 {
@@ -472,45 +371,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     }
                 }
                 return table;
-            }
-        }
-
-        private void CalculateCosts()
-        {
-            lock (m_Lock)
-            {
-                ClearCosts();
-                if (HasCompilationErrors)
-                {
-                    return;
-                }
-                IList<ResourceSeries> seriesSet = m_ResourceChartSeriesSet;
-                if (seriesSet != null
-                    && seriesSet.Any())
-                {
-                    DirectCost = seriesSet
-                        .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
-                        .Sum(x => x.Values.Sum(y => y * x.UnitCost));
-                    IndirectCost = seriesSet
-                        .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
-                        .Sum(x => x.Values.Sum(y => y * x.UnitCost));
-                    OtherCost = seriesSet
-                        .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.None)
-                        .Sum(x => x.Values.Sum(y => y * x.UnitCost));
-                    TotalCost = seriesSet
-                        .Sum(x => x.Values.Sum(y => y * x.UnitCost));
-                }
-            }
-        }
-
-        private void ClearCosts()
-        {
-            lock (m_Lock)
-            {
-                DirectCost = null;
-                IndirectCost = null;
-                OtherCost = null;
-                TotalCost = null;
             }
         }
 
@@ -603,58 +463,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public double? DirectCost
-        {
-            get
-            {
-                return m_CoreViewModel.DirectCost;
-            }
-            private set
-            {
-                m_CoreViewModel.DirectCost = value;
-                RaisePropertyChanged();
-            }
-        }
-
-        public double? IndirectCost
-        {
-            get
-            {
-                return m_CoreViewModel.IndirectCost;
-            }
-            private set
-            {
-                m_CoreViewModel.IndirectCost = value;
-                RaisePropertyChanged();
-            }
-        }
-
-        public double? OtherCost
-        {
-            get
-            {
-                return m_CoreViewModel.OtherCost;
-            }
-            private set
-            {
-                m_CoreViewModel.OtherCost = value;
-                RaisePropertyChanged();
-            }
-        }
-
-        public double? TotalCost
-        {
-            get
-            {
-                return m_CoreViewModel.TotalCost;
-            }
-            private set
-            {
-                m_CoreViewModel.TotalCost = value;
-                RaisePropertyChanged();
-            }
-        }
-
         public ICommand CopyResourceChartToClipboardCommand
         {
             get;
@@ -665,20 +473,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get;
             private set;
-        }
-
-        #endregion
-
-        #region Private Types
-
-        private class ResourceSeries
-        {
-            public string Title { get; set; }
-            public InterActivityAllocationType InterActivityAllocationType { get; set; }
-            public IList<int> Values { get; set; }
-            public ColorFormatDto ColorFormatDto { get; set; }
-            public double UnitCost { get; set; }
-            public int DisplayOrder { get; set; }
         }
 
         #endregion

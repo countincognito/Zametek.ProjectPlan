@@ -6,7 +6,7 @@ namespace Zametek.Common.Project
     [Serializable]
     public class ArrowGraphSettingsDto
     {
-        public IList<ActivitySeverityDto> ActivitySeverities { get; set; }
-        public IList<EdgeTypeFormatDto> EdgeTypeFormats { get; set; }
+        public List<ActivitySeverityDto> ActivitySeverities { get; set; }
+        public List<EdgeTypeFormatDto> EdgeTypeFormats { get; set; }
     }
 }

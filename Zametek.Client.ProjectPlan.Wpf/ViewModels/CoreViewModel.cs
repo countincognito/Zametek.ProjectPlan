@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using Zametek.Common.Project;
+using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 
@@ -16,6 +17,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #region Fields
 
         private readonly object m_Lock;
+        private readonly IProjectManager m_ProjectManager;
         private readonly ISettingManager m_SettingManager;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly VertexGraphCompiler<int, IDependentActivity<int>> m_VertexGraphCompiler;
@@ -45,18 +47,21 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #region Ctors
 
         public CoreViewModel(
+            IProjectManager projectManager,
             ISettingManager settingManager,
             IDateTimeCalculator dateTimeCalculator,
             IEventAggregator eventService)
             : base(eventService)
         {
             m_Lock = new object();
+            m_ProjectManager = projectManager ?? throw new ArgumentNullException(nameof(projectManager));
             m_SettingManager = settingManager ?? throw new ArgumentNullException(nameof(settingManager));
             m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
             m_VertexGraphCompiler = VertexGraphCompiler<int, IDependentActivity<int>>.Create();
             Activities = new ObservableCollection<ManagedActivityViewModel>();
+            ResourceSeriesSet = new List<ResourceSeriesDto>();
             ClearSettings();
         }
 
@@ -74,6 +79,17 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
                 .Publish(new GraphCompilationUpdatedPayload());
+        }
+
+        private void ClearCosts()
+        {
+            lock (m_Lock)
+            {
+                DirectCost = null;
+                IndirectCost = null;
+                OtherCost = null;
+                TotalCost = null;
+            }
         }
 
         private string BuildCircularDependenciesErrorMessage(IList<CircularDependency<int>> circularDependencies)
@@ -368,6 +384,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
+        public IList<ResourceSeriesDto> ResourceSeriesSet
+        {
+            get;
+        }
+
         public int? CyclomaticComplexity
         {
             get
@@ -587,6 +608,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
                 CyclomaticComplexity = m_VertexGraphCompiler.CyclomaticComplexity;
                 Duration = m_VertexGraphCompiler.Duration;
+
+                CalculateCosts();
+
                 IsProjectUpdated = true;
 
                 SetCompilationOutput();
@@ -649,6 +673,39 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 }
 
                 CompilationOutput = output.ToString();
+            }
+        }
+
+        public void CalculateCosts()
+        {
+            lock (m_Lock)
+            {
+                IList<IResourceSchedule<int>> resourceSchedules = GraphCompilation?.ResourceSchedules;
+                IList<ResourceDto> resources = ResourceSettingsDto.Resources;
+
+                if (resourceSchedules == null || resources == null)
+                {
+                    return;
+                }
+
+                IList<ResourceSeriesDto> resourceSeriesSet = m_ProjectManager.CalculateResourceSeriesSet(resourceSchedules, resources, ResourceSettingsDto.DefaultUnitCost);
+                ResourceSeriesSet.Clear();
+                foreach (ResourceSeriesDto series in resourceSeriesSet)
+                {
+                    ResourceSeriesSet.Add(series);
+                }
+
+                ClearCosts();
+                if (HasCompilationErrors)
+                {
+                    return;
+                }
+
+                CostsDto costs = m_ProjectManager.CalculateProjectCosts(resourceSeriesSet);
+                DirectCost = costs.DirectCost;
+                IndirectCost = costs.IndirectCost;
+                OtherCost = costs.OtherCost;
+                TotalCost = costs.TotalCost;
             }
         }
 
