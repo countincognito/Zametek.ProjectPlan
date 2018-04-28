@@ -27,7 +27,7 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Zametek.ProjectPlan.Setup",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{B10DAC64-0DCC-4004-932F-C66F6D399465}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Engine.ProjectPlan.Test", "Zametek.Engine.ProjectPlan.Test\Zametek.Engine.ProjectPlan.Test.csproj", "{40DA77AB-1C7A-4C11-A825-7A95D6700FF8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Manager.ProjectPlan.Tests", "Zametek.Manager.ProjectPlan.Tests\Zametek.Manager.ProjectPlan.Tests.csproj", "{2ED8BAD7-8818-4354-8266-D7FADEC3B9E3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,10 +69,10 @@ Global
 		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{93E0CAC1-9122-44CD-AB88-B909F102FE76}.Debug|Any CPU.ActiveCfg = Debug
 		{93E0CAC1-9122-44CD-AB88-B909F102FE76}.Release|Any CPU.ActiveCfg = Release
-		{40DA77AB-1C7A-4C11-A825-7A95D6700FF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{40DA77AB-1C7A-4C11-A825-7A95D6700FF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{40DA77AB-1C7A-4C11-A825-7A95D6700FF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{40DA77AB-1C7A-4C11-A825-7A95D6700FF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2ED8BAD7-8818-4354-8266-D7FADEC3B9E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2ED8BAD7-8818-4354-8266-D7FADEC3B9E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2ED8BAD7-8818-4354-8266-D7FADEC3B9E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2ED8BAD7-8818-4354-8266-D7FADEC3B9E3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,7 +87,7 @@ Global
 		{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0} = {634E47B4-5589-4674-A220-14D6203BB179}
 		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D} = {634E47B4-5589-4674-A220-14D6203BB179}
 		{93E0CAC1-9122-44CD-AB88-B909F102FE76} = {DE811A33-0D54-49C8-9732-6EC759832990}
-		{40DA77AB-1C7A-4C11-A825-7A95D6700FF8} = {B10DAC64-0DCC-4004-932F-C66F6D399465}
+		{2ED8BAD7-8818-4354-8266-D7FADEC3B9E3} = {B10DAC64-0DCC-4004-932F-C66F6D399465}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {55169D4C-5329-4E00-8CDE-32A672466357}
