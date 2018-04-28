@@ -78,25 +78,46 @@
                 </prism:PopupWindowAction.WindowContent>
             </prism:PopupWindowAction>
         </prism:InteractionRequestTrigger>
+
+        <prism:InteractionRequestTrigger SourceObject="{Binding Path=AboutInteractionRequest, Mode=OneWay}">
+            <prism:PopupWindowAction IsModal="True"
+                                     CenterOverAssociatedObject="True">
+                <prism:PopupWindowAction.WindowStyle>
+                    <Style TargetType="{x:Type Window}">
+                        <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+                        <Setter Property="ResizeMode" Value="NoResize"/>
+                    </Style>
+                </prism:PopupWindowAction.WindowStyle>
+                <prism:PopupWindowAction.WindowContent>
+                    <local:AboutView />
+                </prism:PopupWindowAction.WindowContent>
+            </prism:PopupWindowAction>
+        </prism:InteractionRequestTrigger>
     </i:Interaction.Triggers>
 
     <DockPanel Margin="7">
-        <Menu DockPanel.Dock="Top">
+        <Menu DockPanel.Dock="Top"
+              Padding="3">
             <MenuItem Header="{x:Static local:Properties.Resources.Label_File}">
                 <MenuItem Header="{x:Static local:Properties.Resources.Label_Open}"
                           Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"/>
+                <Separator />
                 <MenuItem Header="{x:Static local:Properties.Resources.Label_Save}"
                           Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"/>
+                <Separator />
                 <MenuItem Header="{x:Static local:Properties.Resources.Label_Import}"
                           Command="{Binding Path=ImportMicrosoftProjectCommand, Mode=OneWay}"/>
+                <Separator />
                 <MenuItem Header="{x:Static local:Properties.Resources.Label_Close}"
                           Command="{Binding Path=CloseProjectCommand, Mode=OneWay}"/>
             </MenuItem>
             <MenuItem Header="{x:Static local:Properties.Resources.Label_Settings}">
                 <MenuItem Header="{x:Static local:Properties.Resources.Label_ResourceSettings}"
                           Command="{Binding Path=OpenResourceSettingsCommand, Mode=OneWay}"/>
+                <Separator />
                 <MenuItem Header="{x:Static local:Properties.Resources.Label_ArrowGraphSettings}"
                           Command="{Binding Path=OpenArrowGraphSettingsCommand, Mode=OneWay}"/>
+                <Separator />
                 <MenuItem Header="{x:Static local:Properties.Resources.Label_ShowDates}"
                           IsCheckable="True"
                           IsChecked="{Binding Path=ShowDates, Mode=TwoWay}"/>
@@ -110,6 +131,22 @@
                 <MenuItem Header="{x:Static local:Properties.Resources.Label_AutoCompile}"
                           IsCheckable="True"
                           IsChecked="{Binding Path=AutoCompile, Mode=TwoWay}"/>
+            </MenuItem>
+            <MenuItem Header="{x:Static local:Properties.Resources.Label_Help}">
+                <MenuItem Header="{x:Static local:Properties.Resources.Label_Documentation}"
+                          Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+                          CommandParameter="{x:Static local:Properties.Resources.Link_Documentation}"/>
+                <Separator />
+                <MenuItem Header="{x:Static local:Properties.Resources.Label_ReportIssue}"
+                          Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+                          CommandParameter="{x:Static local:Properties.Resources.Link_ReportIssue}"/>
+                <Separator />
+                <MenuItem Header="{x:Static local:Properties.Resources.Label_ViewLicense}"
+                          Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+                          CommandParameter="{x:Static local:Properties.Resources.Link_ViewLicense}"/>
+                <Separator />
+                <MenuItem Header="{x:Static local:Properties.Resources.Label_About}"
+                          Command="{Binding Path=OpenAboutCommand, Mode=OneWay}"/>
             </MenuItem>
         </Menu>
 

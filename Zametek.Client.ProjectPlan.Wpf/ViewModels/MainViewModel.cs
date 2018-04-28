@@ -7,6 +7,7 @@ using Prism.Interactivity.InteractionRequest;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -35,9 +36,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private readonly IEventAggregator m_EventService;
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
         private readonly InteractionRequest<Confirmation> m_ConfirmationInteractionRequest;
-        private readonly InteractionRequest<Confirmation> m_ProjectTitleInteractionRequest;
         private readonly InteractionRequest<ResourceSettingsManagerConfirmation> m_ResourceSettingsManagerInteractionRequest;
         private readonly InteractionRequest<ArrowGraphSettingsManagerConfirmation> m_ArrowGraphSettingsManagerInteractionRequest;
+        private readonly InteractionRequest<Notification> m_AboutInteractionRequest;
 
         #endregion
 
@@ -58,9 +59,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
             m_NotificationInteractionRequest = new InteractionRequest<Notification>();
             m_ConfirmationInteractionRequest = new InteractionRequest<Confirmation>();
-            m_ProjectTitleInteractionRequest = new InteractionRequest<Confirmation>();
             m_ResourceSettingsManagerInteractionRequest = new InteractionRequest<ResourceSettingsManagerConfirmation>();
             m_ArrowGraphSettingsManagerInteractionRequest = new InteractionRequest<ArrowGraphSettingsManagerConfirmation>();
+            m_AboutInteractionRequest = new InteractionRequest<Notification>();
 
             ResetProject();
 
@@ -316,6 +317,38 @@ namespace Zametek.Client.ProjectPlan.Wpf
             return !IsBusy;
         }
 
+        private DelegateCommandBase InternalOpenHyperLinkCommand
+        {
+            get;
+            set;
+        }
+
+        private void OpenHyperLink(string hyperlink)
+        {
+            DoOpenHyperLink(hyperlink);
+        }
+
+        private bool CanOpenHyperLink(string _)
+        {
+            return true;
+        }
+
+        private DelegateCommandBase InternalOpenAboutCommand
+        {
+            get;
+            set;
+        }
+
+        private void OpenAbout()
+        {
+            DoOpenAbout();
+        }
+
+        private bool CanOpenAbout()
+        {
+            return true;
+        }
+
         #endregion
 
         #region Private Methods
@@ -343,6 +376,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             CompileCommand =
                 InternalCompileCommand =
                     new DelegateCommand(Compile, CanCompile);
+            OpenHyperLinkCommand =
+                InternalOpenHyperLinkCommand =
+                    new DelegateCommand<string>(OpenHyperLink, CanOpenHyperLink);
+            OpenAboutCommand =
+                InternalOpenAboutCommand =
+                    new DelegateCommand(OpenAbout, CanOpenAbout);
         }
 
         private void RaiseCanExecuteChangedAllCommands()
@@ -890,6 +929,51 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
+        public void DoOpenHyperLink(string hyperlink)
+        {
+            if (string.IsNullOrWhiteSpace(hyperlink))
+            {
+                throw new ArgumentNullException(nameof(hyperlink));
+            }
+            try
+            {
+                IsBusy = true;
+                var uri = new Uri(hyperlink);
+                Process.Start(new ProcessStartInfo(uri.AbsoluteUri));
+            }
+            catch (Exception ex)
+            {
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+                RaiseCanExecuteChangedAllCommands();
+            }
+        }
+
+        public void DoOpenAbout()
+        {
+            try
+            {
+                IsBusy = true;
+                m_AboutInteractionRequest.Raise(new Notification() { Title = Properties.Resources.Title_AppName });
+            }
+            catch (Exception ex)
+            {
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+                RaiseCanExecuteChangedAllCommands();
+            }
+        }
+
         #endregion
 
         #region IMainViewModel Members
@@ -898,11 +982,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public IInteractionRequest ConfirmationInteractionRequest => m_ConfirmationInteractionRequest;
 
-        public IInteractionRequest ProjectTitleInteractionRequest => m_ProjectTitleInteractionRequest;
-
         public IInteractionRequest ResourceSettingsManagerInteractionRequest => m_ResourceSettingsManagerInteractionRequest;
 
         public IInteractionRequest ArrowGraphSettingsManagerInteractionRequest => m_ArrowGraphSettingsManagerInteractionRequest;
+
+        public IInteractionRequest AboutInteractionRequest => m_AboutInteractionRequest;
 
         public bool IsBusy
         {
@@ -1072,6 +1156,18 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         public ICommand CompileCommand
+        {
+            get;
+            private set;
+        }
+
+        public ICommand OpenHyperLinkCommand
+        {
+            get;
+            private set;
+        }
+
+        public ICommand OpenAboutCommand
         {
             get;
             private set;

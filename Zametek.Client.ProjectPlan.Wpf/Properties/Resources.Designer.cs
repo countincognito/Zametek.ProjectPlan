@@ -151,6 +151,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to About.
+        /// </summary>
+        public static string Label_About {
+            get {
+                return ResourceManager.GetString("Label_About", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Activities.
         /// </summary>
         public static string Label_ActivitiesViewTitle {
@@ -201,6 +210,24 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Label_AddManagedResource {
             get {
                 return ResourceManager.GetString("Label_AddManagedResource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project Plan.
+        /// </summary>
+        public static string Label_AppName {
+            get {
+                return ResourceManager.GetString("Label_AppName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Version 0.3.0.
+        /// </summary>
+        public static string Label_AppVersion {
+            get {
+                return ResourceManager.GetString("Label_AppVersion", resourceCulture);
             }
         }
         
@@ -282,6 +309,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Label_CopyResourceChartToClipboard {
             get {
                 return ResourceManager.GetString("Label_CopyResourceChartToClipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copyright (c) 2018, Riccardo M Bennett-Lovsey.
+        /// </summary>
+        public static string Label_Copyright {
+            get {
+                return ResourceManager.GetString("Label_Copyright", resourceCulture);
             }
         }
         
@@ -381,6 +417,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Label_DisplayOrder {
             get {
                 return ResourceManager.GetString("Label_DisplayOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Documentation.
+        /// </summary>
+        public static string Label_Documentation {
+            get {
+                return ResourceManager.GetString("Label_Documentation", resourceCulture);
             }
         }
         
@@ -574,6 +619,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Help.
+        /// </summary>
+        public static string Label_Help {
+            get {
+                return ResourceManager.GetString("Label_Help", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ID.
         /// </summary>
         public static string Label_Id {
@@ -723,6 +777,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Label_ProjectStart {
             get {
                 return ResourceManager.GetString("Label_ProjectStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report Issue.
+        /// </summary>
+        public static string Label_ReportIssue {
+            get {
+                return ResourceManager.GetString("Label_ReportIssue", resourceCulture);
             }
         }
         
@@ -889,11 +952,47 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to View License.
+        /// </summary>
+        public static string Label_ViewLicense {
+            get {
+                return ResourceManager.GetString("Label_ViewLicense", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Width:.
         /// </summary>
         public static string Label_Width {
             get {
                 return ResourceManager.GetString("Label_Width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://github.com/countincognito/Zametek.ProjectPlan/wiki.
+        /// </summary>
+        public static string Link_Documentation {
+            get {
+                return ResourceManager.GetString("Link_Documentation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://github.com/countincognito/Zametek.ProjectPlan/issues.
+        /// </summary>
+        public static string Link_ReportIssue {
+            get {
+                return ResourceManager.GetString("Link_ReportIssue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://github.com/countincognito/Zametek.ProjectPlan/blob/master/LICENSE.
+        /// </summary>
+        public static string Link_ViewLicense {
+            get {
+                return ResourceManager.GetString("Link_ViewLicense", resourceCulture);
             }
         }
         
@@ -948,6 +1047,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Message_UnsavedChanges {
             get {
                 return ResourceManager.GetString("Message_UnsavedChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project Plan.
+        /// </summary>
+        public static string Title_AppName {
+            get {
+                return ResourceManager.GetString("Title_AppName", resourceCulture);
             }
         }
         

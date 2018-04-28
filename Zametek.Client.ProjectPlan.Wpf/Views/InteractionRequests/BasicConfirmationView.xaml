@@ -38,7 +38,7 @@
             </Button>
             <Grid/>
         </DockPanel>
-        <Grid>
+        <Grid Margin="7">
             <ContentControl Content="{Binding Path=Content, Mode=OneWay}"
                             VerticalContentAlignment="Center"
                             HorizontalContentAlignment="Center"/>

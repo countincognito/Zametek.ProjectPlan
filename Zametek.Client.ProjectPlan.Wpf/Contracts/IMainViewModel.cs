@@ -28,6 +28,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             get;
         }
 
+        IInteractionRequest AboutInteractionRequest
+        {
+            get;
+        }
+
         bool IsBusy
         {
             get;
@@ -108,6 +113,16 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         ICommand CompileCommand
+        {
+            get;
+        }
+
+        ICommand OpenHyperLinkCommand
+        {
+            get;
+        }
+
+        ICommand OpenAboutCommand
         {
             get;
         }

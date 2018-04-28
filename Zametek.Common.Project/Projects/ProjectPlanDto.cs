@@ -6,7 +6,8 @@ namespace Zametek.Common.Project
     [Serializable]
     public class ProjectPlanDto
     {
-        //public string Title { get; set; }
+        public string Version { get; set; } = "0.1.0";
+
         public DateTime ProjectStart { get; set; }
 
         public List<DependentActivityDto> DependentActivities { get; set; }

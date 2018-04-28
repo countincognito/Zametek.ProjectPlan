@@ -367,12 +367,16 @@
     <Compile Include="ViewModels\ResourceSettingsManagement\ManagedResourceViewModel.cs" />
     <Compile Include="ViewModels\ResourceSettingsManagement\ResourceSettingsManagerConfirmation.cs" />
     <Compile Include="ViewModels\ResourceSettingsManagement\ResourceSettingsManagerViewModel.cs" />
+    <Compile Include="ViewModels\AboutViewModel.cs" />
     <Compile Include="Views\ActivityManagement\ActivitiesManagerView.xaml.cs">
       <DependentUpon>ActivitiesManagerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ActivityManagement\ManagedActivityContext.cs" />
     <Compile Include="Views\ArrowGraphSettingsManagement\ArrowGraphSettingsManagerView.xaml.cs">
       <DependentUpon>ArrowGraphSettingsManagerView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\AboutView.xaml.cs">
+      <DependentUpon>AboutView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\BindingProxy.cs" />
     <Compile Include="Views\EarnedValueChartManagement\EarnedValueChartManagerView.xaml.cs">
@@ -425,6 +429,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\ArrowGraphSettingsManagement\ArrowGraphSettingsManagerView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\AboutView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
