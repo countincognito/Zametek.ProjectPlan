@@ -141,6 +141,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         void UpdateActivitiesTargetResourceDependencies();
 
+        void UpdateActivitiesAllocatedResources();
+
         void UpdateActivitiesProjectStart();
 
         void UpdateActivitiesUseBusinessDays();

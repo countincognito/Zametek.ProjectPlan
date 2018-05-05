@@ -1149,6 +1149,44 @@
                                     </DataGridTemplateColumn.CellEditingTemplate>
                                 </DataGridTemplateColumn>
 
+                                <DataGridTemplateColumn Header="{x:Static local:Properties.Resources.Label_AllocatedResources}"
+                                                        CanUserSort="True"
+                                                        SortMemberPath="AllocatedResources.AllocatedResourcesString"
+                                                        Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ContentControl Content="{Binding}">
+                                                <ContentControl.Style>
+                                                    <Style TargetType="{x:Type ContentControl}">
+                                                        <Setter Property="ContentTemplate">
+                                                            <Setter.Value>
+                                                                <DataTemplate>
+                                                                    <Grid>
+                                                                        <TextBlock VerticalAlignment="Center"
+                                                                                   Margin="0"
+                                                                                   Padding="3"
+                                                                                   Text="{Binding Path=AllocatedResources.AllocatedResourcesString, Mode=OneWay}">
+                                                                            <TextBlock.Style>
+                                                                                <Style TargetType="{x:Type TextBlock}">
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding Path=IsSelected, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" Value="True">
+                                                                                            <Setter Property="Foreground" Value="Black" />
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </TextBlock.Style>
+                                                                        </TextBlock>
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </ContentControl.Style>
+                                            </ContentControl>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
                                 <DataGridTemplateColumn Header="{x:Static local:Properties.Resources.Label_ActivityName}"
                                                         CanUserSort="True"
                                                         SortMemberPath="Name"

@@ -214,6 +214,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allocated Resources.
+        /// </summary>
+        public static string Label_AllocatedResources {
+            get {
+                return ResourceManager.GetString("Label_AllocatedResources", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Project Plan.
         /// </summary>
         public static string Label_AppName {

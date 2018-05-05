@@ -571,6 +571,57 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
+        public void UpdateActivitiesAllocatedResources()
+        {
+            lock (m_Lock)
+            {
+                IList<IResourceSchedule<int>> resourceSchedules = GraphCompilation?.ResourceSchedules;
+                IList<ResourceDto> resources = ResourceSettingsDto.Resources;
+
+                if (resourceSchedules == null || resources == null)
+                {
+                    return;
+                }
+
+                var activityAllocatedResourcesLookup = new Dictionary<int, HashSet<int>>();
+
+                for (int resourceIndex = 0; resourceIndex < resourceSchedules.Count; resourceIndex++)
+                {
+                    IResourceSchedule<int> resourceSchedule = resourceSchedules[resourceIndex];
+                    IList<IScheduledActivity<int>> scheduledActivities = resourceSchedule?.ScheduledActivities;
+                    if (resourceSchedule.Resource == null || scheduledActivities == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (IScheduledActivity<int> scheduledActivity in scheduledActivities)
+                    {
+                        HashSet<int> allocatedResources;
+                        if (!activityAllocatedResourcesLookup.TryGetValue(scheduledActivity.Id, out allocatedResources))
+                        {
+                            allocatedResources = new HashSet<int>();
+                            activityAllocatedResourcesLookup.Add(scheduledActivity.Id, allocatedResources);
+                        }
+
+                        allocatedResources.Add(resourceSchedule.Resource.Id);
+                    }
+                }
+
+                foreach (ManagedActivityViewModel activity in Activities)
+                {
+                    HashSet<int> allocatedResources;
+                    if (!activityAllocatedResourcesLookup.TryGetValue(activity.Id, out allocatedResources))
+                    {
+                        allocatedResources = new HashSet<int>();
+                    }
+
+                    activity.SetAllocatedResources(
+                        resources.Select(x => x.Copy()),
+                        allocatedResources);
+                }
+            }
+        }
+
         public void UpdateActivitiesProjectStart()
         {
             lock (m_Lock)
@@ -608,6 +659,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
                 CyclomaticComplexity = m_VertexGraphCompiler.CyclomaticComplexity;
                 Duration = m_VertexGraphCompiler.Duration;
+
+                UpdateActivitiesAllocatedResources();
 
                 CalculateCosts();
 

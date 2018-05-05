@@ -31,6 +31,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
             ResourceSelector = new ResourceSelectorViewModel();
+            AllocatedResources = new AllocatedResourcesViewModel();
             UpdatedDependencies = new HashSet<int>();
         }
 
@@ -46,6 +47,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_ProjectStart = projectStart;
             var selectedResources = new HashSet<int>(m_DependentActivity.TargetResources.ToList());
             ResourceSelector.SetTargetResources(targetResources, selectedResources);
+            AllocatedResources.SetAllocatedResources(targetResources, new HashSet<int>());
+
             if (MinimumEarliestStartDateTime.HasValue)
             {
                 CalculateMinimumEarliestStartTime();
@@ -96,6 +99,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         public ResourceSelectorViewModel ResourceSelector
+        {
+            get;
+            private set;
+        }
+
+        public AllocatedResourcesViewModel AllocatedResources
         {
             get;
             private set;
@@ -205,9 +214,23 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 throw new ArgumentNullException(nameof(targetResources));
             }
             UpdateTargetResources();
-            var selectedResources = new HashSet<int>(m_DependentActivity.TargetResources.ToList());
-            ResourceSelector.SetTargetResources(targetResources, selectedResources);
+            var selectedTargetResources = new HashSet<int>(m_DependentActivity.TargetResources.ToList());
+            ResourceSelector.SetTargetResources(targetResources, selectedTargetResources);
             UpdateTargetResources();
+        }
+
+        public void SetAllocatedResources(IEnumerable<ResourceDto> targetResources, HashSet<int> allocatedResources)
+        {
+            if (targetResources == null)
+            {
+                throw new ArgumentNullException(nameof(targetResources));
+            }
+            if (allocatedResources == null)
+            {
+                throw new ArgumentNullException(nameof(allocatedResources));
+            }
+            AllocatedResources.SetAllocatedResources(targetResources, allocatedResources);
+            UpdateAllocatedResources();
         }
 
         #endregion
@@ -252,6 +275,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_DependentActivity.TargetResources.UnionWith(ResourceSelector.SelectedResourceIds);
             RaisePropertyChanged(nameof(TargetResources));
             RaisePropertyChanged(nameof(ResourceSelector));
+        }
+
+        private void UpdateAllocatedResources()
+        {
+            RaisePropertyChanged(nameof(AllocatedResources));
         }
 
         #endregion

@@ -446,7 +446,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             DateTime projectStart = mpx.ProjectProperties.StartDate.ToDateTime();
 
             var resources = new List<ResourceDto>();
-            foreach (var resource in mpx.AllResources.ToIEnumerable<net.sf.mpxj.Resource>())
+            foreach (var resource in mpx.Resources.ToIEnumerable<net.sf.mpxj.Resource>())
             {
                 int id = resource.ID.intValue();
                 if (id == 0)
@@ -466,7 +466,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
 
             var dependentActivities = new List<DependentActivityDto>();
-            foreach (var task in mpx.AllTasks.ToIEnumerable<net.sf.mpxj.Task>())
+            foreach (var task in mpx.Tasks.ToIEnumerable<net.sf.mpxj.Task>())
             {
                 int id = task.ID.intValue();
                 if (id == 0)
@@ -581,10 +581,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     m_CoreViewModel.AddManagedActivity(DtoConverter.FromDto(dependentActivityDto));
                 }
 
+                m_CoreViewModel.UpdateActivitiesAllocatedResources();
+
                 m_CoreViewModel.SetCompilationOutput();
 
                 m_CoreViewModel.CalculateCosts();
-
+                
                 // Arrow Graph.
                 ArrowGraphSettingsDto = projectPlanDto.ArrowGraphSettings;
                 ArrowGraphDto = projectPlanDto.ArrowGraph;
@@ -861,6 +863,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 IsProjectUpdated = true;
 
                 await RunAutoCompileAsync();
+
+                m_CoreViewModel.UpdateActivitiesAllocatedResources();
             }
             catch (Exception ex)
             {
