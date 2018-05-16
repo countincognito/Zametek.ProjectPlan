@@ -131,6 +131,8 @@
                 <MenuItem Header="{x:Static local:Properties.Resources.Label_AutoCompile}"
                           IsCheckable="True"
                           IsChecked="{Binding Path=AutoCompile, Mode=TwoWay}"/>
+                <MenuItem Header="{x:Static local:Properties.Resources.Label_TransitiveReduction}"
+                          Command="{Binding Path=TransitiveReductionCommand, Mode=OneWay}"/>
             </MenuItem>
             <MenuItem Header="{x:Static local:Properties.Resources.Label_Help}">
                 <MenuItem Header="{x:Static local:Properties.Resources.Label_Documentation}"

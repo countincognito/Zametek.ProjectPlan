@@ -433,7 +433,7 @@
     <value>Project Plan</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>Version 0.3.0</value>
+    <value>Version 0.4.0-alpha</value>
   </data>
   <data name="Label_Copyright" xml:space="preserve">
     <value>Copyright (c) 2018, Riccardo M Bennett-Lovsey</value>
@@ -464,5 +464,8 @@
   </data>
   <data name="Label_AllocatedResources" xml:space="preserve">
     <value>Allocated Resources</value>
+  </data>
+  <data name="Label_TransitiveReduction" xml:space="preserve">
+    <value>Transitive Reduction</value>
   </data>
 </root>

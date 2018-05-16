@@ -117,6 +117,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             get;
         }
 
+        ICommand TransitiveReductionCommand
+        {
+            get;
+        }
+
         ICommand OpenHyperLinkCommand
         {
             get;

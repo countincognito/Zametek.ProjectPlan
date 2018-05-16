@@ -81,17 +81,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 .Publish(new GraphCompilationUpdatedPayload());
         }
 
-        private void ClearCosts()
-        {
-            lock (m_Lock)
-            {
-                DirectCost = null;
-                IndirectCost = null;
-                OtherCost = null;
-                TotalCost = null;
-            }
-        }
-
         private string BuildCircularDependenciesErrorMessage(IList<CircularDependency<int>> circularDependencies)
         {
             if (circularDependencies == null)
@@ -543,8 +532,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public void ClearManagedActivities()
         {
-            Activities.Clear();
-            m_VertexGraphCompiler.Reset();
+            lock (m_Lock)
+            {
+                Activities.Clear();
+                m_VertexGraphCompiler.Reset();
+            }
         }
 
         public void UpdateActivitiesTargetResources()
@@ -657,7 +649,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 }
 
                 GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
+
                 CyclomaticComplexity = m_VertexGraphCompiler.CyclomaticComplexity;
+
                 Duration = m_VertexGraphCompiler.Duration;
 
                 UpdateActivitiesAllocatedResources();
@@ -678,6 +672,17 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             if (AutoCompile)
             {
+                RunCompile();
+            }
+        }
+
+        public void RunTransitiveReduction()
+        {
+            lock (m_Lock)
+            {
+                UpdateActivitiesTargetResourceDependencies();
+                m_VertexGraphCompiler.Compile(new List<IResource<int>>());
+                m_VertexGraphCompiler.TransitiveReduction();
                 RunCompile();
             }
         }
@@ -741,6 +746,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     return;
                 }
 
+                ClearCosts();
+
                 IList<ResourceSeriesDto> resourceSeriesSet = m_ProjectManager.CalculateResourceSeriesSet(resourceSchedules, resources, ResourceSettingsDto.DefaultUnitCost);
                 ResourceSeriesSet.Clear();
                 foreach (ResourceSeriesDto series in resourceSeriesSet)
@@ -748,7 +755,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     ResourceSeriesSet.Add(series);
                 }
 
-                ClearCosts();
                 if (HasCompilationErrors)
                 {
                     return;
@@ -759,6 +765,18 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 IndirectCost = costs.IndirectCost;
                 OtherCost = costs.OtherCost;
                 TotalCost = costs.TotalCost;
+            }
+        }
+
+        public void ClearCosts()
+        {
+            lock (m_Lock)
+            {
+                ResourceSeriesSet.Clear();
+                DirectCost = null;
+                IndirectCost = null;
+                OtherCost = null;
+                TotalCost = null;
             }
         }
 

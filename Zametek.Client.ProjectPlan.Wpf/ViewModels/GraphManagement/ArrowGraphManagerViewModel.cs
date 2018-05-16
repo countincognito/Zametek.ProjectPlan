@@ -193,6 +193,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         arrowGraphCompiler.AddActivity(dependentActivity);
                     }
 
+                    arrowGraphCompiler.TransitiveReduction();
                     arrowGraphCompiler.Compile();
                     Graph<int, IDependentActivity<int>, IEvent<int>> arrowGraph = arrowGraphCompiler.ToGraph();
 

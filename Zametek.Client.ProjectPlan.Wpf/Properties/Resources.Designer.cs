@@ -232,7 +232,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Version 0.3.0.
+        ///   Looks up a localized string similar to Version 0.4.0-alpha.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -939,6 +939,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Label_TotalSlack {
             get {
                 return ResourceManager.GetString("Label_TotalSlack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transitive Reduction.
+        /// </summary>
+        public static string Label_TransitiveReduction {
+            get {
+                return ResourceManager.GetString("Label_TransitiveReduction", resourceCulture);
             }
         }
         

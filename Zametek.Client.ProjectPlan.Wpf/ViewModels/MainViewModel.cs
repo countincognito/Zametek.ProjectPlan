@@ -317,6 +317,22 @@ namespace Zametek.Client.ProjectPlan.Wpf
             return !IsBusy;
         }
 
+        private DelegateCommandBase InternalTransitiveReductionCommand
+        {
+            get;
+            set;
+        }
+
+        private async void TransitiveReduction()
+        {
+            await DoTransitiveReductionAsync();
+        }
+
+        private bool CanTransitiveReduction()
+        {
+            return !IsBusy;
+        }
+
         private DelegateCommandBase InternalOpenHyperLinkCommand
         {
             get;
@@ -376,6 +392,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             CompileCommand =
                 InternalCompileCommand =
                     new DelegateCommand(Compile, CanCompile);
+            TransitiveReductionCommand =
+                InternalTransitiveReductionCommand =
+                    new DelegateCommand(TransitiveReduction, CanTransitiveReduction);
             OpenHyperLinkCommand =
                 InternalOpenHyperLinkCommand =
                     new DelegateCommand<string>(OpenHyperLink, CanOpenHyperLink);
@@ -586,7 +605,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 m_CoreViewModel.SetCompilationOutput();
 
                 m_CoreViewModel.CalculateCosts();
-                
+
                 // Arrow Graph.
                 ArrowGraphSettingsDto = projectPlanDto.ArrowGraphSettings;
                 ArrowGraphDto = projectPlanDto.ArrowGraph;
@@ -647,6 +666,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             await Task.Run(() => m_CoreViewModel.RunCompile());
         }
 
+        private async Task RunTransitiveReductionAsync()
+        {
+            await Task.Run(() => m_CoreViewModel.RunTransitiveReduction());
+        }
+
         private async Task RunAutoCompileAsync()
         {
             await Task.Run(() => m_CoreViewModel.RunAutoCompile());
@@ -676,6 +700,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 m_CoreViewModel.SetCompilationOutput();
 
                 ArrowGraphDto = null;
+
+                m_CoreViewModel.ClearCosts();
 
                 ProjectStartWithoutPublishing = DateTime.UtcNow.BeginningOfDay();
                 IsProjectUpdated = false;
@@ -933,6 +959,26 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
+        public async Task DoTransitiveReductionAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                await RunTransitiveReductionAsync();
+            }
+            catch (Exception ex)
+            {
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+                RaiseCanExecuteChangedAllCommands();
+            }
+        }
+
         public void DoOpenHyperLink(string hyperlink)
         {
             if (string.IsNullOrWhiteSpace(hyperlink))
@@ -1160,6 +1206,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         public ICommand CompileCommand
+        {
+            get;
+            private set;
+        }
+
+        public ICommand TransitiveReductionCommand
         {
             get;
             private set;

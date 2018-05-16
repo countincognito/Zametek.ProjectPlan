@@ -151,9 +151,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         void RunAutoCompile();
 
+        void RunTransitiveReduction();
+
         void SetCompilationOutput();
 
         void CalculateCosts();
+
+        void ClearCosts();
 
         void ClearSettings();
     }
