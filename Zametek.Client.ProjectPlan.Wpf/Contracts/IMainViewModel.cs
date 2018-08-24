@@ -38,7 +38,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             get;
         }
 
-        string ProjectTitle
+        string Title
         {
             get;
         }
@@ -92,6 +92,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             get;
         }
 
+        ICommand SaveAsProjectPlanFileCommand
+        {
+            get;
+        }
+
         ICommand ImportMicrosoftProjectCommand
         {
             get;
@@ -108,6 +113,16 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         ICommand OpenArrowGraphSettingsCommand
+        {
+            get;
+        }
+
+        ICommand ToggleShowDatesCommand
+        {
+            get;
+        }
+
+        ICommand ToggleUseBusinessDaysCommand
         {
             get;
         }

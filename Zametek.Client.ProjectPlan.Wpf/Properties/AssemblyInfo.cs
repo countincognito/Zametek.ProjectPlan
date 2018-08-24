@@ -8,11 +8,11 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Zametek.Client.ProjectPlan.Wpf")]
-[assembly: AssemblyDescription("countincognito")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("countincognito")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Zametek.Client.ProjectPlan.Wpf")]
-[assembly: AssemblyCopyright("Copyright (c) 2017 Riccardo M Bennett-Lovsey")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -17,7 +17,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private bool m_IsActive;
         private readonly IFileDialogService m_FileDialogService;
-        private readonly IAppSettingService m_AppSettingService;
+        private readonly IProjectSettingService m_ProjectSettingService;
         private readonly IEventAggregator m_EventService;
         private SubscriptionToken m_ArrowGraphDataUpdatedSubscriptionToken;
 
@@ -28,11 +28,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
         public ArrowGraphManagerView(
             IArrowGraphManagerViewModel viewModel,
             IFileDialogService fileDialogService,
-            IAppSettingService appSettingService,
+            IProjectSettingService projectSettingService,
             IEventAggregator eventService)
         {
             m_FileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
-            m_AppSettingService = appSettingService ?? throw new ArgumentNullException(nameof(appSettingService));
+            m_ProjectSettingService = projectSettingService ?? throw new ArgumentNullException(nameof(projectSettingService));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
             InitializeComponent();
             ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -108,7 +108,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             try
             {
-                string directory = m_AppSettingService.ProjectPlanFolder;
+                string directory = m_ProjectSettingService.PlanDirectory;
                 if (m_FileDialogService.ShowSaveDialog(
                     directory,
                     Properties.Resources.Filter_SaveGraphMLFileType,
@@ -130,7 +130,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                                 filename,
                                 ViewModel.ExportArrowGraphToDiagram(
                                     ArrowGraphAreaCtrl.ToDiagramArrowGraphDto()));
-                            m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
+                            m_ProjectSettingService.SetDirectory(filename);
                         }
                     }
                 }

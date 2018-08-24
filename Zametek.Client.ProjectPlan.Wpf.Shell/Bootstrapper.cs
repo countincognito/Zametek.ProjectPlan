@@ -43,8 +43,8 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
                 .As<IDateTimeCalculator>();
             builder.RegisterType<FileDialogService>()
                 .As<IFileDialogService>();
-            builder.RegisterType<AppSettingService>()
-                .As<IAppSettingService>();
+            builder.RegisterType<ProjectSettingService>()
+                .As<IProjectSettingService>();
 
             builder.RegisterType<GraphProcessingEngine>()
                 .As<IGraphProcessingEngine>().SingleInstance();
@@ -113,13 +113,13 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
 
         protected override DependencyObject CreateShell()
         {
-            return Container.Resolve<ShellView>();
+            return Container.Resolve<MainView>();
         }
 
         protected override void InitializeShell()
         {
             //base.InitializeShell();
-            //Application.Current.MainWindow = (ShellView)Shell;
+            //Application.Current.MainWindow = (MainView)Shell;
             Application.Current.MainWindow.Show();
 
             // Create any core application services here.

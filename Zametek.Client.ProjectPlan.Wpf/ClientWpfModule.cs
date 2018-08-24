@@ -27,7 +27,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public void Initialize()
         {
-            m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanMainRegion, typeof(MainView));
             m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanActivitiesRegion, typeof(ActivitiesManagerView));
             m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanMetricsRegion, typeof(MetricsManagerView));
             m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanArrowGraphRegion, typeof(ArrowGraphManagerView));

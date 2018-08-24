@@ -31,7 +31,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IFileDialogService m_FileDialogService;
-        private readonly IAppSettingService m_AppSettingService;
+        private readonly IProjectSettingService m_ProjectSettingService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IEventAggregator m_EventService;
 
@@ -46,7 +46,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         public EarnedValueChartManagerViewModel(
             ICoreViewModel coreViewModel,
             IFileDialogService fileDialogService,
-            IAppSettingService appSettingService,
+            IProjectSettingService projectSettingService,
             IDateTimeCalculator dateTimeCalculator,
             IEventAggregator eventService)
             : base(eventService)
@@ -54,7 +54,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_Lock = new object();
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
             m_FileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
-            m_AppSettingService = appSettingService ?? throw new ArgumentNullException(nameof(appSettingService));
+            m_ProjectSettingService = projectSettingService ?? throw new ArgumentNullException(nameof(projectSettingService));
             m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
@@ -376,7 +376,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             try
             {
                 IsBusy = true;
-                string directory = m_AppSettingService.ProjectPlanFolder;
+                string directory = m_ProjectSettingService.PlanDirectory;
                 if (m_FileDialogService.ShowSaveDialog(
                     directory,
                     Properties.Resources.Filter_SaveCsvFileType,
@@ -393,7 +393,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     {
                         DataTable dataTable = await BuildEarnedValueChartDataTableAsync();
                         await ChartHelper.ExportDataTableToCsvAsync(dataTable, filename);
-                        m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
+                        m_ProjectSettingService.SetDirectory(filename);
                     }
                 }
             }

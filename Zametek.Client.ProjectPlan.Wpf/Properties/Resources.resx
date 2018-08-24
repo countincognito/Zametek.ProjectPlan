@@ -337,7 +337,7 @@
     <value>Resources...</value>
   </data>
   <data name="Label_Save" xml:space="preserve">
-    <value>Save...</value>
+    <value>Save</value>
   </data>
   <data name="Label_SelfDependency" xml:space="preserve">
     <value>Self dependency</value>
@@ -405,9 +405,6 @@
   <data name="Title_UnsavedChanges" xml:space="preserve">
     <value>Project has unsaved changes</value>
   </data>
-  <data name="Label_DefaultTitle" xml:space="preserve">
-    <value>Untitled</value>
-  </data>
   <data name="Label_EarnedValueChartsViewTitle" xml:space="preserve">
     <value>Earned Value Chart</value>
   </data>
@@ -467,5 +464,14 @@
   </data>
   <data name="Label_TransitiveReduction" xml:space="preserve">
     <value>Transitive Reduction</value>
+  </data>
+  <data name="Label_SaveAs" xml:space="preserve">
+    <value>Save As...</value>
+  </data>
+  <data name="Title_ProjectPlan" xml:space="preserve">
+    <value>Project Plan</value>
+  </data>
+  <data name="Label_EmptyProjectTitle" xml:space="preserve">
+    <value>Untitled</value>
   </data>
 </root>

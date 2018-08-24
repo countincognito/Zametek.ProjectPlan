@@ -358,15 +358,6 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Untitled.
-        /// </summary>
-        public static string Label_DefaultTitle {
-            get {
-                return ResourceManager.GetString("Label_DefaultTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Default Unit Cost:.
         /// </summary>
         public static string Label_DefaultUnitCost {
@@ -498,6 +489,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Label_EarnedValueTitle {
             get {
                 return ResourceManager.GetString("Label_EarnedValueTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Untitled.
+        /// </summary>
+        public static string Label_EmptyProjectTitle {
+            get {
+                return ResourceManager.GetString("Label_EmptyProjectTitle", resourceCulture);
             }
         }
         
@@ -853,11 +853,20 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Save....
+        ///   Looks up a localized string similar to Save.
         /// </summary>
         public static string Label_Save {
             get {
                 return ResourceManager.GetString("Label_Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save As....
+        /// </summary>
+        public static string Label_SaveAs {
+            get {
+                return ResourceManager.GetString("Label_SaveAs", resourceCulture);
             }
         }
         
@@ -1092,6 +1101,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Title_Error {
             get {
                 return ResourceManager.GetString("Title_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project Plan.
+        /// </summary>
+        public static string Title_ProjectPlan {
+            get {
+                return ResourceManager.GetString("Title_ProjectPlan", resourceCulture);
             }
         }
         

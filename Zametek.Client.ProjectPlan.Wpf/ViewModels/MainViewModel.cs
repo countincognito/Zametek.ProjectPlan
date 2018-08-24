@@ -10,6 +10,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -25,14 +26,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #region Fields
 
         private readonly object m_Lock;
-        private string m_ProjectTitle;
         private bool m_IsBusy;
-
-        private static string s_DefaultProjectTitle = Properties.Resources.Label_DefaultTitle;
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IFileDialogService m_FileDialogService;
-        private readonly IAppSettingService m_AppSettingService;
+        private readonly IProjectSettingService m_ProjectSettingService;
         private readonly IEventAggregator m_EventService;
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
         private readonly InteractionRequest<Confirmation> m_ConfirmationInteractionRequest;
@@ -47,14 +45,14 @@ namespace Zametek.Client.ProjectPlan.Wpf
         public MainViewModel(
             ICoreViewModel coreViewModel,
             IFileDialogService fileDialogService,
-            IAppSettingService appSettingService,
+            IProjectSettingService projectSettingService,
             IEventAggregator eventService)
             : base(eventService)
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
             m_FileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
-            m_AppSettingService = appSettingService ?? throw new ArgumentNullException(nameof(appSettingService));
+            m_ProjectSettingService = projectSettingService ?? throw new ArgumentNullException(nameof(projectSettingService));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
             m_NotificationInteractionRequest = new InteractionRequest<Notification>();
@@ -72,8 +70,17 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ProjectStart), nameof(ProjectStart), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsProjectUpdated), nameof(IsProjectUpdated), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsProjectUpdated), nameof(Title), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ShowDates), nameof(ShowDates), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.UseBusinessDays), nameof(UseBusinessDays), ThreadOption.BackgroundThread);
+
+            PropertyChanged += (sender, args) =>
+            {
+                if (string.CompareOrdinal(args.PropertyName, nameof(IsProjectUpdated)) == 0)
+                {
+                    RaiseCanExecuteChangedAllCommands();
+                }
+            };
         }
 
         #endregion
@@ -216,11 +223,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             await DoOpenProjectPlanFileAsync();
         }
 
-        private bool CanOpenProjectPlanFile()
-        {
-            return true;
-        }
-
         private DelegateCommandBase InternalSaveProjectPlanFileCommand
         {
             get;
@@ -234,7 +236,18 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private bool CanSaveProjectPlanFile()
         {
-            return true;
+            return IsProjectUpdated;
+        }
+
+        private DelegateCommandBase InternalSaveAsProjectPlanFileCommand
+        {
+            get;
+            set;
+        }
+
+        private async void SaveAsProjectPlanFile()
+        {
+            await DoSaveAsProjectPlanFileAsync();
         }
 
         private DelegateCommandBase InternalImportMicrosoftProjectCommand
@@ -248,11 +261,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             await DoImportMicrosoftProjectAsync();
         }
 
-        private bool CanImportMicrosoftProject()
-        {
-            return true;
-        }
-
         private DelegateCommandBase InternalCloseProjectCommand
         {
             get;
@@ -262,11 +270,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private void CloseProject()
         {
             DoCloseProject();
-        }
-
-        private bool CanCloseProject()
-        {
-            return true;
         }
 
         private DelegateCommandBase InternalOpenResourceSettingsCommand
@@ -280,11 +283,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             await DoOpenResourceSettingsAsync();
         }
 
-        private bool CanOpenResourceSettings()
-        {
-            return true;
-        }
-
         private DelegateCommandBase InternalOpenArrowGraphSettingsCommand
         {
             get;
@@ -296,9 +294,26 @@ namespace Zametek.Client.ProjectPlan.Wpf
             DoOpenArrowGraphSettings();
         }
 
-        private bool CanOpenArrowGraphSettings()
+        private DelegateCommandBase InternalToggleShowDatesCommand
         {
-            return true;
+            get;
+            set;
+        }
+
+        private void ToggleShowDates()
+        {
+            ShowDates = !ShowDates;
+        }
+
+        private DelegateCommandBase InternalToggleUseBusinessDaysCommand
+        {
+            get;
+            set;
+        }
+
+        private void ToggleUseBusinessDays()
+        {
+            UseBusinessDays = !UseBusinessDays;
         }
 
         private DelegateCommandBase InternalCompileCommand
@@ -344,11 +359,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             DoOpenHyperLink(hyperlink);
         }
 
-        private bool CanOpenHyperLink(string _)
-        {
-            return true;
-        }
-
         private DelegateCommandBase InternalOpenAboutCommand
         {
             get;
@@ -360,11 +370,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             DoOpenAbout();
         }
 
-        private bool CanOpenAbout()
-        {
-            return true;
-        }
-
         #endregion
 
         #region Private Methods
@@ -373,22 +378,31 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             OpenProjectPlanFileCommand =
                 InternalOpenProjectPlanFileCommand =
-                    new DelegateCommand(OpenProjectPlanFile, CanOpenProjectPlanFile);
+                    new DelegateCommand(OpenProjectPlanFile);
             SaveProjectPlanFileCommand =
                 InternalSaveProjectPlanFileCommand =
                     new DelegateCommand(SaveProjectPlanFile, CanSaveProjectPlanFile);
+            SaveAsProjectPlanFileCommand =
+                InternalSaveAsProjectPlanFileCommand =
+                    new DelegateCommand(SaveAsProjectPlanFile);
             ImportMicrosoftProjectCommand =
                 InternalImportMicrosoftProjectCommand =
-                    new DelegateCommand(ImportMicrosoftProject, CanImportMicrosoftProject);
+                    new DelegateCommand(ImportMicrosoftProject);
             CloseProjectCommand =
                 InternalCloseProjectCommand =
-                    new DelegateCommand(CloseProject, CanCloseProject);
+                    new DelegateCommand(CloseProject);
             OpenResourceSettingsCommand =
                 InternalOpenResourceSettingsCommand =
-                    new DelegateCommand(OpenResourceSettings, CanOpenResourceSettings);
+                    new DelegateCommand(OpenResourceSettings);
             OpenArrowGraphSettingsCommand =
                 InternalOpenArrowGraphSettingsCommand =
-                    new DelegateCommand(OpenArrowGraphSettings, CanOpenArrowGraphSettings);
+                    new DelegateCommand(OpenArrowGraphSettings);
+            ToggleShowDatesCommand =
+                InternalToggleShowDatesCommand =
+                    new DelegateCommand(ToggleShowDates);
+            ToggleUseBusinessDaysCommand =
+                InternalToggleUseBusinessDaysCommand =
+                    new DelegateCommand(ToggleUseBusinessDays);
             CompileCommand =
                 InternalCompileCommand =
                     new DelegateCommand(Compile, CanCompile);
@@ -397,20 +411,27 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     new DelegateCommand(TransitiveReduction, CanTransitiveReduction);
             OpenHyperLinkCommand =
                 InternalOpenHyperLinkCommand =
-                    new DelegateCommand<string>(OpenHyperLink, CanOpenHyperLink);
+                    new DelegateCommand<string>(OpenHyperLink);
             OpenAboutCommand =
                 InternalOpenAboutCommand =
-                    new DelegateCommand(OpenAbout, CanOpenAbout);
+                    new DelegateCommand(OpenAbout);
         }
 
         private void RaiseCanExecuteChangedAllCommands()
         {
             InternalOpenProjectPlanFileCommand.RaiseCanExecuteChanged();
             InternalSaveProjectPlanFileCommand.RaiseCanExecuteChanged();
+            InternalSaveAsProjectPlanFileCommand.RaiseCanExecuteChanged();
             InternalImportMicrosoftProjectCommand.RaiseCanExecuteChanged();
             InternalCloseProjectCommand.RaiseCanExecuteChanged();
             InternalOpenResourceSettingsCommand.RaiseCanExecuteChanged();
             InternalOpenArrowGraphSettingsCommand.RaiseCanExecuteChanged();
+            InternalToggleShowDatesCommand.RaiseCanExecuteChanged();
+            InternalToggleUseBusinessDaysCommand.RaiseCanExecuteChanged();
+            InternalCompileCommand.RaiseCanExecuteChanged();
+            InternalTransitiveReductionCommand.RaiseCanExecuteChanged();
+            InternalOpenHyperLinkCommand.RaiseCanExecuteChanged();
+            InternalOpenAboutCommand.RaiseCanExecuteChanged();
         }
 
         private void PublishProjectStartUpdatedPayload()
@@ -705,7 +726,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 ProjectStartWithoutPublishing = DateTime.UtcNow.BeginningOfDay();
                 IsProjectUpdated = false;
-                ProjectTitle = s_DefaultProjectTitle;
+                m_ProjectSettingService.Reset();
 
                 HasStaleOutputs = false;
             }
@@ -735,10 +756,53 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public async Task DoSaveProjectPlanFileAsync()
         {
+            string projectTitle = m_ProjectSettingService.PlanTitle;
+            if (string.IsNullOrEmpty(projectTitle))
+            {
+                await DoSaveAsProjectPlanFileAsync();
+            }
+            else
+            {
+                await DoSaveProjectPlanFileAsync(projectTitle);
+            }
+        }
+
+        public async Task DoSaveProjectPlanFileAsync(string projectTitle)
+        {
+            if (string.IsNullOrWhiteSpace(projectTitle))
+            {
+                throw new ArgumentNullException(nameof(projectTitle));
+            }
             try
             {
                 IsBusy = true;
-                string directory = m_AppSettingService.ProjectPlanFolder;
+                string directory = m_ProjectSettingService.PlanDirectory;
+                string filename = Path.Combine(directory, projectTitle);
+                filename = Path.ChangeExtension(filename, Properties.Resources.Filter_SaveProjectPlanFileExtension);
+                ProjectPlanDto projectPlan = await BuildProjectPlanDtoAsync();
+                await SaveProjectPlanDtoAsync(projectPlan, filename);
+                IsProjectUpdated = false;
+                m_ProjectSettingService.SetFilePath(filename);
+            }
+            catch (Exception ex)
+            {
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+                RaiseCanExecuteChangedAllCommands();
+            }
+        }
+
+        public async Task DoSaveAsProjectPlanFileAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                string directory = m_ProjectSettingService.PlanDirectory;
                 if (m_FileDialogService.ShowSaveDialog(
                     directory,
                     Properties.Resources.Filter_SaveProjectPlanFileType,
@@ -756,8 +820,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         ProjectPlanDto projectPlan = await BuildProjectPlanDtoAsync();
                         await SaveProjectPlanDtoAsync(projectPlan, filename);
                         IsProjectUpdated = false;
-                        ProjectTitle = Path.GetFileNameWithoutExtension(filename);
-                        m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
+                        m_ProjectSettingService.SetFilePath(filename);
                     }
                 }
             }
@@ -792,7 +855,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         return;
                     }
                 }
-                string directory = m_AppSettingService.ProjectPlanFolder;
+                string directory = m_ProjectSettingService.PlanDirectory;
                 if (m_FileDialogService.ShowOpenDialog(
                     directory,
                     Properties.Resources.Filter_ImportMicrosoftProjectFileType,
@@ -812,10 +875,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                         HasStaleOutputs = true;
                         IsProjectUpdated = true;
-                        ProjectTitle = Path.GetFileNameWithoutExtension(filename);
+                        m_ProjectSettingService.SetFilePath(filename);
 
                         await RunAutoCompileAsync();
-                        m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
                     }
                 }
             }
@@ -1051,16 +1113,28 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public string ProjectTitle
+        public string Title
         {
             get
             {
-                return m_ProjectTitle;
-            }
-            private set
-            {
-                m_ProjectTitle = value;
-                RaisePropertyChanged(nameof(ProjectTitle));
+                var titleBuilder = new StringBuilder();
+
+                if (IsProjectUpdated)
+                {
+                    titleBuilder.Append(@"*");
+                }
+
+                if (string.IsNullOrWhiteSpace(m_ProjectSettingService.PlanTitle))
+                {
+                    titleBuilder.Append(Properties.Resources.Label_EmptyProjectTitle);
+                }
+                else
+                {
+                    titleBuilder.Append(m_ProjectSettingService.PlanTitle);
+                }
+
+                titleBuilder.Append($@" - {Properties.Resources.Title_ProjectPlan}");
+                return titleBuilder.ToString();
             }
         }
 
@@ -1181,6 +1255,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set;
         }
 
+        public ICommand SaveAsProjectPlanFileCommand
+        {
+            get;
+            private set;
+        }
+
         public ICommand ImportMicrosoftProjectCommand
         {
             get;
@@ -1200,6 +1280,18 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         public ICommand OpenArrowGraphSettingsCommand
+        {
+            get;
+            private set;
+        }
+
+        public ICommand ToggleShowDatesCommand
+        {
+            get;
+            private set;
+        }
+
+        public ICommand ToggleUseBusinessDaysCommand
         {
             get;
             private set;
@@ -1250,7 +1342,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 string filename = fileName;
                 if (string.IsNullOrWhiteSpace(filename))
                 {
-                    string directory = m_AppSettingService.ProjectPlanFolder;
+                    string directory = m_ProjectSettingService.PlanDirectory;
                     if (m_FileDialogService.ShowOpenDialog(
                             directory,
                             Properties.Resources.Filter_OpenProjectPlanFileType,
@@ -1274,8 +1366,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     ProjectPlanDto projectPlan = await OpenProjectPlanDtoAsync(filename);
                     ProcessProjectPlanDto(projectPlan);
                     IsProjectUpdated = false;
-                    ProjectTitle = Path.GetFileNameWithoutExtension(filename);
-                    m_AppSettingService.ProjectPlanFolder = Path.GetDirectoryName(filename);
+                    m_ProjectSettingService.SetFilePath(filename);
                 }
             }
             catch (Exception ex)

@@ -59,14 +59,5 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Project Plan.
-        /// </summary>
-        public static string Title_ProjectPlan {
-            get {
-                return ResourceManager.GetString("Title_ProjectPlan", resourceCulture);
-            }
-        }
     }
 }
