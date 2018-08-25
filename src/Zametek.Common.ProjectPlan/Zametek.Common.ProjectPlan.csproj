@@ -2,14 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Copyright>Copyright (c) 2017 Riccardo M Bennett-Lovsey</Copyright>
+    <Copyright>Copyright (c) 2018 Riccardo M Bennett-Lovsey</Copyright>
     <Company>countincognito</Company>
     <Authors>countincognito</Authors>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Zametek.Contract.ProjectPlan\Zametek.Contract.ProjectPlan.csproj" />
+    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zametek.Common.Project\Zametek.Common.Project.csproj" />
   </ItemGroup>
 
 </Project>

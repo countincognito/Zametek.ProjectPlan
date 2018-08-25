@@ -2,10 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Copyright>Copyright (c) 2017 Riccardo M Bennett-Lovsey</Copyright>
+    <Copyright>Copyright (c) 2018 Riccardo M Bennett-Lovsey</Copyright>
     <Company>countincognito</Company>
     <Authors>countincognito</Authors>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
