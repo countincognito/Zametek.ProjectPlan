@@ -282,7 +282,7 @@
       <HintPath>..\packages\Extended.Wpf.Toolkit.3.3.0\lib\net40\Xceed.Wpf.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="Zametek.Maths.Graphs.Compilers, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Zametek.Maths.Graphs.Compilers.1.1.0-alpha\lib\netstandard1.4\Zametek.Maths.Graphs.Compilers.dll</HintPath>
+      <HintPath>..\packages\Zametek.Maths.Graphs.Compilers.1.1.0\lib\netstandard1.4\Zametek.Maths.Graphs.Compilers.dll</HintPath>
     </Reference>
     <Reference Include="Zametek.Maths.Graphs.Primitives, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Zametek.Maths.Graphs.Primitives.1.0.2\lib\netstandard1.4\Zametek.Maths.Graphs.Primitives.dll</HintPath>
@@ -310,6 +310,7 @@
     <Compile Include="Contracts\IResourceChartManagerViewModel.cs" />
     <Compile Include="Contracts\IResourceSettingsManagerViewModel.cs" />
     <Compile Include="Converters\ColorFormatToColorConverter.cs" />
+    <Compile Include="Events\ApplicationClosingPayload.cs" />
     <Compile Include="Events\ArrowGraphSettingsUpdatedPayload.cs" />
     <Compile Include="Events\ArrowGraphDtoUpdatedPayload.cs" />
     <Compile Include="Events\ArrowGraphDataUpdatedPayload.cs" />
@@ -491,7 +492,7 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\net.sf.mpxj-ikvm.7.4.2\build\net.sf.mpxj-ikvm.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\net.sf.mpxj-ikvm.7.4.2\build\net.sf.mpxj-ikvm.targets'))" />
-    <Error Condition="!Exists('..\packages\NETStandard.Library.2.0.1\build\netstandard2.0\NETStandard.Library.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NETStandard.Library.2.0.1\build\netstandard2.0\NETStandard.Library.targets'))" />
+    <Error Condition="!Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets'))" />
   </Target>
-  <Import Project="..\packages\NETStandard.Library.2.0.1\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.1\build\netstandard2.0\NETStandard.Library.targets')" />
+  <Import Project="..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />
 </Project>

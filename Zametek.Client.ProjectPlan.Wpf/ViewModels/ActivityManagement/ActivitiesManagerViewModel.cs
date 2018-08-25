@@ -8,7 +8,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {

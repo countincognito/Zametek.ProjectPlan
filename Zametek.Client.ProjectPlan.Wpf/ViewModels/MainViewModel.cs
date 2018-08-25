@@ -38,6 +38,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private readonly InteractionRequest<ArrowGraphSettingsManagerConfirmation> m_ArrowGraphSettingsManagerInteractionRequest;
         private readonly InteractionRequest<Notification> m_AboutInteractionRequest;
 
+        private SubscriptionToken m_ApplicationClosingPayloadToken;
+
         #endregion
 
         #region Ctors
@@ -67,6 +69,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             UseBusinessDaysWithoutPublishing = true;
             AutoCompile = true;
             InitializeCommands();
+            SubscribeToEvents();
 
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ProjectStart), nameof(ProjectStart), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsProjectUpdated), nameof(IsProjectUpdated), ThreadOption.BackgroundThread);
@@ -432,6 +435,49 @@ namespace Zametek.Client.ProjectPlan.Wpf
             InternalTransitiveReductionCommand.RaiseCanExecuteChanged();
             InternalOpenHyperLinkCommand.RaiseCanExecuteChanged();
             InternalOpenAboutCommand.RaiseCanExecuteChanged();
+        }
+
+        private void SubscribeToEvents()
+        {
+            m_ApplicationClosingPayloadToken =
+                m_EventService.GetEvent<PubSubEvent<ApplicationClosingPayload>>()
+                    .Subscribe(payload =>
+                    {
+                        try
+                        {
+                            IsBusy = true;
+                            if (IsProjectUpdated)
+                            {
+                                var confirmation = new Confirmation()
+                                {
+                                    Title = Properties.Resources.Title_UnsavedChanges,
+                                    Content = Properties.Resources.Message_UnsavedChanges
+                                };
+                                m_ConfirmationInteractionRequest.Raise(confirmation);
+                                if (!confirmation.Confirmed)
+                                {
+                                    payload.IsCanceled = true;
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            DispatchNotification(
+                                Properties.Resources.Title_Error,
+                                ex.Message);
+                        }
+                        finally
+                        {
+                            IsBusy = false;
+                            RaiseCanExecuteChangedAllCommands();
+                        }
+                    }, ThreadOption.PublisherThread);
+        }
+
+        private void UnsubscribeFromEvents()
+        {
+            m_EventService.GetEvent<PubSubEvent<ApplicationClosingPayload>>()
+                .Unsubscribe(m_ApplicationClosingPayloadToken);
         }
 
         private void PublishProjectStartUpdatedPayload()
@@ -886,6 +932,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 DispatchNotification(
                     Properties.Resources.Title_Error,
                     ex.Message);
+                ResetProject();
             }
             finally
             {
@@ -1374,6 +1421,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 DispatchNotification(
                     Properties.Resources.Title_Error,
                     ex.Message);
+                ResetProject();
             }
             finally
             {

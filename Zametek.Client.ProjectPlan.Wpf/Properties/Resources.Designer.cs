@@ -232,7 +232,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Version 0.4.0-alpha.
+        ///   Looks up a localized string similar to Version 0.4.0.
         /// </summary>
         public static string Label_AppVersion {
             get {
