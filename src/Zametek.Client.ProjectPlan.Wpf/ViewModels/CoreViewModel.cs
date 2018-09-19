@@ -650,8 +650,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
 
-                CyclomaticComplexity = m_VertexGraphCompiler.CyclomaticComplexity;
-
                 Duration = m_VertexGraphCompiler.Duration;
 
                 UpdateActivitiesAllocatedResources();
@@ -661,6 +659,34 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 IsProjectUpdated = true;
 
                 SetCompilationOutput();
+
+                // Cyclomatic complexity is calculated against the transitively reduced
+                // vertex graph, where resource dependencies are taken into account along
+                // with regular dependencies.
+                CyclomaticComplexity = null;
+
+                if (!HasCompilationErrors)
+                {
+                    IList<IDependentActivity<int>> dependentActivities =
+                        GraphCompilation.DependentActivities
+                        .Select(x => (IDependentActivity<int>)x.WorkingCopy())
+                        .ToList();
+
+                    if (dependentActivities.Any())
+                    {
+                        var vertexGraphCompiler = VertexGraphCompiler<int, IDependentActivity<int>>.Create();
+                        foreach (DependentActivity<int> dependentActivity in dependentActivities)
+                        {
+                            dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
+                            dependentActivity.ResourceDependencies.Clear();
+                            vertexGraphCompiler.AddActivity(dependentActivity);
+                        }
+
+                        vertexGraphCompiler.TransitiveReduction();
+                        CyclomaticComplexity = vertexGraphCompiler.CyclomaticComplexity;
+                    }
+                }
+
                 HasStaleOutputs = false;
             }
 
