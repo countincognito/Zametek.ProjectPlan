@@ -430,7 +430,7 @@
     <value>Project Plan</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>Version 0.4.0</value>
+    <value>Version 0.4.1</value>
   </data>
   <data name="Label_Copyright" xml:space="preserve">
     <value>Copyright (c) 2018, Riccardo M Bennett-Lovsey</value>
@@ -473,5 +473,14 @@
   </data>
   <data name="Label_EmptyProjectTitle" xml:space="preserve">
     <value>Untitled</value>
+  </data>
+  <data name="Label_ResourcedCyclomaticComplexity" xml:space="preserve">
+    <value>Resourced Cyclomatic Complexity...</value>
+  </data>
+  <data name="Message_ResourcedCyclomaticComplexity" xml:space="preserve">
+    <value>Cyclomatic Complexity with resource dependencies considered after transitive reduction:</value>
+  </data>
+  <data name="Title_ResourcedCyclomaticComplexity" xml:space="preserve">
+    <value>Resourced Cyclomatic Complexity</value>
   </data>
 </root>

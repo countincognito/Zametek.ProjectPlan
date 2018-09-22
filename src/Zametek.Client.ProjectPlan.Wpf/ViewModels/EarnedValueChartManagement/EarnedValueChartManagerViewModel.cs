@@ -23,7 +23,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #region Fields
 
         private readonly object m_Lock;
-        private bool m_IsBusy;
+
         private IList<EarnedValuePoint> m_EarnedValueChartPointSet;
         private PlotModel m_EarnedValueChartPlotModel;
         private int m_EarnedValueChartOutputWidth;
@@ -68,6 +68,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             InitializeCommands();
             SubscribeToEvents();
 
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsBusy), nameof(IsBusy), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasStaleOutputs), nameof(HasStaleOutputs), ThreadOption.BackgroundThread);
         }
 
@@ -420,11 +421,14 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get
             {
-                return m_IsBusy;
+                return m_CoreViewModel.IsBusy;
             }
             private set
             {
-                m_IsBusy = value;
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.IsBusy = value;
+                }
                 RaisePropertyChanged();
             }
         }

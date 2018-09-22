@@ -232,7 +232,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Version 0.4.0.
+        ///   Looks up a localized string similar to Version 0.4.1.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -817,6 +817,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Resourced Cyclomatic Complexity....
+        /// </summary>
+        public static string Label_ResourcedCyclomaticComplexity {
+            get {
+                return ResourceManager.GetString("Label_ResourcedCyclomaticComplexity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resource Dependencies.
         /// </summary>
         public static string Label_ResourceDependencies {
@@ -1069,6 +1078,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cyclomatic Complexity with resource dependencies considered after transitive reduction:.
+        /// </summary>
+        public static string Message_ResourcedCyclomaticComplexity {
+            get {
+                return ResourceManager.GetString("Message_ResourcedCyclomaticComplexity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Project has unsaved changes. Do you wish to continue?.
         /// </summary>
         public static string Message_UnsavedChanges {
@@ -1110,6 +1128,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Title_ProjectPlan {
             get {
                 return ResourceManager.GetString("Title_ProjectPlan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resourced Cyclomatic Complexity.
+        /// </summary>
+        public static string Title_ResourcedCyclomaticComplexity {
+            get {
+                return ResourceManager.GetString("Title_ResourcedCyclomaticComplexity", resourceCulture);
             }
         }
         

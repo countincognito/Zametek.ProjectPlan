@@ -130,5 +130,18 @@
                 </graphxCtrl:ZoomControl.Style>
             </graphxCtrl:ZoomControl>
         </Grid>
+
+        <DockPanel.Style>
+            <Style TargetType="DockPanel">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Path=IsBusy, Mode=OneWay}" Value="True">
+                        <Setter Property="IsEnabled" Value="False"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Path=IsBusy, Mode=OneWay}" Value="False">
+                        <Setter Property="IsEnabled" Value="True"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </DockPanel.Style>
     </DockPanel>
 </UserControl>

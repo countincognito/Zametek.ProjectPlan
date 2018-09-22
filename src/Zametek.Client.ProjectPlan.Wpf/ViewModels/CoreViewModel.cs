@@ -21,6 +21,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private readonly ISettingManager m_SettingManager;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly VertexGraphCompiler<int, IDependentActivity<int>> m_VertexGraphCompiler;
+        private bool m_IsBusy;
         private DateTime m_ProjectStart;
         private bool m_IsProjectUpdated;
         private bool m_ShowDates;
@@ -174,6 +175,22 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #endregion
 
         #region ICoreViewModel Members
+
+        public bool IsBusy
+        {
+            get
+            {
+                return m_IsBusy;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_IsBusy = value;
+                }
+                RaisePropertyChanged();
+            }
+        }
 
         public DateTime ProjectStart
         {
@@ -636,6 +653,44 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
+        public int RunCalculateResourcedCyclomaticComplexity()
+        {
+            lock (m_Lock)
+            {
+                int resourcedCyclomaticComplexity = 0;
+
+                // Cyclomatic complexity is calculated against the transitively reduced
+                // vertex graph, where resource dependencies are taken into account along
+                // with regular dependencies.
+                if (GraphCompilation != null
+                    && !HasCompilationErrors
+                    && !HasStaleOutputs
+                    && !ResourceSettingsDto.AreDisabled)
+                {
+                    IList<IDependentActivity<int>> dependentActivities =
+                        GraphCompilation.DependentActivities
+                        .Select(x => (IDependentActivity<int>)x.WorkingCopy())
+                        .ToList();
+
+                    if (dependentActivities.Any())
+                    {
+                        var vertexGraphCompiler = VertexGraphCompiler<int, IDependentActivity<int>>.Create();
+                        foreach (DependentActivity<int> dependentActivity in dependentActivities)
+                        {
+                            dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
+                            dependentActivity.ResourceDependencies.Clear();
+                            vertexGraphCompiler.AddActivity(dependentActivity);
+                        }
+
+                        vertexGraphCompiler.TransitiveReduction();
+                        resourcedCyclomaticComplexity = vertexGraphCompiler.CyclomaticComplexity;
+                    }
+                }
+
+                return resourcedCyclomaticComplexity;
+            }
+        }
+
         public void RunCompile()
         {
             lock (m_Lock)
@@ -660,9 +715,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 SetCompilationOutput();
 
-                // Cyclomatic complexity is calculated against the transitively reduced
-                // vertex graph, where resource dependencies are taken into account along
-                // with regular dependencies.
+                // Cyclomatic complexity is calculated against the vertex graph without resource dependencies.
                 CyclomaticComplexity = null;
 
                 if (!HasCompilationErrors)
@@ -677,12 +730,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         var vertexGraphCompiler = VertexGraphCompiler<int, IDependentActivity<int>>.Create();
                         foreach (DependentActivity<int> dependentActivity in dependentActivities)
                         {
-                            dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
                             dependentActivity.ResourceDependencies.Clear();
                             vertexGraphCompiler.AddActivity(dependentActivity);
                         }
-
-                        vertexGraphCompiler.TransitiveReduction();
                         CyclomaticComplexity = vertexGraphCompiler.CyclomaticComplexity;
                     }
                 }

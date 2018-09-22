@@ -24,7 +24,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #region Fields
 
         private readonly object m_Lock;
-        private bool m_IsBusy;
+
         private bool m_ExportResourceChartAsCosts;
         private PlotModel m_ResourceChartPlotModel;
         private int m_ResourceChartOutputWidth;
@@ -68,6 +68,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             InitializeCommands();
             SubscribeToEvents();
 
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsBusy), nameof(IsBusy), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasStaleOutputs), nameof(HasStaleOutputs), ThreadOption.BackgroundThread);
         }
 
@@ -394,11 +395,14 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get
             {
-                return m_IsBusy;
+                return m_CoreViewModel.IsBusy;
             }
             private set
             {
-                m_IsBusy = value;
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.IsBusy = value;
+                }
                 RaisePropertyChanged();
             }
         }

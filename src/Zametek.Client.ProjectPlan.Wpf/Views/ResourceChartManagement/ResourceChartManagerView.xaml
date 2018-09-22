@@ -127,12 +127,10 @@
             <Style TargetType="DockPanel">
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding Path=IsBusy, Mode=OneWay}" Value="True">
-                        <Setter Property="ForceCursor" Value="True"/>
-                        <Setter Property="Cursor" Value="Wait"/>
+                        <Setter Property="IsEnabled" Value="False"/>
                     </DataTrigger>
                     <DataTrigger Binding="{Binding Path=IsBusy, Mode=OneWay}" Value="False">
-                        <Setter Property="ForceCursor" Value="False"/>
-                        <Setter Property="Cursor" Value="Arrow"/>
+                        <Setter Property="IsEnabled" Value="True"/>
                     </DataTrigger>
                 </Style.Triggers>
             </Style>

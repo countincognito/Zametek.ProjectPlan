@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -11,6 +10,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
     public interface ICoreViewModel
         : IPropertyChangedPubSubViewModel
     {
+        bool IsBusy
+        {
+            get;
+            set;
+        }
+
         DateTime ProjectStart
         {
             get;
@@ -146,6 +151,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
         void UpdateActivitiesProjectStart();
 
         void UpdateActivitiesUseBusinessDays();
+
+        int RunCalculateResourcedCyclomaticComplexity();
 
         void RunCompile();
 

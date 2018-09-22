@@ -26,7 +26,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #region Fields
 
         private readonly object m_Lock;
-        private bool m_IsBusy;
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IFileDialogService m_FileDialogService;
@@ -71,6 +70,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             InitializeCommands();
             SubscribeToEvents();
 
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsBusy), nameof(IsBusy), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ProjectStart), nameof(ProjectStart), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsProjectUpdated), nameof(IsProjectUpdated), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsProjectUpdated), nameof(Title), ThreadOption.BackgroundThread);
@@ -142,6 +142,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private bool HasCompilationErrors
         {
+            get
+            {
+                return m_CoreViewModel.HasCompilationErrors;
+            }
             set
             {
                 lock (m_Lock)
@@ -319,6 +323,25 @@ namespace Zametek.Client.ProjectPlan.Wpf
             UseBusinessDays = !UseBusinessDays;
         }
 
+        private DelegateCommandBase InternalCalculateResourcedCyclomaticComplexityCommand
+        {
+            get;
+            set;
+        }
+
+        private async void CalculateResourcedCyclomaticComplexity()
+        {
+            await DoCalculateResourcedCyclomaticComplexityAsync();
+        }
+
+        private bool CanCalculateResourcedCyclomaticComplexity()
+        {
+            return GraphCompilation != null
+                && !HasCompilationErrors
+                && !HasStaleOutputs
+                && !ResourceSettingsDto.AreDisabled;
+        }
+
         private DelegateCommandBase InternalCompileCommand
         {
             get;
@@ -406,6 +429,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             ToggleUseBusinessDaysCommand =
                 InternalToggleUseBusinessDaysCommand =
                     new DelegateCommand(ToggleUseBusinessDays);
+            CalculateResourcedCyclomaticComplexityCommand =
+                InternalCalculateResourcedCyclomaticComplexityCommand =
+                    new DelegateCommand(CalculateResourcedCyclomaticComplexity, CanCalculateResourcedCyclomaticComplexity);
             CompileCommand =
                 InternalCompileCommand =
                     new DelegateCommand(Compile, CanCompile);
@@ -431,6 +457,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             InternalOpenArrowGraphSettingsCommand.RaiseCanExecuteChanged();
             InternalToggleShowDatesCommand.RaiseCanExecuteChanged();
             InternalToggleUseBusinessDaysCommand.RaiseCanExecuteChanged();
+            InternalCalculateResourcedCyclomaticComplexityCommand.RaiseCanExecuteChanged();
             InternalCompileCommand.RaiseCanExecuteChanged();
             InternalTransitiveReductionCommand.RaiseCanExecuteChanged();
             InternalOpenHyperLinkCommand.RaiseCanExecuteChanged();
@@ -726,6 +753,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 throw new ArgumentException(nameof(filename));
             }
             return Task.Run(() => OpenSave.SaveJson(projectPlanDto, filename));
+        }
+
+        private async Task<int> RunCalculateResourcedCyclomaticComplexityAsync()
+        {
+            return await Task<int>.Run(() => m_CoreViewModel.RunCalculateResourcedCyclomaticComplexity());
         }
 
         private async Task RunCompileAsync()
@@ -1048,6 +1080,29 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
+        public async Task DoCalculateResourcedCyclomaticComplexityAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                int resourcedCyclomaticComplexity = await RunCalculateResourcedCyclomaticComplexityAsync();
+                DispatchNotification(
+                    Properties.Resources.Title_ResourcedCyclomaticComplexity,
+                    $@"{Properties.Resources.Message_ResourcedCyclomaticComplexity}{Environment.NewLine}{Environment.NewLine}{resourcedCyclomaticComplexity}"
+                );
+            }
+            catch (Exception ex)
+            {
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
         public async Task DoCompileAsync()
         {
             try
@@ -1151,12 +1206,15 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get
             {
-                return m_IsBusy;
+                return m_CoreViewModel.IsBusy;
             }
-            set
+            private set
             {
-                m_IsBusy = value;
-                RaisePropertyChanged(nameof(IsBusy));
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.IsBusy = value;
+                }
+                RaisePropertyChanged();
             }
         }
 
@@ -1339,6 +1397,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         public ICommand ToggleUseBusinessDaysCommand
+        {
+            get;
+            private set;
+        }
+
+        public ICommand CalculateResourcedCyclomaticComplexityCommand
         {
             get;
             private set;

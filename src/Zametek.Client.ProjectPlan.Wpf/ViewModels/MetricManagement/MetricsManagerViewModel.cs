@@ -27,8 +27,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private int? m_CyclomaticComplexity;
         private double? m_DurationManMonths;
 
-        private bool m_IsBusy;
-
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectManager m_ProjectManager;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
@@ -55,6 +53,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
             SubscribeToEvents();
 
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsBusy), nameof(IsBusy), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasCompilationErrors), nameof(HasCompilationErrors), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasStaleOutputs), nameof(HasStaleOutputs), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.DirectCost), nameof(DirectCost), ThreadOption.BackgroundThread);
@@ -205,11 +204,14 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get
             {
-                return m_IsBusy;
+                return m_CoreViewModel.IsBusy;
             }
             private set
             {
-                m_IsBusy = value;
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.IsBusy = value;
+                }
                 RaisePropertyChanged();
             }
         }

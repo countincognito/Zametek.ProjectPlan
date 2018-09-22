@@ -127,6 +127,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             get;
         }
 
+        ICommand CalculateResourcedCyclomaticComplexityCommand
+        {
+            get;
+        }
+
         ICommand CompileCommand
         {
             get;
