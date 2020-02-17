@@ -430,10 +430,10 @@
     <value>Project Plan</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>Version 0.4.1</value>
+    <value>Version 0.4.2</value>
   </data>
   <data name="Label_Copyright" xml:space="preserve">
-    <value>Copyright (c) 2018, Riccardo M Bennett-Lovsey</value>
+    <value>Copyright (c) 2020, Riccardo M Bennett-Lovsey</value>
   </data>
   <data name="Label_Documentation" xml:space="preserve">
     <value>Documentation</value>
