@@ -10,9 +10,9 @@ namespace Zametek.Manager.ProjectPlan.Tests
 {
     public class ProjectManagerShould
     {
-        private IGraphProcessingEngine m_GraphProcessingEngine;
-        private IAssessingEngine m_AssessingEngine;
-        private IProjectManager m_ProjectManager;
+        private readonly IGraphProcessingEngine m_GraphProcessingEngine;
+        private readonly IAssessingEngine m_AssessingEngine;
+        private readonly IProjectManager m_ProjectManager;
 
         public ProjectManagerShould()
         {

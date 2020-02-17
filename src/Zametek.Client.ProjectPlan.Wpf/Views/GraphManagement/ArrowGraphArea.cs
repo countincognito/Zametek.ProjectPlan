@@ -6,10 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Media;
-using Zametek.Common.ProjectPlan;
-using Zametek.Utility;
-using System.ComponentModel;
 using Zametek.Common.Project;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -46,8 +44,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 throw new ArgumentNullException(nameof(vertexControl));
             }
             var outputNodeDto = new DiagramNodeDto();
-            var node = vertexControl.Vertex as ArrowGraphVertex;
-            if (node != null)
+            if (vertexControl.Vertex is ArrowGraphVertex node)
             {
                 outputNodeDto.Id = Convert.ToInt32(node.ID);
                 Point point = vertexControl.GetPosition();
@@ -73,21 +70,26 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 throw new ArgumentNullException(nameof(edgeControl));
             }
             var outputEdge = new DiagramEdgeDto();
-            var edge = edgeControl.Edge as ArrowGraphEdge;
-            if (edge != null)
+            if (edgeControl.Edge is ArrowGraphEdge edge)
             {
                 outputEdge.Id = Convert.ToInt32(edge.ID);
                 outputEdge.Name = edge.Name;
                 outputEdge.SourceId = Convert.ToInt32(edge.Source.ID);
                 outputEdge.TargetId = Convert.ToInt32(edge.Target.ID);
-                Common.Project.EdgeDashStyle dashStyle = Common.Project.EdgeDashStyle.Normal;
-                edge.DashStyle.ValueSwitchOn()
-                    .Case(GraphX.Controls.EdgeDashStyle.Solid, x => dashStyle = Common.Project.EdgeDashStyle.Normal)
-                    .Case(GraphX.Controls.EdgeDashStyle.Dash, x => dashStyle = Common.Project.EdgeDashStyle.Dashed)
-                    .Default(x =>
-                    {
-                        throw new InvalidEnumArgumentException("Unknown EdgeDashStyle value");
-                    });
+
+                Common.Project.EdgeDashStyle dashStyle;
+                switch (edge.DashStyle)
+                {
+                    case GraphX.Controls.EdgeDashStyle.Solid:
+                        dashStyle = Common.Project.EdgeDashStyle.Normal;
+                        break;
+                    case GraphX.Controls.EdgeDashStyle.Dash:
+                        dashStyle = Common.Project.EdgeDashStyle.Dashed;
+                        break;
+                    default:
+                        throw new InvalidOperationException("Unknown EdgeDashStyle value");
+                }
+
                 outputEdge.DashStyle = dashStyle;
                 Color foregroundColor = ((SolidColorBrush)edgeControl.Foreground).Color;
                 outputEdge.ForegroundColorHexCode =

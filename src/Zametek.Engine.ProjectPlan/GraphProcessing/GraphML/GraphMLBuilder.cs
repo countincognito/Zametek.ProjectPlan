@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
-using Zametek.Utility;
 
 namespace Zametek.Engine.ProjectPlan
 {
@@ -139,16 +138,18 @@ namespace Zametek.Engine.ProjectPlan
                 target = FormatArrowGraphNodeId(diagramEdgeDto.TargetId)
             };
 
-            string dashStyle = "line";
-            diagramEdgeDto.DashStyle.ValueSwitchOn()
-                .Case(EdgeDashStyle.Normal, x => dashStyle = "line")
-                .Case(EdgeDashStyle.Dashed, x => dashStyle = "dashed")
-                .Default(x =>
-                {
-                    // TODO
-                    //throw new InvalidEnumArgumentException("Unknown EdgeDashStyle value");
+            string dashStyle;
+            switch (diagramEdgeDto.DashStyle)
+            {
+                case EdgeDashStyle.Normal:
+                    dashStyle = @"line";
+                    break;
+                case EdgeDashStyle.Dashed:
+                    dashStyle = @"dashed";
+                    break;
+                default:
                     throw new InvalidOperationException("Unknown EdgeDashStyle value");
-                });
+            }
 
             outputEdge.data = new data
             {

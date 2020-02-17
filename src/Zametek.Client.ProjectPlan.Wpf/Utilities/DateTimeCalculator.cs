@@ -1,7 +1,5 @@
-﻿using System;
-using System.ComponentModel;
-using FluentDateTime;
-using Zametek.Utility;
+﻿using FluentDateTime;
+using System;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -71,14 +69,18 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             get
             {
-                int daysPerWeek = 0;
-                Mode.ValueSwitchOn()
-                    .Case(DateTimeCalculatorMode.AllDays, x => daysPerWeek = 7)
-                    .Case(DateTimeCalculatorMode.BusinessDays, x => daysPerWeek = 5)
-                    .Default(x =>
-                    {
-                        throw new InvalidEnumArgumentException(@"Unknown DateTimeCalculatorMode value");
-                    });
+                int daysPerWeek;
+                switch (Mode)
+                {
+                    case DateTimeCalculatorMode.AllDays:
+                        daysPerWeek = 7;
+                        break;
+                    case DateTimeCalculatorMode.BusinessDays:
+                        daysPerWeek = 5;
+                        break;
+                    default:
+                        throw new InvalidOperationException(@"Unknown DateTimeCalculatorMode value");
+                }
                 return daysPerWeek;
             }
         }
@@ -90,27 +92,35 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public DateTime AddDays(DateTime startDateTime, int days)
         {
-            DateTime finishDateTime = startDateTime;
-            Mode.ValueSwitchOn()
-                .Case(DateTimeCalculatorMode.AllDays, x => finishDateTime = AddAllDays(startDateTime, days))
-                .Case(DateTimeCalculatorMode.BusinessDays, x => finishDateTime = AddBusinessDays(startDateTime, days))
-                .Default(x =>
-                {
-                    throw new InvalidEnumArgumentException(@"Unknown DateTimeCalculatorMode value");
-                });
+            DateTime finishDateTime;
+            switch (Mode)
+            {
+                case DateTimeCalculatorMode.AllDays:
+                    finishDateTime = AddAllDays(startDateTime, days);
+                    break;
+                case DateTimeCalculatorMode.BusinessDays:
+                    finishDateTime = AddBusinessDays(startDateTime, days);
+                    break;
+                default:
+                    throw new InvalidOperationException(@"Unknown DateTimeCalculatorMode value");
+            }
             return finishDateTime;
         }
 
         public int CountDays(DateTime current, DateTime toCompareWith)
         {
-            int count = 0;
-            Mode.ValueSwitchOn()
-                .Case(DateTimeCalculatorMode.AllDays, x => count = CountAllDays(current, toCompareWith))
-                .Case(DateTimeCalculatorMode.BusinessDays, x => count = CountBusinessDays(current, toCompareWith))
-                .Default(x =>
-                {
-                    throw new InvalidEnumArgumentException(@"Unknown DateTimeCalculatorMode value");
-                });
+            int count;
+            switch (Mode)
+            {
+                case DateTimeCalculatorMode.AllDays:
+                    count = CountAllDays(current, toCompareWith);
+                    break;
+                case DateTimeCalculatorMode.BusinessDays:
+                    count = CountBusinessDays(current, toCompareWith);
+                    break;
+                default:
+                    throw new InvalidOperationException(@"Unknown DateTimeCalculatorMode value");
+            }
             return count;
         }
 
