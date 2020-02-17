@@ -1,6 +1,6 @@
 # Zametek.ProjectPlan
 
-For documentation, see [here](wiki).
+For documentation, see [here](https://github.com/countincognito/Zametek.ProjectPlan/wiki).
 
 In order to build the installer, install [this extension for VS2019](https://marketplace.visualstudio.com/items?itemName=VisualStudioProductTeam.MicrosoftVisualStudio2017InstallerProjects).
 
