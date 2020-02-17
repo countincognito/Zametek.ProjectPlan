@@ -158,6 +158,11 @@
                                                         CanUserSort="True"
                                                         SortMemberPath="Id"
                                                         IsReadOnly="True">
+                                    <DataGridTemplateColumn.HeaderStyle>
+                                        <Style TargetType="{x:Type DataGridColumnHeader}">
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_Id}" />
+                                        </Style>
+                                    </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ContentControl Content="{Binding}">
@@ -184,6 +189,11 @@
                                                         CanUserSort="True"
                                                         SortMemberPath="Duration"
                                                         Width="60">
+                                    <DataGridTemplateColumn.HeaderStyle>
+                                        <Style TargetType="{x:Type DataGridColumnHeader}">
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_Duration}" />
+                                        </Style>
+                                    </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ContentControl Content="{Binding}">
@@ -245,6 +255,11 @@
                                                         CanUserSort="True"
                                                         SortMemberPath="DependenciesString"
                                                         Width="100">
+                                    <DataGridTemplateColumn.HeaderStyle>
+                                        <Style TargetType="{x:Type DataGridColumnHeader}">
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_Dependencies}" />
+                                        </Style>
+                                    </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ContentControl Content="{Binding}">
@@ -333,6 +348,11 @@
                                                         CanUserSort="True"
                                                         SortMemberPath="ResourceDependenciesString"
                                                         IsReadOnly="True">
+                                    <DataGridTemplateColumn.HeaderStyle>
+                                        <Style TargetType="{x:Type DataGridColumnHeader}">
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_ResourceDependencies}" />
+                                        </Style>
+                                    </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ContentControl Content="{Binding}">
@@ -363,6 +383,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_IsDummy}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -399,6 +420,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_IsCritical}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -438,6 +460,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_EarliestStartTime}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -472,6 +495,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_EarliestStartTime}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -508,6 +532,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_LatestStartTime}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -542,6 +567,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_LatestStartTime}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -578,6 +604,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_EarliestFinishTime}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -612,6 +639,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_EarliestFinishTime}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -648,6 +676,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_LatestFinishTime}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -682,6 +711,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_LatestFinishTime}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -717,6 +747,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_TotalSlack}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -750,6 +781,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_FreeSlack}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -783,6 +815,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_InterferingSlack}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -817,6 +850,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_MinimumFreeSlack}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -886,6 +920,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_MinimumEarliestStartTime}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -953,6 +988,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_MinimumEarliestStartTime}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -1024,6 +1060,11 @@
                                                         CanUserSort="True"
                                                         SortMemberPath="ResourceSelector.TargetResourcesString"
                                                         Width="120">
+                                    <DataGridTemplateColumn.HeaderStyle>
+                                        <Style TargetType="{x:Type DataGridColumnHeader}">
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_TargetResources}" />
+                                        </Style>
+                                    </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ContentControl Content="{Binding}">
@@ -1094,6 +1135,7 @@
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_TargetResourceOperator}" />
                                         </Style>
                                     </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
@@ -1149,10 +1191,15 @@
                                     </DataGridTemplateColumn.CellEditingTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{x:Static local:Properties.Resources.Label_AllocatedResources}"
+                                <DataGridTemplateColumn Header="{x:Static local:Properties.Resources.Label_AllocatedToResources}"
                                                         CanUserSort="True"
-                                                        SortMemberPath="AllocatedResources.AllocatedResourcesString"
+                                                        SortMemberPath="AllocatedToResources.AllocatedToResourcesString"
                                                         Width="120">
+                                    <DataGridTemplateColumn.HeaderStyle>
+                                        <Style TargetType="{x:Type DataGridColumnHeader}">
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_AllocatedToResources}" />
+                                        </Style>
+                                    </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ContentControl Content="{Binding}">
@@ -1165,7 +1212,7 @@
                                                                         <TextBlock VerticalAlignment="Center"
                                                                                    Margin="0"
                                                                                    Padding="3"
-                                                                                   Text="{Binding Path=AllocatedResources.AllocatedResourcesString, Mode=OneWay}">
+                                                                                   Text="{Binding Path=AllocatedToResources.AllocatedToResourcesString, Mode=OneWay}">
                                                                             <TextBlock.Style>
                                                                                 <Style TargetType="{x:Type TextBlock}">
                                                                                     <Style.Triggers>
@@ -1192,6 +1239,11 @@
                                                         SortMemberPath="Name"
                                                         Width="Auto"
                                                         MinWidth="400">
+                                    <DataGridTemplateColumn.HeaderStyle>
+                                        <Style TargetType="{x:Type DataGridColumnHeader}">
+                                            <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_ActivityName}" />
+                                        </Style>
+                                    </DataGridTemplateColumn.HeaderStyle>
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ContentControl Content="{Binding}">

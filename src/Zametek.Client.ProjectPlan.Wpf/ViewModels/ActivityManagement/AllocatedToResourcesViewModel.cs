@@ -6,29 +6,29 @@ using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
-    public class AllocatedResourcesViewModel
+    public class AllocatedToResourcesViewModel
         : BindableBase
     {
         #region Fields
 
         private readonly object m_Lock;
-        private IList<SelectableResourceViewModel> m_AllocatedResources;
+        private readonly IList<SelectableResourceViewModel> m_AllocatedToResources;
 
         #endregion
 
         #region Ctors
 
-        public AllocatedResourcesViewModel()
+        public AllocatedToResourcesViewModel()
         {
             m_Lock = new object();
-            m_AllocatedResources = new List<SelectableResourceViewModel>();
+            m_AllocatedToResources = new List<SelectableResourceViewModel>();
         }
 
         #endregion
 
         #region Properties
 
-        public string AllocatedResourcesString
+        public string AllocatedToResourcesString
         {
             get
             {
@@ -36,7 +36,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     return string.Join(
                         DependenciesStringValidationRule.Separator.ToString(),
-                        m_AllocatedResources.Where(x => x.IsSelected).Select(x => x.DisplayName));
+                        m_AllocatedToResources.Where(x => x.IsSelected).Select(x => x.DisplayName));
                 }
             }
         }
@@ -45,7 +45,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Public Methods
 
-        public void SetAllocatedResources(IEnumerable<ResourceDto> targetResources, HashSet<int> selectedTargetResources)
+        public void SetAllocatedToResources(IEnumerable<ResourceDto> targetResources, HashSet<int> selectedTargetResources)
         {
             if (targetResources == null)
             {
@@ -58,17 +58,17 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
             lock (m_Lock)
             {
-                m_AllocatedResources.Clear();
+                m_AllocatedToResources.Clear();
                 foreach (ResourceDto targetResource in targetResources)
                 {
-                    m_AllocatedResources.Add(
+                    m_AllocatedToResources.Add(
                         new SelectableResourceViewModel(
                             targetResource.Id,
                             targetResource.Name,
                             selectedTargetResources.Contains(targetResource.Id)));
                 }
             }
-            RaisePropertyChanged(nameof(AllocatedResourcesString));
+            RaisePropertyChanged(nameof(AllocatedToResourcesString));
         }
 
         #endregion
@@ -77,7 +77,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public override string ToString()
         {
-            return AllocatedResourcesString;
+            return AllocatedToResourcesString;
         }
 
         #endregion

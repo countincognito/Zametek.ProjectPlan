@@ -580,7 +580,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public void UpdateActivitiesAllocatedResources()
+        public void UpdateActivitiesAllocatedToResources()
         {
             lock (m_Lock)
             {
@@ -592,7 +592,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     return;
                 }
 
-                var activityAllocatedResourcesLookup = new Dictionary<int, HashSet<int>>();
+                var activityAllocatedToResourcesLookup = new Dictionary<int, HashSet<int>>();
 
                 for (int resourceIndex = 0; resourceIndex < resourceSchedules.Count; resourceIndex++)
                 {
@@ -605,28 +605,26 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                     foreach (IScheduledActivity<int> scheduledActivity in scheduledActivities)
                     {
-                        HashSet<int> allocatedResources;
-                        if (!activityAllocatedResourcesLookup.TryGetValue(scheduledActivity.Id, out allocatedResources))
+                        if (!activityAllocatedToResourcesLookup.TryGetValue(scheduledActivity.Id, out HashSet<int> allocatedToResources))
                         {
-                            allocatedResources = new HashSet<int>();
-                            activityAllocatedResourcesLookup.Add(scheduledActivity.Id, allocatedResources);
+                            allocatedToResources = new HashSet<int>();
+                            activityAllocatedToResourcesLookup.Add(scheduledActivity.Id, allocatedToResources);
                         }
 
-                        allocatedResources.Add(resourceSchedule.Resource.Id);
+                        allocatedToResources.Add(resourceSchedule.Resource.Id);
                     }
                 }
 
                 foreach (ManagedActivityViewModel activity in Activities)
                 {
-                    HashSet<int> allocatedResources;
-                    if (!activityAllocatedResourcesLookup.TryGetValue(activity.Id, out allocatedResources))
+                    if (!activityAllocatedToResourcesLookup.TryGetValue(activity.Id, out HashSet<int> allocatedToResources))
                     {
-                        allocatedResources = new HashSet<int>();
+                        allocatedToResources = new HashSet<int>();
                     }
 
-                    activity.SetAllocatedResources(
+                    activity.SetAllocatedToResources(
                         resources.Select(x => x.Copy()),
-                        allocatedResources);
+                        allocatedToResources);
                 }
             }
         }
@@ -707,7 +705,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 Duration = m_VertexGraphCompiler.Duration;
 
-                UpdateActivitiesAllocatedResources();
+                UpdateActivitiesAllocatedToResources();
 
                 CalculateCosts();
 

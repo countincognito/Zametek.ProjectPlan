@@ -459,8 +459,8 @@
   <data name="Title_AppName" xml:space="preserve">
     <value>Project Plan</value>
   </data>
-  <data name="Label_AllocatedResources" xml:space="preserve">
-    <value>Allocated Resources</value>
+  <data name="Label_AllocatedToResources" xml:space="preserve">
+    <value>Allocated to Resources</value>
   </data>
   <data name="Label_TransitiveReduction" xml:space="preserve">
     <value>Transitive Reduction</value>
@@ -482,5 +482,89 @@
   </data>
   <data name="Title_ResourcedCyclomaticComplexity" xml:space="preserve">
     <value>Resourced Cyclomatic Complexity</value>
+  </data>
+  <data name="Tooltip_ActivityName" xml:space="preserve">
+    <value>Activity Name</value>
+  </data>
+  <data name="Tooltip_AllocatedToResources" xml:space="preserve">
+    <value>Allocated to Resources</value>
+  </data>
+  <data name="Tooltip_Dependencies" xml:space="preserve">
+    <value>Dependencies</value>
+  </data>
+  <data name="Tooltip_Duration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="Tooltip_EarliestFinishTime" xml:space="preserve">
+    <value>Earliest Finish Time</value>
+  </data>
+  <data name="Tooltip_EarliestStartTime" xml:space="preserve">
+    <value>Earliest Start Time</value>
+  </data>
+  <data name="Tooltip_FreeSlack" xml:space="preserve">
+    <value>Free Slack</value>
+  </data>
+  <data name="Tooltip_Id" xml:space="preserve">
+    <value>Identifier</value>
+  </data>
+  <data name="Tooltip_InterferingSlack" xml:space="preserve">
+    <value>Interfering Slack</value>
+  </data>
+  <data name="Tooltip_IsCritical" xml:space="preserve">
+    <value>Critical Activity</value>
+  </data>
+  <data name="Tooltip_IsDummy" xml:space="preserve">
+    <value>Dummy Activity</value>
+  </data>
+  <data name="Tooltip_LatestFinishTime" xml:space="preserve">
+    <value>Latest Finish Time</value>
+  </data>
+  <data name="Tooltip_LatestStartTime" xml:space="preserve">
+    <value>Latest Start Time</value>
+  </data>
+  <data name="Tooltip_MinimumEarliestStartTime" xml:space="preserve">
+    <value>Minimum Earliest Start Time</value>
+  </data>
+  <data name="Tooltip_MinimumFreeSlack" xml:space="preserve">
+    <value>Minimum Free Slack</value>
+  </data>
+  <data name="Tooltip_ResourceDependencies" xml:space="preserve">
+    <value>Resource Dependencies</value>
+  </data>
+  <data name="Tooltip_TargetResourceOperator" xml:space="preserve">
+    <value>Resource Operator</value>
+  </data>
+  <data name="Tooltip_TargetResources" xml:space="preserve">
+    <value>Target Resources</value>
+  </data>
+  <data name="Tooltip_TotalSlack" xml:space="preserve">
+    <value>Total Slack</value>
+  </data>
+  <data name="Tooltip_Color" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="Tooltip_CriticalityWeight" xml:space="preserve">
+    <value>Criticality Weight</value>
+  </data>
+  <data name="Tooltip_DisplayOrder" xml:space="preserve">
+    <value>Display Order</value>
+  </data>
+  <data name="Tooltip_ExplicitTarget" xml:space="preserve">
+    <value>Explicit Target</value>
+  </data>
+  <data name="Tooltip_FibonacciWeight" xml:space="preserve">
+    <value>Fibonacci Weight</value>
+  </data>
+  <data name="Tooltip_InterActivityAllocation" xml:space="preserve">
+    <value>Inter-activity Allocation</value>
+  </data>
+  <data name="Tooltip_ResourceName" xml:space="preserve">
+    <value>Resource Name</value>
+  </data>
+  <data name="Tooltip_SlackLimit" xml:space="preserve">
+    <value>Slack Limit</value>
+  </data>
+  <data name="Tooltip_UnitCost" xml:space="preserve">
+    <value>Unit Cost</value>
   </data>
 </root>

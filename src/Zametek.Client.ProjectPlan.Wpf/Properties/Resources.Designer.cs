@@ -214,11 +214,11 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allocated Resources.
+        ///   Looks up a localized string similar to Allocated to Resources.
         /// </summary>
-        public static string Label_AllocatedResources {
+        public static string Label_AllocatedToResources {
             get {
-                return ResourceManager.GetString("Label_AllocatedResources", resourceCulture);
+                return ResourceManager.GetString("Label_AllocatedToResources", resourceCulture);
             }
         }
         
@@ -1155,6 +1155,258 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Title_UnsavedChanges {
             get {
                 return ResourceManager.GetString("Title_UnsavedChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Activity Name.
+        /// </summary>
+        public static string Tooltip_ActivityName {
+            get {
+                return ResourceManager.GetString("Tooltip_ActivityName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allocated to Resources.
+        /// </summary>
+        public static string Tooltip_AllocatedToResources {
+            get {
+                return ResourceManager.GetString("Tooltip_AllocatedToResources", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Color.
+        /// </summary>
+        public static string Tooltip_Color {
+            get {
+                return ResourceManager.GetString("Tooltip_Color", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Criticality Weight.
+        /// </summary>
+        public static string Tooltip_CriticalityWeight {
+            get {
+                return ResourceManager.GetString("Tooltip_CriticalityWeight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dependencies.
+        /// </summary>
+        public static string Tooltip_Dependencies {
+            get {
+                return ResourceManager.GetString("Tooltip_Dependencies", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Display Order.
+        /// </summary>
+        public static string Tooltip_DisplayOrder {
+            get {
+                return ResourceManager.GetString("Tooltip_DisplayOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duration.
+        /// </summary>
+        public static string Tooltip_Duration {
+            get {
+                return ResourceManager.GetString("Tooltip_Duration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Earliest Finish Time.
+        /// </summary>
+        public static string Tooltip_EarliestFinishTime {
+            get {
+                return ResourceManager.GetString("Tooltip_EarliestFinishTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Earliest Start Time.
+        /// </summary>
+        public static string Tooltip_EarliestStartTime {
+            get {
+                return ResourceManager.GetString("Tooltip_EarliestStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Target.
+        /// </summary>
+        public static string Tooltip_ExplicitTarget {
+            get {
+                return ResourceManager.GetString("Tooltip_ExplicitTarget", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fibonacci Weight.
+        /// </summary>
+        public static string Tooltip_FibonacciWeight {
+            get {
+                return ResourceManager.GetString("Tooltip_FibonacciWeight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Free Slack.
+        /// </summary>
+        public static string Tooltip_FreeSlack {
+            get {
+                return ResourceManager.GetString("Tooltip_FreeSlack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Identifier.
+        /// </summary>
+        public static string Tooltip_Id {
+            get {
+                return ResourceManager.GetString("Tooltip_Id", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inter-activity Allocation.
+        /// </summary>
+        public static string Tooltip_InterActivityAllocation {
+            get {
+                return ResourceManager.GetString("Tooltip_InterActivityAllocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interfering Slack.
+        /// </summary>
+        public static string Tooltip_InterferingSlack {
+            get {
+                return ResourceManager.GetString("Tooltip_InterferingSlack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Critical Activity.
+        /// </summary>
+        public static string Tooltip_IsCritical {
+            get {
+                return ResourceManager.GetString("Tooltip_IsCritical", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dummy Activity.
+        /// </summary>
+        public static string Tooltip_IsDummy {
+            get {
+                return ResourceManager.GetString("Tooltip_IsDummy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Latest Finish Time.
+        /// </summary>
+        public static string Tooltip_LatestFinishTime {
+            get {
+                return ResourceManager.GetString("Tooltip_LatestFinishTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Latest Start Time.
+        /// </summary>
+        public static string Tooltip_LatestStartTime {
+            get {
+                return ResourceManager.GetString("Tooltip_LatestStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Earliest Start Time.
+        /// </summary>
+        public static string Tooltip_MinimumEarliestStartTime {
+            get {
+                return ResourceManager.GetString("Tooltip_MinimumEarliestStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Free Slack.
+        /// </summary>
+        public static string Tooltip_MinimumFreeSlack {
+            get {
+                return ResourceManager.GetString("Tooltip_MinimumFreeSlack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource Dependencies.
+        /// </summary>
+        public static string Tooltip_ResourceDependencies {
+            get {
+                return ResourceManager.GetString("Tooltip_ResourceDependencies", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource Name.
+        /// </summary>
+        public static string Tooltip_ResourceName {
+            get {
+                return ResourceManager.GetString("Tooltip_ResourceName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Slack Limit.
+        /// </summary>
+        public static string Tooltip_SlackLimit {
+            get {
+                return ResourceManager.GetString("Tooltip_SlackLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource Operator.
+        /// </summary>
+        public static string Tooltip_TargetResourceOperator {
+            get {
+                return ResourceManager.GetString("Tooltip_TargetResourceOperator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target Resources.
+        /// </summary>
+        public static string Tooltip_TargetResources {
+            get {
+                return ResourceManager.GetString("Tooltip_TargetResources", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Slack.
+        /// </summary>
+        public static string Tooltip_TotalSlack {
+            get {
+                return ResourceManager.GetString("Tooltip_TotalSlack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unit Cost.
+        /// </summary>
+        public static string Tooltip_UnitCost {
+            get {
+                return ResourceManager.GetString("Tooltip_UnitCost", resourceCulture);
             }
         }
     }

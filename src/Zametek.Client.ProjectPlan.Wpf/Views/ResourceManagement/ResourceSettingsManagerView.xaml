@@ -145,6 +145,11 @@
                                                                 CanUserSort="True"
                                                                 SortMemberPath="Id"
                                                                 IsReadOnly="True">
+                                            <DataGridTemplateColumn.HeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_Id}" />
+                                                </Style>
+                                            </DataGridTemplateColumn.HeaderStyle>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <ContentControl Content="{Binding}">
@@ -172,6 +177,11 @@
                                                                 CanUserSort="True"
                                                                 SortMemberPath="IsExplicitTarget"
                                                                 IsReadOnly="True">
+                                            <DataGridTemplateColumn.HeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_ExplicitTarget}" />
+                                                </Style>
+                                            </DataGridTemplateColumn.HeaderStyle>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <ContentControl Content="{Binding}">
@@ -201,6 +211,11 @@
                                                                 CanUserSort="True"
                                                                 SortMemberPath="InterActivityAllocationType"
                                                                 Width="140">
+                                            <DataGridTemplateColumn.HeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_InterActivityAllocation}" />
+                                                </Style>
+                                            </DataGridTemplateColumn.HeaderStyle>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <ContentControl Content="{Binding}">
@@ -258,6 +273,11 @@
                                                                 CanUserSort="True"
                                                                 SortMemberPath="UnitCost"
                                                                 Width="100">
+                                            <DataGridTemplateColumn.HeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_UnitCost}" />
+                                                </Style>
+                                            </DataGridTemplateColumn.HeaderStyle>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <ContentControl Content="{Binding}">
@@ -320,6 +340,11 @@
                                                                 CanUserSort="True"
                                                                 SortMemberPath="DisplayOrder"
                                                                 Width="100">
+                                            <DataGridTemplateColumn.HeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_DisplayOrder}" />
+                                                </Style>
+                                            </DataGridTemplateColumn.HeaderStyle>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <ContentControl Content="{Binding}">
@@ -381,6 +406,11 @@
                                                                 SortMemberPath="ColorFormat"
                                                                 Width="100"
                                                                 IsReadOnly="True">
+                                            <DataGridTemplateColumn.HeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_Color}" />
+                                                </Style>
+                                            </DataGridTemplateColumn.HeaderStyle>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <xctk:ColorPicker ShowDropDownButton="True" IsEnabled="True"
@@ -394,6 +424,11 @@
                                                                 SortMemberPath="Name"
                                                                 Width="Auto"
                                                                 MinWidth="400">
+                                            <DataGridTemplateColumn.HeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_ResourceName}" />
+                                                </Style>
+                                            </DataGridTemplateColumn.HeaderStyle>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <ContentControl Content="{Binding}">

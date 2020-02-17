@@ -75,6 +75,11 @@
                                                                 CanUserResize="False"                                           
                                                                 Header="{x:Static local:Properties.Resources.Label_SlackLimit}"
                                                                 Width="75">
+                                            <DataGridTemplateColumn.HeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_SlackLimit}" />
+                                                </Style>
+                                            </DataGridTemplateColumn.HeaderStyle>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <ContentControl Content="{Binding}">
@@ -171,6 +176,11 @@
                                                                 CanUserResize="False"                                           
                                                                 Header="{x:Static local:Properties.Resources.Label_CriticalityWeight}"
                                                                 Width="75">
+                                            <DataGridTemplateColumn.HeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_CriticalityWeight}" />
+                                                </Style>
+                                            </DataGridTemplateColumn.HeaderStyle>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <ContentControl Content="{Binding}">
@@ -235,6 +245,11 @@
                                                                 CanUserResize="False"                                           
                                                                 Header="{x:Static local:Properties.Resources.Label_FibonacciWeight}"
                                                                 Width="75">
+                                            <DataGridTemplateColumn.HeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_FibonacciWeight}" />
+                                                </Style>
+                                            </DataGridTemplateColumn.HeaderStyle>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <ContentControl Content="{Binding}">
@@ -297,6 +312,11 @@
                                                     Header="{x:Static local:Properties.Resources.Label_Color}"
                                                     Width="*"
                                                     IsReadOnly="True">
+                                            <DataGridTemplateColumn.HeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="ToolTip" Value="{x:Static local:Properties.Resources.Tooltip_Color}" />
+                                                </Style>
+                                            </DataGridTemplateColumn.HeaderStyle>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <xctk:ColorPicker ShowDropDownButton="True" IsEnabled="True"

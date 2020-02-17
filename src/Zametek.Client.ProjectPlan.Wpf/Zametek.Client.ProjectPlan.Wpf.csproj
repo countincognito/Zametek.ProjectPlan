@@ -346,7 +346,7 @@
     <Compile Include="ViewModels\ActivityManagement\ActivitiesManagerViewModel.cs" />
     <Compile Include="ViewModels\ActivityManagement\DependenciesStringValidationRule.cs" />
     <Compile Include="ViewModels\ActivityManagement\ManagedActivityViewModel.cs" />
-    <Compile Include="ViewModels\ActivityManagement\AllocatedResourcesViewModel.cs" />
+    <Compile Include="ViewModels\ActivityManagement\AllocatedToResourcesViewModel.cs" />
     <Compile Include="ViewModels\ActivityManagement\ResourceSelectorViewModel.cs" />
     <Compile Include="ViewModels\ActivityManagement\SelectableResourceViewModel.cs" />
     <Compile Include="ViewModels\ArrowGraphSettingsManagement\ArrowGraphSettingsManagerConfirmation.cs" />

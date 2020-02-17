@@ -694,7 +694,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     m_CoreViewModel.AddManagedActivity(DtoConverter.FromDto(dependentActivityDto));
                 }
 
-                m_CoreViewModel.UpdateActivitiesAllocatedResources();
+                m_CoreViewModel.UpdateActivitiesAllocatedToResources();
 
                 m_CoreViewModel.SetCompilationOutput();
 
@@ -1031,7 +1031,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 await RunAutoCompileAsync();
 
-                m_CoreViewModel.UpdateActivitiesAllocatedResources();
+                m_CoreViewModel.UpdateActivitiesAllocatedToResources();
             }
             catch (Exception ex)
             {
