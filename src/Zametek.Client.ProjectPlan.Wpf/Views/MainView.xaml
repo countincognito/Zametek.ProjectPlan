@@ -51,7 +51,7 @@
                 <prism:PopupWindowAction.WindowStyle>
                     <Style TargetType="{x:Type Window}">
                         <Setter Property="MinHeight" Value="250"/>
-                        <Setter Property="Height" Value="300"/>
+                        <Setter Property="Height" Value="450"/>
                         <Setter Property="MinWidth" Value="450"/>
                         <Setter Property="Width" Value="1000"/>
                         <Setter Property="ResizeMode" Value="CanResize"/>
@@ -212,6 +212,13 @@
                                 <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanActivitiesRegion}" />
                             </xcad:LayoutAnchorable>
 
+                            <xcad:LayoutAnchorable ContentId="GanttChart"
+                                                   Title="{x:Static local:Properties.Resources.Label_GanttChartViewTitle}"
+                                                   CanHide="False"
+                                                   CanClose="False">
+                                <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanGanttChartRegion}" />
+                            </xcad:LayoutAnchorable>
+
                             <xcad:LayoutAnchorable ContentId="ArrowGraph"
                                                    Title="{x:Static local:Properties.Resources.Label_ArrowGraphViewTitle}"
                                                    CanHide="False"
@@ -219,13 +226,13 @@
                                 <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanArrowGraphRegion}" />
                             </xcad:LayoutAnchorable>
 
-
                             <xcad:LayoutAnchorable ContentId="ResourceChart"
                                                    Title="{x:Static local:Properties.Resources.Label_ResourceChartsViewTitle}"
                                                    CanHide="False"
                                                    CanClose="False">
                                 <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanResourceChartRegion}" />
                             </xcad:LayoutAnchorable>
+                            
                             <xcad:LayoutAnchorable ContentId="EarnedValueChart"
                                                    Title="{x:Static local:Properties.Resources.Label_EarnedValueChartsViewTitle}"
                                                    CanHide="False"
@@ -233,11 +240,7 @@
                                 <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanEarnedValueChartRegion}" />
                             </xcad:LayoutAnchorable>
                         </xcad:LayoutAnchorablePane>
-
-
                     </xcad:LayoutPanel>
-
-
                 </xcad:LayoutPanel>
             </xcad:LayoutRoot>
         </xcad:DockingManager>

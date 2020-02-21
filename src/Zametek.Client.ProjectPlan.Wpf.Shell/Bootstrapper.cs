@@ -77,6 +77,10 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
                 .As<IArrowGraphManagerViewModel>()
                 .SingleInstance();
 
+            builder.RegisterType<GanttChartManagerViewModel>()
+                .As<IGanttChartManagerViewModel>()
+                .SingleInstance();
+
             builder.RegisterType<ActivitiesManagerViewModel>()
                 .As<IActivitiesManagerViewModel>()
                 .SingleInstance();

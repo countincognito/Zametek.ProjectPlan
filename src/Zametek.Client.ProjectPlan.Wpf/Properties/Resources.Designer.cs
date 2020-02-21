@@ -466,7 +466,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Earned Value Chart.
+        ///   Looks up a localized string similar to Earned-Value Chart.
         /// </summary>
         public static string Label_EarnedValueChartsViewTitle {
             get {
@@ -579,6 +579,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Label_FreeSlack {
             get {
                 return ResourceManager.GetString("Label_FreeSlack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gantt Chart.
+        /// </summary>
+        public static string Label_GanttChartViewTitle {
+            get {
+                return ResourceManager.GetString("Label_GanttChartViewTitle", resourceCulture);
             }
         }
         

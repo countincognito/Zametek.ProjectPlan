@@ -406,7 +406,7 @@
     <value>Project has unsaved changes</value>
   </data>
   <data name="Label_EarnedValueChartsViewTitle" xml:space="preserve">
-    <value>Earned Value Chart</value>
+    <value>Earned-Value Chart</value>
   </data>
   <data name="Label_EarnedValuePercentageAxisTitle" xml:space="preserve">
     <value>Earned Value (%)</value>
@@ -566,5 +566,8 @@
   </data>
   <data name="Tooltip_UnitCost" xml:space="preserve">
     <value>Unit Cost</value>
+  </data>
+  <data name="Label_GanttChartViewTitle" xml:space="preserve">
+    <value>Gantt Chart</value>
   </data>
 </root>

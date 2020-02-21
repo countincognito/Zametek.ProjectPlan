@@ -1,0 +1,122 @@
+﻿<UserControl x:Class="Zametek.Client.ProjectPlan.Wpf.GanttChartManagerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Zametek.Client.ProjectPlan.Wpf"
+             xmlns:oxy="http://oxyplot.org/wpf"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+             xmlns:prism="http://prismlibrary.com/"
+             xmlns:nGantt="clr-namespace:nGantt;assembly=nGantt"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <i:Interaction.Triggers>
+        <prism:InteractionRequestTrigger SourceObject="{Binding Path=NotificationInteractionRequest, Mode=OneWay}">
+            <prism:PopupWindowAction IsModal="True"
+                                     CenterOverAssociatedObject="True">
+                <prism:PopupWindowAction.WindowStyle>
+                    <Style TargetType="{x:Type Window}">
+                        <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+                        <Setter Property="ResizeMode" Value="NoResize"/>
+                    </Style>
+                </prism:PopupWindowAction.WindowStyle>
+                <prism:PopupWindowAction.WindowContent>
+                    <local:BasicNotificationView />
+                </prism:PopupWindowAction.WindowContent>
+            </prism:PopupWindowAction>
+        </prism:InteractionRequestTrigger>
+    </i:Interaction.Triggers>
+    
+    <DockPanel Margin="7">
+        <Border BorderThickness="2">
+            <Border.Style>
+                <Style TargetType="{x:Type Border}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Path=HasStaleOutputs, Mode=OneWay}" Value="True">
+                            <Setter Property="BorderBrush" Value="Red"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <DockPanel>
+                <Grid Margin="0,5,0,0"
+                      DockPanel.Dock="Top">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="5"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Row="0" Grid.Column="0" Content="|&lt;" x:Name="ButtonFirst" Click="ButtonFirst_OnClick"/>
+                    <Button Grid.Row="0" Grid.Column="1" Content="&lt;&lt;" x:Name="ButtonMonthBack" Click="ButtonMonthBack_OnClick"/>
+                    <Button Grid.Row="0" Grid.Column="2" Content="&lt;" x:Name="ButtonDayBack" Click="ButtonDayBack_OnClick"/>
+                    <DatePicker x:Name="DatePicker" Grid.Row="0" Grid.Column="3" SelectedDateChanged="DatePicker_OnSelectedDateChanged" IsTodayHighlighted="True" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" VerticalAlignment="Stretch"/>
+                    <Button Grid.Row="0" Grid.Column="4" Content="&gt;" x:Name="ButtonDayForth" Click="ButtonDayForth_OnClick"/>
+                    <Button Grid.Row="0" Grid.Column="5" Content="&gt;&gt;" x:Name="ButtonMonthForth" Click="ButtonMonthForth_OnClick"/>
+                    <Button Grid.Row="0" Grid.Column="6" Content="&gt;|" x:Name="ButtonLast" Click="ButtonLast_OnClick"/>
+                    <Label Grid.Row="0" Grid.Column="7" Content="Days:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    <TextBox x:Name="DaysSelect" Grid.Row="0" Grid.Column="8" TextAlignment="Center" DataContextChanged="DaysSelect_OnDataContextChanged" PreviewTextInput="DaysSelect_OnPreviewTextInput" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    <Button x:Name="Refresh" Grid.Row="0" Grid.Column="9" Click="Refresh_OnClick" Content="&#x21bb;" FontSize="20"/>
+                    <!--<Label Grid.Row="0" Grid.Column="10" Content="Search" VerticalAlignment="Center" />
+                    <TextBox Grid.Row="0" Grid.Column="11" x:Name="SearchTextBox" DataContextChanged="SearchTextBox_OnDataContextChanged" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                    <Button Grid.Row="0" Grid.Column="12" x:Name="SearchButton" Content="&#128269;" Click="SearchButton_OnClick" FontSize="15"/>-->
+                </Grid>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <nGantt:GanttControl x:Name="GanttChartAreaCtrl"
+                                     Grid.Row="1"
+                                     Grid.Column="0"
+                                     Grid.ColumnSpan="15"
+                                     TaskSelectionMode="Single"
+                                     AllowUserSelection="False"
+                                     AllowDrop="False"/>
+            </DockPanel>
+            
+
+
+        </Border>
+
+        <DockPanel.Style>
+            <Style TargetType="DockPanel">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Path=IsBusy, Mode=OneWay}" Value="True">
+                        <Setter Property="IsEnabled" Value="False"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Path=IsBusy, Mode=OneWay}" Value="False">
+                        <Setter Property="IsEnabled" Value="True"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </DockPanel.Style>
+    </DockPanel>
+</UserControl>

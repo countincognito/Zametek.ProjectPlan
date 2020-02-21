@@ -6,30 +6,15 @@ namespace Zametek.Client.ProjectPlan.Wpf
 {
     public interface IArrowGraphManagerViewModel
     {
-        IInteractionRequest NotificationInteractionRequest
-        {
-            get;
-        }
+        IInteractionRequest NotificationInteractionRequest { get; }
 
-        bool IsBusy
-        {
-            get;
-        }
+        bool IsBusy { get; }
 
-        bool HasStaleArrowGraph
-        {
-            get;
-        }
+        bool HasStaleArrowGraph { get; }
 
-        ArrowGraphData ArrowGraphData
-        {
-            get;
-        }
+        ArrowGraphData ArrowGraphData { get; }
 
-        ICommand GenerateArrowGraphCommand
-        {
-            get;
-        }
+        ICommand GenerateArrowGraphCommand { get; }
 
         byte[] ExportArrowGraphToDiagram(DiagramArrowGraphDto diagramArrowGraphDto);
     }

@@ -300,6 +300,7 @@
     <Compile Include="Contracts\IArrowGraphManagerViewModel.cs" />
     <Compile Include="Contracts\IArrowGraphSettingsManagerViewModel.cs" />
     <Compile Include="Contracts\IDateTimeCalculator.cs" />
+    <Compile Include="Contracts\IGanttChartManagerViewModel.cs" />
     <Compile Include="Contracts\IProjectSettingService.cs" />
     <Compile Include="Contracts\IFileDialogService.cs" />
     <Compile Include="Contracts\ICoreViewModel.cs" />
@@ -311,6 +312,7 @@
     <Compile Include="Contracts\IResourceSettingsManagerViewModel.cs" />
     <Compile Include="Converters\ColorFormatToColorConverter.cs" />
     <Compile Include="Events\ApplicationClosingPayload.cs" />
+    <Compile Include="Events\GanttChartDataUpdatedPayload.cs" />
     <Compile Include="Events\ArrowGraphSettingsUpdatedPayload.cs" />
     <Compile Include="Events\ArrowGraphDtoUpdatedPayload.cs" />
     <Compile Include="Events\ArrowGraphDataUpdatedPayload.cs" />
@@ -354,6 +356,7 @@
     <Compile Include="ViewModels\ArrowGraphSettingsManagement\ManagedActivitySeverityViewModel.cs" />
     <Compile Include="ViewModels\CoreViewModel.cs" />
     <Compile Include="ViewModels\EarnedValueChartManagement\EarnedValueChartManagerViewModel.cs" />
+    <Compile Include="ViewModels\GanttChartManagement\GanttChartManagerViewModel.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphManagerViewModel.cs" />
     <Compile Include="ViewModels\MetricManagement\MetricsManagerViewModel.cs" />
     <Compile Include="ViewModels\PropertyChangedPubSubViewModel.cs" />
@@ -382,6 +385,9 @@
     <Compile Include="Views\BindingProxy.cs" />
     <Compile Include="Views\EarnedValueChartManagement\EarnedValueChartManagerView.xaml.cs">
       <DependentUpon>EarnedValueChartManagerView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\GanttChartManagement\GanttChartManagerView.xaml.cs">
+      <DependentUpon>GanttChartManagerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\GraphManagement\ArrowGraphArea.cs" />
     <Compile Include="Views\GraphManagement\ArrowGraphGXLogicCore.cs" />
@@ -441,6 +447,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\GanttChartManagement\GanttChartManagerView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\GraphManagement\ArrowGraphManagerView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -471,6 +481,10 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\nGantt\nGantt.csproj">
+      <Project>{ccc54f28-5d20-4ab3-a1a8-c62cd2da3ae7}</Project>
+      <Name>nGantt</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj">
       <Project>{b2b2a9a6-be16-43f6-a623-fa40ccf97853}</Project>
       <Name>Zametek.Common.ProjectPlan</Name>

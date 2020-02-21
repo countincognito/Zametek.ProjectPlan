@@ -6,69 +6,30 @@ namespace Zametek.Client.ProjectPlan.Wpf
 {
     public interface IActivitiesManagerViewModel
     {
-        IInteractionRequest NotificationInteractionRequest
-        {
-            get;
-        }
+        IInteractionRequest NotificationInteractionRequest { get; }
 
-        bool IsBusy
-        {
-            get;
-        }
+        bool IsBusy { get; }
 
-        bool HasStaleOutputs
-        {
-            get;
-        }
+        bool HasStaleOutputs { get; }
 
-        bool ShowDates
-        {
-            get;
-        }
+        bool ShowDates { get; }
 
-        bool ShowDays
-        {
-            get;
-        }
+        bool ShowDays { get; }
 
-        bool HasCompilationErrors
-        {
-            get;
-        }
+        bool HasCompilationErrors { get; }
 
-        string CompilationOutput
-        {
-            get;
-        }
+        string CompilationOutput { get; }
 
-        ObservableCollection<ManagedActivityViewModel> Activities
-        {
-            get;
-        }
+        ObservableCollection<ManagedActivityViewModel> Activities { get; }
 
-        ObservableCollection<ManagedActivityViewModel> SelectedActivities
-        {
-            get;
-        }
+        ObservableCollection<ManagedActivityViewModel> SelectedActivities { get; }
 
-        ManagedActivityViewModel SelectedActivity
-        {
-            get;
-        }
+        ManagedActivityViewModel SelectedActivity { get; }
 
-        ICommand SetSelectedManagedActivitiesCommand
-        {
-            get;
-        }
+        ICommand SetSelectedManagedActivitiesCommand { get; }
 
-        ICommand AddManagedActivityCommand
-        {
-            get;
-        }
+        ICommand AddManagedActivityCommand { get; }
 
-        ICommand RemoveManagedActivityCommand
-        {
-            get;
-        }
+        ICommand RemoveManagedActivityCommand { get; }
     }
 }
