@@ -570,4 +570,7 @@
   <data name="Label_GanttChartViewTitle" xml:space="preserve">
     <value>Gantt Chart</value>
   </data>
+  <data name="Label_GenerateGanttChart" xml:space="preserve">
+    <value>Generate Gantt Chart</value>
+  </data>
 </root>

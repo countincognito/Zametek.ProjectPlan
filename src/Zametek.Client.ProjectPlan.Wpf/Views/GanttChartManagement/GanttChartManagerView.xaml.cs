@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -61,7 +62,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 m_EventService.GetEvent<PubSubEvent<GanttChartDataUpdatedPayload>>()
                 .Subscribe(payload =>
                 {
-                    GenerateGanttChart(null, null);
+                    GenerateGanttChart();
                 }, ThreadOption.UIThread);
         }
 
@@ -71,71 +72,59 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 .Unsubscribe(m_GanttChartDataUpdatedSubscriptionToken);
         }
 
+        private void DatePicker_OnSelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        {
 
+        }
 
-
-
-        private void GenerateGanttChart(DateTime? minimumDateTime, DateTime? maximumDateTime)
+        private void GenerateGanttChart()
         {
             GanttChartAreaCtrl.ClearGantt();
             IList<ManagedActivityViewModel> arrangedActivities = ViewModel.ArrangedActivities;
 
             if (arrangedActivities != null)
             {
-                DateTime minDate = minimumDateTime ?? ViewModel.ProjectStart;
-                DateTime? maybeMaxDate = maximumDateTime ?? minDate.AddDays(90);
+                DateTime minDate = DatePicker.SelectedDate ?? ViewModel.ProjectStart;
+                DateTime maxDate = minDate.AddDays(DaysSelect.Value.GetValueOrDefault());
+                GanttChartAreaCtrl.Initialize(minDate, maxDate);
 
-                if (maybeMaxDate.HasValue)
+                // Create timelines and define how they should be presented
+                GanttChartAreaCtrl.CreateTimeLine(new PeriodYearSplitter(minDate, maxDate), FormatYear);
+                GanttChartAreaCtrl.CreateTimeLine(new PeriodMonthSplitter(minDate, maxDate), FormatMonth);
+                var gridLineTimeLine = GanttChartAreaCtrl.CreateTimeLine(new PeriodDaySplitter(minDate, maxDate), FormatDay);
+                GanttChartAreaCtrl.CreateTimeLine(new PeriodDaySplitter(minDate, maxDate), FormatDayName);
+
+                // Set the timeline to attach gridlines to
+                GanttChartAreaCtrl.SetGridLinesTimeline(gridLineTimeLine, DetermineBackground);
+
+                foreach (ManagedActivityViewModel managedActivityViewModel in arrangedActivities)
                 {
-                    DateTime maxDate = maybeMaxDate.Value;
+                    HeaderedGanttRowGroup rowgroupprojectphases = GanttChartAreaCtrl.CreateGanttRowGroup("Example-Heading");
+                    GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowgroupprojectphases, managedActivityViewModel.Name);
 
-                    GanttChartAreaCtrl.Initialize(minDate, maxDate);
 
-                    // Create timelines and define how they should be presented
-                    GanttChartAreaCtrl.CreateTimeLine(new PeriodYearSplitter(minDate, maxDate), FormatYear);
-                    GanttChartAreaCtrl.CreateTimeLine(new PeriodMonthSplitter(minDate, maxDate), FormatMonth);
-                    var gridLineTimeLine = GanttChartAreaCtrl.CreateTimeLine(new PeriodDaySplitter(minDate, maxDate), FormatDay);
-                    GanttChartAreaCtrl.CreateTimeLine(new PeriodDaySplitter(minDate, maxDate), FormatDayName);
 
-                    // Set the timeline to attach gridlines to
 
-                    foreach (ManagedActivityViewModel managedActivityViewModel in arrangedActivities)
+
+                    if (managedActivityViewModel.EarliestStartDateTime.HasValue
+                        && managedActivityViewModel.EarliestFinishDateTime.HasValue)
                     {
-                        HeaderedGanttRowGroup rowgroupprojectphases = GanttChartAreaCtrl.CreateGanttRowGroup("Example-Heading");
-                        GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowgroupprojectphases, managedActivityViewModel.Name);
-
-
-
-
-                        if (managedActivityViewModel.EarliestStartDateTime.HasValue
-                            && managedActivityViewModel.EarliestFinishDateTime.HasValue)
+                        GanttChartAreaCtrl.AddGanttTask(row, new GanttTask
                         {
-                            GanttChartAreaCtrl.AddGanttTask(row, new GanttTask
-                            {
-                                Start = managedActivityViewModel.EarliestStartDateTime.Value,
-                                End = managedActivityViewModel.EarliestFinishDateTime.Value,
-                                Name = $"{managedActivityViewModel.Name}",
-                                Color = Colors.OrangeRed, //sortedchartTimeSpan.selected ? Colors.OrangeRed : Colors.DodgerBlue,
-                                Radius = 5,//(sortedchartTimeSpan.to - sortedchartTimeSpan.from).TotalDays < 3 ? 0 : 5
-                            });
-                        }
-
-
-
-
+                            Start = managedActivityViewModel.EarliestStartDateTime.Value,
+                            End = managedActivityViewModel.EarliestFinishDateTime.Value,
+                            Name = $"{managedActivityViewModel.Name}",
+                            Color = Colors.OrangeRed, //sortedchartTimeSpan.selected ? Colors.OrangeRed : Colors.DodgerBlue,
+                            Radius = 5,//(sortedchartTimeSpan.to - sortedchartTimeSpan.from).TotalDays < 3 ? 0 : 5
+                        });
                     }
+
+
+
+
                 }
             }
         }
-
-
-
-
-
-
-
-
-
 
         private Brush DetermineBackground(TimeLineItem timeLineItem)
         {
@@ -146,164 +135,23 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private string FormatYear(Period period)
         {
-            return period.Start.Year.ToString();
+            return period.Start.ToString("yyyy", DateTimeFormatInfo.InvariantInfo);
         }
 
         private string FormatMonth(Period period)
         {
-            return period.Start.Month.ToString();
+            return period.Start.ToString("MMM", DateTimeFormatInfo.InvariantInfo);
         }
 
         private string FormatDay(Period period)
         {
-            return period.Start.Day.ToString();
+            return period.Start.ToString("dd", DateTimeFormatInfo.InvariantInfo);
         }
 
         private string FormatDayName(Period period)
         {
-            string returns = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.DayNames[(int)period.Start.DayOfWeek];
-            return returns.Substring(0, 2);
+            return period.Start.ToString("ddd", DateTimeFormatInfo.InvariantInfo);
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        private void ButtonMonthBack_OnClick(object sender, RoutedEventArgs e)
-        {
-            DateTime minDate = GanttChartAreaCtrl.GanttData.MinDate.AddMonths(-1);
-            DateTime maxDate = GanttChartAreaCtrl.GanttData.MaxDate.AddMonths(-1);
-            GenerateGanttChart(minDate, maxDate);
-        }
-
-        private void ButtonDayBack_OnClick(object sender, RoutedEventArgs e)
-        {
-            DateTime minDate = GanttChartAreaCtrl.GanttData.MinDate.AddDays(-1);
-            DateTime maxDate = GanttChartAreaCtrl.GanttData.MaxDate.AddDays(-1);
-            GenerateGanttChart(minDate, maxDate);
-        }
-
-        private void ButtonMonthForth_OnClick(object sender, RoutedEventArgs e)
-        {
-            DateTime minDate = GanttChartAreaCtrl.GanttData.MinDate.AddMonths(1);
-            DateTime maxDate = GanttChartAreaCtrl.GanttData.MaxDate.AddMonths(1);
-            GenerateGanttChart(minDate, maxDate);
-        }
-
-        private void ButtonDayForth_OnClick(object sender, RoutedEventArgs e)
-        {
-            DateTime minDate = GanttChartAreaCtrl.GanttData.MinDate.AddDays(1);
-            DateTime maxDate = GanttChartAreaCtrl.GanttData.MaxDate.AddDays(1);
-            GenerateGanttChart(minDate, maxDate);
-        }
-
-        private void DatePicker_OnSelectedDateChanged(object sender, SelectionChangedEventArgs e)
-        {
-            //DateTime minDate = DatePicker.DisplayDate;
-            //DateTime maxDate = minDate.AddDays(DaysToShow);
-            //GenerateGanttChart(minDate, maxDate);
-        }
-
-        private void Refresh_OnClick(object sender, RoutedEventArgs e)
-        {
-            //DaysToShow = Convert.ToInt32(DaysSelect.Text);
-
-            //DateTime minDate = GanttChartAreaCtrl.GanttData.MinDate;
-            //DateTime maxDate = minDate.AddDays(DaysToShow);
-            //GenerateGanttChart(minDate, maxDate);
-        }
-
-        private void DaysSelect_OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            //DaysToShow = Convert.ToInt32(DaysSelect.Text);
-        }
-
-        private void DaysSelect_OnPreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            //if (Regex.IsMatch(e.Text, @"^[0-9]"))
-            //    e.Handled = false;
-            //else
-            //{
-            //    e.Handled = true;
-            //    MessageBox.Show("Mistake");
-            //}
-        }
-
-        private void ButtonFirst_OnClick(object sender, RoutedEventArgs e)
-        {
-            //DateTime minDate = data.ListOfChartTimeSpans.Min(c => c.from).Date;
-            //DateTime maxDate = minDate.AddMonths(2);
-            //GenerateGanttChart(minDate, maxDate);
-        }
-
-        private void ButtonLast_OnClick(object sender, RoutedEventArgs e)
-        {
-            //DateTime maxDate = data.ListOfChartTimeSpans.Max(c => c.to).Date;
-            //DateTime minDate = maxDate.AddMonths(-2);
-            //GenerateGanttChart(minDate, maxDate);
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //private void SearchTextBox_OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        //{
-        //    Search = DaysSelect.Text;
-        //}
-
-        //private void SearchButton_OnClick(object sender, RoutedEventArgs e)
-        //{
-        //    ganttControl.ClearGantt();
-        //    if (SearchTextBox.Text != "")
-        //        foreach (ChartTimeSpan charttimespan in data.ListOfChartTimeSpans)
-        //            charttimespan.selected = charttimespan.name.Contains(SearchTextBox.Text);
-        //    else if (SearchTextBox.Text == "")
-        //        foreach (ChartTimeSpan charttimespan in data.ListOfChartTimeSpans)
-        //            charttimespan.selected = false;
-
-        //    gantt.CreateData(this, data, ganttControl.GanttData.MinDate, ganttControl.GanttData.MaxDate);
-        //}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         #endregion
 

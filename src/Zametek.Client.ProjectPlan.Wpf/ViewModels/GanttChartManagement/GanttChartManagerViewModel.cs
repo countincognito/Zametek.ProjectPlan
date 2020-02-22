@@ -43,7 +43,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
-            ArrangedActivities = new ObservableCollection<ManagedActivityViewModel>();
+            ArrangedActivities = new List<ManagedActivityViewModel>();
 
             m_NotificationInteractionRequest = new InteractionRequest<Notification>();
 
@@ -66,26 +66,107 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #endregion
 
+        #region Commands
+
+        private DelegateCommandBase InternalGenerateGanttChartCommand
+        {
+            get;
+            set;
+        }
+
+        private async void GenerateGanttChart()
+        {
+            await DoGenerateGanttChartAsync();
+        }
+
+        private bool CanGenerateGanttChart()
+        {
+            return !HasCompilationErrors;
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public async Task DoGenerateGanttChartAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                await GenerateGanttChartDataFromGraphCompilationAsync();
+                //HasStaleArrowGraph = false;
+                //IsProjectUpdated = true;
+            }
+            catch (Exception ex)
+            {
+                DispatchNotification(
+                    Properties.Resources.Title_Error,
+                    ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+                RaiseCanExecuteChangedAllCommands();
+            }
+        }
+
+        #endregion
+
         #region Private Methods
 
         private void InitializeCommands()
         {
+            GenerateGanttChartCommand =
+                InternalGenerateGanttChartCommand =
+                    new DelegateCommand(GenerateGanttChart, CanGenerateGanttChart);
         }
 
         private void RaiseCanExecuteChangedAllCommands()
         {
+            InternalGenerateGanttChartCommand.RaiseCanExecuteChanged();
         }
 
         private void SubscribeToEvents()
         {
-            m_GraphCompilationUpdatedPayloadToken =
-                m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
-                    .Subscribe(payload =>
-                    {
-                        IsBusy = true;
-                        CalculateGanttChartModel();
-                        IsBusy = false;
-                    }, ThreadOption.BackgroundThread);
+
+
+
+            //m_GraphCompiledPayloadToken =
+            //    m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
+            //        .Subscribe(payload =>
+            //        {
+            //            HasStaleArrowGraph = true;
+            //        }, ThreadOption.BackgroundThread);
+            //m_ArrowGraphSettingsUpdatedPayloadToken =
+            //    m_EventService.GetEvent<PubSubEvent<ArrowGraphSettingsUpdatedPayload>>()
+            //        .Subscribe(payload =>
+            //        {
+            //            HasStaleArrowGraph = true;
+            //        }, ThreadOption.BackgroundThread);
+            //m_ArrowGraphDtoUpdatedSubscriptionToken =
+            //    m_EventService.GetEvent<PubSubEvent<ArrowGraphDtoUpdatedPayload>>()
+            //        .Subscribe(async payload =>
+            //        {
+            //            await GenerateArrowGraphDataFromDtoAsync();
+            //        }, ThreadOption.BackgroundThread);
+
+
+
+
+
+
+
+
+
+            //m_GraphCompilationUpdatedPayloadToken =
+            //    m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
+            //        .Subscribe(payload =>
+            //        {
+            //            //HasStaleArrowGraph = true;
+            //            //IsBusy = true;
+            //            //CalculateGanttChartModel();
+            //            //IsBusy = false;
+            //        }, ThreadOption.BackgroundThread);
         }
 
         private void UnsubscribeFromEvents()
@@ -100,7 +181,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 .Publish(new GanttChartDataUpdatedPayload());
         }
 
-        private void CalculateGanttChartModel()
+        private async Task GenerateGanttChartDataFromGraphCompilationAsync()
+        {
+            await Task.Run(() => GenerateGanttChartDataFromGraphCompilation());
+        }
+
+        private void GenerateGanttChartDataFromGraphCompilation()
         {
             lock (m_Lock)
             {
@@ -108,7 +194,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 ArrangedActivities.AddRange(Activities.OrderBy(x => x.EarliestStartTime).ThenBy(x => x.Duration));
             }
             PublishGanttChartDataUpdatedPayload();
-            RaiseCanExecuteChangedAllCommands();
         }
 
         private void DispatchNotification(string title, object content)
@@ -181,7 +266,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public ObservableCollection<ManagedActivityViewModel> ArrangedActivities { get; }
+        public List<ManagedActivityViewModel> ArrangedActivities { get; }
+
+        public ICommand GenerateGanttChartCommand
+        {
+            get;
+            private set;
+        }
 
         #endregion
     }

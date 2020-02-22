@@ -94,7 +94,7 @@
         <DataTemplate x:Key="GanttRowTemplate">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="150"/>
                     <ColumnDefinition Width="1"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
@@ -103,12 +103,12 @@
                     <RowDefinition Height="1"/>
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Path=RowHeader.Name}" ToolTip="{Binding Path=RowHeader.Name}" Margin="5,5,0,0" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <Grid Name="RowGrid" Grid.Column="2" Grid.Row="0" Width="Auto" Height="{Binding ElementName=RowHeightSlider, Path=Value}" Margin="0,5,0,5">
+                <Grid Name="RowGrid" Grid.Column="2" Grid.Row="0" Width="Auto" Margin="0,5,0,5">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="{Binding ElementName=RowHeightSlider, Path=Value}"/>
+                        <RowDefinition Height="40"/>
                     </Grid.RowDefinitions>
-                    <Canvas Name="selectionCanvas" Background="Transparent" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Stretch" Margin="0,0,0,0" VerticalAlignment="Stretch" Height="{Binding ElementName=RowHeightSlider, Path=Value}" MouseMove="selectionRectangle_MouseMove" MouseLeftButtonUp="Grid_MouseLeftButtonUp" MouseLeftButtonDown="Grid_MouseLeftButtonDown" MouseLeave="selectionCanvas_MouseLeave">
-                        <Border Name="selectionRectangle" CornerRadius="3" Opacity="0.7" Height="{Binding ElementName=RowHeightSlider, Path=Value}" HorizontalAlignment="Stretch" BorderBrush="#FF0062FF" Background="#FFADADAD" Margin="0,0,0,5" BorderThickness="1" Visibility="Hidden" ContextMenuOpening="selectionRectangle_ContextMenuOpening" IsHitTestVisible="True" >
+                    <Canvas Name="selectionCanvas" Background="Transparent" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Stretch" Margin="0,0,0,0" VerticalAlignment="Stretch" MouseMove="selectionRectangle_MouseMove" MouseLeftButtonUp="Grid_MouseLeftButtonUp" MouseLeftButtonDown="Grid_MouseLeftButtonDown" MouseLeave="selectionCanvas_MouseLeave">
+                        <Border Name="selectionRectangle" CornerRadius="3" Opacity="0.7" HorizontalAlignment="Stretch" BorderBrush="#FF0062FF" Background="#FFADADAD" Margin="0,0,0,5" BorderThickness="1" Visibility="Hidden" ContextMenuOpening="selectionRectangle_ContextMenuOpening" IsHitTestVisible="True" >
                             <Border.ContextMenu>
                                 <ContextMenu ItemsSource="{Binding Path=DataContext.SelectionContextMenuItems, Source={x:Reference root}}">
                                     <ContextMenu.ItemTemplate>
@@ -136,7 +136,7 @@
                             </Border.ContextMenu>
                         </Border>
                     </Canvas>
-                    <ItemsControl Grid.Row="0"  ItemsSource="{Binding Path=Tasks}" Height="{Binding ElementName=RowHeightSlider, Path=Value}">
+                    <ItemsControl Grid.Row="0" ItemsSource="{Binding Path=Tasks}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <ng:GanttRowPanel DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}" MinDate="{Binding Path=GanttData.MinDate}" MaxDate="{Binding Path=GanttData.MaxDate}"/>
@@ -355,12 +355,12 @@
         <DataTemplate x:Key="GanttGrid">
             <Grid Name="GanttMainGrid">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="1"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="150"/>
                     <ColumnDefinition Width="1"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
@@ -372,7 +372,7 @@
                 <ScrollViewer Name="Scroller" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" Grid.Row="2" Grid.ColumnSpan="3" Grid.Column="0">
                     <Grid>
                         <!-- Gridlines -->
-                        <ContentControl ContentTemplate="{StaticResource GanttTimeLineGridLines}" Content="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Path=GridLineTimeLine}" Margin="100,0,1,0"/>
+                        <ContentControl ContentTemplate="{StaticResource GanttTimeLineGridLines}" Content="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Path=GridLineTimeLine}" Margin="150,0,1,0"/>
                         <!-- RowGroups -->
                         <ItemsControl ItemsSource="{Binding Path=RowGroups}"/>
                     </Grid>
@@ -382,15 +382,6 @@
     </UserControl.Resources>
 
     <Grid Margin="0,5,0,0" x:Name="root" >
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="5"/>
-            <RowDefinition Height="auto"/>
-        </Grid.RowDefinitions>
         <ContentControl Grid.Row="0" ContentTemplate="{StaticResource GanttGrid}" Content="{Binding Path=GanttData}"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="2">
-            <Label Content="Size"/>
-            <Slider Minimum="30" Maximum="100" Value="40" Name="RowHeightSlider" Width="200" Height="22"/>
-        </StackPanel>
     </Grid>
 </UserControl>

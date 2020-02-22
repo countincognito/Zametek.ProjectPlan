@@ -601,6 +601,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Generate Gantt Chart.
+        /// </summary>
+        public static string Label_GenerateGanttChart {
+            get {
+                return ResourceManager.GetString("Label_GenerateGanttChart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Geometric (Act.) Risk:.
         /// </summary>
         public static string Label_GeometricActivityRisk {
