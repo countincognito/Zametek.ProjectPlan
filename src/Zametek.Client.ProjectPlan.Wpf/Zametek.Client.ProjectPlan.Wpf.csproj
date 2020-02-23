@@ -312,6 +312,8 @@
     <Compile Include="Contracts\IResourceSettingsManagerViewModel.cs" />
     <Compile Include="Converters\ColorFormatToColorConverter.cs" />
     <Compile Include="Events\ApplicationClosingPayload.cs" />
+    <Compile Include="Events\GanttChartSettingsUpdatedPayload.cs" />
+    <Compile Include="Events\GanttChartDtoUpdatedPayload.cs" />
     <Compile Include="Events\GanttChartDataUpdatedPayload.cs" />
     <Compile Include="Events\ArrowGraphSettingsUpdatedPayload.cs" />
     <Compile Include="Events\ArrowGraphDtoUpdatedPayload.cs" />
@@ -356,6 +358,7 @@
     <Compile Include="ViewModels\ArrowGraphSettingsManagement\ManagedActivitySeverityViewModel.cs" />
     <Compile Include="ViewModels\CoreViewModel.cs" />
     <Compile Include="ViewModels\EarnedValueChartManagement\EarnedValueChartManagerViewModel.cs" />
+    <Compile Include="ViewModels\GanttChartManagement\GanttChartDto.cs" />
     <Compile Include="ViewModels\GanttChartManagement\GanttChartManagerViewModel.cs" />
     <Compile Include="ViewModels\GraphManagement\ArrowGraphManagerViewModel.cs" />
     <Compile Include="ViewModels\MetricManagement\MetricsManagerViewModel.cs" />
@@ -382,6 +385,7 @@
     <Compile Include="Views\AboutView.xaml.cs">
       <DependentUpon>AboutView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\ArrowGraphSettingsManagement\SlackColorFormatLookup.cs" />
     <Compile Include="Views\BindingProxy.cs" />
     <Compile Include="Views\EarnedValueChartManagement\EarnedValueChartManagerView.xaml.cs">
       <DependentUpon>EarnedValueChartManagerView.xaml</DependentUpon>

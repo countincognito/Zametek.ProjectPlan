@@ -47,7 +47,7 @@
                 <Border.Style>
                     <Style TargetType="{x:Type Border}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding Path=HasStaleOutputs, Mode=OneWay}" Value="True">
+                            <DataTrigger Binding="{Binding Path=HasStaleGanttChart, Mode=OneWay}" Value="True">
                                 <Setter Property="BorderBrush" Value="Red"/>
                             </DataTrigger>
                         </Style.Triggers>
@@ -58,7 +58,15 @@
                     <DockPanel Margin="0,5,0,0"
                                DockPanel.Dock="Top">
 
-                        <DatePicker x:Name="DatePicker" Margin="7,0,0,0" DockPanel.Dock="Left" SelectedDateChanged="DatePicker_OnSelectedDateChanged" IsTodayHighlighted="True" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" VerticalAlignment="Stretch"/>
+                        <DatePicker x:Name="DatePicker"
+                                    Margin="7,0,0,0"
+                                    DockPanel.Dock="Left"
+                                    SelectedDate="{Binding Path=ProjectStart, Mode=OneWay}"
+                                    SelectedDateChanged="DatePicker_OnSelectedDateChanged"
+                                    IsTodayHighlighted="True"
+                                    VerticalContentAlignment="Center"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalAlignment="Stretch"/>
 
                         <Label Margin="7,0,0,0" DockPanel.Dock="Left" Content="Days To Show:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
 
@@ -67,14 +75,26 @@
                                             DockPanel.Dock="Left" 
                                             TextAlignment="Right"
                                             Width="75"
-                                            DefaultValue="60"
+                                            DefaultValue="120"
                                             DisplayDefaultValueOnEmptyText="True"
                                             Minimum="30"
-                                            Maximum="365"
+                                            Maximum="730"
                                             VerticalContentAlignment="Center"
                                             HorizontalContentAlignment="Center"
                                             HorizontalAlignment="Stretch"
-                                            VerticalAlignment="Stretch"/>
+                                            VerticalAlignment="Stretch"
+                                            ValueChanged="DaysSelect_ValueChanged"/>
+
+                        <Label Margin="7,0,0,0" DockPanel.Dock="Left" Content="Group by Resources:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+
+                        <CheckBox x:Name="GroupByResource"
+                                  Margin="7,0,0,0"
+                                  VerticalContentAlignment="Center"
+                                  HorizontalContentAlignment="Center"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Stretch"
+                                  Checked="GroupByResource_CheckChanged"
+                                  Unchecked="GroupByResource_CheckChanged"/>
 
                         <Grid/>
 

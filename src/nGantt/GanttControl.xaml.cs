@@ -23,7 +23,7 @@ namespace nGantt
         private readonly GanttChartData ganttChartData = new GanttChartData();
         private TimeLine gridLineTimeLine;
         private double selectionStartX;
-        private readonly ObservableCollection<TimeLine> gridLineTimeLines = new ObservableCollection<TimeLine>();
+
         public event EventHandler SelectedItemChanged;
         public event EventHandler<PeriodEventArgs> GanttRowAreaSelected;
 
@@ -32,7 +32,21 @@ namespace nGantt
 
         public ObservableCollection<ContextMenuItem> GanttTaskContextMenuItems { get; set; }
         public ObservableCollection<SelectionContextMenuItem> SelectionContextMenuItems { get; set; }
-        public ObservableCollection<TimeLine> GridLineTimeLine { get { return gridLineTimeLines; } }
+
+
+        //public ObservableCollection<TimeLine> GridLineTimeLine { get; } = new ObservableCollection<TimeLine>();
+
+        public ObservableCollection<TimeLine> GridLineTimeLine
+        {
+            get { return (ObservableCollection<TimeLine>)GetValue(GridLineTimeLineProperty); }
+            set { SetValue(GridLineTimeLineProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for GetTimeLines.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty GridLineTimeLineProperty =
+            DependencyProperty.Register("GridLineTimeLine", typeof(ObservableCollection<TimeLine>), typeof(GanttControl), new PropertyMetadata(new ObservableCollection<TimeLine>()));
+
+
         public SelectionMode TaskSelectionMode { get; set; }
 
         public List<GanttTask> SelectedItems
@@ -54,6 +68,7 @@ namespace nGantt
         public GanttControl()
         {
             InitializeComponent();
+            //GridLineTimeLine = new ObservableCollection<TimeLine>();
             DataContext = this;
             SelectionPeriod = new Period();
         }
@@ -94,6 +109,7 @@ namespace nGantt
         {
             ganttChartData.RowGroups.Clear();
             ganttChartData.TimeLines.Clear();
+            GridLineTimeLine.Clear();
             SelectedItems.Clear();
         }
 
@@ -143,7 +159,7 @@ namespace nGantt
 
         public GanttRow CreateGanttRow(GanttRowGroup rowGroup, string name)
         {
-            var rowHeader = new GanttRowHeader() { Name = name };
+            GanttRowHeader rowHeader = new GanttRowHeader() { Name = name };
             var row = new GanttRow() { RowHeader = rowHeader, Tasks = new ObservableCollection<GanttTask>() };
             rowGroup.Rows.Add(row);
             return row;
@@ -165,8 +181,8 @@ namespace nGantt
             foreach (var item in timeline.Items)
                 item.BackgroundColor = backgroundFormatter(item);
 
-            gridLineTimeLines.Clear();
-            gridLineTimeLines.Add(timeline);
+            GridLineTimeLine.Clear();
+            GridLineTimeLine.Add(timeline);
         }
 
         #region "Handle selection rectangle -area"

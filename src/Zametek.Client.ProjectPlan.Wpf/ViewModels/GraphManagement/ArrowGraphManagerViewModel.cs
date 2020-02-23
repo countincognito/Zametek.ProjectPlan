@@ -28,8 +28,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
 
-        private SubscriptionToken m_GraphCompiledPayloadToken;
-        private SubscriptionToken m_ArrowGraphSettingsUpdatedPayloadToken;
+        private SubscriptionToken m_GraphCompiledSubscriptionToken;
+        private SubscriptionToken m_ArrowGraphSettingsUpdatedSubscriptionToken;
         private SubscriptionToken m_ArrowGraphDtoUpdatedSubscriptionToken;
 
         #endregion
@@ -132,13 +132,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void SubscribeToEvents()
         {
-            m_GraphCompiledPayloadToken =
+            m_GraphCompiledSubscriptionToken =
                 m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
                     .Subscribe(payload =>
                     {
                         HasStaleArrowGraph = true;
                     }, ThreadOption.BackgroundThread);
-            m_ArrowGraphSettingsUpdatedPayloadToken =
+            m_ArrowGraphSettingsUpdatedSubscriptionToken =
                 m_EventService.GetEvent<PubSubEvent<ArrowGraphSettingsUpdatedPayload>>()
                     .Subscribe(payload =>
                     {
@@ -155,9 +155,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private void UnsubscribeFromEvents()
         {
             m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
-                .Unsubscribe(m_GraphCompiledPayloadToken);
+                .Unsubscribe(m_GraphCompiledSubscriptionToken);
             m_EventService.GetEvent<PubSubEvent<ArrowGraphSettingsUpdatedPayload>>()
-                .Unsubscribe(m_ArrowGraphSettingsUpdatedPayloadToken);
+                .Unsubscribe(m_ArrowGraphSettingsUpdatedSubscriptionToken);
             m_EventService.GetEvent<PubSubEvent<ArrowGraphDtoUpdatedPayload>>()
                 .Unsubscribe(m_ArrowGraphDtoUpdatedSubscriptionToken);
         }
@@ -193,7 +193,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         dependentActivity.ResourceDependencies.Clear();
                         arrowGraphCompiler.AddActivity(dependentActivity);
                     }
-                    
+
                     arrowGraphCompiler.Compile();
                     Graph<int, IDependentActivity<int>, IEvent<int>> arrowGraph = arrowGraphCompiler.ToGraph();
 
@@ -319,22 +319,23 @@ namespace Zametek.Client.ProjectPlan.Wpf
             {
                 throw new ArgumentNullException(nameof(arrowGraphSettings));
             }
-            GraphXEdgeFormatLookup edgeFormatLookup = GetEdgeFormatLookup(arrowGraphSettings);
+            (GraphXEdgeFormatLookup edgeFormatLookup, SlackColorFormatLookup colorFormatLookup) = GetEdgeFormatLookups(arrowGraphSettings);
             foreach (ArrowGraphEdge edge in arrowGraphData.Edges)
             {
-                edge.ForegroundHexCode = edgeFormatLookup.FindSlackColorHexCode(edge.TotalSlack);
+                edge.ForegroundHexCode = colorFormatLookup.FindSlackColorHexCode(edge.TotalSlack);
                 edge.StrokeThickness = edgeFormatLookup.FindStrokeThickness(edge.IsCritical, edge.IsDummy);
-                edge.DashStyle = edgeFormatLookup.FindDashStyle(edge.IsCritical, edge.IsDummy);
+                edge.DashStyle = edgeFormatLookup.FindGraphXEdgeDashStyle(edge.IsCritical, edge.IsDummy);
             }
         }
 
-        private static GraphXEdgeFormatLookup GetEdgeFormatLookup(ArrowGraphSettingsDto arrowGraphSettingsDto)
+        private static (GraphXEdgeFormatLookup, SlackColorFormatLookup) GetEdgeFormatLookups(ArrowGraphSettingsDto arrowGraphSettingsDto)
         {
             if (arrowGraphSettingsDto == null)
             {
                 throw new ArgumentNullException(nameof(arrowGraphSettingsDto));
             }
-            return new GraphXEdgeFormatLookup(arrowGraphSettingsDto.ActivitySeverities, arrowGraphSettingsDto.EdgeTypeFormats);
+            return (new GraphXEdgeFormatLookup(arrowGraphSettingsDto.EdgeTypeFormats),
+                new SlackColorFormatLookup(arrowGraphSettingsDto.ActivitySeverities));
         }
 
         private void DispatchNotification(string title, object content)

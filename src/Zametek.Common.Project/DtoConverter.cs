@@ -19,15 +19,6 @@ namespace Zametek.Common.Project
             return $@"#{a.ToString("X2")}{r.ToString("X2")}{g.ToString("X2")}{b.ToString("X2")}";
         }
 
-        public static string HexConverter(ColorFormatDto colorFormatDto)
-        {
-            if (colorFormatDto == null)
-            {
-                throw new ArgumentNullException(nameof(colorFormatDto));
-            }
-            return HexConverter(colorFormatDto.A, colorFormatDto.R, colorFormatDto.G, colorFormatDto.B);
-        }
-
         #endregion
 
         #region FromDto

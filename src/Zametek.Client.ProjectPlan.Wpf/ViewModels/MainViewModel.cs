@@ -37,7 +37,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private readonly InteractionRequest<ArrowGraphSettingsManagerConfirmation> m_ArrowGraphSettingsManagerInteractionRequest;
         private readonly InteractionRequest<Notification> m_AboutInteractionRequest;
 
-        private SubscriptionToken m_ApplicationClosingPayloadToken;
+        private SubscriptionToken m_ApplicationClosingSubscriptionToken;
 
         #endregion
 
@@ -466,7 +466,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void SubscribeToEvents()
         {
-            m_ApplicationClosingPayloadToken =
+            m_ApplicationClosingSubscriptionToken =
                 m_EventService.GetEvent<PubSubEvent<ApplicationClosingPayload>>()
                     .Subscribe(payload =>
                     {
@@ -504,7 +504,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private void UnsubscribeFromEvents()
         {
             m_EventService.GetEvent<PubSubEvent<ApplicationClosingPayload>>()
-                .Unsubscribe(m_ApplicationClosingPayloadToken);
+                .Unsubscribe(m_ApplicationClosingSubscriptionToken);
         }
 
         private void PublishProjectStartUpdatedPayload()
@@ -529,6 +529,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
         {
             m_EventService.GetEvent<PubSubEvent<ArrowGraphDtoUpdatedPayload>>()
                 .Publish(new ArrowGraphDtoUpdatedPayload());
+        }
+
+        private void PublishGanttChartDtoUpdatedPayload()
+        {
+            m_EventService.GetEvent<PubSubEvent<GanttChartDtoUpdatedPayload>>()
+                .Publish(new GanttChartDtoUpdatedPayload());
         }
 
         private void PublishArrowGraphSettingsUpdatedPayload()
@@ -709,6 +715,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
             PublishGraphCompilationUpdatedPayload();
             PublishArrowGraphDtoUpdatedPayload();
+            //PublishGanttChartDtoUpdatedPayload();
         }
 
         private async Task<ProjectPlanDto> BuildProjectPlanDtoAsync()
@@ -811,6 +818,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
             PublishGraphCompilationUpdatedPayload();
             PublishArrowGraphDtoUpdatedPayload();
+            PublishGanttChartDtoUpdatedPayload();
         }
 
         private void DispatchNotification(string title, object content)

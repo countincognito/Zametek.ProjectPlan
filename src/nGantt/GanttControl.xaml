@@ -35,6 +35,7 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <ItemsControl ItemsSource="{Binding Path=Items}" VerticalAlignment="Center" VerticalContentAlignment="Stretch" Height="{Binding ElementName=Scroller, Path=ExtentHeight}">
+                            <!--<ItemsControl ItemsSource="{Binding Path=Items}" VerticalAlignment="Center" VerticalContentAlignment="Stretch" Height="{Binding ElementName=Scroller, Path=ExtentHeight}">-->
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <ng:GanttRowPanel DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}" MinDate="{Binding Path=GanttData.MinDate}" MaxDate="{Binding Path=GanttData.MaxDate}"/>
@@ -105,7 +106,7 @@
                 <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Path=RowHeader.Name}" ToolTip="{Binding Path=RowHeader.Name}" Margin="5,5,0,0" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <Grid Name="RowGrid" Grid.Column="2" Grid.Row="0" Width="Auto" Margin="0,5,0,5">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="40"/>
+                        <RowDefinition Height="35"/>
                     </Grid.RowDefinitions>
                     <Canvas Name="selectionCanvas" Background="Transparent" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Stretch" Margin="0,0,0,0" VerticalAlignment="Stretch" MouseMove="selectionRectangle_MouseMove" MouseLeftButtonUp="Grid_MouseLeftButtonUp" MouseLeftButtonDown="Grid_MouseLeftButtonDown" MouseLeave="selectionCanvas_MouseLeave">
                         <Border Name="selectionRectangle" CornerRadius="3" Opacity="0.7" HorizontalAlignment="Stretch" BorderBrush="#FF0062FF" Background="#FFADADAD" Margin="0,0,0,5" BorderThickness="1" Visibility="Hidden" ContextMenuOpening="selectionRectangle_ContextMenuOpening" IsHitTestVisible="True" >
@@ -150,7 +151,7 @@
                         </ItemsControl.ItemContainerStyle>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border CornerRadius="{Binding Path=Radius}" MouseDown="Border_MouseDown" IsHitTestVisible="True" Padding="7,5,7,2" IsEnabled="{Binding IsEnabled}">
+                                <Border CornerRadius="{Binding Path=Radius}" Background="{Binding Path=BackgroundColor}"  MouseDown="Border_MouseDown" IsHitTestVisible="True" Padding="7,5,7,2" IsEnabled="{Binding IsEnabled}">
                                     <Border.ContextMenu>
                                         <ContextMenu ItemsSource="{Binding Path=DataContext.GanttTaskContextMenuItems, Source={x:Reference root}}">
                                             <ContextMenu.ItemTemplate>
@@ -188,11 +189,6 @@
                                     </Border.ToolTip>
                                     <Border.Style>
                                         <Style TargetType="Border">
-                                            <Setter Property="Border.Background">
-                                                <Setter.Value>
-                                                    <SolidColorBrush Color="{Binding Path=Color}"/>
-                                                </Setter.Value>
-                                            </Setter>
                                             <Setter Property="BorderThickness" Value="1"/>
                                             <Setter Property="BorderBrush" Value="Gray"/>
                                             <Style.Triggers>
@@ -212,7 +208,7 @@
                                             <RowDefinition Height="auto"/>
                                         </Grid.RowDefinitions>
                                         <DockPanel VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Name="GanttTaskBorderContentArea">
-                                            <TextBlock MaxWidth="{Binding ElementName=GanttTaskBorderContentArea, Path=ActualWidth}" Text="{Binding Path=Name}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock MaxWidth="{Binding ElementName=GanttTaskBorderContentArea, Path=ActualWidth}" Foreground="{Binding Path=ForegroundColor}" Text="{Binding Path=Name}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
                                         </DockPanel>
                                         <Border Grid.Row="1" BorderBrush="DarkGray" BorderThickness="1" Height="8" Background="Gray" Visibility="{Binding TaskProgressVisibility}">
                                             <Border.ToolTip>
@@ -232,7 +228,7 @@
                                                 </Border>
                                                 <Border HorizontalAlignment="Stretch" Background="Gray">
                                                     <Border.RenderTransform>
-                                                        <ScaleTransform  CenterX="{Binding ElementName=VUMeter, Path=ActualWidth}" ScaleX="{Binding PercentageCompleted}" ScaleY="1"/>
+                                                        <ScaleTransform  CenterX="{Binding ElementName=VUMeter, Path=ActualWidth}" ScaleX="{Binding Path=PercentageCompleted}" ScaleY="1"/>
                                                     </Border.RenderTransform>
                                                 </Border>
 
@@ -260,7 +256,7 @@
                                     <ColumnDefinition Width="4"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" Source="{Binding ImagePath}"/>
+                                <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" Source="{Binding Path=ImagePath, TargetNullValue={x:Null}}"/>
                                 <ToggleButton Grid.Column="2" VerticalAlignment="Center"  IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Expander}}}">
                                     <ToggleButton.Template>
                                         <ControlTemplate>
@@ -311,7 +307,7 @@
                             <ColumnDefinition Width="4"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" Source="{Binding ImagePath}"/>
+                        <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" Source="{Binding Path=ImagePath, TargetNullValue={x:Null}}"/>
                         <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="{Binding Path=Name}" FontWeight="Bold" />
                     </Grid>
                 </Border>

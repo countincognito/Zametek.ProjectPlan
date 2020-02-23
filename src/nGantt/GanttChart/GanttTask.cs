@@ -11,7 +11,9 @@ namespace nGantt.GanttChart
         public string Name { get; set; }
         public Visibility TaskProgressVisibility { get; set; }
         public int Radius { get; set; }
-        public Color Color { get; set; }
+        public SolidColorBrush BackgroundColor { get; set; }
+        public SolidColorBrush ForegroundColor { get; set; }
+
         private double percentageCompleted;
 
         public GanttTask()
@@ -31,7 +33,7 @@ namespace nGantt.GanttChart
             get { return (bool)GetValue(IsEnabledProperty); }
             set { SetValue(IsEnabledProperty, value); }
         }
-        
+
         public bool IsSelected
         {
             get { return (bool)GetValue(IsSelectedProperty); }
@@ -40,7 +42,7 @@ namespace nGantt.GanttChart
 
         public double PercentageCompleted
         {
-            get 
+            get
             {
                 return 1 - percentageCompleted;
             }
@@ -49,6 +51,7 @@ namespace nGantt.GanttChart
                 percentageCompleted = value;
             }
         }
+
         public string PercentageCompletedText
         {
             get
@@ -57,6 +60,6 @@ namespace nGantt.GanttChart
             }
         }
 
-        
+
     }
 }

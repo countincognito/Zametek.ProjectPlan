@@ -8,6 +8,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
@@ -26,7 +28,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
 
-        private SubscriptionToken m_GraphCompilationUpdatedPayloadToken;
+        private SubscriptionToken m_GraphCompiledSubscriptionToken;
+        private SubscriptionToken m_ArrowGraphSettingsUpdatedSubscriptionToken;
+        private SubscriptionToken m_GanttChartSettingsUpdatedSubscriptionToken;
+        private SubscriptionToken m_GanttChartDtoUpdatedSubscriptionToken;
 
         #endregion
 
@@ -43,8 +48,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
-            ArrangedActivities = new List<ManagedActivityViewModel>();
-
             m_NotificationInteractionRequest = new InteractionRequest<Notification>();
 
             InitializeCommands();
@@ -52,17 +55,20 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ProjectStart), nameof(ProjectStart), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsBusy), nameof(IsBusy), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasStaleOutputs), nameof(HasStaleOutputs), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasStaleOutputs), nameof(HasStaleGanttChart), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasCompilationErrors), nameof(HasCompilationErrors), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ShowDates), nameof(ShowDates), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ShowDates), nameof(ShowDays), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.UseBusinessDays), nameof(UseBusinessDays), ThreadOption.BackgroundThread);
         }
 
         #endregion
 
         #region Properties
 
-        private ObservableCollection<ManagedActivityViewModel> Activities => m_CoreViewModel.Activities;
+        private bool HasStaleOutputs => m_CoreViewModel.HasStaleOutputs;
+
+        private GraphCompilation<int, IDependentActivity<int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
+
+        private IList<ResourceSeriesDto> ResourceSeriesSet => m_CoreViewModel.ResourceSeriesSet;
 
         #endregion
 
@@ -93,8 +99,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
             try
             {
                 IsBusy = true;
-                await GenerateGanttChartDataFromGraphCompilationAsync();
-                //HasStaleArrowGraph = false;
+                await GenerateGanttChartFromGraphCompilationAsync();
+                HasStaleGanttChart = false;
                 //IsProjectUpdated = true;
             }
             catch (Exception ex)
@@ -128,51 +134,42 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void SubscribeToEvents()
         {
-
-
-
-            //m_GraphCompiledPayloadToken =
-            //    m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
-            //        .Subscribe(payload =>
-            //        {
-            //            HasStaleArrowGraph = true;
-            //        }, ThreadOption.BackgroundThread);
-            //m_ArrowGraphSettingsUpdatedPayloadToken =
-            //    m_EventService.GetEvent<PubSubEvent<ArrowGraphSettingsUpdatedPayload>>()
-            //        .Subscribe(payload =>
-            //        {
-            //            HasStaleArrowGraph = true;
-            //        }, ThreadOption.BackgroundThread);
-            //m_ArrowGraphDtoUpdatedSubscriptionToken =
-            //    m_EventService.GetEvent<PubSubEvent<ArrowGraphDtoUpdatedPayload>>()
-            //        .Subscribe(async payload =>
-            //        {
-            //            await GenerateArrowGraphDataFromDtoAsync();
-            //        }, ThreadOption.BackgroundThread);
-
-
-
-
-
-
-
-
-
-            //m_GraphCompilationUpdatedPayloadToken =
-            //    m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
-            //        .Subscribe(payload =>
-            //        {
-            //            //HasStaleArrowGraph = true;
-            //            //IsBusy = true;
-            //            //CalculateGanttChartModel();
-            //            //IsBusy = false;
-            //        }, ThreadOption.BackgroundThread);
+            m_GraphCompiledSubscriptionToken =
+                m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
+                    .Subscribe(payload =>
+                    {
+                        HasStaleGanttChart = true;
+                    }, ThreadOption.BackgroundThread);
+            m_ArrowGraphSettingsUpdatedSubscriptionToken =
+                m_EventService.GetEvent<PubSubEvent<ArrowGraphSettingsUpdatedPayload>>()
+                    .Subscribe(payload =>
+                    {
+                        HasStaleGanttChart = true;
+                    }, ThreadOption.BackgroundThread);
+            m_GanttChartSettingsUpdatedSubscriptionToken =
+                m_EventService.GetEvent<PubSubEvent<GanttChartSettingsUpdatedPayload>>()
+                    .Subscribe(payload =>
+                    {
+                        HasStaleGanttChart = true;
+                    }, ThreadOption.BackgroundThread);
+            m_GanttChartDtoUpdatedSubscriptionToken =
+                 m_EventService.GetEvent<PubSubEvent<GanttChartDtoUpdatedPayload>>()
+                     .Subscribe(async payload =>
+                     {
+                         await GenerateGanttChartFromGraphCompilationAsync();
+                     }, ThreadOption.BackgroundThread);
         }
 
         private void UnsubscribeFromEvents()
         {
-            m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
-                .Unsubscribe(m_GraphCompilationUpdatedPayloadToken);
+            m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
+                .Unsubscribe(m_GraphCompiledSubscriptionToken);
+            m_EventService.GetEvent<PubSubEvent<ArrowGraphSettingsUpdatedPayload>>()
+                .Unsubscribe(m_ArrowGraphSettingsUpdatedSubscriptionToken);
+            m_EventService.GetEvent<PubSubEvent<GanttChartSettingsUpdatedPayload>>()
+                .Unsubscribe(m_GanttChartSettingsUpdatedSubscriptionToken);
+            m_EventService.GetEvent<PubSubEvent<GanttChartDtoUpdatedPayload>>()
+                .Unsubscribe(m_GanttChartDtoUpdatedSubscriptionToken);
         }
 
         private void PublishGanttChartDataUpdatedPayload()
@@ -181,17 +178,46 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 .Publish(new GanttChartDataUpdatedPayload());
         }
 
-        private async Task GenerateGanttChartDataFromGraphCompilationAsync()
+        private async Task GenerateGanttChartFromGraphCompilationAsync()
         {
-            await Task.Run(() => GenerateGanttChartDataFromGraphCompilation());
+            await Task.Run(() => GenerateGanttChartFromGraphCompilation());
         }
 
-        private void GenerateGanttChartDataFromGraphCompilation()
+        private void GenerateGanttChartFromGraphCompilation()
         {
             lock (m_Lock)
             {
-                ArrangedActivities.Clear();
-                ArrangedActivities.AddRange(Activities.OrderBy(x => x.EarliestStartTime).ThenBy(x => x.Duration));
+                GanttChartDto = null;
+                IList<IDependentActivity<int>> dependentActivities =
+                    GraphCompilation.DependentActivities
+                    .Select(x => (IDependentActivity<int>)x.WorkingCopy())
+                    .ToList();
+
+                if (!HasCompilationErrors
+                    && dependentActivities.Any())
+                {
+                    IList<IDependentActivity<int>> orderedActivities =
+                        dependentActivities.OrderBy(x => x.EarliestStartTime)
+                        .ThenBy(x => x.Duration)
+                        .ToList();
+
+                    ArrowGraphSettingsDto arrowGraphSettings = ArrowGraphSettingsDto;
+                    IList<IResourceSchedule<int>> resourceSchedules = GraphCompilation.ResourceSchedules;
+                    IList<ResourceSeriesDto> resourceSeriesSet = ResourceSeriesSet;
+
+                    if (arrowGraphSettings != null
+                        && resourceSchedules != null
+                        && resourceSeriesSet != null)
+                    {
+                        GanttChartDto = new GanttChartDto
+                        {
+                            DependentActivities = orderedActivities,
+                            ResourceSchedules = resourceSchedules,
+                            ResourceSeriesSet = resourceSeriesSet,
+                            IsStale = false,
+                        };
+                    }
+                }
             }
             PublishGanttChartDataUpdatedPayload();
         }
@@ -230,25 +256,36 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public bool HasStaleOutputs
+        public bool HasStaleGanttChart
         {
             get
             {
-                return m_CoreViewModel.HasStaleOutputs;
+                lock (m_Lock)
+                {
+                    if (HasStaleOutputs
+                        && GanttChartDto != null)
+                    {
+                        GanttChartDto.IsStale = true;
+                    }
+                    return GanttChartDto?.IsStale ?? false;
+                }
             }
             private set
             {
                 lock (m_Lock)
                 {
-                    m_CoreViewModel.HasStaleOutputs = value;
+                    if (GanttChartDto != null)
+                    {
+                        GanttChartDto.IsStale = value;
+                    }
                 }
                 RaisePropertyChanged();
             }
         }
 
-        public bool ShowDates => m_CoreViewModel.ShowDates;
+        public GanttChartDto GanttChartDto { get; private set; }
 
-        public bool ShowDays => !ShowDates;
+        public bool UseBusinessDays => m_CoreViewModel.UseBusinessDays;
 
         public bool HasCompilationErrors
         {
@@ -266,13 +303,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public List<ManagedActivityViewModel> ArrangedActivities { get; }
-
         public ICommand GenerateGanttChartCommand
         {
             get;
             private set;
         }
+
+        public ArrowGraphSettingsDto ArrowGraphSettingsDto => m_CoreViewModel.ArrowGraphSettingsDto;
 
         #endregion
     }

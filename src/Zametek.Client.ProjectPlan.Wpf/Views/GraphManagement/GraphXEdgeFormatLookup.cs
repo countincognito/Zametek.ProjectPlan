@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Media;
 using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -16,7 +17,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private static double s_NormalStrokeWeight = 2.0;
         private static double s_BoldStrokeWeight = 5.0;
 
-        private readonly IList<ActivitySeverityDto> m_ActivitySeverityDtos;
         private readonly IDictionary<EdgeType, GraphX.Controls.EdgeDashStyle> m_EdgeTypeDashLookup;
         private readonly IDictionary<EdgeType, double> m_EdgeTypeWeightLookup;
 
@@ -38,19 +38,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             };
         }
 
-        public GraphXEdgeFormatLookup(
-            IEnumerable<ActivitySeverityDto> activitySeverityDtos,
-            IEnumerable<EdgeTypeFormatDto> edgeTypeFormatDtos)
+        public GraphXEdgeFormatLookup(IEnumerable<EdgeTypeFormatDto> edgeTypeFormatDtos)
         {
-            if (activitySeverityDtos == null)
-            {
-                throw new ArgumentNullException(nameof(activitySeverityDtos));
-            }
             if (edgeTypeFormatDtos == null)
             {
                 throw new ArgumentNullException(nameof(edgeTypeFormatDtos));
             }
-            m_ActivitySeverityDtos = activitySeverityDtos.OrderBy(x => x.SlackLimit).ToList();
             m_EdgeTypeDashLookup = new Dictionary<EdgeType, GraphX.Controls.EdgeDashStyle>();
             m_EdgeTypeWeightLookup = new Dictionary<EdgeType, double>();
             foreach (EdgeTypeFormatDto edgeTypeFormatDto in edgeTypeFormatDtos)
@@ -64,24 +57,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Public Methods
 
-        public string FindSlackColorHexCode(int? totalSlack)
-        {
-            if (!totalSlack.HasValue)
-            {
-                return DtoConverter.HexConverter(255, 0, 0, 0);
-            }
-            int totalSlackValue = totalSlack.GetValueOrDefault();
-            foreach (ActivitySeverityDto activitySeverityDto in m_ActivitySeverityDtos)
-            {
-                if (totalSlackValue <= activitySeverityDto.SlackLimit)
-                {
-                    return DtoConverter.HexConverter(activitySeverityDto.ColorFormat);
-                }
-            }
-            return DtoConverter.HexConverter(255, 0, 0, 0);
-        }
-
-        public GraphX.Controls.EdgeDashStyle FindDashStyle(bool isCritical, bool isDummy)
+        public GraphX.Controls.EdgeDashStyle FindGraphXEdgeDashStyle(bool isCritical, bool isDummy)
         {
             if (isCritical)
             {

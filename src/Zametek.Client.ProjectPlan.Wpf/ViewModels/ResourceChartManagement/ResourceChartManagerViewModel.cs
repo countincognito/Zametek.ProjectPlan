@@ -37,7 +37,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
 
-        private SubscriptionToken m_GraphCompilationUpdatedPayloadToken;
+        private SubscriptionToken m_GraphCompilationUpdatedSubscriptionToken;
 
         #endregion
 
@@ -207,7 +207,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void SubscribeToEvents()
         {
-            m_GraphCompilationUpdatedPayloadToken =
+            m_GraphCompilationUpdatedSubscriptionToken =
                 m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
                     .Subscribe(payload =>
                     {
@@ -220,7 +220,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private void UnsubscribeFromEvents()
         {
             m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
-                .Unsubscribe(m_GraphCompilationUpdatedPayloadToken);
+                .Unsubscribe(m_GraphCompilationUpdatedSubscriptionToken);
         }
 
         private void CalculateResourceChartPlotModel()

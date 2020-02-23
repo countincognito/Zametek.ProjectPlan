@@ -1,8 +1,7 @@
 ﻿using Prism.Interactivity.InteractionRequest;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -14,16 +13,20 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         bool IsBusy { get; }
 
-        bool HasStaleOutputs { get; }
+        bool HasStaleGanttChart { get; }
 
-        bool ShowDates { get; }
+        GanttChartDto GanttChartDto { get; }
 
-        bool ShowDays { get; }
+        bool UseBusinessDays { get; }
+
+        //bool ShowDates { get; }
+
+        //bool ShowDays { get; }
 
         bool HasCompilationErrors { get; }
 
-        List<ManagedActivityViewModel> ArrangedActivities { get; }
-
         ICommand GenerateGanttChartCommand { get; }
+
+        ArrowGraphSettingsDto ArrowGraphSettingsDto { get; }
     }
 }

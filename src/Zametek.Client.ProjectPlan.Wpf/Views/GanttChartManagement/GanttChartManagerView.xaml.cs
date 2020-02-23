@@ -1,15 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using nGantt.GanttChart;
+﻿using nGantt.GanttChart;
 using nGantt.PeriodSplitter;
 using Prism;
 using Prism.Events;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using Zametek.Common.Project;
+using Zametek.Common.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -19,6 +22,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         #region Fields
 
         private bool m_IsActive;
+        private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IEventAggregator m_EventService;
         private SubscriptionToken m_GanttChartDataUpdatedSubscriptionToken;
 
@@ -28,8 +32,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public GanttChartManagerView(
             IGanttChartManagerViewModel viewModel,
+            IDateTimeCalculator dateTimeCalculator,
             IEventAggregator eventService)
         {
+            m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
             InitializeComponent();
             ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -72,64 +78,191 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 .Unsubscribe(m_GanttChartDataUpdatedSubscriptionToken);
         }
 
+        private void PublishGanttChartSettingsUpdatedPayload()
+        {
+            m_EventService.GetEvent<PubSubEvent<GanttChartSettingsUpdatedPayload>>()
+                .Publish(new GanttChartSettingsUpdatedPayload());
+        }
+
         private void DatePicker_OnSelectedDateChanged(object sender, SelectionChangedEventArgs e)
         {
+            PublishGanttChartSettingsUpdatedPayload();
+        }
 
+        private void DaysSelect_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            PublishGanttChartSettingsUpdatedPayload();
+        }
+
+        private void GroupByResource_CheckChanged(object sender, RoutedEventArgs e)
+        {
+            PublishGanttChartSettingsUpdatedPayload();
         }
 
         private void GenerateGanttChart()
         {
             GanttChartAreaCtrl.ClearGantt();
-            IList<ManagedActivityViewModel> arrangedActivities = ViewModel.ArrangedActivities;
+            GanttChartDto ganttChartDto = ViewModel.GanttChartDto;
 
-            if (arrangedActivities != null)
+            if (ganttChartDto != null)
             {
-                DateTime minDate = DatePicker.SelectedDate ?? ViewModel.ProjectStart;
+                IList<IDependentActivity<int>> dependentActivities = ganttChartDto.DependentActivities;
+                IList<ResourceSeriesDto> resourceSeriesSet = ganttChartDto.ResourceSeriesSet;
+                IList<IResourceSchedule<int>> resourceSchedules = ganttChartDto.ResourceSchedules;
+
+                m_DateTimeCalculator.UseBusinessDays(ViewModel.UseBusinessDays);
+
+                DateTime projectStart = ViewModel.ProjectStart;
+
+                DateTime minDate = DatePicker.SelectedDate ?? projectStart;
                 DateTime maxDate = minDate.AddDays(DaysSelect.Value.GetValueOrDefault());
                 GanttChartAreaCtrl.Initialize(minDate, maxDate);
 
-                // Create timelines and define how they should be presented
+                // Create timelines and define how they should be presented.
                 GanttChartAreaCtrl.CreateTimeLine(new PeriodYearSplitter(minDate, maxDate), FormatYear);
                 GanttChartAreaCtrl.CreateTimeLine(new PeriodMonthSplitter(minDate, maxDate), FormatMonth);
-                var gridLineTimeLine = GanttChartAreaCtrl.CreateTimeLine(new PeriodDaySplitter(minDate, maxDate), FormatDay);
-                GanttChartAreaCtrl.CreateTimeLine(new PeriodDaySplitter(minDate, maxDate), FormatDayName);
+                TimeLine gridLineTimeLine = GanttChartAreaCtrl.CreateTimeLine(new PeriodDaySplitter(minDate, maxDate), FormatDay);
+                //GanttChartAreaCtrl.CreateTimeLine(new PeriodDaySplitter(minDate, maxDate), FormatDayName);
 
-                // Set the timeline to attach gridlines to
-                GanttChartAreaCtrl.SetGridLinesTimeline(gridLineTimeLine, DetermineBackground);
+                // Attach gridlines.
+                //GanttChartAreaCtrl.SetGridLinesTimeline(gridLineTimeLine, DetermineBackground);
 
-                foreach (ManagedActivityViewModel managedActivityViewModel in arrangedActivities)
+                // Prep formatting helpers.
+                SlackColorFormatLookup colorFormatLookup = null;
+                ArrowGraphSettingsDto arrowGraphSettingsDto = ViewModel.ArrowGraphSettingsDto;
+
+                if (arrowGraphSettingsDto?.ActivitySeverities != null)
                 {
-                    HeaderedGanttRowGroup rowgroupprojectphases = GanttChartAreaCtrl.CreateGanttRowGroup("Example-Heading");
-                    GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowgroupprojectphases, managedActivityViewModel.Name);
+                    colorFormatLookup = new SlackColorFormatLookup(arrowGraphSettingsDto.ActivitySeverities);
+                }
 
-
-
-
-
-                    if (managedActivityViewModel.EarliestStartDateTime.HasValue
-                        && managedActivityViewModel.EarliestFinishDateTime.HasValue)
-                    {
-                        GanttChartAreaCtrl.AddGanttTask(row, new GanttTask
-                        {
-                            Start = managedActivityViewModel.EarliestStartDateTime.Value,
-                            End = managedActivityViewModel.EarliestFinishDateTime.Value,
-                            Name = $"{managedActivityViewModel.Name}",
-                            Color = Colors.OrangeRed, //sortedchartTimeSpan.selected ? Colors.OrangeRed : Colors.DodgerBlue,
-                            Radius = 5,//(sortedchartTimeSpan.to - sortedchartTimeSpan.from).TotalDays < 3 ? 0 : 5
-                        });
-                    }
-
-
-
-
+                if (GroupByResource.IsChecked.GetValueOrDefault())
+                {
+                    BuildGanttChart(dependentActivities, resourceSeriesSet, resourceSchedules, projectStart, colorFormatLookup);
+                }
+                else
+                {
+                    BuildGanttChart(dependentActivities, projectStart, colorFormatLookup);
                 }
             }
+        }
+
+        private void BuildGanttChart(
+            IList<IDependentActivity<int>> dependentActivities,
+            IList<ResourceSeriesDto> resourceSeriesSet,
+            IList<IResourceSchedule<int>> resourceSchedules,
+            DateTime projectStart,
+            SlackColorFormatLookup colorFormatLookup)
+        {
+            if (dependentActivities == null || resourceSeriesSet == null || resourceSchedules == null)
+            {
+                return;
+            }
+
+            IDictionary<int, IDependentActivity<int>> activityLookup = dependentActivities.ToDictionary(x => x.Id);
+
+            int spareResourceCount = 1;
+            for (int resourceIndex = 0; resourceIndex < resourceSchedules.Count; resourceIndex++)
+            {
+                IResourceSchedule<int> resourceSchedule = resourceSchedules[resourceIndex];
+                IList<IScheduledActivity<int>> scheduledActivities = resourceSchedule?.ScheduledActivities;
+
+                if (scheduledActivities == null)
+                {
+                    continue;
+                }
+
+                var stringBuilder = new StringBuilder();
+                if (!string.IsNullOrWhiteSpace(resourceSchedule?.Resource?.Name))
+                {
+                    stringBuilder.Append(resourceSchedule.Resource.Name);
+                }
+                else
+                {
+                    stringBuilder.Append($@"Resource {spareResourceCount}");
+                    spareResourceCount++;
+                }
+
+                string resourceName = stringBuilder.ToString();
+                GanttRowGroup rowGroup = GanttChartAreaCtrl.CreateGanttRowGroup(resourceName);
+
+                foreach (IScheduledActivity<int> scheduledctivity in resourceSchedule.ScheduledActivities)
+                {
+                    if (activityLookup.TryGetValue(scheduledctivity.Id, out IDependentActivity<int> activity))
+                    {
+                        GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowGroup, activity.Name);
+
+                        if (activity.EarliestStartTime.HasValue
+                            && activity.EarliestFinishTime.HasValue)
+                        {
+                            GanttChartAreaCtrl.AddGanttTask(
+                                row,
+                                CreateGanttTask(projectStart, activity, colorFormatLookup));
+                        }
+                    }
+                }
+            }
+        }
+
+        private void BuildGanttChart(
+            IList<IDependentActivity<int>> dependentActivities,
+            DateTime projectStart,
+            SlackColorFormatLookup colorFormatLookup)
+        {
+            if (dependentActivities == null)
+            {
+                return;
+            }
+
+            foreach (IDependentActivity<int> activity in dependentActivities)
+            {
+                GanttRowGroup rowGroup = GanttChartAreaCtrl.CreateGanttRowGroup();
+                GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowGroup, activity.Name);
+
+                if (activity.EarliestStartTime.HasValue
+                    && activity.EarliestFinishTime.HasValue)
+                {
+                    GanttChartAreaCtrl.AddGanttTask(
+                        row,
+                        CreateGanttTask(projectStart, activity, colorFormatLookup));
+                }
+            }
+        }
+
+        private GanttTask CreateGanttTask(
+            DateTime projectStart,
+            IDependentActivity<int> activity,
+            SlackColorFormatLookup colorFormatLookup)
+        {
+            Color background = colorFormatLookup?.FindSlackColor(activity.TotalSlack) ?? Colors.DodgerBlue;
+
+            return new GanttTask
+            {
+                Start = m_DateTimeCalculator.AddDays(projectStart, activity.EarliestStartTime.Value),
+                End = m_DateTimeCalculator.AddDays(projectStart, activity.EarliestFinishTime.Value),
+                Name = activity.Name,
+                BackgroundColor = new SolidColorBrush(background),
+                ForegroundColor = new SolidColorBrush(ContrastConvert(background)),
+                Radius = activity.Duration < 3 ? 0 : 5,
+                TaskProgressVisibility = Visibility.Collapsed,
+            };
+        }
+
+        /// <summary>
+        /// https://stackoverflow.com/questions/6763032/how-to-pick-a-background-color-depending-on-font-color-to-have-proper-contrast
+        /// </summary>
+        public Color ContrastConvert(Color color)
+        {
+            double x = 0.2126 * color.ScR + 0.7152 * color.ScG + 0.0722 * color.ScB;
+            return x < 0.5 ? Colors.White : Colors.Black;
         }
 
         private Brush DetermineBackground(TimeLineItem timeLineItem)
         {
             if (timeLineItem.End.Date.DayOfWeek == DayOfWeek.Saturday || timeLineItem.End.Date.DayOfWeek == DayOfWeek.Sunday)
+            {
                 return new SolidColorBrush(Colors.LightBlue);
+            }
             return new SolidColorBrush(Colors.Transparent);
         }
 
@@ -145,7 +278,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private string FormatDay(Period period)
         {
-            return period.Start.ToString("dd", DateTimeFormatInfo.InvariantInfo);
+            return null;// period.Start.ToString("dd", DateTimeFormatInfo.InvariantInfo);
         }
 
         private string FormatDayName(Period period)

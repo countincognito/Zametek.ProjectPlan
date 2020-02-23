@@ -23,10 +23,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
 
-        private SubscriptionToken m_ManagedActivityUpdatedPayloadToken;
-        private SubscriptionToken m_ProjectStartUpdatedPayloadToken;
-        private SubscriptionToken m_UseBusinessDaysUpdatedPayloadToken;
-        private SubscriptionToken m_ShowDatesUpdatedPayloadToken;
+        private SubscriptionToken m_ManagedActivityUpdatedSubscriptionToken;
+        private SubscriptionToken m_ProjectStartUpdatedSubscriptionToken;
+        private SubscriptionToken m_UseBusinessDaysUpdatedSubscriptionToken;
+        private SubscriptionToken m_ShowDatesUpdatedSubscriptionToken;
 
         #endregion
 
@@ -157,7 +157,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         private void SubscribeToEvents()
         {
-            m_ManagedActivityUpdatedPayloadToken =
+            m_ManagedActivityUpdatedSubscriptionToken =
                 m_EventService.GetEvent<PubSubEvent<ManagedActivityUpdatedPayload>>()
                     .Subscribe(async payload =>
                     {
@@ -165,7 +165,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         await UpdateActivitiesTargetResourceDependenciesAsync();
                         await DoAutoCompileAsync();
                     }, ThreadOption.BackgroundThread);
-            m_ProjectStartUpdatedPayloadToken =
+            m_ProjectStartUpdatedSubscriptionToken =
                 m_EventService.GetEvent<PubSubEvent<ProjectStartUpdatedPayload>>()
                     .Subscribe(async payload =>
                     {
@@ -173,7 +173,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         await UpdateActivitiesProjectStartAsync();
                         await DoAutoCompileAsync();
                     }, ThreadOption.BackgroundThread);
-            m_UseBusinessDaysUpdatedPayloadToken =
+            m_UseBusinessDaysUpdatedSubscriptionToken =
                 m_EventService.GetEvent<PubSubEvent<UseBusinessDaysUpdatedPayload>>()
                     .Subscribe(async payload =>
                     {
@@ -181,7 +181,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         await UpdateActivitiesUseBusinessDaysAsync();
                         await DoAutoCompileAsync();
                     }, ThreadOption.BackgroundThread);
-            m_ShowDatesUpdatedPayloadToken =
+            m_ShowDatesUpdatedSubscriptionToken =
                 m_EventService.GetEvent<PubSubEvent<ShowDatesUpdatedPayload>>()
                     .Subscribe(async payload =>
                     {
@@ -193,13 +193,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private void UnsubscribeFromEvents()
         {
             m_EventService.GetEvent<PubSubEvent<ManagedActivityUpdatedPayload>>()
-                .Unsubscribe(m_ManagedActivityUpdatedPayloadToken);
+                .Unsubscribe(m_ManagedActivityUpdatedSubscriptionToken);
             m_EventService.GetEvent<PubSubEvent<ProjectStartUpdatedPayload>>()
-                .Unsubscribe(m_ProjectStartUpdatedPayloadToken);
+                .Unsubscribe(m_ProjectStartUpdatedSubscriptionToken);
             m_EventService.GetEvent<PubSubEvent<UseBusinessDaysUpdatedPayload>>()
-                .Unsubscribe(m_UseBusinessDaysUpdatedPayloadToken);
+                .Unsubscribe(m_UseBusinessDaysUpdatedSubscriptionToken);
             m_EventService.GetEvent<PubSubEvent<ShowDatesUpdatedPayload>>()
-                .Unsubscribe(m_ShowDatesUpdatedPayloadToken);
+                .Unsubscribe(m_ShowDatesUpdatedSubscriptionToken);
         }
 
         private void PublishGraphCompilationUpdatedPayload()
