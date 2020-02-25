@@ -38,7 +38,59 @@
                         Command="{Binding Path=GenerateGanttChartCommand, Mode=OneWay}"
                         Content="{x:Static local:Properties.Resources.Label_GenerateGanttChart}"/>
 
-                <Grid />
+                <DockPanel Margin="0,7,0,0"
+                           DockPanel.Dock="Bottom">
+                    <Label DockPanel.Dock="Left"
+                           Content="{x:Static local:Properties.Resources.Label_GroupByResources}"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Right"/>
+                    <CheckBox x:Name="GroupByResource"
+                              DockPanel.Dock="Left"
+                              Margin="3,0,0,0"
+                              VerticalContentAlignment="Center"
+                              HorizontalContentAlignment="Center"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              Checked="GroupByResource_CheckChanged"
+                              Unchecked="GroupByResource_CheckChanged"/>
+                </DockPanel>
+
+                <DockPanel Margin="0,7,0,0"
+                           DockPanel.Dock="Bottom">
+                    <Label DockPanel.Dock="Left"
+                           Content="{x:Static local:Properties.Resources.Label_DaysToShow}"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Right"/>
+                    <xctk:IntegerUpDown x:Name="DaysSelect"
+                                        Margin="3,0,0,0" 
+                                        DockPanel.Dock="Left" 
+                                        TextAlignment="Right"
+                                        Width="50"
+                                        MaxWidth="50"
+                                        DefaultValue="120"
+                                        DisplayDefaultValueOnEmptyText="True"
+                                        Minimum="30"
+                                        Maximum="730"
+                                        VerticalContentAlignment="Center"
+                                        HorizontalContentAlignment="Center"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch"
+                                        ValueChanged="DaysSelect_ValueChanged"/>
+                </DockPanel>
+
+                <DockPanel Margin="0,7,0,0"
+                           DockPanel.Dock="Bottom">
+                    <DatePicker x:Name="DatePicker"
+                                DockPanel.Dock="Left"
+                                SelectedDate="{Binding Path=ProjectStart, Mode=OneWay}"
+                                SelectedDateChanged="DatePicker_OnSelectedDateChanged"
+                                IsTodayHighlighted="True"
+                                VerticalContentAlignment="Center"
+                                HorizontalContentAlignment="Center"
+                                VerticalAlignment="Stretch"/>
+                </DockPanel>
+
+                <Grid/>
             </DockPanel>
         </Grid>
 
@@ -55,58 +107,13 @@
                 </Border.Style>
 
                 <DockPanel>
-                    <DockPanel Margin="0,5,0,0"
-                               DockPanel.Dock="Top">
-
-                        <DatePicker x:Name="DatePicker"
-                                    Margin="7,0,0,0"
-                                    DockPanel.Dock="Left"
-                                    SelectedDate="{Binding Path=ProjectStart, Mode=OneWay}"
-                                    SelectedDateChanged="DatePicker_OnSelectedDateChanged"
-                                    IsTodayHighlighted="True"
-                                    VerticalContentAlignment="Center"
-                                    HorizontalContentAlignment="Center"
-                                    VerticalAlignment="Stretch"/>
-
-                        <Label Margin="7,0,0,0" DockPanel.Dock="Left" Content="Days To Show:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-
-                        <xctk:IntegerUpDown x:Name="DaysSelect"
-                                            Margin="7,0,0,0" 
-                                            DockPanel.Dock="Left" 
-                                            TextAlignment="Right"
-                                            Width="75"
-                                            DefaultValue="120"
-                                            DisplayDefaultValueOnEmptyText="True"
-                                            Minimum="30"
-                                            Maximum="730"
-                                            VerticalContentAlignment="Center"
-                                            HorizontalContentAlignment="Center"
-                                            HorizontalAlignment="Stretch"
-                                            VerticalAlignment="Stretch"
-                                            ValueChanged="DaysSelect_ValueChanged"/>
-
-                        <Label Margin="7,0,0,0" DockPanel.Dock="Left" Content="Group by Resources:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-
-                        <CheckBox x:Name="GroupByResource"
-                                  Margin="7,0,0,0"
-                                  VerticalContentAlignment="Center"
-                                  HorizontalContentAlignment="Center"
-                                  HorizontalAlignment="Stretch"
-                                  VerticalAlignment="Stretch"
-                                  Checked="GroupByResource_CheckChanged"
-                                  Unchecked="GroupByResource_CheckChanged"/>
-
-                        <Grid/>
-
-                    </DockPanel>
-
                     <nGantt:GanttControl x:Name="GanttChartAreaCtrl"
-                                     Grid.Row="1"
-                                     Grid.Column="0"
-                                     Grid.ColumnSpan="15"
-                                     TaskSelectionMode="Single"
-                                     AllowUserSelection="False"
-                                     AllowDrop="False"/>
+                                         Grid.Row="1"
+                                         Grid.Column="0"
+                                         Grid.ColumnSpan="15"
+                                         TaskSelectionMode="Single"
+                                         AllowUserSelection="False"
+                                         AllowDrop="False"/>
                 </DockPanel>
             </Border>
         </Grid>

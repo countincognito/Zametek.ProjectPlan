@@ -232,7 +232,7 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Version 0.4.2.
+        ///   Looks up a localized string similar to Version 0.5.0.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -354,6 +354,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Label_CyclomaticComplexity {
             get {
                 return ResourceManager.GetString("Label_CyclomaticComplexity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Days to show:.
+        /// </summary>
+        public static string Label_DaysToShow {
+            get {
+                return ResourceManager.GetString("Label_DaysToShow", resourceCulture);
             }
         }
         
@@ -633,6 +642,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Properties {
         public static string Label_GeometricFibonacciRisk {
             get {
                 return ResourceManager.GetString("Label_GeometricFibonacciRisk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group by Resources:.
+        /// </summary>
+        public static string Label_GroupByResources {
+            get {
+                return ResourceManager.GetString("Label_GroupByResources", resourceCulture);
             }
         }
         
