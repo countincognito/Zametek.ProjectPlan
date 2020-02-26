@@ -173,9 +173,16 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 }
 
                 var stringBuilder = new StringBuilder();
-                if (!string.IsNullOrWhiteSpace(resourceSchedule?.Resource?.Name))
+                if (resourceSchedule.Resource != null)
                 {
-                    stringBuilder.Append(resourceSchedule.Resource.Name);
+                    if (string.IsNullOrWhiteSpace(resourceSchedule.Resource.Name))
+                    {
+                        stringBuilder.Append($@"Resource {resourceSchedule.Resource.Id}");
+                    }
+                    else
+                    {
+                        stringBuilder.Append(resourceSchedule.Resource.Name);
+                    }
                 }
                 else
                 {
