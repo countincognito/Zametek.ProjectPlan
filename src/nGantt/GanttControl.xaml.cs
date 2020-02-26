@@ -8,6 +8,7 @@ using System.Windows.Media;
 using nGantt.GanttChart;
 using nGantt.PeriodSplitter;
 using System.Collections.ObjectModel;
+using System.Windows.Threading;
 
 namespace nGantt
 {
@@ -23,6 +24,7 @@ namespace nGantt
         private readonly GanttChartData ganttChartData = new GanttChartData();
         private TimeLine gridLineTimeLine;
         private double selectionStartX;
+        private static Action EmptyDelegate = delegate () { };
 
         public event EventHandler SelectedItemChanged;
         public event EventHandler<PeriodEventArgs> GanttRowAreaSelected;
@@ -111,6 +113,8 @@ namespace nGantt
             ganttChartData.TimeLines.Clear();
             GridLineTimeLine.Clear();
             SelectedItems.Clear();
+            // This is to fix the resizing issue when the background timelines don't resize to fit the scrollviewer.
+            Dispatcher.Invoke(DispatcherPriority.Render, EmptyDelegate);
         }
 
         private void Border_MouseDown(object sender, MouseButtonEventArgs e)

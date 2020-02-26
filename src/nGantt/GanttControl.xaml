@@ -38,7 +38,9 @@
                             <!--<ItemsControl ItemsSource="{Binding Path=Items}" VerticalAlignment="Center" VerticalContentAlignment="Stretch" Height="{Binding ElementName=Scroller, Path=ExtentHeight}">-->
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <ng:GanttRowPanel DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}" MinDate="{Binding Path=GanttData.MinDate}" MaxDate="{Binding Path=GanttData.MaxDate}"/>
+                                    <ng:GanttRowPanel DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"
+                                                      MinDate="{Binding Path=GanttData.MinDate}"
+                                                      MaxDate="{Binding Path=GanttData.MaxDate}"/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemContainerStyle>

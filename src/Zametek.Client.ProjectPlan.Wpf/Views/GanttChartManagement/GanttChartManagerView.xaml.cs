@@ -110,7 +110,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 IList<ResourceSeriesDto> resourceSeriesSet = ganttChartDto.ResourceSeriesSet;
                 IList<IResourceSchedule<int>> resourceSchedules = ganttChartDto.ResourceSchedules;
 
-                m_DateTimeCalculator.UseBusinessDays(ViewModel.UseBusinessDays);
+                //m_DateTimeCalculator.UseBusinessDays(ViewModel.UseBusinessDays);
 
                 DateTime projectStart = ViewModel.ProjectStart;
 
@@ -125,7 +125,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 //GanttChartAreaCtrl.CreateTimeLine(new PeriodDaySplitter(minDate, maxDate), FormatDayName);
 
                 // Attach gridlines.
-                //GanttChartAreaCtrl.SetGridLinesTimeline(gridLineTimeLine, DetermineBackground);
+                GanttChartAreaCtrl.SetGridLinesTimeline(gridLineTimeLine, DetermineBackground);
 
                 // Prep formatting helpers.
                 SlackColorFormatLookup colorFormatLookup = null;
