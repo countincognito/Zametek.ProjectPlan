@@ -1,9 +1,11 @@
 ﻿using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Unity;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Markup;
 using Zametek.Access.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Engine.ProjectPlan;
@@ -49,6 +51,15 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            // Set the display format to the local settings.
+            FrameworkElement.LanguageProperty.OverrideMetadata(
+              typeof(FrameworkElement),
+              new FrameworkPropertyMetadata(
+                  XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
+
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+
             Current.MainWindow.Activate();
 
             // Check if started with filename parameter.
