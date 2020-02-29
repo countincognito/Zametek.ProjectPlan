@@ -1,6 +1,8 @@
 ﻿using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Unity;
+using System.IO;
+using System.Linq;
 using System.Windows;
 using Zametek.Access.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -42,6 +44,22 @@ namespace Zametek.Client.ProjectPlan.Wpf.Shell
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
         {
             moduleCatalog.AddModule<ClientWpfModule>();
+        }
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+            Current.MainWindow.Activate();
+
+            // Check if started with filename parameter.
+            string[] args = e.Args;
+            if (args.Any()
+                && File.Exists(args[0])
+                && string.CompareOrdinal(Path.GetExtension(args[0]), Wpf.Properties.Resources.Filter_OpenProjectPlanFileExtension) == 0)
+            {
+                var mainView = Container.Resolve<IMainViewModel>();
+                mainView.DoOpenProjectPlanFileAsync(args[0]);
+            }
         }
     }
 }
