@@ -247,7 +247,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         {
                             var areaSeries = new AreaSeries
                             {
-                                Smooth = false,
+                                //Smooth = false,
                                 StrokeThickness = 0.0,
                                 Title = series.Title,
                                 Color = OxyColor.FromArgb(

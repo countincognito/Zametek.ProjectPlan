@@ -731,6 +731,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
                             dependentActivity.ResourceDependencies.Clear();
                             vertexGraphCompiler.AddActivity(dependentActivity);
                         }
+
+                        vertexGraphCompiler.TransitiveReduction();
                         CyclomaticComplexity = vertexGraphCompiler.CyclomaticComplexity;
                     }
                 }

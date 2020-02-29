@@ -1,6 +1,6 @@
-﻿using Prism.Modularity;
+﻿using Prism.Ioc;
+using Prism.Modularity;
 using Prism.Regions;
-using System;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -8,33 +8,19 @@ namespace Zametek.Client.ProjectPlan.Wpf
     public class ClientWpfModule
         : IModule
     {
-        #region Fields
-
-        IRegionManager m_RegionManager;
-
-        #endregion
-
-        #region Ctors
-
-        public ClientWpfModule(IRegionManager regionManager)
+        public void OnInitialized(IContainerProvider containerProvider)
         {
-            m_RegionManager = regionManager ?? throw new ArgumentNullException(nameof(regionManager));
+            var regionManager = containerProvider.Resolve<IRegionManager>();
+            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanActivitiesRegion, typeof(ActivitiesManagerView));
+            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanMetricsRegion, typeof(MetricsManagerView));
+            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanGanttChartRegion, typeof(GanttChartManagerView));
+            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanArrowGraphRegion, typeof(ArrowGraphManagerView));
+            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanResourceChartRegion, typeof(ResourceChartManagerView));
+            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanEarnedValueChartRegion, typeof(EarnedValueChartManagerView));
         }
 
-        #endregion
-
-        #region IModule
-
-        public void Initialize()
+        public void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanActivitiesRegion, typeof(ActivitiesManagerView));
-            m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanMetricsRegion, typeof(MetricsManagerView));
-            m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanGanttChartRegion, typeof(GanttChartManagerView));
-            m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanArrowGraphRegion, typeof(ArrowGraphManagerView));
-            m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanResourceChartRegion, typeof(ResourceChartManagerView));
-            m_RegionManager.RegisterViewWithRegion(RegionNames.ProjectPlanEarnedValueChartRegion, typeof(EarnedValueChartManagerView));
         }
-
-        #endregion
     }
 }

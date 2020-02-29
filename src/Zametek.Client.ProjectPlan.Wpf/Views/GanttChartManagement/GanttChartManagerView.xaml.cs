@@ -110,7 +110,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 IList<ResourceSeriesDto> resourceSeriesSet = ganttChartDto.ResourceSeriesSet;
                 IList<IResourceSchedule<int>> resourceSchedules = ganttChartDto.ResourceSchedules;
 
-                //m_DateTimeCalculator.UseBusinessDays(ViewModel.UseBusinessDays);
+                m_DateTimeCalculator.UseBusinessDays(ViewModel.UseBusinessDays);
 
                 DateTime projectStart = ViewModel.ProjectStart;
 

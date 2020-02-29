@@ -2,6 +2,7 @@
 using OxyPlot.Axes;
 using System;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -52,7 +53,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 throw new ArgumentException(nameof(filename));
             }
             TextWriter writer = File.CreateText(filename); // This gets disposed by the CsvWriter.
-            using (var csv = new CsvWriter(writer))
+            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
             {
                 foreach (DataColumn column in dataTable.Columns)
                 {

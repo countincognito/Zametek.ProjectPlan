@@ -1,4 +1,5 @@
-﻿<Application x:Class="Zametek.Client.ProjectPlan.Wpf.Shell.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-</Application>
+﻿<prism:PrismApplication x:Class="Zametek.Client.ProjectPlan.Wpf.Shell.App"
+                        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:prism="http://prismlibrary.com/">
+</prism:PrismApplication>

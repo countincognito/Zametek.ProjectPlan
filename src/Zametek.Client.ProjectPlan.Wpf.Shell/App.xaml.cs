@@ -1,83 +1,47 @@
-﻿using System;
-using System.Globalization;
+﻿using Prism.Ioc;
+using Prism.Modularity;
+using Prism.Unity;
 using System.Windows;
-using System.Windows.Markup;
+using Zametek.Access.ProjectPlan;
+using Zametek.Contract.ProjectPlan;
+using Zametek.Engine.ProjectPlan;
+using Zametek.Manager.ProjectPlan;
 
 namespace Zametek.Client.ProjectPlan.Wpf.Shell
 {
     public partial class App
-        : IDisposable
+        : PrismApplication
     {
-        #region Fields
-
-        private bool m_Disposed;
-        private Bootstrapper m_Bootstrapper;
-
-        #endregion
-
-        #region Private methods
-
-        private void RunApplication()
+        protected override Window CreateShell()
         {
-            AppDomain.CurrentDomain.UnhandledException += AppDomainUnhandledException;
-            try
-            {
-                m_Bootstrapper.Run();
-            }
-            catch (Exception ex)
-            {
-                Bootstrapper.HandleException(ex);
-            }
+            return Container.Resolve<MainView>();
         }
 
-        private static void AppDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            Bootstrapper.HandleException(e.ExceptionObject as Exception);
+            containerRegistry.Register<IDateTimeCalculator, DateTimeCalculator>();
+            containerRegistry.Register<IFileDialogService, FileDialogService>();
+            containerRegistry.Register<IProjectSettingService, ProjectSettingService>();
+
+            containerRegistry.RegisterSingleton<IGraphProcessingEngine, GraphProcessingEngine>();
+            containerRegistry.RegisterSingleton<IAssessingEngine, AssessingEngine>();
+            containerRegistry.RegisterSingleton<IProjectManager, ProjectManager>();
+            containerRegistry.RegisterSingleton<ISettingResourceAccess, SettingResourceAccess>();
+            containerRegistry.RegisterSingleton<ISettingManager, SettingManager>();
+
+            containerRegistry.RegisterSingleton<ICoreViewModel, CoreViewModel>();
+            containerRegistry.RegisterSingleton<IEarnedValueChartManagerViewModel, EarnedValueChartManagerViewModel>();
+            containerRegistry.RegisterSingleton<IResourceChartManagerViewModel, ResourceChartManagerViewModel>();
+            containerRegistry.RegisterSingleton<IMetricsManagerViewModel, MetricsManagerViewModel>();
+            containerRegistry.RegisterSingleton<IArrowGraphManagerViewModel, ArrowGraphManagerViewModel>();
+            containerRegistry.RegisterSingleton<IGanttChartManagerViewModel, GanttChartManagerViewModel>();
+            containerRegistry.RegisterSingleton<IActivitiesManagerViewModel, ActivitiesManagerViewModel>();
+            containerRegistry.RegisterSingleton<IMainViewModel, MainViewModel>();
         }
 
-        #endregion
-
-        #region Overrides
-
-        protected override void OnStartup(StartupEventArgs e)
+        protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
         {
-            base.OnStartup(e);
-            FrameworkElement.LanguageProperty.OverrideMetadata(
-              typeof(FrameworkElement),
-              new FrameworkPropertyMetadata(
-                  XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
-
-            m_Bootstrapper = new Bootstrapper();
-            RunApplication();
-            ShutdownMode = ShutdownMode.OnMainWindowClose;
+            moduleCatalog.AddModule<ClientWpfModule>();
         }
-
-        #endregion
-
-        #region IDisposable
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (m_Disposed)
-            {
-                return;
-            }
-            if (disposing)
-            {
-                m_Bootstrapper.Dispose();
-            }
-
-            // Free any unmanaged objects here. 
-
-            m_Disposed = true;
-        }
-
-        #endregion
     }
 }
