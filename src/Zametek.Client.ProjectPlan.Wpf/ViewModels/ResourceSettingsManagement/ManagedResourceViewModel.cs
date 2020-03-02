@@ -1,6 +1,5 @@
 ﻿using Prism.Mvvm;
 using System;
-using Zametek.Common.Project;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -10,13 +9,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
     {
         #region Fields
 
-        private readonly ResourceDto m_Resource;
+        private readonly Common.Project.v0_1_0.ResourceDto m_Resource;
 
         #endregion
 
         #region Ctors
 
-        public ManagedResourceViewModel(ResourceDto resource)
+        public ManagedResourceViewModel(Common.Project.v0_1_0.ResourceDto resource)
         {
             m_Resource = resource ?? throw new ArgumentNullException(nameof(resource));
         }
@@ -25,7 +24,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Properties
 
-        public ResourceDto ResourceDto => m_Resource;
+        public Common.Project.v0_1_0.ResourceDto ResourceDto => m_Resource;
 
         public int Id => m_Resource.Id;
 
@@ -94,7 +93,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public ColorFormatDto ColorFormat
+        public Common.Project.v0_1_0.ColorFormatDto ColorFormat
         {
             get
             {

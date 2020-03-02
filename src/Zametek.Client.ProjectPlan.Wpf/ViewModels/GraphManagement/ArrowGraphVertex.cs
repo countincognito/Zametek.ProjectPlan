@@ -1,6 +1,5 @@
 ﻿using GraphX.PCL.Common.Models;
 using System;
-using Zametek.Common.Project;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -11,7 +10,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
     {
         #region Fields
 
-        private EventDto m_EventVertex;
+        private Common.Project.v0_1_0.EventDto m_EventVertex;
 
         #endregion
 
@@ -22,7 +21,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         }
 
         public ArrowGraphVertex(
-            EventDto eventVertexDto,
+            Common.Project.v0_1_0.EventDto eventVertexDto,
             NodeType nodeType)
             : this()
         {

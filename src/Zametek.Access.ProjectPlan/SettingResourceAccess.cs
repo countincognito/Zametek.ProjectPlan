@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Zametek.Common.Project;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 
@@ -17,48 +16,48 @@ namespace Zametek.Access.ProjectPlan
 
         #region ISettingResourceAccess Members
 
-        public ArrowGraphSettingsDto GetArrowGraphSettings()
+        public Common.Project.v0_1_0.ArrowGraphSettingsDto GetArrowGraphSettings()
         {
-            return new ArrowGraphSettingsDto
+            return new Common.Project.v0_1_0.ArrowGraphSettingsDto
             {
-                EdgeTypeFormats = new List<EdgeTypeFormatDto>(
+                EdgeTypeFormats = new List<Common.Project.v0_1_0.EdgeTypeFormatDto>(
                     new[]
                     {
-                        new EdgeTypeFormatDto
+                        new Common.Project.v0_1_0.EdgeTypeFormatDto
                         {
                             EdgeType = EdgeType.Activity,
-                            EdgeDashStyle = EdgeDashStyle.Normal,
-                            EdgeWeightStyle = EdgeWeightStyle.Normal
+                            EdgeDashStyle = Common.Project.v0_1_0.EdgeDashStyle.Normal,
+                            EdgeWeightStyle = Common.Project.v0_1_0.EdgeWeightStyle.Normal
                         },
-                        new EdgeTypeFormatDto
+                        new Common.Project.v0_1_0.EdgeTypeFormatDto
                         {
                             EdgeType = EdgeType.CriticalActivity,
-                            EdgeDashStyle = EdgeDashStyle.Normal,
-                            EdgeWeightStyle = EdgeWeightStyle.Bold
+                            EdgeDashStyle = Common.Project.v0_1_0.EdgeDashStyle.Normal,
+                            EdgeWeightStyle = Common.Project.v0_1_0.EdgeWeightStyle.Bold
                         },
-                        new EdgeTypeFormatDto
+                        new Common.Project.v0_1_0.EdgeTypeFormatDto
                         {
                             EdgeType = EdgeType.Dummy,
-                            EdgeDashStyle = EdgeDashStyle.Dashed,
-                            EdgeWeightStyle = EdgeWeightStyle.Normal
+                            EdgeDashStyle = Common.Project.v0_1_0.EdgeDashStyle.Dashed,
+                            EdgeWeightStyle = Common.Project.v0_1_0.EdgeWeightStyle.Normal
                         },
-                        new EdgeTypeFormatDto
+                        new Common.Project.v0_1_0.EdgeTypeFormatDto
                         {
                             EdgeType = EdgeType.CriticalDummy,
-                            EdgeDashStyle = EdgeDashStyle.Dashed,
-                            EdgeWeightStyle = EdgeWeightStyle.Bold
+                            EdgeDashStyle = Common.Project.v0_1_0.EdgeDashStyle.Dashed,
+                            EdgeWeightStyle = Common.Project.v0_1_0.EdgeWeightStyle.Bold
                         }
                     }),
-                ActivitySeverities = new List<ActivitySeverityDto>(
+                ActivitySeverities = new List<Common.Project.v0_1_0.ActivitySeverityDto>(
                     new[]
                     {
                         // Black.
-                        new ActivitySeverityDto
+                        new Common.Project.v0_1_0.ActivitySeverityDto
                         {
                             SlackLimit = 1,
                             CriticalityWeight = 4.0,
                             FibonacciWeight = Math.Pow(GoldenRatio, 3.0),
-                            ColorFormat = new ColorFormatDto
+                            ColorFormat = new Common.Project.v0_1_0.ColorFormatDto
                             {
                                 A = 255,
                                 R = 0,
@@ -67,12 +66,12 @@ namespace Zametek.Access.ProjectPlan
                             }
                         },
                         // Red.
-                        new ActivitySeverityDto
+                        new Common.Project.v0_1_0.ActivitySeverityDto
                         {
                             SlackLimit = 9,
                             CriticalityWeight = 3.0,
                             FibonacciWeight = Math.Pow(GoldenRatio, 2.0),
-                            ColorFormat = new ColorFormatDto
+                            ColorFormat = new Common.Project.v0_1_0.ColorFormatDto
                             {
                                 A = 255,
                                 R = 255,
@@ -81,12 +80,12 @@ namespace Zametek.Access.ProjectPlan
                             }
                         },
                         // Gold.
-                        new ActivitySeverityDto
+                        new Common.Project.v0_1_0.ActivitySeverityDto
                         {
                             SlackLimit = 25,
                             CriticalityWeight = 2.0,
                             FibonacciWeight = Math.Pow(GoldenRatio, 1.0),
-                            ColorFormat = new ColorFormatDto
+                            ColorFormat = new Common.Project.v0_1_0.ColorFormatDto
                             {
                                 A = 255,
                                 R = 255,
@@ -95,12 +94,12 @@ namespace Zametek.Access.ProjectPlan
                             }
                         },
                         // Green.
-                        new ActivitySeverityDto
+                        new Common.Project.v0_1_0.ActivitySeverityDto
                         {
                             SlackLimit = int.MaxValue,
                             CriticalityWeight = 1.0,
                             FibonacciWeight = Math.Pow(GoldenRatio, 0.0),
-                            ColorFormat = new ColorFormatDto
+                            ColorFormat = new Common.Project.v0_1_0.ColorFormatDto
                             {
                                 A = 255,
                                 R = 0,
@@ -112,11 +111,11 @@ namespace Zametek.Access.ProjectPlan
             };
         }
 
-        public ResourceSettingsDto GetResourceSettings()
+        public Common.Project.v0_1_0.ResourceSettingsDto GetResourceSettings()
         {
-            return new ResourceSettingsDto
+            return new Common.Project.v0_1_0.ResourceSettingsDto
             {
-                Resources = new List<ResourceDto>(),
+                Resources = new List<Common.Project.v0_1_0.ResourceDto>(),
                 DefaultUnitCost = 1.0,
                 AreDisabled = false
             };

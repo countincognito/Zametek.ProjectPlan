@@ -1,6 +1,5 @@
 ﻿using Prism.Mvvm;
 using System;
-using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -9,13 +8,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
     {
         #region Fields
 
-        private readonly ActivitySeverityDto m_ActivitySeverity;
+        private readonly Common.Project.v0_1_0.ActivitySeverityDto m_ActivitySeverity;
 
         #endregion
 
         #region Ctors
 
-        public ManagedActivitySeverityViewModel(ActivitySeverityDto activitySeverity)
+        public ManagedActivitySeverityViewModel(Common.Project.v0_1_0.ActivitySeverityDto activitySeverity)
         {
             m_ActivitySeverity = activitySeverity ?? throw new ArgumentNullException(nameof(activitySeverity));
         }
@@ -24,7 +23,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Properties
 
-        public ActivitySeverityDto ActivitySeverityDto => m_ActivitySeverity;
+        public Common.Project.v0_1_0.ActivitySeverityDto ActivitySeverityDto => m_ActivitySeverity;
 
         public int SlackLimit
         {
@@ -65,7 +64,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public ColorFormatDto ColorFormat
+        public Common.Project.v0_1_0.ColorFormatDto ColorFormat
         {
             get
             {

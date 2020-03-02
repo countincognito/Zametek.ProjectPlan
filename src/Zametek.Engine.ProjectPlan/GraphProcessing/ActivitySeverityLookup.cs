@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Zametek.Common.Project;
 
 namespace Zametek.Engine.ProjectPlan
 {
@@ -9,13 +8,13 @@ namespace Zametek.Engine.ProjectPlan
     {
         #region Fields
 
-        private readonly IList<ActivitySeverityDto> m_ActivitySeverityDtos;
+        private readonly IList<Common.Project.v0_1_0.ActivitySeverityDto> m_ActivitySeverityDtos;
 
         #endregion
 
         #region Ctors
 
-        public ActivitySeverityLookup(IEnumerable<ActivitySeverityDto> activitySeverityDtos)
+        public ActivitySeverityLookup(IEnumerable<Common.Project.v0_1_0.ActivitySeverityDto> activitySeverityDtos)
         {
             if (activitySeverityDtos == null)
             {
@@ -35,7 +34,7 @@ namespace Zametek.Engine.ProjectPlan
                 return 1.0;
             }
             int totalSlackValue = totalSlack.GetValueOrDefault();
-            foreach (ActivitySeverityDto activitySeverityDto in m_ActivitySeverityDtos)
+            foreach (Common.Project.v0_1_0.ActivitySeverityDto activitySeverityDto in m_ActivitySeverityDtos)
             {
                 if (totalSlackValue <= activitySeverityDto.SlackLimit)
                 {
@@ -57,7 +56,7 @@ namespace Zametek.Engine.ProjectPlan
                 return 1.0;
             }
             int totalSlackValue = totalSlack.GetValueOrDefault();
-            foreach (ActivitySeverityDto activitySeverityDto in m_ActivitySeverityDtos)
+            foreach (Common.Project.v0_1_0.ActivitySeverityDto activitySeverityDto in m_ActivitySeverityDtos)
             {
                 if (totalSlackValue <= activitySeverityDto.SlackLimit)
                 {

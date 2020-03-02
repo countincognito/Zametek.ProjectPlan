@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -31,9 +30,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
         private bool m_HasCompilationErrors;
         private GraphCompilation<int, IDependentActivity<int>> m_GraphCompilation;
         private string m_CompilationOutput;
-        private ArrowGraphDto m_ArrowGraphDto;
-        private ArrowGraphSettingsDto m_ArrowGraphSettingsDto;
-        private ResourceSettingsDto m_ResourceSettingsDto;
+        private Common.Project.v0_1_0.ArrowGraphDto m_ArrowGraphDto;
+        private Common.Project.v0_1_0.ArrowGraphSettingsDto m_ArrowGraphSettingsDto;
+        private Common.Project.v0_1_0.ResourceSettingsDto m_ResourceSettingsDto;
         private int? m_CyclomaticComplexity;
         private int? m_Duration;
         private double? m_DirectCost;
@@ -60,7 +59,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
-            m_VertexGraphCompiler = VertexGraphCompiler<int, IDependentActivity<int>>.Create();
+            m_VertexGraphCompiler = new VertexGraphCompiler<int, IDependentActivity<int>>();
             Activities = new ObservableCollection<ManagedActivityViewModel>();
             ResourceSeriesSet = new List<ResourceSeriesDto>();
             ClearSettings();
@@ -337,7 +336,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public ArrowGraphDto ArrowGraphDto
+        public Common.Project.v0_1_0.ArrowGraphDto ArrowGraphDto
         {
             get
             {
@@ -358,7 +357,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             get;
         }
 
-        public ArrowGraphSettingsDto ArrowGraphSettingsDto
+        public Common.Project.v0_1_0.ArrowGraphSettingsDto ArrowGraphSettingsDto
         {
             get
             {
@@ -374,7 +373,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public ResourceSettingsDto ResourceSettingsDto
+        public Common.Project.v0_1_0.ResourceSettingsDto ResourceSettingsDto
         {
             get
             {
@@ -562,7 +561,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             {
                 foreach (ManagedActivityViewModel activity in Activities)
                 {
-                    activity.SetTargetResources(ResourceSettingsDto.Resources.Select(x => x.Copy()));
+                    activity.SetTargetResources(ResourceSettingsDto.Resources.Select(x => Common.Project.v0_1_0.DtoExtensions.Copy(x)));
                 }
             }
         }
@@ -585,7 +584,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             lock (m_Lock)
             {
                 IList<IResourceSchedule<int>> resourceSchedules = GraphCompilation?.ResourceSchedules;
-                IList<ResourceDto> resources = ResourceSettingsDto.Resources;
+                IList<Common.Project.v0_1_0.ResourceDto> resources = ResourceSettingsDto.Resources;
 
                 if (resourceSchedules == null || resources == null)
                 {
@@ -623,7 +622,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     }
 
                     activity.SetAllocatedToResources(
-                        resources.Select(x => x.Copy()),
+                        resources.Select(x => Common.Project.v0_1_0.DtoExtensions.Copy(x)),
                         allocatedToResources);
                 }
             }
@@ -667,12 +666,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     IList<IDependentActivity<int>> dependentActivities =
                         GraphCompilation.DependentActivities
-                        .Select(x => (IDependentActivity<int>)x.WorkingCopy())
+                        .Select(x => (IDependentActivity<int>)x.CloneObject())
                         .ToList();
 
                     if (dependentActivities.Any())
                     {
-                        var vertexGraphCompiler = VertexGraphCompiler<int, IDependentActivity<int>>.Create();
+                        var vertexGraphCompiler = new VertexGraphCompiler<int, IDependentActivity<int>>();
                         foreach (DependentActivity<int> dependentActivity in dependentActivities)
                         {
                             dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
@@ -698,7 +697,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 var availableResources = new List<IResource<int>>();
                 if (!ResourceSettingsDto.AreDisabled)
                 {
-                    availableResources.AddRange(ResourceSettingsDto.Resources.Select(x => DtoConverter.FromDto(x)));
+                    availableResources.AddRange(ResourceSettingsDto.Resources.Select(x => Common.Project.v0_1_0.DtoConverter.FromDto(x)));
                 }
 
                 GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
@@ -720,12 +719,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 {
                     IList<IDependentActivity<int>> dependentActivities =
                         GraphCompilation.DependentActivities
-                        .Select(x => (IDependentActivity<int>)x.WorkingCopy())
+                        .Select(x => (IDependentActivity<int>)x.CloneObject())
                         .ToList();
 
                     if (dependentActivities.Any())
                     {
-                        var vertexGraphCompiler = VertexGraphCompiler<int, IDependentActivity<int>>.Create();
+                        var vertexGraphCompiler = new VertexGraphCompiler<int, IDependentActivity<int>>();
                         foreach (DependentActivity<int> dependentActivity in dependentActivities)
                         {
                             dependentActivity.ResourceDependencies.Clear();
@@ -776,22 +775,25 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 }
                 var output = new StringBuilder();
 
-                if (graphCompilation.AllResourcesExplicitTargetsButNotAllActivitiesTargeted)
+                if (graphCompilation.Errors != null)
                 {
-                    HasCompilationErrors = true;
-                    output.AppendLine($@">{Properties.Resources.Message_AllResourcesExplicitTargetsNotAllActivitiesTargeted}");
-                }
+                    if (graphCompilation.Errors.AllResourcesExplicitTargetsButNotAllActivitiesTargeted)
+                    {
+                        HasCompilationErrors = true;
+                        output.AppendLine($@">{Properties.Resources.Message_AllResourcesExplicitTargetsNotAllActivitiesTargeted}");
+                    }
 
-                if (graphCompilation.CircularDependencies.Any())
-                {
-                    HasCompilationErrors = true;
-                    output.Append(BuildCircularDependenciesErrorMessage(graphCompilation.CircularDependencies));
-                }
+                    if (graphCompilation.Errors.CircularDependencies.Any())
+                    {
+                        HasCompilationErrors = true;
+                        output.Append(BuildCircularDependenciesErrorMessage(graphCompilation.Errors.CircularDependencies));
+                    }
 
-                if (graphCompilation.MissingDependencies.Any())
-                {
-                    HasCompilationErrors = true;
-                    output.Append(BuildMissingDependenciesErrorMessage(graphCompilation.MissingDependencies));
+                    if (graphCompilation.Errors.MissingDependencies.Any())
+                    {
+                        HasCompilationErrors = true;
+                        output.Append(BuildMissingDependenciesErrorMessage(graphCompilation.Errors.MissingDependencies));
+                    }
                 }
 
                 if (graphCompilation.ResourceSchedules.Any()
@@ -815,7 +817,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             lock (m_Lock)
             {
                 IList<IResourceSchedule<int>> resourceSchedules = GraphCompilation?.ResourceSchedules;
-                IList<ResourceDto> resources = ResourceSettingsDto.Resources;
+                IList<Common.Project.v0_1_0.ResourceDto> resources = ResourceSettingsDto.Resources;
 
                 if (resourceSchedules == null || resources == null)
                 {

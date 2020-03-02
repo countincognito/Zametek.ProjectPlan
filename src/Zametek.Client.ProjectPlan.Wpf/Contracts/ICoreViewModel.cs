@@ -30,15 +30,15 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         string CompilationOutput { get; set; }
 
-        ArrowGraphDto ArrowGraphDto { get; set; }
+        Common.Project.v0_1_0.ArrowGraphDto ArrowGraphDto { get; set; }
 
         ObservableCollection<ManagedActivityViewModel> Activities { get; }
 
         IList<ResourceSeriesDto> ResourceSeriesSet { get; }
 
-        ArrowGraphSettingsDto ArrowGraphSettingsDto { get; set; }
+        Common.Project.v0_1_0.ArrowGraphSettingsDto ArrowGraphSettingsDto { get; set; }
 
-        ResourceSettingsDto ResourceSettingsDto { get; set; }
+        Common.Project.v0_1_0.ResourceSettingsDto ResourceSettingsDto { get; set; }
 
         int? CyclomaticComplexity { get; set; }
 

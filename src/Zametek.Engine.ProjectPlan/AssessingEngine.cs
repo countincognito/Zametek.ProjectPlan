@@ -174,7 +174,7 @@ namespace Zametek.Engine.ProjectPlan
 
         public MetricsDto CalculateProjectMetrics(
             IList<IActivity<int>> activities,
-            IList<ActivitySeverityDto> activitySeverityDtos)
+            IList<Common.Project.v0_1_0.ActivitySeverityDto> activitySeverityDtos)
         {
             if (activities == null)
             {
@@ -199,7 +199,7 @@ namespace Zametek.Engine.ProjectPlan
 
         public IList<ResourceSeriesDto> CalculateResourceSeriesSet(
             IList<IResourceSchedule<int>> resourceSchedules,
-            IList<ResourceDto> resources,
+            IList<Common.Project.v0_1_0.ResourceDto> resources,
             double defaultUnitCost)
         {
             if (resourceSchedules == null)
@@ -215,7 +215,7 @@ namespace Zametek.Engine.ProjectPlan
 
             if (resourceSchedules.Any())
             {
-                IDictionary<int, ColorFormatDto> colorFormatLookup = resources.ToDictionary(x => x.Id, x => x.ColorFormat);
+                IDictionary<int, Common.Project.v0_1_0.ColorFormatDto> colorFormatLookup = resources.ToDictionary(x => x.Id, x => x.ColorFormat);
                 var indirectResourceIdsToIgnore = new HashSet<int>();
                 int finishTime = resourceSchedules.Max(x => x.FinishTime);
                 int spareResourceCount = 1;
@@ -252,7 +252,7 @@ namespace Zametek.Engine.ProjectPlan
                     }
 
                     series.Title = stringBuilder.ToString();
-                    series.ColorFormatDto = resource != null && colorFormatLookup.ContainsKey(resource.Id) ? colorFormatLookup[resource.Id].Copy() : new ColorFormatDto().Randomize();
+                    series.ColorFormatDto = resource != null && colorFormatLookup.ContainsKey(resource.Id) ? Common.Project.v0_1_0.DtoExtensions.Copy(colorFormatLookup[resource.Id]) : Common.Project.v0_1_0.DtoExtensions.Randomize(new Common.Project.v0_1_0.ColorFormatDto());
                     series.UnitCost = resource?.UnitCost ?? defaultUnitCost;
                     series.DisplayOrder = resource?.DisplayOrder ?? 0;
                     scheduledSeriesSet.Add(series);
@@ -261,10 +261,10 @@ namespace Zametek.Engine.ProjectPlan
                 // Now add the remaining resources that are indirect costs, but
                 // sort them separately and add them to the front of the list.
                 var unscheduledSeriesSet = new List<ResourceSeriesDto>();
-                IEnumerable<ResourceDto> indirectResources =
+                IEnumerable<Common.Project.v0_1_0.ResourceDto> indirectResources =
                     resources.Where(x => !indirectResourceIdsToIgnore.Contains(x.Id) && x.InterActivityAllocationType == InterActivityAllocationType.Indirect);
 
-                foreach (ResourceDto resourceDto in indirectResources)
+                foreach (Common.Project.v0_1_0.ResourceDto resourceDto in indirectResources)
                 {
                     var series = new ResourceSeriesDto()
                     {
@@ -282,7 +282,7 @@ namespace Zametek.Engine.ProjectPlan
                     }
 
                     series.Title = stringBuilder.ToString();
-                    series.ColorFormatDto = resourceDto.ColorFormat != null ? resourceDto.ColorFormat.Copy() : new ColorFormatDto().Randomize();
+                    series.ColorFormatDto = resourceDto.ColorFormat != null ? Common.Project.v0_1_0.DtoExtensions.Copy(resourceDto.ColorFormat) : Common.Project.v0_1_0.DtoExtensions.Randomize(new Common.Project.v0_1_0.ColorFormatDto());
                     series.UnitCost = resourceDto.UnitCost;
                     series.DisplayOrder = resourceDto.DisplayOrder;
                     unscheduledSeriesSet.Add(series);

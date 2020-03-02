@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Engine.ProjectPlan
@@ -141,10 +140,10 @@ namespace Zametek.Engine.ProjectPlan
             string dashStyle;
             switch (diagramEdgeDto.DashStyle)
             {
-                case EdgeDashStyle.Normal:
+                case Common.Project.v0_1_0.EdgeDashStyle.Normal:
                     dashStyle = @"line";
                     break;
-                case EdgeDashStyle.Dashed:
+                case Common.Project.v0_1_0.EdgeDashStyle.Dashed:
                     dashStyle = @"dashed";
                     break;
                 default:

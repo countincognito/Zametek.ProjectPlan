@@ -3,13 +3,9 @@ using Prism.Events;
 using Prism.Interactivity.InteractionRequest;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
-using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
@@ -190,7 +186,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 GanttChartDto = null;
                 IList<IDependentActivity<int>> dependentActivities =
                     GraphCompilation.DependentActivities
-                    .Select(x => (IDependentActivity<int>)x.WorkingCopy())
+                    .Select(x => (IDependentActivity<int>)x.CloneObject())
                     .ToList();
 
                 if (!HasCompilationErrors
@@ -201,7 +197,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         .ThenBy(x => x.Duration)
                         .ToList();
 
-                    ArrowGraphSettingsDto arrowGraphSettings = ArrowGraphSettingsDto;
+                    Common.Project.v0_1_0.ArrowGraphSettingsDto arrowGraphSettings = ArrowGraphSettingsDto;
                     IList<IResourceSchedule<int>> resourceSchedules = GraphCompilation.ResourceSchedules;
                     IList<ResourceSeriesDto> resourceSeriesSet = ResourceSeriesSet;
 
@@ -309,7 +305,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             private set;
         }
 
-        public ArrowGraphSettingsDto ArrowGraphSettingsDto => m_CoreViewModel.ArrowGraphSettingsDto;
+        public Common.Project.v0_1_0.ArrowGraphSettingsDto ArrowGraphSettingsDto => m_CoreViewModel.ArrowGraphSettingsDto;
 
         #endregion
     }

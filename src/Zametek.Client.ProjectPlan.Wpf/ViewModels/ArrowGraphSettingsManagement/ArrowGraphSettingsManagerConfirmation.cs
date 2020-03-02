@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -12,19 +11,19 @@ namespace Zametek.Client.ProjectPlan.Wpf
     {
         #region Fields
 
-        private IList<EdgeTypeFormatDto> m_EdgeTypeFormats;
+        private IList<Common.Project.v0_1_0.EdgeTypeFormatDto> m_EdgeTypeFormats;
 
         #endregion
 
         #region Ctors
 
-        public ArrowGraphSettingsManagerConfirmation(ArrowGraphSettingsDto arrowGraphSettings)
+        public ArrowGraphSettingsManagerConfirmation(Common.Project.v0_1_0.ArrowGraphSettingsDto arrowGraphSettings)
         {
             if (arrowGraphSettings == null)
             {
                 throw new ArgumentNullException(nameof(arrowGraphSettings));
             }
-            m_EdgeTypeFormats = new List<EdgeTypeFormatDto>();
+            m_EdgeTypeFormats = new List<Common.Project.v0_1_0.EdgeTypeFormatDto>();
             ActivitySeverities = new ObservableCollection<ManagedActivitySeverityViewModel>();
             SetManagedActivitySeverities(arrowGraphSettings.ActivitySeverities);
             SetEdgeTypeFormats(arrowGraphSettings.EdgeTypeFormats);
@@ -39,7 +38,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             get;
         }
 
-        public IEnumerable<ActivitySeverityDto> ActivitySeverityDtos
+        public IEnumerable<Common.Project.v0_1_0.ActivitySeverityDto> ActivitySeverityDtos
         {
             get
             {
@@ -47,7 +46,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public IEnumerable<EdgeTypeFormatDto> EdgeTypeFormatDtos
+        public IEnumerable<Common.Project.v0_1_0.EdgeTypeFormatDto> EdgeTypeFormatDtos
         {
             get
             {
@@ -55,11 +54,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public ArrowGraphSettingsDto ArrowGraphSettingsDto
+        public Common.Project.v0_1_0.ArrowGraphSettingsDto ArrowGraphSettingsDto
         {
             get
             {
-                return new ArrowGraphSettingsDto
+                return new Common.Project.v0_1_0.ArrowGraphSettingsDto
                 {
                     ActivitySeverities = ActivitySeverityDtos.ToList(),
                     EdgeTypeFormats = EdgeTypeFormatDtos.ToList()
@@ -71,7 +70,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Private Methods
 
-        private void SetManagedActivitySeverities(IEnumerable<ActivitySeverityDto> activitySeverities)
+        private void SetManagedActivitySeverities(IEnumerable<Common.Project.v0_1_0.ActivitySeverityDto> activitySeverities)
         {
             if (activitySeverities == null)
             {
@@ -81,14 +80,14 @@ namespace Zametek.Client.ProjectPlan.Wpf
             ActivitySeverities.AddRange(activitySeverities.Select(x => new ManagedActivitySeverityViewModel(x)));
         }
 
-        private void SetEdgeTypeFormats(IEnumerable<EdgeTypeFormatDto> edgeTypeFormats)
+        private void SetEdgeTypeFormats(IEnumerable<Common.Project.v0_1_0.EdgeTypeFormatDto> edgeTypeFormats)
         {
             if (edgeTypeFormats == null)
             {
                 throw new ArgumentNullException(nameof(edgeTypeFormats));
             }
             m_EdgeTypeFormats.Clear();
-            foreach (EdgeTypeFormatDto edgeTypeFormatDto in edgeTypeFormats)
+            foreach (Common.Project.v0_1_0.EdgeTypeFormatDto edgeTypeFormatDto in edgeTypeFormats)
             {
                 m_EdgeTypeFormats.Add(edgeTypeFormatDto);
             }

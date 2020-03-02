@@ -2,7 +2,6 @@
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -72,12 +71,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
-        ArrowGraphSettingsDto ArrowGraphSettingsDto
+        Common.Project.v0_1_0.ArrowGraphSettingsDto ArrowGraphSettingsDto
         {
             get;
         }
 
-        ResourceSettingsDto ResourceSettingsDto
+        Common.Project.v0_1_0.ResourceSettingsDto ResourceSettingsDto
         {
             get;
         }

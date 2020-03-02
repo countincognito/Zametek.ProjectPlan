@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Media;
-using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -54,10 +53,10 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 outputNodeDto.Width = vertexControl.ActualWidth;
                 Color fillColor = ((SolidColorBrush)vertexControl.Background).Color;
                 outputNodeDto.FillColorHexCode =
-                    DtoConverter.HexConverter(fillColor.R, fillColor.G, fillColor.B);
+                    Common.Project.v0_1_0.DtoConverter.HexConverter(fillColor.R, fillColor.G, fillColor.B);
                 Color borderColor = ((SolidColorBrush)vertexControl.BorderBrush).Color;
                 outputNodeDto.BorderColorHexCode =
-                    DtoConverter.HexConverter(borderColor.R, borderColor.G, borderColor.B);
+                    Common.Project.v0_1_0.DtoConverter.HexConverter(borderColor.R, borderColor.G, borderColor.B);
                 outputNodeDto.Text = node.ToString();
             }
             return outputNodeDto;
@@ -77,14 +76,14 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 outputEdge.SourceId = Convert.ToInt32(edge.Source.ID);
                 outputEdge.TargetId = Convert.ToInt32(edge.Target.ID);
 
-                Common.Project.EdgeDashStyle dashStyle;
+                Common.Project.v0_1_0.EdgeDashStyle dashStyle;
                 switch (edge.DashStyle)
                 {
-                    case GraphX.Controls.EdgeDashStyle.Solid:
-                        dashStyle = Common.Project.EdgeDashStyle.Normal;
+                    case EdgeDashStyle.Solid:
+                        dashStyle = Common.Project.v0_1_0.EdgeDashStyle.Normal;
                         break;
-                    case GraphX.Controls.EdgeDashStyle.Dash:
-                        dashStyle = Common.Project.EdgeDashStyle.Dashed;
+                    case EdgeDashStyle.Dash:
+                        dashStyle = Common.Project.v0_1_0.EdgeDashStyle.Dashed;
                         break;
                     default:
                         throw new InvalidOperationException("Unknown EdgeDashStyle value");
@@ -93,7 +92,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 outputEdge.DashStyle = dashStyle;
                 Color foregroundColor = ((SolidColorBrush)edgeControl.Foreground).Color;
                 outputEdge.ForegroundColorHexCode =
-                    DtoConverter.HexConverter(foregroundColor.R, foregroundColor.G, foregroundColor.B);
+                    Common.Project.v0_1_0.DtoConverter.HexConverter(foregroundColor.R, foregroundColor.G, foregroundColor.B);
                 outputEdge.StrokeThickness = edge.StrokeThickness;
                 var labelText = new StringBuilder();
                 if (edge.IsDummy)

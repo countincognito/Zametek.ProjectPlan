@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Media;
-using Zametek.Common.Project;
-using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -12,8 +8,8 @@ namespace Zametek.Client.ProjectPlan.Wpf
     {
         #region Fields
 
-        private static readonly IDictionary<EdgeDashStyle, GraphX.Controls.EdgeDashStyle> s_EdgeDashLookup;
-        private static readonly IDictionary<EdgeWeightStyle, double> s_EdgeWeightLookup;
+        private static readonly IDictionary<Common.Project.v0_1_0.EdgeDashStyle, GraphX.Controls.EdgeDashStyle> s_EdgeDashLookup;
+        private static readonly IDictionary<Common.Project.v0_1_0.EdgeWeightStyle, double> s_EdgeWeightLookup;
         private static double s_NormalStrokeWeight = 2.0;
         private static double s_BoldStrokeWeight = 5.0;
 
@@ -26,19 +22,19 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         static GraphXEdgeFormatLookup()
         {
-            s_EdgeDashLookup = new Dictionary<EdgeDashStyle, GraphX.Controls.EdgeDashStyle>
+            s_EdgeDashLookup = new Dictionary<Common.Project.v0_1_0.EdgeDashStyle, GraphX.Controls.EdgeDashStyle>
             {
-                {EdgeDashStyle.Normal, GraphX.Controls.EdgeDashStyle.Solid},
-                {EdgeDashStyle.Dashed, GraphX.Controls.EdgeDashStyle.Dash}
+                {Common.Project.v0_1_0.EdgeDashStyle.Normal, GraphX.Controls.EdgeDashStyle.Solid},
+                {Common.Project.v0_1_0.EdgeDashStyle.Dashed, GraphX.Controls.EdgeDashStyle.Dash}
             };
-            s_EdgeWeightLookup = new Dictionary<EdgeWeightStyle, double>
+            s_EdgeWeightLookup = new Dictionary<Common.Project.v0_1_0.EdgeWeightStyle, double>
             {
-                {EdgeWeightStyle.Normal, s_NormalStrokeWeight},
-                {EdgeWeightStyle.Bold, s_BoldStrokeWeight}
+                {Common.Project.v0_1_0.EdgeWeightStyle.Normal, s_NormalStrokeWeight},
+                {Common.Project.v0_1_0.EdgeWeightStyle.Bold, s_BoldStrokeWeight}
             };
         }
 
-        public GraphXEdgeFormatLookup(IEnumerable<EdgeTypeFormatDto> edgeTypeFormatDtos)
+        public GraphXEdgeFormatLookup(IEnumerable<Common.Project.v0_1_0.EdgeTypeFormatDto> edgeTypeFormatDtos)
         {
             if (edgeTypeFormatDtos == null)
             {
@@ -46,7 +42,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
             m_EdgeTypeDashLookup = new Dictionary<EdgeType, GraphX.Controls.EdgeDashStyle>();
             m_EdgeTypeWeightLookup = new Dictionary<EdgeType, double>();
-            foreach (EdgeTypeFormatDto edgeTypeFormatDto in edgeTypeFormatDtos)
+            foreach (Common.Project.v0_1_0.EdgeTypeFormatDto edgeTypeFormatDto in edgeTypeFormatDtos)
             {
                 m_EdgeTypeDashLookup.Add(edgeTypeFormatDto.EdgeType, s_EdgeDashLookup[edgeTypeFormatDto.EdgeDashStyle]);
                 m_EdgeTypeWeightLookup.Add(edgeTypeFormatDto.EdgeType, s_EdgeWeightLookup[edgeTypeFormatDto.EdgeWeightStyle]);

@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -45,7 +44,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Public Methods
 
-        public void SetAllocatedToResources(IEnumerable<ResourceDto> targetResources, HashSet<int> selectedTargetResources)
+        public void SetAllocatedToResources(IEnumerable<Common.Project.v0_1_0.ResourceDto> targetResources, HashSet<int> selectedTargetResources)
         {
             if (targetResources == null)
             {
@@ -59,7 +58,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             lock (m_Lock)
             {
                 m_AllocatedToResources.Clear();
-                foreach (ResourceDto targetResource in targetResources)
+                foreach (Common.Project.v0_1_0.ResourceDto targetResource in targetResources)
                 {
                     m_AllocatedToResources.Add(
                         new SelectableResourceViewModel(

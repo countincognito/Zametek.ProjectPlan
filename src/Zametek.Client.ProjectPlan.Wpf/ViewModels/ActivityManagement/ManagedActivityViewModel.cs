@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using Zametek.Common.Project;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Client.ProjectPlan.Wpf
@@ -38,7 +37,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
         public ManagedActivityViewModel(
             IDependentActivity<int> dependentActivity,
             DateTime projectStart,
-            IEnumerable<ResourceDto> targetResources,
+            IEnumerable<Common.Project.v0_1_0.ResourceDto> targetResources,
             IDateTimeCalculator dateTimeCalculator,
             IEventAggregator eventService)
             : this(dateTimeCalculator, eventService)
@@ -207,7 +206,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Public Methods
 
-        public void SetTargetResources(IEnumerable<ResourceDto> targetResources)
+        public void SetTargetResources(IEnumerable<Common.Project.v0_1_0.ResourceDto> targetResources)
         {
             if (targetResources == null)
             {
@@ -219,7 +218,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             UpdateTargetResources();
         }
 
-        public void SetAllocatedToResources(IEnumerable<ResourceDto> targetResources, HashSet<int> allocatedToResources)
+        public void SetAllocatedToResources(IEnumerable<Common.Project.v0_1_0.ResourceDto> targetResources, HashSet<int> allocatedToResources)
         {
             if (targetResources == null)
             {
@@ -486,9 +485,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             m_DependentActivity.SetAsRemovable();
         }
 
-        public object WorkingCopy()
+        public object CloneObject()
         {
-            return m_DependentActivity.WorkingCopy();
+            return m_DependentActivity.CloneObject();
         }
 
         #endregion

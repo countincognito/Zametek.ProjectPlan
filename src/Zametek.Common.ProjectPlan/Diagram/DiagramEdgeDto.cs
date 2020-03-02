@@ -1,5 +1,4 @@
 ﻿using System;
-using Zametek.Common.Project;
 
 namespace Zametek.Common.ProjectPlan
 {
@@ -10,7 +9,7 @@ namespace Zametek.Common.ProjectPlan
         public string Name { get; set; }
         public int SourceId { get; set; }
         public int TargetId { get; set; }
-        public EdgeDashStyle DashStyle { get; set; }
+        public Project.v0_1_0.EdgeDashStyle DashStyle { get; set; }
         public string ForegroundColorHexCode { get; set; }
         public double StrokeThickness { get; set; }
         public string Label { get; set; }

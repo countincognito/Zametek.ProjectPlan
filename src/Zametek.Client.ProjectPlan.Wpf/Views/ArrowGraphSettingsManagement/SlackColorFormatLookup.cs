@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Media;
-using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -10,13 +9,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
     {
         #region Fields
 
-        private readonly IList<ActivitySeverityDto> m_ActivitySeverityDtos;
+        private readonly IList<Common.Project.v0_1_0.ActivitySeverityDto> m_ActivitySeverityDtos;
 
         #endregion
 
         #region Ctors
 
-        public SlackColorFormatLookup(IEnumerable<ActivitySeverityDto> activitySeverityDtos)
+        public SlackColorFormatLookup(IEnumerable<Common.Project.v0_1_0.ActivitySeverityDto> activitySeverityDtos)
         {
             if (activitySeverityDtos == null)
             {
@@ -36,7 +35,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 return func(255, 0, 0, 0);
             }
             int totalSlackValue = totalSlack.GetValueOrDefault();
-            foreach (ActivitySeverityDto activitySeverityDto in m_ActivitySeverityDtos)
+            foreach (Common.Project.v0_1_0.ActivitySeverityDto activitySeverityDto in m_ActivitySeverityDtos)
             {
                 if (totalSlackValue <= activitySeverityDto.SlackLimit)
                 {
@@ -61,7 +60,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public string FindSlackColorHexCode(int? totalSlack)
         {
-            return FindSlackColor(totalSlack, DtoConverter.HexConverter);
+            return FindSlackColor(totalSlack, Common.Project.v0_1_0.DtoConverter.HexConverter);
         }
 
         #endregion

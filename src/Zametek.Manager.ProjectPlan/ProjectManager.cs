@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -33,7 +32,7 @@ namespace Zametek.Manager.ProjectPlan
 
         public MetricsDto CalculateProjectMetrics(
             IList<IActivity<int>> activities,
-            IList<ActivitySeverityDto> activitySeverityDtos)
+            IList<Common.Project.v0_1_0.ActivitySeverityDto> activitySeverityDtos)
         {
             if (activities == null)
             {
@@ -48,7 +47,7 @@ namespace Zametek.Manager.ProjectPlan
 
         public IList<ResourceSeriesDto> CalculateResourceSeriesSet(
             IList<IResourceSchedule<int>> resourceSchedules,
-            IList<ResourceDto> resources,
+            IList<Common.Project.v0_1_0.ResourceDto> resources,
             double defaultUnitCost)
         {
             if (resourceSchedules == null)

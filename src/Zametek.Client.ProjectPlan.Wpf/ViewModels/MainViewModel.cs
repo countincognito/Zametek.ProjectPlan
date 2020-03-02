@@ -14,7 +14,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
-using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
@@ -200,7 +199,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        private ArrowGraphDto ArrowGraphDto
+        private Common.Project.v0_1_0.ArrowGraphDto ArrowGraphDto
         {
             get
             {
@@ -564,7 +563,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             net.sf.mpxj.ProjectFile mpx = reader.read(filename);
             DateTime projectStart = mpx.ProjectProperties.StartDate.ToDateTime();
 
-            var resources = new List<ResourceDto>();
+            var resources = new List<Common.Project.v0_1_0.ResourceDto>();
             foreach (var resource in mpx.Resources.ToIEnumerable<net.sf.mpxj.Resource>())
             {
                 int id = resource.ID.intValue();
@@ -573,18 +572,18 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     continue;
                 }
                 string name = resource.Name;
-                var resourceDto = new ResourceDto
+                var resourceDto = new Common.Project.v0_1_0.ResourceDto
                 {
                     Id = id,
                     IsExplicitTarget = true,
                     Name = name,
                     DisplayOrder = id,
-                    ColorFormat = new ColorFormatDto()
+                    ColorFormat = new Common.Project.v0_1_0.ColorFormatDto()
                 };
                 resources.Add(resourceDto);
             }
 
-            var dependentActivities = new List<DependentActivityDto>();
+            var dependentActivities = new List<Common.Project.v0_1_0.DependentActivityDto>();
             foreach (var task in mpx.Tasks.ToIEnumerable<net.sf.mpxj.Task>())
             {
                 int id = task.ID.intValue();
@@ -620,9 +619,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         dependencies.Add(pred.TargetTask.ID.intValue());
                     }
                 }
-                var dependentActivityDto = new DependentActivityDto
+                var dependentActivityDto = new Common.Project.v0_1_0.DependentActivityDto
                 {
-                    Activity = new ActivityDto
+                    Activity = new Common.Project.v0_1_0.ActivityDto
                     {
                         Id = id,
                         Name = name,
@@ -657,21 +656,21 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 ProjectStartWithoutPublishing = microsoftProjectDto.ProjectStart;
 
                 // Resources.
-                foreach (ResourceDto resourceDto in microsoftProjectDto.Resources)
+                foreach (Common.Project.v0_1_0.ResourceDto resourceDto in microsoftProjectDto.Resources)
                 {
                     ResourceSettingsDto.Resources.Add(resourceDto);
                 }
                 //SetTargetResources();
 
                 // Activities.
-                foreach (DependentActivityDto dependentActivityDto in microsoftProjectDto.DependentActivities)
+                foreach (Common.Project.v0_1_0.DependentActivityDto dependentActivityDto in microsoftProjectDto.DependentActivities)
                 {
-                    m_CoreViewModel.AddManagedActivity(DtoConverter.FromDto(dependentActivityDto));
+                    m_CoreViewModel.AddManagedActivity(Common.Project.v0_1_0.DtoConverter.FromDto(dependentActivityDto));
                 }
             }
         }
 
-        private void ProcessProjectPlanDto(ProjectPlanDto projectPlanDto)
+        private void ProcessProjectPlanDto(Common.Project.v0_2_0.ProjectPlanDto projectPlanDto)
         {
             if (projectPlanDto == null)
             {
@@ -688,16 +687,16 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 ResourceSettingsDto = projectPlanDto.ResourceSettings;
 
                 // Compilation.
-                GraphCompilation = DtoConverter.FromDto(projectPlanDto.GraphCompilation);
+                GraphCompilation = Common.Project.v0_2_0.DtoConverter.FromDto(projectPlanDto.GraphCompilation);
 
                 CyclomaticComplexity = projectPlanDto.GraphCompilation.CyclomaticComplexity;
                 Duration = projectPlanDto.GraphCompilation.Duration;
 
                 // Activities.
                 // Be sure to do this after the resources and project start date have been added.
-                foreach (DependentActivityDto dependentActivityDto in projectPlanDto.DependentActivities)
+                foreach (Common.Project.v0_1_0.DependentActivityDto dependentActivityDto in projectPlanDto.DependentActivities)
                 {
-                    m_CoreViewModel.AddManagedActivity(DtoConverter.FromDto(dependentActivityDto));
+                    m_CoreViewModel.AddManagedActivity(Common.Project.v0_1_0.DtoConverter.FromDto(dependentActivityDto));
                 }
 
                 m_CoreViewModel.UpdateActivitiesAllocatedToResources();
@@ -718,38 +717,38 @@ namespace Zametek.Client.ProjectPlan.Wpf
             //PublishGanttChartDtoUpdatedPayload();
         }
 
-        private async Task<ProjectPlanDto> BuildProjectPlanDtoAsync()
+        private async Task<Common.Project.v0_2_0.ProjectPlanDto> BuildProjectPlanDtoAsync()
         {
             return await Task.Run(() => BuildProjectPlanDto());
         }
 
-        private ProjectPlanDto BuildProjectPlanDto()
+        private Common.Project.v0_2_0.ProjectPlanDto BuildProjectPlanDto()
         {
             lock (m_Lock)
             {
-                return new ProjectPlanDto()
+                return new Common.Project.v0_2_0.ProjectPlanDto()
                 {
                     ProjectStart = ProjectStart,
-                    DependentActivities = Activities.Select(x => DtoConverter.ToDto(x)).ToList(),
-                    ResourceSettings = ResourceSettingsDto.Copy(),
-                    ArrowGraphSettings = ArrowGraphSettingsDto.Copy(),
-                    GraphCompilation = DtoConverter.ToDto(GraphCompilation, CyclomaticComplexity.GetValueOrDefault(), Duration.GetValueOrDefault()),
-                    ArrowGraph = ArrowGraphDto != null ? ArrowGraphDto.Copy() : new ArrowGraphDto() { Edges = new List<ActivityEdgeDto>(), Nodes = new List<EventNodeDto>(), IsStale = false },
+                    DependentActivities = Activities.Select(x => Common.Project.v0_1_0.DtoConverter.ToDto(x)).ToList(),
+                    ResourceSettings = Common.Project.v0_1_0.DtoExtensions.Copy(ResourceSettingsDto),
+                    ArrowGraphSettings = Common.Project.v0_1_0.DtoExtensions.Copy(ArrowGraphSettingsDto),
+                    GraphCompilation = Common.Project.v0_2_0.DtoConverter.ToDto(GraphCompilation, CyclomaticComplexity.GetValueOrDefault(), Duration.GetValueOrDefault()),
+                    ArrowGraph = ArrowGraphDto != null ? Common.Project.v0_1_0.DtoExtensions.Copy(ArrowGraphDto) : new Common.Project.v0_1_0.ArrowGraphDto() { Edges = new List<Common.Project.v0_1_0.ActivityEdgeDto>(), Nodes = new List<Common.Project.v0_1_0.EventNodeDto>(), IsStale = false },
                     HasStaleOutputs = HasStaleOutputs
                 };
             }
         }
 
-        private Task<ProjectPlanDto> OpenProjectPlanDtoAsync(string filename)
+        private static async Task<Common.Project.v0_2_0.ProjectPlanDto> OpenProjectPlanDtoAsync(string filename)
         {
             if (string.IsNullOrWhiteSpace(filename))
             {
                 throw new ArgumentException(nameof(filename));
             }
-            return Task.Run(() => OpenSave.OpenJson<ProjectPlanDto>(filename));
+            return await OpenSave.OpenProjectPlanDtoAsync(filename).ConfigureAwait(false);
         }
 
-        private static Task SaveProjectPlanDtoAsync(ProjectPlanDto projectPlanDto, string filename)
+        private static Task SaveProjectPlanDtoAsync(Common.Project.v0_2_0.ProjectPlanDto projectPlanDto, string filename)
         {
             if (projectPlanDto == null)
             {
@@ -759,12 +758,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             {
                 throw new ArgumentException(nameof(filename));
             }
-            return Task.Run(() => OpenSave.SaveJson(projectPlanDto, filename));
+            return Task.Run(() => OpenSave.SaveProjectPlanDto(projectPlanDto, filename));
         }
 
         private async Task<int> RunCalculateResourcedCyclomaticComplexityAsync()
         {
-            return await Task<int>.Run(() => m_CoreViewModel.RunCalculateResourcedCyclomaticComplexity());
+            return await Task.Run(() => m_CoreViewModel.RunCalculateResourcedCyclomaticComplexity());
         }
 
         private async Task RunCompileAsync()
@@ -793,9 +792,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 m_CoreViewModel.ClearSettings();
 
                 GraphCompilation = new GraphCompilation<int, IDependentActivity<int>>(
-                    false,
-                    Enumerable.Empty<CircularDependency<int>>(),
-                    Enumerable.Empty<int>(),
                     Enumerable.Empty<IDependentActivity<int>>(),
                     Enumerable.Empty<IResourceSchedule<int>>());
 
@@ -865,7 +861,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 string directory = m_ProjectSettingService.PlanDirectory;
                 string filename = Path.Combine(directory, projectTitle);
                 filename = Path.ChangeExtension(filename, Properties.Resources.Filter_SaveProjectPlanFileExtension);
-                ProjectPlanDto projectPlan = await BuildProjectPlanDtoAsync();
+                Common.Project.v0_2_0.ProjectPlanDto projectPlan = await BuildProjectPlanDtoAsync();
                 await SaveProjectPlanDtoAsync(projectPlan, filename);
                 IsProjectUpdated = false;
                 m_ProjectSettingService.SetFilePath(filename);
@@ -903,7 +899,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     }
                     else
                     {
-                        ProjectPlanDto projectPlan = await BuildProjectPlanDtoAsync();
+                        Common.Project.v0_2_0.ProjectPlanDto projectPlan = await BuildProjectPlanDtoAsync();
                         await SaveProjectPlanDtoAsync(projectPlan, filename);
                         IsProjectUpdated = false;
                         m_ProjectSettingService.SetFilePath(filename);
@@ -1021,7 +1017,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 IsBusy = true;
                 lock (m_Lock)
                 {
-                    var confirmation = new ResourceSettingsManagerConfirmation(ResourceSettingsDto.Copy())
+                    var confirmation = new ResourceSettingsManagerConfirmation(Common.Project.v0_1_0.DtoExtensions.Copy(ResourceSettingsDto))
                     {
                         Title = Properties.Resources.Title_ResourceSettings
                     };
@@ -1061,7 +1057,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 IsBusy = true;
                 lock (m_Lock)
                 {
-                    var confirmation = new ArrowGraphSettingsManagerConfirmation(ArrowGraphSettingsDto.Copy())
+                    var confirmation = new ArrowGraphSettingsManagerConfirmation(Common.Project.v0_1_0.DtoExtensions.Copy(ArrowGraphSettingsDto))
                     {
                         Title = Properties.Resources.Title_ArrowGraphSettings
                     };
@@ -1326,7 +1322,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public ArrowGraphSettingsDto ArrowGraphSettingsDto
+        public Common.Project.v0_1_0.ArrowGraphSettingsDto ArrowGraphSettingsDto
         {
             get
             {
@@ -1341,7 +1337,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public ResourceSettingsDto ResourceSettingsDto
+        public Common.Project.v0_1_0.ResourceSettingsDto ResourceSettingsDto
         {
             get
             {
@@ -1482,7 +1478,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 }
                 else
                 {
-                    ProjectPlanDto projectPlan = await OpenProjectPlanDtoAsync(filename);
+                    Common.Project.v0_2_0.ProjectPlanDto projectPlan = await OpenProjectPlanDtoAsync(filename);
                     ProcessProjectPlanDto(projectPlan);
                     IsProjectUpdated = false;
                     m_ProjectSettingService.SetFilePath(filename);

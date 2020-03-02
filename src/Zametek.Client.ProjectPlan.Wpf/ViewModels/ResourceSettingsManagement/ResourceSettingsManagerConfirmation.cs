@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -12,7 +11,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
     {
         #region Ctors
 
-        public ResourceSettingsManagerConfirmation(ResourceSettingsDto resourceSettings)
+        public ResourceSettingsManagerConfirmation(Common.Project.v0_1_0.ResourceSettingsDto resourceSettings)
         {
             if (resourceSettings == null)
             {
@@ -45,7 +44,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             set;
         }
 
-        public IEnumerable<ResourceDto> ResourceDtos
+        public IEnumerable<Common.Project.v0_1_0.ResourceDto> ResourceDtos
         {
             get
             {
@@ -53,11 +52,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        public ResourceSettingsDto ResourceSettingsDto
+        public Common.Project.v0_1_0.ResourceSettingsDto ResourceSettingsDto
         {
             get
             {
-                return new ResourceSettingsDto
+                return new Common.Project.v0_1_0.ResourceSettingsDto
                 {
                     Resources = ResourceDtos.ToList(),
                     DefaultUnitCost = DefaultUnitCost,
@@ -70,7 +69,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Private Methods
 
-        private void SetManagedResources(IEnumerable<ResourceDto> resources)
+        private void SetManagedResources(IEnumerable<Common.Project.v0_1_0.ResourceDto> resources)
         {
             if (resources == null)
             {

@@ -1,5 +1,4 @@
 ﻿using System;
-using Zametek.Common.Project;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.Manager.ProjectPlan
@@ -8,7 +7,7 @@ namespace Zametek.Manager.ProjectPlan
         : ISettingManager
     {
         #region Fields
-        
+
         private readonly ISettingResourceAccess m_SettingResourceAccess;
 
         #endregion
@@ -24,12 +23,12 @@ namespace Zametek.Manager.ProjectPlan
 
         #region ISettingManager Members
 
-        public ArrowGraphSettingsDto GetArrowGraphSettings()
+        public Common.Project.v0_1_0.ArrowGraphSettingsDto GetArrowGraphSettings()
         {
             return m_SettingResourceAccess.GetArrowGraphSettings();
         }
 
-        public ResourceSettingsDto GetResourceSettings()
+        public Common.Project.v0_1_0.ResourceSettingsDto GetResourceSettings()
         {
             return m_SettingResourceAccess.GetResourceSettings();
         }

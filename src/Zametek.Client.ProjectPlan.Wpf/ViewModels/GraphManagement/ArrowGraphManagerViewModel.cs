@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -60,11 +59,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         #region Properties
 
-        private ArrowGraphSettingsDto ArrowGraphSettingsDto => m_CoreViewModel.ArrowGraphSettingsDto;
+        private Common.Project.v0_1_0.ArrowGraphSettingsDto ArrowGraphSettingsDto => m_CoreViewModel.ArrowGraphSettingsDto;
 
         private bool HasStaleOutputs => m_CoreViewModel.HasStaleOutputs;
 
-        private ArrowGraphDto ArrowGraphDto
+        private Common.Project.v0_1_0.ArrowGraphDto ArrowGraphDto
         {
             get
             {
@@ -180,13 +179,13 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 ArrowGraphDto = null;
                 IList<IDependentActivity<int>> dependentActivities =
                     GraphCompilation.DependentActivities
-                    .Select(x => (IDependentActivity<int>)x.WorkingCopy())
+                    .Select(x => (IDependentActivity<int>)x.CloneObject())
                     .ToList();
 
                 if (!HasCompilationErrors
                     && dependentActivities.Any())
                 {
-                    var arrowGraphCompiler = ArrowGraphCompiler<int, IDependentActivity<int>>.Create();
+                    var arrowGraphCompiler = new ArrowGraphCompiler<int, IDependentActivity<int>>();
                     foreach (DependentActivity<int> dependentActivity in dependentActivities)
                     {
                         dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
@@ -201,7 +200,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     {
                         throw new InvalidOperationException("Cannot construct arrow graph");
                     }
-                    ArrowGraphDto = DtoConverter.ToDto(arrowGraph);
+                    ArrowGraphDto = Common.Project.v0_1_0.DtoConverter.ToDto(arrowGraph);
                 }
                 GenerateArrowGraphDataFromDto();
             }
@@ -222,7 +221,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             PublishArrowGraphDataUpdatedPayload();
         }
 
-        private static ArrowGraphData GenerateArrowGraphData(ArrowGraphDto arrowGraph)
+        private static ArrowGraphData GenerateArrowGraphData(Common.Project.v0_1_0.ArrowGraphDto arrowGraph)
         {
             if (arrowGraph == null
                 || arrowGraph.Nodes == null
@@ -232,11 +231,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             {
                 return null;
             }
-            IList<EventNodeDto> nodeDtos = arrowGraph.Nodes.ToList();
+            IList<Common.Project.v0_1_0.EventNodeDto> nodeDtos = arrowGraph.Nodes.ToList();
             var edgeHeadVertexLookup = new Dictionary<int, ArrowGraphVertex>();
             var edgeTailVertexLookup = new Dictionary<int, ArrowGraphVertex>();
             var arrowGraphVertices = new List<ArrowGraphVertex>();
-            foreach (EventNodeDto nodeDto in nodeDtos)
+            foreach (Common.Project.v0_1_0.EventNodeDto nodeDto in nodeDtos)
             {
                 var vertex = new ArrowGraphVertex(nodeDto.Content, nodeDto.NodeType);
                 arrowGraphVertices.Add(vertex);
@@ -251,7 +250,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
 
             // Check all edges are used.
-            IList<ActivityEdgeDto> edgeDtos = arrowGraph.Edges.ToList();
+            IList<Common.Project.v0_1_0.ActivityEdgeDto> edgeDtos = arrowGraph.Edges.ToList();
             IList<int> edgeIds = edgeDtos.Select(x => x.Content.Id).ToList();
             if (!edgeIds.OrderBy(x => x).SequenceEqual(edgeHeadVertexLookup.Keys.OrderBy(x => x)))
             {
@@ -272,12 +271,12 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
 
             // Check Start and End nodes.
-            IEnumerable<EventNodeDto> startNodes = nodeDtos.Where(x => x.NodeType == NodeType.Start);
+            IEnumerable<Common.Project.v0_1_0.EventNodeDto> startNodes = nodeDtos.Where(x => x.NodeType == NodeType.Start);
             if (startNodes.Count() != 1)
             {
                 throw new ArgumentException("Data contain more than one Start node");
             }
-            IEnumerable<EventNodeDto> endNodes = nodeDtos.Where(x => x.NodeType == NodeType.End);
+            IEnumerable<Common.Project.v0_1_0.EventNodeDto> endNodes = nodeDtos.Where(x => x.NodeType == NodeType.End);
             if (endNodes.Count() != 1)
             {
                 throw new ArgumentException("Data contain more than one End node");
@@ -289,9 +288,9 @@ namespace Zametek.Client.ProjectPlan.Wpf
             {
                 graph.AddVertex(vertex);
             }
-            foreach (ActivityEdgeDto edgeDto in edgeDtos)
+            foreach (Common.Project.v0_1_0.ActivityEdgeDto edgeDto in edgeDtos)
             {
-                ActivityDto activityDto = edgeDto.Content;
+                Common.Project.v0_1_0.ActivityDto activityDto = edgeDto.Content;
                 var edge = new ArrowGraphEdge(
                     activityDto,
                     edgeTailVertexLookup[activityDto.Id],
@@ -309,7 +308,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        private static void DecorateArrowGraphByGraphSettings(ArrowGraphData arrowGraphData, ArrowGraphSettingsDto arrowGraphSettings)
+        private static void DecorateArrowGraphByGraphSettings(ArrowGraphData arrowGraphData, Common.Project.v0_1_0.ArrowGraphSettingsDto arrowGraphSettings)
         {
             if (arrowGraphData == null)
             {
@@ -328,7 +327,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
             }
         }
 
-        private static (GraphXEdgeFormatLookup, SlackColorFormatLookup) GetEdgeFormatLookups(ArrowGraphSettingsDto arrowGraphSettingsDto)
+        private static (GraphXEdgeFormatLookup, SlackColorFormatLookup) GetEdgeFormatLookups(Common.Project.v0_1_0.ArrowGraphSettingsDto arrowGraphSettingsDto)
         {
             if (arrowGraphSettingsDto == null)
             {

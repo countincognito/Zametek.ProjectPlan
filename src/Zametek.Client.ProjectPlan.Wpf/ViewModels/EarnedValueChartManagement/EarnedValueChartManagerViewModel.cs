@@ -188,7 +188,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 if (dependentActivities != null)
                 {
                     IList<IDependentActivity<int>> orderedDependentActivities = dependentActivities
-                        .Select(x => (IDependentActivity<int>)x.WorkingCopy())
+                        .Select(x => (IDependentActivity<int>)x.CloneObject())
                         .OrderBy(x => x.EarliestFinishTime.GetValueOrDefault())
                         .ThenBy(x => x.EarliestStartTime.GetValueOrDefault())
                         .ToList();

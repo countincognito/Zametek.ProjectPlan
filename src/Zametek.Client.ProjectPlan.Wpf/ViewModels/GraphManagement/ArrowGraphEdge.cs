@@ -1,6 +1,5 @@
 ﻿using GraphX.PCL.Common.Models;
 using System;
-using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -10,14 +9,14 @@ namespace Zametek.Client.ProjectPlan.Wpf
     {
         #region Fields
 
-        private ActivityDto m_Activity;
+        private Common.Project.v0_1_0.ActivityDto m_Activity;
 
         #endregion
 
         #region Ctors
 
         public ArrowGraphEdge(
-            ActivityDto activityDto,
+            Common.Project.v0_1_0.ActivityDto activityDto,
             ArrowGraphVertex source,
             ArrowGraphVertex target)
             : base(source, target, 1.0)

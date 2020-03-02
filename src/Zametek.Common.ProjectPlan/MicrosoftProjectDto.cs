@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Zametek.Common.Project;
 
 namespace Zametek.Common.ProjectPlan
 {
@@ -8,7 +7,7 @@ namespace Zametek.Common.ProjectPlan
     public class MicrosoftProjectDto
     {
         public DateTime ProjectStart { get; set; }
-        public List<DependentActivityDto> DependentActivities { get; set; }
-        public List<ResourceDto> Resources { get; set; }
+        public List<Common.Project.v0_1_0.DependentActivityDto> DependentActivities { get; set; }
+        public List<Common.Project.v0_1_0.ResourceDto> Resources { get; set; }
     }
 }

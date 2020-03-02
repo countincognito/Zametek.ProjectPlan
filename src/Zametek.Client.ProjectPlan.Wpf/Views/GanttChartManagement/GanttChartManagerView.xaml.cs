@@ -10,7 +10,6 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Zametek.Common.Project;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
@@ -129,7 +128,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
                 // Prep formatting helpers.
                 SlackColorFormatLookup colorFormatLookup = null;
-                ArrowGraphSettingsDto arrowGraphSettingsDto = ViewModel.ArrowGraphSettingsDto;
+                Common.Project.v0_1_0.ArrowGraphSettingsDto arrowGraphSettingsDto = ViewModel.ArrowGraphSettingsDto;
 
                 if (arrowGraphSettingsDto?.ActivitySeverities != null)
                 {

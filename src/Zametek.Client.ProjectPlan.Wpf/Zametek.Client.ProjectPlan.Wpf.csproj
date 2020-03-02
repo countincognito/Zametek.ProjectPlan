@@ -314,14 +314,14 @@
     <Reference Include="Xceed.Wpf.Toolkit, Version=3.8.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Extended.Wpf.Toolkit.3.8.1\lib\net40\Xceed.Wpf.Toolkit.dll</HintPath>
     </Reference>
-    <Reference Include="Zametek.Maths.Graphs.Compilers, Version=1.1.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Zametek.Maths.Graphs.Compilers.1.1.1\lib\netstandard1.4\Zametek.Maths.Graphs.Compilers.dll</HintPath>
+    <Reference Include="Zametek.Maths.Graphs.Compilers, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Zametek.Maths.Graphs.Compilers.1.2.0\lib\netstandard1.4\Zametek.Maths.Graphs.Compilers.dll</HintPath>
     </Reference>
-    <Reference Include="Zametek.Maths.Graphs.Primitives, Version=1.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Zametek.Maths.Graphs.Primitives.1.0.3\lib\netstandard1.4\Zametek.Maths.Graphs.Primitives.dll</HintPath>
+    <Reference Include="Zametek.Maths.Graphs.Primitives, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Zametek.Maths.Graphs.Primitives.1.2.0\lib\netstandard1.4\Zametek.Maths.Graphs.Primitives.dll</HintPath>
     </Reference>
-    <Reference Include="Zametek.Utility, Version=2.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Zametek.Utility.2.0.2\lib\netstandard2.0\Zametek.Utility.dll</HintPath>
+    <Reference Include="Zametek.Utility, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Zametek.Utility.2.1.0\lib\netstandard1.4\Zametek.Utility.dll</HintPath>
     </Reference>
     <Reference Include="Zametek.WindowsEx.Interactivity, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Zametek.WindowsEx.Interactivity.1.0.2\lib\net452\Zametek.WindowsEx.Interactivity.dll</HintPath>

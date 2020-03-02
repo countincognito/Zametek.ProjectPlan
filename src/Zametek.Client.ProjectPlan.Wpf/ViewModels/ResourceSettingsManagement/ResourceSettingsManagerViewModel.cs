@@ -5,7 +5,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -99,11 +98,11 @@ namespace Zametek.Client.ProjectPlan.Wpf
             int resourceId = GetNextResourceId();
             Resources.Add(
                 new ManagedResourceViewModel(
-                    new ResourceDto
+                    new Common.Project.v0_1_0.ResourceDto
                     {
                         Id = resourceId,
                         IsExplicitTarget = true,
-                        ColorFormat = new ColorFormatDto(),
+                        ColorFormat = new Common.Project.v0_1_0.ColorFormatDto(),
                         UnitCost = DefaultUnitCost
                     }));
             RaisePropertyChanged(nameof(Resources));

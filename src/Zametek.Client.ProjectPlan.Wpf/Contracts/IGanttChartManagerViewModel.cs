@@ -1,7 +1,6 @@
 ﻿using Prism.Interactivity.InteractionRequest;
 using System;
 using System.Windows.Input;
-using Zametek.Common.Project;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -27,6 +26,6 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         ICommand GenerateGanttChartCommand { get; }
 
-        ArrowGraphSettingsDto ArrowGraphSettingsDto { get; }
+        Common.Project.v0_1_0.ArrowGraphSettingsDto ArrowGraphSettingsDto { get; }
     }
 }

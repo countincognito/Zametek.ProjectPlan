@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Windows.Media;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
-using Zametek.Common.Project;
+using System.Windows.Media;
 
 namespace Zametek.Client.ProjectPlan.Wpf
 {
@@ -14,7 +13,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var input = value as ColorFormatDto;
+            var input = value as Common.Project.v0_1_0.ColorFormatDto;
             if (input == null)
             {
                 return DependencyProperty.UnsetValue;
@@ -29,7 +28,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                 return DependencyProperty.UnsetValue;
             }
             var input = (Color)value;
-            return new ColorFormatDto
+            return new Common.Project.v0_1_0.ColorFormatDto
             {
                 A = input.A,
                 R = input.R,
