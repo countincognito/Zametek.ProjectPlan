@@ -257,8 +257,10 @@
                                                                 <Setter Property="ContentTemplate">
                                                                     <Setter.Value>
                                                                         <DataTemplate>
+                                                                            <!--FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}" forces editing on second click-->
                                                                             <ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:InterActivityAllocationType}}}"
-                                                                                      SelectedValue="{Binding Path=InterActivityAllocationType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                                      SelectedValue="{Binding Path=InterActivityAllocationType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                                      FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"/>
                                                                         </DataTemplate>
                                                                     </Setter.Value>
                                                                 </Setter>
@@ -317,6 +319,7 @@
                                                                 <Setter Property="ContentTemplate">
                                                                     <Setter.Value>
                                                                         <DataTemplate>
+                                                                            <!--FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}" forces editing on second click-->
                                                                             <xctk:DoubleUpDown Value="{Binding Path=UnitCost, Mode=TwoWay}"
                                                                                                FormatString="F2"
                                                                                                VerticalAlignment="Stretch"
@@ -325,7 +328,8 @@
                                                                                                HorizontalContentAlignment="Right"
                                                                                                Margin="0"
                                                                                                Increment="1.00"
-                                                                                               Minimum="0.00"/>
+                                                                                               Minimum="0.00"
+                                                                                               FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"/>
                                                                         </DataTemplate>
                                                                     </Setter.Value>
                                                                 </Setter>
@@ -384,13 +388,15 @@
                                                                 <Setter Property="ContentTemplate">
                                                                     <Setter.Value>
                                                                         <DataTemplate>
+                                                                            <!--FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}" forces editing on second click-->
                                                                             <xctk:IntegerUpDown Value="{Binding Path=DisplayOrder, Mode=TwoWay}"
                                                                                                 VerticalAlignment="Stretch"
                                                                                                 VerticalContentAlignment="Center"
                                                                                                 HorizontalAlignment="Stretch"
                                                                                                 HorizontalContentAlignment="Right"
                                                                                                 Margin="0"
-                                                                                                Minimum="0"/>
+                                                                                                Minimum="0"
+                                                                                                FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"/>
                                                                         </DataTemplate>
                                                                     </Setter.Value>
                                                                 </Setter>
@@ -468,13 +474,15 @@
                                                                 <Setter Property="ContentTemplate">
                                                                     <Setter.Value>
                                                                         <DataTemplate>
+                                                                            <!--FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}" forces editing on second click-->
                                                                             <TextBox Text="{Binding Path=Name, Mode=TwoWay}"
                                                                                      VerticalAlignment="Stretch"
                                                                                      VerticalContentAlignment="Center"
                                                                                      HorizontalAlignment="Stretch"
                                                                                      HorizontalContentAlignment="Left"
                                                                                      Margin="0"
-                                                                                     Padding="3"/>
+                                                                                     Padding="3"
+                                                                                     FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"/>
                                                                         </DataTemplate>
                                                                     </Setter.Value>
                                                                 </Setter>

@@ -136,13 +136,15 @@
                                                                 <Setter Property="ContentTemplate">
                                                                     <Setter.Value>
                                                                         <DataTemplate>
+                                                                            <!--FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}" forces editing on second click-->
                                                                             <xctk:IntegerUpDown Value="{Binding Path=SlackLimit, Mode=TwoWay}"
                                                                                                 VerticalAlignment="Stretch"
                                                                                                 VerticalContentAlignment="Center"
                                                                                                 HorizontalAlignment="Stretch"
                                                                                                 HorizontalContentAlignment="Right"
                                                                                                 Margin="0"
-                                                                                                Minimum="0"/>
+                                                                                                Minimum="0"
+                                                                                                FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"/>
                                                                         </DataTemplate>
                                                                     </Setter.Value>
                                                                 </Setter>
@@ -220,6 +222,7 @@
                                                                 <Setter Property="ContentTemplate">
                                                                     <Setter.Value>
                                                                         <DataTemplate>
+                                                                            <!--FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}" forces editing on second click-->
                                                                             <xctk:DoubleUpDown FormatString="F2"
                                                                                                Margin="0"
                                                                                                VerticalAlignment="Stretch"
@@ -228,7 +231,8 @@
                                                                                                HorizontalContentAlignment="Right"
                                                                                                Value="{Binding Path=CriticalityWeight, Mode=TwoWay}"
                                                                                                Increment="0.01"
-                                                                                               Minimum="0.01"/>
+                                                                                               Minimum="0.01"
+                                                                                               FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"/>
                                                                         </DataTemplate>
                                                                     </Setter.Value>
                                                                 </Setter>
@@ -289,6 +293,7 @@
                                                                 <Setter Property="ContentTemplate">
                                                                     <Setter.Value>
                                                                         <DataTemplate>
+                                                                            <!--FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}" forces editing on second click-->
                                                                             <xctk:DoubleUpDown FormatString="F2"
                                                                                                Margin="0"
                                                                                                VerticalAlignment="Stretch"
@@ -297,7 +302,8 @@
                                                                                                HorizontalContentAlignment="Right"
                                                                                                Value="{Binding Path=FibonacciWeight, Mode=TwoWay}"
                                                                                                Increment="0.01"
-                                                                                               Minimum="0.01"/>
+                                                                                               Minimum="0.01"
+                                                                                               FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"/>
                                                                         </DataTemplate>
                                                                     </Setter.Value>
                                                                 </Setter>
