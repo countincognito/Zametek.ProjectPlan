@@ -79,7 +79,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         daysPerWeek = 5;
                         break;
                     default:
-                        throw new InvalidOperationException(@"Unknown DateTimeCalculatorMode value");
+                        throw new InvalidOperationException($@"Unknown DateTimeCalculatorMode value ""{Mode}""");
                 }
                 return daysPerWeek;
             }
@@ -102,7 +102,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     finishDateTime = AddBusinessDays(startDateTime, days);
                     break;
                 default:
-                    throw new InvalidOperationException(@"Unknown DateTimeCalculatorMode value");
+                    throw new InvalidOperationException($@"Unknown DateTimeCalculatorMode value ""{Mode}""");
             }
             return finishDateTime;
         }
@@ -119,7 +119,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                     count = CountBusinessDays(current, toCompareWith);
                     break;
                 default:
-                    throw new InvalidOperationException(@"Unknown DateTimeCalculatorMode value");
+                    throw new InvalidOperationException($@"Unknown DateTimeCalculatorMode value ""{Mode}""");
             }
             return count;
         }

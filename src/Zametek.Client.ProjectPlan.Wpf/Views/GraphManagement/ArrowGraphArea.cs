@@ -86,7 +86,7 @@ namespace Zametek.Client.ProjectPlan.Wpf
                         dashStyle = Common.Project.v0_1_0.EdgeDashStyle.Dashed;
                         break;
                     default:
-                        throw new InvalidOperationException("Unknown EdgeDashStyle value");
+                        throw new InvalidOperationException($@"Unknown EdgeDashStyle value ""{edge.DashStyle}""");
                 }
 
                 outputEdge.DashStyle = dashStyle;

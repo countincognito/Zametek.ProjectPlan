@@ -147,7 +147,7 @@ namespace Zametek.Engine.ProjectPlan
                     dashStyle = @"dashed";
                     break;
                 default:
-                    throw new InvalidOperationException("Unknown EdgeDashStyle value");
+                    throw new InvalidOperationException($@"Unknown EdgeDashStyle value ""{diagramEdgeDto.DashStyle}""");
             }
 
             outputEdge.data = new data
