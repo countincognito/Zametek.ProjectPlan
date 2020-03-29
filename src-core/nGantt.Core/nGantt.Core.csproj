@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="README.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="README.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="GanttControl.xaml.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>GanttControl.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="GanttControl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+
+</Project>

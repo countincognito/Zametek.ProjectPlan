@@ -1,0 +1,63 @@
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using Zametek.Common.ProjectPlan;
+using Zametek.Data.ProjectPlan;
+using Zametek.Utility;
+
+namespace Zametek.ViewModel.ProjectPlan
+{
+    public static class OpenSave
+    {
+        public static async Task<ProjectPlanModel> OpenProjectPlanAsync(string filename)
+        {
+            if (File.Exists(filename))
+            {
+                using (StreamReader reader = File.OpenText(filename))
+                {
+                    string content = await reader.ReadToEndAsync();
+                    JObject json = JObject.Parse(content);
+                    string version = json.GetValue(nameof(ProjectPlanModel.Version))?.ToString();
+                    string jsonString = json.ToString();
+                    ProjectPlanModel projectPlan = null;
+
+                    version.ValueSwitchOn()
+                        .Case(Versions.v0_1_0_original, x =>
+                        {
+                            projectPlan = Converter.Upgrade(JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectPlanModel>(jsonString));
+                        })
+                        .Case(Versions.v0_1_0, x =>
+                        {
+                            projectPlan = Converter.Upgrade(JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectPlanModel>(jsonString));
+                        })
+                        .Case(Versions.v0_2_0, x =>
+                        {
+                            projectPlan = Converter.Upgrade(JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_0.ProjectPlanModel>(jsonString));
+                        })
+                        .Default(x => throw new InvalidOperationException($@"Cannot process version ""{x}""."));
+
+                    return projectPlan;
+                }
+            }
+            return null;
+        }
+
+        public static void SaveProjectPlan(
+            ProjectPlanModel state,
+            string fileName)
+        {
+            using (StreamWriter writer = File.CreateText(fileName))
+            {
+                var jsonSerializer = JsonSerializer.Create(
+                    new JsonSerializerSettings
+                    {
+                        Formatting = Formatting.Indented,
+                        NullValueHandling = NullValueHandling.Ignore,
+                    });
+                jsonSerializer.Serialize(writer, state, typeof(ProjectPlanModel));
+            }
+        }
+    }
+}

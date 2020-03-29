@@ -1,0 +1,28 @@
+﻿using AutoMapper;
+
+namespace Zametek.Data.ProjectPlan
+{
+    public static class Converter
+    {
+        private readonly static IMapper m_Mapper;
+
+        static Converter()
+        {
+            var config = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile<MapperProfile>();
+            });
+            m_Mapper = config.CreateMapper();
+        }
+
+        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_2_0.ProjectPlanModel projectPlan)
+        {
+            return m_Mapper.Map<v0_2_0.ProjectPlanModel, Common.ProjectPlan.ProjectPlanModel>(projectPlan);
+        }
+
+        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_1_0.ProjectPlanModel projectPlan)
+        {
+            return Upgrade(v0_2_0.Converter.Upgrade(projectPlan));
+        }
+    }
+}
