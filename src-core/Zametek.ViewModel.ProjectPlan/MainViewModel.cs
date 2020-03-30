@@ -730,7 +730,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                var graphCompilation = m_Mapper.Map<GraphCompilationModel>(GraphCompilation);
+                var graphCompilation = m_Mapper.Map<IGraphCompilation<int, int, IDependentActivity<int, int>>, GraphCompilationModel>(GraphCompilation);
                 graphCompilation.CyclomaticComplexity = CyclomaticComplexity.GetValueOrDefault();
                 graphCompilation.Duration = Duration.GetValueOrDefault();
 

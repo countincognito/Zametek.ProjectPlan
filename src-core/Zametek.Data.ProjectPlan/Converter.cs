@@ -24,5 +24,10 @@ namespace Zametek.Data.ProjectPlan
         {
             return Upgrade(v0_2_0.Converter.Upgrade(projectPlan));
         }
+
+        public static v0_2_0.ProjectPlanModel Format(Common.ProjectPlan.ProjectPlanModel projectPlan)
+        {
+            return m_Mapper.Map<Common.ProjectPlan.ProjectPlanModel, v0_2_0.ProjectPlanModel>(projectPlan);
+        }
     }
 }

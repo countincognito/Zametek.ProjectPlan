@@ -7,6 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
+using Zametek.Contract.ProjectPlan;
+using Zametek.Event.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -27,7 +29,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private SubscriptionToken m_GraphCompiledSubscriptionToken;
         private SubscriptionToken m_ArrowGraphSettingsUpdatedSubscriptionToken;
         private SubscriptionToken m_GanttChartSettingsUpdatedSubscriptionToken;
-        private SubscriptionToken m_GanttChartDtoUpdatedSubscriptionToken;
+        private SubscriptionToken m_GanttChartUpdatedSubscriptionToken;
 
         #endregion
 
@@ -62,9 +64,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private bool HasStaleOutputs => m_CoreViewModel.HasStaleOutputs;
 
-        private GraphCompilation<int, IDependentActivity<int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
+        private IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
 
-        private IList<ResourceSeriesDto> ResourceSeriesSet => m_CoreViewModel.ResourceSeriesSet;
+        private IList<ResourceSeriesModel> ResourceSeriesSet => m_CoreViewModel.ResourceSeriesSet;
 
         #endregion
 
@@ -148,8 +150,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         HasStaleGanttChart = true;
                     }, ThreadOption.BackgroundThread);
-            m_GanttChartDtoUpdatedSubscriptionToken =
-                 m_EventService.GetEvent<PubSubEvent<GanttChartDtoUpdatedPayload>>()
+            m_GanttChartUpdatedSubscriptionToken =
+                 m_EventService.GetEvent<PubSubEvent<GanttChartUpdatedPayload>>()
                      .Subscribe(async payload =>
                      {
                          await GenerateGanttChartFromGraphCompilationAsync();
@@ -164,8 +166,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Unsubscribe(m_ArrowGraphSettingsUpdatedSubscriptionToken);
             m_EventService.GetEvent<PubSubEvent<GanttChartSettingsUpdatedPayload>>()
                 .Unsubscribe(m_GanttChartSettingsUpdatedSubscriptionToken);
-            m_EventService.GetEvent<PubSubEvent<GanttChartDtoUpdatedPayload>>()
-                .Unsubscribe(m_GanttChartDtoUpdatedSubscriptionToken);
+            m_EventService.GetEvent<PubSubEvent<GanttChartUpdatedPayload>>()
+                .Unsubscribe(m_GanttChartUpdatedSubscriptionToken);
         }
 
         private void PublishGanttChartDataUpdatedPayload()
@@ -183,29 +185,29 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                GanttChartDto = null;
-                IList<IDependentActivity<int>> dependentActivities =
+                GanttChart = null;
+                IList<IDependentActivity<int, int>> dependentActivities =
                     GraphCompilation.DependentActivities
-                    .Select(x => (IDependentActivity<int>)x.CloneObject())
+                    .Select(x => (IDependentActivity<int, int>)x.CloneObject())
                     .ToList();
 
                 if (!HasCompilationErrors
                     && dependentActivities.Any())
                 {
-                    IList<IDependentActivity<int>> orderedActivities =
+                    IList<IDependentActivity<int, int>> orderedActivities =
                         dependentActivities.OrderBy(x => x.EarliestStartTime)
                         .ThenBy(x => x.Duration)
                         .ToList();
 
-                    Common.Project.v0_1_0.ArrowGraphSettingsDto arrowGraphSettings = ArrowGraphSettingsDto;
-                    IList<IResourceSchedule<int>> resourceSchedules = GraphCompilation.ResourceSchedules;
-                    IList<ResourceSeriesDto> resourceSeriesSet = ResourceSeriesSet;
+                    ArrowGraphSettingsModel arrowGraphSettings = ArrowGraphSettings;
+                    IList<IResourceSchedule<int, int>> resourceSchedules = GraphCompilation.ResourceSchedules.ToList();
+                    IList<ResourceSeriesModel> resourceSeriesSet = ResourceSeriesSet;
 
                     if (arrowGraphSettings != null
                         && resourceSchedules != null
                         && resourceSeriesSet != null)
                     {
-                        GanttChartDto = new GanttChartDto
+                        GanttChart = new GanttChartModel
                         {
                             DependentActivities = orderedActivities,
                             ResourceSchedules = resourceSchedules,
@@ -259,27 +261,27 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     if (HasStaleOutputs
-                        && GanttChartDto != null)
+                        && GanttChart != null)
                     {
-                        GanttChartDto.IsStale = true;
+                        GanttChart.IsStale = true;
                     }
-                    return GanttChartDto?.IsStale ?? false;
+                    return GanttChart?.IsStale ?? false;
                 }
             }
             private set
             {
                 lock (m_Lock)
                 {
-                    if (GanttChartDto != null)
+                    if (GanttChart != null)
                     {
-                        GanttChartDto.IsStale = value;
+                        GanttChart.IsStale = value;
                     }
                 }
                 RaisePropertyChanged();
             }
         }
 
-        public GanttChartDto GanttChartDto { get; private set; }
+        public GanttChartModel GanttChart { get; private set; }
 
         public bool UseBusinessDays => m_CoreViewModel.UseBusinessDays;
 
@@ -305,7 +307,7 @@ namespace Zametek.ViewModel.ProjectPlan
             private set;
         }
 
-        public Common.Project.v0_1_0.ArrowGraphSettingsDto ArrowGraphSettingsDto => m_CoreViewModel.ArrowGraphSettingsDto;
+        public ArrowGraphSettingsModel ArrowGraphSettings => m_CoreViewModel.ArrowGraphSettings;
 
         #endregion
     }

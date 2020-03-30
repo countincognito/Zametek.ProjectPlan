@@ -6,7 +6,7 @@ namespace Zametek.Data.ProjectPlan.v0_2_0
     [Serializable]
     public class ProjectPlanModel
     {
-        public string Version { get; set; } = Versions.v0_2_0;
+        public string Version { get; } = Versions.v0_2_0;
 
         public DateTime ProjectStart { get; set; }
 

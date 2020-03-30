@@ -1,4 +1,4 @@
-﻿namespace Zametek.View.ProjectPlan
+﻿namespace Zametek.ViewModel.ProjectPlan
 {
     public static class Converter
     {

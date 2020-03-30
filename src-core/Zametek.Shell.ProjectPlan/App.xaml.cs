@@ -46,9 +46,9 @@ namespace Zametek.Shell.ProjectPlan
             containerRegistry.RegisterSingleton<ICoreViewModel, CoreViewModel>();
             //containerRegistry.RegisterSingleton<IEarnedValueChartManagerViewModel, EarnedValueChartManagerViewModel>();
             //containerRegistry.RegisterSingleton<IResourceChartManagerViewModel, ResourceChartManagerViewModel>();
-            //containerRegistry.RegisterSingleton<IMetricsManagerViewModel, MetricsManagerViewModel>();
-            //containerRegistry.RegisterSingleton<IArrowGraphManagerViewModel, ArrowGraphManagerViewModel>();
-            //containerRegistry.RegisterSingleton<IGanttChartManagerViewModel, GanttChartManagerViewModel>();
+            containerRegistry.RegisterSingleton<IMetricsManagerViewModel, MetricsManagerViewModel>();
+            containerRegistry.RegisterSingleton<IArrowGraphManagerViewModel, ArrowGraphManagerViewModel>();
+            containerRegistry.RegisterSingleton<IGanttChartManagerViewModel, GanttChartManagerViewModel>();
             containerRegistry.RegisterSingleton<IActivitiesManagerViewModel, ActivitiesManagerViewModel>();
             containerRegistry.RegisterSingleton<IMainViewModel, MainViewModel>();
 
@@ -61,6 +61,7 @@ namespace Zametek.Shell.ProjectPlan
             //containerRegistry.RegisterSingleton<ShellView>();
 
 
+            containerRegistry.RegisterSingleton<MetricsManagerView>();
             containerRegistry.RegisterSingleton<ActivitiesManagerView>();
 
         }

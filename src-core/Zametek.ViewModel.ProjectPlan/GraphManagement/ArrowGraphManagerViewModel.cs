@@ -9,6 +9,9 @@ using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 using Zametek.Maths.Graphs;
+using Zametek.Contract.ProjectPlan;
+using Zametek.Event.ProjectPlan;
+using AutoMapper;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -22,14 +25,15 @@ namespace Zametek.ViewModel.ProjectPlan
         private ArrowGraphData m_ArrowGraphData;
 
         private readonly ICoreViewModel m_CoreViewModel;
-        private readonly IProjectManager m_ProjectManager;
+        private readonly IProjectService m_ProjectService;
+        private readonly IMapper m_Mapper;
         private readonly IEventAggregator m_EventService;
 
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
 
         private SubscriptionToken m_GraphCompiledSubscriptionToken;
         private SubscriptionToken m_ArrowGraphSettingsUpdatedSubscriptionToken;
-        private SubscriptionToken m_ArrowGraphDtoUpdatedSubscriptionToken;
+        private SubscriptionToken m_ArrowGraphUpdatedSubscriptionToken;
 
         #endregion
 
@@ -37,13 +41,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ArrowGraphManagerViewModel(
             ICoreViewModel coreViewModel,
-            IProjectManager projectManager,
+            IProjectService projectService,
+            IMapper mapper,
             IEventAggregator eventService)
             : base(eventService)
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
-            m_ProjectManager = projectManager ?? throw new ArgumentNullException(nameof(projectManager));
+            m_ProjectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
+            m_Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
             m_NotificationInteractionRequest = new InteractionRequest<Notification>();
@@ -59,21 +65,21 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Properties
 
-        private Common.Project.v0_1_0.ArrowGraphSettingsDto ArrowGraphSettingsDto => m_CoreViewModel.ArrowGraphSettingsDto;
+        private ArrowGraphSettingsModel ArrowGraphSettings => m_CoreViewModel.ArrowGraphSettings;
 
         private bool HasStaleOutputs => m_CoreViewModel.HasStaleOutputs;
 
-        private Common.Project.v0_1_0.ArrowGraphDto ArrowGraphDto
+        private ArrowGraphModel ArrowGraph
         {
             get
             {
-                return m_CoreViewModel.ArrowGraphDto;
+                return m_CoreViewModel.ArrowGraph;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_CoreViewModel.ArrowGraphDto = value;
+                    m_CoreViewModel.ArrowGraph = value;
                 }
             }
         }
@@ -91,7 +97,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private bool HasCompilationErrors => m_CoreViewModel.HasCompilationErrors;
 
-        private GraphCompilation<int, IDependentActivity<int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
+        private IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
 
         #endregion
 
@@ -143,11 +149,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         HasStaleArrowGraph = true;
                     }, ThreadOption.BackgroundThread);
-            m_ArrowGraphDtoUpdatedSubscriptionToken =
-                m_EventService.GetEvent<PubSubEvent<ArrowGraphDtoUpdatedPayload>>()
+            m_ArrowGraphUpdatedSubscriptionToken =
+                m_EventService.GetEvent<PubSubEvent<ArrowGraphUpdatedPayload>>()
                     .Subscribe(async payload =>
                     {
-                        await GenerateArrowGraphDataFromDtoAsync();
+                        await GenerateArrowGraphDataFromAsync();
                     }, ThreadOption.BackgroundThread);
         }
 
@@ -157,8 +163,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Unsubscribe(m_GraphCompiledSubscriptionToken);
             m_EventService.GetEvent<PubSubEvent<ArrowGraphSettingsUpdatedPayload>>()
                 .Unsubscribe(m_ArrowGraphSettingsUpdatedSubscriptionToken);
-            m_EventService.GetEvent<PubSubEvent<ArrowGraphDtoUpdatedPayload>>()
-                .Unsubscribe(m_ArrowGraphDtoUpdatedSubscriptionToken);
+            m_EventService.GetEvent<PubSubEvent<ArrowGraphUpdatedPayload>>()
+                .Unsubscribe(m_ArrowGraphUpdatedSubscriptionToken);
         }
 
         private void PublishArrowGraphDataUpdatedPayload()
@@ -176,17 +182,17 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                ArrowGraphDto = null;
-                IList<IDependentActivity<int>> dependentActivities =
+                ArrowGraph = null;
+                IList<IDependentActivity<int, int>> dependentActivities =
                     GraphCompilation.DependentActivities
-                    .Select(x => (IDependentActivity<int>)x.CloneObject())
+                    .Select(x => (IDependentActivity<int, int>)x.CloneObject())
                     .ToList();
 
                 if (!HasCompilationErrors
                     && dependentActivities.Any())
                 {
-                    var arrowGraphCompiler = new ArrowGraphCompiler<int, IDependentActivity<int>>();
-                    foreach (DependentActivity<int> dependentActivity in dependentActivities)
+                    var arrowGraphCompiler = new ArrowGraphCompiler<int, int, IDependentActivity<int, int>>();
+                    foreach (IDependentActivity<int, int> dependentActivity in dependentActivities)
                     {
                         dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
                         dependentActivity.ResourceDependencies.Clear();
@@ -194,34 +200,34 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     arrowGraphCompiler.Compile();
-                    Graph<int, IDependentActivity<int>, IEvent<int>> arrowGraph = arrowGraphCompiler.ToGraph();
+                    Graph<int, IDependentActivity<int, int>, IEvent<int>> arrowGraph = arrowGraphCompiler.ToGraph();
 
                     if (arrowGraph == null)
                     {
                         throw new InvalidOperationException("Cannot construct arrow graph");
                     }
-                    ArrowGraphDto = Common.Project.v0_1_0.DtoConverter.ToDto(arrowGraph);
+                    ArrowGraph = m_Mapper.Map<Graph<int, IDependentActivity<int, int>, IEvent<int>>, ArrowGraphModel>(arrowGraph);
                 }
-                GenerateArrowGraphDataFromDto();
+                GenerateArrowGraphDataFrom();
             }
         }
 
-        private async Task GenerateArrowGraphDataFromDtoAsync()
+        private async Task GenerateArrowGraphDataFromAsync()
         {
-            await Task.Run(() => GenerateArrowGraphDataFromDto());
+            await Task.Run(() => GenerateArrowGraphDataFrom());
         }
 
-        private void GenerateArrowGraphDataFromDto()
+        private void GenerateArrowGraphDataFrom()
         {
             lock (m_Lock)
             {
-                ArrowGraphData = GenerateArrowGraphData(ArrowGraphDto);
+                ArrowGraphData = GenerateArrowGraphData(ArrowGraph);
                 DecorateArrowGraph();
             }
             PublishArrowGraphDataUpdatedPayload();
         }
 
-        private static ArrowGraphData GenerateArrowGraphData(Common.Project.v0_1_0.ArrowGraphDto arrowGraph)
+        private static ArrowGraphData GenerateArrowGraphData(ArrowGraphModel arrowGraph)
         {
             if (arrowGraph == null
                 || arrowGraph.Nodes == null
@@ -231,27 +237,27 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 return null;
             }
-            IList<Common.Project.v0_1_0.EventNodeDto> nodeDtos = arrowGraph.Nodes.ToList();
+            IList<EventNodeModel> nodes = arrowGraph.Nodes.ToList();
             var edgeHeadVertexLookup = new Dictionary<int, ArrowGraphVertex>();
             var edgeTailVertexLookup = new Dictionary<int, ArrowGraphVertex>();
             var arrowGraphVertices = new List<ArrowGraphVertex>();
-            foreach (Common.Project.v0_1_0.EventNodeDto nodeDto in nodeDtos)
+            foreach (EventNodeModel node in nodes)
             {
-                var vertex = new ArrowGraphVertex(nodeDto.Content, nodeDto.NodeType);
+                var vertex = new ArrowGraphVertex(node.Content, node.NodeType);
                 arrowGraphVertices.Add(vertex);
-                foreach (int edgeId in nodeDto.IncomingEdges)
+                foreach (int edgeId in node.IncomingEdges)
                 {
                     edgeHeadVertexLookup.Add(edgeId, vertex);
                 }
-                foreach (int edgeId in nodeDto.OutgoingEdges)
+                foreach (int edgeId in node.OutgoingEdges)
                 {
                     edgeTailVertexLookup.Add(edgeId, vertex);
                 }
             }
 
             // Check all edges are used.
-            IList<Common.Project.v0_1_0.ActivityEdgeDto> edgeDtos = arrowGraph.Edges.ToList();
-            IList<int> edgeIds = edgeDtos.Select(x => x.Content.Id).ToList();
+            IList<ActivityEdgeModel> edges = arrowGraph.Edges.ToList();
+            IList<int> edgeIds = edges.Select(x => x.Content.Id).ToList();
             if (!edgeIds.OrderBy(x => x).SequenceEqual(edgeHeadVertexLookup.Keys.OrderBy(x => x)))
             {
                 throw new ArgumentException("List of Edge IDs and Edges referenced by head Nodes do not match");
@@ -271,12 +277,12 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // Check Start and End nodes.
-            IEnumerable<Common.Project.v0_1_0.EventNodeDto> startNodes = nodeDtos.Where(x => x.NodeType == NodeType.Start);
+            IEnumerable<EventNodeModel> startNodes = nodes.Where(x => x.NodeType == NodeType.Start);
             if (startNodes.Count() != 1)
             {
                 throw new ArgumentException("Data contain more than one Start node");
             }
-            IEnumerable<Common.Project.v0_1_0.EventNodeDto> endNodes = nodeDtos.Where(x => x.NodeType == NodeType.End);
+            IEnumerable<EventNodeModel> endNodes = nodes.Where(x => x.NodeType == NodeType.End);
             if (endNodes.Count() != 1)
             {
                 throw new ArgumentException("Data contain more than one End node");
@@ -288,13 +294,13 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 graph.AddVertex(vertex);
             }
-            foreach (Common.Project.v0_1_0.ActivityEdgeDto edgeDto in edgeDtos)
+            foreach (ActivityEdgeModel activityEdge in edges)
             {
-                Common.Project.v0_1_0.ActivityDto activityDto = edgeDto.Content;
+                ActivityModel activity = activityEdge.Content;
                 var edge = new ArrowGraphEdge(
-                    activityDto,
-                    edgeTailVertexLookup[activityDto.Id],
-                    edgeHeadVertexLookup[activityDto.Id]);
+                    activity,
+                    edgeTailVertexLookup[activity.Id],
+                    edgeHeadVertexLookup[activity.Id]);
                 graph.AddEdge(edge);
             }
             return graph;
@@ -304,11 +310,13 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                DecorateArrowGraphByGraphSettings(ArrowGraphData, ArrowGraphSettingsDto);
+                DecorateArrowGraphByGraphSettings(ArrowGraphData, ArrowGraphSettings);
             }
         }
 
-        private static void DecorateArrowGraphByGraphSettings(ArrowGraphData arrowGraphData, Common.Project.v0_1_0.ArrowGraphSettingsDto arrowGraphSettings)
+        private static void DecorateArrowGraphByGraphSettings(
+            ArrowGraphData arrowGraphData,
+            ArrowGraphSettingsModel arrowGraphSettings)
         {
             if (arrowGraphData == null)
             {
@@ -327,14 +335,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static (GraphXEdgeFormatLookup, SlackColorFormatLookup) GetEdgeFormatLookups(Common.Project.v0_1_0.ArrowGraphSettingsDto arrowGraphSettingsDto)
+        private static (GraphXEdgeFormatLookup, SlackColorFormatLookup) GetEdgeFormatLookups(ArrowGraphSettingsModel arrowGraphSettings)
         {
-            if (arrowGraphSettingsDto == null)
+            if (arrowGraphSettings == null)
             {
-                throw new ArgumentNullException(nameof(arrowGraphSettingsDto));
+                throw new ArgumentNullException(nameof(arrowGraphSettings));
             }
-            return (new GraphXEdgeFormatLookup(arrowGraphSettingsDto.EdgeTypeFormats),
-                new SlackColorFormatLookup(arrowGraphSettingsDto.ActivitySeverities));
+            return (new GraphXEdgeFormatLookup(arrowGraphSettings.EdgeTypeFormats),
+                new SlackColorFormatLookup(arrowGraphSettings.ActivitySeverities));
         }
 
         private void DispatchNotification(string title, object content)
@@ -402,20 +410,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     if (HasStaleOutputs
-                        && ArrowGraphDto != null)
+                        && ArrowGraph != null)
                     {
-                        ArrowGraphDto.IsStale = true;
+                        ArrowGraph.IsStale = true;
                     }
-                    return ArrowGraphDto?.IsStale ?? false;
+                    return ArrowGraph?.IsStale ?? false;
                 }
             }
             private set
             {
                 lock (m_Lock)
                 {
-                    if (ArrowGraphDto != null)
+                    if (ArrowGraph != null)
                     {
-                        ArrowGraphDto.IsStale = value;
+                        ArrowGraph.IsStale = value;
                     }
                 }
                 RaisePropertyChanged();
@@ -444,13 +452,13 @@ namespace Zametek.ViewModel.ProjectPlan
             private set;
         }
 
-        public byte[] ExportArrowGraphToDiagram(DiagramArrowGraphDto diagramArrowGraphDto)
+        public byte[] ExportArrowGraphToDiagram(DiagramArrowGraphModel diagramArrowGraph)
         {
-            if (diagramArrowGraphDto == null)
+            if (diagramArrowGraph == null)
             {
-                throw new ArgumentNullException(nameof(diagramArrowGraphDto));
+                throw new ArgumentNullException(nameof(diagramArrowGraph));
             }
-            return m_ProjectManager.ExportArrowGraphToDiagram(diagramArrowGraphDto);
+            return m_ProjectService.ExportArrowGraphToDiagram(diagramArrowGraph);
         }
 
         #endregion

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Xml.Serialization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -368,7 +367,7 @@ namespace Zametek.ViewModel.ProjectPlan
             byte[] output = null;
             using (var ms = new MemoryStream())
             {
-                var xmlSerializer = new XmlSerializer(typeof(graphml));
+                var xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(graphml));
                 xmlSerializer.Serialize(ms, graphML);
                 output = ms.ToArray();
             }

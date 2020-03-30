@@ -9,35 +9,31 @@
     <Compile Remove="ActivityManagement\**" />
     <Compile Remove="ArrowGraphSettingsManagement\**" />
     <Compile Remove="EarnedValueChartManagement\**" />
-    <Compile Remove="GanttChartManagement\**" />
-    <Compile Remove="GraphManagement\**" />
     <Compile Remove="MetricManagement\**" />
     <Compile Remove="ResourceChartManagement\**" />
     <Compile Remove="ResourceSettingsManagement\**" />
     <EmbeddedResource Remove="ActivityManagement\**" />
     <EmbeddedResource Remove="ArrowGraphSettingsManagement\**" />
     <EmbeddedResource Remove="EarnedValueChartManagement\**" />
-    <EmbeddedResource Remove="GanttChartManagement\**" />
-    <EmbeddedResource Remove="GraphManagement\**" />
     <EmbeddedResource Remove="MetricManagement\**" />
     <EmbeddedResource Remove="ResourceChartManagement\**" />
     <EmbeddedResource Remove="ResourceSettingsManagement\**" />
     <None Remove="ActivityManagement\**" />
     <None Remove="ArrowGraphSettingsManagement\**" />
     <None Remove="EarnedValueChartManagement\**" />
-    <None Remove="GanttChartManagement\**" />
-    <None Remove="GraphManagement\**" />
     <None Remove="MetricManagement\**" />
     <None Remove="ResourceChartManagement\**" />
     <None Remove="ResourceSettingsManagement\**" />
     <Page Remove="ActivityManagement\**" />
     <Page Remove="ArrowGraphSettingsManagement\**" />
     <Page Remove="EarnedValueChartManagement\**" />
-    <Page Remove="GanttChartManagement\**" />
-    <Page Remove="GraphManagement\**" />
     <Page Remove="MetricManagement\**" />
     <Page Remove="ResourceChartManagement\**" />
     <Page Remove="ResourceSettingsManagement\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="GanttChartManagement\GanttChartDto.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -50,6 +46,7 @@
     <Compile Include="ArrowGraphSettingsManagement\ArrowGraphSettingsManagerConfirmation.cs" />
     <Compile Include="ArrowGraphSettingsManagement\ArrowGraphSettingsManagerViewModel.cs" />
     <Compile Include="ArrowGraphSettingsManagement\ManagedActivitySeverityViewModel.cs" />
+    <Compile Include="MetricManagement\MetricsManagerViewModel.cs" />
     <Compile Include="ResourceSettingsManagement\ManagedResourceViewModel.cs" />
     <Compile Include="ResourceSettingsManagement\ResourceSettingsManagerConfirmation.cs" />
     <Compile Include="ResourceSettingsManagement\ResourceSettingsManagerViewModel.cs" />

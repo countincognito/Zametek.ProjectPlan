@@ -78,6 +78,11 @@ namespace nGantt.GanttChart
             double offset = (childStartDate - minDate).Ticks * pixelsPerTick;
             double width = childDuration.Ticks * pixelsPerTick;
 
+            //if (width < 0)
+            //{
+            //    width = 0;
+            //}
+
             if (offset < 0)
             {
                 width = width + offset;

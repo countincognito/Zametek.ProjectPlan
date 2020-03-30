@@ -4,7 +4,7 @@ using System.Linq;
 using System.Windows.Media;
 using Zametek.Common.ProjectPlan;
 
-namespace Zametek.View.ProjectPlan
+namespace Zametek.ViewModel.ProjectPlan
 {
     public class SlackColorFormatLookup
     {

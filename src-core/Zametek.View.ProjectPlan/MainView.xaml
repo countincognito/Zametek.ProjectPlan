@@ -214,7 +214,7 @@
                                 <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanActivitiesRegion}" />
                             </avalonDockLayout:LayoutAnchorable>
 
-                            <!--<avalonDockLayout:LayoutAnchorable ContentId="GanttChart"
+                            <avalonDockLayout:LayoutAnchorable ContentId="GanttChart"
                                                                Title="{x:Static properties:Resources.Label_GanttChartViewTitle}"
                                                                CanHide="False"
                                                                CanClose="False">
@@ -228,7 +228,7 @@
                                 <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanArrowGraphRegion}" />
                             </avalonDockLayout:LayoutAnchorable>
 
-                            <avalonDockLayout:LayoutAnchorable ContentId="ResourceChart"
+                            <!--<avalonDockLayout:LayoutAnchorable ContentId="ResourceChart"
                                                                Title="{x:Static properties:Resources.Label_ResourceChartsViewTitle}"
                                                                CanHide="False"
                                                                CanClose="False">

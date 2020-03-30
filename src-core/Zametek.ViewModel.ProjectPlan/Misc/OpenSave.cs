@@ -15,31 +15,29 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             if (File.Exists(filename))
             {
-                using (StreamReader reader = File.OpenText(filename))
-                {
-                    string content = await reader.ReadToEndAsync();
-                    JObject json = JObject.Parse(content);
-                    string version = json.GetValue(nameof(ProjectPlanModel.Version))?.ToString();
-                    string jsonString = json.ToString();
-                    ProjectPlanModel projectPlan = null;
+                using StreamReader reader = File.OpenText(filename);
+                string content = await reader.ReadToEndAsync();
+                JObject json = JObject.Parse(content);
+                string version = json.GetValue(nameof(ProjectPlanModel.Version))?.ToString();
+                string jsonString = json.ToString();
+                ProjectPlanModel projectPlan = null;
 
-                    version.ValueSwitchOn()
-                        .Case(Versions.v0_1_0_original, x =>
-                        {
-                            projectPlan = Converter.Upgrade(JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectPlanModel>(jsonString));
-                        })
-                        .Case(Versions.v0_1_0, x =>
-                        {
-                            projectPlan = Converter.Upgrade(JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectPlanModel>(jsonString));
-                        })
-                        .Case(Versions.v0_2_0, x =>
-                        {
-                            projectPlan = Converter.Upgrade(JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_0.ProjectPlanModel>(jsonString));
-                        })
-                        .Default(x => throw new InvalidOperationException($@"Cannot process version ""{x}""."));
+                version.ValueSwitchOn()
+                    .Case(Versions.v0_1_0_original, x =>
+                    {
+                        projectPlan = Data.ProjectPlan.Converter.Upgrade(JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectPlanModel>(jsonString));
+                    })
+                    .Case(Versions.v0_1_0, x =>
+                    {
+                        projectPlan = Data.ProjectPlan.Converter.Upgrade(JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectPlanModel>(jsonString));
+                    })
+                    .Case(Versions.v0_2_0, x =>
+                    {
+                        projectPlan = Data.ProjectPlan.Converter.Upgrade(JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_0.ProjectPlanModel>(jsonString));
+                    })
+                    .Default(x => throw new InvalidOperationException($@"Cannot process version ""{x}""."));
 
-                    return projectPlan;
-                }
+                return projectPlan;
             }
             return null;
         }
@@ -48,16 +46,15 @@ namespace Zametek.ViewModel.ProjectPlan
             ProjectPlanModel state,
             string fileName)
         {
-            using (StreamWriter writer = File.CreateText(fileName))
-            {
-                var jsonSerializer = JsonSerializer.Create(
-                    new JsonSerializerSettings
-                    {
-                        Formatting = Formatting.Indented,
-                        NullValueHandling = NullValueHandling.Ignore,
-                    });
-                jsonSerializer.Serialize(writer, state, typeof(ProjectPlanModel));
-            }
+            using StreamWriter writer = File.CreateText(fileName);
+            var jsonSerializer = JsonSerializer.Create(
+                new JsonSerializerSettings
+                {
+                    Formatting = Formatting.Indented,
+                    NullValueHandling = NullValueHandling.Ignore,
+                });
+            Data.ProjectPlan.v0_2_0.ProjectPlanModel output = Data.ProjectPlan.Converter.Format(state);
+            jsonSerializer.Serialize(writer, output, output.GetType());
         }
     }
 }

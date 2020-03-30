@@ -3,7 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Zametek.Common.ProjectPlan;
-using Zametek.ViewModel.ProjectPlan;
+using Zametek.Contract.ProjectPlan;
+using Zametek.Event.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -15,7 +16,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly object m_Lock;
 
-        private MetricsDto m_MetricsDto;
+        private MetricsModel m_Metrics;
         private double? m_CriticalityRisk;
         private double? m_FibonacciRisk;
         private double? m_ActivityRisk;
@@ -27,7 +28,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private double? m_DurationManMonths;
 
         private readonly ICoreViewModel m_CoreViewModel;
-        private readonly IProjectManager m_ProjectManager;
+        private readonly IProjectService m_ProjectService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IEventAggregator m_EventService;
 
@@ -39,14 +40,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public MetricsManagerViewModel(
             ICoreViewModel coreViewModel,
-            IProjectManager projectManager,
+            IProjectService projectService,
             IDateTimeCalculator dateTimeCalculator,
             IEventAggregator eventService)
             : base(eventService)
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
-            m_ProjectManager = projectManager ?? throw new ArgumentNullException(nameof(projectManager));
+            m_ProjectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
             m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
@@ -67,9 +68,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private bool UseBusinessDays => m_CoreViewModel.UseBusinessDays;
 
-        private GraphCompilation<int, IDependentActivity<int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
+        private IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
 
-        private Common.Project.v0_1_0.ArrowGraphSettingsDto ArrowGraphSettingsDto => m_CoreViewModel.ArrowGraphSettingsDto;
+        private ArrowGraphSettingsModel ArrowGraphSettings => m_CoreViewModel.ArrowGraphSettings;
 
         #endregion
 
@@ -99,7 +100,7 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 ClearRiskMetrics();
-                IList<IDependentActivity<int>> dependentActivities = GraphCompilation?.DependentActivities;
+                IEnumerable<IDependentActivity<int, int>> dependentActivities = GraphCompilation?.DependentActivities;
                 if (dependentActivities != null
                     && dependentActivities.Any())
                 {
@@ -107,9 +108,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         return;
                     }
-                    m_MetricsDto = m_ProjectManager.CalculateProjectMetrics(
-                        dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int>)x).ToList(),
-                        ArrowGraphSettingsDto?.ActivitySeverities);
+                    m_Metrics = m_ProjectService.CalculateProjectMetrics(
+                        dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int, int>)x).ToList(),
+                        ArrowGraphSettings?.ActivitySeverities);
                     SetRiskMetrics();
                 }
             }
@@ -134,16 +135,16 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 ClearRiskMetrics();
-                MetricsDto metricsDto = m_MetricsDto;
-                if (metricsDto != null)
+                MetricsModel metrics = m_Metrics;
+                if (metrics != null)
                 {
-                    CriticalityRisk = metricsDto.Criticality;
-                    FibonacciRisk = metricsDto.Fibonacci;
-                    ActivityRisk = metricsDto.Activity;
-                    ActivityRiskWithStdDevCorrection = metricsDto.ActivityStdDevCorrection;
-                    GeometricCriticalityRisk = metricsDto.GeometricCriticality;
-                    GeometricFibonacciRisk = metricsDto.GeometricFibonacci;
-                    GeometricActivityRisk = metricsDto.GeometricActivity;
+                    CriticalityRisk = metrics.Criticality;
+                    FibonacciRisk = metrics.Fibonacci;
+                    ActivityRisk = metrics.Activity;
+                    ActivityRiskWithStdDevCorrection = metrics.ActivityStdDevCorrection;
+                    GeometricCriticalityRisk = metrics.GeometricCriticality;
+                    GeometricFibonacciRisk = metrics.GeometricFibonacci;
+                    GeometricActivityRisk = metrics.GeometricActivity;
                 }
             }
         }
