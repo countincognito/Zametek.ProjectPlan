@@ -3,7 +3,7 @@ using System.Windows.Media;
 
 namespace nGantt.GanttChart
 {
-    public class TimeLineItem 
+    public class TimeLineItem
     {
         public TimeLineItem()
         {

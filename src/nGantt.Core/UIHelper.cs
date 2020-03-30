@@ -15,6 +15,6 @@ namespace nGantt
             if (parent != null)
                 return parent;
             return FindVisualParent<T>(parentObject);
-        } 
+        }
     }
 }

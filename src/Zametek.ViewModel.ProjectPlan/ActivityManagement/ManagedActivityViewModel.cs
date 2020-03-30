@@ -205,7 +205,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get
             {
-                return string.Join(DependenciesStringValidationRule.Separator.ToString(), Dependencies.OrderBy(x => x));
+                return string.Join(DependenciesStringValidationRule.Separator, Dependencies.OrderBy(x => x));
             }
             set
             {
@@ -238,7 +238,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public string ResourceDependenciesString => string.Join(DependenciesStringValidationRule.Separator.ToString(), ResourceDependencies.OrderBy(x => x));
+        public string ResourceDependenciesString => string.Join(DependenciesStringValidationRule.Separator, ResourceDependencies.OrderBy(x => x));
 
         public int Id => DependentActivity.Id;
 
@@ -278,7 +278,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get
             {
-                return string.Join(DependenciesStringValidationRule.Separator.ToString(), ResourceSelector
+                return string.Join(DependenciesStringValidationRule.Separator, ResourceSelector
                     .TargetResources.Where(x => AllocatedToResources.Contains(x.Id))
                     .OrderBy(x => x.Id)
                     .Select(x => x.DisplayName));

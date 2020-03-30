@@ -1,5 +1,5 @@
-﻿using System.Windows.Input;
-using nGantt.PeriodSplitter;
+﻿using nGantt.PeriodSplitter;
+using System.Windows.Input;
 
 namespace nGantt.GanttChart
 {

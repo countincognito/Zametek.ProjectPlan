@@ -1,4 +1,5 @@
-﻿using Prism.Commands;
+﻿using AutoMapper;
+using Prism.Commands;
 using Prism.Events;
 using Prism.Interactivity.InteractionRequest;
 using System;
@@ -7,11 +8,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
-using Zametek.ViewModel.ProjectPlan;
-using Zametek.Maths.Graphs;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Event.ProjectPlan;
-using AutoMapper;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
 {

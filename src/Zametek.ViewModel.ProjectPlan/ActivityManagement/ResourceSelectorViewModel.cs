@@ -40,7 +40,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     return string.Join(
-                        DependenciesStringValidationRule.Separator.ToString(),
+                        DependenciesStringValidationRule.Separator,
                         TargetResources.Where(x => x.IsSelected).Select(x => x.DisplayName));
                 }
             }

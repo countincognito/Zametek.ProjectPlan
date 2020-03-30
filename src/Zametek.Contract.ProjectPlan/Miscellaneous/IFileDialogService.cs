@@ -1,6 +1,4 @@
-﻿using Prism.Services.Dialogs;
-
-namespace Zametek.Contract.ProjectPlan
+﻿namespace Zametek.Contract.ProjectPlan
 {
     public interface IFileDialogService
     {

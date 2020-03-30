@@ -10,6 +10,6 @@ namespace nGantt.GanttChart
         }
 
         public ObservableCollection<TimeLineItem> Items { get; set; }
-        
+
     }
 }

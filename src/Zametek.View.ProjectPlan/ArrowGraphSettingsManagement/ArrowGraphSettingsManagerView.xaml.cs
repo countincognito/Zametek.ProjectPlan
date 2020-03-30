@@ -1,6 +1,5 @@
 ﻿using Prism;
 using System;
-using Zametek.Contract.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan

@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Windows.Controls;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace nGantt.GanttChart
 {
-    public class GanttRowPanel : Panel 
+    public class GanttRowPanel : Panel
     {
         public static readonly DependencyProperty StartDateProperty =
            DependencyProperty.RegisterAttached("StartDate", typeof(DateTime), typeof(GanttRowPanel), new FrameworkPropertyMetadata(DateTime.MinValue, FrameworkPropertyMetadataOptions.AffectsParentArrange));
@@ -88,7 +88,7 @@ namespace nGantt.GanttChart
                 width = width + offset;
                 offset = 0;
             }
-            
+
             double range = (MaxDate - MinDate).Ticks;
             if ((offset + width) > range * pixelsPerTick)
                 width = range * pixelsPerTick - offset;

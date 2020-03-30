@@ -7,6 +7,10 @@
 
   <ItemGroup>
     <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="4.6.79" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Zamatek.Windows.Interactivity.Core" Version="1.0.0" />
     <PackageReference Include="Zametek.Prism.AvalonDock.Core" Version="1.0.0" />
     <PackageReference Include="Zametek.Windows.AvalonDock.Core" Version="1.0.0" />

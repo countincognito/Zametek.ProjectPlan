@@ -1,5 +1,4 @@
 ﻿using Microsoft.Win32;
-using Prism.Services.Dialogs;
 using System.IO;
 using Zametek.Contract.ProjectPlan;
 

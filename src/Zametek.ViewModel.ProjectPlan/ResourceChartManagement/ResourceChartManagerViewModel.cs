@@ -132,7 +132,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void ExportResourceChartToCsv()
         {
-            await DoExportResourceChartToCsvAsync();
+            await DoExportResourceChartToCsvAsync().ConfigureAwait(false);
         }
 
         private bool CanExportResourceChartToCsv()
@@ -170,8 +170,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                     else
                     {
-                        DataTable dataTable = await BuildResourceChartDataTableAsync();
-                        await ChartHelper.ExportDataTableToCsvAsync(dataTable, filename);
+                        DataTable dataTable = await BuildResourceChartDataTableAsync().ConfigureAwait(false);
+                        await ChartHelper.ExportDataTableToCsvAsync(dataTable, filename).ConfigureAwait(false);
                         m_SettingService.SetDirectory(filename);
                     }
                 }

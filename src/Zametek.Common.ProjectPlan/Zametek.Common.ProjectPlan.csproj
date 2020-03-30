@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Xenko.GraphX.WPF.Controls" Version="2.4.0" />
     <PackageReference Include="Zametek.Maths.Graphs.Primitives" Version="1.2.14" />
   </ItemGroup>
