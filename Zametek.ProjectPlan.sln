@@ -3,47 +3,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Common.Project", "src\Zametek.Common.Project\Zametek.Common.Project.csproj", "{C94518D7-10FC-4B55-8749-2B7317CF9AAB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B10DAC64-0DCC-4004-932F-C66F6D399465}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Common.ProjectPlan", "src\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj", "{B2B2A9A6-BE16-43F6-A623-FA40CCF97853}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "nGantt.Core", "src\nGantt.Core\nGantt.Core.csproj", "{7B30E74B-E20A-4A04-A1F7-367A69293CB8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Contract.ProjectPlan", "src\Zametek.Contract.ProjectPlan\Zametek.Contract.ProjectPlan.csproj", "{65D15656-91AA-4571-87BE-60EB877283D7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Common.ProjectPlan", "src\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj", "{BF5B2C3D-E265-4FA1-B44F-909A47E6A02B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Access.ProjectPlan", "src\Zametek.Access.ProjectPlan\Zametek.Access.ProjectPlan.csproj", "{A0292825-7185-4328-BDB5-60C9399ABC5B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.ViewModel.ProjectPlan", "src\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj", "{50DFA8B9-FF0C-4843-9C7C-7EDD57457315}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Engine.ProjectPlan", "src\Zametek.Engine.ProjectPlan\Zametek.Engine.ProjectPlan.csproj", "{FECA9612-A4AF-45DB-8EEA-A9D5090602FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Contract.ProjectPlan", "src\Zametek.Contract.ProjectPlan\Zametek.Contract.ProjectPlan.csproj", "{12207EDD-0604-4A25-A954-EB51AAB5BCD1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Manager.ProjectPlan", "src\Zametek.Manager.ProjectPlan\Zametek.Manager.ProjectPlan.csproj", "{9737882D-E514-44D6-9724-B8C59E802AD5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Event.ProjectPlan", "src\Zametek.Event.ProjectPlan\Zametek.Event.ProjectPlan.csproj", "{1C6F0E7C-CCE9-427A-A0BC-9AE2FF59C38D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Client.ProjectPlan.Wpf", "src\Zametek.Client.ProjectPlan.Wpf\Zametek.Client.ProjectPlan.Wpf.csproj", "{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.View.ProjectPlan", "src\Zametek.View.ProjectPlan\Zametek.View.ProjectPlan.csproj", "{3B4959AF-0F41-461C-91DD-5844E590D2AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Client.ProjectPlan.Wpf.Shell", "src\Zametek.Client.ProjectPlan.Wpf.Shell\Zametek.Client.ProjectPlan.Wpf.Shell.csproj", "{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Shell.ProjectPlan", "src\Zametek.Shell.ProjectPlan\Zametek.Shell.ProjectPlan.csproj", "{86EF0BB3-FCA6-430B-8677-D4B808EA142A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{634E47B4-5589-4674-A220-14D6203BB179}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "install", "install", "{DE811A33-0D54-49C8-9732-6EC759832990}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src-core", "src-core", "{B10DAC64-0DCC-4004-932F-C66F6D399465}"
-EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Zametek.ProjectPlan.Setup", "install\Zametek.ProjectPlan.Setup\Zametek.ProjectPlan.Setup.vdproj", "{0FD62FCD-A67E-4AD8-94F3-521AE0D61933}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nGantt", "src\nGantt\nGantt.csproj", "{CCC54F28-5D20-4AB3-A1A8-C62CD2DA3AE7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nGantt.Core", "src-core\nGantt.Core\nGantt.Core.csproj", "{7B30E74B-E20A-4A04-A1F7-367A69293CB8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Common.ProjectPlan", "src-core\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj", "{BF5B2C3D-E265-4FA1-B44F-909A47E6A02B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.ViewModel.ProjectPlan", "src-core\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj", "{50DFA8B9-FF0C-4843-9C7C-7EDD57457315}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Contract.ProjectPlan", "src-core\Zametek.Contract.ProjectPlan\Zametek.Contract.ProjectPlan.csproj", "{12207EDD-0604-4A25-A954-EB51AAB5BCD1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Event.ProjectPlan", "src-core\Zametek.Event.ProjectPlan\Zametek.Event.ProjectPlan.csproj", "{1C6F0E7C-CCE9-427A-A0BC-9AE2FF59C38D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.View.ProjectPlan", "src-core\Zametek.View.ProjectPlan\Zametek.View.ProjectPlan.csproj", "{3B4959AF-0F41-461C-91DD-5844E590D2AC}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Shell.ProjectPlan", "src-core\Zametek.Shell.ProjectPlan\Zametek.Shell.ProjectPlan.csproj", "{86EF0BB3-FCA6-430B-8677-D4B808EA142A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Data.ProjectPlan", "src-core\Zametek.Data.ProjectPlan\Zametek.Data.ProjectPlan.csproj", "{D0AF647F-89F3-435A-980F-ABF8C87080A9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Data.ProjectPlan", "src\Zametek.Data.ProjectPlan\Zametek.Data.ProjectPlan.csproj", "{D0AF647F-89F3-435A-980F-ABF8C87080A9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,44 +27,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C94518D7-10FC-4B55-8749-2B7317CF9AAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C94518D7-10FC-4B55-8749-2B7317CF9AAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C94518D7-10FC-4B55-8749-2B7317CF9AAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C94518D7-10FC-4B55-8749-2B7317CF9AAB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B2B2A9A6-BE16-43F6-A623-FA40CCF97853}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B2B2A9A6-BE16-43F6-A623-FA40CCF97853}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B2B2A9A6-BE16-43F6-A623-FA40CCF97853}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B2B2A9A6-BE16-43F6-A623-FA40CCF97853}.Release|Any CPU.Build.0 = Release|Any CPU
-		{65D15656-91AA-4571-87BE-60EB877283D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{65D15656-91AA-4571-87BE-60EB877283D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{65D15656-91AA-4571-87BE-60EB877283D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{65D15656-91AA-4571-87BE-60EB877283D7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A0292825-7185-4328-BDB5-60C9399ABC5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A0292825-7185-4328-BDB5-60C9399ABC5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A0292825-7185-4328-BDB5-60C9399ABC5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A0292825-7185-4328-BDB5-60C9399ABC5B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FECA9612-A4AF-45DB-8EEA-A9D5090602FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FECA9612-A4AF-45DB-8EEA-A9D5090602FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FECA9612-A4AF-45DB-8EEA-A9D5090602FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FECA9612-A4AF-45DB-8EEA-A9D5090602FB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9737882D-E514-44D6-9724-B8C59E802AD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9737882D-E514-44D6-9724-B8C59E802AD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9737882D-E514-44D6-9724-B8C59E802AD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9737882D-E514-44D6-9724-B8C59E802AD5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0FD62FCD-A67E-4AD8-94F3-521AE0D61933}.Debug|Any CPU.ActiveCfg = Debug
-		{0FD62FCD-A67E-4AD8-94F3-521AE0D61933}.Release|Any CPU.ActiveCfg = Release
-		{CCC54F28-5D20-4AB3-A1A8-C62CD2DA3AE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CCC54F28-5D20-4AB3-A1A8-C62CD2DA3AE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CCC54F28-5D20-4AB3-A1A8-C62CD2DA3AE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CCC54F28-5D20-4AB3-A1A8-C62CD2DA3AE7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7B30E74B-E20A-4A04-A1F7-367A69293CB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7B30E74B-E20A-4A04-A1F7-367A69293CB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B30E74B-E20A-4A04-A1F7-367A69293CB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -126,16 +64,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{C94518D7-10FC-4B55-8749-2B7317CF9AAB} = {634E47B4-5589-4674-A220-14D6203BB179}
-		{B2B2A9A6-BE16-43F6-A623-FA40CCF97853} = {634E47B4-5589-4674-A220-14D6203BB179}
-		{65D15656-91AA-4571-87BE-60EB877283D7} = {634E47B4-5589-4674-A220-14D6203BB179}
-		{A0292825-7185-4328-BDB5-60C9399ABC5B} = {634E47B4-5589-4674-A220-14D6203BB179}
-		{FECA9612-A4AF-45DB-8EEA-A9D5090602FB} = {634E47B4-5589-4674-A220-14D6203BB179}
-		{9737882D-E514-44D6-9724-B8C59E802AD5} = {634E47B4-5589-4674-A220-14D6203BB179}
-		{A87FCC3B-5ADD-4F4F-A5B4-9F13F1CC39C0} = {634E47B4-5589-4674-A220-14D6203BB179}
-		{740CA2B1-0E35-4150-BEAC-55810FAFBD6D} = {634E47B4-5589-4674-A220-14D6203BB179}
-		{0FD62FCD-A67E-4AD8-94F3-521AE0D61933} = {DE811A33-0D54-49C8-9732-6EC759832990}
-		{CCC54F28-5D20-4AB3-A1A8-C62CD2DA3AE7} = {634E47B4-5589-4674-A220-14D6203BB179}
 		{7B30E74B-E20A-4A04-A1F7-367A69293CB8} = {B10DAC64-0DCC-4004-932F-C66F6D399465}
 		{BF5B2C3D-E265-4FA1-B44F-909A47E6A02B} = {B10DAC64-0DCC-4004-932F-C66F6D399465}
 		{50DFA8B9-FF0C-4843-9C7C-7EDD57457315} = {B10DAC64-0DCC-4004-932F-C66F6D399465}

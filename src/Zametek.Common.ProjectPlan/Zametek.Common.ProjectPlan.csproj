@@ -1,20 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Copyright>Copyright (c) 2018 Riccardo M Bennett-Lovsey</Copyright>
-    <Company>countincognito</Company>
-    <Authors>countincognito</Authors>
-    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <Version>1.0.1</Version>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Zametek.Common.Project\Zametek.Common.Project.csproj" />
+    <PackageReference Include="Xenko.GraphX.WPF.Controls" Version="2.4.0" />
+    <PackageReference Include="Zametek.Maths.Graphs.Primitives" Version="1.2.14" />
   </ItemGroup>
 
 </Project>
