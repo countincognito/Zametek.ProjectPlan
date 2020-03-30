@@ -228,7 +228,7 @@
                                 <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanArrowGraphRegion}" />
                             </avalonDockLayout:LayoutAnchorable>
 
-                            <!--<avalonDockLayout:LayoutAnchorable ContentId="ResourceChart"
+                            <avalonDockLayout:LayoutAnchorable ContentId="ResourceChart"
                                                                Title="{x:Static properties:Resources.Label_ResourceChartsViewTitle}"
                                                                CanHide="False"
                                                                CanClose="False">
@@ -240,7 +240,7 @@
                                                                CanHide="False"
                                                                CanClose="False">
                                 <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanEarnedValueChartRegion}" />
-                            </avalonDockLayout:LayoutAnchorable>-->
+                            </avalonDockLayout:LayoutAnchorable>
                         </avalonDockLayout:LayoutAnchorablePane>
                     </avalonDockLayout:LayoutPanel>
                 </avalonDockLayout:LayoutPanel>

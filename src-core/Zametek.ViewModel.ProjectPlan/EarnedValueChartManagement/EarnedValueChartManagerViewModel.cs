@@ -7,12 +7,12 @@ using Prism.Interactivity.InteractionRequest;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using Zametek.Contract.ProjectPlan;
+using Zametek.Event.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -31,7 +31,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IFileDialogService m_FileDialogService;
-        private readonly IProjectSettingService m_ProjectSettingService;
+        private readonly ISettingService m_SettingService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IEventAggregator m_EventService;
 
@@ -46,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public EarnedValueChartManagerViewModel(
             ICoreViewModel coreViewModel,
             IFileDialogService fileDialogService,
-            IProjectSettingService projectSettingService,
+            ISettingService settingService,
             IDateTimeCalculator dateTimeCalculator,
             IEventAggregator eventService)
             : base(eventService)
@@ -54,7 +54,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new object();
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
             m_FileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
-            m_ProjectSettingService = projectSettingService ?? throw new ArgumentNullException(nameof(projectSettingService));
+            m_SettingService = settingService ?? throw new ArgumentNullException(nameof(settingService));
             m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
@@ -84,7 +84,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private bool HasCompilationErrors => m_CoreViewModel.HasCompilationErrors;
 
-        private GraphCompilation<int, IDependentActivity<int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
+        private IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
 
         #endregion
 
@@ -184,11 +184,11 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                IList<IDependentActivity<int>> dependentActivities = GraphCompilation?.DependentActivities;
+                IEnumerable<IDependentActivity<int, int>> dependentActivities = GraphCompilation?.DependentActivities;
                 if (dependentActivities != null)
                 {
-                    IList<IDependentActivity<int>> orderedDependentActivities = dependentActivities
-                        .Select(x => (IDependentActivity<int>)x.CloneObject())
+                    IList<IDependentActivity<int, int>> orderedDependentActivities = dependentActivities
+                        .Select(x => (IDependentActivity<int, int>)x.CloneObject())
                         .OrderBy(x => x.EarliestFinishTime.GetValueOrDefault())
                         .ThenBy(x => x.EarliestStartTime.GetValueOrDefault())
                         .ToList();
@@ -208,7 +208,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         double totalTime = Convert.ToDouble(orderedDependentActivities.Sum(s => s.Duration));
                         int runningTotal = 0;
-                        foreach (IDependentActivity<int> activity in orderedDependentActivities)
+                        foreach (IDependentActivity<int, int> activity in orderedDependentActivities)
                         {
                             runningTotal += activity.Duration;
                             double percentage = (runningTotal / totalTime) * 100.0;
@@ -268,7 +268,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                IList<IDependentActivity<int>> dependentActivities = GraphCompilation?.DependentActivities;
+                IEnumerable<IDependentActivity<int, int>> dependentActivities = GraphCompilation?.DependentActivities;
                 Axis axis = null;
                 if (dependentActivities != null
                     && dependentActivities.Any())
@@ -377,11 +377,14 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 IsBusy = true;
-                string directory = m_ProjectSettingService.PlanDirectory;
-                if (m_FileDialogService.ShowSaveDialog(
+                string directory = m_SettingService.PlanDirectory;
+
+                bool result = m_FileDialogService.ShowSaveDialog(
                     directory,
                     Properties.Resources.Filter_SaveCsvFileType,
-                    Properties.Resources.Filter_SaveCsvFileExtension) == DialogResult.OK)
+                    Properties.Resources.Filter_SaveCsvFileExtension);
+
+                if (result)
                 {
                     string filename = m_FileDialogService.Filename;
                     if (string.IsNullOrWhiteSpace(filename))
@@ -394,7 +397,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         DataTable dataTable = await BuildEarnedValueChartDataTableAsync();
                         await ChartHelper.ExportDataTableToCsvAsync(dataTable, filename);
-                        m_ProjectSettingService.SetDirectory(filename);
+                        m_SettingService.SetDirectory(filename);
                     }
                 }
             }

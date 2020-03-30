@@ -9,10 +9,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Zametek.Common.ProjectPlan;
+using Zametek.Contract.ProjectPlan;
+using Zametek.Event.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -31,7 +32,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IFileDialogService m_FileDialogService;
-        private readonly IProjectSettingService m_ProjectSettingService;
+        private readonly ISettingService m_SettingService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IEventAggregator m_EventService;
 
@@ -46,7 +47,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public ResourceChartManagerViewModel(
             ICoreViewModel coreViewModel,
             IFileDialogService fileDialogService,
-            IProjectSettingService projectSettingService,
+            ISettingService settingService,
             IDateTimeCalculator dateTimeCalculator,
             IEventAggregator eventService)
             : base(eventService)
@@ -54,7 +55,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new object();
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
             m_FileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
-            m_ProjectSettingService = projectSettingService ?? throw new ArgumentNullException(nameof(projectSettingService));
+            m_SettingService = settingService ?? throw new ArgumentNullException(nameof(settingService));
             m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
@@ -83,9 +84,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private bool HasCompilationErrors => m_CoreViewModel.HasCompilationErrors;
 
-        private GraphCompilation<int, IDependentActivity<int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
+        private IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
 
-        private IList<ResourceSeriesDto> ResourceSeriesSet => m_CoreViewModel.ResourceSeriesSet;
+        private IList<ResourceSeriesModel> ResourceSeriesSet => m_CoreViewModel.ResourceSeriesSet;
 
         #endregion
 
@@ -151,11 +152,14 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 IsBusy = true;
-                string directory = m_ProjectSettingService.PlanDirectory;
-                if (m_FileDialogService.ShowSaveDialog(
+                string directory = m_SettingService.PlanDirectory;
+
+                bool result = m_FileDialogService.ShowSaveDialog(
                     directory,
                     Properties.Resources.Filter_SaveCsvFileType,
-                    Properties.Resources.Filter_SaveCsvFileExtension) == DialogResult.OK)
+                    Properties.Resources.Filter_SaveCsvFileExtension);
+
+                if (result)
                 {
                     string filename = m_FileDialogService.Filename;
                     if (string.IsNullOrWhiteSpace(filename))
@@ -168,7 +172,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         DataTable dataTable = await BuildResourceChartDataTableAsync();
                         await ChartHelper.ExportDataTableToCsvAsync(dataTable, filename);
-                        m_ProjectSettingService.SetDirectory(filename);
+                        m_SettingService.SetDirectory(filename);
                     }
                 }
             }
@@ -227,7 +231,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                IList<ResourceSeriesDto> resourceSeriesSet = ResourceSeriesSet;
+                IList<ResourceSeriesModel> resourceSeriesSet = ResourceSeriesSet;
                 PlotModel plotModel = null;
                 if (resourceSeriesSet != null
                     && resourceSeriesSet.Any())
@@ -241,7 +245,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     var total = new List<int>();
                     m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
 
-                    foreach (ResourceSeriesDto series in resourceSeriesSet)
+                    foreach (ResourceSeriesModel series in resourceSeriesSet)
                     {
                         if (series != null)
                         {
@@ -251,10 +255,10 @@ namespace Zametek.ViewModel.ProjectPlan
                                 StrokeThickness = 0.0,
                                 Title = series.Title,
                                 Color = OxyColor.FromArgb(
-                                    series.ColorFormatDto.A,
-                                    series.ColorFormatDto.R,
-                                    series.ColorFormatDto.G,
-                                    series.ColorFormatDto.B)
+                                    series.ColorFormat.A,
+                                    series.ColorFormat.R,
+                                    series.ColorFormat.G,
+                                    series.ColorFormat.B)
                             };
                             for (int i = 0; i < series.Values.Count; i++)
                             {
@@ -284,7 +288,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                IList<IResourceSchedule<int>> resourceSchedules = GraphCompilation?.ResourceSchedules;
+                IEnumerable<IResourceSchedule<int, int>> resourceSchedules = GraphCompilation?.ResourceSchedules;
                 Axis axis = null;
                 if (resourceSchedules != null
                     && resourceSchedules.Any())
@@ -343,7 +347,7 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 var table = new DataTable();
-                IList<ResourceSeriesDto> seriesSet = ResourceSeriesSet.OrderBy(x => x.DisplayOrder).ToList();
+                IList<ResourceSeriesModel> seriesSet = ResourceSeriesSet.OrderBy(x => x.DisplayOrder).ToList();
                 if (seriesSet != null
                     && seriesSet.Any())
                 {

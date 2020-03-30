@@ -1,16 +1,15 @@
-﻿using System;
+﻿using AutoMapper;
 using AvalonDock;
 using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Regions;
 using Prism.Unity;
 using System.Windows;
-using Zametek.Wpf.Core;
-using Zametek.View.ProjectPlan;
-using Zametek.Contract.ProjectPlan;
-using Zametek.ViewModel.ProjectPlan;
-using AutoMapper;
 using System.Windows.Controls;
+using Zametek.Contract.ProjectPlan;
+using Zametek.View.ProjectPlan;
+using Zametek.ViewModel.ProjectPlan;
+using Zametek.Wpf.Core;
 
 namespace Zametek.Shell.ProjectPlan
 {
@@ -37,33 +36,14 @@ namespace Zametek.Shell.ProjectPlan
             containerRegistry.Register<IProjectService, ProjectService>();
             containerRegistry.Register<ISettingService, SettingService>();
 
-            //containerRegistry.RegisterSingleton<IGraphProcessingEngine, GraphProcessingEngine>();
-            //containerRegistry.RegisterSingleton<IAssessingEngine, AssessingEngine>();
-            //containerRegistry.RegisterSingleton<IProjectManager, ProjectManager>();
-            //containerRegistry.RegisterSingleton<ISettingResourceAccess, SettingResourceAccess>();
-            //containerRegistry.RegisterSingleton<ISettingManager, SettingManager>();
-
             containerRegistry.RegisterSingleton<ICoreViewModel, CoreViewModel>();
-            //containerRegistry.RegisterSingleton<IEarnedValueChartManagerViewModel, EarnedValueChartManagerViewModel>();
-            //containerRegistry.RegisterSingleton<IResourceChartManagerViewModel, ResourceChartManagerViewModel>();
+            containerRegistry.RegisterSingleton<IEarnedValueChartManagerViewModel, EarnedValueChartManagerViewModel>();
+            containerRegistry.RegisterSingleton<IResourceChartManagerViewModel, ResourceChartManagerViewModel>();
             containerRegistry.RegisterSingleton<IMetricsManagerViewModel, MetricsManagerViewModel>();
             containerRegistry.RegisterSingleton<IArrowGraphManagerViewModel, ArrowGraphManagerViewModel>();
             containerRegistry.RegisterSingleton<IGanttChartManagerViewModel, GanttChartManagerViewModel>();
             containerRegistry.RegisterSingleton<IActivitiesManagerViewModel, ActivitiesManagerViewModel>();
             containerRegistry.RegisterSingleton<IMainViewModel, MainViewModel>();
-
-
-
-            //containerRegistry.RegisterSingleton<BottomAnchorableView>();
-            //containerRegistry.RegisterForNavigation<DocumentView>(TestApp.Properties.Resources.DocumentView);
-            //containerRegistry.RegisterSingleton<LeftAnchorableView>();
-            //containerRegistry.RegisterSingleton<RightAnchorableView>();
-            //containerRegistry.RegisterSingleton<ShellView>();
-
-
-            containerRegistry.RegisterSingleton<MetricsManagerView>();
-            containerRegistry.RegisterSingleton<ActivitiesManagerView>();
-
         }
 
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)

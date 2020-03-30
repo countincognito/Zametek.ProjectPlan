@@ -6,56 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="ActivityManagement\**" />
-    <Compile Remove="ArrowGraphSettingsManagement\**" />
-    <Compile Remove="EarnedValueChartManagement\**" />
-    <Compile Remove="MetricManagement\**" />
-    <Compile Remove="ResourceChartManagement\**" />
-    <Compile Remove="ResourceSettingsManagement\**" />
-    <EmbeddedResource Remove="ActivityManagement\**" />
-    <EmbeddedResource Remove="ArrowGraphSettingsManagement\**" />
-    <EmbeddedResource Remove="EarnedValueChartManagement\**" />
-    <EmbeddedResource Remove="MetricManagement\**" />
-    <EmbeddedResource Remove="ResourceChartManagement\**" />
-    <EmbeddedResource Remove="ResourceSettingsManagement\**" />
-    <None Remove="ActivityManagement\**" />
-    <None Remove="ArrowGraphSettingsManagement\**" />
-    <None Remove="EarnedValueChartManagement\**" />
-    <None Remove="MetricManagement\**" />
-    <None Remove="ResourceChartManagement\**" />
-    <None Remove="ResourceSettingsManagement\**" />
-    <Page Remove="ActivityManagement\**" />
-    <Page Remove="ArrowGraphSettingsManagement\**" />
-    <Page Remove="EarnedValueChartManagement\**" />
-    <Page Remove="MetricManagement\**" />
-    <Page Remove="ResourceChartManagement\**" />
-    <Page Remove="ResourceSettingsManagement\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="GanttChartManagement\GanttChartDto.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="ActivityManagement\ActivitiesManagerViewModel.cs" />
-    <Compile Include="ActivityManagement\DependenciesStringValidationRule.cs" />
-    <Compile Include="ActivityManagement\ManagedActivityContext.cs" />
-    <Compile Include="ActivityManagement\ManagedActivityViewModel.cs" />
-    <Compile Include="ActivityManagement\ResourceSelectorViewModel.cs" />
-    <Compile Include="ActivityManagement\SelectableResourceViewModel.cs" />
-    <Compile Include="ArrowGraphSettingsManagement\ArrowGraphSettingsManagerConfirmation.cs" />
-    <Compile Include="ArrowGraphSettingsManagement\ArrowGraphSettingsManagerViewModel.cs" />
-    <Compile Include="ArrowGraphSettingsManagement\ManagedActivitySeverityViewModel.cs" />
-    <Compile Include="MetricManagement\MetricsManagerViewModel.cs" />
-    <Compile Include="ResourceSettingsManagement\ManagedResourceViewModel.cs" />
-    <Compile Include="ResourceSettingsManagement\ResourceSettingsManagerConfirmation.cs" />
-    <Compile Include="ResourceSettingsManagement\ResourceSettingsManagerViewModel.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="9.0.0" />
     <PackageReference Include="CsvHelper" Version="15.0.3" />
     <PackageReference Include="FluentDateTime" Version="2.0.0" />
+    <PackageReference Include="OxyPlot.Wpf" Version="2.0.0" />
     <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="1.2.14" />
   </ItemGroup>
 

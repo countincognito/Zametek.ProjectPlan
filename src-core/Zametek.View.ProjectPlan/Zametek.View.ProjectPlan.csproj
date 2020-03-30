@@ -18,18 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="AboutView.xaml.cs">
-      <DependentUpon>AboutView.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="GanttChartManagement\GanttChartManagerView.xaml.cs">
-      <DependentUpon>GanttChartManagerView.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="GraphManagement\ArrowGraphManagerView.xaml.cs">
-      <DependentUpon>ArrowGraphManagerView.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="MetricManagement\MetricsManagerView.xaml.cs">
-      <DependentUpon>MetricsManagerView.xaml</DependentUpon>
-    </Compile>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -42,21 +30,6 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Update="AboutView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="GanttChartManagement\GanttChartManagerView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="GraphManagement\ArrowGraphManagerView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="MetricManagement\MetricsManagerView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
   </ItemGroup>
 
 </Project>
