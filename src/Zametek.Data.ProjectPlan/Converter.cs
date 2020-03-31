@@ -4,16 +4,7 @@ namespace Zametek.Data.ProjectPlan
 {
     public static class Converter
     {
-        private readonly static IMapper m_Mapper;
-
-        static Converter()
-        {
-            var config = new MapperConfiguration(cfg =>
-            {
-                cfg.AddProfile<MapperProfile>();
-            });
-            m_Mapper = config.CreateMapper();
-        }
+        private readonly static IMapper m_Mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
 
         public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_2_0.ProjectPlanModel projectPlan)
         {

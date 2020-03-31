@@ -260,7 +260,7 @@ namespace Zametek.View.ProjectPlan
         /// <summary>
         /// https://stackoverflow.com/questions/6763032/how-to-pick-a-background-color-depending-on-font-color-to-have-proper-contrast
         /// </summary>
-        public Color ContrastConvert(Color color)
+        public static Color ContrastConvert(Color color)
         {
             double x = 0.2126 * color.ScR + 0.7152 * color.ScG + 0.0722 * color.ScB;
             return x < 0.5 ? Colors.White : Colors.Black;

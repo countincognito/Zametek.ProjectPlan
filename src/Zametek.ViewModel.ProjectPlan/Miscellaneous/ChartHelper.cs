@@ -23,9 +23,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             if (showDates)
             {
-                return dateTimeCalculator.AddDays(projectStart, days).ToString("d");
+                return dateTimeCalculator.AddDays(projectStart, days).ToString("d", CultureInfo.InvariantCulture);
             }
-            return days.ToString();
+            return days.ToString(CultureInfo.InvariantCulture);
         }
 
         public static double CalculateChartTimeXValue(
@@ -50,7 +50,7 @@ namespace Zametek.ViewModel.ProjectPlan
             DataTable dataTable,
             string filename)
         {
-            await Task.Run(() => ExportDataTableToCsv(dataTable, filename));
+            await Task.Run(() => ExportDataTableToCsv(dataTable, filename)).ConfigureAwait(true);
         }
 
         public static void ExportDataTableToCsv(
@@ -59,11 +59,11 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             if (dataTable == null)
             {
-                throw new ArgumentException(nameof(dataTable));
+                throw new ArgumentNullException(nameof(dataTable));
             }
             if (string.IsNullOrWhiteSpace(filename))
             {
-                throw new ArgumentException(nameof(filename));
+                throw new ArgumentNullException(nameof(filename));
             }
             TextWriter writer = File.CreateText(filename); // This gets disposed by the CsvWriter.
             using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))

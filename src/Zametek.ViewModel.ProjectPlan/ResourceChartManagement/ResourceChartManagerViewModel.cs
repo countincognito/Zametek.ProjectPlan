@@ -132,7 +132,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void ExportResourceChartToCsv()
         {
-            await DoExportResourceChartToCsvAsync().ConfigureAwait(false);
+            await DoExportResourceChartToCsvAsync().ConfigureAwait(true);
         }
 
         private bool CanExportResourceChartToCsv()
@@ -156,8 +156,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 bool result = m_FileDialogService.ShowSaveDialog(
                     directory,
-                    Properties.Resources.Filter_SaveCsvFileType,
-                    Properties.Resources.Filter_SaveCsvFileExtension);
+                    Resource.ProjectPlan.Properties.Resources.Filter_SaveCsvFileType,
+                    Resource.ProjectPlan.Properties.Resources.Filter_SaveCsvFileExtension);
 
                 if (result)
                 {
@@ -165,13 +165,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (string.IsNullOrWhiteSpace(filename))
                     {
                         DispatchNotification(
-                            Properties.Resources.Title_Error,
-                            Properties.Resources.Message_EmptyFilename);
+                            Resource.ProjectPlan.Properties.Resources.Title_Error,
+                            Resource.ProjectPlan.Properties.Resources.Message_EmptyFilename);
                     }
                     else
                     {
-                        DataTable dataTable = await BuildResourceChartDataTableAsync().ConfigureAwait(false);
-                        await ChartHelper.ExportDataTableToCsvAsync(dataTable, filename).ConfigureAwait(false);
+                        DataTable dataTable = await BuildResourceChartDataTableAsync().ConfigureAwait(true);
+                        await ChartHelper.ExportDataTableToCsvAsync(dataTable, filename).ConfigureAwait(true);
                         m_SettingService.SetDirectory(filename);
                     }
                 }
@@ -179,7 +179,7 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -305,7 +305,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Position = AxisPosition.Bottom,
                             Minimum = minValue,
                             Maximum = maxValue,
-                            Title = Properties.Resources.Label_TimeAxisTitle,
+                            Title = Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle,
                             StringFormat = "d"
                         };
                     }
@@ -316,7 +316,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Position = AxisPosition.Bottom,
                             Minimum = minValue,
                             Maximum = maxValue,
-                            Title = Properties.Resources.Label_TimeAxisTitle
+                            Title = Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle
                         };
                     }
                 }
@@ -333,7 +333,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = Properties.Resources.Label_ResourcesAxisTitle
+                Title = Resource.ProjectPlan.Properties.Resources.Label_ResourcesAxisTitle
             };
         }
 
@@ -351,7 +351,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (seriesSet != null
                     && seriesSet.Any())
                 {
-                    table.Columns.Add(new DataColumn(Properties.Resources.Label_TimeAxisTitle));
+                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle));
 
                     // Create the column titles.
                     for (int seriesIndex = 0; seriesIndex < seriesSet.Count; seriesIndex++)

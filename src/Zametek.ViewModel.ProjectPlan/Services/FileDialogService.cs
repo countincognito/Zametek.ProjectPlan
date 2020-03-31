@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using System.Globalization;
 using System.IO;
 using Zametek.Contract.ProjectPlan;
 
@@ -17,7 +18,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             dlg.InitialDirectory = initialDirectory;
             dlg.DefaultExt = associatedFileExtension;
-            dlg.Filter = string.Format("{0} | *{1}", associatedFileType, associatedFileExtension);
+            dlg.Filter = string.Format(CultureInfo.InvariantCulture, "{0} | *{1}", associatedFileType, associatedFileExtension);
             bool? result = dlg.ShowDialog();
             FileInfo fileInfo = null;
             DirectoryInfo directoryInfo = null;

@@ -110,7 +110,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void GenerateArrowGraph()
         {
-            await DoGenerateArrowGraphAsync();
+            await DoGenerateArrowGraphAsync().ConfigureAwait(true);
         }
 
         private bool CanGenerateArrowGraph()
@@ -152,7 +152,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_EventService.GetEvent<PubSubEvent<ArrowGraphUpdatedPayload>>()
                     .Subscribe(async payload =>
                     {
-                        await GenerateArrowGraphDataFromAsync();
+                        await GenerateArrowGraphDataFromAsync().ConfigureAwait(true);
                     }, ThreadOption.BackgroundThread);
         }
 
@@ -174,7 +174,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task GenerateArrowGraphFromGraphCompilationAsync()
         {
-            await Task.Run(() => GenerateArrowGraphFromGraphCompilation());
+            await Task.Run(() => GenerateArrowGraphFromGraphCompilation()).ConfigureAwait(true);
         }
 
         private void GenerateArrowGraphFromGraphCompilation()
@@ -213,7 +213,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task GenerateArrowGraphDataFromAsync()
         {
-            await Task.Run(() => GenerateArrowGraphDataFrom());
+            await Task.Run(() => GenerateArrowGraphDataFrom()).ConfigureAwait(true);
         }
 
         private void GenerateArrowGraphDataFrom()
@@ -363,14 +363,14 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 IsBusy = true;
-                await GenerateArrowGraphFromGraphCompilationAsync();
+                await GenerateArrowGraphFromGraphCompilationAsync().ConfigureAwait(true);
                 HasStaleArrowGraph = false;
                 IsProjectUpdated = true;
             }
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally

@@ -2,6 +2,7 @@
 using QuickGraph;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -99,11 +100,11 @@ namespace Zametek.View.ProjectPlan
                 {
                     if (!edge.CanBeRemoved)
                     {
-                        labelText.AppendFormat("{0}", edge.ID);
+                        labelText.AppendFormat(CultureInfo.InvariantCulture, "{0}", edge.ID);
                         if (!edge.IsCritical)
                         {
                             labelText.AppendLine();
-                            labelText.AppendFormat("{0}|{1}", edge.FreeSlack, edge.TotalSlack);
+                            labelText.AppendFormat(CultureInfo.InvariantCulture, "{0}|{1}", edge.FreeSlack, edge.TotalSlack);
                         }
                         outputEdge.ShowLabel = true;
                     }
@@ -111,18 +112,18 @@ namespace Zametek.View.ProjectPlan
                     {
                         if (!edge.IsCritical)
                         {
-                            labelText.AppendFormat("{0}|{1}", edge.FreeSlack, edge.TotalSlack);
+                            labelText.AppendFormat(CultureInfo.InvariantCulture, "{0}|{1}", edge.FreeSlack, edge.TotalSlack);
                             outputEdge.ShowLabel = true;
                         }
                     }
                 }
                 else
                 {
-                    labelText.AppendFormat("{0} ({1})", edge.ID, edge.Duration);
+                    labelText.AppendFormat(CultureInfo.InvariantCulture, "{0} ({1})", edge.ID, edge.Duration);
                     if (!edge.IsCritical)
                     {
                         labelText.AppendLine();
-                        labelText.AppendFormat("{0}|{1}", edge.FreeSlack, edge.TotalSlack);
+                        labelText.AppendFormat(CultureInfo.InvariantCulture, "{0}|{1}", edge.FreeSlack, edge.TotalSlack);
                     }
                     outputEdge.ShowLabel = true;
                 }

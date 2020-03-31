@@ -6,7 +6,7 @@ using Zametek.Common.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class GraphMLBuilder
+    public static class GraphMLBuilder
     {
         #region Public Methods
 

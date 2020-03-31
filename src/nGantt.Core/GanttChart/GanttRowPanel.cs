@@ -17,24 +17,44 @@ namespace nGantt.GanttChart
             DependencyProperty.Register("MinDate", typeof(DateTime), typeof(GanttRowPanel), new FrameworkPropertyMetadata(DateTime.MinValue, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
 
-        public static DateTime GetStartDate(DependencyObject obj)
+        public static DateTime GetStartDate(DependencyObject input)
         {
-            return (DateTime)obj.GetValue(StartDateProperty);
+            if (input is null)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+
+            return (DateTime)input.GetValue(StartDateProperty);
         }
 
-        public static void SetStartDate(DependencyObject obj, DateTime value)
+        public static void SetStartDate(DependencyObject input, DateTime value)
         {
-            obj.SetValue(StartDateProperty, value);
+            if (input is null)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+
+            input.SetValue(StartDateProperty, value);
         }
 
-        public static DateTime GetEndDate(DependencyObject obj)
+        public static DateTime GetEndDate(DependencyObject input)
         {
-            return (DateTime)obj.GetValue(EndDateProperty);
+            if (input is null)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+
+            return (DateTime)input.GetValue(EndDateProperty);
         }
 
-        public static void SetEndDate(DependencyObject obj, DateTime value)
+        public static void SetEndDate(DependencyObject input, DateTime value)
         {
-            obj.SetValue(EndDateProperty, value);
+            if (input is null)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+
+            input.SetValue(EndDateProperty, value);
         }
 
         public DateTime MaxDate
@@ -77,11 +97,6 @@ namespace nGantt.GanttChart
 
             double offset = (childStartDate - minDate).Ticks * pixelsPerTick;
             double width = childDuration.Ticks * pixelsPerTick;
-
-            //if (width < 0)
-            //{
-            //    width = 0;
-            //}
 
             if (offset < 0)
             {

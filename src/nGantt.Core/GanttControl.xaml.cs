@@ -83,12 +83,30 @@ namespace nGantt
 
         public void AddGanttTask(GanttRow row, GanttTask task)
         {
+            if (row is null)
+            {
+                throw new ArgumentNullException(nameof(row));
+            }
+            if (task is null)
+            {
+                throw new ArgumentNullException(nameof(task));
+            }
+
             if (task.Start < ganttChartData.MaxDate && task.End > ganttChartData.MinDate)
                 row.Tasks.Add(task);
         }
 
         public TimeLine CreateTimeLine(PeriodSplitter.PeriodSplitter splitter, PeriodNameFormatter PeriodNameFormatter)
         {
+            if (splitter is null)
+            {
+                throw new ArgumentNullException(nameof(splitter));
+            }
+            if (PeriodNameFormatter is null)
+            {
+                throw new ArgumentNullException(nameof(PeriodNameFormatter));
+            }
+
             if (splitter.MaxDate != GanttData.MaxDate || splitter.MinDate != GanttData.MinDate)
                 throw new ArgumentException("The timeline must have the same max and min -date as the chart");
 
@@ -163,6 +181,15 @@ namespace nGantt
 
         public GanttRow CreateGanttRow(GanttRowGroup rowGroup, string name)
         {
+            if (rowGroup is null)
+            {
+                throw new ArgumentNullException(nameof(rowGroup));
+            }
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException(nameof(name));
+            }
+
             GanttRowHeader rowHeader = new GanttRowHeader() { Name = name };
             var row = new GanttRow() { RowHeader = rowHeader, Tasks = new ObservableCollection<GanttTask>() };
             rowGroup.Rows.Add(row);
@@ -179,6 +206,15 @@ namespace nGantt
 
         public void SetGridLinesTimeline(TimeLine timeline, BackgroundFormatter backgroundFormatter)
         {
+            if (timeline is null)
+            {
+                throw new ArgumentNullException(nameof(timeline));
+            }
+            if (backgroundFormatter is null)
+            {
+                throw new ArgumentNullException(nameof(backgroundFormatter));
+            }
+
             if (!ganttChartData.TimeLines.Contains(timeline))
                 throw new Exception("Invalid timeline");
 

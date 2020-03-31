@@ -3,10 +3,10 @@
     public class AboutViewModel
         : BasicNotificationViewModel
     {
-        public string AppName => Properties.Resources.Label_AppName;
+        public static string AppName => Resource.ProjectPlan.Properties.Resources.Label_AppName;
 
-        public string AppVersion => Properties.Resources.Label_AppVersion;
+        public static string AppVersion => Resource.ProjectPlan.Properties.Resources.Label_AppVersion;
 
-        public string Copyright => Properties.Resources.Label_Copyright;
+        public static string Copyright => Resource.ProjectPlan.Properties.Resources.Label_Copyright;
     }
 }

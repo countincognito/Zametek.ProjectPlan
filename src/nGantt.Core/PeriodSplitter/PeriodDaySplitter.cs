@@ -11,13 +11,13 @@ namespace nGantt.PeriodSplitter
 
         public override List<Period> Split()
         {
-            var precedingBreak = min.Date;
+            var precedingBreak = MinDate.Date;
             return base.Split(precedingBreak);
         }
 
-        protected override DateTime Increase(DateTime date, int value)
+        protected override DateTime Increase(DateTime dateTime, int value)
         {
-            return date.AddDays(value);
+            return dateTime.AddDays(value);
         }
     }
 }

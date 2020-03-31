@@ -229,7 +229,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void OpenProjectPlanFile()
         {
-            await DoOpenProjectPlanFileAsync();
+            await DoOpenProjectPlanFileAsync().ConfigureAwait(true);
         }
 
         private DelegateCommandBase InternalSaveProjectPlanFileCommand
@@ -240,7 +240,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void SaveProjectPlanFile()
         {
-            await DoSaveProjectPlanFileAsync();
+            await DoSaveProjectPlanFileAsync().ConfigureAwait(true);
         }
 
         private bool CanSaveProjectPlanFile()
@@ -256,7 +256,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void SaveAsProjectPlanFile()
         {
-            await DoSaveAsProjectPlanFileAsync();
+            await DoSaveAsProjectPlanFileAsync().ConfigureAwait(true);
         }
 
         private DelegateCommandBase InternalImportMicrosoftProjectCommand
@@ -289,7 +289,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void OpenResourceSettings()
         {
-            await DoOpenResourceSettingsAsync();
+            await DoOpenResourceSettingsAsync().ConfigureAwait(true);
         }
 
         private DelegateCommandBase InternalOpenArrowGraphSettingsCommand
@@ -333,7 +333,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void CalculateResourcedCyclomaticComplexity()
         {
-            await DoCalculateResourcedCyclomaticComplexityAsync();
+            await DoCalculateResourcedCyclomaticComplexityAsync().ConfigureAwait(true);
         }
 
         private bool CanCalculateResourcedCyclomaticComplexity()
@@ -352,7 +352,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void Compile()
         {
-            await DoCompileAsync();
+            await DoCompileAsync().ConfigureAwait(true);
         }
 
         private bool CanCompile()
@@ -368,7 +368,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void TransitiveReduction()
         {
-            await DoTransitiveReductionAsync();
+            await DoTransitiveReductionAsync().ConfigureAwait(true);
         }
 
         private bool CanTransitiveReduction()
@@ -479,8 +479,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             {
                                 var confirmation = new Confirmation
                                 {
-                                    Title = Properties.Resources.Title_UnsavedChanges,
-                                    Content = Properties.Resources.Message_UnsavedChanges
+                                    Title = Resource.ProjectPlan.Properties.Resources.Title_UnsavedChanges,
+                                    Content = Resource.ProjectPlan.Properties.Resources.Message_UnsavedChanges
                                 };
                                 m_ConfirmationInteractionRequest.Raise(confirmation);
                                 if (!confirmation.Confirmed)
@@ -492,7 +492,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         catch (Exception ex)
                         {
                             DispatchNotification(
-                                Properties.Resources.Title_Error,
+                                Resource.ProjectPlan.Properties.Resources.Title_Error,
                                 ex.Message);
                         }
                         finally
@@ -722,7 +722,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task<ProjectPlanModel> BuildProjectPlanAsync()
         {
-            return await Task.Run(() => BuildProjectPlan());
+            return await Task.Run(() => BuildProjectPlan()).ConfigureAwait(true);
         }
 
         private ProjectPlanModel BuildProjectPlan()
@@ -750,12 +750,14 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             if (string.IsNullOrWhiteSpace(filename))
             {
-                throw new ArgumentException(nameof(filename));
+                throw new ArgumentNullException(nameof(filename));
             }
-            return await OpenSave.OpenProjectPlanAsync(filename).ConfigureAwait(false);
+            return await OpenSave.OpenProjectPlanAsync(filename).ConfigureAwait(true);
         }
 
-        private static Task SaveProjectPlanAsync(ProjectPlanModel projectPlan, string filename)
+        private static Task SaveProjectPlanAsync(
+            ProjectPlanModel projectPlan,
+            string filename)
         {
             if (projectPlan == null)
             {
@@ -763,29 +765,29 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             if (string.IsNullOrWhiteSpace(filename))
             {
-                throw new ArgumentException(nameof(filename));
+                throw new ArgumentNullException(nameof(filename));
             }
             return Task.Run(() => OpenSave.SaveProjectPlan(projectPlan, filename));
         }
 
         private async Task<int> RunCalculateResourcedCyclomaticComplexityAsync()
         {
-            return await Task.Run(() => m_CoreViewModel.RunCalculateResourcedCyclomaticComplexity());
+            return await Task.Run(() => m_CoreViewModel.RunCalculateResourcedCyclomaticComplexity()).ConfigureAwait(true);
         }
 
         private async Task RunCompileAsync()
         {
-            await Task.Run(() => m_CoreViewModel.RunCompile());
+            await Task.Run(() => m_CoreViewModel.RunCompile()).ConfigureAwait(true);
         }
 
         private async Task RunTransitiveReductionAsync()
         {
-            await Task.Run(() => m_CoreViewModel.RunTransitiveReduction());
+            await Task.Run(() => m_CoreViewModel.RunTransitiveReduction()).ConfigureAwait(true);
         }
 
         private async Task RunAutoCompileAsync()
         {
-            await Task.Run(() => m_CoreViewModel.RunAutoCompile());
+            await Task.Run(() => m_CoreViewModel.RunAutoCompile()).ConfigureAwait(true);
         }
 
         private void ResetProject()
@@ -840,7 +842,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public async Task DoOpenProjectPlanFileAsync()
         {
-            await DoOpenProjectPlanFileAsync(string.Empty);
+            await DoOpenProjectPlanFileAsync(string.Empty).ConfigureAwait(true);
         }
 
         public async Task DoSaveProjectPlanFileAsync()
@@ -848,11 +850,11 @@ namespace Zametek.ViewModel.ProjectPlan
             string projectTitle = m_SettingService.PlanTitle;
             if (string.IsNullOrEmpty(projectTitle))
             {
-                await DoSaveAsProjectPlanFileAsync();
+                await DoSaveAsProjectPlanFileAsync().ConfigureAwait(true);
             }
             else
             {
-                await DoSaveProjectPlanFileAsync(projectTitle);
+                await DoSaveProjectPlanFileAsync(projectTitle).ConfigureAwait(true);
             }
         }
 
@@ -867,16 +869,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = true;
                 string directory = m_SettingService.PlanDirectory;
                 string filename = Path.Combine(directory, projectTitle);
-                filename = Path.ChangeExtension(filename, Properties.Resources.Filter_SaveProjectPlanFileExtension);
-                ProjectPlanModel projectPlan = await BuildProjectPlanAsync();
-                await SaveProjectPlanAsync(projectPlan, filename);
+                filename = Path.ChangeExtension(filename, Resource.ProjectPlan.Properties.Resources.Filter_SaveProjectPlanFileExtension);
+                ProjectPlanModel projectPlan = await BuildProjectPlanAsync().ConfigureAwait(true);
+                await SaveProjectPlanAsync(projectPlan, filename).ConfigureAwait(true);
                 IsProjectUpdated = false;
                 m_SettingService.SetFilePath(filename);
             }
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -895,8 +897,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 bool result = m_FileDialogService.ShowSaveDialog(
                     directory,
-                    Properties.Resources.Filter_SaveProjectPlanFileType,
-                    Properties.Resources.Filter_SaveProjectPlanFileExtension);
+                    Resource.ProjectPlan.Properties.Resources.Filter_SaveProjectPlanFileType,
+                    Resource.ProjectPlan.Properties.Resources.Filter_SaveProjectPlanFileExtension);
 
                 if (result)
                 {
@@ -904,13 +906,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (string.IsNullOrWhiteSpace(filename))
                     {
                         DispatchNotification(
-                            Properties.Resources.Title_Error,
-                            Properties.Resources.Message_EmptyFilename);
+                            Resource.ProjectPlan.Properties.Resources.Title_Error,
+                            Resource.ProjectPlan.Properties.Resources.Message_EmptyFilename);
                     }
                     else
                     {
-                        ProjectPlanModel projectPlan = await BuildProjectPlanAsync();
-                        await SaveProjectPlanAsync(projectPlan, filename);
+                        ProjectPlanModel projectPlan = await BuildProjectPlanAsync().ConfigureAwait(true);
+                        await SaveProjectPlanAsync(projectPlan, filename).ConfigureAwait(true);
                         IsProjectUpdated = false;
                         m_SettingService.SetFilePath(filename);
                     }
@@ -919,7 +921,7 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -938,8 +940,8 @@ namespace Zametek.ViewModel.ProjectPlan
         //        {
         //            var confirmation = new Confirmation()
         //            {
-        //                Title = Properties.Resources.Title_UnsavedChanges,
-        //                Content = Properties.Resources.Message_UnsavedChanges
+        //                Title = Resource.ProjectPlan.Properties.Resources.Title_UnsavedChanges,
+        //                Content = Resource.ProjectPlan.Properties.Resources.Message_UnsavedChanges
         //            };
         //            m_ConfirmationInteractionRequest.Raise(confirmation);
         //            if (!confirmation.Confirmed)
@@ -950,15 +952,15 @@ namespace Zametek.ViewModel.ProjectPlan
         //        string directory = m_SettingService.PlanDirectory;
         //        if (m_FileDialogService.ShowOpenDialog(
         //            directory,
-        //            Properties.Resources.Filter_ImportMicrosoftProjectFileType,
-        //            Properties.Resources.Filter_ImportMicrosoftProjectFileExtension) == DialogResult.OK)
+        //            Resource.ProjectPlan.Properties.Resources.Filter_ImportMicrosoftProjectFileType,
+        //            Resource.ProjectPlan.Properties.Resources.Filter_ImportMicrosoftProjectFileExtension) == DialogResult.OK)
         //        {
         //            string filename = m_FileDialogService.Filename;
         //            if (string.IsNullOrWhiteSpace(filename))
         //            {
         //                DispatchNotification(
-        //                    Properties.Resources.Title_Error,
-        //                    Properties.Resources.Message_EmptyFilename);
+        //                    Resource.ProjectPlan.Properties.Resources.Title_Error,
+        //                    Resource.ProjectPlan.Properties.Resources.Message_EmptyFilename);
         //            }
         //            else
         //            {
@@ -976,7 +978,7 @@ namespace Zametek.ViewModel.ProjectPlan
         //    catch (Exception ex)
         //    {
         //        DispatchNotification(
-        //            Properties.Resources.Title_Error,
+        //            Resource.ProjectPlan.Properties.Resources.Title_Error,
         //            ex.Message);
         //        ResetProject();
         //    }
@@ -996,8 +998,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     var confirmation = new Confirmation
                     {
-                        Title = Properties.Resources.Title_UnsavedChanges,
-                        Content = Properties.Resources.Message_UnsavedChanges
+                        Title = Resource.ProjectPlan.Properties.Resources.Title_UnsavedChanges,
+                        Content = Resource.ProjectPlan.Properties.Resources.Message_UnsavedChanges
                     };
                     m_ConfirmationInteractionRequest.Raise(confirmation);
                     if (!confirmation.Confirmed)
@@ -1010,7 +1012,7 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -1029,7 +1031,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     var confirmation = new ResourceSettingsManagerConfirmation(ResourceSettings.CloneObject())
                     {
-                        Title = Properties.Resources.Title_ResourceSettings
+                        Title = Resource.ProjectPlan.Properties.Resources.Title_ResourceSettings
                     };
                     m_ResourceSettingsManagerInteractionRequest.Raise(confirmation);
                     if (!confirmation.Confirmed)
@@ -1043,14 +1045,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 HasStaleOutputs = true;
                 IsProjectUpdated = true;
 
-                await RunAutoCompileAsync();
+                await RunAutoCompileAsync().ConfigureAwait(true);
 
                 m_CoreViewModel.UpdateActivitiesAllocatedToResources();
             }
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -1069,7 +1071,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     var confirmation = new ArrowGraphSettingsManagerConfirmation(ArrowGraphSettings.CloneObject())
                     {
-                        Title = Properties.Resources.Title_ArrowGraphSettings
+                        Title = Resource.ProjectPlan.Properties.Resources.Title_ArrowGraphSettings
                     };
                     m_ArrowGraphSettingsManagerInteractionRequest.Raise(confirmation);
                     if (!confirmation.Confirmed)
@@ -1084,7 +1086,7 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -1099,16 +1101,16 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 IsBusy = true;
-                int resourcedCyclomaticComplexity = await RunCalculateResourcedCyclomaticComplexityAsync();
+                int resourcedCyclomaticComplexity = await RunCalculateResourcedCyclomaticComplexityAsync().ConfigureAwait(true);
                 DispatchNotification(
-                    Properties.Resources.Title_ResourcedCyclomaticComplexity,
-                    $@"{Properties.Resources.Message_ResourcedCyclomaticComplexity}{Environment.NewLine}{Environment.NewLine}{resourcedCyclomaticComplexity}"
+                    Resource.ProjectPlan.Properties.Resources.Title_ResourcedCyclomaticComplexity,
+                    $@"{Resource.ProjectPlan.Properties.Resources.Message_ResourcedCyclomaticComplexity}{Environment.NewLine}{Environment.NewLine}{resourcedCyclomaticComplexity}"
                 );
             }
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -1122,12 +1124,12 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 IsBusy = true;
-                await RunCompileAsync();
+                await RunCompileAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -1142,12 +1144,12 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 IsBusy = true;
-                await RunTransitiveReductionAsync();
+                await RunTransitiveReductionAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -1167,12 +1169,16 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 IsBusy = true;
                 var uri = new Uri(hyperlink);
-                Process.Start(new ProcessStartInfo(uri.AbsoluteUri));
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = uri.AbsoluteUri,
+                    UseShellExecute = true,
+                });
             }
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -1187,12 +1193,12 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 IsBusy = true;
-                m_AboutInteractionRequest.Raise(new Notification { Title = Properties.Resources.Title_AppName });
+                m_AboutInteractionRequest.Raise(new Notification { Title = Resource.ProjectPlan.Properties.Resources.Title_AppName });
             }
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -1245,14 +1251,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (string.IsNullOrWhiteSpace(m_SettingService.PlanTitle))
                 {
-                    titleBuilder.Append(Properties.Resources.Label_EmptyProjectTitle);
+                    titleBuilder.Append(Resource.ProjectPlan.Properties.Resources.Label_EmptyProjectTitle);
                 }
                 else
                 {
                     titleBuilder.Append(m_SettingService.PlanTitle);
                 }
 
-                titleBuilder.Append($@" - {Properties.Resources.Title_ProjectPlan}");
+                titleBuilder.Append($@" - {Resource.ProjectPlan.Properties.Resources.Title_ProjectPlan}");
                 return titleBuilder.ToString();
             }
         }
@@ -1455,8 +1461,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     var confirmation = new Confirmation
                     {
-                        Title = Properties.Resources.Title_UnsavedChanges,
-                        Content = Properties.Resources.Message_UnsavedChanges
+                        Title = Resource.ProjectPlan.Properties.Resources.Title_UnsavedChanges,
+                        Content = Resource.ProjectPlan.Properties.Resources.Message_UnsavedChanges
                     };
                     m_ConfirmationInteractionRequest.Raise(confirmation);
                     if (!confirmation.Confirmed)
@@ -1470,8 +1476,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     string directory = m_SettingService.PlanDirectory;
                     bool result = m_FileDialogService.ShowOpenDialog(
                         directory,
-                        Properties.Resources.Filter_OpenProjectPlanFileType,
-                        Properties.Resources.Filter_OpenProjectPlanFileExtension);
+                        Resource.ProjectPlan.Properties.Resources.Filter_OpenProjectPlanFileType,
+                        Resource.ProjectPlan.Properties.Resources.Filter_OpenProjectPlanFileExtension);
                     if (result)
                     {
                         filename = m_FileDialogService.Filename;
@@ -1484,12 +1490,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (string.IsNullOrWhiteSpace(filename))
                 {
                     DispatchNotification(
-                        Properties.Resources.Title_Error,
-                        Properties.Resources.Message_EmptyFilename);
+                        Resource.ProjectPlan.Properties.Resources.Title_Error,
+                        Resource.ProjectPlan.Properties.Resources.Message_EmptyFilename);
                 }
                 else
                 {
-                    ProjectPlanModel projectPlan = await OpenProjectPlanAsync(filename);
+                    ProjectPlanModel projectPlan = await OpenProjectPlanAsync(filename).ConfigureAwait(true);
                     ProcessProjectPlan(projectPlan);
                     IsProjectUpdated = false;
                     m_SettingService.SetFilePath(filename);
@@ -1498,7 +1504,7 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
                 ResetProject();
             }

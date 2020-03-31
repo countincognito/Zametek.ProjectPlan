@@ -49,6 +49,11 @@ namespace Zametek.View.ProjectPlan
 
         protected override void OnClosing(CancelEventArgs e)
         {
+            if (e is null)
+            {
+                throw new ArgumentNullException(nameof(e));
+            }
+
             base.OnClosing(e);
             var closingPayload = new ApplicationClosingPayload();
             m_EventService.GetEvent<PubSubEvent<ApplicationClosingPayload>>()

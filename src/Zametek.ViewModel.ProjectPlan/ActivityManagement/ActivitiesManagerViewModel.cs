@@ -109,7 +109,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void AddManagedActivity()
         {
-            await DoAddManagedActivityAsync();
+            await DoAddManagedActivityAsync().ConfigureAwait(true);
         }
 
         private bool CanAddManagedActivity()
@@ -125,7 +125,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void RemoveManagedActivity()
         {
-            await DoRemoveManagedActivityAsync();
+            await DoRemoveManagedActivityAsync().ConfigureAwait(true);
         }
 
         private bool CanRemoveManagedActivity()
@@ -164,30 +164,30 @@ namespace Zametek.ViewModel.ProjectPlan
                     .Subscribe(async payload =>
                     {
                         IsProjectUpdated = true;
-                        await UpdateActivitiesTargetResourceDependenciesAsync();
-                        await DoAutoCompileAsync();
+                        await UpdateActivitiesTargetResourceDependenciesAsync().ConfigureAwait(true);
+                        await DoAutoCompileAsync().ConfigureAwait(true);
                     }, ThreadOption.BackgroundThread);
             m_ProjectStartUpdatedSubscriptionToken =
                 m_EventService.GetEvent<PubSubEvent<ProjectStartUpdatedPayload>>()
                     .Subscribe(async payload =>
                     {
                         IsProjectUpdated = true;
-                        await UpdateActivitiesProjectStartAsync();
-                        await DoAutoCompileAsync();
+                        await UpdateActivitiesProjectStartAsync().ConfigureAwait(true);
+                        await DoAutoCompileAsync().ConfigureAwait(true);
                     }, ThreadOption.BackgroundThread);
             m_UseBusinessDaysUpdatedSubscriptionToken =
                 m_EventService.GetEvent<PubSubEvent<UseBusinessDaysUpdatedPayload>>()
                     .Subscribe(async payload =>
                     {
                         IsProjectUpdated = true;
-                        await UpdateActivitiesUseBusinessDaysAsync();
-                        await DoAutoCompileAsync();
+                        await UpdateActivitiesUseBusinessDaysAsync().ConfigureAwait(true);
+                        await DoAutoCompileAsync().ConfigureAwait(true);
                     }, ThreadOption.BackgroundThread);
             m_ShowDatesUpdatedSubscriptionToken =
                 m_EventService.GetEvent<PubSubEvent<ShowDatesUpdatedPayload>>()
                     .Subscribe(async payload =>
                     {
-                        await SetCompilationOutputAsync();
+                        await SetCompilationOutputAsync().ConfigureAwait(true);
                         PublishGraphCompilationUpdatedPayload();
                     }, ThreadOption.BackgroundThread);
         }
@@ -212,27 +212,27 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task UpdateActivitiesTargetResourceDependenciesAsync()
         {
-            await Task.Run(() => m_CoreViewModel.UpdateActivitiesTargetResourceDependencies());
+            await Task.Run(() => m_CoreViewModel.UpdateActivitiesTargetResourceDependencies()).ConfigureAwait(true); ;
         }
 
         private async Task UpdateActivitiesProjectStartAsync()
         {
-            await Task.Run(() => m_CoreViewModel.UpdateActivitiesProjectStart());
+            await Task.Run(() => m_CoreViewModel.UpdateActivitiesProjectStart()).ConfigureAwait(true); ;
         }
 
         private async Task UpdateActivitiesUseBusinessDaysAsync()
         {
-            await Task.Run(() => m_CoreViewModel.UpdateActivitiesUseBusinessDays());
+            await Task.Run(() => m_CoreViewModel.UpdateActivitiesUseBusinessDays()).ConfigureAwait(true); ;
         }
 
         private async Task RunAutoCompileAsync()
         {
-            await Task.Run(() => m_CoreViewModel.RunAutoCompile());
+            await Task.Run(() => m_CoreViewModel.RunAutoCompile()).ConfigureAwait(true); ;
         }
 
         private async Task SetCompilationOutputAsync()
         {
-            await Task.Run(() => m_CoreViewModel.SetCompilationOutput());
+            await Task.Run(() => m_CoreViewModel.SetCompilationOutput()).ConfigureAwait(true); ;
         }
 
         private void DispatchNotification(string title, object content)
@@ -256,12 +256,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = true;
                 HasStaleOutputs = true;
                 IsProjectUpdated = true;
-                await RunAutoCompileAsync();
+                await RunAutoCompileAsync().ConfigureAwait(true); ;
             }
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -285,12 +285,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 HasStaleOutputs = true;
                 IsProjectUpdated = true;
 
-                await RunAutoCompileAsync();
+                await RunAutoCompileAsync().ConfigureAwait(true); ;
             }
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -319,12 +319,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 HasStaleOutputs = true;
                 IsProjectUpdated = true;
 
-                await RunAutoCompileAsync();
+                await RunAutoCompileAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally

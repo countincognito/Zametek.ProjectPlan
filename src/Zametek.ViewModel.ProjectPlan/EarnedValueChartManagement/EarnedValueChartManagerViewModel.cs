@@ -7,6 +7,7 @@ using Prism.Interactivity.InteractionRequest;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -130,7 +131,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void ExportEarnedValueChartToCsv()
         {
-            await DoExportEarnedValueChartToCsvAsync();
+            await DoExportEarnedValueChartToCsvAsync().ConfigureAwait(true);
         }
 
         private bool CanExportEarnedValueChartToCsv()
@@ -216,7 +217,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             pointSet.Add(new EarnedValuePoint
                             {
                                 Time = time,
-                                ActivityId = activity.Id.ToString(),
+                                ActivityId = activity.Id.ToString(CultureInfo.InvariantCulture),
                                 ActivityName = activity.Name,
                                 EarnedValue = runningTotal,
                                 EarnedValuePercentage = percentage
@@ -285,7 +286,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Position = AxisPosition.Bottom,
                             Minimum = minValue,
                             Maximum = maxValue,
-                            Title = Properties.Resources.Label_TimeAxisTitle,
+                            Title = Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle,
                             StringFormat = "d"
                         };
                     }
@@ -296,7 +297,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Position = AxisPosition.Bottom,
                             Minimum = minValue,
                             Maximum = maxValue,
-                            Title = Properties.Resources.Label_TimeAxisTitle
+                            Title = Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle
                         };
                     }
                 }
@@ -315,7 +316,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Position = AxisPosition.Left,
                 Minimum = 0.0,
                 Maximum = 100.0,
-                Title = Properties.Resources.Label_EarnedValuePercentageAxisTitle
+                Title = Resource.ProjectPlan.Properties.Resources.Label_EarnedValuePercentageAxisTitle
             };
         }
 
@@ -333,11 +334,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (pointSet != null
                     && pointSet.Any())
                 {
-                    table.Columns.Add(new DataColumn(Properties.Resources.Label_TimeAxisTitle));
-                    table.Columns.Add(new DataColumn(Properties.Resources.Label_Id));
-                    table.Columns.Add(new DataColumn(Properties.Resources.Label_ActivityName));
-                    table.Columns.Add(new DataColumn(Properties.Resources.Label_EarnedValueTitle));
-                    table.Columns.Add(new DataColumn(Properties.Resources.Label_EarnedValuePercentageAxisTitle));
+                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle));
+                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_Id));
+                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_ActivityName));
+                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_EarnedValueTitle));
+                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_EarnedValuePercentageAxisTitle));
 
                     m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
 
@@ -381,8 +382,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 bool result = m_FileDialogService.ShowSaveDialog(
                     directory,
-                    Properties.Resources.Filter_SaveCsvFileType,
-                    Properties.Resources.Filter_SaveCsvFileExtension);
+                    Resource.ProjectPlan.Properties.Resources.Filter_SaveCsvFileType,
+                    Resource.ProjectPlan.Properties.Resources.Filter_SaveCsvFileExtension);
 
                 if (result)
                 {
@@ -390,13 +391,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (string.IsNullOrWhiteSpace(filename))
                     {
                         DispatchNotification(
-                            Properties.Resources.Title_Error,
-                            Properties.Resources.Message_EmptyFilename);
+                            Resource.ProjectPlan.Properties.Resources.Title_Error,
+                            Resource.ProjectPlan.Properties.Resources.Message_EmptyFilename);
                     }
                     else
                     {
-                        DataTable dataTable = await BuildEarnedValueChartDataTableAsync();
-                        await ChartHelper.ExportDataTableToCsvAsync(dataTable, filename);
+                        DataTable dataTable = await BuildEarnedValueChartDataTableAsync().ConfigureAwait(true);
+                        await ChartHelper.ExportDataTableToCsvAsync(dataTable, filename).ConfigureAwait(true);
                         m_SettingService.SetDirectory(filename);
                     }
                 }
@@ -404,7 +405,7 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -496,12 +497,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Types
 
-        public class EarnedValuePoint
+        private class EarnedValuePoint
         {
             public int Time { get; set; }
+
             public string ActivityId { get; set; }
+
             public string ActivityName { get; set; }
+
             public int EarnedValue { get; set; }
+
             public double EarnedValuePercentage { get; set; }
         }
 

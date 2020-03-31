@@ -1,4 +1,5 @@
 ﻿using Prism.Mvvm;
+using System.Globalization;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -49,7 +50,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public string DisplayName => string.IsNullOrWhiteSpace(Name) ? Id.ToString() : Name;
+        public string DisplayName => string.IsNullOrWhiteSpace(Name) ? Id.ToString(CultureInfo.InvariantCulture) : Name;
 
         public bool IsSelected
         {

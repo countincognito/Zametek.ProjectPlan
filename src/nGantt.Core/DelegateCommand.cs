@@ -14,7 +14,7 @@ namespace nGantt
         public DelegateCommand(Action<T> execute, Predicate<T> canExecute)
         {
             if (execute == null)
-                throw new ArgumentNullException("Execute can not be null");
+                throw new ArgumentNullException(nameof(execute));
 
             this.execute = execute;
             this.canExecute = canExecute;

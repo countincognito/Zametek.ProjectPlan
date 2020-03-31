@@ -114,8 +114,8 @@ namespace Zametek.View.ProjectPlan
 
                 bool result = m_FileDialogService.ShowSaveDialog(
                     directory,
-                    Properties.Resources.Filter_SaveGraphMLFileType,
-                    Properties.Resources.Filter_SaveGraphMLFileExtension);
+                    Resource.ProjectPlan.Properties.Resources.Filter_SaveGraphMLFileType,
+                    Resource.ProjectPlan.Properties.Resources.Filter_SaveGraphMLFileExtension);
 
                 if (result)
                 {
@@ -124,8 +124,8 @@ namespace Zametek.View.ProjectPlan
                         if (string.IsNullOrWhiteSpace(filename))
                         {
                             MessageBox.Show(
-                                Properties.Resources.Message_EmptyFilename,
-                                Properties.Resources.Title_Error,
+                                Resource.ProjectPlan.Properties.Resources.Message_EmptyFilename,
+                                Resource.ProjectPlan.Properties.Resources.Title_Error,
                                 MessageBoxButton.OKCancel,
                                 MessageBoxImage.Error);
                         }
@@ -144,7 +144,7 @@ namespace Zametek.View.ProjectPlan
             {
                 System.Windows.MessageBox.Show(
                     ex.Message,
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     MessageBoxButton.OKCancel,
                     MessageBoxImage.Error);
             }

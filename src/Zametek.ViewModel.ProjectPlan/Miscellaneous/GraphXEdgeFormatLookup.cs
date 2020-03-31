@@ -9,8 +9,18 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private static readonly IDictionary<EdgeDashStyle, GraphX.Controls.EdgeDashStyle> s_EdgeDashLookup;
-        private static readonly IDictionary<EdgeWeightStyle, double> s_EdgeWeightLookup;
+        private static readonly IDictionary<EdgeDashStyle, GraphX.Controls.EdgeDashStyle> s_EdgeDashLookup =
+            new Dictionary<EdgeDashStyle, GraphX.Controls.EdgeDashStyle>
+            {
+                {EdgeDashStyle.Normal, GraphX.Controls.EdgeDashStyle.Solid},
+                {EdgeDashStyle.Dashed, GraphX.Controls.EdgeDashStyle.Dash}
+            };
+        private static readonly IDictionary<EdgeWeightStyle, double> s_EdgeWeightLookup =
+            new Dictionary<EdgeWeightStyle, double>
+            {
+                {EdgeWeightStyle.Normal, s_NormalStrokeWeight},
+                {EdgeWeightStyle.Bold, s_BoldStrokeWeight}
+            };
         private static double s_NormalStrokeWeight = 2.0;
         private static double s_BoldStrokeWeight = 5.0;
 
@@ -20,20 +30,6 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Ctors
-
-        static GraphXEdgeFormatLookup()
-        {
-            s_EdgeDashLookup = new Dictionary<EdgeDashStyle, GraphX.Controls.EdgeDashStyle>
-            {
-                {EdgeDashStyle.Normal, GraphX.Controls.EdgeDashStyle.Solid},
-                {EdgeDashStyle.Dashed, GraphX.Controls.EdgeDashStyle.Dash}
-            };
-            s_EdgeWeightLookup = new Dictionary<EdgeWeightStyle, double>
-            {
-                {EdgeWeightStyle.Normal, s_NormalStrokeWeight},
-                {EdgeWeightStyle.Bold, s_BoldStrokeWeight}
-            };
-        }
 
         public GraphXEdgeFormatLookup(IEnumerable<EdgeTypeFormatModel> edgeTypeFormats)
         {

@@ -80,7 +80,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void GenerateGanttChart()
         {
-            await DoGenerateGanttChartAsync();
+            await DoGenerateGanttChartAsync().ConfigureAwait(true); ;
         }
 
         private bool CanGenerateGanttChart()
@@ -97,14 +97,14 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 IsBusy = true;
-                await GenerateGanttChartFromGraphCompilationAsync();
+                await GenerateGanttChartFromGraphCompilationAsync().ConfigureAwait(true);
                 HasStaleGanttChart = false;
                 //IsProjectUpdated = true;
             }
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -154,7 +154,7 @@ namespace Zametek.ViewModel.ProjectPlan
                  m_EventService.GetEvent<PubSubEvent<GanttChartUpdatedPayload>>()
                      .Subscribe(async payload =>
                      {
-                         await GenerateGanttChartFromGraphCompilationAsync();
+                         await GenerateGanttChartFromGraphCompilationAsync().ConfigureAwait(true);
                      }, ThreadOption.BackgroundThread);
         }
 
@@ -178,7 +178,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task GenerateGanttChartFromGraphCompilationAsync()
         {
-            await Task.Run(() => GenerateGanttChartFromGraphCompilation());
+            await Task.Run(() => GenerateGanttChartFromGraphCompilation()).ConfigureAwait(true);
         }
 
         private void GenerateGanttChartFromGraphCompilation()

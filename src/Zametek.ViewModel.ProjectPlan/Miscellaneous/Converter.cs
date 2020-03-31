@@ -1,4 +1,6 @@
-﻿namespace Zametek.ViewModel.ProjectPlan
+﻿using System.Globalization;
+
+namespace Zametek.ViewModel.ProjectPlan
 {
     public static class Converter
     {
@@ -6,12 +8,17 @@
 
         public static string HexConverter(byte r, byte g, byte b)
         {
-            return $@"#{r.ToString("X2")}{g.ToString("X2")}{b.ToString("X2")}";
+            return $@"#{r.ByteToHexString()}{g.ByteToHexString()}{b.ByteToHexString()}";
         }
 
         public static string HexConverter(byte a, byte r, byte g, byte b)
         {
-            return $@"#{a.ToString("X2")}{r.ToString("X2")}{g.ToString("X2")}{b.ToString("X2")}";
+            return $@"#{a.ByteToHexString()}{r.ByteToHexString()}{g.ByteToHexString()}{b.ByteToHexString()}";
+        }
+
+        private static string ByteToHexString(this byte input)
+        {
+            return input.ToString(@"X2", CultureInfo.InvariantCulture);
         }
 
         #endregion

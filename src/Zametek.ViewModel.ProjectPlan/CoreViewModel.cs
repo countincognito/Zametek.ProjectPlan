@@ -3,6 +3,7 @@ using Prism.Events;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using Zametek.Common.ProjectPlan;
@@ -94,7 +95,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 return string.Empty;
             }
             var output = new StringBuilder();
-            output.AppendLine($@">{Properties.Resources.Message_CircularDependencies}");
+            output.AppendLine($@">{Resource.ProjectPlan.Properties.Resources.Message_CircularDependencies}");
             foreach (CircularDependency<int> circularDependency in circularDependencies)
             {
                 output.AppendLine(string.Join(@" -> ", circularDependency.Dependencies));
@@ -109,14 +110,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 return string.Empty;
             }
             var output = new StringBuilder();
-            output.AppendLine($@">{Properties.Resources.Message_MissingDependencies}");
+            output.AppendLine($@">{Resource.ProjectPlan.Properties.Resources.Message_MissingDependencies}");
             foreach (int missingDependency in missingDependencies)
             {
                 IList<int> activities = Activities
                     .Where(x => x.Dependencies.Contains(missingDependency))
                     .Select(x => x.Id)
                     .ToList();
-                output.AppendFormat($@"{missingDependency} -> ");
+                output.AppendFormat(CultureInfo.InvariantCulture, $@"{missingDependency} -> ");
                 output.AppendLine(string.Join(@", ", activities));
             }
             return output.ToString();
@@ -748,7 +749,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (graphCompilation.Errors.AllResourcesExplicitTargetsButNotAllActivitiesTargeted)
                     {
                         HasCompilationErrors = true;
-                        output.AppendLine($@">{Properties.Resources.Message_AllResourcesExplicitTargetsNotAllActivitiesTargeted}");
+                        output.AppendLine($@">{Resource.ProjectPlan.Properties.Resources.Message_AllResourcesExplicitTargetsNotAllActivitiesTargeted}");
                     }
 
                     if (graphCompilation.Errors.CircularDependencies.Any())
@@ -773,7 +774,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (HasCompilationErrors)
                 {
                     output.Insert(0, Environment.NewLine);
-                    output.Insert(0, $@">{Properties.Resources.Message_CompilationErrors}");
+                    output.Insert(0, $@">{Resource.ProjectPlan.Properties.Resources.Message_CompilationErrors}");
                 }
 
                 CompilationOutput = output.ToString();

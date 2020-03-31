@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Resources;
 
 namespace Zametek.View.ProjectPlan
@@ -30,8 +31,8 @@ namespace Zametek.View.ProjectPlan
         {
             get
             {
-                string description = m_ResourceManager.GetString(m_ResourceKey);
-                return string.IsNullOrWhiteSpace(description) ? string.Format("[[{0}]]", m_ResourceKey) : description;
+                string description = m_ResourceManager.GetString(m_ResourceKey, CultureInfo.InvariantCulture);
+                return string.IsNullOrWhiteSpace(description) ? string.Format(CultureInfo.InvariantCulture, "[[{0}]]", m_ResourceKey) : description;
             }
         }
 

@@ -59,6 +59,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public static IList<int> Parse(string input)
         {
+            if (input is null)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
             return input
                 .Split(new[] { Separator }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(int.Parse)
@@ -90,7 +94,7 @@ namespace Zametek.ViewModel.ProjectPlan
             string stripped = StripWhitespace(input);
             if (!s_StrippedMatch.IsMatch(stripped))
             {
-                return new ValidationResult(false, Properties.Resources.Label_InvalidFormat);
+                return new ValidationResult(false, Resource.ProjectPlan.Properties.Resources.Label_InvalidFormat);
             }
             ManagedActivityContext context = Context;
             if (context != null && context.Id != 0)
@@ -98,7 +102,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 IList<int> output = Parse(stripped);
                 if (output.Contains(context.Id))
                 {
-                    return new ValidationResult(false, Properties.Resources.Label_SelfDependency);
+                    return new ValidationResult(false, Resource.ProjectPlan.Properties.Resources.Label_SelfDependency);
                 }
             }
             return ValidationResult.ValidResult;

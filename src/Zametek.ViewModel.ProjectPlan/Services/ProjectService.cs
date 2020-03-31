@@ -13,12 +13,7 @@ namespace Zametek.ViewModel.ProjectPlan
     public class ProjectService
         : IProjectService
     {
-        private static Random _Rnd;
-
-        static ProjectService()
-        {
-            _Rnd = new Random();
-        }
+        private static Random _Rnd = new Random();
 
         #region Private Methods
 

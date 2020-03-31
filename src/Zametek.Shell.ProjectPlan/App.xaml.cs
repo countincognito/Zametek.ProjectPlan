@@ -53,6 +53,11 @@ namespace Zametek.Shell.ProjectPlan
 
         protected override void ConfigureRegionAdapterMappings(RegionAdapterMappings regionAdapterMappings)
         {
+            if (regionAdapterMappings is null)
+            {
+                throw new System.ArgumentNullException(nameof(regionAdapterMappings));
+            }
+
             regionAdapterMappings.RegisterMapping(typeof(ContentControl), Container.Resolve<ContentControlRegionAdapter>());
             regionAdapterMappings.RegisterMapping(typeof(DockingManager), Container.Resolve<DockingManagerRegionAdapter>());
         }

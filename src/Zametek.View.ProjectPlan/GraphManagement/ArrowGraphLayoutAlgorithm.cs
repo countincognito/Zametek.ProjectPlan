@@ -18,10 +18,10 @@ namespace Zametek.View.ProjectPlan
         #region Fields
 
         private readonly TGraph m_Graph;
-        private double m_OffsetX;
+        private readonly double m_OffsetX;
         private double m_OffsetY;
-        private double m_RateX;
-        private double m_RateY;
+        private readonly double m_RateX;
+        private readonly double m_RateY;
 
         #endregion
 
@@ -95,6 +95,8 @@ namespace Zametek.View.ProjectPlan
             private set;
         }
 
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Interface implementation")]
         public IDictionary<TVertex, Size> VertexSizes
         {
             get;

@@ -156,6 +156,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         protected void SubscriptionAction(PropertyChangedPubSubPayload payload)
         {
+            if (payload is null)
+            {
+                throw new ArgumentNullException(nameof(payload));
+            }
+
             if (!payload.Source.TryGetTarget(out IPropertyChangedPubSubViewModel source))
             {
                 return;
@@ -182,6 +187,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         protected bool SubscriptionFilter(PropertyChangedPubSubPayload payload)
         {
+            if (payload is null)
+            {
+                throw new ArgumentNullException(nameof(payload));
+            }
+
             if (!payload.Source.TryGetTarget(out IPropertyChangedPubSubViewModel source))
             {
                 return false;
@@ -210,6 +220,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         protected override void OnPropertyChanged(PropertyChangedEventArgs args)
         {
+            if (args is null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
+
             base.OnPropertyChanged(args);
             m_EventService.GetEvent<PubSubEvent<PropertyChangedPubSubPayload>>()
                 .Publish(new PropertyChangedPubSubPayload(args.PropertyName, new WeakReference<IPropertyChangedPubSubViewModel>(this)));
