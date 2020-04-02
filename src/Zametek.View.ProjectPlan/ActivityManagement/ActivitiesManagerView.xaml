@@ -236,7 +236,7 @@
                                                         <Setter Property="ContentTemplate">
                                                             <Setter.Value>
                                                                 <DataTemplate>
-                                                                    <!--FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}" forces editing on second click-->
+                                                                    <!--FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}" forces editing on second click -->
                                                                     <xctk:IntegerUpDown Value="{Binding Path=Duration, Mode=TwoWay}"
                                                                                         VerticalAlignment="Stretch"
                                                                                         VerticalContentAlignment="Center"
@@ -245,7 +245,17 @@
                                                                                         ShowButtonSpinner="False"
                                                                                         Margin="0"
                                                                                         Minimum="0"
-                                                                                        FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"/>
+                                                                                        FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}">
+                                                                        <xctk:IntegerUpDown.Style>
+                                                                            <Style TargetType="{x:Type xctk:IntegerUpDown}">
+                                                                                <Style.Triggers>
+                                                                                    <Trigger Property="Validation.HasError" Value="True">
+                                                                                        <Setter Property="Validation.ErrorTemplate" Value="{StaticResource ResourceKey=ErrorTemplate}"/>
+                                                                                    </Trigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </xctk:IntegerUpDown.Style>
+                                                                    </xctk:IntegerUpDown>
                                                                 </DataTemplate>
                                                             </Setter.Value>
                                                         </Setter>

@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="4.6.79" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -18,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\nGantt.Core\nGantt.Core.csproj" />
+    <ProjectReference Include="..\Xceed.Wpf.Toolkit\DotNetProjects.Wpf.Extended.Toolkit.csproj" />
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
   </ItemGroup>

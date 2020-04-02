@@ -277,13 +277,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (IResourceSchedule<int, int> resourceSchedule in resourceSchedules)
                 {
-                    var series = new ResourceSeriesModel()
+                    var series = new ResourceSeriesModel
                     {
                         Values = resourceSchedule.ActivityAllocation.Select(x => x ? 1 : 0).ToList()
                     };
                     series.InterActivityAllocationType = InterActivityAllocationType.None;
                     var stringBuilder = new StringBuilder();
-
 
                     if (resourceSchedule.Resource != null
                         && resourceLookup.TryGetValue(resourceSchedule.Resource.Id, out ResourceModel resource))
@@ -323,7 +322,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (ResourceModel resource in indirectResources)
                 {
-                    var series = new ResourceSeriesModel()
+                    var series = new ResourceSeriesModel
                     {
                         InterActivityAllocationType = resource.InterActivityAllocationType,
                         Values = new List<int>(Enumerable.Repeat(1, finishTime))
