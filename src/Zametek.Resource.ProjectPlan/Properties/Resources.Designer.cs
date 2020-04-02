@@ -169,6 +169,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Activity.
+        /// </summary>
+        public static string Label_Activity {
+            get {
+                return ResourceManager.GetString("Label_Activity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Activity Name.
         /// </summary>
         public static string Label_ActivityName {
@@ -840,6 +849,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         public static string Label_ResetGraph {
             get {
                 return ResourceManager.GetString("Label_ResetGraph", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource.
+        /// </summary>
+        public static string Label_Resource {
+            get {
+                return ResourceManager.GetString("Label_Resource", resourceCulture);
             }
         }
         

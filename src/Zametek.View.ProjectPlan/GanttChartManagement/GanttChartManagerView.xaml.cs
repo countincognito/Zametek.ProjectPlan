@@ -6,14 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Event.ProjectPlan;
-using Zametek.Maths.Graphs;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
@@ -108,9 +106,8 @@ namespace Zametek.View.ProjectPlan
 
             if (ganttChart != null)
             {
-                IList<IDependentActivity<int, int>> dependentActivities = ganttChart.DependentActivities;
-                IList<ResourceSeriesModel> resourceSeriesSet = ganttChart.ResourceSeriesSet;
-                IList<IResourceSchedule<int, int>> resourceSchedules = ganttChart.ResourceSchedules;
+                IList<DependentActivityModel> dependentActivities = ganttChart.DependentActivities;
+                ResourceSeriesSetModel resourceSeriesSet = ganttChart.ResourceSeriesSet;
 
                 m_DateTimeCalculator.UseBusinessDays(ViewModel.UseBusinessDays);
 
@@ -140,73 +137,49 @@ namespace Zametek.View.ProjectPlan
 
                 if (GroupByResource.IsChecked.GetValueOrDefault())
                 {
-                    BuildGanttChart(dependentActivities, resourceSeriesSet, resourceSchedules, projectStart, colorFormatLookup);
+                    BuildGanttChart(dependentActivities.Select(x => x.Activity), resourceSeriesSet, projectStart, colorFormatLookup);
                 }
                 else
                 {
-                    BuildGanttChart(dependentActivities, projectStart, colorFormatLookup);
+                    BuildGanttChart(dependentActivities.Select(x => x.Activity), projectStart, colorFormatLookup);
                 }
             }
         }
 
         private void BuildGanttChart(
-            IList<IDependentActivity<int, int>> dependentActivities,
-            IList<ResourceSeriesModel> resourceSeriesSet,
-            IList<IResourceSchedule<int, int>> resourceSchedules,
+            IEnumerable<ActivityModel> activities,
+            ResourceSeriesSetModel resourceSeriesSet,
             DateTime projectStart,
             SlackColorFormatLookup colorFormatLookup)
         {
-            if (dependentActivities == null || resourceSeriesSet == null || resourceSchedules == null)
+            if (activities == null || resourceSeriesSet?.Scheduled == null)
             {
                 return;
             }
 
-            IDictionary<int, IDependentActivity<int, int>> activityLookup = dependentActivities.ToDictionary(x => x.Id);
+            IDictionary<int, ActivityModel> activityLookup = activities.ToDictionary(x => x.Id);
 
-            int spareResourceCount = 1;
-            for (int resourceIndex = 0; resourceIndex < resourceSchedules.Count; resourceIndex++)
+            foreach (ResourceSeriesModel resourceSeries in resourceSeriesSet.Scheduled)
             {
-                IResourceSchedule<int, int> resourceSchedule = resourceSchedules[resourceIndex];
-                IEnumerable<IScheduledActivity<int>> scheduledActivities = resourceSchedule?.ScheduledActivities;
+                ResourceScheduleModel resourceSchedule = resourceSeries.ResourceSchedule;
 
-                if (scheduledActivities == null)
+                if (resourceSchedule != null)
                 {
-                    continue;
-                }
+                    GanttRowGroup rowGroup = GanttChartAreaCtrl.CreateGanttRowGroup(resourceSeries.Title);
 
-                var stringBuilder = new StringBuilder();
-                if (resourceSchedule.Resource != null)
-                {
-                    if (string.IsNullOrWhiteSpace(resourceSchedule.Resource.Name))
+                    foreach (ScheduledActivityModel scheduledctivity in resourceSchedule.ScheduledActivities)
                     {
-                        stringBuilder.Append($@"Resource {resourceSchedule.Resource.Id}");
-                    }
-                    else
-                    {
-                        stringBuilder.Append(resourceSchedule.Resource.Name);
-                    }
-                }
-                else
-                {
-                    stringBuilder.Append($@"Resource {spareResourceCount}");
-                    spareResourceCount++;
-                }
-
-                string resourceName = stringBuilder.ToString();
-                GanttRowGroup rowGroup = GanttChartAreaCtrl.CreateGanttRowGroup(resourceName);
-
-                foreach (IScheduledActivity<int> scheduledctivity in resourceSchedule.ScheduledActivities)
-                {
-                    if (activityLookup.TryGetValue(scheduledctivity.Id, out IDependentActivity<int, int> activity))
-                    {
-                        GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowGroup, activity.Name);
-
-                        if (activity.EarliestStartTime.HasValue
-                            && activity.EarliestFinishTime.HasValue)
+                        if (activityLookup.TryGetValue(scheduledctivity.Id, out ActivityModel activity))
                         {
-                            GanttChartAreaCtrl.AddGanttTask(
-                                row,
-                                CreateGanttTask(projectStart, activity, colorFormatLookup));
+                            GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowGroup, scheduledctivity.Name);
+
+                            if (activity.EarliestStartTime.HasValue
+                                && activity.EarliestFinishTime.HasValue)
+                            {
+                                GanttChartAreaCtrl.AddGanttTask(
+                                    row,
+                                    CreateGanttTask(projectStart, activity, colorFormatLookup));
+                            }
                         }
                     }
                 }
@@ -214,16 +187,16 @@ namespace Zametek.View.ProjectPlan
         }
 
         private void BuildGanttChart(
-            IList<IDependentActivity<int, int>> dependentActivities,
+            IEnumerable<ActivityModel> activities,
             DateTime projectStart,
             SlackColorFormatLookup colorFormatLookup)
         {
-            if (dependentActivities == null)
+            if (activities == null)
             {
                 return;
             }
 
-            foreach (IDependentActivity<int, int> activity in dependentActivities)
+            foreach (ActivityModel activity in activities)
             {
                 GanttRowGroup rowGroup = GanttChartAreaCtrl.CreateGanttRowGroup();
                 GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowGroup, activity.Name);
@@ -240,7 +213,7 @@ namespace Zametek.View.ProjectPlan
 
         private GanttTask CreateGanttTask(
             DateTime projectStart,
-            IDependentActivity<int, int> activity,
+            ActivityModel activity,
             SlackColorFormatLookup colorFormatLookup)
         {
             Color background = colorFormatLookup?.FindSlackColor(activity.TotalSlack) ?? Colors.DodgerBlue;

@@ -1,4 +1,5 @@
-﻿using Prism.Commands;
+﻿using AutoMapper;
+using Prism.Commands;
 using Prism.Events;
 using Prism.Interactivity.InteractionRequest;
 using System;
@@ -21,7 +22,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly object m_Lock;
 
         private readonly ICoreViewModel m_CoreViewModel;
-        private readonly IDateTimeCalculator m_DateTimeCalculator;
+        private readonly IMapper m_Mapper;
         private readonly IEventAggregator m_EventService;
 
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
@@ -37,13 +38,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public GanttChartManagerViewModel(
             ICoreViewModel coreViewModel,
-            IDateTimeCalculator dateTimeCalculator,
+            IMapper mapper,
             IEventAggregator eventService)
             : base(eventService)
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
-            m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
+            m_Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
             m_NotificationInteractionRequest = new InteractionRequest<Notification>();
@@ -66,7 +67,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
 
-        private IList<ResourceSeriesModel> ResourceSeriesSet => m_CoreViewModel.ResourceSeriesSet;
+        private ResourceSeriesSetModel ResourceSeriesSet => m_CoreViewModel.ResourceSeriesSet;
 
         #endregion
 
@@ -194,23 +195,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (!HasCompilationErrors
                     && dependentActivities.Any())
                 {
-                    IList<IDependentActivity<int, int>> orderedActivities =
+                    List<IDependentActivity<int, int>> orderedActivities =
                         dependentActivities.OrderBy(x => x.EarliestStartTime)
                         .ThenBy(x => x.Duration)
                         .ToList();
 
                     ArrowGraphSettingsModel arrowGraphSettings = ArrowGraphSettings;
-                    IList<IResourceSchedule<int, int>> resourceSchedules = GraphCompilation.ResourceSchedules.ToList();
-                    IList<ResourceSeriesModel> resourceSeriesSet = ResourceSeriesSet;
+                    ResourceSeriesSetModel resourceSeriesSet = ResourceSeriesSet;
 
                     if (arrowGraphSettings != null
-                        && resourceSchedules != null
                         && resourceSeriesSet != null)
                     {
                         GanttChart = new GanttChartModel
                         {
-                            DependentActivities = orderedActivities,
-                            ResourceSchedules = resourceSchedules,
+                            DependentActivities = m_Mapper.Map<List<IDependentActivity<int, int>>, List<DependentActivityModel>>(orderedActivities),
                             ResourceSeriesSet = resourceSeriesSet,
                             IsStale = false,
                         };

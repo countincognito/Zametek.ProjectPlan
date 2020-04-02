@@ -68,7 +68,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_VertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
             Activities = new ObservableCollection<IManagedActivityViewModel>();
-            ResourceSeriesSet = new List<ResourceSeriesModel>();
             ClearSettings();
         }
 
@@ -123,60 +122,46 @@ namespace Zametek.ViewModel.ProjectPlan
             return output.ToString();
         }
 
-        //private string BuildActivitySchedules(IList<IResourceSchedule<int>> resourceSchedules)
-        //{
-        //    lock (m_Lock)
-        //    {
-        //        if (resourceSchedules == null)
-        //        {
-        //            return string.Empty;
-        //        }
-        //        var output = new StringBuilder();
-        //        int spareResourceCount = 1;
-        //        for (int resourceIndex = 0; resourceIndex < resourceSchedules.Count; resourceIndex++)
-        //        {
-        //            IResourceSchedule<int> resourceSchedule = resourceSchedules[resourceIndex];
-        //            IList<IScheduledActivity<int>> scheduledActivities = resourceSchedule?.ScheduledActivities;
-        //            if (scheduledActivities == null)
-        //            {
-        //                continue;
-        //            }
-        //            var stringBuilder = new StringBuilder(@">Resource");
-        //            if (resourceSchedule.Resource != null)
-        //            {
-        //                stringBuilder.Append($@" {resourceSchedule.Resource.Id}");
-        //                if (!string.IsNullOrWhiteSpace(resourceSchedule.Resource.Name))
-        //                {
-        //                    stringBuilder.Append($@" ({resourceSchedule.Resource.Name})");
-        //                }
-        //            }
-        //            else
-        //            {
-        //                stringBuilder.Append($@" {spareResourceCount}");
-        //                spareResourceCount++;
-        //            }
-        //            output.AppendLine(stringBuilder.ToString());
-        //            int previousFinishTime = 0;
-        //            foreach (IScheduledActivity<int> scheduledActivity in scheduledActivities)
-        //            {
-        //                int startTime = scheduledActivity.StartTime;
-        //                int finishTime = scheduledActivity.FinishTime;
-        //                if (startTime > previousFinishTime)
-        //                {
-        //                    string from = ChartHelper.FormatScheduleOutput(previousFinishTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-        //                    string to = ChartHelper.FormatScheduleOutput(startTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-        //                    output.AppendLine($@"*** {from} -> {to} ***");
-        //                }
-        //                string start = ChartHelper.FormatScheduleOutput(startTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-        //                string finish = ChartHelper.FormatScheduleOutput(finishTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-        //                output.AppendLine($@"Activity {scheduledActivity.Id}: {start} -> {finish}");
-        //                previousFinishTime = finishTime;
-        //            }
-        //            output.AppendLine();
-        //        }
-        //        return output.ToString();
-        //    }
-        //}
+        private string BuildActivitySchedules(IEnumerable<ResourceSeriesModel> resourceSeriesSet)
+        {
+            lock (m_Lock)
+            {
+                if (resourceSeriesSet == null)
+                {
+                    return string.Empty;
+                }
+
+                var output = new StringBuilder();
+
+                foreach (ResourceSeriesModel resourceSeries in resourceSeriesSet)
+                {
+                    IEnumerable<ScheduledActivityModel> scheduledActivities = resourceSeries?.ResourceSchedule?.ScheduledActivities;
+                    if (scheduledActivities == null)
+                    {
+                        continue;
+                    }
+                    output.AppendLine($@">{resourceSeries.Title}");
+                    int previousFinishTime = 0;
+                    foreach (ScheduledActivityModel scheduledActivity in scheduledActivities)
+                    {
+                        int startTime = scheduledActivity.StartTime;
+                        int finishTime = scheduledActivity.FinishTime;
+                        if (startTime > previousFinishTime)
+                        {
+                            string from = ChartHelper.FormatScheduleOutput(previousFinishTime, ShowDates, ProjectStart, m_DateTimeCalculator);
+                            string to = ChartHelper.FormatScheduleOutput(startTime, ShowDates, ProjectStart, m_DateTimeCalculator);
+                            output.AppendLine($@"*** {from} -> {to} ***");
+                        }
+                        string start = ChartHelper.FormatScheduleOutput(startTime, ShowDates, ProjectStart, m_DateTimeCalculator);
+                        string finish = ChartHelper.FormatScheduleOutput(finishTime, ShowDates, ProjectStart, m_DateTimeCalculator);
+                        output.AppendLine($@"{Resource.ProjectPlan.Properties.Resources.Label_Activity} {scheduledActivity.Id}: {start} -> {finish}");
+                        previousFinishTime = finishTime;
+                    }
+                    output.AppendLine();
+                }
+                return output.ToString();
+            }
+        }
 
         #endregion
 
@@ -396,9 +381,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public IList<ResourceSeriesModel> ResourceSeriesSet
+        public ResourceSeriesSetModel ResourceSeriesSet
         {
             get;
+            private set;
         }
 
         public int? CyclomaticComplexity
@@ -666,7 +652,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 var availableResources = new List<IResource<int>>();
                 if (!ResourceSettings.AreDisabled)
                 {
-                    availableResources.AddRange(ResourceSettings.Resources.Select(x => m_Mapper.Map<ResourceModel, Resource<int>>(x)));
+                    availableResources.AddRange(m_Mapper.Map<IEnumerable<ResourceModel>, IEnumerable<Resource<int>>>(ResourceSettings.Resources));
                 }
 
                 GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
@@ -674,6 +660,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 Duration = m_VertexGraphCompiler.Duration;
 
                 UpdateActivitiesAllocatedToResources();
+
+                CalculateResourceSeriesSet();
 
                 CalculateCosts();
 
@@ -765,11 +753,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
-                //if (graphCompilation.ResourceSchedules.Any()
-                //    && !HasCompilationErrors)
-                //{
-                //    output.Append(BuildActivitySchedules(graphCompilation.ResourceSchedules));
-                //}
+                if (ResourceSeriesSet?.Scheduled != null
+                    && ResourceSeriesSet.Scheduled.Any()
+                    && !HasCompilationErrors)
+                {
+                    output.Append(BuildActivitySchedules(ResourceSeriesSet.Scheduled));
+                }
 
                 if (HasCompilationErrors)
                 {
@@ -781,10 +770,12 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void CalculateCosts()
+        public void CalculateResourceSeriesSet()
         {
             lock (m_Lock)
             {
+                ClearResourceSeriesSet();
+
                 IEnumerable<IResourceSchedule<int, int>> resourceSchedules = GraphCompilation?.ResourceSchedules;
                 IList<ResourceModel> resources = ResourceSettings.Resources;
 
@@ -793,21 +784,33 @@ namespace Zametek.ViewModel.ProjectPlan
                     return;
                 }
 
-                ClearCosts();
+                ResourceSeriesSet = m_ProjectService.CalculateResourceSeriesSet(
+                    m_Mapper.Map<IEnumerable<IResourceSchedule<int, int>>, IList<ResourceScheduleModel>>(resourceSchedules),
+                    resources,
+                    ResourceSettings.DefaultUnitCost);
+            }
+        }
 
-                IEnumerable<ResourceSeriesModel> resourceSeriesSet = m_ProjectService.CalculateResourceSeriesSet(resourceSchedules, resources, ResourceSettings.DefaultUnitCost);
-                ResourceSeriesSet.Clear();
-                foreach (ResourceSeriesModel series in resourceSeriesSet)
-                {
-                    ResourceSeriesSet.Add(series);
-                }
+        public void ClearResourceSeriesSet()
+        {
+            lock (m_Lock)
+            {
+                ResourceSeriesSet = null;
+            }
+        }
+
+        public void CalculateCosts()
+        {
+            lock (m_Lock)
+            {
+                ClearCosts();
 
                 if (HasCompilationErrors)
                 {
                     return;
                 }
 
-                CostsModel costs = m_ProjectService.CalculateProjectCosts(resourceSeriesSet);
+                CostsModel costs = ResourceSeriesSet != null ? m_ProjectService.CalculateProjectCosts(ResourceSeriesSet) : new CostsModel();
                 DirectCost = costs.DirectCost;
                 IndirectCost = costs.IndirectCost;
                 OtherCost = costs.OtherCost;
@@ -819,7 +822,6 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                ResourceSeriesSet.Clear();
                 DirectCost = null;
                 IndirectCost = null;
                 OtherCost = null;

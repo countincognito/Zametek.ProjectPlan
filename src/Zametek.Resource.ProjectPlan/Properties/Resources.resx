@@ -153,6 +153,9 @@
   <data name="Label_ActivitiesViewTitle" xml:space="preserve">
     <value>Activities</value>
   </data>
+  <data name="Label_Activity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
   <data name="Label_ActivityName" xml:space="preserve">
     <value>Activity Name</value>
   </data>
@@ -377,6 +380,9 @@
   </data>
   <data name="Label_ResetGraph" xml:space="preserve">
     <value>Reset Graph</value>
+  </data>
+  <data name="Label_Resource" xml:space="preserve">
+    <value>Resource</value>
   </data>
   <data name="Label_ResourceChartsViewTitle" xml:space="preserve">
     <value>Resource Chart</value>

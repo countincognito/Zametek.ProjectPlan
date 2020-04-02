@@ -33,7 +33,7 @@ namespace Zametek.Contract.ProjectPlan
 
         ObservableCollection<IManagedActivityViewModel> Activities { get; }
 
-        IList<ResourceSeriesModel> ResourceSeriesSet { get; }
+        ResourceSeriesSetModel ResourceSeriesSet { get; }
 
         ArrowGraphSettingsModel ArrowGraphSettings { get; set; }
 
@@ -78,6 +78,10 @@ namespace Zametek.Contract.ProjectPlan
         void RunTransitiveReduction();
 
         void SetCompilationOutput();
+
+        void CalculateResourceSeriesSet();
+
+        void ClearResourceSeriesSet();
 
         void CalculateCosts();
 

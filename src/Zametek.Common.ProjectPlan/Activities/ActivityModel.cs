@@ -25,7 +25,13 @@ namespace Zametek.Common.ProjectPlan
 
         public int? FreeSlack { get; set; }
 
+        public int? TotalSlack { get; set; }
+
         public int? EarliestStartTime { get; set; }
+
+        public int? LatestStartTime { get; set; }
+
+        public int? EarliestFinishTime { get; set; }
 
         public int? LatestFinishTime { get; set; }
 

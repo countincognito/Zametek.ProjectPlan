@@ -527,13 +527,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Publish(new ShowDatesUpdatedPayload());
         }
 
-        private void PublishArrowGraphDtoUpdatedPayload()
+        private void PublishArrowGraphUpdatedPayload()
         {
             m_EventService.GetEvent<PubSubEvent<ArrowGraphUpdatedPayload>>()
                 .Publish(new ArrowGraphUpdatedPayload());
         }
 
-        private void PublishGanttChartDtoUpdatedPayload()
+        private void PublishGanttChartUpdatedPayload()
         {
             m_EventService.GetEvent<PubSubEvent<GanttChartUpdatedPayload>>()
                 .Publish(new GanttChartUpdatedPayload());
@@ -704,9 +704,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 m_CoreViewModel.UpdateActivitiesAllocatedToResources();
 
-                m_CoreViewModel.SetCompilationOutput();
+                m_CoreViewModel.CalculateResourceSeriesSet();
 
                 m_CoreViewModel.CalculateCosts();
+
+                m_CoreViewModel.SetCompilationOutput();
 
                 // Arrow Graph.
                 ArrowGraphSettings = projectPlan.ArrowGraphSettings;
@@ -716,8 +718,8 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             PublishGraphCompilationUpdatedPayload();
-            PublishArrowGraphDtoUpdatedPayload();
-            PublishGanttChartDtoUpdatedPayload();
+            PublishArrowGraphUpdatedPayload();
+            PublishGanttChartUpdatedPayload();
         }
 
         private async Task<ProjectPlanModel> BuildProjectPlanAsync()
@@ -807,12 +809,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 CyclomaticComplexity = null;
                 Duration = null;
 
+                m_CoreViewModel.ClearResourceSeriesSet();
+                m_CoreViewModel.ClearCosts();
+
                 HasCompilationErrors = false;
                 m_CoreViewModel.SetCompilationOutput();
 
                 ArrowGraph = null;
-
-                m_CoreViewModel.ClearCosts();
 
                 ProjectStartWithoutPublishing = DateTime.UtcNow.BeginningOfDay();
                 IsProjectUpdated = false;
@@ -822,8 +825,8 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             PublishGraphCompilationUpdatedPayload();
-            PublishArrowGraphDtoUpdatedPayload();
-            PublishGanttChartDtoUpdatedPayload();
+            PublishArrowGraphUpdatedPayload();
+            PublishGanttChartUpdatedPayload();
         }
 
         private void DispatchNotification(string title, object content)

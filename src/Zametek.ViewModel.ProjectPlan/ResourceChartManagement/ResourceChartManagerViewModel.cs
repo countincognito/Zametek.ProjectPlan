@@ -86,7 +86,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
 
-        private IList<ResourceSeriesModel> ResourceSeriesSet => m_CoreViewModel.ResourceSeriesSet;
+        private ResourceSeriesSetModel ResourceSeriesSet => m_CoreViewModel.ResourceSeriesSet;
 
         #endregion
 
@@ -139,7 +139,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                return ResourceSeriesSet.Any();
+                return ResourceSeriesSet != null;
             }
         }
 
@@ -231,51 +231,56 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                IList<ResourceSeriesModel> resourceSeriesSet = ResourceSeriesSet;
+                ResourceSeriesSetModel resourceSeriesSet = ResourceSeriesSet;
                 PlotModel plotModel = null;
-                if (resourceSeriesSet != null
-                    && resourceSeriesSet.Any())
+
+                if (resourceSeriesSet != null)
                 {
-                    plotModel = new PlotModel();
-                    plotModel.Axes.Add(BuildResourceChartXAxis());
-                    plotModel.Axes.Add(BuildResourceChartYAxis());
-                    plotModel.LegendPlacement = LegendPlacement.Outside;
-                    plotModel.LegendPosition = LegendPosition.RightMiddle;
+                    IEnumerable<ResourceSeriesModel> combinedResourceSeries = resourceSeriesSet.Combined.OrderBy(x => x.DisplayOrder);
 
-                    var total = new List<int>();
-                    m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
-
-                    foreach (ResourceSeriesModel series in resourceSeriesSet)
+                    if (combinedResourceSeries.Any())
                     {
-                        if (series != null)
+                        plotModel = new PlotModel();
+                        plotModel.Axes.Add(BuildResourceChartXAxis());
+                        plotModel.Axes.Add(BuildResourceChartYAxis());
+                        plotModel.LegendPlacement = LegendPlacement.Outside;
+                        plotModel.LegendPosition = LegendPosition.RightMiddle;
+
+                        var total = new List<int>();
+                        m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
+
+                        foreach (ResourceSeriesModel series in combinedResourceSeries)
                         {
-                            var areaSeries = new AreaSeries
+                            if (series != null)
                             {
-                                //Smooth = false,
-                                StrokeThickness = 0.0,
-                                Title = series.Title,
-                                Color = OxyColor.FromArgb(
-                                    series.ColorFormat.A,
-                                    series.ColorFormat.R,
-                                    series.ColorFormat.G,
-                                    series.ColorFormat.B)
-                            };
-                            for (int i = 0; i < series.Values.Count; i++)
-                            {
-                                int j = series.Values[i];
-                                if (i >= total.Count)
+                                var areaSeries = new AreaSeries
                                 {
-                                    total.Add(0);
+                                    //Smooth = false,
+                                    StrokeThickness = 0.0,
+                                    Title = series.Title,
+                                    Color = OxyColor.FromArgb(
+                                        series.ColorFormat.A,
+                                        series.ColorFormat.R,
+                                        series.ColorFormat.G,
+                                        series.ColorFormat.B)
+                                };
+                                for (int i = 0; i < series.Values.Count; i++)
+                                {
+                                    int j = series.Values[i];
+                                    if (i >= total.Count)
+                                    {
+                                        total.Add(0);
+                                    }
+                                    areaSeries.Points.Add(
+                                        new DataPoint(ChartHelper.CalculateChartTimeXValue(i, ShowDates, ProjectStart, m_DateTimeCalculator),
+                                        total[i]));
+                                    total[i] += j;
+                                    areaSeries.Points2.Add(
+                                        new DataPoint(ChartHelper.CalculateChartTimeXValue(i, ShowDates, ProjectStart, m_DateTimeCalculator),
+                                        total[i]));
                                 }
-                                areaSeries.Points.Add(
-                                    new DataPoint(ChartHelper.CalculateChartTimeXValue(i, ShowDates, ProjectStart, m_DateTimeCalculator),
-                                    total[i]));
-                                total[i] += j;
-                                areaSeries.Points2.Add(
-                                    new DataPoint(ChartHelper.CalculateChartTimeXValue(i, ShowDates, ProjectStart, m_DateTimeCalculator),
-                                    total[i]));
+                                plotModel.Series.Add(areaSeries);
                             }
-                            plotModel.Series.Add(areaSeries);
                         }
                     }
                 }
@@ -347,33 +352,39 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 var table = new DataTable();
-                IList<ResourceSeriesModel> seriesSet = ResourceSeriesSet.OrderBy(x => x.DisplayOrder).ToList();
-                if (seriesSet != null
-                    && seriesSet.Any())
+                ResourceSeriesSetModel resourceSeriesSet = ResourceSeriesSet;
+
+                if (resourceSeriesSet != null)
                 {
-                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle));
+                    IEnumerable<ResourceSeriesModel> combinedResourceSeries = resourceSeriesSet.Combined.OrderBy(x => x.DisplayOrder);
 
-                    // Create the column titles.
-                    for (int seriesIndex = 0; seriesIndex < seriesSet.Count; seriesIndex++)
+                    if (combinedResourceSeries.Any())
                     {
-                        var column = new DataColumn(seriesSet[seriesIndex].Title, typeof(int));
-                        table.Columns.Add(column);
-                    }
+                        table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle));
 
-                    m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
-
-                    // Pivot the series values.
-                    int valueCount = seriesSet.Max(x => x.Values.Count);
-                    for (int timeIndex = 0; timeIndex < valueCount; timeIndex++)
-                    {
-                        var rowData = new List<object>
+                        // Create the column titles.
+                        foreach (ResourceSeriesModel resourceSeries in combinedResourceSeries)
                         {
-                            ChartHelper.FormatScheduleOutput(timeIndex, ShowDates, ProjectStart, m_DateTimeCalculator)
-                        };
-                        rowData.AddRange(seriesSet.Select(x => x.Values[timeIndex] * (ExportResourceChartAsCosts ? x.UnitCost : 1)).Cast<object>());
-                        table.Rows.Add(rowData.ToArray());
+                            var column = new DataColumn(resourceSeries.Title, typeof(int));
+                            table.Columns.Add(column);
+                        }
+
+                        m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
+
+                        // Pivot the series values.
+                        int valueCount = combinedResourceSeries.Max(x => x.Values.Count);
+                        for (int timeIndex = 0; timeIndex < valueCount; timeIndex++)
+                        {
+                            var rowData = new List<object>
+                                {
+                                    ChartHelper.FormatScheduleOutput(timeIndex, ShowDates, ProjectStart, m_DateTimeCalculator)
+                                };
+                            rowData.AddRange(combinedResourceSeries.Select(x => x.Values[timeIndex] * (ExportResourceChartAsCosts ? x.UnitCost : 1)).Cast<object>());
+                            table.Rows.Add(rowData.ToArray());
+                        }
                     }
                 }
+
                 return table;
             }
         }

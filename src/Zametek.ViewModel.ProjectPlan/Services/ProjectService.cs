@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Serialization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -13,12 +14,16 @@ namespace Zametek.ViewModel.ProjectPlan
     public class ProjectService
         : IProjectService
     {
-        private static Random _Rnd = new Random();
+        #region Fields
+
+        private static readonly Random s_Rnd = new Random();
+
+        #endregion
 
         #region Private Methods
 
         private static double CalculateCriticalityRisk(
-            IEnumerable<IActivity<int, int>> activities,
+            IEnumerable<ActivityModel> activities,
             ActivitySeverityLookup activitySeverityLookup)
         {
             if (activities == null)
@@ -35,7 +40,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static double CalculateFibonacciRisk(
-            IEnumerable<IActivity<int, int>> activities,
+            IEnumerable<ActivityModel> activities,
             ActivitySeverityLookup activitySeverityLookup)
         {
             if (activities == null)
@@ -51,7 +56,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return (numerator / denominator);
         }
 
-        private static double CalculateActivityRisk(IEnumerable<IActivity<int, int>> activities)
+        private static double CalculateActivityRisk(IEnumerable<ActivityModel> activities)
         {
             if (activities == null)
             {
@@ -59,7 +64,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             double numerator = 0.0;
             double maxTotalSlack = 0.0;
-            foreach (IActivity<int, int> activity in activities.Where(x => x.TotalSlack.HasValue))
+            foreach (ActivityModel activity in activities.Where(x => x.TotalSlack.HasValue))
             {
                 double totalSlack = Convert.ToDouble(activity.TotalSlack.GetValueOrDefault());
                 if (totalSlack > maxTotalSlack)
@@ -72,7 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return 1.0 - (numerator / denominator);
         }
 
-        private static double CalculateActivityRiskWithStdDevCorrection(IEnumerable<IActivity<int, int>> activities)
+        private static double CalculateActivityRiskWithStdDevCorrection(IEnumerable<ActivityModel> activities)
         {
             if (activities == null)
             {
@@ -113,7 +118,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static double CalculateGeometricCriticalityRisk(
-            IEnumerable<IActivity<int, int>> activities,
+            IEnumerable<ActivityModel> activities,
             ActivitySeverityLookup activitySeverityLookup)
         {
             if (activities == null)
@@ -125,7 +130,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 throw new ArgumentNullException(nameof(activitySeverityLookup));
             }
             double numerator = 1.0;
-            foreach (IActivity<int, int> activity in activities)
+            foreach (ActivityModel activity in activities)
             {
                 numerator *= activitySeverityLookup.FindSlackCriticalityWeight(activity.TotalSlack);
             }
@@ -135,7 +140,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static double CalculateGeometricFibonacciRisk(
-            IEnumerable<IActivity<int, int>> activities,
+            IEnumerable<ActivityModel> activities,
             ActivitySeverityLookup activitySeverityLookup)
         {
             if (activities == null)
@@ -147,7 +152,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 throw new ArgumentNullException(nameof(activitySeverityLookup));
             }
             double numerator = 1.0;
-            foreach (IActivity<int, int> activity in activities)
+            foreach (ActivityModel activity in activities)
             {
                 numerator *= activitySeverityLookup.FindSlackFibonacciWeight(activity.TotalSlack);
             }
@@ -156,7 +161,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return (numerator / denominator);
         }
 
-        private static double CalculateGeometricActivityRisk(IEnumerable<IActivity<int, int>> activities)
+        private static double CalculateGeometricActivityRisk(IEnumerable<ActivityModel> activities)
         {
             if (activities == null)
             {
@@ -164,7 +169,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             double numerator = 1.0;
             double maxTotalSlack = 0.0;
-            foreach (IActivity<int, int> activity in activities.Where(x => x.TotalSlack.HasValue))
+            foreach (ActivityModel activity in activities.Where(x => x.TotalSlack.HasValue))
             {
                 double totalSlack = Convert.ToDouble(activity.TotalSlack.GetValueOrDefault());
                 if (totalSlack > maxTotalSlack)
@@ -186,7 +191,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 throw new ArgumentNullException(nameof(colorFormat));
             }
             var b = new byte[4];
-            _Rnd.NextBytes(b);
+            s_Rnd.NextBytes(b);
             colorFormat.A = b[0];
             colorFormat.R = b[1];
             colorFormat.G = b[2];
@@ -198,7 +203,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IProjectService Members
 
-        public CostsModel CalculateProjectCosts(IEnumerable<ResourceSeriesModel> resourceSeriesSet)
+        public CostsModel CalculateProjectCosts(ResourceSeriesSetModel resourceSeriesSet)
         {
             if (resourceSeriesSet == null)
             {
@@ -207,26 +212,25 @@ namespace Zametek.ViewModel.ProjectPlan
 
             var costs = new CostsModel();
 
-            if (resourceSeriesSet.Any())
+            if (resourceSeriesSet.Combined.Any())
             {
-                costs.DirectCost = resourceSeriesSet
+                costs.DirectCost = resourceSeriesSet.Combined
                     .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
                     .Sum(x => x.Values.Sum(y => y * x.UnitCost));
-                costs.IndirectCost = resourceSeriesSet
+                costs.IndirectCost = resourceSeriesSet.Combined
                     .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
                     .Sum(x => x.Values.Sum(y => y * x.UnitCost));
-                costs.OtherCost = resourceSeriesSet
+                costs.OtherCost = resourceSeriesSet.Combined
                     .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.None)
-                    .Sum(x => x.Values.Sum(y => y * x.UnitCost));
-                costs.TotalCost = resourceSeriesSet
                     .Sum(x => x.Values.Sum(y => y * x.UnitCost));
             }
 
+            costs.TotalCost = costs.DirectCost + costs.IndirectCost + costs.OtherCost;
             return costs;
         }
 
         public MetricsModel CalculateProjectMetrics(
-            IEnumerable<IActivity<int, int>> activities,
+            IEnumerable<ActivityModel> activities,
             IEnumerable<ActivitySeverityModel> activitySeverities)
         {
             if (activities == null)
@@ -250,8 +254,8 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        public IEnumerable<ResourceSeriesModel> CalculateResourceSeriesSet(
-            IEnumerable<IResourceSchedule<int, int>> resourceSchedules,
+        public ResourceSeriesSetModel CalculateResourceSeriesSet(
+            IEnumerable<ResourceScheduleModel> resourceSchedules,
             IEnumerable<ResourceModel> resources,
             double defaultUnitCost)
         {
@@ -264,46 +268,58 @@ namespace Zametek.ViewModel.ProjectPlan
                 throw new ArgumentNullException(nameof(resources));
             }
 
-            var resourceSeriesSet = new List<ResourceSeriesModel>();
+            var resourceSeriesSet = new ResourceSeriesSetModel
+            {
+                Scheduled = new List<ResourceSeriesModel>(),
+                Unscheduled = new List<ResourceSeriesModel>(),
+                Combined = new List<ResourceSeriesModel>(),
+            };
             var resourceLookup = resources.ToDictionary(x => x.Id);
 
             if (resourceSchedules.Any())
             {
                 IDictionary<int, ColorFormatModel> colorFormatLookup = resources.ToDictionary(x => x.Id, x => x.ColorFormat);
-                var indirectResourceIdsToIgnore = new HashSet<int>();
                 int finishTime = resourceSchedules.Max(x => x.FinishTime);
                 int spareResourceCount = 1;
-                var scheduledSeriesSet = new List<ResourceSeriesModel>();
 
-                foreach (IResourceSchedule<int, int> resourceSchedule in resourceSchedules)
+                // Scheduled resource series.
+                // These are the series that apply to scheduled activities (whether allocated to named or unnamed resources).
+                var scheduledSeriesSet = new List<ResourceSeriesModel>();
+                var scheduledResourceSeriesLookup = new Dictionary<int, ResourceSeriesModel>();
+
+                foreach (ResourceScheduleModel resourceSchedule in resourceSchedules)
                 {
                     var series = new ResourceSeriesModel
                     {
-                        Values = resourceSchedule.ActivityAllocation.Select(x => x ? 1 : 0).ToList()
+                        ResourceSchedule = resourceSchedule,
+                        Values = resourceSchedule.ActivityAllocation.Select(x => x ? 1 : 0).ToList(),
+                        InterActivityAllocationType = InterActivityAllocationType.None,
                     };
-                    series.InterActivityAllocationType = InterActivityAllocationType.None;
+
                     var stringBuilder = new StringBuilder();
 
                     if (resourceSchedule.Resource != null
                         && resourceLookup.TryGetValue(resourceSchedule.Resource.Id, out ResourceModel resource))
                     {
+                        int resourceId = resource.Id;
+                        series.ResourceId = resourceId;
                         series.InterActivityAllocationType = resource.InterActivityAllocationType;
-                        indirectResourceIdsToIgnore.Add(resource.Id);
                         if (string.IsNullOrWhiteSpace(resource.Name))
                         {
-                            stringBuilder.Append($@"Resource {resource.Id}");
+                            stringBuilder.Append($@"{Resource.ProjectPlan.Properties.Resources.Label_Resource} {resourceId}");
                         }
                         else
                         {
                             stringBuilder.Append($@"{resource.Name}");
                         }
-                        series.ColorFormat = colorFormatLookup.ContainsKey(resource.Id) ? colorFormatLookup[resource.Id].CloneObject() : Randomize(new ColorFormatModel());
+                        series.ColorFormat = colorFormatLookup.ContainsKey(resourceId) ? colorFormatLookup[resourceId].CloneObject() : Randomize(new ColorFormatModel());
                         series.UnitCost = resource.UnitCost;
                         series.DisplayOrder = resource.DisplayOrder;
+                        scheduledResourceSeriesLookup.Add(resourceId, series);
                     }
                     else
                     {
-                        stringBuilder.Append($@"Resource {spareResourceCount}");
+                        stringBuilder.Append($@"{Resource.ProjectPlan.Properties.Resources.Label_Resource} {spareResourceCount}");
                         spareResourceCount++;
                         series.ColorFormat = Randomize(new ColorFormatModel());
                         series.UnitCost = defaultUnitCost;
@@ -314,38 +330,86 @@ namespace Zametek.ViewModel.ProjectPlan
                     scheduledSeriesSet.Add(series);
                 }
 
-                // Now add the remaining resources that are indirect costs, but
-                // sort them separately and add them to the front of the list.
+                // Unscheduled resource series.
+                // These are the series that apply to named resources that need to be included, even if they are not
+                // scheduled to specific activities.
                 var unscheduledSeriesSet = new List<ResourceSeriesModel>();
-                IEnumerable<ResourceModel> indirectResources = resources
-                    .Where(x => !indirectResourceIdsToIgnore.Contains(x.Id) && x.InterActivityAllocationType == InterActivityAllocationType.Indirect);
+                var unscheduledResourceSeriesLookup = new Dictionary<int, ResourceSeriesModel>();
 
-                foreach (ResourceModel resource in indirectResources)
+                IEnumerable<ResourceModel> unscheduledResources = resources
+                    .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect);
+
+                foreach (ResourceModel resource in unscheduledResources)
                 {
+                    int resourceId = resource.Id;
                     var series = new ResourceSeriesModel
                     {
+                        ResourceId = resourceId,
                         InterActivityAllocationType = resource.InterActivityAllocationType,
-                        Values = new List<int>(Enumerable.Repeat(1, finishTime))
+                        Values = new List<int>(Enumerable.Repeat(1, finishTime)),
+                        ColorFormat = resource.ColorFormat != null ? resource.ColorFormat.CloneObject() : Randomize(new ColorFormatModel()),
+                        UnitCost = resource.UnitCost,
+                        DisplayOrder = resource.DisplayOrder,
                     };
+
                     var stringBuilder = new StringBuilder();
                     if (string.IsNullOrWhiteSpace(resource.Name))
                     {
-                        stringBuilder.Append($@"Resource {resource.Id}");
+                        stringBuilder.Append($@"{Resource.ProjectPlan.Properties.Resources.Label_Resource} {resourceId}");
                     }
                     else
                     {
                         stringBuilder.Append($@"{resource.Name}");
                     }
-
                     series.Title = stringBuilder.ToString();
-                    series.ColorFormat = resource.ColorFormat != null ? resource.ColorFormat.CloneObject() : Randomize(new ColorFormatModel());
-                    series.UnitCost = resource.UnitCost;
-                    series.DisplayOrder = resource.DisplayOrder;
+
                     unscheduledSeriesSet.Add(series);
+                    unscheduledResourceSeriesLookup.Add(resourceId, series);
                 }
 
-                resourceSeriesSet.AddRange(unscheduledSeriesSet.OrderBy(x => x.DisplayOrder));
-                resourceSeriesSet.AddRange(scheduledSeriesSet.OrderBy(x => x.DisplayOrder));
+                // Combined resource series.
+                // The intersection of the scheduled and unscheduled series.
+                var combinedScheduled = new List<ResourceSeriesModel>();
+                var unscheduledSeriesAlreadyIncluded = new HashSet<int>();
+
+                foreach (ResourceSeriesModel scheduledSeries in scheduledSeriesSet)
+                {
+                    var values = new List<int>(Enumerable.Repeat(0, finishTime));
+                    if (scheduledSeries.ResourceId.HasValue)
+                    {
+                        int resourceId = scheduledSeries.ResourceId.GetValueOrDefault();
+                        if (unscheduledResourceSeriesLookup.TryGetValue(resourceId, out ResourceSeriesModel unscheduledResourceSeries))
+                        {
+                            values = scheduledSeries.Values.Zip(unscheduledResourceSeries.Values, (x, y) => Math.Max(x, y)).ToList();
+                            unscheduledSeriesAlreadyIncluded.Add(resourceId);
+                        }
+                        else
+                        {
+                            values = scheduledSeries.Values.ToList();
+                        }
+                    }
+                    else
+                    {
+                        values = scheduledSeries.Values.ToList();
+                    }
+
+                    scheduledSeries.Values = values;
+
+                    combinedScheduled.Add(scheduledSeries);
+                }
+
+                // Finally, add the unscheduled series that have not already been included above.
+
+                // Prepend so that they might be displayed first after sorting.
+                List<ResourceSeriesModel> combined = unscheduledSeriesSet
+                    .Where(x => !unscheduledSeriesAlreadyIncluded.Contains(x.ResourceId.GetValueOrDefault()))
+                    .ToList();
+
+                combined.AddRange(combinedScheduled);
+
+                resourceSeriesSet.Scheduled.AddRange(scheduledSeriesSet);
+                resourceSeriesSet.Unscheduled.AddRange(unscheduledSeriesSet);
+                resourceSeriesSet.Combined.AddRange(combined.OrderBy(x => x.DisplayOrder));
             }
 
             return resourceSeriesSet;
@@ -361,7 +425,7 @@ namespace Zametek.ViewModel.ProjectPlan
             byte[] output = null;
             using (var ms = new MemoryStream())
             {
-                var xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(graphml));
+                var xmlSerializer = new XmlSerializer(typeof(graphml));
                 xmlSerializer.Serialize(ms, graphML);
                 output = ms.ToArray();
             }

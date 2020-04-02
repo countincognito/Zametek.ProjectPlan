@@ -1,4 +1,5 @@
-﻿using Prism.Events;
+﻿using AutoMapper;
+using Prism.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +31,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectService m_ProjectService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
+        private readonly IMapper m_Mapper;
         private readonly IEventAggregator m_EventService;
 
         private SubscriptionToken m_GraphCompilationUpdatedSubscriptionToken;
@@ -42,6 +44,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             IProjectService projectService,
             IDateTimeCalculator dateTimeCalculator,
+            IMapper mapper,
             IEventAggregator eventService)
             : base(eventService)
         {
@@ -49,6 +52,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
             m_ProjectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
             m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
+            m_Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
             SubscribeToEvents();
@@ -109,7 +113,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_Metrics = m_ProjectService.CalculateProjectMetrics(
-                        dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int, int>)x).ToList(),
+                        m_Mapper.Map<IEnumerable<IActivity<int, int>>, IList<ActivityModel>>(dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int, int>)x)),
                         ArrowGraphSettings?.ActivitySeverities);
                     SetRiskMetrics();
                 }

@@ -9,7 +9,7 @@ namespace Zametek.Common.ProjectPlan
     {
         #region Fields
 
-        private EventModel m_EventVertex;
+        private readonly EventModel m_EventVertex;
 
         #endregion
 
