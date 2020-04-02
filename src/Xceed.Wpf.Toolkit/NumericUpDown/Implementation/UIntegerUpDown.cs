@@ -15,39 +15,38 @@
   ***********************************************************************************/
 
 using System;
-using System.Windows;
 
 namespace Xceed.Wpf.Toolkit
 {
-  [CLSCompliantAttribute(false)]
-  public class UIntegerUpDown : CommonNumericUpDown<uint>
-  {
-    #region Constructors
-
-    static UIntegerUpDown()
+    [CLSCompliantAttribute(false)]
+    public class UIntegerUpDown : CommonNumericUpDown<uint>
     {
-      UpdateMetadata( typeof( UIntegerUpDown ), ( uint )1, uint.MinValue, uint.MaxValue );
+        #region Constructors
+
+        static UIntegerUpDown()
+        {
+            UpdateMetadata(typeof(UIntegerUpDown), (uint)1, uint.MinValue, uint.MaxValue);
+        }
+
+        public UIntegerUpDown()
+          : base(uint.TryParse, Decimal.ToUInt32, (v1, v2) => v1 < v2, (v1, v2) => v1 > v2)
+        {
+        }
+
+        #endregion //Constructors
+
+        #region Base Class Overrides
+
+        protected override uint IncrementValue(uint value, uint increment)
+        {
+            return (uint)(value + increment);
+        }
+
+        protected override uint DecrementValue(uint value, uint increment)
+        {
+            return (uint)(value - increment);
+        }
+
+        #endregion //Base Class Overrides
     }
-
-    public UIntegerUpDown()
-      : base( uint.TryParse, Decimal.ToUInt32, ( v1, v2 ) => v1 < v2, ( v1, v2 ) => v1 > v2 )
-    {
-    }
-
-    #endregion //Constructors
-
-    #region Base Class Overrides
-
-    protected override uint IncrementValue( uint value, uint increment )
-    {
-      return ( uint )( value + increment );
-    }
-
-    protected override uint DecrementValue( uint value, uint increment )
-    {
-      return ( uint )( value - increment );
-    }
-
-    #endregion //Base Class Overrides
-  }
 }

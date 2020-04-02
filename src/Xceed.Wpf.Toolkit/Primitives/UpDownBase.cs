@@ -15,14 +15,13 @@
   ***********************************************************************************/
 
 using System;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using Xceed.Wpf.Toolkit.Core;
-using Xceed.Wpf.Toolkit.Core.Input;
-using System.Globalization;
 using System.Windows.Threading;
+using Xceed.Wpf.Toolkit.Core.Input;
 
 namespace Xceed.Wpf.Toolkit.Primitives
 {

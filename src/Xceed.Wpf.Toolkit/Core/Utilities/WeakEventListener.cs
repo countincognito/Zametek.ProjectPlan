@@ -15,29 +15,26 @@
   ***********************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 
 namespace Xceed.Wpf.Toolkit.Core.Utilities
 {
-  internal class WeakEventListener<TArgs> : IWeakEventListener where TArgs : EventArgs
-  {
-    private Action<object,TArgs> _callback;
-
-    public WeakEventListener(Action<object,TArgs> callback)
+    internal class WeakEventListener<TArgs> : IWeakEventListener where TArgs : EventArgs
     {
-      if( callback == null )
-         throw new ArgumentNullException( "callback" );
+        private Action<object, TArgs> _callback;
 
-      _callback = callback;
-    }
+        public WeakEventListener(Action<object, TArgs> callback)
+        {
+            if (callback == null)
+                throw new ArgumentNullException("callback");
 
-    public bool ReceiveWeakEvent( Type managerType, object sender, EventArgs e )
-    {
-      _callback(sender, (TArgs)e);
-      return true;
+            _callback = callback;
+        }
+
+        public bool ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+        {
+            _callback(sender, (TArgs)e);
+            return true;
+        }
     }
-  }
 }

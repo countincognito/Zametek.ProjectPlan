@@ -18,564 +18,564 @@ using Xceed.Wpf.Toolkit.Media.Animation;
 
 namespace Xceed.Wpf.Toolkit.Panels
 {
-  public static class Animators
-  {
-    #region BackEaseIn Static Property
-
-    public static DoubleAnimator BackEaseIn
+    public static class Animators
     {
-      get
-      {
-        if( _backEaseIn == null )
+        #region BackEaseIn Static Property
+
+        public static DoubleAnimator BackEaseIn
         {
-          _backEaseIn = new DoubleAnimator( PennerEquations.BackEaseIn );
+            get
+            {
+                if (_backEaseIn == null)
+                {
+                    _backEaseIn = new DoubleAnimator(PennerEquations.BackEaseIn);
+                }
+                return _backEaseIn;
+            }
         }
-        return _backEaseIn;
-      }
-    }
 
-    private static DoubleAnimator _backEaseIn;
+        private static DoubleAnimator _backEaseIn;
 
-    #endregion
+        #endregion
 
-    #region BackEaseInOut Static Property
+        #region BackEaseInOut Static Property
 
-    public static DoubleAnimator BackEaseInOut
-    {
-      get
-      {
-        if( _backEaseInOut == null )
+        public static DoubleAnimator BackEaseInOut
         {
-          _backEaseInOut = new DoubleAnimator( PennerEquations.BackEaseInOut );
+            get
+            {
+                if (_backEaseInOut == null)
+                {
+                    _backEaseInOut = new DoubleAnimator(PennerEquations.BackEaseInOut);
+                }
+                return _backEaseInOut;
+            }
         }
-        return _backEaseInOut;
-      }
-    }
 
-    private static DoubleAnimator _backEaseInOut;
+        private static DoubleAnimator _backEaseInOut;
 
-    #endregion
+        #endregion
 
-    #region BackEaseOut Static Property
+        #region BackEaseOut Static Property
 
-    public static DoubleAnimator BackEaseOut
-    {
-      get
-      {
-        if( _backEaseOut == null )
+        public static DoubleAnimator BackEaseOut
         {
-          _backEaseOut = new DoubleAnimator( PennerEquations.BackEaseOut );
+            get
+            {
+                if (_backEaseOut == null)
+                {
+                    _backEaseOut = new DoubleAnimator(PennerEquations.BackEaseOut);
+                }
+                return _backEaseOut;
+            }
         }
-        return _backEaseOut;
-      }
-    }
 
-    private static DoubleAnimator _backEaseOut;
+        private static DoubleAnimator _backEaseOut;
 
-    #endregion
+        #endregion
 
-    #region BounceEaseIn Static Property
+        #region BounceEaseIn Static Property
 
-    public static DoubleAnimator BounceEaseIn
-    {
-      get
-      {
-        if( _bounceEaseIn == null )
+        public static DoubleAnimator BounceEaseIn
         {
-          _bounceEaseIn = new DoubleAnimator( PennerEquations.BounceEaseIn );
+            get
+            {
+                if (_bounceEaseIn == null)
+                {
+                    _bounceEaseIn = new DoubleAnimator(PennerEquations.BounceEaseIn);
+                }
+                return _bounceEaseIn;
+            }
         }
-        return _bounceEaseIn;
-      }
-    }
 
-    private static DoubleAnimator _bounceEaseIn;
+        private static DoubleAnimator _bounceEaseIn;
 
-    #endregion
+        #endregion
 
-    #region BounceEaseInOut Static Property
+        #region BounceEaseInOut Static Property
 
-    public static DoubleAnimator BounceEaseInOut
-    {
-      get
-      {
-        if( _bounceEaseInOut == null )
+        public static DoubleAnimator BounceEaseInOut
         {
-          _bounceEaseInOut = new DoubleAnimator( PennerEquations.BounceEaseInOut );
+            get
+            {
+                if (_bounceEaseInOut == null)
+                {
+                    _bounceEaseInOut = new DoubleAnimator(PennerEquations.BounceEaseInOut);
+                }
+                return _bounceEaseInOut;
+            }
         }
-        return _bounceEaseInOut;
-      }
-    }
 
-    private static DoubleAnimator _bounceEaseInOut;
+        private static DoubleAnimator _bounceEaseInOut;
 
-    #endregion
+        #endregion
 
-    #region BounceEaseOut Static Property
+        #region BounceEaseOut Static Property
 
-    public static DoubleAnimator BounceEaseOut
-    {
-      get
-      {
-        if( _bounceEaseOut == null )
+        public static DoubleAnimator BounceEaseOut
         {
-          _bounceEaseOut = new DoubleAnimator( PennerEquations.BounceEaseOut );
+            get
+            {
+                if (_bounceEaseOut == null)
+                {
+                    _bounceEaseOut = new DoubleAnimator(PennerEquations.BounceEaseOut);
+                }
+                return _bounceEaseOut;
+            }
         }
-        return _bounceEaseOut;
-      }
-    }
 
-    private static DoubleAnimator _bounceEaseOut;
+        private static DoubleAnimator _bounceEaseOut;
 
-    #endregion
+        #endregion
 
-    #region CircEaseIn Static Property
+        #region CircEaseIn Static Property
 
-    public static DoubleAnimator CircEaseIn
-    {
-      get
-      {
-        if( _circEaseIn == null )
+        public static DoubleAnimator CircEaseIn
         {
-          _circEaseIn = new DoubleAnimator( PennerEquations.CircEaseIn );
+            get
+            {
+                if (_circEaseIn == null)
+                {
+                    _circEaseIn = new DoubleAnimator(PennerEquations.CircEaseIn);
+                }
+                return _circEaseIn;
+            }
         }
-        return _circEaseIn;
-      }
-    }
 
-    private static DoubleAnimator _circEaseIn;
+        private static DoubleAnimator _circEaseIn;
 
-    #endregion
+        #endregion
 
-    #region CircEaseInOut Static Property
+        #region CircEaseInOut Static Property
 
-    public static DoubleAnimator CircEaseInOut
-    {
-      get
-      {
-        if( _circEaseInOut == null )
+        public static DoubleAnimator CircEaseInOut
         {
-          _circEaseInOut = new DoubleAnimator( PennerEquations.CircEaseInOut );
+            get
+            {
+                if (_circEaseInOut == null)
+                {
+                    _circEaseInOut = new DoubleAnimator(PennerEquations.CircEaseInOut);
+                }
+                return _circEaseInOut;
+            }
         }
-        return _circEaseInOut;
-      }
-    }
 
-    private static DoubleAnimator _circEaseInOut;
+        private static DoubleAnimator _circEaseInOut;
 
-    #endregion
+        #endregion
 
-    #region CircEaseOut Static Property
+        #region CircEaseOut Static Property
 
-    public static DoubleAnimator CircEaseOut
-    {
-      get
-      {
-        if( _circEaseOut == null )
+        public static DoubleAnimator CircEaseOut
         {
-          _circEaseOut = new DoubleAnimator( PennerEquations.CircEaseOut );
+            get
+            {
+                if (_circEaseOut == null)
+                {
+                    _circEaseOut = new DoubleAnimator(PennerEquations.CircEaseOut);
+                }
+                return _circEaseOut;
+            }
         }
-        return _circEaseOut;
-      }
-    }
 
-    private static DoubleAnimator _circEaseOut;
+        private static DoubleAnimator _circEaseOut;
 
-    #endregion
+        #endregion
 
-    #region CubicEaseIn Static Property
+        #region CubicEaseIn Static Property
 
-    public static DoubleAnimator CubicEaseIn
-    {
-      get
-      {
-        if( _cubicEaseIn == null )
+        public static DoubleAnimator CubicEaseIn
         {
-          _cubicEaseIn = new DoubleAnimator( PennerEquations.CubicEaseIn );
+            get
+            {
+                if (_cubicEaseIn == null)
+                {
+                    _cubicEaseIn = new DoubleAnimator(PennerEquations.CubicEaseIn);
+                }
+                return _cubicEaseIn;
+            }
         }
-        return _cubicEaseIn;
-      }
-    }
 
-    private static DoubleAnimator _cubicEaseIn;
+        private static DoubleAnimator _cubicEaseIn;
 
-    #endregion
+        #endregion
 
-    #region CubicEaseInOut Static Property
+        #region CubicEaseInOut Static Property
 
-    public static DoubleAnimator CubicEaseInOut
-    {
-      get
-      {
-        if( _cubicEaseInOut == null )
+        public static DoubleAnimator CubicEaseInOut
         {
-          _cubicEaseInOut = new DoubleAnimator( PennerEquations.CubicEaseInOut );
+            get
+            {
+                if (_cubicEaseInOut == null)
+                {
+                    _cubicEaseInOut = new DoubleAnimator(PennerEquations.CubicEaseInOut);
+                }
+                return _cubicEaseInOut;
+            }
         }
-        return _cubicEaseInOut;
-      }
-    }
 
-    private static DoubleAnimator _cubicEaseInOut;
+        private static DoubleAnimator _cubicEaseInOut;
 
-    #endregion
+        #endregion
 
-    #region CubicEaseOut Static Property
+        #region CubicEaseOut Static Property
 
-    public static DoubleAnimator CubicEaseOut
-    {
-      get
-      {
-        if( _cubicEaseOut == null )
+        public static DoubleAnimator CubicEaseOut
         {
-          _cubicEaseOut = new DoubleAnimator( PennerEquations.CubicEaseOut );
+            get
+            {
+                if (_cubicEaseOut == null)
+                {
+                    _cubicEaseOut = new DoubleAnimator(PennerEquations.CubicEaseOut);
+                }
+                return _cubicEaseOut;
+            }
         }
-        return _cubicEaseOut;
-      }
-    }
 
-    private static DoubleAnimator _cubicEaseOut;
+        private static DoubleAnimator _cubicEaseOut;
 
-    #endregion
+        #endregion
 
-    #region ElasticEaseIn Static Property
+        #region ElasticEaseIn Static Property
 
-    public static DoubleAnimator ElasticEaseIn
-    {
-      get
-      {
-        if( _elasticEaseIn == null )
+        public static DoubleAnimator ElasticEaseIn
         {
-          _elasticEaseIn = new DoubleAnimator( PennerEquations.ElasticEaseIn );
+            get
+            {
+                if (_elasticEaseIn == null)
+                {
+                    _elasticEaseIn = new DoubleAnimator(PennerEquations.ElasticEaseIn);
+                }
+                return _elasticEaseIn;
+            }
         }
-        return _elasticEaseIn;
-      }
-    }
 
-    private static DoubleAnimator _elasticEaseIn;
+        private static DoubleAnimator _elasticEaseIn;
 
-    #endregion
+        #endregion
 
-    #region ElasticEaseInOut Static Property
+        #region ElasticEaseInOut Static Property
 
-    public static DoubleAnimator ElasticEaseInOut
-    {
-      get
-      {
-        if( _elasticEaseInOut == null )
+        public static DoubleAnimator ElasticEaseInOut
         {
-          _elasticEaseInOut = new DoubleAnimator( PennerEquations.ElasticEaseInOut );
+            get
+            {
+                if (_elasticEaseInOut == null)
+                {
+                    _elasticEaseInOut = new DoubleAnimator(PennerEquations.ElasticEaseInOut);
+                }
+                return _elasticEaseInOut;
+            }
         }
-        return _elasticEaseInOut;
-      }
-    }
 
-    private static DoubleAnimator _elasticEaseInOut;
+        private static DoubleAnimator _elasticEaseInOut;
 
-    #endregion
+        #endregion
 
-    #region ElasticEaseOut Static Property
+        #region ElasticEaseOut Static Property
 
-    public static DoubleAnimator ElasticEaseOut
-    {
-      get
-      {
-        if( _elasticEaseOut == null )
+        public static DoubleAnimator ElasticEaseOut
         {
-          _elasticEaseOut = new DoubleAnimator( PennerEquations.ElasticEaseOut );
+            get
+            {
+                if (_elasticEaseOut == null)
+                {
+                    _elasticEaseOut = new DoubleAnimator(PennerEquations.ElasticEaseOut);
+                }
+                return _elasticEaseOut;
+            }
         }
-        return _elasticEaseOut;
-      }
-    }
 
-    private static DoubleAnimator _elasticEaseOut;
+        private static DoubleAnimator _elasticEaseOut;
 
-    #endregion
+        #endregion
 
-    #region ExpoEaseIn Static Property
+        #region ExpoEaseIn Static Property
 
-    public static DoubleAnimator ExpoEaseIn
-    {
-      get
-      {
-        if( _expoEaseIn == null )
+        public static DoubleAnimator ExpoEaseIn
         {
-          _expoEaseIn = new DoubleAnimator( PennerEquations.ExpoEaseIn );
+            get
+            {
+                if (_expoEaseIn == null)
+                {
+                    _expoEaseIn = new DoubleAnimator(PennerEquations.ExpoEaseIn);
+                }
+                return _expoEaseIn;
+            }
         }
-        return _expoEaseIn;
-      }
-    }
 
-    private static DoubleAnimator _expoEaseIn;
+        private static DoubleAnimator _expoEaseIn;
 
-    #endregion
+        #endregion
 
-    #region ExpoEaseInOut Static Property
+        #region ExpoEaseInOut Static Property
 
-    public static DoubleAnimator ExpoEaseInOut
-    {
-      get
-      {
-        if( _expoEaseInOut == null )
+        public static DoubleAnimator ExpoEaseInOut
         {
-          _expoEaseInOut = new DoubleAnimator( PennerEquations.ExpoEaseInOut );
+            get
+            {
+                if (_expoEaseInOut == null)
+                {
+                    _expoEaseInOut = new DoubleAnimator(PennerEquations.ExpoEaseInOut);
+                }
+                return _expoEaseInOut;
+            }
         }
-        return _expoEaseInOut;
-      }
-    }
 
-    private static DoubleAnimator _expoEaseInOut;
+        private static DoubleAnimator _expoEaseInOut;
 
-    #endregion
+        #endregion
 
-    #region ExpoEaseOut Static Property
+        #region ExpoEaseOut Static Property
 
-    public static DoubleAnimator ExpoEaseOut
-    {
-      get
-      {
-        if( _expoEaseOut == null )
+        public static DoubleAnimator ExpoEaseOut
         {
-          _expoEaseOut = new DoubleAnimator( PennerEquations.ExpoEaseOut );
+            get
+            {
+                if (_expoEaseOut == null)
+                {
+                    _expoEaseOut = new DoubleAnimator(PennerEquations.ExpoEaseOut);
+                }
+                return _expoEaseOut;
+            }
         }
-        return _expoEaseOut;
-      }
-    }
 
-    private static DoubleAnimator _expoEaseOut;
+        private static DoubleAnimator _expoEaseOut;
 
-    #endregion
+        #endregion
 
-    #region Linear Static Property
+        #region Linear Static Property
 
-    public static DoubleAnimator Linear
-    {
-      get
-      {
-        if( _linear == null )
+        public static DoubleAnimator Linear
         {
-          _linear = new DoubleAnimator( PennerEquations.Linear );
+            get
+            {
+                if (_linear == null)
+                {
+                    _linear = new DoubleAnimator(PennerEquations.Linear);
+                }
+                return _linear;
+            }
         }
-        return _linear;
-      }
-    }
 
-    private static DoubleAnimator _linear;
+        private static DoubleAnimator _linear;
 
-    #endregion
+        #endregion
 
-    #region QuadEaseIn Static Property
+        #region QuadEaseIn Static Property
 
-    public static DoubleAnimator QuadEaseIn
-    {
-      get
-      {
-        if( _quadEaseIn == null )
+        public static DoubleAnimator QuadEaseIn
         {
-          _quadEaseIn = new DoubleAnimator( PennerEquations.QuadEaseIn );
+            get
+            {
+                if (_quadEaseIn == null)
+                {
+                    _quadEaseIn = new DoubleAnimator(PennerEquations.QuadEaseIn);
+                }
+                return _quadEaseIn;
+            }
         }
-        return _quadEaseIn;
-      }
-    }
 
-    private static DoubleAnimator _quadEaseIn;
+        private static DoubleAnimator _quadEaseIn;
 
-    #endregion
+        #endregion
 
-    #region QuadEaseInOut Static Property
+        #region QuadEaseInOut Static Property
 
-    public static DoubleAnimator QuadEaseInOut
-    {
-      get
-      {
-        if( _quadEaseInOut == null )
+        public static DoubleAnimator QuadEaseInOut
         {
-          _quadEaseInOut = new DoubleAnimator( PennerEquations.QuadEaseInOut );
+            get
+            {
+                if (_quadEaseInOut == null)
+                {
+                    _quadEaseInOut = new DoubleAnimator(PennerEquations.QuadEaseInOut);
+                }
+                return _quadEaseInOut;
+            }
         }
-        return _quadEaseInOut;
-      }
-    }
 
-    private static DoubleAnimator _quadEaseInOut;
+        private static DoubleAnimator _quadEaseInOut;
 
-    #endregion
+        #endregion
 
-    #region QuadEaseOut Static Property
+        #region QuadEaseOut Static Property
 
-    public static DoubleAnimator QuadEaseOut
-    {
-      get
-      {
-        if( _quadEaseOut == null )
+        public static DoubleAnimator QuadEaseOut
         {
-          _quadEaseOut = new DoubleAnimator( PennerEquations.QuadEaseOut );
+            get
+            {
+                if (_quadEaseOut == null)
+                {
+                    _quadEaseOut = new DoubleAnimator(PennerEquations.QuadEaseOut);
+                }
+                return _quadEaseOut;
+            }
         }
-        return _quadEaseOut;
-      }
-    }
 
-    private static DoubleAnimator _quadEaseOut;
+        private static DoubleAnimator _quadEaseOut;
 
-    #endregion
+        #endregion
 
-    #region QuartEaseIn Static Property
+        #region QuartEaseIn Static Property
 
-    public static DoubleAnimator QuartEaseIn
-    {
-      get
-      {
-        if( _quartEaseIn == null )
+        public static DoubleAnimator QuartEaseIn
         {
-          _quartEaseIn = new DoubleAnimator( PennerEquations.QuartEaseIn );
+            get
+            {
+                if (_quartEaseIn == null)
+                {
+                    _quartEaseIn = new DoubleAnimator(PennerEquations.QuartEaseIn);
+                }
+                return _quartEaseIn;
+            }
         }
-        return _quartEaseIn;
-      }
-    }
 
-    private static DoubleAnimator _quartEaseIn;
+        private static DoubleAnimator _quartEaseIn;
 
-    #endregion
+        #endregion
 
-    #region QuartEaseInOut Static Property
+        #region QuartEaseInOut Static Property
 
-    public static DoubleAnimator QuartEaseInOut
-    {
-      get
-      {
-        if( _quartEaseInOut == null )
+        public static DoubleAnimator QuartEaseInOut
         {
-          _quartEaseInOut = new DoubleAnimator( PennerEquations.QuartEaseInOut );
+            get
+            {
+                if (_quartEaseInOut == null)
+                {
+                    _quartEaseInOut = new DoubleAnimator(PennerEquations.QuartEaseInOut);
+                }
+                return _quartEaseInOut;
+            }
         }
-        return _quartEaseInOut;
-      }
-    }
 
-    private static DoubleAnimator _quartEaseInOut;
+        private static DoubleAnimator _quartEaseInOut;
 
-    #endregion
+        #endregion
 
-    #region QuartEaseOut Static Property
+        #region QuartEaseOut Static Property
 
-    public static DoubleAnimator QuartEaseOut
-    {
-      get
-      {
-        if( _quartEaseOut == null )
+        public static DoubleAnimator QuartEaseOut
         {
-          _quartEaseOut = new DoubleAnimator( PennerEquations.QuartEaseOut );
+            get
+            {
+                if (_quartEaseOut == null)
+                {
+                    _quartEaseOut = new DoubleAnimator(PennerEquations.QuartEaseOut);
+                }
+                return _quartEaseOut;
+            }
         }
-        return _quartEaseOut;
-      }
-    }
 
-    private static DoubleAnimator _quartEaseOut;
+        private static DoubleAnimator _quartEaseOut;
 
-    #endregion
+        #endregion
 
-    #region QuintEaseIn Static Property
+        #region QuintEaseIn Static Property
 
-    public static DoubleAnimator QuintEaseIn
-    {
-      get
-      {
-        if( _quintEaseIn == null )
+        public static DoubleAnimator QuintEaseIn
         {
-          _quintEaseIn = new DoubleAnimator( PennerEquations.QuintEaseIn );
+            get
+            {
+                if (_quintEaseIn == null)
+                {
+                    _quintEaseIn = new DoubleAnimator(PennerEquations.QuintEaseIn);
+                }
+                return _quintEaseIn;
+            }
         }
-        return _quintEaseIn;
-      }
-    }
 
-    private static DoubleAnimator _quintEaseIn;
+        private static DoubleAnimator _quintEaseIn;
 
-    #endregion
+        #endregion
 
-    #region QuintEaseInOut Static Property
+        #region QuintEaseInOut Static Property
 
-    public static DoubleAnimator QuintEaseInOut
-    {
-      get
-      {
-        if( _quintEaseInOut == null )
+        public static DoubleAnimator QuintEaseInOut
         {
-          _quintEaseInOut = new DoubleAnimator( PennerEquations.QuintEaseInOut );
+            get
+            {
+                if (_quintEaseInOut == null)
+                {
+                    _quintEaseInOut = new DoubleAnimator(PennerEquations.QuintEaseInOut);
+                }
+                return _quintEaseInOut;
+            }
         }
-        return _quintEaseInOut;
-      }
-    }
 
-    private static DoubleAnimator _quintEaseInOut;
+        private static DoubleAnimator _quintEaseInOut;
 
-    #endregion
+        #endregion
 
-    #region QuintEaseOut Static Property
+        #region QuintEaseOut Static Property
 
-    public static DoubleAnimator QuintEaseOut
-    {
-      get
-      {
-        if( _quintEaseOut == null )
+        public static DoubleAnimator QuintEaseOut
         {
-          _quintEaseOut = new DoubleAnimator( PennerEquations.QuintEaseOut );
+            get
+            {
+                if (_quintEaseOut == null)
+                {
+                    _quintEaseOut = new DoubleAnimator(PennerEquations.QuintEaseOut);
+                }
+                return _quintEaseOut;
+            }
         }
-        return _quintEaseOut;
-      }
-    }
 
-    private static DoubleAnimator _quintEaseOut;
+        private static DoubleAnimator _quintEaseOut;
 
-    #endregion
+        #endregion
 
-    #region SineEaseIn Static Property
+        #region SineEaseIn Static Property
 
-    public static DoubleAnimator SineEaseIn
-    {
-      get
-      {
-        if( _sineEaseIn == null )
+        public static DoubleAnimator SineEaseIn
         {
-          _sineEaseIn = new DoubleAnimator( PennerEquations.SineEaseIn );
+            get
+            {
+                if (_sineEaseIn == null)
+                {
+                    _sineEaseIn = new DoubleAnimator(PennerEquations.SineEaseIn);
+                }
+                return _sineEaseIn;
+            }
         }
-        return _sineEaseIn;
-      }
-    }
 
-    private static DoubleAnimator _sineEaseIn;
+        private static DoubleAnimator _sineEaseIn;
 
-    #endregion
+        #endregion
 
-    #region SineEaseInOut Static Property
+        #region SineEaseInOut Static Property
 
-    public static DoubleAnimator SineEaseInOut
-    {
-      get
-      {
-        if( _sineEaseInOut == null )
+        public static DoubleAnimator SineEaseInOut
         {
-          _sineEaseInOut = new DoubleAnimator( PennerEquations.SineEaseInOut );
+            get
+            {
+                if (_sineEaseInOut == null)
+                {
+                    _sineEaseInOut = new DoubleAnimator(PennerEquations.SineEaseInOut);
+                }
+                return _sineEaseInOut;
+            }
         }
-        return _sineEaseInOut;
-      }
-    }
 
-    private static DoubleAnimator _sineEaseInOut;
+        private static DoubleAnimator _sineEaseInOut;
 
-    #endregion
+        #endregion
 
-    #region SineEaseOut Static Property
+        #region SineEaseOut Static Property
 
-    public static DoubleAnimator SineEaseOut
-    {
-      get
-      {
-        if( _sineEaseOut == null )
+        public static DoubleAnimator SineEaseOut
         {
-          _sineEaseOut = new DoubleAnimator( PennerEquations.SineEaseOut );
+            get
+            {
+                if (_sineEaseOut == null)
+                {
+                    _sineEaseOut = new DoubleAnimator(PennerEquations.SineEaseOut);
+                }
+                return _sineEaseOut;
+            }
         }
-        return _sineEaseOut;
-      }
+
+        private static DoubleAnimator _sineEaseOut;
+
+        #endregion
     }
-
-    private static DoubleAnimator _sineEaseOut;
-
-    #endregion
-  }
 }

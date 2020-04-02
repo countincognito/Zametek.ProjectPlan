@@ -19,20 +19,20 @@ using System.Windows.Data;
 
 namespace Xceed.Wpf.Toolkit.Mag.Converters
 {
-  public class RadiusConverter : IValueConverter
-  {
-    #region IValueConverter Members
-
-    public object Convert( object value, Type targetType, object parameter, System.Globalization.CultureInfo culture )
+    public class RadiusConverter : IValueConverter
     {
-      return ( double )value * 2;
-    }
+        #region IValueConverter Members
 
-    public object ConvertBack( object value, Type targetType, object parameter, System.Globalization.CultureInfo culture )
-    {
-      throw new NotImplementedException();
-    }
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return (double)value * 2;
+        }
 
-    #endregion
-  }
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
 }

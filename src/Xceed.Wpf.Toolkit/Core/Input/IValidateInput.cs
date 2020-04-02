@@ -14,16 +14,11 @@
 
   ***********************************************************************************/
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 namespace Xceed.Wpf.Toolkit.Core.Input
 {
-  public interface IValidateInput
-  {
-    event InputValidationErrorEventHandler InputValidationError;
-    bool CommitInput();
-  }
+    public interface IValidateInput
+    {
+        event InputValidationErrorEventHandler InputValidationError;
+        bool CommitInput();
+    }
 }

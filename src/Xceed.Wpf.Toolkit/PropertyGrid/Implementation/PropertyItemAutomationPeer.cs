@@ -30,7 +30,7 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
 
         public override object GetPattern(PatternInterface patternInterface)
         {
-            if(patternInterface == PatternInterface.Value)
+            if (patternInterface == PatternInterface.Value)
             {
                 return this;
             }

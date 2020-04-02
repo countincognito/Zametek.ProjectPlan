@@ -17,13 +17,13 @@
 
 namespace Xceed.Wpf.Toolkit.Zoombox
 {
-  public enum ZoomboxViewKind
-  {
-    Absolute = -5,
-    Fit = -4,
-    Fill = -3,
-    Center = -2,
-    Empty = -1,
-    Region,
-  }
+    public enum ZoomboxViewKind
+    {
+        Absolute = -5,
+        Fit = -4,
+        Fill = -3,
+        Center = -2,
+        Empty = -1,
+        Region,
+    }
 }

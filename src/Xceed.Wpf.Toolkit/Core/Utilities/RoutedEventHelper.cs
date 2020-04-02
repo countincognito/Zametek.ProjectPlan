@@ -19,52 +19,52 @@ using System.Windows;
 
 namespace Xceed.Wpf.Toolkit.Core.Utilities
 {
-  internal static class RoutedEventHelper
-  {
-    internal static void RaiseEvent( DependencyObject target, RoutedEventArgs args )
+    internal static class RoutedEventHelper
     {
-      if( target is UIElement )
-      {
-        ( target as UIElement ).RaiseEvent( args );
-      }
-      else if( target is ContentElement )
-      {
-        ( target as ContentElement ).RaiseEvent( args );
-      }
-    }
-
-    internal static void AddHandler( DependencyObject element, RoutedEvent routedEvent, Delegate handler )
-    {
-      UIElement uie = element as UIElement;
-      if( uie != null )
-      {
-        uie.AddHandler( routedEvent, handler );
-      }
-      else
-      {
-        ContentElement ce = element as ContentElement;
-        if( ce != null )
+        internal static void RaiseEvent(DependencyObject target, RoutedEventArgs args)
         {
-          ce.AddHandler( routedEvent, handler );
+            if (target is UIElement)
+            {
+                (target as UIElement).RaiseEvent(args);
+            }
+            else if (target is ContentElement)
+            {
+                (target as ContentElement).RaiseEvent(args);
+            }
         }
-      }
-    }
 
-    internal static void RemoveHandler( DependencyObject element, RoutedEvent routedEvent, Delegate handler )
-    {
-      UIElement uie = element as UIElement;
-      if( uie != null )
-      {
-        uie.RemoveHandler( routedEvent, handler );
-      }
-      else
-      {
-        ContentElement ce = element as ContentElement;
-        if( ce != null )
+        internal static void AddHandler(DependencyObject element, RoutedEvent routedEvent, Delegate handler)
         {
-          ce.RemoveHandler( routedEvent, handler );
+            UIElement uie = element as UIElement;
+            if (uie != null)
+            {
+                uie.AddHandler(routedEvent, handler);
+            }
+            else
+            {
+                ContentElement ce = element as ContentElement;
+                if (ce != null)
+                {
+                    ce.AddHandler(routedEvent, handler);
+                }
+            }
         }
-      }
+
+        internal static void RemoveHandler(DependencyObject element, RoutedEvent routedEvent, Delegate handler)
+        {
+            UIElement uie = element as UIElement;
+            if (uie != null)
+            {
+                uie.RemoveHandler(routedEvent, handler);
+            }
+            else
+            {
+                ContentElement ce = element as ContentElement;
+                if (ce != null)
+                {
+                    ce.RemoveHandler(routedEvent, handler);
+                }
+            }
+        }
     }
-  }
 }

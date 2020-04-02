@@ -18,16 +18,16 @@ using System.Windows.Input;
 
 namespace Xceed.Wpf.Toolkit
 {
-  public static class CalculatorCommands
-  {
-    private static RoutedCommand _calculatorButtonClickCommand = new RoutedCommand();
-
-    public static RoutedCommand CalculatorButtonClick
+    public static class CalculatorCommands
     {
-      get
-      {
-        return _calculatorButtonClickCommand;
-      }
+        private static RoutedCommand _calculatorButtonClickCommand = new RoutedCommand();
+
+        public static RoutedCommand CalculatorButtonClick
+        {
+            get
+            {
+                return _calculatorButtonClickCommand;
+            }
+        }
     }
-  }
 }

@@ -20,17 +20,17 @@ using System.Windows.Data;
 
 namespace Xceed.Wpf.Toolkit.PropertyGrid.Converters
 {
-  public class ExpandableObjectMarginConverter : IValueConverter
-  {
-    public object Convert( object value, Type targetType, object parameter, System.Globalization.CultureInfo culture )
+    public class ExpandableObjectMarginConverter : IValueConverter
     {
-      int childLevel = ( int )value;
-      return new Thickness( childLevel * 15, 0, 0, 0 );
-    }
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            int childLevel = (int)value;
+            return new Thickness(childLevel * 15, 0, 0, 0);
+        }
 
-    public object ConvertBack( object value, Type targetType, object parameter, System.Globalization.CultureInfo culture )
-    {
-      throw new NotImplementedException();
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
-  }
 }

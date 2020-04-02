@@ -15,7 +15,6 @@
   ***********************************************************************************/
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 #if !VS2008
@@ -27,142 +26,142 @@ using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace Xceed.Wpf.Toolkit.PropertyGrid
 {
-  internal class ObjectContainerHelper : ObjectContainerHelperBase
-  {
-    private object _selectedObject;
-
-    public ObjectContainerHelper( IPropertyContainer propertyContainer, object selectedObject )
-      : base( propertyContainer )
+    internal class ObjectContainerHelper : ObjectContainerHelperBase
     {
-      _selectedObject = selectedObject;
-    }
+        private object _selectedObject;
 
-    private object SelectedObject
-    {
-      get
-      {
-        return _selectedObject;
-      }
-    }
-
-    protected override string GetDefaultPropertyName()
-    {
-      object selectedObject = SelectedObject;
-      return ( selectedObject != null ) ? ObjectContainerHelperBase.GetDefaultPropertyName( SelectedObject ) : ( string )null;
-    }
-
-    protected override void GenerateSubPropertiesCore( Action<IEnumerable<PropertyItem>> updatePropertyItemsCallback )
-    {
-      var propertyItems = new List<PropertyItem>();
-
-      if( SelectedObject != null )
-      {
-        try
+        public ObjectContainerHelper(IPropertyContainer propertyContainer, object selectedObject)
+          : base(propertyContainer)
         {
-          var descriptors = new List<PropertyDescriptor>();
-          {
-            descriptors = ObjectContainerHelperBase.GetPropertyDescriptors( SelectedObject, this.PropertyContainer.HideInheritedProperties );
-          }
+            _selectedObject = selectedObject;
+        }
 
-          foreach( var descriptor in descriptors )
-          {
-            var propertyDef = this.GetPropertyDefinition( descriptor );
-            bool isBrowsable = false;
-
-            var isPropertyBrowsable = this.PropertyContainer.IsPropertyVisible( descriptor );
-            if( isPropertyBrowsable.HasValue )
+        private object SelectedObject
+        {
+            get
             {
-              isBrowsable = isPropertyBrowsable.Value;
+                return _selectedObject;
             }
-            else
+        }
+
+        protected override string GetDefaultPropertyName()
+        {
+            object selectedObject = SelectedObject;
+            return (selectedObject != null) ? ObjectContainerHelperBase.GetDefaultPropertyName(SelectedObject) : (string)null;
+        }
+
+        protected override void GenerateSubPropertiesCore(Action<IEnumerable<PropertyItem>> updatePropertyItemsCallback)
+        {
+            var propertyItems = new List<PropertyItem>();
+
+            if (SelectedObject != null)
             {
+                try
+                {
+                    var descriptors = new List<PropertyDescriptor>();
+                    {
+                        descriptors = ObjectContainerHelperBase.GetPropertyDescriptors(SelectedObject, this.PropertyContainer.HideInheritedProperties);
+                    }
+
+                    foreach (var descriptor in descriptors)
+                    {
+                        var propertyDef = this.GetPropertyDefinition(descriptor);
+                        bool isBrowsable = false;
+
+                        var isPropertyBrowsable = this.PropertyContainer.IsPropertyVisible(descriptor);
+                        if (isPropertyBrowsable.HasValue)
+                        {
+                            isBrowsable = isPropertyBrowsable.Value;
+                        }
+                        else
+                        {
 #if !VS2008
-              var displayAttribute = PropertyGridUtilities.GetAttribute<DisplayAttribute>( descriptor );
-              if( displayAttribute != null )
-              {
-                var autoGenerateField = displayAttribute.GetAutoGenerateField();
-                isBrowsable = this.PropertyContainer.AutoGenerateProperties 
-                              && ((autoGenerateField.HasValue && autoGenerateField.Value) || !autoGenerateField.HasValue);
-              }
-              else
+                            var displayAttribute = PropertyGridUtilities.GetAttribute<DisplayAttribute>(descriptor);
+                            if (displayAttribute != null)
+                            {
+                                var autoGenerateField = displayAttribute.GetAutoGenerateField();
+                                isBrowsable = this.PropertyContainer.AutoGenerateProperties
+                                              && ((autoGenerateField.HasValue && autoGenerateField.Value) || !autoGenerateField.HasValue);
+                            }
+                            else
 #endif
-              {
-                isBrowsable = descriptor.IsBrowsable && this.PropertyContainer.AutoGenerateProperties;
-              }
+                            {
+                                isBrowsable = descriptor.IsBrowsable && this.PropertyContainer.AutoGenerateProperties;
+                            }
 
-              if( propertyDef != null )
-              {
-                isBrowsable = propertyDef.IsBrowsable.GetValueOrDefault( isBrowsable );
-              }
+                            if (propertyDef != null)
+                            {
+                                isBrowsable = propertyDef.IsBrowsable.GetValueOrDefault(isBrowsable);
+                            }
+                        }
+
+                        if (isBrowsable)
+                        {
+                            var prop = this.CreatePropertyItem(descriptor, propertyDef);
+                            if (prop != null)
+                            {
+                                propertyItems.Add(prop);
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    //TODO: handle this some how
+                    Debug.WriteLine("Property creation failed.");
+                    Debug.WriteLine(e.StackTrace);
+                }
             }
 
-            if( isBrowsable )
+            updatePropertyItemsCallback.Invoke(propertyItems);
+        }
+
+
+        private PropertyItem CreatePropertyItem(PropertyDescriptor property, PropertyDefinition propertyDef)
+        {
+            DescriptorPropertyDefinition definition = new DescriptorPropertyDefinition(property, SelectedObject, this.PropertyContainer);
+            definition.InitProperties();
+
+            this.InitializeDescriptorDefinition(definition, propertyDef);
+            PropertyItem propertyItem = new PropertyItem(definition);
+            Debug.Assert(SelectedObject != null);
+            propertyItem.Instance = SelectedObject;
+            propertyItem.CategoryOrder = this.GetCategoryOrder(definition.CategoryValue);
+
+            propertyItem.WillRefreshPropertyGrid = this.GetWillRefreshPropertyGrid(property);
+            return propertyItem;
+        }
+
+        private int GetCategoryOrder(object categoryValue)
+        {
+            Debug.Assert(SelectedObject != null);
+
+            if (categoryValue == null)
+                return int.MaxValue;
+
+            int order = int.MaxValue;
+            object selectedObject = SelectedObject;
+            CategoryOrderAttribute[] orderAttributes = (selectedObject != null)
+              ? (CategoryOrderAttribute[])selectedObject.GetType().GetCustomAttributes(typeof(CategoryOrderAttribute), true)
+              : new CategoryOrderAttribute[0];
+
+            var orderAttribute = orderAttributes
+              .FirstOrDefault((a) => object.Equals(a.CategoryValue, categoryValue));
+
+            if (orderAttribute != null)
             {
-              var prop = this.CreatePropertyItem( descriptor, propertyDef );
-              if( prop != null )
-              {
-                propertyItems.Add( prop );
-              }
+                order = orderAttribute.Order;
             }
-          }
-        }
-        catch( Exception e )
-        {
-          //TODO: handle this some how
-          Debug.WriteLine( "Property creation failed." );
-          Debug.WriteLine( e.StackTrace );
-        }
-      }
 
-      updatePropertyItemsCallback.Invoke( propertyItems );
-    }
-
-
-    private PropertyItem CreatePropertyItem( PropertyDescriptor property, PropertyDefinition propertyDef )
-    {
-      DescriptorPropertyDefinition definition = new DescriptorPropertyDefinition( property, SelectedObject, this.PropertyContainer );                                                                                 
-      definition.InitProperties();
-
-      this.InitializeDescriptorDefinition( definition, propertyDef );
-      PropertyItem propertyItem = new PropertyItem( definition );
-      Debug.Assert( SelectedObject != null );
-      propertyItem.Instance = SelectedObject;
-      propertyItem.CategoryOrder = this.GetCategoryOrder( definition.CategoryValue );
-
-      propertyItem.WillRefreshPropertyGrid = this.GetWillRefreshPropertyGrid( property );
-      return propertyItem;
-    }
-
-    private int GetCategoryOrder( object categoryValue )
-    {
-      Debug.Assert( SelectedObject != null );
-
-      if( categoryValue == null )
-        return int.MaxValue;
-
-      int order = int.MaxValue;
-        object selectedObject = SelectedObject;
-        CategoryOrderAttribute[] orderAttributes = ( selectedObject != null )
-          ? ( CategoryOrderAttribute[] )selectedObject.GetType().GetCustomAttributes( typeof( CategoryOrderAttribute ), true )
-          : new CategoryOrderAttribute[ 0 ];
-
-        var orderAttribute = orderAttributes
-          .FirstOrDefault( ( a ) => object.Equals( a.CategoryValue, categoryValue ) );
-
-        if( orderAttribute != null )
-        {
-          order = orderAttribute.Order;
+            return order;
         }
 
-      return order;
+
+
+
+
+
+
+
     }
-
-
-
-
-
-
-
-
-  }
 }

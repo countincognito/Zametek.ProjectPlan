@@ -18,22 +18,22 @@ using System;
 
 namespace Xceed.Wpf.Toolkit.PropertyGrid.Attributes
 {
-  public class ExpandableObjectAttribute : Attribute
-  {
-    #region Constructors
-
-    public ExpandableObjectAttribute()
+    public class ExpandableObjectAttribute : Attribute
     {
+        #region Constructors
+
+        public ExpandableObjectAttribute()
+        {
+        }
+
+
+        #endregion
+
+        #region Properties
+
+
+
+
+        #endregion
     }
-
-
-    #endregion
-
-    #region Properties
-
-
-
-
-    #endregion
-  }
 }

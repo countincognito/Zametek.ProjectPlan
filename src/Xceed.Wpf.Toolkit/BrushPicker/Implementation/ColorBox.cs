@@ -11,14 +11,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Media;
-using System.Windows.Controls;
-using System.Windows;
 using System.Collections.ObjectModel;
-using System.Windows.Input;
+using System.Linq;
 using System.Reflection;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
+using System.Windows.Media;
 using Xceed.Wpf.Toolkit.BrushPicker.Implementation;
 
 namespace ColorBox
@@ -47,13 +47,13 @@ namespace ColorBox
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(ColorBox), new FrameworkPropertyMetadata(typeof(ColorBox)));
 
-           _wpfBrushTypes = typeof(Brushes)
-            .GetProperties(BindingFlags.Static | BindingFlags.Public)
-            .Where(p => p.PropertyType == typeof(SolidColorBrush))
-            .Select(p => new BrushItem() {Name = p.Name, Brush = (Brush) p.GetValue(null, null)})
-            .ToArray();
+            _wpfBrushTypes = typeof(Brushes)
+             .GetProperties(BindingFlags.Static | BindingFlags.Public)
+             .Where(p => p.PropertyType == typeof(SolidColorBrush))
+             .Select(p => new BrushItem() { Name = p.Name, Brush = (Brush)p.GetValue(null, null) })
+             .ToArray();
         }
-        
+
         public static RoutedCommand RemoveGradientStop = new RoutedCommand();
         public static RoutedCommand ReverseGradientStop = new RoutedCommand();
 
@@ -64,7 +64,7 @@ namespace ColorBox
             CurrentColorTextBox = GetTemplateChild(PART_CurrentColor) as TextBox;
             if (CurrentColorTextBox != null)
             {
-                CurrentColorTextBox.PreviewKeyDown += CurrentColorTextBox_PreviewKeyDown;        
+                CurrentColorTextBox.PreviewKeyDown += CurrentColorTextBox_PreviewKeyDown;
             }
 
             this.CommandBindings.Add(new CommandBinding(ColorBox.RemoveGradientStop, RemoveGradientStop_Executed));
@@ -74,7 +74,7 @@ namespace ColorBox
         void CurrentColorTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
-            {                
+            {
                 BindingExpression be = CurrentColorTextBox.GetBindingExpression(TextBox.TextProperty);
                 if (be != null)
                 {
@@ -82,7 +82,7 @@ namespace ColorBox
                 }
             }
         }
-        
+
         private void RemoveGradientStop_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             if (this.Gradients != null && this.Gradients.Count > 2)
@@ -408,7 +408,7 @@ namespace ColorBox
                 c.SetBrush();
             }
         }
-        
+
         #endregion
 
         #region Public Properties
@@ -450,7 +450,7 @@ namespace ColorBox
         {
             get
             {
-              return _wpfBrushTypes;
+                return _wpfBrushTypes;
             }
         }
 
@@ -477,7 +477,7 @@ namespace ColorBox
                 }
                 else if (brush is SolidColorBrush)
                 {
-                    var sbrush = (SolidColorBrush) brush;
+                    var sbrush = (SolidColorBrush)brush;
                     var fbrush = _wpfBrushTypes.FirstOrDefault(x => ((SolidColorBrush)x.Brush).Color == sbrush.Color);
                     if (fbrush != null)
                     {
@@ -487,7 +487,7 @@ namespace ColorBox
                     {
                         c.BrushType = BrushTypes.Solid;
                     }
-                   c.Color = (brush as SolidColorBrush).Color;
+                    c.Color = (brush as SolidColorBrush).Color;
                 }
                 else if (brush is LinearGradientBrush)
                 {
@@ -564,7 +564,7 @@ namespace ColorBox
                     // update RGB value based on new value of color
 
                     c._RGBSetInternally = true;
-                  
+
                     c.A = color.A;
                     c.R = color.R;
                     c.G = color.G;
@@ -579,7 +579,7 @@ namespace ColorBox
 
         #endregion
 
-        
+
         #region Color Specific Properties
 
         private double Hue
@@ -688,7 +688,7 @@ namespace ColorBox
         private static readonly DependencyProperty BProperty =
             DependencyProperty.Register("B", typeof(int), typeof(ColorBox),
             new FrameworkPropertyMetadata(default(int), new PropertyChangedCallback(UpdateColorRGB), new CoerceValueCallback(RGBCoerce)));
-        
+
 
         private static object RGBCoerce(DependencyObject d, object value)
         {
@@ -740,7 +740,7 @@ namespace ColorBox
             c._RGBSetInternally = false;
         }
 
-       
+
         #region ColorChanged Event
 
         public delegate void ColorChangedEventHandler(object sender, ColorChangedEventArgs e);
@@ -782,9 +782,10 @@ namespace ColorBox
             switch (BrushType)
             {
                 case BrushTypes.Predefined:
-                  break;
-                case BrushTypes.None: Brush = null;
-                  break;
+                    break;
+                case BrushTypes.None:
+                    Brush = null;
+                    break;
 
                 case BrushTypes.Solid:
                     Brush = new SolidColorBrush(this.Color);
@@ -832,5 +833,5 @@ namespace ColorBox
 
             this._BrushSetInternally = false;
         }
-    }    
+    }
 }

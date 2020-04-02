@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows.Automation.Peers;
 
 namespace Xceed.Wpf.Toolkit.PropertyGrid
@@ -27,7 +25,7 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
             var control = (PropertyGrid)Owner;
 
             var itemsControl = control.Template.FindName("PART_PropertyItemsControl", control) as PropertyItemsControl;
-            if(itemsControl != null)
+            if (itemsControl != null)
             {
                 var peer = CreatePeerForElement(itemsControl);
                 return new[] { peer }.ToList();

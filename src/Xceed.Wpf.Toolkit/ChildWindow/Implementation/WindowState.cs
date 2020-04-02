@@ -16,9 +16,9 @@
 
 namespace Xceed.Wpf.Toolkit
 {
-  public enum WindowState
-  {
-    Closed,
-    Open
-  }
+    public enum WindowState
+    {
+        Closed,
+        Open
+    }
 }

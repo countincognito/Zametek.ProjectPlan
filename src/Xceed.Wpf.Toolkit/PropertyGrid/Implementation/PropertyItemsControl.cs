@@ -15,103 +15,103 @@
   ***********************************************************************************/
 
 using System;
-using System.Windows.Controls;
-using System.Windows;
 using System.ComponentModel;
+using System.Windows;
 using System.Windows.Automation.Peers;
+using System.Windows.Controls;
 
 namespace Xceed.Wpf.Toolkit.PropertyGrid
 {
-  /// <summary>
-  /// This Control is intended to be used in the template of the 
-  /// PropertyItemBase and PropertyGrid classes to contain the
-  /// sub-children properties.
-  /// </summary>
-  public class PropertyItemsControl : ItemsControl
-  {
-
-    public PropertyItemsControl()
+    /// <summary>
+    /// This Control is intended to be used in the template of the 
+    /// PropertyItemBase and PropertyGrid classes to contain the
+    /// sub-children properties.
+    /// </summary>
+    public class PropertyItemsControl : ItemsControl
     {
-      var propertyItemsControlProperties = TypeDescriptor.GetProperties( this, new Attribute[] { new PropertyFilterAttribute( PropertyFilterOptions.All ) } );
-      var prop1 = propertyItemsControlProperties.Find( "VirtualizingPanel.IsVirtualizingWhenGrouping", false );
-      if( prop1 != null )
-      {
-        prop1.SetValue( this, true );
-      }
-      var prop2 = propertyItemsControlProperties.Find( "VirtualizingPanel.CacheLengthUnit", false );
-      if( prop2 != null )
-      {
-        prop2.SetValue( this, Enum.ToObject( prop2.PropertyType, 1 ) );
-      }
-        //this.SetValue(VirtualizingStackPanel.IsVirtualizingProperty, true);
-        //this.SetValue(VirtualizingStackPanel.VirtualizationModeProperty, VirtualizationMode.Recycling);
+
+        public PropertyItemsControl()
+        {
+            var propertyItemsControlProperties = TypeDescriptor.GetProperties(this, new Attribute[] { new PropertyFilterAttribute(PropertyFilterOptions.All) });
+            var prop1 = propertyItemsControlProperties.Find("VirtualizingPanel.IsVirtualizingWhenGrouping", false);
+            if (prop1 != null)
+            {
+                prop1.SetValue(this, true);
+            }
+            var prop2 = propertyItemsControlProperties.Find("VirtualizingPanel.CacheLengthUnit", false);
+            if (prop2 != null)
+            {
+                prop2.SetValue(this, Enum.ToObject(prop2.PropertyType, 1));
+            }
+            //this.SetValue(VirtualizingStackPanel.IsVirtualizingProperty, true);
+            //this.SetValue(VirtualizingStackPanel.VirtualizationModeProperty, VirtualizationMode.Recycling);
 #if NET45
         this.SetValue(VirtualizingStackPanel.ScrollUnitProperty, ScrollUnit.Item);
         this.SetValue(VirtualizingStackPanel.IsVirtualizingWhenGroupingProperty, true);
 #endif
-    }
-      
-    #region PreparePropertyItemEvent Attached Routed Event
+        }
 
-    internal static readonly RoutedEvent PreparePropertyItemEvent = EventManager.RegisterRoutedEvent( "PreparePropertyItem", RoutingStrategy.Bubble, typeof( PropertyItemEventHandler ), typeof( PropertyItemsControl ) );
-    internal event PropertyItemEventHandler PreparePropertyItem
-    {
-      add
-      {
-        AddHandler( PropertyItemsControl.PreparePropertyItemEvent, value );
-      }
-      remove
-      {
-        RemoveHandler( PropertyItemsControl.PreparePropertyItemEvent, value );
-      }
-    }
+        #region PreparePropertyItemEvent Attached Routed Event
 
-    private void RaisePreparePropertyItemEvent( PropertyItemBase propertyItem, object item )
-    {
-      this.RaiseEvent( new PropertyItemEventArgs( PropertyItemsControl.PreparePropertyItemEvent, this, propertyItem, item ) );
-    }
+        internal static readonly RoutedEvent PreparePropertyItemEvent = EventManager.RegisterRoutedEvent("PreparePropertyItem", RoutingStrategy.Bubble, typeof(PropertyItemEventHandler), typeof(PropertyItemsControl));
+        internal event PropertyItemEventHandler PreparePropertyItem
+        {
+            add
+            {
+                AddHandler(PropertyItemsControl.PreparePropertyItemEvent, value);
+            }
+            remove
+            {
+                RemoveHandler(PropertyItemsControl.PreparePropertyItemEvent, value);
+            }
+        }
 
-    #endregion
+        private void RaisePreparePropertyItemEvent(PropertyItemBase propertyItem, object item)
+        {
+            this.RaiseEvent(new PropertyItemEventArgs(PropertyItemsControl.PreparePropertyItemEvent, this, propertyItem, item));
+        }
 
-    #region ClearPropertyItemEvent Attached Routed Event
+        #endregion
 
-    internal static readonly RoutedEvent ClearPropertyItemEvent = EventManager.RegisterRoutedEvent( "ClearPropertyItem", RoutingStrategy.Bubble, typeof( PropertyItemEventHandler ), typeof( PropertyItemsControl ) );
-    internal event PropertyItemEventHandler ClearPropertyItem
-    {
-      add
-      {
-        AddHandler( PropertyItemsControl.ClearPropertyItemEvent, value );
-      }
-      remove
-      {
-        RemoveHandler( PropertyItemsControl.ClearPropertyItemEvent, value );
-      }
-    }
+        #region ClearPropertyItemEvent Attached Routed Event
 
-    private void RaiseClearPropertyItemEvent( PropertyItemBase propertyItem, object item )
-    {
-      this.RaiseEvent( new PropertyItemEventArgs( PropertyItemsControl.ClearPropertyItemEvent, this, propertyItem, item ) );
-    }
+        internal static readonly RoutedEvent ClearPropertyItemEvent = EventManager.RegisterRoutedEvent("ClearPropertyItem", RoutingStrategy.Bubble, typeof(PropertyItemEventHandler), typeof(PropertyItemsControl));
+        internal event PropertyItemEventHandler ClearPropertyItem
+        {
+            add
+            {
+                AddHandler(PropertyItemsControl.ClearPropertyItemEvent, value);
+            }
+            remove
+            {
+                RemoveHandler(PropertyItemsControl.ClearPropertyItemEvent, value);
+            }
+        }
 
-    #endregion
+        private void RaiseClearPropertyItemEvent(PropertyItemBase propertyItem, object item)
+        {
+            this.RaiseEvent(new PropertyItemEventArgs(PropertyItemsControl.ClearPropertyItemEvent, this, propertyItem, item));
+        }
 
-    protected override bool IsItemItsOwnContainerOverride( object item )
-    {
-      return ( item is PropertyItemBase );
-    }
+        #endregion
+
+        protected override bool IsItemItsOwnContainerOverride(object item)
+        {
+            return (item is PropertyItemBase);
+        }
 
 
-    protected override void PrepareContainerForItemOverride( DependencyObject element, object item )
-    {
-      base.PrepareContainerForItemOverride( element, item );
-      this.RaisePreparePropertyItemEvent( ( PropertyItemBase )element, item );
-    }
+        protected override void PrepareContainerForItemOverride(DependencyObject element, object item)
+        {
+            base.PrepareContainerForItemOverride(element, item);
+            this.RaisePreparePropertyItemEvent((PropertyItemBase)element, item);
+        }
 
-    protected override void ClearContainerForItemOverride( DependencyObject element, object item )
-    {
-      this.RaiseClearPropertyItemEvent( ( PropertyItemBase )element, item );
-      base.ClearContainerForItemOverride( element, item );
-    }
+        protected override void ClearContainerForItemOverride(DependencyObject element, object item)
+        {
+            this.RaiseClearPropertyItemEvent((PropertyItemBase)element, item);
+            base.ClearContainerForItemOverride(element, item);
+        }
 
         protected override AutomationPeer OnCreateAutomationPeer()
         {

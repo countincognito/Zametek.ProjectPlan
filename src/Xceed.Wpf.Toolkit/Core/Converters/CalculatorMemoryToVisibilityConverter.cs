@@ -20,16 +20,16 @@ using System.Windows.Data;
 
 namespace Xceed.Wpf.Toolkit.Core.Converters
 {
-  public class CalculatorMemoryToVisibilityConverter : IValueConverter
-  {
-    public object Convert( object value, Type targetType, object parameter, System.Globalization.CultureInfo culture )
+    public class CalculatorMemoryToVisibilityConverter : IValueConverter
     {
-      return ( decimal )value == decimal.Zero ? Visibility.Hidden : Visibility.Visible;
-    }
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return (decimal)value == decimal.Zero ? Visibility.Hidden : Visibility.Visible;
+        }
 
-    public object ConvertBack( object value, Type targetType, object parameter, System.Globalization.CultureInfo culture )
-    {
-      throw new NotImplementedException();
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
-  }
 }

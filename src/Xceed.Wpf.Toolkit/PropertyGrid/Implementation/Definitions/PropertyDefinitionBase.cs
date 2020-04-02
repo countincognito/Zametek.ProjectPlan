@@ -23,94 +23,94 @@ using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 
 namespace Xceed.Wpf.Toolkit.PropertyGrid
 {
-  public abstract class PropertyDefinitionBase : DefinitionBase
-  {
-    #region Constructors
-
-    internal PropertyDefinitionBase()
+    public abstract class PropertyDefinitionBase : DefinitionBase
     {
-      _targetProperties = new List<object>();
-      this.PropertyDefinitions = new PropertyDefinitionCollection();
-    }
+        #region Constructors
 
-    #endregion
-
-    #region Properties
-
-    #region TargetProperties
-
-    [TypeConverter(typeof(ListConverter))]
-    public IList TargetProperties 
-    {
-      get { return _targetProperties; }
-      set 
-      {
-        this.ThrowIfLocked( () => this.TargetProperties );
-        _targetProperties = value; 
-      }
-    }
-
-    private IList _targetProperties;
-
-    #endregion
-
-    public Type HasAttribute { get; set; }
-
-    #region PropertyDefinitions
-
-    public PropertyDefinitionCollection PropertyDefinitions
-    {
-      get
-      {
-        return _propertyDefinitions;
-      }
-      set
-      {
-        this.ThrowIfLocked( () => this.PropertyDefinitions );
-        _propertyDefinitions = value;
-      }
-    }
-
-    private PropertyDefinitionCollection _propertyDefinitions;
-
-    #endregion //PropertyDefinitions
-
-    #endregion
-
-    #region Overrides
-
-    internal override void Lock()
-    {
-      if( this.IsLocked )
-        return;
-
-      base.Lock();
-
-      // Just create a new copy of the properties target to ensure 
-      // that the list doesn't ever get modified.
-
-      List<object> newList = new List<object>();
-      if( _targetProperties != null )
-      {
-        foreach( object p in _targetProperties )
+        internal PropertyDefinitionBase()
         {
-          object prop = p;
-          // Convert all TargetPropertyType to Types
-          var targetType = prop as TargetPropertyType;
-          if( targetType != null )
-          {
-            prop = targetType.Type;
-          }
-          newList.Add( prop );
+            _targetProperties = new List<object>();
+            this.PropertyDefinitions = new PropertyDefinitionCollection();
         }
-      }
 
-      //In Designer Mode, the Designer is broken if using a ReadOnlyCollection
-      _targetProperties = DesignerProperties.GetIsInDesignMode( this )
-                          ? new Collection<object>( newList )
-                          : new ReadOnlyCollection<object>( newList ) as IList;
+        #endregion
+
+        #region Properties
+
+        #region TargetProperties
+
+        [TypeConverter(typeof(ListConverter))]
+        public IList TargetProperties
+        {
+            get { return _targetProperties; }
+            set
+            {
+                this.ThrowIfLocked(() => this.TargetProperties);
+                _targetProperties = value;
+            }
+        }
+
+        private IList _targetProperties;
+
+        #endregion
+
+        public Type HasAttribute { get; set; }
+
+        #region PropertyDefinitions
+
+        public PropertyDefinitionCollection PropertyDefinitions
+        {
+            get
+            {
+                return _propertyDefinitions;
+            }
+            set
+            {
+                this.ThrowIfLocked(() => this.PropertyDefinitions);
+                _propertyDefinitions = value;
+            }
+        }
+
+        private PropertyDefinitionCollection _propertyDefinitions;
+
+        #endregion //PropertyDefinitions
+
+        #endregion
+
+        #region Overrides
+
+        internal override void Lock()
+        {
+            if (this.IsLocked)
+                return;
+
+            base.Lock();
+
+            // Just create a new copy of the properties target to ensure 
+            // that the list doesn't ever get modified.
+
+            List<object> newList = new List<object>();
+            if (_targetProperties != null)
+            {
+                foreach (object p in _targetProperties)
+                {
+                    object prop = p;
+                    // Convert all TargetPropertyType to Types
+                    var targetType = prop as TargetPropertyType;
+                    if (targetType != null)
+                    {
+                        prop = targetType.Type;
+                    }
+                    newList.Add(prop);
+                }
+            }
+
+            //In Designer Mode, the Designer is broken if using a ReadOnlyCollection
+            _targetProperties = DesignerProperties.GetIsInDesignMode(this)
+                                ? new Collection<object>(newList)
+                                : new ReadOnlyCollection<object>(newList) as IList;
+        }
+
+        #endregion
     }
-
-    #endregion
-  }
 }

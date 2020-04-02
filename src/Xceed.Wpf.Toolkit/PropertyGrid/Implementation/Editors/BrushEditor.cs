@@ -16,17 +16,17 @@
 
 namespace Xceed.Wpf.Toolkit.PropertyGrid.Editors
 {
-  public class BrushEditor : TypeEditor<ColorBox.ColorBox>
-  {
-    protected override void SetControlProperties(PropertyItem propertyItem)
-        {
-      Editor.BorderThickness = new System.Windows.Thickness( 0 );
-      //Editor.DisplayColorAndName = true;
-      //Editor.Style = PropertyGridUtilities.ColorPickerStyle;
-    }
-    protected override void SetValueDependencyProperty()
+    public class BrushEditor : TypeEditor<ColorBox.ColorBox>
     {
-      ValueProperty = ColorBox.ColorBox.BrushProperty;
+        protected override void SetControlProperties(PropertyItem propertyItem)
+        {
+            Editor.BorderThickness = new System.Windows.Thickness(0);
+            //Editor.DisplayColorAndName = true;
+            //Editor.Style = PropertyGridUtilities.ColorPickerStyle;
+        }
+        protected override void SetValueDependencyProperty()
+        {
+            ValueProperty = ColorBox.ColorBox.BrushProperty;
+        }
     }
-  }
 }

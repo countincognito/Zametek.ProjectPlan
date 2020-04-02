@@ -16,37 +16,37 @@
 
 namespace Xceed.Wpf.Toolkit
 {
-  internal class DateTimeInfo
-  {
-    public string Content
+    internal class DateTimeInfo
     {
-      get;
-      set;
+        public string Content
+        {
+            get;
+            set;
+        }
+        public string Format
+        {
+            get;
+            set;
+        }
+        public bool IsReadOnly
+        {
+            get;
+            set;
+        }
+        public int Length
+        {
+            get;
+            set;
+        }
+        public int StartPosition
+        {
+            get;
+            set;
+        }
+        public DateTimePart Type
+        {
+            get;
+            set;
+        }
     }
-    public string Format
-    {
-      get;
-      set;
-    }
-    public bool IsReadOnly
-    {
-      get;
-      set;
-    }
-    public int Length
-    {
-      get;
-      set;
-    }
-    public int StartPosition
-    {
-      get;
-      set;
-    }
-    public DateTimePart Type
-    {
-      get;
-      set;
-    }
-  }
 }

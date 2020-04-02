@@ -18,14 +18,14 @@ using System.Windows.Controls;
 
 namespace Xceed.Wpf.Toolkit.Panels
 {
-  public abstract class PanelBase : Panel
-  {
-    #region Constructor
-
-    public PanelBase()
+    public abstract class PanelBase : Panel
     {
-    }
+        #region Constructor
 
-    #endregion
-  }
+        public PanelBase()
+        {
+        }
+
+        #endregion
+    }
 }

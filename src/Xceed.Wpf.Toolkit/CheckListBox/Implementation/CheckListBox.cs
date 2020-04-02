@@ -19,24 +19,24 @@ using Xceed.Wpf.Toolkit.Primitives;
 
 namespace Xceed.Wpf.Toolkit
 {
-  public class CheckListBox : SelectAllSelector
-  {
-    #region Constructors
-
-    static CheckListBox()
+    public class CheckListBox : SelectAllSelector
     {
-      DefaultStyleKeyProperty.OverrideMetadata( typeof( CheckListBox ), new FrameworkPropertyMetadata( typeof( CheckListBox ) ) );
+        #region Constructors
+
+        static CheckListBox()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(CheckListBox), new FrameworkPropertyMetadata(typeof(CheckListBox)));
+        }
+
+        public CheckListBox()
+        {
+        }
+
+        #endregion //Constructors
+
+        #region Base Class Override
+
+
+        #endregion
     }
-
-    public CheckListBox()
-    {
-    }
-
-    #endregion //Constructors
-
-    #region Base Class Override
-
-
-    #endregion
-  }
 }

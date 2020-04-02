@@ -15,44 +15,41 @@
   ***********************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Controls;
 using System.ComponentModel;
-using Xceed.Wpf.Toolkit.Core.Utilities;
 using System.Globalization;
+using System.Windows.Controls;
+using Xceed.Wpf.Toolkit.Core.Utilities;
 
 namespace Xceed.Wpf.Toolkit.PropertyGrid
 {
-  internal class CommonPropertyExceptionValidationRule : ValidationRule
-  {
-    private TypeConverter _propertyTypeConverter;
-    private Type _type;
-
-    internal CommonPropertyExceptionValidationRule( Type type )
+    internal class CommonPropertyExceptionValidationRule : ValidationRule
     {
-      _propertyTypeConverter = TypeDescriptor.GetConverter( type );
-      _type = type;
-    }
+        private TypeConverter _propertyTypeConverter;
+        private Type _type;
 
-    public override ValidationResult Validate( object value, CultureInfo cultureInfo )
-    {
-      ValidationResult result = new ValidationResult( true, null );
+        internal CommonPropertyExceptionValidationRule(Type type)
+        {
+            _propertyTypeConverter = TypeDescriptor.GetConverter(type);
+            _type = type;
+        }
 
-      if( GeneralUtilities.CanConvertValue( value, _type ) )
-      {
-        try
+        public override ValidationResult Validate(object value, CultureInfo cultureInfo)
         {
-          _propertyTypeConverter.ConvertFrom( value );
+            ValidationResult result = new ValidationResult(true, null);
+
+            if (GeneralUtilities.CanConvertValue(value, _type))
+            {
+                try
+                {
+                    _propertyTypeConverter.ConvertFrom(value);
+                }
+                catch (Exception e)
+                {
+                    // Will display a red border in propertyGrid
+                    result = new ValidationResult(false, e.Message);
+                }
+            }
+            return result;
         }
-        catch( Exception e )
-        {
-          // Will display a red border in propertyGrid
-          result = new ValidationResult( false, e.Message );
-        }
-      }
-      return result;
     }
-  }
 }

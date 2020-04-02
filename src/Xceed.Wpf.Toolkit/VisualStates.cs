@@ -16,8 +16,8 @@
 
 namespace Xceed.Wpf.Toolkit
 {
-  internal static partial class VisualStates
-  {
+    internal static partial class VisualStates
+    {
 
-  }
+    }
 }

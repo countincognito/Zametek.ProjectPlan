@@ -22,58 +22,58 @@ using System.Windows.Data;
 
 namespace Xceed.Wpf.Toolkit.PropertyGrid.Editors
 {
-  public class SourceComboBoxEditor : ComboBoxEditor
-  {
-    ICollection _collection;
-    TypeConverter _typeConverter;
-
-    public SourceComboBoxEditor( ICollection collection, TypeConverter typeConverter )
+    public class SourceComboBoxEditor : ComboBoxEditor
     {
-      _collection = collection;
-      _typeConverter = typeConverter;
+        ICollection _collection;
+        TypeConverter _typeConverter;
+
+        public SourceComboBoxEditor(ICollection collection, TypeConverter typeConverter)
+        {
+            _collection = collection;
+            _typeConverter = typeConverter;
+        }
+
+        protected override IEnumerable CreateItemsSource(PropertyItem propertyItem)
+        {
+            return _collection;
+        }
+
+        protected override IValueConverter CreateValueConverter()
+        {
+            //When using a stringConverter, we need to convert the value
+            if ((_typeConverter != null) && (_typeConverter is StringConverter))
+                return new SourceComboBoxEditorConverter(_typeConverter);
+            return null;
+        }
     }
 
-    protected override IEnumerable CreateItemsSource( PropertyItem propertyItem )
+    internal class SourceComboBoxEditorConverter : IValueConverter
     {
-      return _collection;
-    }
+        private TypeConverter _typeConverter;
 
-    protected override IValueConverter CreateValueConverter()
-    {
-      //When using a stringConverter, we need to convert the value
-      if( (_typeConverter != null) && (_typeConverter is StringConverter) )
-        return new SourceComboBoxEditorConverter( _typeConverter );
-      return null;
-    }
-  }
+        internal SourceComboBoxEditorConverter(TypeConverter typeConverter)
+        {
+            _typeConverter = typeConverter;
+        }
 
-  internal class SourceComboBoxEditorConverter : IValueConverter
-  {
-    private TypeConverter _typeConverter;
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (_typeConverter != null)
+            {
+                if (_typeConverter.CanConvertTo(typeof(string)))
+                    return _typeConverter.ConvertTo(value, typeof(string));
+            }
+            return value;
+        }
 
-    internal SourceComboBoxEditorConverter( TypeConverter typeConverter )
-    {
-      _typeConverter = typeConverter;
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (_typeConverter != null)
+            {
+                if (_typeConverter.CanConvertFrom(value.GetType()))
+                    return _typeConverter.ConvertFrom(value);
+            }
+            return value;
+        }
     }
-
-    public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
-    {
-      if( _typeConverter != null )
-      {
-        if( _typeConverter.CanConvertTo( typeof(string) ) )
-          return _typeConverter.ConvertTo( value, typeof(string) );
-      }
-      return value;
-    }
-
-    public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
-    {
-      if( _typeConverter != null )
-      {
-        if( _typeConverter.CanConvertFrom( value.GetType() ) )
-          return _typeConverter.ConvertFrom( value );
-      }
-      return value;
-    }
-  }
 }

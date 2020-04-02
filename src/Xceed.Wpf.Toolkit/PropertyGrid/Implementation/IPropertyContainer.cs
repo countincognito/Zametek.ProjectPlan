@@ -15,17 +15,12 @@
   ***********************************************************************************/
 
 
-using System.Collections.Generic;
-using System.Windows.Controls;
-using System.Collections;
 using System.ComponentModel;
-using System.Windows.Data;
-using System;
 using System.Windows;
 namespace Xceed.Wpf.Toolkit.PropertyGrid
 {
-  internal interface IPropertyContainer
-  {
+    internal interface IPropertyContainer
+    {
 
 
 
@@ -33,25 +28,25 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
 
 
 
-    ContainerHelperBase ContainerHelper { get; }
+        ContainerHelperBase ContainerHelper { get; }
 
-    Style PropertyContainerStyle { get; }
+        Style PropertyContainerStyle { get; }
 
-    EditorDefinitionCollection EditorDefinitions { get; }
+        EditorDefinitionCollection EditorDefinitions { get; }
 
-    PropertyDefinitionCollection PropertyDefinitions { get; }
+        PropertyDefinitionCollection PropertyDefinitions { get; }
 
-    bool IsCategorized { get; }
+        bool IsCategorized { get; }
 
-    bool IsSortedAlphabetically { get; }
+        bool IsSortedAlphabetically { get; }
 
-    bool AutoGenerateProperties { get; }
+        bool AutoGenerateProperties { get; }
 
-    bool HideInheritedProperties { get; }
+        bool HideInheritedProperties { get; }
 
-    FilterInfo FilterInfo { get; }
+        FilterInfo FilterInfo { get; }
 
-    bool? IsPropertyVisible( PropertyDescriptor pd );
+        bool? IsPropertyVisible(PropertyDescriptor pd);
 
-  }
+    }
 }

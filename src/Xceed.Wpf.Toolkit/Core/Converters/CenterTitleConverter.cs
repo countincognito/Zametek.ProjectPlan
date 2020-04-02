@@ -15,14 +15,10 @@
   ***********************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Data;
 using System.Globalization;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Controls;
+using System.Windows.Data;
 
 namespace Xceed.Wpf.Toolkit.Core.Converters
 {

@@ -18,29 +18,29 @@ using System.Windows;
 
 namespace Xceed.Wpf.Toolkit.Panels
 {
-  public class ChildExitedEventArgs : RoutedEventArgs
-  {
-    #region Constructors
-
-    public ChildExitedEventArgs( UIElement child )
+    public class ChildExitedEventArgs : RoutedEventArgs
     {
-      _child = child;
+        #region Constructors
+
+        public ChildExitedEventArgs(UIElement child)
+        {
+            _child = child;
+        }
+
+        #endregion
+
+        #region Child Property
+
+        public UIElement Child
+        {
+            get
+            {
+                return _child;
+            }
+        }
+
+        private readonly UIElement _child;
+
+        #endregion
     }
-
-    #endregion
-
-    #region Child Property
-
-    public UIElement Child
-    {
-      get
-      {
-        return _child;
-      }
-    }
-
-    private readonly UIElement _child;
-
-    #endregion
-  }
 }

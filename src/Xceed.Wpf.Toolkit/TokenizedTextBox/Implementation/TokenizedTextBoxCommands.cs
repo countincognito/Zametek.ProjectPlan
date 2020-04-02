@@ -20,16 +20,16 @@ using System.Windows.Input;
 
 namespace Xceed.Wpf.Toolkit
 {
-  public static class TokenizedTextBoxCommands
-  {
-    private static RoutedCommand _deleteCommand = new RoutedCommand();
-
-    public static RoutedCommand Delete
+    public static class TokenizedTextBoxCommands
     {
-      get
-      {
-        return _deleteCommand;
-      }
+        private static RoutedCommand _deleteCommand = new RoutedCommand();
+
+        public static RoutedCommand Delete
+        {
+            get
+            {
+                return _deleteCommand;
+            }
+        }
     }
-  }
 }

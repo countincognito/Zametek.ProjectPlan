@@ -14,58 +14,58 @@
 
   ***********************************************************************************/
 
-using System.Windows;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 
 namespace Xceed.Wpf.Toolkit.PropertyGrid.Editors
 {
-  public class PrimitiveTypeCollectionEditor : TypeEditor<PrimitiveTypeCollectionControl>
-  {
-    protected override void SetControlProperties( PropertyItem propertyItem )
+    public class PrimitiveTypeCollectionEditor : TypeEditor<PrimitiveTypeCollectionControl>
     {
-      Editor.BorderThickness = new System.Windows.Thickness( 0 );
-      Editor.Content = "(Collection)";
-    }
-
-    protected override void SetValueDependencyProperty()
-    {
-      ValueProperty = PrimitiveTypeCollectionControl.ItemsSourceProperty;
-    }
-
-    protected override PrimitiveTypeCollectionControl CreateEditor()
-    {
-      return new PropertyGridEditorPrimitiveTypeCollectionControl();
-    }
-
-    protected override void ResolveValueBinding( PropertyItem propertyItem )
-    {
-      var type = propertyItem.PropertyType;
-      Editor.ItemsSourceType = type;
-
-      var icollection = propertyItem.PropertyType.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(ICollection<>));
-      if (icollection != null)
-      {
-          Editor.ItemType = icollection.GetGenericArguments()[0];
-      }
-      else
-      {
-        var typeArguments = type.GetGenericArguments();
-        if( typeArguments.Length > 0 )
+        protected override void SetControlProperties(PropertyItem propertyItem)
         {
-          Editor.ItemType = typeArguments[ 0 ];
+            Editor.BorderThickness = new System.Windows.Thickness(0);
+            Editor.Content = "(Collection)";
         }
-      }
 
-      base.ResolveValueBinding( propertyItem );
+        protected override void SetValueDependencyProperty()
+        {
+            ValueProperty = PrimitiveTypeCollectionControl.ItemsSourceProperty;
+        }
+
+        protected override PrimitiveTypeCollectionControl CreateEditor()
+        {
+            return new PropertyGridEditorPrimitiveTypeCollectionControl();
+        }
+
+        protected override void ResolveValueBinding(PropertyItem propertyItem)
+        {
+            var type = propertyItem.PropertyType;
+            Editor.ItemsSourceType = type;
+
+            var icollection = propertyItem.PropertyType.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(ICollection<>));
+            if (icollection != null)
+            {
+                Editor.ItemType = icollection.GetGenericArguments()[0];
+            }
+            else
+            {
+                var typeArguments = type.GetGenericArguments();
+                if (typeArguments.Length > 0)
+                {
+                    Editor.ItemType = typeArguments[0];
+                }
+            }
+
+            base.ResolveValueBinding(propertyItem);
+        }
     }
-  }
 
-  public class PropertyGridEditorPrimitiveTypeCollectionControl : PrimitiveTypeCollectionControl
-  {
-    static PropertyGridEditorPrimitiveTypeCollectionControl()
+    public class PropertyGridEditorPrimitiveTypeCollectionControl : PrimitiveTypeCollectionControl
     {
-      DefaultStyleKeyProperty.OverrideMetadata( typeof( PropertyGridEditorPrimitiveTypeCollectionControl ), new FrameworkPropertyMetadata( typeof( PropertyGridEditorPrimitiveTypeCollectionControl ) ) );
+        static PropertyGridEditorPrimitiveTypeCollectionControl()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(PropertyGridEditorPrimitiveTypeCollectionControl), new FrameworkPropertyMetadata(typeof(PropertyGridEditorPrimitiveTypeCollectionControl)));
+        }
     }
-  }
 }

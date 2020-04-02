@@ -20,35 +20,35 @@ using System;
 
 namespace Xceed.Wpf.Toolkit
 {
-  internal class Token
-  {
-    public string Delimiter
+    internal class Token
     {
-      get;
-      private set;
-    }
-    public object Item
-    {
-      get;
-      set;
-    }
+        public string Delimiter
+        {
+            get;
+            private set;
+        }
+        public object Item
+        {
+            get;
+            set;
+        }
 
-    private string _tokenKey;
-    public string TokenKey
-    {
-      get
-      {
-        return _tokenKey;
-      }
-      set
-      {
-        _tokenKey = String.Format( "{0}{1}", value, Delimiter );
-      }
-    }
+        private string _tokenKey;
+        public string TokenKey
+        {
+            get
+            {
+                return _tokenKey;
+            }
+            set
+            {
+                _tokenKey = String.Format("{0}{1}", value, Delimiter);
+            }
+        }
 
-    public Token( string delimiter )
-    {
-      Delimiter = delimiter;
+        public Token(string delimiter)
+        {
+            Delimiter = delimiter;
+        }
     }
-  }
 }

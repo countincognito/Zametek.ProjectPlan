@@ -15,26 +15,23 @@
   ***********************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Data;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Data;
 
 namespace Xceed.Wpf.Toolkit.Converters
 {
-  public class StyleableWindowClippingBorderConverter : IValueConverter
-  {
-    public object Convert( object value, Type targetType, object parameter, CultureInfo culture )
+    public class StyleableWindowClippingBorderConverter : IValueConverter
     {
-      double borderThickness = (double)value;
-      return new Thickness( borderThickness, borderThickness, borderThickness, borderThickness * 2);
-    }
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            double borderThickness = (double)value;
+            return new Thickness(borderThickness, borderThickness, borderThickness, borderThickness * 2);
+        }
 
-    public object ConvertBack( object value, Type targetType, object parameter, CultureInfo culture )
-    {
-      throw new NotImplementedException();
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
-  }
 }

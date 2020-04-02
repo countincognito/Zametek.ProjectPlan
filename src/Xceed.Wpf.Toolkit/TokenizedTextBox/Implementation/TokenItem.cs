@@ -21,24 +21,24 @@ using System.Windows.Controls;
 
 namespace Xceed.Wpf.Toolkit
 {
-  public class TokenItem : ContentControl
-  {
-    static TokenItem()
+    public class TokenItem : ContentControl
     {
-      DefaultStyleKeyProperty.OverrideMetadata( typeof( TokenItem ), new FrameworkPropertyMetadata( typeof( TokenItem ) ) );
-    }
+        static TokenItem()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(TokenItem), new FrameworkPropertyMetadata(typeof(TokenItem)));
+        }
 
-    public static readonly DependencyProperty TokenKeyProperty = DependencyProperty.Register( "TokenKey", typeof( string ), typeof( TokenItem ), new UIPropertyMetadata( null ) );
-    public string TokenKey
-    {
-      get
-      {
-        return ( string )GetValue( TokenKeyProperty );
-      }
-      set
-      {
-        SetValue( TokenKeyProperty, value );
-      }
+        public static readonly DependencyProperty TokenKeyProperty = DependencyProperty.Register("TokenKey", typeof(string), typeof(TokenItem), new UIPropertyMetadata(null));
+        public string TokenKey
+        {
+            get
+            {
+                return (string)GetValue(TokenKeyProperty);
+            }
+            set
+            {
+                SetValue(TokenKeyProperty, value);
+            }
+        }
     }
-  }
 }

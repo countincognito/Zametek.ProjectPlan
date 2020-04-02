@@ -19,29 +19,29 @@ using System.Windows.Controls;
 
 namespace Xceed.Wpf.Toolkit.PropertyGrid.Editors
 {
-  public class CheckBoxEditor : TypeEditor<CheckBox>
-  {
-    protected override CheckBox CreateEditor()
+    public class CheckBoxEditor : TypeEditor<CheckBox>
     {
-      return new PropertyGridEditorCheckBox();
+        protected override CheckBox CreateEditor()
+        {
+            return new PropertyGridEditorCheckBox();
+        }
+
+        protected override void SetControlProperties(PropertyItem propertyItem)
+        {
+            Editor.Margin = new Thickness(5, 0, 0, 0);
+        }
+
+        protected override void SetValueDependencyProperty()
+        {
+            ValueProperty = CheckBox.IsCheckedProperty;
+        }
     }
 
-    protected override void SetControlProperties( PropertyItem propertyItem )
+    public class PropertyGridEditorCheckBox : CheckBox
     {
-      Editor.Margin = new Thickness( 5, 0, 0, 0 );
+        static PropertyGridEditorCheckBox()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(PropertyGridEditorCheckBox), new FrameworkPropertyMetadata(typeof(PropertyGridEditorCheckBox)));
+        }
     }
-
-    protected override void SetValueDependencyProperty()
-    {
-      ValueProperty = CheckBox.IsCheckedProperty;
-    }
-  }
-
-  public class PropertyGridEditorCheckBox : CheckBox
-  {
-    static PropertyGridEditorCheckBox()
-    {
-      DefaultStyleKeyProperty.OverrideMetadata( typeof( PropertyGridEditorCheckBox ), new FrameworkPropertyMetadata( typeof( PropertyGridEditorCheckBox ) ) );
-    }
-  }
 }
