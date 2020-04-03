@@ -10,9 +10,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Zamatek.Windows.Interactivity.Core" Version="1.0.0" />
-    <PackageReference Include="Zametek.Prism.AvalonDock.Core" Version="1.0.0" />
-    <PackageReference Include="Zametek.Windows.AvalonDock.Core" Version="1.0.0" />
+    <PackageReference Include="Zamatek.Windows.Interactivity.Core" Version="0.1.0" />
+    <PackageReference Include="Zametek.Prism.AvalonDock.Core" Version="0.1.0" />
+    <PackageReference Include="Zametek.Windows.AvalonDock.Core" Version="0.1.0" />
   </ItemGroup>
 
   <ItemGroup>
