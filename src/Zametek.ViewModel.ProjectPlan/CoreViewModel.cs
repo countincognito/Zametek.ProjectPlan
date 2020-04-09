@@ -488,11 +488,20 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 var activityId = m_VertexGraphCompiler.GetNextActivityId();
-                AddManagedActivity(new DependentActivity<int, int>(activityId, 0));
+                AddManagedActivity(new DependentActivityModel
+                {
+                    Activity = new ActivityModel
+                    {
+                        Id = activityId,
+                        Duration = 0,
+                    },
+                    Dependencies = new List<int>(),
+                    ResourceDependencies = new List<int>(),
+                });
             }
         }
 
-        public void AddManagedActivity(IDependentActivity<int, int> dependentActivity)
+        public void AddManagedActivity(DependentActivityModel dependentActivity)
         {
             if (dependentActivity == null)
             {
@@ -505,8 +514,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 dateTimeCalculator.UseBusinessDays(UseBusinessDays);
 
                 var activity = new ManagedActivityViewModel(
-                    dependentActivity,
+                    m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity),
                     ProjectStart,
+                    dependentActivity.Activity.MinimumEarliestStartDateTime,
                     ResourceSettings.Resources,
                     dateTimeCalculator,
                     m_EventService);

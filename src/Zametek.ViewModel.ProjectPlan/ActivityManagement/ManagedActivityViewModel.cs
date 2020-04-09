@@ -39,6 +39,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public ManagedActivityViewModel(
             IDependentActivity<int, int> dependentActivity,
             DateTime projectStart,
+            DateTime? minimumEarliestStartDateTime,
             IEnumerable<ResourceModel> targetResources,
             IDateTimeCalculator dateTimeCalculator,
             IEventAggregator eventService)
@@ -46,6 +47,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             DependentActivity = dependentActivity ?? throw new ArgumentNullException(nameof(dependentActivity));
             m_ProjectStart = projectStart;
+            m_MinimumEarliestStartDateTime = minimumEarliestStartDateTime;
             var selectedResources = new HashSet<int>(DependentActivity.TargetResources.ToList());
             ResourceSelector.SetTargetResources(targetResources, selectedResources);
             UpdateAllocatedToResources();

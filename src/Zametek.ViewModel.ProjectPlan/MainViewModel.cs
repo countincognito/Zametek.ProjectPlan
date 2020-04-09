@@ -717,7 +717,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 // Activities.
                 foreach (DependentActivityModel dependentActivity in microsoftProject.DependentActivities)
                 {
-                    m_CoreViewModel.AddManagedActivity(m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity));
+                    m_CoreViewModel.AddManagedActivity(dependentActivity);
                 }
             }
         }
@@ -748,7 +748,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 // Be sure to do this after the resources and project start date have been added.
                 foreach (DependentActivityModel dependentActivity in projectPlan.DependentActivities)
                 {
-                    m_CoreViewModel.AddManagedActivity(m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity));
+                    m_CoreViewModel.AddManagedActivity(dependentActivity);
                 }
 
                 m_CoreViewModel.UpdateActivitiesAllocatedToResources();

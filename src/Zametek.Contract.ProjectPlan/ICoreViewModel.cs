@@ -53,7 +53,7 @@ namespace Zametek.Contract.ProjectPlan
 
         void AddManagedActivity();
 
-        void AddManagedActivity(IDependentActivity<int, int> dependentActivity);
+        void AddManagedActivity(DependentActivityModel dependentActivity);
 
         void RemoveManagedActivities(HashSet<int> dependentActivities);
 
