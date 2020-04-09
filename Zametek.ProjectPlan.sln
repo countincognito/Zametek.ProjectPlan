@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Shell.ProjectPlan",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Data.ProjectPlan", "src\Zametek.Data.ProjectPlan\Zametek.Data.ProjectPlan.csproj", "{D0AF647F-89F3-435A-980F-ABF8C87080A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.Resource.ProjectPlan", "src\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj", "{B751D7A9-C191-4517-B7F4-591795858F47}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Resource.ProjectPlan", "src\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj", "{B751D7A9-C191-4517-B7F4-591795858F47}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetProjects.Wpf.Extended.Toolkit", "src\Xceed.Wpf.Toolkit\DotNetProjects.Wpf.Extended.Toolkit.csproj", "{28F41DF1-F73A-4836-B284-E6109D0FA283}"
 EndProject

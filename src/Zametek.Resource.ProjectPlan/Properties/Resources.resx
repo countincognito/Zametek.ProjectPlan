@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Filter_ImportMicrosoftProjectFileExtension" xml:space="preserve">
-    <value>.mpp</value>
+    <value>.xml</value>
   </data>
   <data name="Filter_ImportMicrosoftProjectFileType" xml:space="preserve">
     <value>MS Projects</value>

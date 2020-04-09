@@ -61,7 +61,7 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .mpp.
+        ///   Looks up a localized string similar to .xml.
         /// </summary>
         public static string Filter_ImportMicrosoftProjectFileExtension {
             get {

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Xml;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Event.ProjectPlan;
@@ -267,7 +268,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void ImportMicrosoftProject()
         {
-            //await DoImportMicrosoftProjectAsync();
+            await DoImportMicrosoftProjectAsync().ConfigureAwait(true);
         }
 
         private DelegateCommandBase InternalCloseProjectCommand
@@ -551,127 +552,175 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Publish(new GraphCompilationUpdatedPayload());
         }
 
-        //private async Task<MicrosoftProjectDto> ImportMicrosoftProjectAsync(string filename)
-        //{
-        //    return await Task.Run(() => ImportMicrosoftProject(filename));
-        //}
+        private static async Task<MicrosoftProjectModel> ImportMicrosoftProjectAsync(string filename)
+        {
+            return await Task.Run(() => ImportMicrosoftProject(filename)).ConfigureAwait(true);
+        }
 
-        //private static MicrosoftProjectDto ImportMicrosoftProject(string filename)
-        //{
-        //    if (string.IsNullOrWhiteSpace(filename))
-        //    {
-        //        throw new ArgumentNullException(nameof(filename));
-        //    }
-        //    ProjectReader reader = ProjectReaderUtility.getProjectReader(filename);
-        //    net.sf.mpxj.ProjectFile mpx = reader.read(filename);
-        //    DateTime projectStart = mpx.ProjectProperties.StartDate.ToDateTime();
+        private static MicrosoftProjectModel ImportMicrosoftProject(string filename)
+        {
+            if (string.IsNullOrWhiteSpace(filename))
+            {
+                throw new ArgumentNullException(nameof(filename));
+            }
+            var xDoc = new XmlDocument();
+            var nsMan = new XmlNamespaceManager(xDoc.NameTable);
+            nsMan.AddNamespace("ns", "http://schemas.microsoft.com/project");
+            xDoc.Load(filename);
 
-        //    var resources = new List<Common.Project.v0_1_0.ResourceDto>();
-        //    foreach (var resource in mpx.Resources.ToIEnumerable<net.sf.mpxj.Resource>())
-        //    {
-        //        int id = resource.ID.intValue();
-        //        if (id == 0)
-        //        {
-        //            continue;
-        //        }
-        //        string name = resource.Name;
-        //        var resourceDto = new Common.Project.v0_1_0.ResourceDto
-        //        {
-        //            Id = id,
-        //            IsExplicitTarget = true,
-        //            Name = name,
-        //            DisplayOrder = id,
-        //            ColorFormat = new Common.Project.v0_1_0.ColorFormatDto()
-        //        };
-        //        resources.Add(resourceDto);
-        //    }
+            DateTime projectStart = XmlConvert.ToDateTime(xDoc[@"Project"][@"StartDate"].InnerText, XmlDateTimeSerializationMode.Local);
+            int minutesPerDay = XmlConvert.ToInt32(xDoc[@"Project"][@"MinutesPerDay"].InnerText);
+            double hoursPerDay = new TimeSpan(0, minutesPerDay, 0).TotalHours;
 
-        //    var dependentActivities = new List<Common.Project.v0_1_0.DependentActivityDto>();
-        //    foreach (var task in mpx.Tasks.ToIEnumerable<net.sf.mpxj.Task>())
-        //    {
-        //        int id = task.ID.intValue();
-        //        if (id == 0)
-        //        {
-        //            continue;
-        //        }
-        //        string name = task.Name;
-        //        int duration = Convert.ToInt32(task.Duration.Duration);
+            // Resources.
+            var resources = new List<ResourceModel>();
+            var resourceUidToIdLookup = new Dictionary<int, int>();
 
-        //        DateTime? minimumEarliestStartDateTime = null;
-        //        if (task.ConstraintType == net.sf.mpxj.ConstraintType.START_NO_EARLIER_THAN)
-        //        {
-        //            //minimumEarliestStartTime = Convert.ToInt32((task.ConstraintDate.ToDateTime() - projectStart).TotalDays);
-        //            minimumEarliestStartDateTime = task.ConstraintDate.ToDateTime();
-        //        }
+            foreach (XmlNode projectResource in xDoc[@"Project"][@"Resources"].ChildNodes)
+            {
+                int resourceUid = XmlConvert.ToInt32(projectResource[@"UID"].InnerText);
+                int resourceId = XmlConvert.ToInt32(projectResource[@"ID"].InnerText);
+                if (resourceId == 0)
+                {
+                    continue;
+                }
+                string name = projectResource[@"Name"].InnerText;
+                var resource = new ResourceModel
+                {
+                    Id = resourceId,
+                    IsExplicitTarget = true,
+                    Name = name,
+                    DisplayOrder = resourceId,
+                    UnitCost = XmlConvert.ToDouble(projectResource[@"Cost"].InnerText),
+                    ColorFormat = new ColorFormatModel()
+                };
+                resources.Add(resource);
 
-        //        var targetResources = new List<int>();
-        //        foreach (var resourceAssignment in task.ResourceAssignments.ToIEnumerable<net.sf.mpxj.ResourceAssignment>())
-        //        {
-        //            if (resourceAssignment.Resource != null)
-        //            {
-        //                targetResources.Add(resourceAssignment.Resource.ID.intValue());
-        //            }
-        //        }
+                resourceUidToIdLookup.Add(resourceUid, resourceId);
+            }
 
-        //        var dependencies = new List<int>();
-        //        var preds = task.Predecessors;
-        //        if (preds != null && !preds.isEmpty())
-        //        {
-        //            foreach (var pred in preds.ToIEnumerable<net.sf.mpxj.Relation>())
-        //            {
-        //                dependencies.Add(pred.TargetTask.ID.intValue());
-        //            }
-        //        }
-        //        var dependentActivityDto = new Common.Project.v0_1_0.DependentActivityDto
-        //        {
-        //            Activity = new Common.Project.v0_1_0.ActivityDto
-        //            {
-        //                Id = id,
-        //                Name = name,
-        //                TargetResources = targetResources,
-        //                Duration = duration,
-        //                MinimumEarliestStartDateTime = minimumEarliestStartDateTime
-        //            },
-        //            Dependencies = dependencies,
-        //            ResourceDependencies = new List<int>()
-        //        };
-        //        dependentActivities.Add(dependentActivityDto);
-        //    }
-        //    return new MicrosoftProjectDto
-        //    {
-        //        ProjectStart = projectStart,
-        //        DependentActivities = dependentActivities.ToList(),
-        //        Resources = resources.ToList()
-        //    };
-        //}
+            // Tasks.
+            XmlNodeList projectTasks = xDoc[@"Project"][@"Tasks"].ChildNodes;
 
-        //private void ProcessMicrosoftProject(MicrosoftProjectDto microsoftProjectDto)
-        //{
-        //    if (microsoftProjectDto == null)
-        //    {
-        //        throw new ArgumentNullException(nameof(microsoftProjectDto));
-        //    }
-        //    lock (m_Lock)
-        //    {
-        //        ResetProject();
+            var taskUidToIdLookup = new Dictionary<int, int>();
 
-        //        // Project Start Date.
-        //        ProjectStartWithoutPublishing = microsoftProjectDto.ProjectStart;
+            foreach (XmlNode projectTask in projectTasks)
+            {
+                int taskUid = XmlConvert.ToInt32(projectTask[@"UID"].InnerText);
+                int taskId = XmlConvert.ToInt32(projectTask[@"ID"].InnerText);
+                taskUidToIdLookup.Add(taskUid, taskId);
+            }
 
-        //        // Resources.
-        //        foreach (Common.Project.v0_1_0.ResourceDto resourceDto in microsoftProjectDto.Resources)
-        //        {
-        //            ResourceSettingsDto.Resources.Add(resourceDto);
-        //        }
-        //        //SetTargetResources();
+            // Resource assignments.
+            var resourceAssignmentLookup = new Dictionary<int, IList<int>>();
+            XmlNodeList projectAssignments = xDoc[@"Project"][@"Assignments"].ChildNodes;
 
-        //        // Activities.
-        //        foreach (Common.Project.v0_1_0.DependentActivityDto dependentActivityDto in microsoftProjectDto.DependentActivities)
-        //        {
-        //            m_CoreViewModel.AddManagedActivity(Common.Project.v0_1_0.DtoConverter.FromDto(dependentActivityDto));
-        //        }
-        //    }
-        //}
+            foreach (XmlNode projectAssignment in projectAssignments)
+            {
+                int taskUid = XmlConvert.ToInt32(projectAssignment[@"TaskUID"].InnerText);
+                int resourceUid = XmlConvert.ToInt32(projectAssignment[@"ResourceUID"].InnerText);
+
+                if (taskUidToIdLookup.TryGetValue(taskUid, out int taskId)
+                    && resourceUidToIdLookup.TryGetValue(resourceUid, out int resourceId))
+                {
+                    if (!resourceAssignmentLookup.TryGetValue(taskId, out IList<int> resourceAssignments))
+                    {
+                        resourceAssignments = new List<int>();
+                        resourceAssignmentLookup.Add(taskId, resourceAssignments);
+                    }
+
+                    resourceAssignments.Add(resourceId);
+                }
+            }
+
+            // Cycle through tasks.
+            var dependentActivities = new List<DependentActivityModel>();
+            foreach (XmlNode projectTask in projectTasks)
+            {
+                int taskId = XmlConvert.ToInt32(projectTask[@"ID"].InnerText);
+                if (taskId == 0)
+                {
+                    continue;
+                }
+                string name = projectTask[@"Name"].InnerText;
+                double totalDurationMinutes = XmlConvert.ToTimeSpan(projectTask[@"Duration"].InnerText).TotalMinutes;
+                int durationDays = Convert.ToInt32(totalDurationMinutes / minutesPerDay);
+                DateTime? minimumEarliestStartDateTime = null;
+                if (string.Equals(projectTask[@"ConstraintType"].InnerText, @"4", StringComparison.OrdinalIgnoreCase)) // START_NO_EARLIER_THAN
+                {
+                    minimumEarliestStartDateTime = XmlConvert.ToDateTime(projectTask[@"ConstraintDate"].InnerText, XmlDateTimeSerializationMode.Local);
+                }
+
+                if (!resourceAssignmentLookup.TryGetValue(taskId, out IList<int> targetResources))
+                {
+                    targetResources = new List<int>();
+                }
+
+                // Do not forget namespaces.
+                // https://stackoverflow.com/questions/33125519/how-to-get-text-from-ms-projects-xml-file-in-c
+                var dependencies = new List<int>();
+                foreach (XmlNode predecessorNode in projectTask.SelectNodes("./ns:PredecessorLink", nsMan))
+                {
+                    int predecessorUid = XmlConvert.ToInt32(predecessorNode[@"PredecessorUID"].InnerText);
+
+                    if (taskUidToIdLookup.TryGetValue(predecessorUid, out int predecessorId))
+                    {
+                        dependencies.Add(predecessorId);
+                    }
+                }
+
+                var dependentActivity = new DependentActivityModel
+                {
+                    Activity = new ActivityModel
+                    {
+                        Id = taskId,
+                        Name = name,
+                        TargetResources = targetResources.ToList(),
+                        Duration = durationDays,
+                        MinimumEarliestStartDateTime = minimumEarliestStartDateTime,
+                        AllocatedToResources = new List<int>(),
+                    },
+                    Dependencies = dependencies,
+                    ResourceDependencies = new List<int>(),
+                };
+                dependentActivities.Add(dependentActivity);
+            }
+
+            return new MicrosoftProjectModel
+            {
+                ProjectStart = projectStart,
+                DependentActivities = dependentActivities.ToList(),
+                Resources = resources.ToList()
+            };
+        }
+
+        private void ProcessMicrosoftProject(MicrosoftProjectModel microsoftProject)
+        {
+            if (microsoftProject == null)
+            {
+                throw new ArgumentNullException(nameof(microsoftProject));
+            }
+            lock (m_Lock)
+            {
+                ResetProject();
+
+                // Project Start Date.
+                ProjectStartWithoutPublishing = microsoftProject.ProjectStart;
+
+                // Resources.
+                foreach (ResourceModel resource in microsoftProject.Resources)
+                {
+                    ResourceSettings.Resources.Add(resource);
+                }
+                //SetTargetResources();
+
+                // Activities.
+                foreach (DependentActivityModel dependentActivity in microsoftProject.DependentActivities)
+                {
+                    m_CoreViewModel.AddManagedActivity(m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity));
+                }
+            }
+        }
 
         private void ProcessProjectPlan(ProjectPlanModel projectPlan)
         {
@@ -934,63 +983,67 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        //public async Task DoImportMicrosoftProjectAsync()
-        //{
-        //    try
-        //    {
-        //        IsBusy = true;
-        //        if (IsProjectUpdated)
-        //        {
-        //            var confirmation = new Confirmation()
-        //            {
-        //                Title = Resource.ProjectPlan.Properties.Resources.Title_UnsavedChanges,
-        //                Content = Resource.ProjectPlan.Properties.Resources.Message_UnsavedChanges
-        //            };
-        //            m_ConfirmationInteractionRequest.Raise(confirmation);
-        //            if (!confirmation.Confirmed)
-        //            {
-        //                return;
-        //            }
-        //        }
-        //        string directory = m_SettingService.PlanDirectory;
-        //        if (m_FileDialogService.ShowOpenDialog(
-        //            directory,
-        //            Resource.ProjectPlan.Properties.Resources.Filter_ImportMicrosoftProjectFileType,
-        //            Resource.ProjectPlan.Properties.Resources.Filter_ImportMicrosoftProjectFileExtension) == DialogResult.OK)
-        //        {
-        //            string filename = m_FileDialogService.Filename;
-        //            if (string.IsNullOrWhiteSpace(filename))
-        //            {
-        //                DispatchNotification(
-        //                    Resource.ProjectPlan.Properties.Resources.Title_Error,
-        //                    Resource.ProjectPlan.Properties.Resources.Message_EmptyFilename);
-        //            }
-        //            else
-        //            {
-        //                MicrosoftProjectModel microsoftProjectDto = await ImportMicrosoftProjectAsync(filename);
-        //                ProcessMicrosoftProject(microsoftProjectDto);
+        public async Task DoImportMicrosoftProjectAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                if (IsProjectUpdated)
+                {
+                    var confirmation = new Confirmation
 
-        //                HasStaleOutputs = true;
-        //                IsProjectUpdated = true;
-        //                m_SettingService.SetFilePath(filename);
+                    {
+                        Title = Resource.ProjectPlan.Properties.Resources.Title_UnsavedChanges,
+                        Content = Resource.ProjectPlan.Properties.Resources.Message_UnsavedChanges
+                    };
+                    m_ConfirmationInteractionRequest.Raise(confirmation);
+                    if (!confirmation.Confirmed)
+                    {
+                        return;
+                    }
+                }
+                string directory = m_SettingService.PlanDirectory;
 
-        //                await RunAutoCompileAsync();
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        DispatchNotification(
-        //            Resource.ProjectPlan.Properties.Resources.Title_Error,
-        //            ex.Message);
-        //        ResetProject();
-        //    }
-        //    finally
-        //    {
-        //        IsBusy = false;
-        //        RaiseCanExecuteChangedAllCommands();
-        //    }
-        //}
+                bool result = m_FileDialogService.ShowOpenDialog(
+                    directory,
+                    Resource.ProjectPlan.Properties.Resources.Filter_ImportMicrosoftProjectFileType,
+                    Resource.ProjectPlan.Properties.Resources.Filter_ImportMicrosoftProjectFileExtension);
+
+                if (result)
+                {
+                    string filename = m_FileDialogService.Filename;
+                    if (string.IsNullOrWhiteSpace(filename))
+                    {
+                        DispatchNotification(
+                            Resource.ProjectPlan.Properties.Resources.Title_Error,
+                            Resource.ProjectPlan.Properties.Resources.Message_EmptyFilename);
+                    }
+                    else
+                    {
+                        MicrosoftProjectModel microsoftProjectDto = await ImportMicrosoftProjectAsync(filename).ConfigureAwait(true);
+                        ProcessMicrosoftProject(microsoftProjectDto);
+
+                        HasStaleOutputs = true;
+                        IsProjectUpdated = true;
+                        m_SettingService.SetFilePath(filename);
+
+                        await RunAutoCompileAsync().ConfigureAwait(true);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                DispatchNotification(
+                    Resource.ProjectPlan.Properties.Resources.Title_Error,
+                    ex.Message);
+                ResetProject();
+            }
+            finally
+            {
+                IsBusy = false;
+                RaiseCanExecuteChangedAllCommands();
+            }
+        }
 
         public void DoCloseProject()
         {
