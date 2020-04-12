@@ -12,12 +12,12 @@ namespace Zametek.Shell.ProjectPlan
         public void OnInitialized(IContainerProvider containerProvider)
         {
             var regionManager = containerProvider.Resolve<IRegionManager>();
-            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanActivitiesRegion, typeof(ActivitiesManagerView));
+            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanMainRegion, typeof(ActivitiesManagerView));
             regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanMetricsRegion, typeof(MetricsManagerView));
-            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanGanttChartRegion, typeof(GanttChartManagerView));
-            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanArrowGraphRegion, typeof(ArrowGraphManagerView));
-            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanResourceChartRegion, typeof(ResourceChartManagerView));
-            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanEarnedValueChartRegion, typeof(EarnedValueChartManagerView));
+            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanMainRegion, typeof(GanttChartManagerView));
+            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanMainRegion, typeof(ArrowGraphManagerView));
+            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanMainRegion, typeof(ResourceChartManagerView));
+            regionManager.RegisterViewWithRegion(RegionNames.ProjectPlanMainRegion, typeof(EarnedValueChartManagerView));
         }
 
         public void RegisterTypes(IContainerRegistry containerRegistry)

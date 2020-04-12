@@ -5,6 +5,7 @@ using System.Windows.Input;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IActivitiesManagerViewModel
+        : INamed
     {
         IInteractionRequest NotificationInteractionRequest { get; }
 
@@ -25,6 +26,8 @@ namespace Zametek.Contract.ProjectPlan
         ObservableCollection<IManagedActivityViewModel> SelectedActivities { get; }
 
         IManagedActivityViewModel SelectedActivity { get; }
+
+        IApplicationCommands ApplicationCommands { get; }
 
         ICommand SetSelectedManagedActivitiesCommand { get; }
 

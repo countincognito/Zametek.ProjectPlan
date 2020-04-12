@@ -1,9 +1,11 @@
 ﻿using Prism;
 using System;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Wpf.Core;
 
 namespace Zametek.View.ProjectPlan
 {
+    [AvalonDockAnchorable(Strategy = AnchorableStrategies.Top, IsHidden = false)]
     public partial class EarnedValueChartManagerView
         : IActiveAware
     {

@@ -49,6 +49,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IFileDialogService fileDialogService,
             ISettingService settingService,
             IMapper mapper,
+            IApplicationCommands applicationCommands,
             IEventAggregator eventService)
             : base(eventService)
         {
@@ -57,6 +58,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_FileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
             m_SettingService = settingService ?? throw new ArgumentNullException(nameof(settingService));
             m_Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            ApplicationCommands = applicationCommands ?? throw new ArgumentNullException(nameof(applicationCommands));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
             m_NotificationInteractionRequest = new InteractionRequest<Notification>();
@@ -715,10 +717,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 //SetTargetResources();
 
                 // Activities.
-                foreach (DependentActivityModel dependentActivity in microsoftProject.DependentActivities)
-                {
-                    m_CoreViewModel.AddManagedActivity(dependentActivity);
-                }
+                m_CoreViewModel.AddManagedActivities(new HashSet<DependentActivityModel>(microsoftProject.DependentActivities));
             }
         }
 
@@ -736,7 +735,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ProjectStartWithoutPublishing = projectPlan.ProjectStart;
 
                 // Resources.
-                ResourceSettings = projectPlan.ResourceSettings;
+                m_CoreViewModel.UpdateResourceSettings(projectPlan.ResourceSettings);
 
                 // Compilation.
                 GraphCompilation = m_Mapper.Map<GraphCompilation<int, int, DependentActivity<int, int>>>(projectPlan.GraphCompilation);
@@ -746,10 +745,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 // Activities.
                 // Be sure to do this after the resources and project start date have been added.
-                foreach (DependentActivityModel dependentActivity in projectPlan.DependentActivities)
-                {
-                    m_CoreViewModel.AddManagedActivity(dependentActivity);
-                }
+                m_CoreViewModel.AddManagedActivities(new HashSet<DependentActivityModel>(projectPlan.DependentActivities));
 
                 m_CoreViewModel.UpdateActivitiesAllocatedToResources();
 
@@ -1094,8 +1090,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         return;
                     }
-                    ResourceSettings = confirmation.ResourceSettings;
-                    m_CoreViewModel.UpdateActivitiesTargetResources();
+                    m_CoreViewModel.UpdateResourceSettings(confirmation.ResourceSettings);
                 }
 
                 HasStaleOutputs = true;
@@ -1415,13 +1410,11 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 return m_CoreViewModel.ResourceSettings;
             }
-            private set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.ResourceSettings = value;
-                }
-            }
+        }
+
+        public IApplicationCommands ApplicationCommands
+        {
+            get;
         }
 
         public ICommand OpenProjectPlanFileCommand

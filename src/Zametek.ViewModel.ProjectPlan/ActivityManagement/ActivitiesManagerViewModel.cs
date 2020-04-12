@@ -1,4 +1,6 @@
-﻿using Prism.Commands;
+﻿using AutoMapper;
+using Prism;
+using Prism.Commands;
 using Prism.Events;
 using Prism.Interactivity.InteractionRequest;
 using System;
@@ -10,17 +12,19 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Event.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ActivitiesManagerViewModel
-        : PropertyChangedPubSubViewModel, IActivitiesManagerViewModel
+        : PropertyChangedPubSubViewModel, IActivitiesManagerViewModel, IActiveAware
     {
         #region Fields
 
         private readonly object m_Lock;
 
         private readonly ICoreViewModel m_CoreViewModel;
+        private readonly IMapper m_Mapper;
         private readonly IEventAggregator m_EventService;
 
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
@@ -30,17 +34,23 @@ namespace Zametek.ViewModel.ProjectPlan
         private SubscriptionToken m_UseBusinessDaysUpdatedSubscriptionToken;
         private SubscriptionToken m_ShowDatesUpdatedSubscriptionToken;
 
+        private bool m_IsActive;
+
         #endregion
 
         #region Ctors
 
         public ActivitiesManagerViewModel(
             ICoreViewModel coreViewModel,
+            IApplicationCommands applicationCommands,
+            IMapper mapper,
             IEventAggregator eventService)
             : base(eventService)
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
+            ApplicationCommands = applicationCommands ?? throw new ArgumentNullException(nameof(applicationCommands));
+            m_Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
             SelectedActivities = new ObservableCollection<IManagedActivityViewModel>();
@@ -70,9 +80,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private bool UseBusinessDays => m_CoreViewModel.UseBusinessDays;
+        //private bool UseBusinessDays => m_CoreViewModel.UseBusinessDays;
 
-        private DateTime ProjectStart => m_CoreViewModel.ProjectStart;
+        //private DateTime ProjectStart => m_CoreViewModel.ProjectStart;
 
         #endregion
 
@@ -212,27 +222,27 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task UpdateActivitiesTargetResourceDependenciesAsync()
         {
-            await Task.Run(() => m_CoreViewModel.UpdateActivitiesTargetResourceDependencies()).ConfigureAwait(true); ;
+            await Task.Run(() => m_CoreViewModel.UpdateActivitiesTargetResourceDependencies()).ConfigureAwait(true);
         }
 
         private async Task UpdateActivitiesProjectStartAsync()
         {
-            await Task.Run(() => m_CoreViewModel.UpdateActivitiesProjectStart()).ConfigureAwait(true); ;
+            await Task.Run(() => m_CoreViewModel.UpdateActivitiesProjectStart()).ConfigureAwait(true);
         }
 
         private async Task UpdateActivitiesUseBusinessDaysAsync()
         {
-            await Task.Run(() => m_CoreViewModel.UpdateActivitiesUseBusinessDays()).ConfigureAwait(true); ;
+            await Task.Run(() => m_CoreViewModel.UpdateActivitiesUseBusinessDays()).ConfigureAwait(true);
         }
 
         private async Task RunAutoCompileAsync()
         {
-            await Task.Run(() => m_CoreViewModel.RunAutoCompile()).ConfigureAwait(true); ;
+            await Task.Run(() => m_CoreViewModel.RunAutoCompile()).ConfigureAwait(true);
         }
 
         private async Task SetCompilationOutputAsync()
         {
-            await Task.Run(() => m_CoreViewModel.SetCompilationOutput()).ConfigureAwait(true); ;
+            await Task.Run(() => m_CoreViewModel.SetCompilationOutput()).ConfigureAwait(true);
         }
 
         private void DispatchNotification(string title, object content)
@@ -256,7 +266,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = true;
                 HasStaleOutputs = true;
                 IsProjectUpdated = true;
-                await RunAutoCompileAsync().ConfigureAwait(true); ;
+                await RunAutoCompileAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -285,7 +295,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 HasStaleOutputs = true;
                 IsProjectUpdated = true;
 
-                await RunAutoCompileAsync().ConfigureAwait(true); ;
+                await RunAutoCompileAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -308,11 +318,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 lock (m_Lock)
                 {
-                    var activityIds = new HashSet<int>(SelectedActivities.Select(x => x.Id));
+                    IEnumerable<IDependentActivity<int, int>> dependentActivities = SelectedActivities.ToList();
+                    var activityIds = new HashSet<int>(dependentActivities.Select(x => x.Id));
+
                     if (!activityIds.Any())
                     {
                         return;
                     }
+
                     m_CoreViewModel.RemoveManagedActivities(activityIds);
                 }
 
@@ -340,6 +353,8 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region IActivityManagerViewModel Members
+
+        public string Title => Resource.ProjectPlan.Properties.Resources.Label_ActivitiesViewTitle;
 
         public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
 
@@ -434,6 +449,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public IApplicationCommands ApplicationCommands
+        {
+            get;
+        }
+
         public ICommand SetSelectedManagedActivitiesCommand
         {
             get;
@@ -450,6 +470,28 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get;
             private set;
+        }
+
+        #endregion
+
+        #region IActiveAware Members
+
+        public event EventHandler IsActiveChanged;
+
+        public bool IsActive
+        {
+            get
+            {
+                return m_IsActive;
+            }
+            set
+            {
+                if (m_IsActive != value)
+                {
+                    m_IsActive = value;
+                    IsActiveChanged?.Invoke(this, new EventArgs());
+                }
+            }
         }
 
         #endregion

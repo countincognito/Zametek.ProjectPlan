@@ -7,6 +7,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IMainViewModel
+        : INamed
     {
         IInteractionRequest ConfirmationInteractionRequest { get; }
 
@@ -35,6 +36,8 @@ namespace Zametek.Contract.ProjectPlan
         ArrowGraphSettingsModel ArrowGraphSettings { get; }
 
         ResourceSettingsModel ResourceSettings { get; }
+
+        IApplicationCommands ApplicationCommands { get; }
 
         ICommand OpenProjectPlanFileCommand { get; }
 

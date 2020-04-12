@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Prism;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Interactivity.InteractionRequest;
@@ -15,7 +16,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ArrowGraphManagerViewModel
-        : PropertyChangedPubSubViewModel, IArrowGraphManagerViewModel
+        : PropertyChangedPubSubViewModel, IArrowGraphManagerViewModel, IActiveAware
     {
         #region Fields
 
@@ -33,6 +34,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private SubscriptionToken m_GraphCompiledSubscriptionToken;
         private SubscriptionToken m_ArrowGraphSettingsUpdatedSubscriptionToken;
         private SubscriptionToken m_ArrowGraphUpdatedSubscriptionToken;
+
+        private bool m_IsActive;
 
         #endregion
 
@@ -384,6 +387,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IArrowGraphManagerViewModel Members
 
+        public string Title => Resource.ProjectPlan.Properties.Resources.Label_ArrowGraphViewTitle;
+
         public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
 
         public bool IsBusy
@@ -458,6 +463,28 @@ namespace Zametek.ViewModel.ProjectPlan
                 throw new ArgumentNullException(nameof(diagramArrowGraph));
             }
             return m_ProjectService.ExportArrowGraphToDiagram(diagramArrowGraph);
+        }
+
+        #endregion
+
+        #region IActiveAware Members
+
+        public event EventHandler IsActiveChanged;
+
+        public bool IsActive
+        {
+            get
+            {
+                return m_IsActive;
+            }
+            set
+            {
+                if (m_IsActive != value)
+                {
+                    m_IsActive = value;
+                    IsActiveChanged?.Invoke(this, new EventArgs());
+                }
+            }
         }
 
         #endregion

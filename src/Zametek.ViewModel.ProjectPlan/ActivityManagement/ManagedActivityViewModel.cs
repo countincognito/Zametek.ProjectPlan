@@ -2,6 +2,7 @@
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -11,7 +12,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ManagedActivityViewModel
-        : BindableBase, IManagedActivityViewModel
+        : BindableBase, IManagedActivityViewModel, IEditableObject
     {
         #region Fields
 
@@ -478,21 +479,21 @@ namespace Zametek.ViewModel.ProjectPlan
             return DependentActivity.CloneObject();
         }
 
-        private bool _isDirty = false;
+        private bool m_isDirty = false;
 
         public void BeginEdit()
         {
             // Bug Fix: Windows Controls call EndEdit twice; Once
             // from IEditableCollectionView, and once from BindingGroup.
             // This makes sure it only happens once after a BeginEdit.
-            _isDirty = true;
+            m_isDirty = true;
         }
 
         public void EndEdit()
         {
-            if (_isDirty)
+            if (m_isDirty)
             {
-                _isDirty = false;
+                m_isDirty = false;
                 UpdateTargetResources();
                 PublishManagedActivityUpdatedPayload();
             }
@@ -500,7 +501,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void CancelEdit()
         {
-            _isDirty = false;
+            m_isDirty = false;
         }
 
         #endregion

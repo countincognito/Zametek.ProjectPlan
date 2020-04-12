@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Prism;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Interactivity.InteractionRequest;
@@ -15,7 +16,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class GanttChartManagerViewModel
-        : PropertyChangedPubSubViewModel, IGanttChartManagerViewModel
+        : PropertyChangedPubSubViewModel, IGanttChartManagerViewModel, IActiveAware
     {
         #region Fields
 
@@ -31,6 +32,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private SubscriptionToken m_ArrowGraphSettingsUpdatedSubscriptionToken;
         private SubscriptionToken m_GanttChartSettingsUpdatedSubscriptionToken;
         private SubscriptionToken m_GanttChartUpdatedSubscriptionToken;
+
+        private bool m_IsActive;
 
         #endregion
 
@@ -81,7 +84,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async void GenerateGanttChart()
         {
-            await DoGenerateGanttChartAsync().ConfigureAwait(true); ;
+            await DoGenerateGanttChartAsync().ConfigureAwait(true);
         }
 
         private bool CanGenerateGanttChart()
@@ -232,6 +235,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IGanttChartManagerViewModel Members
 
+        public string Title => Resource.ProjectPlan.Properties.Resources.Label_GanttChartViewTitle;
+
         public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
 
         public DateTime ProjectStart => m_CoreViewModel.ProjectStart;
@@ -306,6 +311,28 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public ArrowGraphSettingsModel ArrowGraphSettings => m_CoreViewModel.ArrowGraphSettings;
+
+        #endregion
+
+        #region IActiveAware Members
+
+        public event EventHandler IsActiveChanged;
+
+        public bool IsActive
+        {
+            get
+            {
+                return m_IsActive;
+            }
+            set
+            {
+                if (m_IsActive != value)
+                {
+                    m_IsActive = value;
+                    IsActiveChanged?.Invoke(this, new EventArgs());
+                }
+            }
+        }
 
         #endregion
     }

@@ -1150,6 +1150,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Value cannot be less than 1.
+        /// </summary>
+        public static string Message_ValueCannotBeLessThanOne {
+            get {
+                return ResourceManager.GetString("Message_ValueCannotBeLessThanOne", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Project Plan.
         /// </summary>
         public static string Title_AppName {

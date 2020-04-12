@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Prism.Commands;
 using Prism.Events;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Event.ProjectPlan;
@@ -20,6 +22,11 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
+
+        private const int c_MaxUndoRedoStackSize = 10;
+        private readonly LimitedSizeStack<UndoRedoCommandPair> m_UndoStack;
+        private readonly LimitedSizeStack<UndoRedoCommandPair> m_RedoStack;
+
         private readonly IProjectService m_ProjectService;
         private readonly ISettingService m_SettingService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
@@ -54,26 +61,261 @@ namespace Zametek.ViewModel.ProjectPlan
         public CoreViewModel(
             IProjectService projectService,
             ISettingService settingService,
+            IApplicationCommands applicationCommands,
             IDateTimeCalculator dateTimeCalculator,
             IMapper mapper,
             IEventAggregator eventService)
             : base(eventService)
         {
             m_Lock = new object();
+            m_UndoStack = new LimitedSizeStack<UndoRedoCommandPair>(c_MaxUndoRedoStackSize);
+            m_RedoStack = new LimitedSizeStack<UndoRedoCommandPair>(c_MaxUndoRedoStackSize);
             m_ProjectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
             m_SettingService = settingService ?? throw new ArgumentNullException(nameof(settingService));
+            ApplicationCommands = applicationCommands ?? throw new ArgumentNullException(nameof(applicationCommands));
             m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
             m_VertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
             Activities = new ObservableCollection<IManagedActivityViewModel>();
+            InitializeCommands();
             ClearSettings();
         }
 
         #endregion
 
+
+
+
+
+
+
+
+
+
+
+
+        public IApplicationCommands ApplicationCommands
+        {
+            get;
+        }
+
+
+
+
+
+
+
+        private void ReplaceCoreState(CoreState coreState)
+        {
+            SetCoreState(coreState);
+        }
+
+        private bool CanReplaceCoreState(CoreState coreState)
+        {
+            return true;
+        }
+
+        private DelegateCommand UndoCommand
+        {
+            get;
+            set;
+        }
+
+        private void Undo()
+        {
+            lock (m_Lock)
+            {
+                UndoRedoCommandPair undoRedoCommandPair = m_UndoStack.Pop();
+                undoRedoCommandPair.UndoCommand.Execute(undoRedoCommandPair.UndoParameter);
+                m_RedoStack.Push(undoRedoCommandPair);
+            }
+        }
+
+        private bool CanUndo()
+        {
+            return m_UndoStack.Any();
+        }
+
+        private DelegateCommand RedoCommand
+        {
+            get;
+            set;
+        }
+
+        private void Redo()
+        {
+            lock (m_Lock)
+            {
+                UndoRedoCommandPair undoRedoCommandPair = m_RedoStack.Pop();
+                undoRedoCommandPair.RedoCommand.Execute(undoRedoCommandPair.RedoParameter);
+                m_UndoStack.Push(undoRedoCommandPair);
+            }
+        }
+
+        private bool CanRedo()
+        {
+            return m_RedoStack.Any();
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         #region Private Methods
+
+
+
+
+
+
+
+
+        private void InitializeCommands()
+        {
+
+            UndoCommand = new DelegateCommand(Undo, CanUndo);
+            ApplicationCommands.UndoCommand.RegisterCommand(UndoCommand);
+
+            RedoCommand = new DelegateCommand(Redo, CanRedo);
+            ApplicationCommands.RedoCommand.RegisterCommand(RedoCommand);
+        }
+
+
+
+        private void RaiseCanExecuteChangedAllCommands()
+        {
+
+            UndoCommand.RaiseCanExecuteChanged();
+            RedoCommand.RaiseCanExecuteChanged();
+        }
+
+
+
+
+
+
+
+
+        private CoreState GetCoreState()
+        {
+            lock (m_Lock)
+            {
+                IEnumerable<IDependentActivity<int, int>> activities = Activities.Select(x => (IDependentActivity<int, int>)x.CloneObject());
+
+                return new CoreState
+                {
+                    ArrowGraphSettings = ArrowGraphSettings.CloneObject(),
+                    ResourceSettings = ResourceSettings.CloneObject(),
+                    DependentActivities = m_Mapper.Map<IEnumerable<IDependentActivity<int, int>>, IEnumerable<DependentActivityModel>>(activities),
+                    ProjectStart = ProjectStart,
+                    UseBusinessDays = UseBusinessDays,
+                    ShowDates = ShowDates,
+                };
+            }
+        }
+
+        private void SetCoreState(CoreState coreState)
+        {
+            if (coreState is null)
+            {
+                throw new ArgumentNullException(nameof(coreState));
+            }
+
+            lock (m_Lock)
+            {
+                try
+                {
+                    IsBusy = true;
+
+                    ClearManagedActivities();
+
+                    m_ArrowGraphSettingsModel = coreState.ArrowGraphSettings;
+                    m_ResourceSettingsModel = coreState.ResourceSettings;
+
+                    m_ProjectStart = coreState.ProjectStart;
+                    m_UseBusinessDays = coreState.UseBusinessDays;
+                    m_ShowDates = coreState.ShowDates;
+
+                    RaisePropertyChanged(nameof(ProjectStart));
+                    RaisePropertyChanged(nameof(UseBusinessDays));
+                    RaisePropertyChanged(nameof(ShowDates));
+
+                    AddManagedActivities(new HashSet<DependentActivityModel>(coreState.DependentActivities));
+
+                    RunAutoCompile();
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+            }
+        }
+
+        private void RecordRedoUndo(Action action)
+        {
+            if (action is null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            lock (m_Lock)
+            {
+                CoreState before = GetCoreState();
+                action();
+                CoreState after = GetCoreState();
+
+                m_RedoStack.Clear();
+                m_UndoStack.Push(new UndoRedoCommandPair(
+                    new DelegateCommand<CoreState>(ReplaceCoreState, CanReplaceCoreState), before,
+                    new DelegateCommand<CoreState>(ReplaceCoreState, CanReplaceCoreState), after));
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         private void PublishGraphCompiledPayload()
         {
@@ -193,7 +435,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_ProjectStart = value;
+                    RecordRedoUndo(() => m_ProjectStart = value);
                 }
                 RaisePropertyChanged();
             }
@@ -225,7 +467,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_ShowDates = value;
+                    RecordRedoUndo(() => m_ShowDates = value);
                 }
                 RaisePropertyChanged();
             }
@@ -241,8 +483,11 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_UseBusinessDays = value;
-                    m_DateTimeCalculator.UseBusinessDays(value);
+                    RecordRedoUndo(() =>
+                    {
+                        m_UseBusinessDays = value;
+                        m_DateTimeCalculator.UseBusinessDays(value);
+                    });
                 }
                 RaisePropertyChanged();
             }
@@ -483,52 +728,69 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void AddManagedActivity()
+        public DependentActivityModel AddManagedActivity()
         {
             lock (m_Lock)
             {
                 var activityId = m_VertexGraphCompiler.GetNextActivityId();
-                AddManagedActivity(new DependentActivityModel
+
+                var set = new HashSet<DependentActivityModel>();
+                set.Add(new DependentActivityModel
                 {
                     Activity = new ActivityModel
                     {
                         Id = activityId,
                         Duration = 0,
+                        TargetResources = new List<int>(),
+                        AllocatedToResources = new List<int>(),
                     },
                     Dependencies = new List<int>(),
                     ResourceDependencies = new List<int>(),
                 });
+                HashSet<DependentActivityModel> output = AddManagedActivities(set);
+                return output.SingleOrDefault();
             }
         }
 
-        public void AddManagedActivity(DependentActivityModel dependentActivity)
+        public HashSet<DependentActivityModel> AddManagedActivities(HashSet<DependentActivityModel> dependentActivities)
         {
-            if (dependentActivity == null)
+            if (dependentActivities == null)
             {
-                throw new ArgumentNullException(nameof(dependentActivity));
+                throw new ArgumentNullException(nameof(dependentActivities));
             }
 
             lock (m_Lock)
             {
-                var dateTimeCalculator = new DateTimeCalculator();
-                dateTimeCalculator.UseBusinessDays(UseBusinessDays);
+                var output = new HashSet<DependentActivityModel>();
 
-                var activity = new ManagedActivityViewModel(
-                    m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity),
-                    ProjectStart,
-                    dependentActivity.Activity.MinimumEarliestStartDateTime,
-                    ResourceSettings.Resources,
-                    dateTimeCalculator,
-                    m_EventService);
-
-                if (m_VertexGraphCompiler.AddActivity(activity))
+                RecordRedoUndo(() =>
                 {
-                    Activities.Add(activity);
-                }
+                    foreach (DependentActivityModel dependentActivity in dependentActivities)
+                    {
+                        var dateTimeCalculator = new DateTimeCalculator();
+                        dateTimeCalculator.UseBusinessDays(UseBusinessDays);
+
+                        var activity = new ManagedActivityViewModel(
+                            m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity),
+                            ProjectStart,
+                            dependentActivity.Activity.MinimumEarliestStartDateTime,
+                            ResourceSettings.Resources,
+                            dateTimeCalculator,
+                            m_EventService);
+
+                        if (m_VertexGraphCompiler.AddActivity(activity))
+                        {
+                            Activities.Add(activity);
+                            output.Add(dependentActivity);
+                        }
+                    }
+                });
+
+                return output;
             }
         }
 
-        public void RemoveManagedActivities(HashSet<int> dependentActivityIds)
+        public HashSet<DependentActivityModel> RemoveManagedActivities(HashSet<int> dependentActivityIds)
         {
             if (dependentActivityIds == null)
             {
@@ -537,15 +799,24 @@ namespace Zametek.ViewModel.ProjectPlan
 
             lock (m_Lock)
             {
-                IEnumerable<IManagedActivityViewModel> dependentActivities = Activities.Where(x => dependentActivityIds.Contains(x.Id)).ToList();
+                var output = new HashSet<DependentActivityModel>();
 
-                foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
+                RecordRedoUndo(() =>
                 {
-                    if (m_VertexGraphCompiler.RemoveActivity(dependentActivity.Id))
+                    IEnumerable<IManagedActivityViewModel> dependentActivities = Activities.Where(x => dependentActivityIds.Contains(x.Id)).ToList();
+
+                    foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
                     {
-                        Activities.Remove(dependentActivity);
+                        if (m_VertexGraphCompiler.RemoveActivity(dependentActivity.Id))
+                        {
+                            Activities.Remove(dependentActivity);
+                            output.Add(m_Mapper.Map<IDependentActivity<int, int>, DependentActivityModel>(dependentActivity));
+                        }
+
                     }
-                }
+                });
+
+                return output;
             }
         }
 
@@ -558,14 +829,24 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void UpdateActivitiesTargetResources()
+        public void UpdateResourceSettings(ResourceSettingsModel resourceSettings)
         {
+            if (resourceSettings == null)
+            {
+                throw new ArgumentNullException(nameof(resourceSettings));
+            }
+
             lock (m_Lock)
             {
-                foreach (IManagedActivityViewModel activity in Activities)
+                RecordRedoUndo(() =>
                 {
-                    activity.SetTargetResources(ResourceSettings.Resources.Select(x => x.CloneObject()));
-                }
+                    ResourceSettings = resourceSettings;
+
+                    foreach (IManagedActivityViewModel activity in Activities)
+                    {
+                        activity.SetTargetResources(ResourceSettings.Resources.Select(x => x.CloneObject()));
+                    }
+                });
             }
         }
 
@@ -573,12 +854,15 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                foreach (IManagedActivityViewModel activity in Activities.Where(x => x.HasUpdatedDependencies))
+                RecordRedoUndo(() =>
                 {
-                    m_VertexGraphCompiler.SetActivityDependencies(activity.Id, new HashSet<int>(activity.UpdatedDependencies));
-                    activity.UpdatedDependencies.Clear();
-                    activity.HasUpdatedDependencies = false;
-                }
+                    foreach (IManagedActivityViewModel activity in Activities.Where(x => x.HasUpdatedDependencies))
+                    {
+                        m_VertexGraphCompiler.SetActivityDependencies(activity.Id, new HashSet<int>(activity.UpdatedDependencies));
+                        activity.UpdatedDependencies.Clear();
+                        activity.HasUpdatedDependencies = false;
+                    }
+                });
             }
         }
 

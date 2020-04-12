@@ -9,19 +9,22 @@ using System.Windows;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Event.ProjectPlan;
+using Zametek.Wpf.Core;
 
 namespace Zametek.View.ProjectPlan
 {
+    [AvalonDockAnchorable(Strategy = AnchorableStrategies.Top, IsHidden = false)]
     public partial class ArrowGraphManagerView
         : IActiveAware
     {
         #region Fields
 
-        private bool m_IsActive;
         private readonly IFileDialogService m_FileDialogService;
         private readonly ISettingService m_SettingService;
         private readonly IEventAggregator m_EventService;
         private SubscriptionToken m_ArrowGraphDataUpdatedSubscriptionToken;
+
+        private bool m_IsActive;
 
         #endregion
 

@@ -480,6 +480,9 @@
   <data name="Message_UnsavedChanges" xml:space="preserve">
     <value>Project has unsaved changes. Do you wish to continue?</value>
   </data>
+  <data name="Message_ValueCannotBeLessThanOne" xml:space="preserve">
+    <value>Value cannot be less than 1</value>
+  </data>
   <data name="Title_AppName" xml:space="preserve">
     <value>Project Plan</value>
   </data>

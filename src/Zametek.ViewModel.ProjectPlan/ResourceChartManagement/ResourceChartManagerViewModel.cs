@@ -1,6 +1,7 @@
 ﻿using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
+using Prism;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Interactivity.InteractionRequest;
@@ -19,7 +20,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ResourceChartManagerViewModel
-        : PropertyChangedPubSubViewModel, IResourceChartManagerViewModel
+        : PropertyChangedPubSubViewModel, IResourceChartManagerViewModel, IActiveAware
     {
         #region Fields
 
@@ -39,6 +40,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
 
         private SubscriptionToken m_GraphCompilationUpdatedSubscriptionToken;
+
+        private bool m_IsActive;
 
         #endregion
 
@@ -403,6 +406,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IResourceChartManagerViewModel Members
 
+        public string Title => Resource.ProjectPlan.Properties.Resources.Label_ResourceChartsViewTitle;
+
         public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
 
         public bool IsBusy
@@ -491,6 +496,28 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get;
             private set;
+        }
+
+        #endregion
+
+        #region IActiveAware Members
+
+        public event EventHandler IsActiveChanged;
+
+        public bool IsActive
+        {
+            get
+            {
+                return m_IsActive;
+            }
+            set
+            {
+                if (m_IsActive != value)
+                {
+                    m_IsActive = value;
+                    IsActiveChanged?.Invoke(this, new EventArgs());
+                }
+            }
         }
 
         #endregion

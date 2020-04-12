@@ -51,15 +51,15 @@ namespace Zametek.Contract.ProjectPlan
 
         double? TotalCost { get; set; }
 
-        void AddManagedActivity();
+        DependentActivityModel AddManagedActivity();
 
-        void AddManagedActivity(DependentActivityModel dependentActivity);
+        HashSet<DependentActivityModel> AddManagedActivities(HashSet<DependentActivityModel> dependentActivities);
 
-        void RemoveManagedActivities(HashSet<int> dependentActivities);
+        HashSet<DependentActivityModel> RemoveManagedActivities(HashSet<int> dependentActivities);
 
         void ClearManagedActivities();
 
-        void UpdateActivitiesTargetResources();
+        void UpdateResourceSettings(ResourceSettingsModel resourceSettings);
 
         void UpdateActivitiesTargetResourceDependencies();
 

@@ -13,18 +13,21 @@ using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Event.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
+using Zametek.Wpf.Core;
 
 namespace Zametek.View.ProjectPlan
 {
+    [AvalonDockAnchorable(Strategy = AnchorableStrategies.Top, IsHidden = false)]
     public partial class GanttChartManagerView
         : IActiveAware
     {
         #region Fields
 
-        private bool m_IsActive;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IEventAggregator m_EventService;
         private SubscriptionToken m_GanttChartDataUpdatedSubscriptionToken;
+
+        private bool m_IsActive;
 
         #endregion
 

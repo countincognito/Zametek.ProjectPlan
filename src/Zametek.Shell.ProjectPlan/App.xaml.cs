@@ -4,6 +4,7 @@ using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Regions;
 using Prism.Unity;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using Zametek.Contract.ProjectPlan;
@@ -44,6 +45,8 @@ namespace Zametek.Shell.ProjectPlan
             containerRegistry.RegisterSingleton<IGanttChartManagerViewModel, GanttChartManagerViewModel>();
             containerRegistry.RegisterSingleton<IActivitiesManagerViewModel, ActivitiesManagerViewModel>();
             containerRegistry.RegisterSingleton<IMainViewModel, MainViewModel>();
+
+            containerRegistry.RegisterSingleton<IApplicationCommands, ApplicationCommands>();
         }
 
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
@@ -55,10 +58,11 @@ namespace Zametek.Shell.ProjectPlan
         {
             if (regionAdapterMappings is null)
             {
-                throw new System.ArgumentNullException(nameof(regionAdapterMappings));
+                throw new ArgumentNullException(nameof(regionAdapterMappings));
             }
 
-            regionAdapterMappings.RegisterMapping(typeof(ContentControl), Container.Resolve<ContentControlRegionAdapter>());
+            base.ConfigureRegionAdapterMappings(regionAdapterMappings);
+            //regionAdapterMappings.RegisterMapping(typeof(ContentControl), Container.Resolve<ContentControlRegionAdapter>());
             regionAdapterMappings.RegisterMapping(typeof(DockingManager), Container.Resolve<DockingManagerRegionAdapter>());
         }
     }

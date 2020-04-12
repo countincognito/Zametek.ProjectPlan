@@ -5,6 +5,7 @@ using System.Windows.Input;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IEarnedValueChartManagerViewModel
+        : INamed
     {
         IInteractionRequest NotificationInteractionRequest { get; }
 
