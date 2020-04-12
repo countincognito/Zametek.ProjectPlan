@@ -96,10 +96,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-        public IApplicationCommands ApplicationCommands
-        {
-            get;
-        }
 
 
 
@@ -117,11 +113,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return true;
         }
 
-        private DelegateCommand UndoCommand
-        {
-            get;
-            set;
-        }
+
 
         private void Undo()
         {
@@ -138,11 +130,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return m_UndoStack.Any();
         }
 
-        private DelegateCommand RedoCommand
-        {
-            get;
-            set;
-        }
+
 
         private void Redo()
         {
@@ -185,21 +173,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void InitializeCommands()
         {
-
-            UndoCommand = new DelegateCommand(Undo, CanUndo);
-            ApplicationCommands.UndoCommand.RegisterCommand(UndoCommand);
-
-            RedoCommand = new DelegateCommand(Redo, CanRedo);
-            ApplicationCommands.RedoCommand.RegisterCommand(RedoCommand);
+            ApplicationCommands.UndoCommand = new DelegateCommand(Undo, CanUndo);
+            ApplicationCommands.RedoCommand = new DelegateCommand(Redo, CanRedo);
         }
 
 
 
         private void RaiseCanExecuteChangedAllCommands()
         {
-
-            UndoCommand.RaiseCanExecuteChanged();
-            RedoCommand.RaiseCanExecuteChanged();
+            ApplicationCommands.UndoCommand.RaiseCanExecuteChanged();
+            ApplicationCommands.RedoCommand.RaiseCanExecuteChanged();
         }
 
 
@@ -264,25 +247,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private void RecordRedoUndo(Action action)
-        {
-            if (action is null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            lock (m_Lock)
-            {
-                CoreState before = GetCoreState();
-                action();
-                CoreState after = GetCoreState();
-
-                m_RedoStack.Clear();
-                m_UndoStack.Push(new UndoRedoCommandPair(
-                    new DelegateCommand<CoreState>(ReplaceCoreState, CanReplaceCoreState), before,
-                    new DelegateCommand<CoreState>(ReplaceCoreState, CanReplaceCoreState), after));
-            }
-        }
 
 
 
@@ -435,7 +399,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    RecordRedoUndo(() => m_ProjectStart = value);
+                    m_ProjectStart = value;
                 }
                 RaisePropertyChanged();
             }
@@ -467,7 +431,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    RecordRedoUndo(() => m_ShowDates = value);
+                    m_ShowDates = value;
                 }
                 RaisePropertyChanged();
             }
@@ -483,11 +447,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    RecordRedoUndo(() =>
-                    {
-                        m_UseBusinessDays = value;
-                        m_DateTimeCalculator.UseBusinessDays(value);
-                    });
+                    m_UseBusinessDays = value;
+                    m_DateTimeCalculator.UseBusinessDays(value);
                 }
                 RaisePropertyChanged();
             }
@@ -632,6 +593,11 @@ namespace Zametek.ViewModel.ProjectPlan
             private set;
         }
 
+        public IApplicationCommands ApplicationCommands
+        {
+            get;
+        }
+
         public int? CyclomaticComplexity
         {
             get
@@ -728,6 +694,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void RecordRedoUndo(Action action)
+        {
+            if (action is null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            lock (m_Lock)
+            {
+                CoreState before = GetCoreState();
+                action();
+                CoreState after = GetCoreState();
+
+                m_RedoStack.Clear();
+                m_UndoStack.Push(new UndoRedoCommandPair(
+                    new DelegateCommand<CoreState>(ReplaceCoreState, CanReplaceCoreState), before,
+                    new DelegateCommand<CoreState>(ReplaceCoreState, CanReplaceCoreState), after));
+
+                RaiseCanExecuteChangedAllCommands();
+            }
+        }
+
         public DependentActivityModel AddManagedActivity()
         {
             lock (m_Lock)
@@ -763,28 +751,25 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var output = new HashSet<DependentActivityModel>();
 
-                RecordRedoUndo(() =>
+                foreach (DependentActivityModel dependentActivity in dependentActivities)
                 {
-                    foreach (DependentActivityModel dependentActivity in dependentActivities)
+                    var dateTimeCalculator = new DateTimeCalculator();
+                    dateTimeCalculator.UseBusinessDays(UseBusinessDays);
+
+                    var activity = new ManagedActivityViewModel(
+                        m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity),
+                        ProjectStart,
+                        dependentActivity.Activity.MinimumEarliestStartDateTime,
+                        ResourceSettings.Resources,
+                        dateTimeCalculator,
+                        m_EventService);
+
+                    if (m_VertexGraphCompiler.AddActivity(activity))
                     {
-                        var dateTimeCalculator = new DateTimeCalculator();
-                        dateTimeCalculator.UseBusinessDays(UseBusinessDays);
-
-                        var activity = new ManagedActivityViewModel(
-                            m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity),
-                            ProjectStart,
-                            dependentActivity.Activity.MinimumEarliestStartDateTime,
-                            ResourceSettings.Resources,
-                            dateTimeCalculator,
-                            m_EventService);
-
-                        if (m_VertexGraphCompiler.AddActivity(activity))
-                        {
-                            Activities.Add(activity);
-                            output.Add(dependentActivity);
-                        }
+                        Activities.Add(activity);
+                        output.Add(dependentActivity);
                     }
-                });
+                }
 
                 return output;
             }
@@ -801,20 +786,17 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var output = new HashSet<DependentActivityModel>();
 
-                RecordRedoUndo(() =>
+                IEnumerable<IManagedActivityViewModel> dependentActivities = Activities.Where(x => dependentActivityIds.Contains(x.Id)).ToList();
+
+                foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
                 {
-                    IEnumerable<IManagedActivityViewModel> dependentActivities = Activities.Where(x => dependentActivityIds.Contains(x.Id)).ToList();
-
-                    foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
+                    if (m_VertexGraphCompiler.RemoveActivity(dependentActivity.Id))
                     {
-                        if (m_VertexGraphCompiler.RemoveActivity(dependentActivity.Id))
-                        {
-                            Activities.Remove(dependentActivity);
-                            output.Add(m_Mapper.Map<IDependentActivity<int, int>, DependentActivityModel>(dependentActivity));
-                        }
-
+                        Activities.Remove(dependentActivity);
+                        output.Add(m_Mapper.Map<IDependentActivity<int, int>, DependentActivityModel>(dependentActivity));
                     }
-                });
+
+                }
 
                 return output;
             }
@@ -838,15 +820,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
             lock (m_Lock)
             {
-                RecordRedoUndo(() =>
-                {
-                    ResourceSettings = resourceSettings;
 
-                    foreach (IManagedActivityViewModel activity in Activities)
-                    {
-                        activity.SetTargetResources(ResourceSettings.Resources.Select(x => x.CloneObject()));
-                    }
-                });
+                ResourceSettings = resourceSettings;
+
+                foreach (IManagedActivityViewModel activity in Activities)
+                {
+                    activity.SetTargetResources(ResourceSettings.Resources.Select(x => x.CloneObject()));
+                }
             }
         }
 
@@ -854,15 +834,12 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                RecordRedoUndo(() =>
+                foreach (IManagedActivityViewModel activity in Activities.Where(x => x.HasUpdatedDependencies))
                 {
-                    foreach (IManagedActivityViewModel activity in Activities.Where(x => x.HasUpdatedDependencies))
-                    {
-                        m_VertexGraphCompiler.SetActivityDependencies(activity.Id, new HashSet<int>(activity.UpdatedDependencies));
-                        activity.UpdatedDependencies.Clear();
-                        activity.HasUpdatedDependencies = false;
-                    }
-                });
+                    m_VertexGraphCompiler.SetActivityDependencies(activity.Id, new HashSet<int>(activity.UpdatedDependencies));
+                    activity.UpdatedDependencies.Clear();
+                    activity.HasUpdatedDependencies = false;
+                }
             }
         }
 

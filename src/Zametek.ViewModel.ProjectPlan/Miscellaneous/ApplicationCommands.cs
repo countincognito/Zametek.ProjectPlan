@@ -6,8 +6,8 @@ namespace Zametek.ViewModel.ProjectPlan
     public class ApplicationCommands
         : IApplicationCommands
     {
-        public CompositeCommand UndoCommand { get; } = new CompositeCommand(false);
+        public DelegateCommandBase UndoCommand { get; set; }
 
-        public CompositeCommand RedoCommand { get; } = new CompositeCommand(false);
+        public DelegateCommandBase RedoCommand { get; set; }
     }
 }

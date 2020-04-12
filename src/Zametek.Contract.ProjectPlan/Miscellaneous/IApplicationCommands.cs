@@ -4,8 +4,8 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IApplicationCommands
     {
-        CompositeCommand UndoCommand { get; }
+        DelegateCommandBase UndoCommand { get; set; }
 
-        CompositeCommand RedoCommand { get; }
+        DelegateCommandBase RedoCommand { get; set; }
     }
 }

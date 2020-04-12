@@ -39,6 +39,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ResourceSettingsModel ResourceSettings { get; set; }
 
+        IApplicationCommands ApplicationCommands { get; }
+
         int? CyclomaticComplexity { get; set; }
 
         int? Duration { get; set; }
@@ -50,6 +52,8 @@ namespace Zametek.Contract.ProjectPlan
         double? OtherCost { get; set; }
 
         double? TotalCost { get; set; }
+
+        void RecordRedoUndo(Action action);
 
         DependentActivityModel AddManagedActivity();
 

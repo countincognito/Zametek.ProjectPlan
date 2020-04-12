@@ -165,6 +165,9 @@ namespace Zametek.ViewModel.ProjectPlan
             InternalSetSelectedManagedActivitiesCommand.RaiseCanExecuteChanged();
             InternalAddManagedActivityCommand.RaiseCanExecuteChanged();
             InternalRemoveManagedActivityCommand.RaiseCanExecuteChanged();
+
+            ApplicationCommands.UndoCommand.RaiseCanExecuteChanged();
+            ApplicationCommands.RedoCommand.RaiseCanExecuteChanged();
         }
 
         private void SubscribeToEvents()
@@ -222,7 +225,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task UpdateActivitiesTargetResourceDependenciesAsync()
         {
-            await Task.Run(() => m_CoreViewModel.UpdateActivitiesTargetResourceDependencies()).ConfigureAwait(true);
+            await Task.Run(() =>
+            {
+                m_CoreViewModel.RecordRedoUndo(() =>
+                {
+                    m_CoreViewModel.UpdateActivitiesTargetResourceDependencies();
+                });
+            }).ConfigureAwait(true);
         }
 
         private async Task UpdateActivitiesProjectStartAsync()
@@ -289,7 +298,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 lock (m_Lock)
                 {
-                    m_CoreViewModel.AddManagedActivity();
+                    m_CoreViewModel.RecordRedoUndo(() =>
+                    {
+                        m_CoreViewModel.AddManagedActivity();
+                    });
                 }
 
                 HasStaleOutputs = true;
@@ -326,7 +338,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
 
-                    m_CoreViewModel.RemoveManagedActivities(activityIds);
+                    m_CoreViewModel.RecordRedoUndo(() =>
+                    {
+                        m_CoreViewModel.RemoveManagedActivities(activityIds);
+                    });
                 }
 
                 HasStaleOutputs = true;

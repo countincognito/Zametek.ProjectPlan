@@ -120,7 +120,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_CoreViewModel.ProjectStart = value;
+                    m_CoreViewModel.RecordRedoUndo(() =>
+                    {
+                        m_CoreViewModel.ProjectStart = value;
+                    });
                     IsProjectUpdated = true;
                 }
                 RaisePropertyChanged(nameof(ProjectStart));
@@ -137,7 +140,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_CoreViewModel.UseBusinessDays = value;
+                    m_CoreViewModel.RecordRedoUndo(() =>
+                    {
+                        m_CoreViewModel.UseBusinessDays = value;
+                    });
                 }
                 RaisePropertyChanged(nameof(UseBusinessDays));
             }
@@ -467,6 +473,9 @@ namespace Zametek.ViewModel.ProjectPlan
             InternalTransitiveReductionCommand.RaiseCanExecuteChanged();
             InternalOpenHyperLinkCommand.RaiseCanExecuteChanged();
             InternalOpenAboutCommand.RaiseCanExecuteChanged();
+
+            ApplicationCommands.UndoCommand.RaiseCanExecuteChanged();
+            ApplicationCommands.RedoCommand.RaiseCanExecuteChanged();
         }
 
         private void SubscribeToEvents()
@@ -1090,7 +1099,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         return;
                     }
-                    m_CoreViewModel.UpdateResourceSettings(confirmation.ResourceSettings);
+
+                    m_CoreViewModel.RecordRedoUndo(() =>
+                    {
+                        m_CoreViewModel.UpdateResourceSettings(confirmation.ResourceSettings);
+                    });
                 }
 
                 HasStaleOutputs = true;
@@ -1353,7 +1366,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_CoreViewModel.ShowDates = value;
+                    m_CoreViewModel.RecordRedoUndo(() =>
+                    {
+                        m_CoreViewModel.ShowDates = value;
+                    });
                 }
                 PublishShowDatesUpdatedPayload();
                 RaisePropertyChanged();
