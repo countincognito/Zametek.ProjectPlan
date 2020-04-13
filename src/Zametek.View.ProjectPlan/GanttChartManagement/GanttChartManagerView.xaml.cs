@@ -174,7 +174,8 @@ namespace Zametek.View.ProjectPlan
                     {
                         if (activityLookup.TryGetValue(scheduledctivity.Id, out ActivityModel activity))
                         {
-                            GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowGroup, scheduledctivity.Name);
+                            string name = string.IsNullOrWhiteSpace(scheduledctivity.Name) ? scheduledctivity.Id.ToString(CultureInfo.InvariantCulture) : scheduledctivity.Name;
+                            GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowGroup, name);
 
                             if (activity.EarliestStartTime.HasValue
                                 && activity.EarliestFinishTime.HasValue)
@@ -202,7 +203,8 @@ namespace Zametek.View.ProjectPlan
             foreach (ActivityModel activity in activities)
             {
                 GanttRowGroup rowGroup = GanttChartAreaCtrl.CreateGanttRowGroup();
-                GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowGroup, activity.Name);
+                string name = string.IsNullOrWhiteSpace(activity.Name) ? activity.Id.ToString(CultureInfo.InvariantCulture) : activity.Name;
+                GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowGroup, name);
 
                 if (activity.EarliestStartTime.HasValue
                     && activity.EarliestFinishTime.HasValue)
@@ -220,12 +222,13 @@ namespace Zametek.View.ProjectPlan
             SlackColorFormatLookup colorFormatLookup)
         {
             Color background = colorFormatLookup?.FindSlackColor(activity.TotalSlack) ?? Colors.DodgerBlue;
+            string name = string.IsNullOrWhiteSpace(activity.Name) ? activity.Id.ToString(CultureInfo.InvariantCulture) : activity.Name;
 
             return new GanttTask
             {
                 Start = m_DateTimeCalculator.AddDays(projectStart, activity.EarliestStartTime.Value),
                 End = m_DateTimeCalculator.AddDays(projectStart, activity.EarliestFinishTime.Value),
-                Name = activity.Name,
+                Name = name,
                 BackgroundColor = new SolidColorBrush(background),
                 ForegroundColor = new SolidColorBrush(ContrastConvert(background)),
                 Radius = activity.Duration < 3 ? 0 : 5,
