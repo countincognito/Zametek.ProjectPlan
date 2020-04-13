@@ -178,7 +178,7 @@
     <value>Project Plan</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>Version 0.6.0</value>
+    <value>Version 0.6.0-alpha</value>
   </data>
   <data name="Label_ArrowGraphSettings" xml:space="preserve">
     <value>Arrow Graph...</value>
