@@ -42,14 +42,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ActivitiesManagerViewModel(
             ICoreViewModel coreViewModel,
-            IApplicationCommands applicationCommands,
             IMapper mapper,
             IEventAggregator eventService)
             : base(eventService)
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
-            ApplicationCommands = applicationCommands ?? throw new ArgumentNullException(nameof(applicationCommands));
             m_Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
@@ -165,9 +163,6 @@ namespace Zametek.ViewModel.ProjectPlan
             InternalSetSelectedManagedActivitiesCommand.RaiseCanExecuteChanged();
             InternalAddManagedActivityCommand.RaiseCanExecuteChanged();
             InternalRemoveManagedActivityCommand.RaiseCanExecuteChanged();
-
-            ApplicationCommands.UndoCommand.RaiseCanExecuteChanged();
-            ApplicationCommands.RedoCommand.RaiseCanExecuteChanged();
         }
 
         private void SubscribeToEvents()
@@ -462,11 +457,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 return null;
             }
-        }
-
-        public IApplicationCommands ApplicationCommands
-        {
-            get;
         }
 
         public ICommand SetSelectedManagedActivitiesCommand

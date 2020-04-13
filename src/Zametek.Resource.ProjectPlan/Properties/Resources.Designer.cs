@@ -511,6 +511,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edit.
+        /// </summary>
+        public static string Label_Edit {
+            get {
+                return ResourceManager.GetString("Label_Edit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Untitled.
         /// </summary>
         public static string Label_EmptyProjectTitle {
@@ -835,6 +844,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Redo.
+        /// </summary>
+        public static string Label_Redo {
+            get {
+                return ResourceManager.GetString("Label_Redo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Report Issue.
         /// </summary>
         public static string Label_ReportIssue {
@@ -1020,6 +1038,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         public static string Label_TransitiveReduction {
             get {
                 return ResourceManager.GetString("Label_TransitiveReduction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Undo.
+        /// </summary>
+        public static string Label_Undo {
+            get {
+                return ResourceManager.GetString("Label_Undo", resourceCulture);
             }
         }
         

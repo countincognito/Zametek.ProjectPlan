@@ -53,6 +53,10 @@ namespace Zametek.Contract.ProjectPlan
 
         double? TotalCost { get; set; }
 
+        public CoreStateModel CoreState { get; }
+
+        void RecordCoreState();
+
         void RecordRedoUndo(Action action);
 
         DependentActivityModel AddManagedActivity();

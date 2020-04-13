@@ -85,35 +85,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region Commands
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        private void ReplaceCoreState(CoreState coreState)
+        private void ReplaceCoreState(CoreStateModel coreState)
         {
             SetCoreState(coreState);
         }
 
-        private bool CanReplaceCoreState(CoreState coreState)
+        private bool CanReplaceCoreState(CoreStateModel coreState)
         {
             return true;
         }
-
-
 
         private void Undo()
         {
@@ -122,6 +104,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 UndoRedoCommandPair undoRedoCommandPair = m_UndoStack.Pop();
                 undoRedoCommandPair.UndoCommand.Execute(undoRedoCommandPair.UndoParameter);
                 m_RedoStack.Push(undoRedoCommandPair);
+                RaiseCanExecuteChangedAllCommands();
             }
         }
 
@@ -130,8 +113,6 @@ namespace Zametek.ViewModel.ProjectPlan
             return m_UndoStack.Any();
         }
 
-
-
         private void Redo()
         {
             lock (m_Lock)
@@ -139,6 +120,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 UndoRedoCommandPair undoRedoCommandPair = m_RedoStack.Pop();
                 undoRedoCommandPair.RedoCommand.Execute(undoRedoCommandPair.RedoParameter);
                 m_UndoStack.Push(undoRedoCommandPair);
+                RaiseCanExecuteChangedAllCommands();
             }
         }
 
@@ -147,29 +129,9 @@ namespace Zametek.ViewModel.ProjectPlan
             return m_RedoStack.Any();
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        #endregion
 
         #region Private Methods
-
-
-
-
-
-
-
 
         private void InitializeCommands()
         {
@@ -177,28 +139,19 @@ namespace Zametek.ViewModel.ProjectPlan
             ApplicationCommands.RedoCommand = new DelegateCommand(Redo, CanRedo);
         }
 
-
-
         private void RaiseCanExecuteChangedAllCommands()
         {
             ApplicationCommands.UndoCommand.RaiseCanExecuteChanged();
             ApplicationCommands.RedoCommand.RaiseCanExecuteChanged();
         }
 
-
-
-
-
-
-
-
-        private CoreState GetCoreState()
+        private CoreStateModel GetCoreState()
         {
             lock (m_Lock)
             {
                 IEnumerable<IDependentActivity<int, int>> activities = Activities.Select(x => (IDependentActivity<int, int>)x.CloneObject());
 
-                return new CoreState
+                return new CoreStateModel
                 {
                     ArrowGraphSettings = ArrowGraphSettings.CloneObject(),
                     ResourceSettings = ResourceSettings.CloneObject(),
@@ -210,11 +163,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private void SetCoreState(CoreState coreState)
+        private void SetCoreState(CoreStateModel coreState)
         {
             if (coreState is null)
             {
-                throw new ArgumentNullException(nameof(coreState));
+                return;
             }
 
             lock (m_Lock)
@@ -239,6 +192,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     AddManagedActivities(new HashSet<DependentActivityModel>(coreState.DependentActivities));
 
                     RunAutoCompile();
+
+                    RecordCoreState();
                 }
                 finally
                 {
@@ -246,40 +201,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         private void PublishGraphCompiledPayload()
         {
@@ -400,6 +321,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_ProjectStart = value;
+                    RecordCoreState();
                 }
                 RaisePropertyChanged();
             }
@@ -432,6 +354,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_ShowDates = value;
+                    RecordCoreState();
                 }
                 RaisePropertyChanged();
             }
@@ -449,6 +372,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_UseBusinessDays = value;
                     m_DateTimeCalculator.UseBusinessDays(value);
+                    RecordCoreState();
                 }
                 RaisePropertyChanged();
             }
@@ -694,6 +618,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public CoreStateModel CoreState
+        {
+            get;
+            private set;
+        }
+
+        public void RecordCoreState()
+        {
+            lock (m_Lock)
+            {
+                CoreState = GetCoreState();
+            }
+        }
+
         public void RecordRedoUndo(Action action)
         {
             if (action is null)
@@ -703,14 +641,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
             lock (m_Lock)
             {
-                CoreState before = GetCoreState();
+                CoreStateModel before = CoreState?.CloneObject();
                 action();
-                CoreState after = GetCoreState();
+                CoreStateModel after = GetCoreState();
 
                 m_RedoStack.Clear();
                 m_UndoStack.Push(new UndoRedoCommandPair(
-                    new DelegateCommand<CoreState>(ReplaceCoreState, CanReplaceCoreState), before,
-                    new DelegateCommand<CoreState>(ReplaceCoreState, CanReplaceCoreState), after));
+                    new DelegateCommand<CoreStateModel>(ReplaceCoreState, CanReplaceCoreState), before,
+                    new DelegateCommand<CoreStateModel>(ReplaceCoreState, CanReplaceCoreState), after));
 
                 RaiseCanExecuteChangedAllCommands();
             }
@@ -771,6 +709,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
+                RecordCoreState();
+
                 return output;
             }
         }
@@ -797,6 +737,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                 }
+
+                RecordCoreState();
 
                 return output;
             }
@@ -827,6 +769,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     activity.SetTargetResources(ResourceSettings.Resources.Select(x => x.CloneObject()));
                 }
+
+                RecordCoreState();
             }
         }
 
@@ -840,6 +784,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     activity.UpdatedDependencies.Clear();
                     activity.HasUpdatedDependencies = false;
                 }
+
+
+                RecordCoreState();
             }
         }
 

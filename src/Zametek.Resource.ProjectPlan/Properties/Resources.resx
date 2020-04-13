@@ -267,6 +267,9 @@
   <data name="Label_EarnedValueTitle" xml:space="preserve">
     <value>Earned Value</value>
   </data>
+  <data name="Label_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
   <data name="Label_EmptyProjectTitle" xml:space="preserve">
     <value>Untitled</value>
   </data>
@@ -375,6 +378,9 @@
   <data name="Label_ProjectStart" xml:space="preserve">
     <value>Project Start:</value>
   </data>
+  <data name="Label_Redo" xml:space="preserve">
+    <value>Redo</value>
+  </data>
   <data name="Label_ReportIssue" xml:space="preserve">
     <value>Report Issue</value>
   </data>
@@ -437,6 +443,9 @@
   </data>
   <data name="Label_TransitiveReduction" xml:space="preserve">
     <value>Transitive Reduction</value>
+  </data>
+  <data name="Label_Undo" xml:space="preserve">
+    <value>Undo</value>
   </data>
   <data name="Label_UnitCost" xml:space="preserve">
     <value>Unit Cost</value>

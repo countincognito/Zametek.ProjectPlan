@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Zametek.Common.ProjectPlan;
 
-namespace Zametek.ViewModel.ProjectPlan
+namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public class CoreState
+    public class CoreStateModel
     {
         public ArrowGraphSettingsModel ArrowGraphSettings { get; set; }
 

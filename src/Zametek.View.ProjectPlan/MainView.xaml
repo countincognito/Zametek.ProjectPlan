@@ -169,6 +169,15 @@
                 <MenuItem Header="{x:Static properties:Resources.Label_Close}"
                           Command="{Binding Path=CloseProjectCommand, Mode=OneWay}"/>
             </MenuItem>
+            <MenuItem Header="{x:Static properties:Resources.Label_Edit}">
+                <MenuItem Header="{x:Static properties:Resources.Label_Undo}"
+                          Command="{Binding Path=ApplicationCommands.UndoCommand, Mode=OneWay}"
+                          InputGestureText="Ctrl+Z"/>
+                <Separator />
+                <MenuItem Header="{x:Static properties:Resources.Label_Redo}"
+                          Command="{Binding Path=ApplicationCommands.RedoCommand, Mode=OneWay}"
+                          InputGestureText="Ctrl+Y"/>
+            </MenuItem>
             <MenuItem Header="{x:Static properties:Resources.Label_Settings}">
                 <MenuItem Header="{x:Static properties:Resources.Label_ResourceSettings}"
                           Command="{Binding Path=OpenResourceSettingsCommand, Mode=OneWay}"
