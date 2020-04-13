@@ -184,7 +184,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_ProjectStart = coreState.ProjectStart;
                     m_UseBusinessDays = coreState.UseBusinessDays;
                     m_ShowDates = coreState.ShowDates;
-
                     RaisePropertyChanged(nameof(ProjectStart));
                     RaisePropertyChanged(nameof(UseBusinessDays));
                     RaisePropertyChanged(nameof(ShowDates));
@@ -485,7 +484,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 return m_ArrowGraphSettingsModel;
             }
-            set
+            private set
             {
                 lock (m_Lock)
                 {
@@ -501,7 +500,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 return m_ResourceSettingsModel;
             }
-            set
+            private set
             {
                 lock (m_Lock)
                 {
@@ -641,11 +640,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             lock (m_Lock)
             {
-                CoreStateModel before = CoreState?.CloneObject();
+                CoreStateModel before = CoreState;
                 action();
                 CoreStateModel after = GetCoreState();
 
-                m_RedoStack.Clear();
+                ClearRedoStack();
                 m_UndoStack.Push(new UndoRedoCommandPair(
                     new DelegateCommand<CoreStateModel>(ReplaceCoreState, CanReplaceCoreState), before,
                     new DelegateCommand<CoreStateModel>(ReplaceCoreState, CanReplaceCoreState), after));
@@ -654,7 +653,24 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public DependentActivityModel AddManagedActivity()
+        public void ClearUndoStack()
+        {
+            lock (m_Lock)
+            {
+                m_UndoStack.Clear();
+                RecordCoreState();
+            }
+        }
+
+        public void ClearRedoStack()
+        {
+            lock (m_Lock)
+            {
+                m_RedoStack.Clear();
+            }
+        }
+
+        public void AddManagedActivity()
         {
             lock (m_Lock)
             {
@@ -673,12 +689,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     Dependencies = new List<int>(),
                     ResourceDependencies = new List<int>(),
                 });
-                HashSet<DependentActivityModel> output = AddManagedActivities(set);
-                return output.SingleOrDefault();
+                AddManagedActivities(set);
             }
         }
 
-        public HashSet<DependentActivityModel> AddManagedActivities(HashSet<DependentActivityModel> dependentActivities)
+        public void AddManagedActivities(HashSet<DependentActivityModel> dependentActivities)
         {
             if (dependentActivities == null)
             {
@@ -687,8 +702,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             lock (m_Lock)
             {
-                var output = new HashSet<DependentActivityModel>();
-
                 foreach (DependentActivityModel dependentActivity in dependentActivities)
                 {
                     var dateTimeCalculator = new DateTimeCalculator();
@@ -697,7 +710,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     var activity = new ManagedActivityViewModel(
                         m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity),
                         ProjectStart,
-                        dependentActivity.Activity.MinimumEarliestStartDateTime,
+                        dependentActivity.Activity?.MinimumEarliestStartDateTime,
                         ResourceSettings.Resources,
                         dateTimeCalculator,
                         m_EventService);
@@ -705,17 +718,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (m_VertexGraphCompiler.AddActivity(activity))
                     {
                         Activities.Add(activity);
-                        output.Add(dependentActivity);
                     }
                 }
 
                 RecordCoreState();
-
-                return output;
             }
         }
 
-        public HashSet<DependentActivityModel> RemoveManagedActivities(HashSet<int> dependentActivityIds)
+        public void RemoveManagedActivities(HashSet<int> dependentActivityIds)
         {
             if (dependentActivityIds == null)
             {
@@ -724,8 +734,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             lock (m_Lock)
             {
-                var output = new HashSet<DependentActivityModel>();
-
                 IEnumerable<IManagedActivityViewModel> dependentActivities = Activities.Where(x => dependentActivityIds.Contains(x.Id)).ToList();
 
                 foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
@@ -733,14 +741,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (m_VertexGraphCompiler.RemoveActivity(dependentActivity.Id))
                     {
                         Activities.Remove(dependentActivity);
-                        output.Add(m_Mapper.Map<IDependentActivity<int, int>, DependentActivityModel>(dependentActivity));
                     }
-
                 }
 
                 RecordCoreState();
-
-                return output;
             }
         }
 
@@ -750,6 +754,20 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 Activities.Clear();
                 m_VertexGraphCompiler.Reset();
+            }
+        }
+
+        public void UpdateArrowGraphSettings(ArrowGraphSettingsModel arrowGraphSettings)
+        {
+            if (arrowGraphSettings is null)
+            {
+                throw new ArgumentNullException(nameof(arrowGraphSettings));
+            }
+
+            lock (m_Lock)
+            {
+                ArrowGraphSettings = arrowGraphSettings;
+                RecordCoreState();
             }
         }
 
@@ -784,7 +802,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     activity.UpdatedDependencies.Clear();
                     activity.HasUpdatedDependencies = false;
                 }
-
 
                 RecordCoreState();
             }

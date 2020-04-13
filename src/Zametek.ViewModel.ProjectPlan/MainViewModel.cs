@@ -72,6 +72,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ShowDates = false;
             UseBusinessDaysWithoutPublishing = true;
             AutoCompile = true;
+            m_CoreViewModel.ClearUndoStack();
+
             InitializeCommands();
             SubscribeToEvents();
 
@@ -727,6 +729,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 // Activities.
                 m_CoreViewModel.AddManagedActivities(new HashSet<DependentActivityModel>(microsoftProject.DependentActivities));
+
+                HasStaleOutputs = true;
+                IsProjectUpdated = true;
+
+                m_CoreViewModel.ClearUndoStack();
+                m_CoreViewModel.ClearRedoStack();
             }
         }
 
@@ -765,10 +773,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_CoreViewModel.SetCompilationOutput();
 
                 // Arrow Graph.
-                ArrowGraphSettings = projectPlan.ArrowGraphSettings;
+                m_CoreViewModel.UpdateArrowGraphSettings(projectPlan.ArrowGraphSettings);
                 ArrowGraph = projectPlan.ArrowGraph;
 
                 HasStaleOutputs = projectPlan.HasStaleOutputs;
+                IsProjectUpdated = false;
+
+                m_CoreViewModel.ClearUndoStack();
+                m_CoreViewModel.ClearRedoStack();
             }
 
             PublishGraphCompilationUpdatedPayload();
@@ -876,6 +888,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_SettingService.Reset();
 
                 HasStaleOutputs = false;
+
+                m_CoreViewModel.ClearUndoStack();
+                m_CoreViewModel.ClearRedoStack();
             }
 
             PublishGraphCompilationUpdatedPayload();
@@ -1028,8 +1043,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         MicrosoftProjectModel microsoftProjectDto = await ImportMicrosoftProjectAsync(filename).ConfigureAwait(true);
                         ProcessMicrosoftProject(microsoftProjectDto);
 
-                        HasStaleOutputs = true;
-                        IsProjectUpdated = true;
                         m_SettingService.SetFilePath(filename);
 
                         await RunAutoCompileAsync().ConfigureAwait(true);
@@ -1142,7 +1155,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         return;
                     }
-                    ArrowGraphSettings = confirmation.ArrowGraphSettings;
+
+                    m_CoreViewModel.RecordRedoUndo(() =>
+                    {
+                        m_CoreViewModel.UpdateArrowGraphSettings(confirmation.ArrowGraphSettings);
+                    });
                 }
                 IsProjectUpdated = true;
                 PublishArrowGraphSettingsUpdatedPayload();
@@ -1411,13 +1428,6 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 return m_CoreViewModel.ArrowGraphSettings;
             }
-            private set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.ArrowGraphSettings = value;
-                }
-            }
         }
 
         public ResourceSettingsModel ResourceSettings
@@ -1562,7 +1572,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ProjectPlanModel projectPlan = await OpenProjectPlanAsync(filename).ConfigureAwait(true);
                     ProcessProjectPlan(projectPlan);
-                    IsProjectUpdated = false;
                     m_SettingService.SetFilePath(filename);
                 }
             }

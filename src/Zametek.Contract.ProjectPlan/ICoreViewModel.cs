@@ -35,9 +35,9 @@ namespace Zametek.Contract.ProjectPlan
 
         ResourceSeriesSetModel ResourceSeriesSet { get; }
 
-        ArrowGraphSettingsModel ArrowGraphSettings { get; set; }
+        ArrowGraphSettingsModel ArrowGraphSettings { get; }
 
-        ResourceSettingsModel ResourceSettings { get; set; }
+        ResourceSettingsModel ResourceSettings { get; }
 
         IApplicationCommands ApplicationCommands { get; }
 
@@ -59,13 +59,19 @@ namespace Zametek.Contract.ProjectPlan
 
         void RecordRedoUndo(Action action);
 
-        DependentActivityModel AddManagedActivity();
+        void ClearUndoStack();
 
-        HashSet<DependentActivityModel> AddManagedActivities(HashSet<DependentActivityModel> dependentActivities);
+        void ClearRedoStack();
 
-        HashSet<DependentActivityModel> RemoveManagedActivities(HashSet<int> dependentActivities);
+        void AddManagedActivity();
+
+        void AddManagedActivities(HashSet<DependentActivityModel> dependentActivities);
+
+        void RemoveManagedActivities(HashSet<int> dependentActivities);
 
         void ClearManagedActivities();
+
+        void UpdateArrowGraphSettings(ArrowGraphSettingsModel arrowGraphSettings);
 
         void UpdateResourceSettings(ResourceSettingsModel resourceSettings);
 

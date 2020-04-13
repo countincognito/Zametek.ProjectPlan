@@ -173,7 +173,6 @@
                 <MenuItem Header="{x:Static properties:Resources.Label_Undo}"
                           Command="{Binding Path=ApplicationCommands.UndoCommand, Mode=OneWay}"
                           InputGestureText="Ctrl+Z"/>
-                <Separator />
                 <MenuItem Header="{x:Static properties:Resources.Label_Redo}"
                           Command="{Binding Path=ApplicationCommands.RedoCommand, Mode=OneWay}"
                           InputGestureText="Ctrl+Y"/>
