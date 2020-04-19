@@ -21,6 +21,8 @@ namespace Zametek.Common.ProjectPlan
 
         public bool CanBeRemoved { get; set; }
 
+        public bool HasNoCost { get; set; }
+
         public int Duration { get; set; }
 
         public int? FreeSlack { get; set; }
@@ -40,5 +42,9 @@ namespace Zametek.Common.ProjectPlan
         public int? MinimumEarliestStartTime { get; set; }
 
         public DateTime? MinimumEarliestStartDateTime { get; set; }
+
+        public int? MaximumLatestFinishTime { get; set; }
+
+        public DateTime? MaximumLatestFinishDateTime { get; set; }
     }
 }

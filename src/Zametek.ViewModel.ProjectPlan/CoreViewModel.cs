@@ -248,6 +248,17 @@ namespace Zametek.ViewModel.ProjectPlan
             return output.ToString();
         }
 
+        private string BuildInvalidConstraintsErrorMessage(IEnumerable<int> invalidConstraints)
+        {
+            if (invalidConstraints == null)
+            {
+                return string.Empty;
+            }
+            var output = new StringBuilder();
+            output.AppendLine($@">{Resource.ProjectPlan.Properties.Resources.Message_InvalidConstraints} {string.Join(@", ", invalidConstraints)}");
+            return output.ToString();
+        }
+
         private string BuildActivitySchedules(IEnumerable<ResourceSeriesModel> resourceSeriesSet)
         {
             lock (m_Lock)
@@ -711,6 +722,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity),
                         ProjectStart,
                         dependentActivity.Activity?.MinimumEarliestStartDateTime,
+                        dependentActivity.Activity?.MaximumLatestFinishDateTime,
                         ResourceSettings.Resources,
                         dateTimeCalculator,
                         m_EventService);
@@ -985,6 +997,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         HasCompilationErrors = true;
                         output.Append(BuildMissingDependenciesErrorMessage(graphCompilation.Errors.MissingDependencies));
+                    }
+
+                    if (graphCompilation.Errors.InvalidConstraints.Any())
+                    {
+                        HasCompilationErrors = true;
+                        output.Append(BuildInvalidConstraintsErrorMessage(graphCompilation.Errors.InvalidConstraints));
                     }
                 }
 

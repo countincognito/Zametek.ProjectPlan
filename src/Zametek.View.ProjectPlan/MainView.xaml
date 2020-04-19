@@ -177,6 +177,18 @@
                           Command="{Binding Path=ApplicationCommands.RedoCommand, Mode=OneWay}"
                           InputGestureText="Ctrl+Y"/>
             </MenuItem>
+            <MenuItem Header="{x:Static properties:Resources.Label_View}">
+                <MenuItem Header="{x:Static properties:Resources.Label_ActivitiesTab}"
+                          Click="MenuItem_ViewActivitiesManager"/>
+                <MenuItem Header="{x:Static properties:Resources.Label_GanttChartTab}"
+                          Click="MenuItem_ViewGanttChartManager"/>
+                <MenuItem Header="{x:Static properties:Resources.Label_ArrowGraphTab}"
+                          Click="MenuItem_ViewArrowGraphManager"/>
+                <MenuItem Header="{x:Static properties:Resources.Label_ResourceChartTab}"
+                          Click="MenuItem_ViewResourceChartManager"/>
+                <MenuItem Header="{x:Static properties:Resources.Label_EarnedValueChartTab}"
+                          Click="MenuItem_ViewEarnedValueChartManager"/>
+            </MenuItem>
             <MenuItem Header="{x:Static properties:Resources.Label_Settings}">
                 <MenuItem Header="{x:Static properties:Resources.Label_ResourceSettings}"
                           Command="{Binding Path=OpenResourceSettingsCommand, Mode=OneWay}"
@@ -260,44 +272,6 @@
             <avalonDockLayout:LayoutRoot x:Name="_layoutRoot">
                 <avalonDockLayout:LayoutPanel Orientation="Vertical" IsMaximized="True">
                     <avalonDockLayout:LayoutAnchorablePane />
-                    <!--<avalonDockLayout:LayoutPanel Orientation="Horizontal">
-                        <avalonDockLayout:LayoutAnchorablePane>
-                            <avalonDockLayout:LayoutAnchorable ContentId="Activities"
-                                                               Title="{x:Static properties:Resources.Label_ActivitiesViewTitle}"
-                                                               CanHide="False"
-                                                               CanClose="False">
-                                <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanActivitiesRegion}" />
-                            </avalonDockLayout:LayoutAnchorable>
-
-                            <avalonDockLayout:LayoutAnchorable ContentId="GanttChart"
-                                                               Title="{x:Static properties:Resources.Label_GanttChartViewTitle}"
-                                                               CanHide="False"
-                                                               CanClose="False">
-                                <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanGanttChartRegion}" />
-                            </avalonDockLayout:LayoutAnchorable>
-
-                            <avalonDockLayout:LayoutAnchorable ContentId="ArrowGraph"
-                                                               Title="{x:Static properties:Resources.Label_ArrowGraphViewTitle}"
-                                                               CanHide="False"
-                                                               CanClose="False">
-                                <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanArrowGraphRegion}" />
-                            </avalonDockLayout:LayoutAnchorable>
-
-                            <avalonDockLayout:LayoutAnchorable ContentId="ResourceChart"
-                                                               Title="{x:Static properties:Resources.Label_ResourceChartsViewTitle}"
-                                                               CanHide="False"
-                                                               CanClose="False">
-                                <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanResourceChartRegion}" />
-                            </avalonDockLayout:LayoutAnchorable>
-
-                            <avalonDockLayout:LayoutAnchorable ContentId="EarnedValueChart"
-                                                               Title="{x:Static properties:Resources.Label_EarnedValueChartsViewTitle}"
-                                                               CanHide="False"
-                                                               CanClose="False">
-                                <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanEarnedValueChartRegion}" />
-                            </avalonDockLayout:LayoutAnchorable>
-                        </avalonDockLayout:LayoutAnchorablePane>
-                    </avalonDockLayout:LayoutPanel>-->
                 </avalonDockLayout:LayoutPanel>
             </avalonDockLayout:LayoutRoot>
         </avalonDock:DockingManager>

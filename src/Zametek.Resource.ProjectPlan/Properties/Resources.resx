@@ -150,6 +150,9 @@
   <data name="Label_About" xml:space="preserve">
     <value>About</value>
   </data>
+  <data name="Label_ActivitiesTab" xml:space="preserve">
+    <value>Activities Tab</value>
+  </data>
   <data name="Label_ActivitiesViewTitle" xml:space="preserve">
     <value>Activities</value>
   </data>
@@ -178,10 +181,13 @@
     <value>Project Plan</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>Version 0.6.0-alpha</value>
+    <value>Version 0.6.0-alpha.1</value>
   </data>
   <data name="Label_ArrowGraphSettings" xml:space="preserve">
     <value>Arrow Graph...</value>
+  </data>
+  <data name="Label_ArrowGraphTab" xml:space="preserve">
+    <value>Arrow Graph Tab</value>
   </data>
   <data name="Label_ArrowGraphViewTitle" xml:space="preserve">
     <value>Arrow Graph</value>
@@ -261,6 +267,9 @@
   <data name="Label_EarnedValueChartsViewTitle" xml:space="preserve">
     <value>Earned-Value Chart</value>
   </data>
+  <data name="Label_EarnedValueChartTab" xml:space="preserve">
+    <value>Earned-Value Chart Tab</value>
+  </data>
   <data name="Label_EarnedValuePercentageAxisTitle" xml:space="preserve">
     <value>Earned Value (%)</value>
   </data>
@@ -300,6 +309,9 @@
   <data name="Label_FreeSlack" xml:space="preserve">
     <value>FS</value>
   </data>
+  <data name="Label_GanttChartTab" xml:space="preserve">
+    <value>Gantt Chart Tab</value>
+  </data>
   <data name="Label_GanttChartViewTitle" xml:space="preserve">
     <value>Gantt Chart</value>
   </data>
@@ -320,6 +332,9 @@
   </data>
   <data name="Label_GroupByResources" xml:space="preserve">
     <value>Group by Resources:</value>
+  </data>
+  <data name="Label_HasNoCost" xml:space="preserve">
+    <value>No Cost</value>
   </data>
   <data name="Label_Height" xml:space="preserve">
     <value>Height:</value>
@@ -360,11 +375,17 @@
   <data name="Label_Max" xml:space="preserve">
     <value>Max</value>
   </data>
+  <data name="Label_MaximumLatestFinishTime" xml:space="preserve">
+    <value>Maximum LFT</value>
+  </data>
   <data name="Label_MinimumEarliestStartTime" xml:space="preserve">
     <value>Minimum EST</value>
   </data>
   <data name="Label_MinimumFreeSlack" xml:space="preserve">
     <value>Minimum FS</value>
+  </data>
+  <data name="Label_Notes" xml:space="preserve">
+    <value>Notes</value>
   </data>
   <data name="Label_Ok" xml:space="preserve">
     <value>OK</value>
@@ -392,6 +413,9 @@
   </data>
   <data name="Label_ResourceChartsViewTitle" xml:space="preserve">
     <value>Resource Chart</value>
+  </data>
+  <data name="Label_ResourceChartTab" xml:space="preserve">
+    <value>Resource Chart Tab</value>
   </data>
   <data name="Label_ResourcedCyclomaticComplexity" xml:space="preserve">
     <value>Resourced Cyclomatic Complexity...</value>
@@ -453,6 +477,9 @@
   <data name="Label_UseBusinessDays" xml:space="preserve">
     <value>Use Business Days</value>
   </data>
+  <data name="Label_View" xml:space="preserve">
+    <value>View</value>
+  </data>
   <data name="Label_ViewLicense" xml:space="preserve">
     <value>View License</value>
   </data>
@@ -479,6 +506,9 @@
   </data>
   <data name="Message_EmptyFilename" xml:space="preserve">
     <value>Empty filename</value>
+  </data>
+  <data name="Message_InvalidConstraints" xml:space="preserve">
+    <value>Invalid activity constraints:</value>
   </data>
   <data name="Message_MissingDependencies" xml:space="preserve">
     <value>Missing activity dependencies:</value>
@@ -549,6 +579,9 @@
   <data name="Tooltip_FreeSlack" xml:space="preserve">
     <value>Free Slack</value>
   </data>
+  <data name="Tooltip_HasNoCost" xml:space="preserve">
+    <value>No Cost</value>
+  </data>
   <data name="Tooltip_Id" xml:space="preserve">
     <value>Identifier</value>
   </data>
@@ -570,11 +603,17 @@
   <data name="Tooltip_LatestStartTime" xml:space="preserve">
     <value>Latest Start Time</value>
   </data>
+  <data name="Tooltip_MaximumLatestFinishTime" xml:space="preserve">
+    <value>Maximum Latest Finish Time</value>
+  </data>
   <data name="Tooltip_MinimumEarliestStartTime" xml:space="preserve">
     <value>Minimum Earliest Start Time</value>
   </data>
   <data name="Tooltip_MinimumFreeSlack" xml:space="preserve">
     <value>Minimum Free Slack</value>
+  </data>
+  <data name="Tooltip_Notes" xml:space="preserve">
+    <value>Notes</value>
   </data>
   <data name="Tooltip_ResourceDependencies" xml:space="preserve">
     <value>Resource Dependencies</value>

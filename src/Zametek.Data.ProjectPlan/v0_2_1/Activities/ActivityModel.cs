@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Zametek.Maths.Graphs;
 
-namespace Zametek.Data.ProjectPlan.v0_1_0
+namespace Zametek.Data.ProjectPlan.v0_2_1
 {
     [Serializable]
     public class ActivityModel
@@ -21,6 +21,8 @@ namespace Zametek.Data.ProjectPlan.v0_1_0
 
         public bool CanBeRemoved { get; set; }
 
+        public bool HasNoCost { get; set; }
+
         public int Duration { get; set; }
 
         public int? FreeSlack { get; set; }
@@ -34,5 +36,9 @@ namespace Zametek.Data.ProjectPlan.v0_1_0
         public int? MinimumEarliestStartTime { get; set; }
 
         public DateTime? MinimumEarliestStartDateTime { get; set; }
+
+        public int? MaximumLatestFinishTime { get; set; }
+
+        public DateTime? MaximumLatestFinishDateTime { get; set; }
     }
 }

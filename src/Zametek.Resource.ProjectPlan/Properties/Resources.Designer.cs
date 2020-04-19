@@ -160,6 +160,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Activities Tab.
+        /// </summary>
+        public static string Label_ActivitiesTab {
+            get {
+                return ResourceManager.GetString("Label_ActivitiesTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Activities.
         /// </summary>
         public static string Label_ActivitiesViewTitle {
@@ -241,7 +250,7 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Version 0.6.0-alpha.
+        ///   Looks up a localized string similar to Version 0.6.0-alpha.1.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -255,6 +264,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         public static string Label_ArrowGraphSettings {
             get {
                 return ResourceManager.GetString("Label_ArrowGraphSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Arrow Graph Tab.
+        /// </summary>
+        public static string Label_ArrowGraphTab {
+            get {
+                return ResourceManager.GetString("Label_ArrowGraphTab", resourceCulture);
             }
         }
         
@@ -493,6 +511,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Earned-Value Chart Tab.
+        /// </summary>
+        public static string Label_EarnedValueChartTab {
+            get {
+                return ResourceManager.GetString("Label_EarnedValueChartTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Earned Value (%).
         /// </summary>
         public static string Label_EarnedValuePercentageAxisTitle {
@@ -610,6 +637,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Gantt Chart Tab.
+        /// </summary>
+        public static string Label_GanttChartTab {
+            get {
+                return ResourceManager.GetString("Label_GanttChartTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Gantt Chart.
         /// </summary>
         public static string Label_GanttChartViewTitle {
@@ -669,6 +705,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         public static string Label_GroupByResources {
             get {
                 return ResourceManager.GetString("Label_GroupByResources", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Cost.
+        /// </summary>
+        public static string Label_HasNoCost {
+            get {
+                return ResourceManager.GetString("Label_HasNoCost", resourceCulture);
             }
         }
         
@@ -790,6 +835,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maximum LFT.
+        /// </summary>
+        public static string Label_MaximumLatestFinishTime {
+            get {
+                return ResourceManager.GetString("Label_MaximumLatestFinishTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Minimum EST.
         /// </summary>
         public static string Label_MinimumEarliestStartTime {
@@ -804,6 +858,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         public static string Label_MinimumFreeSlack {
             get {
                 return ResourceManager.GetString("Label_MinimumFreeSlack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notes.
+        /// </summary>
+        public static string Label_Notes {
+            get {
+                return ResourceManager.GetString("Label_Notes", resourceCulture);
             }
         }
         
@@ -885,6 +948,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         public static string Label_ResourceChartsViewTitle {
             get {
                 return ResourceManager.GetString("Label_ResourceChartsViewTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource Chart Tab.
+        /// </summary>
+        public static string Label_ResourceChartTab {
+            get {
+                return ResourceManager.GetString("Label_ResourceChartTab", resourceCulture);
             }
         }
         
@@ -1069,6 +1141,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to View.
+        /// </summary>
+        public static string Label_View {
+            get {
+                return ResourceManager.GetString("Label_View", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to View License.
         /// </summary>
         public static string Label_ViewLicense {
@@ -1146,6 +1227,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         public static string Message_EmptyFilename {
             get {
                 return ResourceManager.GetString("Message_EmptyFilename", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid activity constraints:.
+        /// </summary>
+        public static string Message_InvalidConstraints {
+            get {
+                return ResourceManager.GetString("Message_InvalidConstraints", resourceCulture);
             }
         }
         
@@ -1357,6 +1447,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No Cost.
+        /// </summary>
+        public static string Tooltip_HasNoCost {
+            get {
+                return ResourceManager.GetString("Tooltip_HasNoCost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Identifier.
         /// </summary>
         public static string Tooltip_Id {
@@ -1420,6 +1519,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maximum Latest Finish Time.
+        /// </summary>
+        public static string Tooltip_MaximumLatestFinishTime {
+            get {
+                return ResourceManager.GetString("Tooltip_MaximumLatestFinishTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Minimum Earliest Start Time.
         /// </summary>
         public static string Tooltip_MinimumEarliestStartTime {
@@ -1434,6 +1542,15 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         public static string Tooltip_MinimumFreeSlack {
             get {
                 return ResourceManager.GetString("Tooltip_MinimumFreeSlack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notes.
+        /// </summary>
+        public static string Tooltip_Notes {
+            get {
+                return ResourceManager.GetString("Tooltip_Notes", resourceCulture);
             }
         }
         

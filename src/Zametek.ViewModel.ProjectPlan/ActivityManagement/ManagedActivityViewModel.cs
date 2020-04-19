@@ -17,6 +17,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private DateTime? m_MinimumEarliestStartDateTime;
+        private DateTime? m_MaximumLatestFinishDateTime;
         private DateTime m_ProjectStart;
         private bool m_HasUpdatedDependencies;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
@@ -41,6 +42,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IDependentActivity<int, int> dependentActivity,
             DateTime projectStart,
             DateTime? minimumEarliestStartDateTime,
+            DateTime? maximumLatestFinishDateTime,
             IEnumerable<ResourceModel> targetResources,
             IDateTimeCalculator dateTimeCalculator,
             IEventAggregator eventService)
@@ -49,6 +51,7 @@ namespace Zametek.ViewModel.ProjectPlan
             DependentActivity = dependentActivity ?? throw new ArgumentNullException(nameof(dependentActivity));
             m_ProjectStart = projectStart;
             m_MinimumEarliestStartDateTime = minimumEarliestStartDateTime;
+            m_MaximumLatestFinishDateTime = maximumLatestFinishDateTime;
             var selectedResources = new HashSet<int>(DependentActivity.TargetResources.ToList());
             ResourceSelector.SetTargetResources(targetResources, selectedResources);
             UpdateAllocatedToResources();
@@ -60,6 +63,15 @@ namespace Zametek.ViewModel.ProjectPlan
             else if (MinimumEarliestStartTime.HasValue)
             {
                 CalculateMinimumEarliestStartDateTime();
+            }
+
+            if (MaximumLatestFinishDateTime.HasValue)
+            {
+                CalculateMaximumLatestFinishTime();
+            }
+            else if (MaximumLatestFinishTime.HasValue)
+            {
+                CalculateMaximumLatestFinishDateTime();
             }
         }
 
@@ -159,6 +171,32 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private void CalculateMaximumLatestFinishDateTime()
+        {
+            int? maximumLatestFinishTime = DependentActivity.MaximumLatestFinishTime;
+            if (maximumLatestFinishTime.HasValue)
+            {
+                m_MaximumLatestFinishDateTime = m_DateTimeCalculator.AddDays(ProjectStart, maximumLatestFinishTime.GetValueOrDefault());
+            }
+            else
+            {
+                m_MaximumLatestFinishDateTime = null;
+            }
+        }
+
+        private void CalculateMaximumLatestFinishTime()
+        {
+            DateTime? maximumLatestFinishDateTime = m_MaximumLatestFinishDateTime;
+            if (maximumLatestFinishDateTime.HasValue)
+            {
+                DependentActivity.MaximumLatestFinishTime = m_DateTimeCalculator.CountDays(ProjectStart, maximumLatestFinishDateTime.GetValueOrDefault());
+            }
+            else
+            {
+                DependentActivity.MaximumLatestFinishTime = null;
+            }
+        }
+
         private void UpdateTargetResources()
         {
             DependentActivity.TargetResources.Clear();
@@ -187,6 +225,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 RaisePropertyChanged(nameof(LatestFinishDateTime));
                 CalculateMinimumEarliestStartTime();
                 RaisePropertyChanged(nameof(MinimumEarliestStartTime));
+                CalculateMaximumLatestFinishTime();
+                RaisePropertyChanged(nameof(MaximumLatestFinishTime));
             }
         }
 
@@ -201,6 +241,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 RaisePropertyChanged(nameof(LatestFinishDateTime));
                 CalculateMinimumEarliestStartTime();
                 RaisePropertyChanged(nameof(MinimumEarliestStartTime));
+                CalculateMaximumLatestFinishTime();
+                RaisePropertyChanged(nameof(MaximumLatestFinishTime));
             }
         }
 
@@ -260,6 +302,19 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public string Notes
+        {
+            get
+            {
+                return DependentActivity.Notes;
+            }
+            set
+            {
+                DependentActivity.Notes = value;
+                RaisePropertyChanged();
+            }
+        }
+
         public HashSet<int> TargetResources => DependentActivity.TargetResources;
 
         public LogicalOperator TargetResourceOperator
@@ -290,6 +345,21 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
         public bool IsDummy => DependentActivity.IsDummy;
+
+        public bool HasNoCost
+        {
+            get
+            {
+                return DependentActivity.HasNoCost;
+            }
+            set
+            {
+                BeginEdit();
+                DependentActivity.HasNoCost = value;
+                EndEdit();
+                RaisePropertyChanged();
+            }
+        }
 
         public int Duration
         {
@@ -440,6 +510,48 @@ namespace Zametek.ViewModel.ProjectPlan
                 RaisePropertyChanged();
                 CalculateMinimumEarliestStartTime();
                 RaisePropertyChanged(nameof(MinimumEarliestStartTime));
+            }
+        }
+
+        public int? MaximumLatestFinishTime
+        {
+            get
+            {
+                return DependentActivity.MaximumLatestFinishTime;
+            }
+            set
+            {
+                if (value < 0)
+                {
+                    value = 0;
+                }
+                DependentActivity.MaximumLatestFinishTime = value;
+                RaisePropertyChanged();
+                CalculateMaximumLatestFinishDateTime();
+                RaisePropertyChanged(nameof(MaximumLatestFinishDateTime));
+            }
+        }
+
+        public DateTime? MaximumLatestFinishDateTime
+        {
+            get
+            {
+                return m_MaximumLatestFinishDateTime;
+            }
+            set
+            {
+                if (value.HasValue)
+                {
+                    if (value < ProjectStart)
+                    {
+                        value = ProjectStart;
+                    }
+                    value = value.GetValueOrDefault().Date + ProjectStart.TimeOfDay;
+                }
+                m_MaximumLatestFinishDateTime = value;
+                RaisePropertyChanged();
+                CalculateMaximumLatestFinishTime();
+                RaisePropertyChanged(nameof(MaximumLatestFinishTime));
             }
         }
 

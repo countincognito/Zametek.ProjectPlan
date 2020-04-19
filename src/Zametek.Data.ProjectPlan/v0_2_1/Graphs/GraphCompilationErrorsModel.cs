@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Zametek.Data.ProjectPlan.v0_2_0
+namespace Zametek.Data.ProjectPlan.v0_2_1
 {
     [Serializable]
     public class GraphCompilationErrorsModel
@@ -13,5 +13,8 @@ namespace Zametek.Data.ProjectPlan.v0_2_0
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "DTO property")]
         public List<int> MissingDependencies { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "DTO property")]
+        public List<int> InvalidConstraints { get; set; }
     }
 }

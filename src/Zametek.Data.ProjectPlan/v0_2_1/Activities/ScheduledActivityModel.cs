@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Zametek.Common.ProjectPlan
+namespace Zametek.Data.ProjectPlan.v0_2_1
 {
     [Serializable]
     public class ScheduledActivityModel

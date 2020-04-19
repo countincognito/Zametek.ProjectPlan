@@ -85,15 +85,25 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ForMember(src => src.ResourceDependencies, opt => opt.Ignore());
 
             CreateMap<ResourceScheduleModel, ResourceSchedule<int, int>>()
-                .ConstructUsing((src, ctx) => new ResourceSchedule<int, int>(ctx.Mapper.Map<ResourceModel, Resource<int>>(src.Resource), ctx.Mapper.Map<IEnumerable<ScheduledActivityModel>, IEnumerable<ScheduledActivity<int>>>(src.ScheduledActivities), src.FinishTime))
+                .ConstructUsing((src, ctx) =>
+                    new ResourceSchedule<int, int>(
+                        ctx.Mapper.Map<ResourceModel, Resource<int>>(src.Resource),
+                        ctx.Mapper.Map<IEnumerable<ScheduledActivityModel>, IEnumerable<ScheduledActivity<int>>>(src.ScheduledActivities),
+                        src.FinishTime))
                 .ReverseMap();
 
             CreateMap<ScheduledActivityModel, ScheduledActivity<int>>()
-                .ConstructUsing(src => new ScheduledActivity<int>(src.Id, src.Name, src.Duration, src.StartTime, src.FinishTime))
+                .ConstructUsing(src => new ScheduledActivity<int>(src.Id, src.Name, src.HasNoCost, src.Duration, src.StartTime, src.FinishTime))
                 .ReverseMap();
 
             CreateMap<GraphCompilationErrorsModel, GraphCompilationErrors<int>>()
-                .ConstructUsing((src, ctx) => new GraphCompilationErrors<int>(src.AllResourcesExplicitTargetsButNotAllActivitiesTargeted, ctx.Mapper.Map<IEnumerable<CircularDependencyModel>, IEnumerable<CircularDependency<int>>>(src.CircularDependencies), src.MissingDependencies))
+                .ConstructUsing((src, ctx) =>
+                    new GraphCompilationErrors<int>(
+                        src.AllResourcesExplicitTargetsButNotAllActivitiesTargeted,
+                        ctx.Mapper.Map<IEnumerable<CircularDependencyModel>,
+                        IEnumerable<CircularDependency<int>>>(src.CircularDependencies),
+                        src.MissingDependencies,
+                        src.InvalidConstraints))
                 .ReverseMap();
 
             CreateMap<CircularDependencyModel, CircularDependency<int>>()

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using AutoMapper;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -35,6 +36,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         projectPlan = Data.ProjectPlan.Converter.Upgrade(JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_0.ProjectPlanModel>(jsonString));
                     })
+                    .Case(Versions.v0_2_1, x =>
+                    {
+                        projectPlan = Data.ProjectPlan.Converter.Upgrade(JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_1.ProjectPlanModel>(jsonString));
+                    })
                     .Default(x => throw new InvalidOperationException($@"Cannot process version ""{x}""."));
 
                 return projectPlan;
@@ -53,7 +58,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Formatting = Formatting.Indented,
                     NullValueHandling = NullValueHandling.Ignore,
                 });
-            Data.ProjectPlan.v0_2_0.ProjectPlanModel output = Data.ProjectPlan.Converter.Format(state);
+            Data.ProjectPlan.v0_2_1.ProjectPlanModel output = Data.ProjectPlan.Converter.Format(state);
             jsonSerializer.Serialize(writer, output, output.GetType());
         }
     }
