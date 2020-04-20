@@ -11,6 +11,8 @@ namespace Zametek.Common.ProjectPlan
 
         public string Name { get; set; }
 
+        public string Notes { get; set; }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "DTO property")]
         public List<int> TargetResources { get; set; }
 
