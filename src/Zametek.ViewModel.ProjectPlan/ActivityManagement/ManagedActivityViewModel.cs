@@ -87,54 +87,6 @@ namespace Zametek.ViewModel.ProjectPlan
             private set;
         }
 
-        public DateTime? EarliestStartDateTime
-        {
-            get
-            {
-                if (EarliestStartTime.HasValue)
-                {
-                    return m_DateTimeCalculator.AddDays(ProjectStart, EarliestStartTime.GetValueOrDefault());
-                }
-                return null;
-            }
-        }
-
-        public DateTime? LatestStartDateTime
-        {
-            get
-            {
-                if (LatestStartTime.HasValue)
-                {
-                    return m_DateTimeCalculator.AddDays(ProjectStart, LatestStartTime.GetValueOrDefault());
-                }
-                return null;
-            }
-        }
-
-        public DateTime? EarliestFinishDateTime
-        {
-            get
-            {
-                if (EarliestFinishTime.HasValue)
-                {
-                    return m_DateTimeCalculator.AddDays(ProjectStart, EarliestFinishTime.GetValueOrDefault());
-                }
-                return null;
-            }
-        }
-
-        public DateTime? LatestFinishDateTime
-        {
-            get
-            {
-                if (LatestFinishTime.HasValue)
-                {
-                    return m_DateTimeCalculator.AddDays(ProjectStart, LatestFinishTime.GetValueOrDefault());
-                }
-                return null;
-            }
-        }
-
         #endregion
 
         #region Private Methods
@@ -343,7 +295,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
         public bool IsDummy => DependentActivity.IsDummy;
 
         public bool HasNoCost
@@ -429,9 +380,45 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public DateTime? EarliestStartDateTime
+        {
+            get
+            {
+                if (EarliestStartTime.HasValue)
+                {
+                    return m_DateTimeCalculator.AddDays(ProjectStart, EarliestStartTime.GetValueOrDefault());
+                }
+                return null;
+            }
+        }
+
         public int? LatestStartTime => DependentActivity.LatestStartTime;
 
+        public DateTime? LatestStartDateTime
+        {
+            get
+            {
+                if (LatestStartTime.HasValue)
+                {
+                    return m_DateTimeCalculator.AddDays(ProjectStart, LatestStartTime.GetValueOrDefault());
+                }
+                return null;
+            }
+        }
+
         public int? EarliestFinishTime => DependentActivity.EarliestFinishTime;
+
+        public DateTime? EarliestFinishDateTime
+        {
+            get
+            {
+                if (EarliestFinishTime.HasValue)
+                {
+                    return m_DateTimeCalculator.AddDays(ProjectStart, EarliestFinishTime.GetValueOrDefault());
+                }
+                return null;
+            }
+        }
 
         public int? LatestFinishTime
         {
@@ -451,6 +438,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 RaisePropertyChanged(nameof(InterferingSlack));
                 RaisePropertyChanged(nameof(DependenciesString));
                 RaisePropertyChanged(nameof(ResourceDependenciesString));
+            }
+        }
+
+        public DateTime? LatestFinishDateTime
+        {
+            get
+            {
+                if (LatestFinishTime.HasValue)
+                {
+                    return m_DateTimeCalculator.AddDays(ProjectStart, LatestFinishTime.GetValueOrDefault());
+                }
+                return null;
             }
         }
 
@@ -590,6 +589,10 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             return DependentActivity.CloneObject();
         }
+
+        #endregion
+
+        #region IEditableObject Members
 
         private bool m_isDirty = false;
 

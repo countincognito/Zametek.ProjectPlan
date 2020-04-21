@@ -20,10 +20,22 @@ namespace Zametek.Contract.ProjectPlan
 
         string ResourceDependenciesString { get; }
 
+        public string AllocatedToResourcesString { get; }
+
+        DateTime? EarliestStartDateTime { get; }
+
+        DateTime? LatestStartDateTime { get; }
+
+        DateTime? EarliestFinishDateTime { get; }
+
+        DateTime? LatestFinishDateTime { get; }
+
+        DateTime? MinimumEarliestStartDateTime { get; set; }
+
+        DateTime? MaximumLatestFinishDateTime { get; set; }
+
         void SetTargetResources(IEnumerable<ResourceModel> targetResources);
 
         void UpdateAllocatedToResources();
-
-        public string AllocatedToResourcesString { get; }
     }
 }
