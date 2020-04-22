@@ -847,7 +847,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 foreach (IManagedActivityViewModel activity in Activities)
                 {
-                    activity.UseBusinessDays = UseBusinessDays;
+                    activity.UseBusinessDays(UseBusinessDays);
                 }
             }
         }

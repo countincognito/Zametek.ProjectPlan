@@ -5,8 +5,9 @@ using Prism.Modularity;
 using Prism.Regions;
 using Prism.Unity;
 using System;
+using System.Globalization;
 using System.Windows;
-using System.Windows.Controls;
+using System.Windows.Markup;
 using Zametek.Contract.ProjectPlan;
 using Zametek.View.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
@@ -19,6 +20,14 @@ namespace Zametek.Shell.ProjectPlan
     {
         protected override Window CreateShell()
         {
+            // https://stackoverflow.com/questions/520115/stringformat-localization-issues-in-wpf/520334
+            // Ensure the current culture passed into bindings is the OS culture.
+            // By default, WPF uses en-US as the culture, regardless of the system settings.
+            FrameworkElement.LanguageProperty.OverrideMetadata(
+                  typeof(FrameworkElement),
+                  new FrameworkPropertyMetadata(
+                      XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
+
             return Container.Resolve<MainView>();
         }
 

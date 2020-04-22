@@ -10,8 +10,6 @@ namespace Zametek.Contract.ProjectPlan
     {
         DateTime ProjectStart { get; set; }
 
-        bool UseBusinessDays { set; }
-
         string DependenciesString { get; set; }
 
         HashSet<int> UpdatedDependencies { get; }
@@ -33,6 +31,8 @@ namespace Zametek.Contract.ProjectPlan
         DateTime? MinimumEarliestStartDateTime { get; set; }
 
         DateTime? MaximumLatestFinishDateTime { get; set; }
+
+        void UseBusinessDays(bool useBusinessDays);
 
         void SetTargetResources(IEnumerable<ResourceModel> targetResources);
 

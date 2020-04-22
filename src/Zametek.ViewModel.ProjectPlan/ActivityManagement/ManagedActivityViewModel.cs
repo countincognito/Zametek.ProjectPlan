@@ -182,22 +182,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public bool UseBusinessDays
-        {
-            set
-            {
-                m_DateTimeCalculator.UseBusinessDays(value);
-                RaisePropertyChanged(nameof(EarliestStartDateTime));
-                RaisePropertyChanged(nameof(LatestStartDateTime));
-                RaisePropertyChanged(nameof(EarliestFinishDateTime));
-                RaisePropertyChanged(nameof(LatestFinishDateTime));
-                CalculateMinimumEarliestStartTime();
-                RaisePropertyChanged(nameof(MinimumEarliestStartTime));
-                CalculateMaximumLatestFinishTime();
-                RaisePropertyChanged(nameof(MaximumLatestFinishTime));
-            }
-        }
-
         public string DependenciesString
         {
             get
@@ -557,6 +541,20 @@ namespace Zametek.ViewModel.ProjectPlan
         public HashSet<int> Dependencies => DependentActivity.Dependencies;
 
         public HashSet<int> ResourceDependencies => DependentActivity.ResourceDependencies;
+
+        public void UseBusinessDays(bool useBusinessDays)
+        {
+            m_DateTimeCalculator.UseBusinessDays(useBusinessDays);
+            RaisePropertyChanged(nameof(EarliestStartDateTime));
+            RaisePropertyChanged(nameof(LatestStartDateTime));
+            RaisePropertyChanged(nameof(EarliestFinishDateTime));
+            RaisePropertyChanged(nameof(LatestFinishDateTime));
+            CalculateMinimumEarliestStartTime();
+            RaisePropertyChanged(nameof(MinimumEarliestStartTime));
+            CalculateMaximumLatestFinishTime();
+            RaisePropertyChanged(nameof(MaximumLatestFinishTime));
+
+        }
 
         public void SetTargetResources(IEnumerable<ResourceModel> targetResources)
         {
