@@ -23,7 +23,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly object m_Lock;
 
-        private const int c_MaxUndoRedoStackSize = 10;
+        private const int c_MaxUndoRedoStackSize = 25;
         private readonly LimitedSizeStack<UndoRedoCommandPair> m_UndoStack;
         private readonly LimitedSizeStack<UndoRedoCommandPair> m_RedoStack;
 
