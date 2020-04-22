@@ -850,7 +850,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task RunTransitiveReductionAsync()
         {
-            await Task.Run(() => m_CoreViewModel.RunTransitiveReduction()).ConfigureAwait(true);
+            await Task.Run(() =>
+            {
+                m_CoreViewModel.RecordRedoUndo(() =>
+                {
+                    m_CoreViewModel.RunTransitiveReduction();
+                });
+            }).ConfigureAwait(true);
         }
 
         private async Task RunAutoCompileAsync()
