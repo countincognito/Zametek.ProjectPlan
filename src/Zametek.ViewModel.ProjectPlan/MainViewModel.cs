@@ -973,10 +973,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = true;
                 string directory = m_SettingService.PlanDirectory;
 
-                bool result = m_FileDialogService.ShowSaveDialog(
-                    directory,
+                var filter = new FileDialogFileTypeFilter(
                     Resource.ProjectPlan.Properties.Resources.Filter_SaveProjectPlanFileType,
-                    Resource.ProjectPlan.Properties.Resources.Filter_SaveProjectPlanFileExtension);
+                    Resource.ProjectPlan.Properties.Resources.Filter_SaveProjectPlanFileExtension
+                    );
+
+                bool result = m_FileDialogService.ShowSaveDialog(directory, filter);
 
                 if (result)
                 {
@@ -1030,10 +1032,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 string directory = m_SettingService.PlanDirectory;
 
-                bool result = m_FileDialogService.ShowOpenDialog(
-                    directory,
-                    Resource.ProjectPlan.Properties.Resources.Filter_ImportMicrosoftProjectFileType,
-                    Resource.ProjectPlan.Properties.Resources.Filter_ImportMicrosoftProjectFileExtension);
+                var filter = new FileDialogFileTypeFilter(
+                    Resource.ProjectPlan.Properties.Resources.Filter_ImportMicrosoftProjectXMLFileType,
+                    Resource.ProjectPlan.Properties.Resources.Filter_ImportMicrosoftProjectXMLFileExtension
+                    );
+
+                bool result = m_FileDialogService.ShowOpenDialog(directory, filter);
 
                 if (result)
                 {
@@ -1555,10 +1559,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (string.IsNullOrWhiteSpace(filename))
                 {
                     string directory = m_SettingService.PlanDirectory;
-                    bool result = m_FileDialogService.ShowOpenDialog(
-                        directory,
+
+                    var filter = new FileDialogFileTypeFilter(
                         Resource.ProjectPlan.Properties.Resources.Filter_OpenProjectPlanFileType,
-                        Resource.ProjectPlan.Properties.Resources.Filter_OpenProjectPlanFileExtension);
+                        Resource.ProjectPlan.Properties.Resources.Filter_OpenProjectPlanFileExtension
+                        );
+
+                    bool result = m_FileDialogService.ShowOpenDialog(directory, filter);
                     if (result)
                     {
                         filename = m_FileDialogService.Filename;

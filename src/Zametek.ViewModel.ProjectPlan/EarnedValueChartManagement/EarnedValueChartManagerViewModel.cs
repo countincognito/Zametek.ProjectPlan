@@ -383,10 +383,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = true;
                 string directory = m_SettingService.PlanDirectory;
 
-                bool result = m_FileDialogService.ShowSaveDialog(
-                    directory,
+                var filter = new FileDialogFileTypeFilter(
                     Resource.ProjectPlan.Properties.Resources.Filter_SaveCsvFileType,
-                    Resource.ProjectPlan.Properties.Resources.Filter_SaveCsvFileExtension);
+                    Resource.ProjectPlan.Properties.Resources.Filter_SaveCsvFileExtension
+                    );
+
+                bool result = m_FileDialogService.ShowSaveDialog(directory, filter);
 
                 if (result)
                 {

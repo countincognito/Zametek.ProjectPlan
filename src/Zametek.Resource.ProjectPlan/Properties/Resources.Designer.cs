@@ -61,7 +61,7 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .xml.
+        ///   Looks up a localized string similar to .mpp.
         /// </summary>
         public static string Filter_ImportMicrosoftProjectFileExtension {
             get {
@@ -70,11 +70,29 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MS Projects.
+        ///   Looks up a localized string similar to MS Project.
         /// </summary>
         public static string Filter_ImportMicrosoftProjectFileType {
             get {
                 return ResourceManager.GetString("Filter_ImportMicrosoftProjectFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .xml.
+        /// </summary>
+        public static string Filter_ImportMicrosoftProjectXMLFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_ImportMicrosoftProjectXMLFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS Project XML.
+        /// </summary>
+        public static string Filter_ImportMicrosoftProjectXMLFileType {
+            get {
+                return ResourceManager.GetString("Filter_ImportMicrosoftProjectXMLFileType", resourceCulture);
             }
         }
         
@@ -88,7 +106,7 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Projects.
+        ///   Looks up a localized string similar to Project Plan.
         /// </summary>
         public static string Filter_OpenProjectPlanFileType {
             get {
@@ -106,7 +124,7 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to CSV.
+        ///   Looks up a localized string similar to Comma Separated Values.
         /// </summary>
         public static string Filter_SaveCsvFileType {
             get {
@@ -142,7 +160,7 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Projects.
+        ///   Looks up a localized string similar to Project Plan.
         /// </summary>
         public static string Filter_SaveProjectPlanFileType {
             get {

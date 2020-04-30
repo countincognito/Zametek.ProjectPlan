@@ -115,10 +115,12 @@ namespace Zametek.View.ProjectPlan
             {
                 string directory = m_SettingService.PlanDirectory;
 
-                bool result = m_FileDialogService.ShowSaveDialog(
-                    directory,
+                var filter = new FileDialogFileTypeFilter(
                     Resource.ProjectPlan.Properties.Resources.Filter_SaveGraphMLFileType,
-                    Resource.ProjectPlan.Properties.Resources.Filter_SaveGraphMLFileExtension);
+                    Resource.ProjectPlan.Properties.Resources.Filter_SaveGraphMLFileExtension
+                    );
+
+                bool result = m_FileDialogService.ShowSaveDialog(directory, filter);
 
                 if (result)
                 {
