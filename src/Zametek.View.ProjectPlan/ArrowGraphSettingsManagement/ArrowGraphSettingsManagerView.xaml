@@ -6,7 +6,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Zametek.View.ProjectPlan"
              xmlns:vm="clr-namespace:Zametek.ViewModel.ProjectPlan;assembly=Zametek.ViewModel.ProjectPlan"
-             xmlns:properties="clr-namespace:Zametek.Resource.ProjectPlan.Properties;assembly=Zametek.Resource.ProjectPlan"
+             xmlns:properties="clr-namespace:Zametek.Resource.ProjectPlan;assembly=Zametek.Resource.ProjectPlan"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"

@@ -306,7 +306,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         series.InterActivityAllocationType = resource.InterActivityAllocationType;
                         if (string.IsNullOrWhiteSpace(resource.Name))
                         {
-                            stringBuilder.Append($@"{Resource.ProjectPlan.Properties.Resources.Label_Resource} {resourceId}");
+                            stringBuilder.Append($@"{Resource.ProjectPlan.Resources.Label_Resource} {resourceId}");
                         }
                         else
                         {
@@ -319,7 +319,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                     else
                     {
-                        stringBuilder.Append($@"{Resource.ProjectPlan.Properties.Resources.Label_Resource} {spareResourceCount}");
+                        stringBuilder.Append($@"{Resource.ProjectPlan.Resources.Label_Resource} {spareResourceCount}");
                         spareResourceCount++;
                         series.ColorFormat = Randomize(new ColorFormatModel());
                         series.UnitCost = defaultUnitCost;
@@ -355,7 +355,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     var stringBuilder = new StringBuilder();
                     if (string.IsNullOrWhiteSpace(resource.Name))
                     {
-                        stringBuilder.Append($@"{Resource.ProjectPlan.Properties.Resources.Label_Resource} {resourceId}");
+                        stringBuilder.Append($@"{Resource.ProjectPlan.Resources.Label_Resource} {resourceId}");
                     }
                     else
                     {
