@@ -5,18 +5,17 @@ using Zametek.Maths.Graphs;
 namespace Zametek.Data.ProjectPlan.v0_1_0
 {
     [Serializable]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Object is a DTO")]
     public class ActivityModel
     {
         public int Id { get; set; }
 
         public string Name { get; set; }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "DTO property")]
         public List<int> TargetResources { get; set; }
 
         public LogicalOperator TargetResourceOperator { get; set; }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "DTO property")]
         public List<int> AllocatedToResources { get; set; }
 
         public bool CanBeRemoved { get; set; }

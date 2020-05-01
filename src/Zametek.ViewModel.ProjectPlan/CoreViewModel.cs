@@ -910,11 +910,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 CalculateResourceSeriesSet();
 
+                SetCompilationOutput();
+
                 CalculateCosts();
 
                 IsProjectUpdated = true;
-
-                SetCompilationOutput();
 
                 // Cyclomatic complexity is calculated against the vertex graph without resource dependencies.
                 CyclomaticComplexity = null;

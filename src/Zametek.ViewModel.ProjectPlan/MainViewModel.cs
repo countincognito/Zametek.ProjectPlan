@@ -768,9 +768,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 m_CoreViewModel.CalculateResourceSeriesSet();
 
-                m_CoreViewModel.CalculateCosts();
-
                 m_CoreViewModel.SetCompilationOutput();
+
+                m_CoreViewModel.CalculateCosts();
 
                 // Arrow Graph.
                 m_CoreViewModel.UpdateArrowGraphSettings(projectPlan.ArrowGraphSettings);

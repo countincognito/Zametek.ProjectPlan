@@ -267,21 +267,31 @@ namespace Zametek.ViewModel.ProjectPlan
                                         series.ColorFormat.G,
                                         series.ColorFormat.B)
                                 };
-                                for (int i = 0; i < series.Values.Count; i++)
+
+                                if (series.Values.Any())
                                 {
-                                    int j = series.Values[i];
-                                    if (i >= total.Count)
+                                    // Mark the start of the plot.
+                                    areaSeries.Points.Add(new DataPoint(0.0, 0.0));
+                                    areaSeries.Points2.Add(new DataPoint(0.0, 0.0));
+
+                                    for (int i = 0; i < series.Values.Count; i++)
                                     {
-                                        total.Add(0);
+                                        int j = series.Values[i];
+                                        if (i >= total.Count)
+                                        {
+                                            total.Add(0);
+                                        }
+                                        int dayNumber = i + 1;
+                                        areaSeries.Points.Add(
+                                            new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, ShowDates, ProjectStart, m_DateTimeCalculator),
+                                            total[i]));
+                                        total[i] += j;
+                                        areaSeries.Points2.Add(
+                                            new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, ShowDates, ProjectStart, m_DateTimeCalculator),
+                                            total[i]));
                                     }
-                                    areaSeries.Points.Add(
-                                        new DataPoint(ChartHelper.CalculateChartTimeXValue(i, ShowDates, ProjectStart, m_DateTimeCalculator),
-                                        total[i]));
-                                    total[i] += j;
-                                    areaSeries.Points2.Add(
-                                        new DataPoint(ChartHelper.CalculateChartTimeXValue(i, ShowDates, ProjectStart, m_DateTimeCalculator),
-                                        total[i]));
-                                }
+                                }    
+
                                 plotModel.Series.Add(areaSeries);
                             }
                         }
