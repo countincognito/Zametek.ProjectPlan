@@ -275,7 +275,7 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Resource.ProjectPlan.Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -307,7 +307,7 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Resource.ProjectPlan.Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -347,7 +347,7 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Resource.ProjectPlan.Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -364,7 +364,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IActivityManagerViewModel Members
 
-        public string Title => Resource.ProjectPlan.Properties.Resources.Label_ActivitiesViewTitle;
+        public string Title => Resource.ProjectPlan.Resources.Label_ActivitiesViewTitle;
 
         public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
 

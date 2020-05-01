@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Zametek.Resource.ProjectPlan.Properties {
+namespace Zametek.Resource.ProjectPlan {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Zametek.Resource.ProjectPlan.Properties {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Zametek.Resource.ProjectPlan.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Zametek.Resource.ProjectPlan.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -57,96 +57,6 @@ namespace Zametek.Resource.ProjectPlan.Properties {
             }
             set {
                 resourceCulture = value;
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to .xml.
-        /// </summary>
-        public static string Filter_ImportMicrosoftProjectFileExtension {
-            get {
-                return ResourceManager.GetString("Filter_ImportMicrosoftProjectFileExtension", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to MS Projects.
-        /// </summary>
-        public static string Filter_ImportMicrosoftProjectFileType {
-            get {
-                return ResourceManager.GetString("Filter_ImportMicrosoftProjectFileType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to .zpp.
-        /// </summary>
-        public static string Filter_OpenProjectPlanFileExtension {
-            get {
-                return ResourceManager.GetString("Filter_OpenProjectPlanFileExtension", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Projects.
-        /// </summary>
-        public static string Filter_OpenProjectPlanFileType {
-            get {
-                return ResourceManager.GetString("Filter_OpenProjectPlanFileType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to .csv.
-        /// </summary>
-        public static string Filter_SaveCsvFileExtension {
-            get {
-                return ResourceManager.GetString("Filter_SaveCsvFileExtension", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to CSV.
-        /// </summary>
-        public static string Filter_SaveCsvFileType {
-            get {
-                return ResourceManager.GetString("Filter_SaveCsvFileType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to .graphml.
-        /// </summary>
-        public static string Filter_SaveGraphMLFileExtension {
-            get {
-                return ResourceManager.GetString("Filter_SaveGraphMLFileExtension", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to GraphML.
-        /// </summary>
-        public static string Filter_SaveGraphMLFileType {
-            get {
-                return ResourceManager.GetString("Filter_SaveGraphMLFileType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to .zpp.
-        /// </summary>
-        public static string Filter_SaveProjectPlanFileExtension {
-            get {
-                return ResourceManager.GetString("Filter_SaveProjectPlanFileExtension", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Projects.
-        /// </summary>
-        public static string Filter_SaveProjectPlanFileType {
-            get {
-                return ResourceManager.GetString("Filter_SaveProjectPlanFileType", resourceCulture);
             }
         }
         

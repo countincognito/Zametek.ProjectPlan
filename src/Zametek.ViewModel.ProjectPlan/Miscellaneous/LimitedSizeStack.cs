@@ -14,7 +14,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             if (maxSize < 1)
             {
-                throw new ArgumentException(Resource.ProjectPlan.Properties.Resources.Message_ValueCannotBeLessThanOne, nameof(maxSize));
+                throw new ArgumentException(Resource.ProjectPlan.Resources.Message_ValueCannotBeLessThanOne, nameof(maxSize));
             }
             m_MaxSize = maxSize;
         }

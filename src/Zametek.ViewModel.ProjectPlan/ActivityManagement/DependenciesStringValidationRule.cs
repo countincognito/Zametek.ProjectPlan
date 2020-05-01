@@ -94,7 +94,7 @@ namespace Zametek.ViewModel.ProjectPlan
             string stripped = StripWhitespace(input);
             if (!s_StrippedMatch.IsMatch(stripped))
             {
-                return new ValidationResult(false, Resource.ProjectPlan.Properties.Resources.Label_InvalidFormat);
+                return new ValidationResult(false, Resource.ProjectPlan.Resources.Label_InvalidFormat);
             }
             ManagedActivityContext context = Context;
             if (context != null && context.Id != 0)
@@ -102,7 +102,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 IList<int> output = Parse(stripped);
                 if (output.Contains(context.Id))
                 {
-                    return new ValidationResult(false, Resource.ProjectPlan.Properties.Resources.Label_SelfDependency);
+                    return new ValidationResult(false, Resource.ProjectPlan.Resources.Label_SelfDependency);
                 }
             }
             return ValidationResult.ValidResult;
