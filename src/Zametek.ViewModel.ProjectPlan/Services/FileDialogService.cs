@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32;
-using System.Globalization;
 using System.IO;
+using System.Linq;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -11,14 +11,15 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Private Method
 
         private bool OpenResult(
-            string initialDirectory,
-            string associatedFileType,
-            string associatedFileExtension,
-            FileDialog dlg)
+        string initialDirectory,
+        FileDialogFileTypeFilter filter,
+        FileDialog dlg
+        )
         {
             dlg.InitialDirectory = initialDirectory;
-            dlg.DefaultExt = associatedFileExtension;
-            dlg.Filter = string.Format(CultureInfo.InvariantCulture, "{0} | *{1}", associatedFileType, associatedFileExtension);
+            dlg.DefaultExt = filter.DefaultExtension;
+            dlg.Filter = filter.ToFileDialogFilterString();
+
             bool? result = dlg.ShowDialog();
             FileInfo fileInfo = null;
             DirectoryInfo directoryInfo = null;
@@ -50,18 +51,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public bool ShowSaveDialog(
             string initialDirectory,
-            string associatedFileType,
-            string associatedFileExtension)
+            FileDialogFileTypeFilter filter)
         {
-            return OpenResult(initialDirectory, associatedFileType, associatedFileExtension, new SaveFileDialog());
+            return OpenResult(initialDirectory, filter, new SaveFileDialog());
         }
 
         public bool ShowOpenDialog(
             string initialDirectory,
-            string associatedFileType,
-            string associatedFileExtension)
+            FileDialogFileTypeFilter filter)
         {
-            return OpenResult(initialDirectory, associatedFileType, associatedFileExtension, new OpenFileDialog());
+            return OpenResult(initialDirectory, filter, new OpenFileDialog());
         }
 
         #endregion

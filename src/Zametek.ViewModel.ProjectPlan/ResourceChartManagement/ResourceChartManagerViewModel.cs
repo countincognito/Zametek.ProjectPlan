@@ -157,10 +157,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = true;
                 string directory = m_SettingService.PlanDirectory;
 
-                bool result = m_FileDialogService.ShowSaveDialog(
-                    directory,
-                    Resource.ProjectPlan.Properties.Resources.Filter_SaveCsvFileType,
-                    Resource.ProjectPlan.Properties.Resources.Filter_SaveCsvFileExtension);
+                var filter = new FileDialogFileTypeFilter(
+                    Resource.ProjectPlan.Filters.SaveCsvFileType,
+                    Resource.ProjectPlan.Filters.SaveCsvFileExtension
+                    );
+
+                bool result = m_FileDialogService.ShowSaveDialog(directory, filter);
 
                 if (result)
                 {
@@ -168,8 +170,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (string.IsNullOrWhiteSpace(filename))
                     {
                         DispatchNotification(
-                            Resource.ProjectPlan.Properties.Resources.Title_Error,
-                            Resource.ProjectPlan.Properties.Resources.Message_EmptyFilename);
+                            Resource.ProjectPlan.Resources.Title_Error,
+                            Resource.ProjectPlan.Resources.Message_EmptyFilename);
                     }
                     else
                     {
@@ -182,7 +184,7 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Resource.ProjectPlan.Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -323,7 +325,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Position = AxisPosition.Bottom,
                             Minimum = minValue,
                             Maximum = maxValue,
-                            Title = Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle,
+                            Title = Resource.ProjectPlan.Resources.Label_TimeAxisTitle,
                             StringFormat = "d"
                         };
                     }
@@ -334,7 +336,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Position = AxisPosition.Bottom,
                             Minimum = minValue,
                             Maximum = maxValue,
-                            Title = Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle
+                            Title = Resource.ProjectPlan.Resources.Label_TimeAxisTitle
                         };
                     }
                 }
@@ -351,7 +353,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = Resource.ProjectPlan.Properties.Resources.Label_ResourcesAxisTitle
+                Title = Resource.ProjectPlan.Resources.Label_ResourcesAxisTitle
             };
         }
 
@@ -373,7 +375,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (combinedResourceSeries.Any())
                     {
-                        table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle));
+                        table.Columns.Add(new DataColumn(Resource.ProjectPlan.Resources.Label_TimeAxisTitle));
 
                         // Create the column titles.
                         foreach (ResourceSeriesModel resourceSeries in combinedResourceSeries)
@@ -416,7 +418,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IResourceChartManagerViewModel Members
 
-        public string Title => Resource.ProjectPlan.Properties.Resources.Label_ResourceChartsViewTitle;
+        public string Title => Resource.ProjectPlan.Resources.Label_ResourceChartsViewTitle;
 
         public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
 

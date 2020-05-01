@@ -289,7 +289,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Position = AxisPosition.Bottom,
                             Minimum = minValue,
                             Maximum = maxValue,
-                            Title = Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle,
+                            Title = Resource.ProjectPlan.Resources.Label_TimeAxisTitle,
                             StringFormat = "d"
                         };
                     }
@@ -300,7 +300,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Position = AxisPosition.Bottom,
                             Minimum = minValue,
                             Maximum = maxValue,
-                            Title = Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle
+                            Title = Resource.ProjectPlan.Resources.Label_TimeAxisTitle
                         };
                     }
                 }
@@ -319,7 +319,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Position = AxisPosition.Left,
                 Minimum = 0.0,
                 Maximum = 100.0,
-                Title = Resource.ProjectPlan.Properties.Resources.Label_EarnedValuePercentageAxisTitle
+                Title = Resource.ProjectPlan.Resources.Label_EarnedValuePercentageAxisTitle
             };
         }
 
@@ -337,11 +337,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (pointSet != null
                     && pointSet.Any())
                 {
-                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_TimeAxisTitle));
-                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_Id));
-                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_ActivityName));
-                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_EarnedValueTitle));
-                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Properties.Resources.Label_EarnedValuePercentageAxisTitle));
+                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Resources.Label_TimeAxisTitle));
+                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Resources.Label_Id));
+                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Resources.Label_ActivityName));
+                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Resources.Label_EarnedValueTitle));
+                    table.Columns.Add(new DataColumn(Resource.ProjectPlan.Resources.Label_EarnedValuePercentageAxisTitle));
 
                     m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
 
@@ -383,10 +383,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = true;
                 string directory = m_SettingService.PlanDirectory;
 
-                bool result = m_FileDialogService.ShowSaveDialog(
-                    directory,
-                    Resource.ProjectPlan.Properties.Resources.Filter_SaveCsvFileType,
-                    Resource.ProjectPlan.Properties.Resources.Filter_SaveCsvFileExtension);
+                var filter = new FileDialogFileTypeFilter(
+                    Resource.ProjectPlan.Filters.SaveCsvFileType,
+                    Resource.ProjectPlan.Filters.SaveCsvFileExtension
+                    );
+
+                bool result = m_FileDialogService.ShowSaveDialog(directory, filter);
 
                 if (result)
                 {
@@ -394,8 +396,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (string.IsNullOrWhiteSpace(filename))
                     {
                         DispatchNotification(
-                            Resource.ProjectPlan.Properties.Resources.Title_Error,
-                            Resource.ProjectPlan.Properties.Resources.Message_EmptyFilename);
+                            Resource.ProjectPlan.Resources.Title_Error,
+                            Resource.ProjectPlan.Resources.Message_EmptyFilename);
                     }
                     else
                     {
@@ -408,7 +410,7 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Resource.ProjectPlan.Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -422,7 +424,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IEarnedValueChartManagerViewModel Members
 
-        public string Title => Resource.ProjectPlan.Properties.Resources.Label_EarnedValueChartsViewTitle;
+        public string Title => Resource.ProjectPlan.Resources.Label_EarnedValueChartsViewTitle;
 
         public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
 

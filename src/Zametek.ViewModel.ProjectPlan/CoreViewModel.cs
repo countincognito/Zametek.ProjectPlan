@@ -220,7 +220,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 return string.Empty;
             }
             var output = new StringBuilder();
-            output.AppendLine($@">{Resource.ProjectPlan.Properties.Resources.Message_CircularDependencies}");
+            output.AppendLine($@">{Resource.ProjectPlan.Resources.Message_CircularDependencies}");
             foreach (CircularDependency<int> circularDependency in circularDependencies)
             {
                 output.AppendLine(string.Join(@" -> ", circularDependency.Dependencies));
@@ -235,7 +235,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 return string.Empty;
             }
             var output = new StringBuilder();
-            output.AppendLine($@">{Resource.ProjectPlan.Properties.Resources.Message_MissingDependencies}");
+            output.AppendLine($@">{Resource.ProjectPlan.Resources.Message_MissingDependencies}");
             foreach (int missingDependency in missingDependencies)
             {
                 IList<int> activities = Activities
@@ -255,7 +255,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 return string.Empty;
             }
             var output = new StringBuilder();
-            output.AppendLine($@">{Resource.ProjectPlan.Properties.Resources.Message_InvalidConstraints} {string.Join(@", ", invalidConstraints)}");
+            output.AppendLine($@">{Resource.ProjectPlan.Resources.Message_InvalidConstraints} {string.Join(@", ", invalidConstraints)}");
             return output.ToString();
         }
 
@@ -291,7 +291,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                         string start = ChartHelper.FormatScheduleOutput(startTime, ShowDates, ProjectStart, m_DateTimeCalculator);
                         string finish = ChartHelper.FormatScheduleOutput(finishTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-                        output.AppendLine($@"{Resource.ProjectPlan.Properties.Resources.Label_Activity} {scheduledActivity.Id}: {start} -> {finish}");
+                        output.AppendLine($@"{Resource.ProjectPlan.Resources.Label_Activity} {scheduledActivity.Id}: {start} -> {finish}");
                         previousFinishTime = finishTime;
                     }
                     output.AppendLine();
@@ -984,7 +984,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (graphCompilation.Errors.AllResourcesExplicitTargetsButNotAllActivitiesTargeted)
                     {
                         HasCompilationErrors = true;
-                        output.AppendLine($@">{Resource.ProjectPlan.Properties.Resources.Message_AllResourcesExplicitTargetsNotAllActivitiesTargeted}");
+                        output.AppendLine($@">{Resource.ProjectPlan.Resources.Message_AllResourcesExplicitTargetsNotAllActivitiesTargeted}");
                     }
 
                     if (graphCompilation.Errors.CircularDependencies.Any())
@@ -1016,7 +1016,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (HasCompilationErrors)
                 {
                     output.Insert(0, Environment.NewLine);
-                    output.Insert(0, $@">{Resource.ProjectPlan.Properties.Resources.Message_CompilationErrors}");
+                    output.Insert(0, $@">{Resource.ProjectPlan.Resources.Message_CompilationErrors}");
                 }
 
                 CompilationOutput = output.ToString();

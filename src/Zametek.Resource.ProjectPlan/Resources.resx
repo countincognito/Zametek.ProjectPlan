@@ -117,36 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Filter_ImportMicrosoftProjectFileExtension" xml:space="preserve">
-    <value>.xml</value>
-  </data>
-  <data name="Filter_ImportMicrosoftProjectFileType" xml:space="preserve">
-    <value>MS Projects</value>
-  </data>
-  <data name="Filter_OpenProjectPlanFileExtension" xml:space="preserve">
-    <value>.zpp</value>
-  </data>
-  <data name="Filter_OpenProjectPlanFileType" xml:space="preserve">
-    <value>Projects</value>
-  </data>
-  <data name="Filter_SaveCsvFileExtension" xml:space="preserve">
-    <value>.csv</value>
-  </data>
-  <data name="Filter_SaveCsvFileType" xml:space="preserve">
-    <value>CSV</value>
-  </data>
-  <data name="Filter_SaveGraphMLFileExtension" xml:space="preserve">
-    <value>.graphml</value>
-  </data>
-  <data name="Filter_SaveGraphMLFileType" xml:space="preserve">
-    <value>GraphML</value>
-  </data>
-  <data name="Filter_SaveProjectPlanFileExtension" xml:space="preserve">
-    <value>.zpp</value>
-  </data>
-  <data name="Filter_SaveProjectPlanFileType" xml:space="preserve">
-    <value>Projects</value>
-  </data>
   <data name="Label_About" xml:space="preserve">
     <value>About</value>
   </data>

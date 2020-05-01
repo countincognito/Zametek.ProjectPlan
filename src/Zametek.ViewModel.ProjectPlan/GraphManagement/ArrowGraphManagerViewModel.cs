@@ -373,7 +373,7 @@ namespace Zametek.ViewModel.ProjectPlan
             catch (Exception ex)
             {
                 DispatchNotification(
-                    Resource.ProjectPlan.Properties.Resources.Title_Error,
+                    Resource.ProjectPlan.Resources.Title_Error,
                     ex.Message);
             }
             finally
@@ -387,7 +387,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IArrowGraphManagerViewModel Members
 
-        public string Title => Resource.ProjectPlan.Properties.Resources.Label_ArrowGraphViewTitle;
+        public string Title => Resource.ProjectPlan.Resources.Label_ArrowGraphViewTitle;
 
         public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
 
