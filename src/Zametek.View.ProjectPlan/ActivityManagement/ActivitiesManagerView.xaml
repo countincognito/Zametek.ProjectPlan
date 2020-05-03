@@ -73,11 +73,11 @@
             </prism:PopupWindowAction>
         </prism:InteractionRequestTrigger>
     </i:Interaction.Triggers>
-    
+
     <DockPanel Margin="7">
         <ContentControl prism:RegionManager.RegionName="{x:Static common:RegionNames.ProjectPlanMetricsRegion}"
                         DockPanel.Dock="Top"/>
-        
+
         <DockPanel DockPanel.Dock="Bottom"
                    Margin="0,11,0,0">
             <Button DockPanel.Dock="Right"
@@ -143,7 +143,7 @@
                             <DataGrid.Resources>
                                 <local:BindingProxy x:Key="ActivitiesGridProxy" Data="{Binding}"/>
                             </DataGrid.Resources>
-                            
+
                             <DataGrid.InputBindings>
                                 <KeyBinding Key="Delete" Command="{Binding Path=RemoveManagedActivityCommand}" />
                             </DataGrid.InputBindings>
@@ -154,6 +154,33 @@
                                                        PassEventArgsToCommand="True" />
                                 </behaviors:EventTrigger>
                             </behaviors:Interaction.Triggers>
+
+                            <DataGrid.RowValidationRules>
+                                <vm:ConstraintsValidationRule ValidationStep="UpdatedValue" />
+                            </DataGrid.RowValidationRules>
+
+                            <DataGrid.RowValidationErrorTemplate>
+                                <ControlTemplate>
+                                    <Grid Margin="0"
+                                          ToolTip="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}, Path=(Validation.Errors)[0].ErrorContent}">
+                                        <Ellipse StrokeThickness="0" Fill="Red"
+                                                 Width="12" Height="12" />
+                                        <TextBlock Text="!" FontSize="12" FontWeight="Bold" Foreground="White" 
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Grid>
+                                </ControlTemplate>
+                            </DataGrid.RowValidationErrorTemplate>
+
+                            <DataGrid.RowStyle>
+                                <Style TargetType="{x:Type DataGridRow}"
+                                       BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                    <Style.Triggers>
+                                        <Trigger Property="Validation.HasError" Value="True">
+                                            <Setter Property="Background" Value="Red" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
 
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_Id}"
@@ -1582,7 +1609,7 @@
                                     </DataGridTemplateColumn.CellEditingTemplate>
                                 </DataGridTemplateColumn>
                             </DataGrid.Columns>
-                            
+
                             <DataGrid.Style>
                                 <Style TargetType="{x:Type DataGrid}"
                                        BasedOn="{StaticResource {x:Type DataGrid}}">

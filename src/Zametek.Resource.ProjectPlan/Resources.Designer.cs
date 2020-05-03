@@ -214,6 +214,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot set Minimum FS and Maximum LFT at the same time.
+        /// </summary>
+        public static string Label_CannotSetMinimumFreeSlackAndMaximumLatestFinishTimeAtSameTime {
+            get {
+                return ResourceManager.GetString("Label_CannotSetMinimumFreeSlackAndMaximumLatestFinishTimeAtSameTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
         public static string Label_Close {
@@ -759,6 +768,16 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_MinimumEarliestStartTime {
             get {
                 return ResourceManager.GetString("Label_MinimumEarliestStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum EST to Maximum LFT must be &gt;= Duration.
+        /// </summary>
+        public static string Label_MinimumEarliestStartTimeToMaximumLatestFinishTimeMustBeGreaterThanOrEqualToDuration {
+            get {
+                return ResourceManager.GetString("Label_MinimumEarliestStartTimeToMaximumLatestFinishTimeMustBeGreaterThanOrEqualTo" +
+                        "Duration", resourceCulture);
             }
         }
         

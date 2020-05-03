@@ -168,6 +168,9 @@
   <data name="Label_Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="Label_CannotSetMinimumFreeSlackAndMaximumLatestFinishTimeAtSameTime" xml:space="preserve">
+    <value>Cannot set Minimum FS and Maximum LFT at the same time</value>
+  </data>
   <data name="Label_Close" xml:space="preserve">
     <value>Close</value>
   </data>
@@ -350,6 +353,9 @@
   </data>
   <data name="Label_MinimumEarliestStartTime" xml:space="preserve">
     <value>Minimum EST</value>
+  </data>
+  <data name="Label_MinimumEarliestStartTimeToMaximumLatestFinishTimeMustBeGreaterThanOrEqualToDuration" xml:space="preserve">
+    <value>Minimum EST to Maximum LFT must be &gt;= Duration</value>
   </data>
   <data name="Label_MinimumFreeSlack" xml:space="preserve">
     <value>Minimum FS</value>
