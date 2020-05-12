@@ -87,7 +87,9 @@ namespace Zametek.ViewModel.ProjectPlan
             CreateMap<ResourceScheduleModel, ResourceSchedule<int, int>>()
                 .ConstructUsing((src, ctx) =>
                 {
-                    var resourceScheduleBuilder = new ResourceScheduleBuilder<int, int>(ctx.Mapper.Map<ResourceModel, Resource<int>>(src.Resource));
+                    ResourceScheduleBuilder<int, int> resourceScheduleBuilder =
+                        src.Resource is null ? new ResourceScheduleBuilder<int, int>() : new ResourceScheduleBuilder<int, int>(ctx.Mapper.Map<ResourceModel, Resource<int>>(src.Resource));
+
                     IEnumerable<ScheduledActivity<int>> scheduledActivities = ctx.Mapper.Map<IEnumerable<ScheduledActivityModel>, IEnumerable<ScheduledActivity<int>>>(src.ScheduledActivities);
 
                     foreach (ScheduledActivity<int> scheduledActivity in scheduledActivities)

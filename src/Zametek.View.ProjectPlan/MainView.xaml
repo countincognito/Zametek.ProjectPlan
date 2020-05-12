@@ -227,6 +227,9 @@
                           Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
                           CommandParameter="{x:Static properties:Resources.Link_ReportIssue}"/>
                 <Separator />
+                <MenuItem Header="{x:Static properties:Resources.Label_Donate}"
+                          Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+                          CommandParameter="{x:Static properties:Resources.Link_Donate}"/>
                 <MenuItem Header="{x:Static properties:Resources.Label_ViewLicense}"
                           Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
                           CommandParameter="{x:Static properties:Resources.Link_ViewLicense}"/>

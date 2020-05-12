@@ -160,7 +160,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Version 0.6.0-alpha.1.
+        ///   Looks up a localized string similar to Version 0.6.0.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -381,6 +381,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_Documentation {
             get {
                 return ResourceManager.GetString("Label_Documentation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Donate.
+        /// </summary>
+        public static string Label_Donate {
+            get {
+                return ResourceManager.GetString("Label_Donate", resourceCulture);
             }
         }
         
@@ -1102,6 +1111,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Link_Documentation {
             get {
                 return ResourceManager.GetString("Link_Documentation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://github.com/sponsors/countincognito.
+        /// </summary>
+        public static string Link_Donate {
+            get {
+                return ResourceManager.GetString("Link_Donate", resourceCulture);
             }
         }
         
