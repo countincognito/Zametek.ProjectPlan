@@ -94,7 +94,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     foreach (ScheduledActivity<int> scheduledActivity in scheduledActivities)
                     {
-                        resourceScheduleBuilder.AppendActivity(scheduledActivity);
+                        resourceScheduleBuilder.AppendActivityWithoutChecks(scheduledActivity);
                     }
 
                     return resourceScheduleBuilder.ToResourceSchedule(src.FinishTime) as ResourceSchedule<int, int>;

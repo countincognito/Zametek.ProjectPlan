@@ -180,6 +180,8 @@ namespace Zametek.View.ProjectPlan
                             if (activity.EarliestStartTime.HasValue
                                 && activity.EarliestFinishTime.HasValue)
                             {
+                                CheckRowErrors(activity, row);
+
                                 GanttChartAreaCtrl.AddGanttTask(
                                     row,
                                     CreateGanttTask(projectStart, activity, colorFormatLookup));
@@ -209,10 +211,27 @@ namespace Zametek.View.ProjectPlan
                 if (activity.EarliestStartTime.HasValue
                     && activity.EarliestFinishTime.HasValue)
                 {
+                    CheckRowErrors(activity, row);
+
                     GanttChartAreaCtrl.AddGanttTask(
                         row,
                         CreateGanttTask(projectStart, activity, colorFormatLookup));
                 }
+            }
+        }
+
+        private void CheckRowErrors(ActivityModel activity, GanttRow row)
+        {
+            if (activity is null
+                || row is null)
+            {
+                return;
+            }
+            if (activity.FreeSlack.GetValueOrDefault() < 0
+                || activity.TotalSlack.GetValueOrDefault() < 0
+                || (activity.TotalSlack.GetValueOrDefault() - activity.FreeSlack.GetValueOrDefault()) < 0)
+            {
+                row.HasErrors = true;
             }
         }
 

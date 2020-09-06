@@ -592,7 +592,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IEditableObject Members
 
-        private bool m_isDirty = false;
+        private bool m_isDirty;
 
         public void BeginEdit()
         {

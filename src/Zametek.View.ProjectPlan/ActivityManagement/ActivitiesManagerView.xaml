@@ -19,6 +19,8 @@
     <UserControl.Resources>
         <CollectionViewSource x:Key="ActivitiesView" Source="{Binding Path=Activities, Mode=OneWay}"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibility"/>
+        <local:NegativeIntToBackgroundConverter x:Key="NegativeIntToBackground"/>
+        <local:NegativeIntToForegroundConverter x:Key="NegativeIntToForeground"/>
 
         <ControlTemplate x:Key="ErrorTemplate">
             <StackPanel Orientation="Vertical">
@@ -166,7 +168,7 @@
                                         <Ellipse StrokeThickness="0" Fill="Red"
                                                  Width="12" Height="12" />
                                         <TextBlock Text="!" FontSize="12" FontWeight="Bold" Foreground="White" 
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                   TextAlignment="Center" VerticalAlignment="Center" />
                                     </Grid>
                                 </ControlTemplate>
                             </DataGrid.RowValidationErrorTemplate>
@@ -516,7 +518,7 @@
                                                             <Setter.Value>
                                                                 <DataTemplate>
                                                                     <TextBlock VerticalAlignment="Center"
-                                                                               HorizontalAlignment="Center"
+                                                                               TextAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
                                                                                Text="{Binding Path=EarliestStartTime, Mode=OneWay}"/>
@@ -551,7 +553,7 @@
                                                             <Setter.Value>
                                                                 <DataTemplate>
                                                                     <TextBlock VerticalAlignment="Center"
-                                                                               HorizontalAlignment="Center"
+                                                                               TextAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
                                                                                Text="{Binding Path=EarliestStartDateTime, Mode=OneWay, StringFormat={}{0:d}}"/>
@@ -588,7 +590,7 @@
                                                             <Setter.Value>
                                                                 <DataTemplate>
                                                                     <TextBlock VerticalAlignment="Center"
-                                                                               HorizontalAlignment="Center"
+                                                                               TextAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
                                                                                Text="{Binding Path=LatestStartTime, Mode=OneWay}"/>
@@ -623,7 +625,7 @@
                                                             <Setter.Value>
                                                                 <DataTemplate>
                                                                     <TextBlock VerticalAlignment="Center"
-                                                                               HorizontalAlignment="Center"
+                                                                               TextAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
                                                                                Text="{Binding Path=LatestStartDateTime, Mode=OneWay, StringFormat={}{0:d}}"/>
@@ -660,7 +662,7 @@
                                                             <Setter.Value>
                                                                 <DataTemplate>
                                                                     <TextBlock VerticalAlignment="Center"
-                                                                               HorizontalAlignment="Center"
+                                                                               TextAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
                                                                                Text="{Binding Path=EarliestFinishTime, Mode=OneWay}"/>
@@ -695,7 +697,7 @@
                                                             <Setter.Value>
                                                                 <DataTemplate>
                                                                     <TextBlock VerticalAlignment="Center"
-                                                                               HorizontalAlignment="Center"
+                                                                               TextAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
                                                                                Text="{Binding Path=EarliestFinishDateTime, Mode=OneWay, StringFormat={}{0:d}}"/>
@@ -732,7 +734,7 @@
                                                             <Setter.Value>
                                                                 <DataTemplate>
                                                                     <TextBlock VerticalAlignment="Center"
-                                                                               HorizontalAlignment="Center"
+                                                                               TextAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
                                                                                Text="{Binding Path=LatestFinishTime, Mode=OneWay}"/>
@@ -767,7 +769,7 @@
                                                             <Setter.Value>
                                                                 <DataTemplate>
                                                                     <TextBlock VerticalAlignment="Center"
-                                                                               HorizontalAlignment="Center"
+                                                                               TextAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
                                                                                Text="{Binding Path=LatestFinishDateTime, Mode=OneWay, StringFormat={}{0:d}}"/>
@@ -803,9 +805,11 @@
                                                             <Setter.Value>
                                                                 <DataTemplate>
                                                                     <TextBlock VerticalAlignment="Center"
-                                                                               HorizontalAlignment="Center"
+                                                                               TextAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
+                                                                               Foreground="{Binding Path=TotalSlack, Mode=OneWay, Converter={StaticResource NegativeIntToForeground}}"
+                                                                               Background="{Binding Path=TotalSlack, Mode=OneWay, Converter={StaticResource NegativeIntToBackground}}"
                                                                                Text="{Binding Path=TotalSlack, Mode=OneWay}"/>
                                                                 </DataTemplate>
                                                             </Setter.Value>
@@ -837,9 +841,11 @@
                                                             <Setter.Value>
                                                                 <DataTemplate>
                                                                     <TextBlock VerticalAlignment="Center"
-                                                                               HorizontalAlignment="Center"
+                                                                               TextAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
+                                                                               Foreground="{Binding Path=FreeSlack, Mode=OneWay, Converter={StaticResource NegativeIntToForeground}}"
+                                                                               Background="{Binding Path=FreeSlack, Mode=OneWay, Converter={StaticResource NegativeIntToBackground}}"
                                                                                Text="{Binding Path=FreeSlack, Mode=OneWay}"/>
                                                                 </DataTemplate>
                                                             </Setter.Value>
@@ -871,9 +877,11 @@
                                                             <Setter.Value>
                                                                 <DataTemplate>
                                                                     <TextBlock VerticalAlignment="Center"
-                                                                               HorizontalAlignment="Center"
+                                                                               TextAlignment="Center"
                                                                                Margin="0"
                                                                                Padding="3"
+                                                                               Foreground="{Binding Path=InterferingSlack, Mode=OneWay, Converter={StaticResource NegativeIntToForeground}}"
+                                                                               Background="{Binding Path=InterferingSlack, Mode=OneWay, Converter={StaticResource NegativeIntToBackground}}"
                                                                                Text="{Binding Path=InterferingSlack, Mode=OneWay}"/>
                                                                 </DataTemplate>
                                                             </Setter.Value>
