@@ -45,7 +45,7 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand SaveAsProjectPlanFileCommand { get; }
 
-        ICommand ImportMicrosoftProjectCommand { get; }
+        ICommand ImportProjectCommand { get; }
 
         ICommand CloseProjectCommand { get; }
 

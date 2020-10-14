@@ -164,7 +164,7 @@
                           Command="{Binding Path=SaveAsProjectPlanFileCommand, Mode=OneWay}"/>
                 <Separator />
                 <MenuItem Header="{x:Static properties:Resources.Label_Import}"
-                          Command="{Binding Path=ImportMicrosoftProjectCommand, Mode=OneWay}"/>
+                          Command="{Binding Path=ImportProjectCommand, Mode=OneWay}"/>
                 <Separator />
                 <MenuItem Header="{x:Static properties:Resources.Label_Close}"
                           Command="{Binding Path=CloseProjectCommand, Mode=OneWay}"/>
