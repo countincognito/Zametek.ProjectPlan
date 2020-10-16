@@ -67,6 +67,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand OpenAboutCommand { get; }
 
+        ICommand ExportScenariosCommand { get; }
+
         Task DoOpenProjectPlanFileAsync(string fileName = null);
     }
 }

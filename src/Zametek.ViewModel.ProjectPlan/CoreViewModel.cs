@@ -7,7 +7,6 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Event.ProjectPlan;
@@ -44,8 +43,10 @@ namespace Zametek.ViewModel.ProjectPlan
         private ArrowGraphModel m_ArrowGraphModel;
         private ArrowGraphSettingsModel m_ArrowGraphSettingsModel;
         private ResourceSettingsModel m_ResourceSettingsModel;
+        private MetricsModel m_MetricsModel;
         private int? m_CyclomaticComplexity;
         private int? m_Duration;
+        private double? m_DurationManMonths;
         private double? m_DirectCost;
         private double? m_IndirectCost;
         private double? m_OtherCost;
@@ -484,6 +485,22 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public MetricsModel Metrics
+        {
+            get 
+            {
+                return m_MetricsModel;
+            }
+            set 
+            {
+                lock (m_Lock)
+                {
+                    m_MetricsModel = value;
+                }
+                RaisePropertyChanged();
+            }
+        }
+
         public ObservableCollection<IManagedActivityViewModel> Activities
         {
             get;
@@ -559,6 +576,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_Duration = value;
+                }
+                RaisePropertyChanged();
+            }
+        }
+
+        public double? DurationManMonths
+        {
+            get
+            {
+                return m_DurationManMonths;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_DurationManMonths = value;
                 }
                 RaisePropertyChanged();
             }
@@ -906,6 +939,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 Duration = m_VertexGraphCompiler.Duration;
 
+                DurationManMonths = CalculateDurationManMonths();
+
                 UpdateActivitiesAllocatedToResources();
 
                 CalculateResourceSeriesSet();
@@ -1068,6 +1103,21 @@ namespace Zametek.ViewModel.ProjectPlan
                 IndirectCost = costs.IndirectCost;
                 OtherCost = costs.OtherCost;
                 TotalCost = costs.TotalCost;
+            }
+        }
+
+        public double CalculateDurationManMonths()
+        {
+            lock (m_Lock)
+            {
+                int? durationManDays = Duration;
+                if (!durationManDays.HasValue)
+                {
+                    return 0;
+                }
+                m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
+                int daysPerWeek = m_DateTimeCalculator.DaysPerWeek;
+                return durationManDays.GetValueOrDefault() / (daysPerWeek * 52 / 12.0);
             }
         }
 
