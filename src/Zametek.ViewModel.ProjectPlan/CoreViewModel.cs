@@ -487,11 +487,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public MetricsModel Metrics
         {
-            get 
+            get
             {
                 return m_MetricsModel;
             }
-            set 
+            set
             {
                 lock (m_Lock)
                 {
@@ -610,6 +610,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_DirectCost = value;
                 }
                 RaisePropertyChanged();
+                RaisePropertyChanged(nameof(Efficiency));
             }
         }
 
@@ -658,6 +659,19 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_TotalCost = value;
                 }
                 RaisePropertyChanged();
+                RaisePropertyChanged(nameof(Efficiency));
+            }
+        }
+
+        public double? Efficiency
+        {
+            get
+            {
+                if (!TotalCost.HasValue || TotalCost.Value == 0)
+                {
+                    return null;
+                }
+                return DirectCost / TotalCost;
             }
         }
 

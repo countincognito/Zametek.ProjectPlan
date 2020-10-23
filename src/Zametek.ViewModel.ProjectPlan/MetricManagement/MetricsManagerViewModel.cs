@@ -60,6 +60,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IndirectCost), nameof(IndirectCost), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.OtherCost), nameof(OtherCost), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.TotalCost), nameof(TotalCost), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.Efficiency), nameof(Efficiency), ThreadOption.BackgroundThread);
         }
 
         #endregion
@@ -309,6 +310,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public double? OtherCost => m_CoreViewModel.OtherCost;
 
         public double? TotalCost => m_CoreViewModel.TotalCost;
+
+        public double? Efficiency => m_CoreViewModel.Efficiency;
 
         #endregion
     }

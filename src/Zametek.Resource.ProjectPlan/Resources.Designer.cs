@@ -475,6 +475,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Efficiency:.
+        /// </summary>
+        public static string Label_Efficiency {
+            get {
+                return ResourceManager.GetString("Label_Efficiency", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Untitled.
         /// </summary>
         public static string Label_EmptyProjectTitle {

@@ -255,6 +255,9 @@
   <data name="Label_Edit" xml:space="preserve">
     <value>Edit</value>
   </data>
+  <data name="Label_Efficiency" xml:space="preserve">
+    <value>Efficiency:</value>
+  </data>
   <data name="Label_EmptyProjectTitle" xml:space="preserve">
     <value>Untitled</value>
   </data>

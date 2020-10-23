@@ -57,6 +57,8 @@ namespace Zametek.Contract.ProjectPlan
 
         double? TotalCost { get; set; }
 
+        double? Efficiency { get; }
+
         public CoreStateModel CoreState { get; }
 
         void RecordCoreState();
