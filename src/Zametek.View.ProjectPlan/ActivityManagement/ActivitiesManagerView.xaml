@@ -217,6 +217,74 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
+                                <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_ActivityName}"
+                                                        CanUserSort="True"
+                                                        SortMemberPath="Name"
+                                                        Width="120"
+                                                        MinWidth="80">
+                                    <DataGridTemplateColumn.HeaderStyle>
+                                        <Style TargetType="{x:Type DataGridColumnHeader}">
+                                            <Setter Property="ToolTip" Value="{x:Static properties:Resources.Tooltip_ActivityName}" />
+                                        </Style>
+                                    </DataGridTemplateColumn.HeaderStyle>
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ContentControl Content="{Binding}">
+                                                <ContentControl.Style>
+                                                    <Style TargetType="{x:Type ContentControl}">
+                                                        <Setter Property="ContentTemplate">
+                                                            <Setter.Value>
+                                                                <DataTemplate>
+                                                                    <TextBlock VerticalAlignment="Center"
+                                                                               Margin="0"
+                                                                               Padding="3"
+                                                                               Background="Khaki"
+                                                                               Text="{Binding Path=Name, Mode=OneWay}">
+                                                                        <TextBlock.Style>
+                                                                            <Style TargetType="{x:Type TextBlock}">
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding Path=IsSelected, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" Value="True">
+                                                                                        <Setter Property="Foreground" Value="Black" />
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </TextBlock.Style>
+                                                                    </TextBlock>
+                                                                </DataTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </ContentControl.Style>
+                                            </ContentControl>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate>
+                                            <ContentControl Content="{Binding}">
+                                                <ContentControl.Style>
+                                                    <Style TargetType="{x:Type ContentControl}">
+                                                        <Setter Property="ContentTemplate">
+                                                            <Setter.Value>
+                                                                <DataTemplate>
+                                                                    <!--FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}" forces editing on second click-->
+                                                                    <TextBox Text="{Binding Path=Name, Mode=TwoWay}"
+                                                                             VerticalAlignment="Stretch"
+                                                                             VerticalContentAlignment="Center"
+                                                                             HorizontalAlignment="Stretch"
+                                                                             HorizontalContentAlignment="Left"
+                                                                             Margin="0"
+                                                                             Padding="3"
+                                                                             FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"/>
+                                                                </DataTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </ContentControl.Style>
+                                            </ContentControl>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+
                                 <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_Duration}"
                                                         CanUserSort="True"
                                                         SortMemberPath="Duration"
@@ -495,8 +563,6 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-
-
                                 <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_EarliestStartTime}"
                                                         Width="50"
                                                         CanUserSort="True"
@@ -566,8 +632,6 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-
-
 
                                 <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_LatestStartTime}"
                                                         Width="50"
@@ -639,8 +703,6 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-
-
                                 <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_EarliestFinishTime}"
                                                         Width="50"
                                                         CanUserSort="True"
@@ -711,8 +773,6 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-
-
                                 <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_LatestFinishTime}"
                                                         Width="50"
                                                         CanUserSort="True"
@@ -782,8 +842,6 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-
-
 
                                 <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_TotalSlack}"
                                                         Width="50"
@@ -893,8 +951,6 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-
-
                                 <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_MinimumFreeSlack}"
                                                         CanUserSort="True"
                                                         SortMemberPath="MinimumFreeSlack"
@@ -963,8 +1019,6 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellEditingTemplate>
                                 </DataGridTemplateColumn>
-
-
 
                                 <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_MinimumEarliestStartTime}"
                                                         CanUserSort="True"
@@ -1113,8 +1167,6 @@
                                     </DataGridTemplateColumn.CellEditingTemplate>
                                 </DataGridTemplateColumn>
 
-
-
                                 <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_MaximumLatestFinishTime}"
                                                         CanUserSort="True"
                                                         SortMemberPath="MaximumLatestFinishTime"
@@ -1261,8 +1313,6 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellEditingTemplate>
                                 </DataGridTemplateColumn>
-
-
 
                                 <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_TargetResources}"
                                                         CanUserSort="True"
@@ -1481,79 +1531,11 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_ActivityName}"
-                                                        CanUserSort="True"
-                                                        SortMemberPath="Name"
-                                                        Width="200"
-                                                        MinWidth="150">
-                                    <DataGridTemplateColumn.HeaderStyle>
-                                        <Style TargetType="{x:Type DataGridColumnHeader}">
-                                            <Setter Property="ToolTip" Value="{x:Static properties:Resources.Tooltip_ActivityName}" />
-                                        </Style>
-                                    </DataGridTemplateColumn.HeaderStyle>
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ContentControl Content="{Binding}">
-                                                <ContentControl.Style>
-                                                    <Style TargetType="{x:Type ContentControl}">
-                                                        <Setter Property="ContentTemplate">
-                                                            <Setter.Value>
-                                                                <DataTemplate>
-                                                                    <TextBlock VerticalAlignment="Center"
-                                                                               Margin="0"
-                                                                               Padding="3"
-                                                                               Background="Khaki"
-                                                                               Text="{Binding Path=Name, Mode=OneWay}">
-                                                                        <TextBlock.Style>
-                                                                            <Style TargetType="{x:Type TextBlock}">
-                                                                                <Style.Triggers>
-                                                                                    <DataTrigger Binding="{Binding Path=IsSelected, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" Value="True">
-                                                                                        <Setter Property="Foreground" Value="Black" />
-                                                                                    </DataTrigger>
-                                                                                </Style.Triggers>
-                                                                            </Style>
-                                                                        </TextBlock.Style>
-                                                                    </TextBlock>
-                                                                </DataTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </Style>
-                                                </ContentControl.Style>
-                                            </ContentControl>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                    <DataGridTemplateColumn.CellEditingTemplate>
-                                        <DataTemplate>
-                                            <ContentControl Content="{Binding}">
-                                                <ContentControl.Style>
-                                                    <Style TargetType="{x:Type ContentControl}">
-                                                        <Setter Property="ContentTemplate">
-                                                            <Setter.Value>
-                                                                <DataTemplate>
-                                                                    <!--FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}" forces editing on second click-->
-                                                                    <TextBox Text="{Binding Path=Name, Mode=TwoWay}"
-                                                                             VerticalAlignment="Stretch"
-                                                                             VerticalContentAlignment="Center"
-                                                                             HorizontalAlignment="Stretch"
-                                                                             HorizontalContentAlignment="Left"
-                                                                             Margin="0"
-                                                                             Padding="3"
-                                                                             FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"/>
-                                                                </DataTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </Style>
-                                                </ContentControl.Style>
-                                            </ContentControl>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellEditingTemplate>
-                                </DataGridTemplateColumn>
-
                                 <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_Notes}"
                                                         CanUserSort="True"
                                                         SortMemberPath="Notes"
                                                         Width="Auto"
-                                                        MinWidth="400">
+                                                        MinWidth="120">
                                     <DataGridTemplateColumn.HeaderStyle>
                                         <Style TargetType="{x:Type DataGridColumnHeader}">
                                             <Setter Property="ToolTip" Value="{x:Static properties:Resources.Tooltip_Notes}" />

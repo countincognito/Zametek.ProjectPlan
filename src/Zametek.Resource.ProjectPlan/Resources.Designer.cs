@@ -1295,6 +1295,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to _New.
+        /// </summary>
+        public static string Menu_New {
+            get {
+                return ResourceManager.GetString("Menu_New", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Open.
         /// </summary>
         public static string Menu_Open {

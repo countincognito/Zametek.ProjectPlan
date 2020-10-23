@@ -528,6 +528,9 @@
   <data name="Menu_Import" xml:space="preserve">
     <value>_Import</value>
   </data>
+  <data name="Menu_New" xml:space="preserve">
+    <value>_New</value>
+  </data>
   <data name="Menu_Open" xml:space="preserve">
     <value>_Open</value>
   </data>

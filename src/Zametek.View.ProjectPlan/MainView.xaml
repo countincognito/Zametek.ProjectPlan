@@ -137,6 +137,7 @@
     </i:Interaction.Triggers>
 
     <Window.InputBindings>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding Path=NewProjectPlanFileCommand, Mode=OneWay}"/>
         <KeyBinding Gesture="Ctrl+O" Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"/>
         <KeyBinding Gesture="Ctrl+S" Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"/>
 
@@ -153,6 +154,10 @@
         <Menu DockPanel.Dock="Top"
               Padding="3">
             <MenuItem Header="{x:Static properties:Resources.Menu_File}">
+                <MenuItem Header="{x:Static properties:Resources.Menu_New}"
+                          Command="{Binding Path=NewProjectPlanFileCommand, Mode=OneWay}"
+                          InputGestureText="Ctrl+N"/>
+                <Separator />
                 <MenuItem Header="{x:Static properties:Resources.Menu_Open}"
                           Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
                           InputGestureText="Ctrl+O"/>

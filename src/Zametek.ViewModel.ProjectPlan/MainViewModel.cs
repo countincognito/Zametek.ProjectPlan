@@ -15,6 +15,7 @@ using System.Windows.Input;
 using System.Xml;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Data.ProjectPlan;
 using Zametek.Event.ProjectPlan;
 using Zametek.Maths.Graphs;
 using Zametek.Utility;
@@ -248,6 +249,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Commands
 
+        private DelegateCommandBase InternalNewProjectPlanFileCommand
+        {
+            get;
+            set;
+        }
+
+        private async void NewProjectPlanFile()
+        {
+            await DoNewProjectPlanFileAsync().ConfigureAwait(true);
+        }
+
         private DelegateCommandBase InternalOpenProjectPlanFileCommand
         {
             get;
@@ -442,6 +454,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void InitializeCommands()
         {
+            NewProjectPlanFileCommand =
+                InternalNewProjectPlanFileCommand =
+                    new DelegateCommand(NewProjectPlanFile);
             OpenProjectPlanFileCommand =
                 InternalOpenProjectPlanFileCommand =
                     new DelegateCommand(OpenProjectPlanFile);
@@ -491,6 +506,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void RaiseCanExecuteChangedAllCommands()
         {
+            InternalNewProjectPlanFileCommand.RaiseCanExecuteChanged();
             InternalOpenProjectPlanFileCommand.RaiseCanExecuteChanged();
             InternalSaveProjectPlanFileCommand.RaiseCanExecuteChanged();
             InternalSaveAsProjectPlanFileCommand.RaiseCanExecuteChanged();
@@ -973,6 +989,41 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Public Methods
+
+        public async Task DoNewProjectPlanFileAsync()
+        {            
+            var projectPlan = new ProjectPlanModel 
+            {
+                Version = Versions.v0_2_1,
+                ProjectStart = DateTime.Now.Date,
+                DependentActivities = new List<DependentActivityModel>(),
+                ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings,
+                ResourceSettings = m_SettingService.DefaultResourceSettings,
+                GraphCompilation = new GraphCompilationModel 
+                {
+                    DependentActivities = new List<DependentActivityModel>(),
+                    CyclomaticComplexity = 0,
+                    Duration = 0,
+                    ResourceSchedules = new List<ResourceScheduleModel>(),
+                    Errors = new GraphCompilationErrorsModel
+                    {
+                        AllResourcesExplicitTargetsButNotAllActivitiesTargeted = false,
+                        CircularDependencies = new List<CircularDependencyModel>(),
+                        InvalidConstraints = new List<int>(),
+                        MissingDependencies = new List<int>()
+                    }
+                },
+                ArrowGraph = new ArrowGraphModel 
+                {
+                    Edges = new List<ActivityEdgeModel>(),
+                    Nodes = new List<EventNodeModel>(),
+                    IsStale = false
+                },
+                HasStaleOutputs = false
+            };
+            ProcessProjectPlan(projectPlan);
+            m_SettingService.SetFilePath("New Project");
+        }
 
         public async Task DoOpenProjectPlanFileAsync()
         {
@@ -1519,6 +1570,12 @@ namespace Zametek.ViewModel.ProjectPlan
         public IApplicationCommands ApplicationCommands
         {
             get;
+        }
+
+        public ICommand NewProjectPlanFileCommand
+        {
+            get;
+            private set;
         }
 
         public ICommand OpenProjectPlanFileCommand
