@@ -172,6 +172,8 @@
                           Command="{Binding Path=ImportProjectCommand, Mode=OneWay}"/>
                 <MenuItem Header="{x:Static properties:Resources.Menu_ExportScenarios}"
                           Command="{Binding Path=ExportScenariosCommand, Mode=OneWay}"/>
+                <MenuItem Header="{x:Static properties:Resources.Menu_ExportCsv}"
+                          Command="{Binding Path=ExportCsvCommand, Mode=OneWay}"/>
                 <Separator />
                 <MenuItem Header="{x:Static properties:Resources.Menu_Close}"
                           Command="{Binding Path=CloseProjectCommand, Mode=OneWay}"/>

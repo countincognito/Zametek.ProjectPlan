@@ -1259,6 +1259,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export CSV.
+        /// </summary>
+        public static string Menu_ExportCsv {
+            get {
+                return ResourceManager.GetString("Menu_ExportCsv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to E_xport Scenarios.
         /// </summary>
         public static string Menu_ExportScenarios {

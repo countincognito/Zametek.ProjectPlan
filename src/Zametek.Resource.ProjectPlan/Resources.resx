@@ -516,6 +516,9 @@
   <data name="Menu_Edit" xml:space="preserve">
     <value>_Edit</value>
   </data>
+  <data name="Menu_ExportCsv" xml:space="preserve">
+    <value>Export CSV</value>
+  </data>
   <data name="Menu_ExportScenarios" xml:space="preserve">
     <value>E_xport Scenarios</value>
   </data>
