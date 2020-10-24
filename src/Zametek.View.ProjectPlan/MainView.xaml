@@ -14,7 +14,7 @@
         prism:ViewModelLocator.AutoWireViewModel="False"
         mc:Ignorable="d" 
         Title="{Binding Path=Title, Mode=OneWay}"
-        Height="680" Width="1200"
+        Height="754" Width="1440"
         MinHeight="680" MinWidth="850">
     <Window.Resources>
         <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -137,6 +137,7 @@
     </i:Interaction.Triggers>
 
     <Window.InputBindings>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding Path=NewProjectPlanFileCommand, Mode=OneWay}"/>
         <KeyBinding Gesture="Ctrl+O" Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"/>
         <KeyBinding Gesture="Ctrl+S" Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"/>
 
@@ -152,89 +153,97 @@
     <DockPanel Margin="7">
         <Menu DockPanel.Dock="Top"
               Padding="3">
-            <MenuItem Header="{x:Static properties:Resources.Label_File}">
-                <MenuItem Header="{x:Static properties:Resources.Label_Open}"
+            <MenuItem Header="{x:Static properties:Resources.Menu_File}">
+                <MenuItem Header="{x:Static properties:Resources.Menu_New}"
+                          Command="{Binding Path=NewProjectPlanFileCommand, Mode=OneWay}"
+                          InputGestureText="Ctrl+N"/>
+                <Separator />
+                <MenuItem Header="{x:Static properties:Resources.Menu_Open}"
                           Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
                           InputGestureText="Ctrl+O"/>
                 <Separator />
-                <MenuItem Header="{x:Static properties:Resources.Label_Save}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_Save}"
                           Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"
                           InputGestureText="Ctrl+S"/>
-                <MenuItem Header="{x:Static properties:Resources.Label_SaveAs}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_SaveAs}"
                           Command="{Binding Path=SaveAsProjectPlanFileCommand, Mode=OneWay}"/>
                 <Separator />
-                <MenuItem Header="{x:Static properties:Resources.Label_Import}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_Import}"
                           Command="{Binding Path=ImportProjectCommand, Mode=OneWay}"/>
+                <MenuItem Header="{x:Static properties:Resources.Menu_ExportScenarios}"
+                          Command="{Binding Path=ExportScenariosCommand, Mode=OneWay}"/>
+                <MenuItem Header="{x:Static properties:Resources.Menu_ExportCsv}"
+                          Command="{Binding Path=ExportCsvCommand, Mode=OneWay}"/>
                 <Separator />
-                <MenuItem Header="{x:Static properties:Resources.Label_Close}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_Close}"
                           Command="{Binding Path=CloseProjectCommand, Mode=OneWay}"/>
             </MenuItem>
-            <MenuItem Header="{x:Static properties:Resources.Label_Edit}">
-                <MenuItem Header="{x:Static properties:Resources.Label_Undo}"
+            <MenuItem Header="{x:Static properties:Resources.Menu_Edit}">
+                <MenuItem Header="{x:Static properties:Resources.Menu_Undo}"
                           Command="{Binding Path=ApplicationCommands.UndoCommand, Mode=OneWay}"
                           InputGestureText="Ctrl+Z"/>
-                <MenuItem Header="{x:Static properties:Resources.Label_Redo}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_Redo}"
                           Command="{Binding Path=ApplicationCommands.RedoCommand, Mode=OneWay}"
                           InputGestureText="Ctrl+Y"/>
             </MenuItem>
-            <MenuItem Header="{x:Static properties:Resources.Label_View}">
-                <MenuItem Header="{x:Static properties:Resources.Label_ActivitiesTab}"
+            <MenuItem Header="{x:Static properties:Resources.Menu_View}">
+                <MenuItem Header="{x:Static properties:Resources.Menu_ActivitiesTab}"
                           Click="MenuItem_ViewActivitiesManager"/>
-                <MenuItem Header="{x:Static properties:Resources.Label_GanttChartTab}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_GanttChartTab}"
                           Click="MenuItem_ViewGanttChartManager"/>
-                <MenuItem Header="{x:Static properties:Resources.Label_ArrowGraphTab}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_ArrowGraphTab}"
                           Click="MenuItem_ViewArrowGraphManager"/>
-                <MenuItem Header="{x:Static properties:Resources.Label_ResourceChartTab}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_ResourceChartTab}"
                           Click="MenuItem_ViewResourceChartManager"/>
-                <MenuItem Header="{x:Static properties:Resources.Label_EarnedValueChartTab}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_EarnedValueChartTab}"
                           Click="MenuItem_ViewEarnedValueChartManager"/>
             </MenuItem>
-            <MenuItem Header="{x:Static properties:Resources.Label_Settings}">
-                <MenuItem Header="{x:Static properties:Resources.Label_ResourceSettings}"
+            <MenuItem Header="{x:Static properties:Resources.Menu_Settings}">
+                <MenuItem Header="{x:Static properties:Resources.Menu_ResourceSettings}"
                           Command="{Binding Path=OpenResourceSettingsCommand, Mode=OneWay}"
                           InputGestureText="Ctrl+R"/>
                 <Separator />
-                <MenuItem Header="{x:Static properties:Resources.Label_ArrowGraphSettings}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_ArrowGraphSettings}"
                           Command="{Binding Path=OpenArrowGraphSettingsCommand, Mode=OneWay}"
                           InputGestureText="Ctrl+G"/>
                 <Separator />
-                <MenuItem Header="{x:Static properties:Resources.Label_ShowDates}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_ShowDates}"
                           IsCheckable="True"
                           IsChecked="{Binding Path=ShowDates, Mode=TwoWay}"
                           InputGestureText="Ctrl+D"/>
-                <MenuItem Header="{x:Static properties:Resources.Label_UseBusinessDays}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_UseBusinessDays}"
                           IsCheckable="True"
                           IsChecked="{Binding Path=UseBusinessDays, Mode=TwoWay}"
                           InputGestureText="Ctrl+B"/>
             </MenuItem>
-            <MenuItem Header="{x:Static properties:Resources.Label_Compile}">
-                <MenuItem Header="{x:Static properties:Resources.Label_ResourcedCyclomaticComplexity}"
+            <MenuItem Header="{x:Static properties:Resources.Menu_Compile}">
+                <MenuItem Header="{x:Static properties:Resources.Menu_ResourcedCyclomaticComplexity}"
                           Command="{Binding Path=CalculateResourcedCyclomaticComplexityCommand, Mode=OneWay}"/>
-                <MenuItem Header="{x:Static properties:Resources.Label_Compile}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_Compile}"
                           Command="{Binding Path=CompileCommand, Mode=OneWay}"/>
-                <MenuItem Header="{x:Static properties:Resources.Label_AutoCompile}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_AutoCompile}"
                           IsCheckable="True"
                           IsChecked="{Binding Path=AutoCompile, Mode=TwoWay}"/>
-                <MenuItem Header="{x:Static properties:Resources.Label_TransitiveReduction}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_TransitiveReduction}"
                           Command="{Binding Path=TransitiveReductionCommand, Mode=OneWay}"/>
             </MenuItem>
-            <MenuItem Header="{x:Static properties:Resources.Label_Help}">
-                <MenuItem Header="{x:Static properties:Resources.Label_Documentation}"
+            <MenuItem Header="{x:Static properties:Resources.Menu_Help}">
+                <MenuItem Header="{x:Static properties:Resources.Menu_Documentation}"
                           Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
                           CommandParameter="{x:Static properties:Resources.Link_Documentation}"/>
                 <Separator />
-                <MenuItem Header="{x:Static properties:Resources.Label_ReportIssue}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_ReportIssue}"
                           Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
                           CommandParameter="{x:Static properties:Resources.Link_ReportIssue}"/>
                 <Separator />
-                <MenuItem Header="{x:Static properties:Resources.Label_Donate}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_Donate}"
                           Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
                           CommandParameter="{x:Static properties:Resources.Link_Donate}"/>
-                <MenuItem Header="{x:Static properties:Resources.Label_ViewLicense}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_ViewLicense}"
                           Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
                           CommandParameter="{x:Static properties:Resources.Link_ViewLicense}"/>
                 <Separator />
-                <MenuItem Header="{x:Static properties:Resources.Label_About}"
+                <MenuItem Header="{x:Static properties:Resources.Menu_About}"
                           Command="{Binding Path=OpenAboutCommand, Mode=OneWay}"/>
             </MenuItem>
         </Menu>

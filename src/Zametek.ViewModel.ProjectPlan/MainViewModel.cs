@@ -15,6 +15,7 @@ using System.Windows.Input;
 using System.Xml;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Data.ProjectPlan;
 using Zametek.Event.ProjectPlan;
 using Zametek.Maths.Graphs;
 using Zametek.Utility;
@@ -214,6 +215,21 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private double? DurationManMonths
+        {
+            get
+            {
+                return m_CoreViewModel.DurationManMonths;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.DurationManMonths = value;
+                }
+            }
+        }
+
         private ArrowGraphModel ArrowGraph
         {
             get
@@ -232,6 +248,17 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Commands
+
+        private DelegateCommandBase InternalNewProjectPlanFileCommand
+        {
+            get;
+            set;
+        }
+
+        private async void NewProjectPlanFile()
+        {
+            await DoNewProjectPlanFileAsync().ConfigureAwait(true);
+        }
 
         private DelegateCommandBase InternalOpenProjectPlanFileCommand
         {
@@ -405,9 +432,31 @@ namespace Zametek.ViewModel.ProjectPlan
             set;
         }
 
+        private DelegateCommandBase InternalExportScenariosCommand
+        {
+            get;
+            set;
+        }
+
+        private DelegateCommandBase InternalExportCsvCommand
+        {
+            get;
+            set;
+        }
+
         private void OpenAbout()
         {
             DoOpenAbout();
+        }
+
+        private async void ExportScenarios()
+        {
+            await DoExportScenariosAsync().ConfigureAwait(true);
+        }
+
+        private async void ExportCsv()
+        {
+            await DoExportCsvAsync().ConfigureAwait(true);
         }
 
         #endregion
@@ -416,6 +465,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void InitializeCommands()
         {
+            NewProjectPlanFileCommand =
+                InternalNewProjectPlanFileCommand =
+                    new DelegateCommand(NewProjectPlanFile);
             OpenProjectPlanFileCommand =
                 InternalOpenProjectPlanFileCommand =
                     new DelegateCommand(OpenProjectPlanFile);
@@ -458,10 +510,17 @@ namespace Zametek.ViewModel.ProjectPlan
             OpenAboutCommand =
                 InternalOpenAboutCommand =
                     new DelegateCommand(OpenAbout);
+            ExportScenariosCommand =
+                InternalExportScenariosCommand =
+                    new DelegateCommand(ExportScenarios);
+            ExportCsvCommand =
+                InternalExportCsvCommand =
+                    new DelegateCommand(ExportCsv);
         }
 
         private void RaiseCanExecuteChangedAllCommands()
         {
+            InternalNewProjectPlanFileCommand.RaiseCanExecuteChanged();
             InternalOpenProjectPlanFileCommand.RaiseCanExecuteChanged();
             InternalSaveProjectPlanFileCommand.RaiseCanExecuteChanged();
             InternalSaveAsProjectPlanFileCommand.RaiseCanExecuteChanged();
@@ -476,6 +535,8 @@ namespace Zametek.ViewModel.ProjectPlan
             InternalTransitiveReductionCommand.RaiseCanExecuteChanged();
             InternalOpenHyperLinkCommand.RaiseCanExecuteChanged();
             InternalOpenAboutCommand.RaiseCanExecuteChanged();
+            InternalExportScenariosCommand.RaiseCanExecuteChanged();
+            InternalExportCsvCommand.RaiseCanExecuteChanged();
 
             ApplicationCommands.UndoCommand.RaiseCanExecuteChanged();
             ApplicationCommands.RedoCommand.RaiseCanExecuteChanged();
@@ -731,7 +792,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             return model;
         }
-        
+
         private void ProcessProjectImportModel(ProjectImportModel importModel)
         {
             if (importModel == null)
@@ -784,6 +845,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 CyclomaticComplexity = projectPlan.GraphCompilation.CyclomaticComplexity;
                 Duration = projectPlan.GraphCompilation.Duration;
+                DurationManMonths = m_CoreViewModel.CalculateDurationManMonths();
 
                 // Activities.
                 // Be sure to do this after the resources and project start date have been added.
@@ -942,6 +1004,41 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Public Methods
+
+        public async Task DoNewProjectPlanFileAsync()
+        {
+            var projectPlan = new ProjectPlanModel
+            {
+                Version = Versions.v0_2_1,
+                ProjectStart = DateTime.Now.Date,
+                DependentActivities = new List<DependentActivityModel>(),
+                ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings,
+                ResourceSettings = m_SettingService.DefaultResourceSettings,
+                GraphCompilation = new GraphCompilationModel
+                {
+                    DependentActivities = new List<DependentActivityModel>(),
+                    CyclomaticComplexity = 0,
+                    Duration = 0,
+                    ResourceSchedules = new List<ResourceScheduleModel>(),
+                    Errors = new GraphCompilationErrorsModel
+                    {
+                        AllResourcesExplicitTargetsButNotAllActivitiesTargeted = false,
+                        CircularDependencies = new List<CircularDependencyModel>(),
+                        InvalidConstraints = new List<int>(),
+                        MissingDependencies = new List<int>()
+                    }
+                },
+                ArrowGraph = new ArrowGraphModel
+                {
+                    Edges = new List<ActivityEdgeModel>(),
+                    Nodes = new List<EventNodeModel>(),
+                    IsStale = false
+                },
+                HasStaleOutputs = false
+            };
+            ProcessProjectPlan(projectPlan);
+            m_SettingService.SetFilePath("New Project");
+        }
 
         public async Task DoOpenProjectPlanFileAsync()
         {
@@ -1490,6 +1587,12 @@ namespace Zametek.ViewModel.ProjectPlan
             get;
         }
 
+        public ICommand NewProjectPlanFileCommand
+        {
+            get;
+            private set;
+        }
+
         public ICommand OpenProjectPlanFileCommand
         {
             get;
@@ -1579,6 +1682,231 @@ namespace Zametek.ViewModel.ProjectPlan
             get;
             private set;
         }
+
+        public ICommand ExportScenariosCommand
+        {
+            get;
+            private set;
+        }
+
+        public ICommand ExportCsvCommand
+        {
+            get;
+            private set;
+        }
+
+        public async Task DoExportScenariosAsync()
+        {
+            var filename = $"{m_SettingService.PlanTitle}.results.csv";
+            try
+            {
+                IsBusy = true;
+
+                // todo: move string to resources
+                if (m_CoreViewModel.Activities.Count == 0
+                    || m_CoreViewModel.ResourceSettings.Resources.Count == 0)
+                {
+                    var context = new Notification
+                    {
+                        Title = Resource.ProjectPlan.Resources.Title_Error,
+                        Content = "Unable to export scenarios for a Project Plan with no activities or no resources."
+                    };
+                    m_NotificationInteractionRequest.Raise(context);
+
+                    return;
+                }
+                if (m_CoreViewModel.ResourceSettings.Resources.All(x => x.IsExplicitTarget))
+                {
+                    var context = new Notification
+                    {
+                        Title = Resource.ProjectPlan.Resources.Title_Error,
+                        Content = "Unable to export scenarios for a Project Plan when all resources are Explicit Targets."
+                    };
+                    m_NotificationInteractionRequest.Raise(context);
+                    return;
+                }
+
+                var filter = new FileDialogFileTypeFilter("Comma Separated Values", ".csv");
+                var directory = m_SettingService.PlanDirectory;
+
+                var original = m_CoreViewModel.ResourceSettings;
+                var scenarios = ResourceScenarioBuilder.Build(ResourceSettings);
+
+                var headers = new[]
+                {
+                    "ImplicitResourceCount",
+                    "ActivityRisk",
+                    "ActivityStdDevRisk",
+                    "CriticalityRisk",
+                    "FibonacciRisk",
+                    "GeometricActivityRisk",
+                    "GeometricCriticalityRisk",
+                    "GeometricFibonacciRisk",
+                    "CyclomaticComplexity",
+                    "DurationMonths",
+                    "DirectCost",
+                    "IndirectCost",
+                    "OtherCost",
+                    "TotalCost",
+                };
+
+                var lines = new List<string>
+                {
+                    string.Join(",", headers)
+                };
+
+                foreach (var scenario in scenarios)
+                {
+                    m_CoreViewModel.UpdateResourceSettings(scenario);
+                    m_CoreViewModel.RunTransitiveReduction();
+                    ProcessProjectPlan(BuildProjectPlan());
+
+                    var metrics = m_CoreViewModel.Metrics;
+
+                    var values = new List<string>
+                    {
+                        $"{scenario.Resources.Count(x => !x.IsExplicitTarget)}",
+                        $"{metrics.Activity:0.000}",
+                        $"{metrics.ActivityStdDevCorrection:0.000}",
+                        $"{metrics.Criticality:0.000}",
+                        $"{metrics.Fibonacci:0.000}",
+                        $"{metrics.GeometricActivity:0.000}",
+                        $"{metrics.GeometricCriticality:0.000}",
+                        $"{metrics.GeometricFibonacci:0.000}",
+                        $"{m_CoreViewModel.CyclomaticComplexity}",
+                        $"{m_CoreViewModel.DurationManMonths:#0.0}",
+                        $"{m_CoreViewModel.DirectCost:#0.0}",
+                        $"{m_CoreViewModel.IndirectCost:#0.0}",
+                        $"{m_CoreViewModel.OtherCost:#0.0}",
+                        $"{m_CoreViewModel.TotalCost:#0.0}",
+                    };
+
+                    lines.Add(string.Join(",", values));
+                }
+
+                var csv = string.Join(Environment.NewLine, lines);
+
+                File.WriteAllText(Path.Combine(directory, filename), csv);
+
+                IsBusy = false;
+            }
+            catch (Exception ex)
+            {
+                DispatchNotification(
+                    Resource.ProjectPlan.Resources.Title_Error,
+                    ex.Message);
+                ResetProject();
+            }
+            finally
+            {
+                IsBusy = false;
+                RaiseCanExecuteChangedAllCommands();
+            }
+
+            var complete = new Notification
+            {
+                Title = Resource.ProjectPlan.Resources.Title_AppName,
+                Content = $"Exported scenarios to {filename}"
+            };
+
+            m_NotificationInteractionRequest.Raise(complete);
+        }
+
+        public async Task DoExportCsvAsync()
+        {
+            var filename = m_SettingService.PlanTitle + ".csv";
+            var directory = m_SettingService.PlanDirectory;
+
+            try
+            {
+                IsBusy = true;
+
+                var headers = new[]
+                {
+                    "Id",
+                    "Name",
+                    "TargetResources",
+                    "AllocatedResources",
+                    "IsDummy",
+                    "Duration",
+                    "TotalSlack",
+                    "FreeSlack",
+                    "InterferingSlack",
+                    "IsCritical",
+                    "EarliestStartTime",
+                    "LatestStartTime",
+                    "EarliestFinishTime",
+                    "LatestFinishTime",
+                    "EarliestStartDateTime",
+                    "LatestStartDateTime",
+                    "EarliestFinishDateTime",
+                    "LatestFinishDateTime",
+                    "Dependencies",
+                    "ResourceDependencies",
+                };
+
+                var lines = new List<string>
+                {
+                    string.Join(",", headers)
+                };
+
+                foreach (var activity in m_CoreViewModel.Activities)
+                {
+                    var values = new List<string>
+                    {
+                        $"{activity.Id}",
+                        $"\"{activity.Name}\"",
+                        $"\"{string.Join(",", activity.TargetResources)}\"",
+                        $"\"{string.Join(",", activity.AllocatedToResourcesString)}\"",
+                        $"{activity.IsDummy}",
+                        $"{activity.Duration}",
+                        $"{activity.TotalSlack}",
+                        $"{activity.FreeSlack}",
+                        $"{activity.InterferingSlack}",
+                        $"{activity.IsCritical}",
+                        $"{activity.EarliestStartTime}",
+                        $"{activity.LatestStartTime}",
+                        $"{activity.EarliestFinishTime}",
+                        $"{activity.LatestFinishTime}",
+                        $"{activity.EarliestStartDateTime}",
+                        $"{activity.LatestStartDateTime}",
+                        $"{activity.EarliestFinishDateTime}",
+                        $"{activity.LatestFinishDateTime}",
+                        $"\"{string.Join(",", activity.Dependencies)}\"",
+                        $"\"{string.Join(",", activity.ResourceDependencies)}\"",
+                    };
+
+                    lines.Add(string.Join(",", values));
+                }
+
+                var csv = string.Join(Environment.NewLine, lines);
+
+                File.WriteAllText(Path.Combine(directory, filename), csv);
+
+                IsBusy = false;
+            }
+            catch (Exception ex)
+            {
+                DispatchNotification(
+                    Resource.ProjectPlan.Resources.Title_Error,
+                    ex.Message);
+                ResetProject();
+            }
+            finally
+            {
+                IsBusy = false;
+                RaiseCanExecuteChangedAllCommands();
+            }
+
+            var complete = new Notification
+            {
+                Title = Resource.ProjectPlan.Resources.Title_AppName,
+                Content = $"Exported csv to {filename}"
+            };
+
+            m_NotificationInteractionRequest.Raise(complete);
+        }
+
 
         public async Task DoOpenProjectPlanFileAsync(string fileName)
         {

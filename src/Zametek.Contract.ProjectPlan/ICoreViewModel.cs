@@ -39,11 +39,15 @@ namespace Zametek.Contract.ProjectPlan
 
         ResourceSettingsModel ResourceSettings { get; }
 
+        MetricsModel Metrics { get; set; }
+
         IApplicationCommands ApplicationCommands { get; }
 
         int? CyclomaticComplexity { get; set; }
 
         int? Duration { get; set; }
+
+        double? DurationManMonths { get; set; }
 
         double? DirectCost { get; set; }
 
@@ -52,6 +56,8 @@ namespace Zametek.Contract.ProjectPlan
         double? OtherCost { get; set; }
 
         double? TotalCost { get; set; }
+
+        double? Efficiency { get; }
 
         public CoreStateModel CoreState { get; }
 
@@ -84,6 +90,8 @@ namespace Zametek.Contract.ProjectPlan
         void UpdateActivitiesUseBusinessDays();
 
         int RunCalculateResourcedCyclomaticComplexity();
+
+        double CalculateDurationManMonths();
 
         void RunCompile();
 
