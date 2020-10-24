@@ -255,6 +255,9 @@
   <data name="Label_Edit" xml:space="preserve">
     <value>Edit</value>
   </data>
+  <data name="Label_Efficiency" xml:space="preserve">
+    <value>Efficiency:</value>
+  </data>
   <data name="Label_EmptyProjectTitle" xml:space="preserve">
     <value>Untitled</value>
   </data>
@@ -476,6 +479,108 @@
   </data>
   <data name="Link_ViewLicense" xml:space="preserve">
     <value>https://github.com/countincognito/Zametek.ProjectPlan/blob/master/LICENSE</value>
+  </data>
+  <data name="Menu_About" xml:space="preserve">
+    <value>_About</value>
+  </data>
+  <data name="Menu_ActivitiesTab" xml:space="preserve">
+    <value>_Activities Tab</value>
+  </data>
+  <data name="Menu_ArrowGraphSettings" xml:space="preserve">
+    <value>_Arrow Graph Settings</value>
+  </data>
+  <data name="Menu_ArrowGraphTab" xml:space="preserve">
+    <value>Arrow _Graph Tab</value>
+  </data>
+  <data name="Menu_AutoCompile" xml:space="preserve">
+    <value>_Auto Compile</value>
+  </data>
+  <data name="Menu_Close" xml:space="preserve">
+    <value>_Close</value>
+  </data>
+  <data name="Menu_Compile" xml:space="preserve">
+    <value>_Compile</value>
+  </data>
+  <data name="Menu_CompileNow" xml:space="preserve">
+    <value>_Compile</value>
+  </data>
+  <data name="Menu_Documentation" xml:space="preserve">
+    <value>_Documentation</value>
+  </data>
+  <data name="Menu_Donate" xml:space="preserve">
+    <value>_Donate</value>
+  </data>
+  <data name="Menu_EarnedValueChartTab" xml:space="preserve">
+    <value>_Earned Value Chart Tab</value>
+  </data>
+  <data name="Menu_Edit" xml:space="preserve">
+    <value>_Edit</value>
+  </data>
+  <data name="Menu_ExportCsv" xml:space="preserve">
+    <value>Export CSV</value>
+  </data>
+  <data name="Menu_ExportScenarios" xml:space="preserve">
+    <value>E_xport Scenarios</value>
+  </data>
+  <data name="Menu_File" xml:space="preserve">
+    <value>_File</value>
+  </data>
+  <data name="Menu_GanttChartTab" xml:space="preserve">
+    <value>_Gantt Chart Tab</value>
+  </data>
+  <data name="Menu_Help" xml:space="preserve">
+    <value>_Help</value>
+  </data>
+  <data name="Menu_Import" xml:space="preserve">
+    <value>_Import</value>
+  </data>
+  <data name="Menu_New" xml:space="preserve">
+    <value>_New</value>
+  </data>
+  <data name="Menu_Open" xml:space="preserve">
+    <value>_Open</value>
+  </data>
+  <data name="Menu_Redo" xml:space="preserve">
+    <value>_Redo</value>
+  </data>
+  <data name="Menu_ReportIssue" xml:space="preserve">
+    <value>_Report Issue</value>
+  </data>
+  <data name="Menu_ResourceChartTab" xml:space="preserve">
+    <value>_Resource Chart Tab</value>
+  </data>
+  <data name="Menu_ResourcedCyclomaticComplexity" xml:space="preserve">
+    <value>_Resourced Cyclomatic Complexity...</value>
+  </data>
+  <data name="Menu_ResourceSettings" xml:space="preserve">
+    <value>_Resource Settings</value>
+  </data>
+  <data name="Menu_Save" xml:space="preserve">
+    <value>_Save</value>
+  </data>
+  <data name="Menu_SaveAs" xml:space="preserve">
+    <value>Save _As</value>
+  </data>
+  <data name="Menu_Settings" xml:space="preserve">
+    <value>_Settings</value>
+  </data>
+  <data name="Menu_ShowDates" xml:space="preserve">
+    <value>Show _Dates</value>
+  </data>
+  <data name="Menu_TransitiveReduction" xml:space="preserve">
+    <value>_Transitive Reduction</value>
+  </data>
+  <data name="Menu_Undo" xml:space="preserve">
+    <value>_Undo</value>
+  </data>
+  <data name="Menu_UseBusinessDays" xml:space="preserve">
+    <value>Use _Business Days</value>
+  </data>
+  <data name="Menu_View" xml:space="preserve">
+    <value>_View</value>
+  </data>
+  <data name="Menu_ViewLicense" xml:space="preserve">
+    <value>View _License</value>
   </data>
   <data name="Message_AllResourcesExplicitTargetsNotAllActivitiesTargeted" xml:space="preserve">
     <value>All resources are explicit targets, but not all activities have targeted resources</value>

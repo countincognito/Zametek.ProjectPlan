@@ -17,7 +17,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly object m_Lock;
 
-        private MetricsModel m_Metrics;
         private double? m_CriticalityRisk;
         private double? m_FibonacciRisk;
         private double? m_ActivityRisk;
@@ -25,12 +24,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private double? m_GeometricCriticalityRisk;
         private double? m_GeometricFibonacciRisk;
         private double? m_GeometricActivityRisk;
-        private int? m_CyclomaticComplexity;
-        private double? m_DurationManMonths;
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectService m_ProjectService;
-        private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IMapper m_Mapper;
         private readonly IEventAggregator m_EventService;
 
@@ -43,7 +39,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public MetricsManagerViewModel(
             ICoreViewModel coreViewModel,
             IProjectService projectService,
-            IDateTimeCalculator dateTimeCalculator,
             IMapper mapper,
             IEventAggregator eventService)
             : base(eventService)
@@ -51,7 +46,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new object();
             m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
             m_ProjectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
-            m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
             m_Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
 
@@ -60,21 +54,37 @@ namespace Zametek.ViewModel.ProjectPlan
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsBusy), nameof(IsBusy), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasCompilationErrors), nameof(HasCompilationErrors), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasStaleOutputs), nameof(HasStaleOutputs), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.CyclomaticComplexity), nameof(CyclomaticComplexity), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.DurationManMonths), nameof(DurationManMonths), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.DirectCost), nameof(DirectCost), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IndirectCost), nameof(IndirectCost), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.OtherCost), nameof(OtherCost), ThreadOption.BackgroundThread);
             SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.TotalCost), nameof(TotalCost), ThreadOption.BackgroundThread);
+            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.Efficiency), nameof(Efficiency), ThreadOption.BackgroundThread);
         }
 
         #endregion
 
         #region Properties
 
-        private bool UseBusinessDays => m_CoreViewModel.UseBusinessDays;
-
         private IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation => m_CoreViewModel.GraphCompilation;
 
         private ArrowGraphSettingsModel ArrowGraphSettings => m_CoreViewModel.ArrowGraphSettings;
+
+        private MetricsModel Metrics
+        {
+            get
+            {
+                return m_CoreViewModel.Metrics;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_CoreViewModel.Metrics = value;
+                }
+            }
+        }
 
         #endregion
 
@@ -88,7 +98,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         IsBusy = true;
                         CalculateRiskMetrics();
-                        CalculateGraphMetrics();
                         IsBusy = false;
                     }, ThreadOption.BackgroundThread);
         }
@@ -112,7 +121,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         return;
                     }
-                    m_Metrics = m_ProjectService.CalculateProjectMetrics(
+                    Metrics = m_ProjectService.CalculateProjectMetrics(
                         m_Mapper.Map<IEnumerable<IActivity<int, int>>, IList<ActivityModel>>(dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int, int>)x)),
                         ArrowGraphSettings?.ActivitySeverities);
                     SetRiskMetrics();
@@ -139,7 +148,7 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 ClearRiskMetrics();
-                MetricsModel metrics = m_Metrics;
+                MetricsModel metrics = Metrics;
                 if (metrics != null)
                 {
                     CriticalityRisk = metrics.Criticality;
@@ -150,53 +159,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     GeometricFibonacciRisk = metrics.GeometricFibonacci;
                     GeometricActivityRisk = metrics.GeometricActivity;
                 }
-            }
-        }
-
-        private void CalculateGraphMetrics()
-        {
-            lock (m_Lock)
-            {
-                ClearGraphMetrics();
-                if (HasCompilationErrors)
-                {
-                    return;
-                }
-                SetGraphMetrics();
-            }
-        }
-
-        private void ClearGraphMetrics()
-        {
-            lock (m_Lock)
-            {
-                CyclomaticComplexity = null;
-                DurationManMonths = null;
-            }
-        }
-
-        private void SetGraphMetrics()
-        {
-            lock (m_Lock)
-            {
-                ClearGraphMetrics();
-                CyclomaticComplexity = m_CoreViewModel.CyclomaticComplexity;
-                DurationManMonths = CalculateDurationManMonths();
-            }
-        }
-
-        private double? CalculateDurationManMonths()
-        {
-            lock (m_Lock)
-            {
-                int? durationManDays = m_CoreViewModel.Duration;
-                if (!durationManDays.HasValue)
-                {
-                    return null;
-                }
-                m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
-                int daysPerWeek = m_DateTimeCalculator.DaysPerWeek;
-                return durationManDays.GetValueOrDefault() / (daysPerWeek * 52.0 / 12.0);
             }
         }
 
@@ -319,11 +281,11 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get
             {
-                return m_CyclomaticComplexity;
+                return m_CoreViewModel.CyclomaticComplexity;
             }
             private set
             {
-                m_CyclomaticComplexity = value;
+                m_CoreViewModel.CyclomaticComplexity = value;
                 RaisePropertyChanged();
             }
         }
@@ -332,11 +294,11 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get
             {
-                return m_DurationManMonths;
+                return m_CoreViewModel.DurationManMonths;
             }
             private set
             {
-                m_DurationManMonths = value;
+                m_CoreViewModel.DurationManMonths = value;
                 RaisePropertyChanged();
             }
         }
@@ -348,6 +310,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public double? OtherCost => m_CoreViewModel.OtherCost;
 
         public double? TotalCost => m_CoreViewModel.TotalCost;
+
+        public double? Efficiency => m_CoreViewModel.Efficiency;
 
         #endregion
     }
