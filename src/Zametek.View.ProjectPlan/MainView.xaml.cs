@@ -2,7 +2,6 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
-using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Event.ProjectPlan;
 using Zametek.Wpf.Core;
@@ -20,7 +19,6 @@ namespace Zametek.View.ProjectPlan
         private readonly IResourceChartManagerViewModel m_ResourceChartManagerViewModel;
         private readonly IEarnedValueChartManagerViewModel m_EarnedValueChartManagerViewModel;
         private readonly IEventAggregator m_EventService;
-        private readonly ISettingService m_settingService;
 
         #endregion
 
@@ -33,8 +31,7 @@ namespace Zametek.View.ProjectPlan
             IArrowGraphManagerViewModel arrowGraphManagerViewModel,
             IResourceChartManagerViewModel resourceChartManagerViewModel,
             IEarnedValueChartManagerViewModel earnedValueChartManagerViewModel,
-            IEventAggregator eventService,
-            ISettingService settingService)
+            IEventAggregator eventService)
         {
             ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
             m_ActivitiesManagerViewModel = activitiesManagerViewModel ?? throw new ArgumentNullException(nameof(activitiesManagerViewModel));
@@ -43,7 +40,6 @@ namespace Zametek.View.ProjectPlan
             m_ResourceChartManagerViewModel = resourceChartManagerViewModel ?? throw new ArgumentNullException(nameof(resourceChartManagerViewModel));
             m_EarnedValueChartManagerViewModel = earnedValueChartManagerViewModel ?? throw new ArgumentNullException(nameof(earnedValueChartManagerViewModel));
             m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
-            m_settingService = settingService ?? throw new ArgumentNullException(nameof(settingService));
             InitializeComponent();
         }
 
@@ -96,35 +92,12 @@ namespace Zametek.View.ProjectPlan
 
         #region Overrides
 
-        protected override void OnSourceInitialized(EventArgs e)
-        {
-            base.OnSourceInitialized(e);
-
-            var settings = m_settingService.MainViewSettings;
-
-            WindowState = settings.Maximized ? WindowState.Maximized : WindowState.Normal;
-            Top = settings.Top;
-            Left = settings.Left;
-            Width = settings.Width;
-            Height = settings.Height;
-        }
-
         protected override void OnClosing(CancelEventArgs e)
         {
             if (e is null)
             {
                 throw new ArgumentNullException(nameof(e));
             }
-
-            var settings = new MainViewSettingsModel
-            {
-                Maximized = WindowState == WindowState.Maximized,
-                Top = Top,
-                Left = Left,
-                Width = Width,
-                Height = Height
-            };
-            m_settingService.SetMainViewSettings(settings);
 
             base.OnClosing(e);
             var closingPayload = new ApplicationClosingPayload();

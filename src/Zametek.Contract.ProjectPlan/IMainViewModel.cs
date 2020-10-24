@@ -45,7 +45,7 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand SaveAsProjectPlanFileCommand { get; }
 
-        ICommand ImportProjectCommand { get; }
+        ICommand ImportMicrosoftProjectCommand { get; }
 
         ICommand CloseProjectCommand { get; }
 
@@ -66,8 +66,6 @@ namespace Zametek.Contract.ProjectPlan
         ICommand OpenHyperLinkCommand { get; }
 
         ICommand OpenAboutCommand { get; }
-
-        ICommand ExportScenariosCommand { get; }
 
         Task DoOpenProjectPlanFileAsync(string fileName = null);
     }

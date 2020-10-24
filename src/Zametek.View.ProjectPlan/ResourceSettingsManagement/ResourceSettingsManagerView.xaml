@@ -10,12 +10,11 @@
              xmlns:local="clr-namespace:Zametek.View.ProjectPlan"
              xmlns:properties="clr-namespace:Zametek.Resource.ProjectPlan;assembly=Zametek.Resource.ProjectPlan"
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
-             xmlns:common="clr-namespace:Zametek.Common.ProjectPlan;assembly=Zametek.Common.ProjectPlan"
              xmlns:vm="clr-namespace:Zametek.ViewModel.ProjectPlan;assembly=Zametek.ViewModel.ProjectPlan"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              prism:ViewModelLocator.AutoWireViewModel="False"
              mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="1060">
+             d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
         <CollectionViewSource x:Key="ResourcesView" Source="{Binding Path=Resources, Mode=OneWay}"/>
         <local:ColorFormatToColorConverter x:Key="ColorFormatToColorConverter"/>
@@ -145,7 +144,7 @@
 
                                     <DataGrid.Columns>
                                         <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_Id}"
-                                                                Width="30"
+                                                                Width="50"
                                                                 CanUserSort="True"
                                                                 SortMemberPath="Id"
                                                                 IsReadOnly="True">
@@ -278,7 +277,7 @@
                                         <DataGridTemplateColumn Header="{x:Static properties:Resources.Label_UnitCost}"
                                                                 CanUserSort="True"
                                                                 SortMemberPath="UnitCost"
-                                                                Width="70">
+                                                                Width="100">
                                             <DataGridTemplateColumn.HeaderStyle>
                                                 <Style TargetType="{x:Type DataGridColumnHeader}">
                                                     <Setter Property="ToolTip" Value="{x:Static properties:Resources.Tooltip_UnitCost}" />
@@ -433,7 +432,7 @@
                                                                 CanUserSort="True"
                                                                 SortMemberPath="Name"
                                                                 Width="Auto"
-                                                                MinWidth="250">
+                                                                MinWidth="400">
                                             <DataGridTemplateColumn.HeaderStyle>
                                                 <Style TargetType="{x:Type DataGridColumnHeader}">
                                                     <Setter Property="ToolTip" Value="{x:Static properties:Resources.Tooltip_ResourceName}" />
@@ -496,7 +495,6 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellEditingTemplate>
                                         </DataGridTemplateColumn>
-
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>
