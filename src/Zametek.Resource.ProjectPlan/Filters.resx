@@ -129,6 +129,12 @@
   <data name="ImportMicrosoftProjectXMLFileType" xml:space="preserve">
     <value>MS Project XML</value>
   </data>
+  <data name="ImportProjectJsonFileExtension" xml:space="preserve">
+    <value>.json</value>
+  </data>
+  <data name="ImportProjectJsonFileType" xml:space="preserve">
+    <value>Project Json</value>
+  </data>
   <data name="OpenProjectPlanFileExtension" xml:space="preserve">
     <value>.zpp</value>
   </data>
