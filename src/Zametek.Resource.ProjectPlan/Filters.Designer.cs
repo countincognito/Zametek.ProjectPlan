@@ -97,6 +97,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to .json.
+        /// </summary>
+        public static string ImportProjectJsonFileExtension {
+            get {
+                return ResourceManager.GetString("ImportProjectJsonFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project Json.
+        /// </summary>
+        public static string ImportProjectJsonFileType {
+            get {
+                return ResourceManager.GetString("ImportProjectJsonFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to .zpp.
         /// </summary>
         public static string OpenProjectPlanFileExtension {

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FluentDateTime;
+using Newtonsoft.Json;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Interactivity.InteractionRequest;
@@ -270,15 +271,15 @@ namespace Zametek.ViewModel.ProjectPlan
             await DoSaveAsProjectPlanFileAsync().ConfigureAwait(true);
         }
 
-        private DelegateCommandBase InternalImportMicrosoftProjectCommand
+        private DelegateCommandBase InternalImportProjectCommand
         {
             get;
             set;
         }
 
-        private async void ImportMicrosoftProject()
+        private async void ImportProject()
         {
-            await DoImportMicrosoftProjectAsync().ConfigureAwait(true);
+            await DoImportProjectAsync().ConfigureAwait(true);
         }
 
         private DelegateCommandBase InternalCloseProjectCommand
@@ -424,9 +425,9 @@ namespace Zametek.ViewModel.ProjectPlan
             SaveAsProjectPlanFileCommand =
                 InternalSaveAsProjectPlanFileCommand =
                     new DelegateCommand(SaveAsProjectPlanFile);
-            ImportMicrosoftProjectCommand =
-                InternalImportMicrosoftProjectCommand =
-                    new DelegateCommand(ImportMicrosoftProject);
+            ImportProjectCommand =
+                InternalImportProjectCommand =
+                    new DelegateCommand(ImportProject);
             CloseProjectCommand =
                 InternalCloseProjectCommand =
                     new DelegateCommand(CloseProject);
@@ -464,7 +465,7 @@ namespace Zametek.ViewModel.ProjectPlan
             InternalOpenProjectPlanFileCommand.RaiseCanExecuteChanged();
             InternalSaveProjectPlanFileCommand.RaiseCanExecuteChanged();
             InternalSaveAsProjectPlanFileCommand.RaiseCanExecuteChanged();
-            InternalImportMicrosoftProjectCommand.RaiseCanExecuteChanged();
+            InternalImportProjectCommand.RaiseCanExecuteChanged();
             InternalCloseProjectCommand.RaiseCanExecuteChanged();
             InternalOpenResourceSettingsCommand.RaiseCanExecuteChanged();
             InternalOpenArrowGraphSettingsCommand.RaiseCanExecuteChanged();
@@ -565,12 +566,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Publish(new GraphCompilationUpdatedPayload());
         }
 
-        private static async Task<MicrosoftProjectModel> ImportMicrosoftProjectAsync(string filename)
+        private static async Task<ProjectImportModel> ImportMicrosoftProjectAsync(string filename)
         {
             return await Task.Run(() => ImportMicrosoftProject(filename)).ConfigureAwait(true);
         }
 
-        private static MicrosoftProjectModel ImportMicrosoftProject(string filename)
+        private static ProjectImportModel ImportMicrosoftProject(string filename)
         {
             if (string.IsNullOrWhiteSpace(filename))
             {
@@ -699,7 +700,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 dependentActivities.Add(dependentActivity);
             }
 
-            return new MicrosoftProjectModel
+            return new ProjectImportModel
             {
                 ProjectStart = projectStart,
                 DependentActivities = dependentActivities.ToList(),
@@ -707,28 +708,52 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private void ProcessMicrosoftProject(MicrosoftProjectModel microsoftProject)
+        private static async Task<ProjectImportModel> ImportProjectJsonAsync(string filename)
         {
-            if (microsoftProject == null)
+            return await Task.Run(() => ImportProjectJson(filename)).ConfigureAwait(true);
+        }
+
+        private static ProjectImportModel ImportProjectJson(string filename)
+        {
+            if (string.IsNullOrWhiteSpace(filename))
             {
-                throw new ArgumentNullException(nameof(microsoftProject));
+                throw new ArgumentNullException(nameof(filename));
+            }
+
+            var json = File.ReadAllText(filename);
+
+            var model = JsonConvert.DeserializeObject<ProjectImportModel>(json);
+            foreach (var dependentActivity in model.DependentActivities)
+            {
+                dependentActivity.ResourceDependencies = new List<int>();
+                dependentActivity.Activity.AllocatedToResources = new List<int>();
+            }
+
+            return model;
+        }
+        
+        private void ProcessProjectImportModel(ProjectImportModel importModel)
+        {
+            if (importModel == null)
+            {
+                throw new ArgumentNullException(nameof(importModel));
             }
             lock (m_Lock)
             {
                 ResetProject();
 
                 // Project Start Date.
-                ProjectStartWithoutPublishing = microsoftProject.ProjectStart;
+                ProjectStartWithoutPublishing = importModel.ProjectStart;
 
                 // Resources.
-                foreach (ResourceModel resource in microsoftProject.Resources)
+                foreach (ResourceModel resource in importModel.Resources)
                 {
                     ResourceSettings.Resources.Add(resource);
                 }
                 //SetTargetResources();
 
                 // Activities.
-                m_CoreViewModel.AddManagedActivities(new HashSet<DependentActivityModel>(microsoftProject.DependentActivities));
+                m_CoreViewModel.AddManagedActivities(new HashSet<DependentActivityModel>(importModel.DependentActivities));
 
                 HasStaleOutputs = true;
                 IsProjectUpdated = true;
@@ -1011,7 +1036,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public async Task DoImportMicrosoftProjectAsync()
+        public async Task DoImportProjectAsync()
         {
             try
             {
@@ -1034,7 +1059,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 var filter = new FileDialogFileTypeFilter(
                     Resource.ProjectPlan.Filters.ImportMicrosoftProjectXMLFileType,
-                    Resource.ProjectPlan.Filters.ImportMicrosoftProjectXMLFileExtension
+                    Resource.ProjectPlan.Filters.ImportMicrosoftProjectXMLFileExtension,
+                    Resource.ProjectPlan.Filters.ImportProjectJsonFileType,
+                    Resource.ProjectPlan.Filters.ImportProjectJsonFileExtension
                     );
 
                 bool result = m_FileDialogService.ShowOpenDialog(directory, filter);
@@ -1050,8 +1077,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                     else
                     {
-                        MicrosoftProjectModel microsoftProjectDto = await ImportMicrosoftProjectAsync(filename).ConfigureAwait(true);
-                        ProcessMicrosoftProject(microsoftProjectDto);
+                        var fileInfo = new FileInfo(filename);
+                        var importModel = default(ProjectImportModel);
+
+                        if (fileInfo.Extension == Resource.ProjectPlan.Filters.ImportMicrosoftProjectXMLFileExtension)
+                        {
+                            importModel = await ImportMicrosoftProjectAsync(filename).ConfigureAwait(true);
+                        }
+                        else
+                        {
+                            importModel = await ImportProjectJsonAsync(filename).ConfigureAwait(true);
+                        }
+                        ProcessProjectImportModel(importModel);
 
                         m_SettingService.SetFilePath(filename);
 
@@ -1471,7 +1508,13 @@ namespace Zametek.ViewModel.ProjectPlan
             private set;
         }
 
-        public ICommand ImportMicrosoftProjectCommand
+        public ICommand ImportProjectCommand
+        {
+            get;
+            private set;
+        }
+
+        public ICommand ImportProjectJsonCommand
         {
             get;
             private set;
