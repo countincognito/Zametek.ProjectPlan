@@ -12,7 +12,7 @@ namespace Zametek.Shell.ProjectPlan {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.7.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.4.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -32,66 +32,6 @@ namespace Zametek.Shell.ProjectPlan {
             }
             set {
                 this["ProjectPlanDirectory"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("25")]
-        public double Main_Top {
-            get {
-                return ((double)(this["Main_Top"]));
-            }
-            set {
-                this["Main_Top"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("25")]
-        public double Main_Left {
-            get {
-                return ((double)(this["Main_Left"]));
-            }
-            set {
-                this["Main_Left"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1152")]
-        public double Main_Height {
-            get {
-                return ((double)(this["Main_Height"]));
-            }
-            set {
-                this["Main_Height"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1536")]
-        public double Main_Width {
-            get {
-                return ((double)(this["Main_Width"]));
-            }
-            set {
-                this["Main_Width"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool Main_Maximized {
-            get {
-                return ((bool)(this["Main_Maximized"]));
-            }
-            set {
-                this["Main_Maximized"] = value;
             }
         }
     }

@@ -8,7 +8,7 @@
              xmlns:prism="http://prismlibrary.com/"
              prism:ViewModelLocator.AutoWireViewModel="False"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="800">
+             d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
         <Border BorderThickness="2"
                 Background="LightGray">
@@ -105,35 +105,25 @@
 
 
 
-                <Label Grid.Column="4" Grid.Row="1"
+                <Label Grid.Column="4" Grid.Row="2"
                        VerticalContentAlignment="Center"
                        HorizontalContentAlignment="Right"
                        Content="{x:Static properties:Resources.Label_CyclomaticComplexity}"/>
-                <TextBlock Grid.Column="5" Grid.Row="1"
+                <TextBlock Grid.Column="5" Grid.Row="2"
                            VerticalAlignment="Center"
                            Margin="7,0,0,0"
                            FontWeight="Bold"
                            Text="{Binding Path=CyclomaticComplexity, Mode=OneWay}"/>
 
-                <Label Grid.Column="4" Grid.Row="2"
-                       VerticalContentAlignment="Center"
-                       HorizontalContentAlignment="Right"
-                       Content="{x:Static properties:Resources.Label_DurationManMonths}"/>
-                <TextBlock Grid.Column="5" Grid.Row="2"
-                           VerticalAlignment="Center"
-                           Margin="7,0,0,0"
-                           FontWeight="Bold"
-                           Text="{Binding Path=DurationManMonths, Mode=OneWay, StringFormat=N1}"/>
-
                 <Label Grid.Column="4" Grid.Row="3"
                        VerticalContentAlignment="Center"
                        HorizontalContentAlignment="Right"
-                       Content="{x:Static properties:Resources.Label_Efficiency}"/>
+                       Content="{x:Static properties:Resources.Label_DurationManMonths}"/>
                 <TextBlock Grid.Column="5" Grid.Row="3"
                            VerticalAlignment="Center"
                            Margin="7,0,0,0"
                            FontWeight="Bold"
-                           Text="{Binding Path=Efficiency, Mode=OneWay, StringFormat=P1}"/>
+                           Text="{Binding Path=DurationManMonths, Mode=OneWay, StringFormat=N1}"/>
 
 
 
