@@ -169,6 +169,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to .graphml.
+        /// </summary>
+        public static string SaveGraphVizFileExtension {
+            get {
+                return ResourceManager.GetString("SaveGraphVizFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GraphML.
+        /// </summary>
+        public static string SaveGraphVizFileType {
+            get {
+                return ResourceManager.GetString("SaveGraphVizFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to .zpp.
         /// </summary>
         public static string SaveProjectPlanFileExtension {

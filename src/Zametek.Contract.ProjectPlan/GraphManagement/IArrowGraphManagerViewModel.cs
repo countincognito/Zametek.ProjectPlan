@@ -17,6 +17,6 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand GenerateArrowGraphCommand { get; }
 
-        byte[] ExportArrowGraphToDiagram(DiagramArrowGraphModel diagramArrowGraph);
+        byte[] ExportArrowGraphToDiagram(DiagramArrowGraphModel diagramArrowGraph, ArrowGraphType graphType);
     }
 }

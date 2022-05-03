@@ -415,12 +415,29 @@ namespace Zametek.ViewModel.ProjectPlan
             return resourceSeriesSet;
         }
 
-        public byte[] ExportArrowGraphToDiagram(DiagramArrowGraphModel diagramArrowGraph)
+        public byte[] ExportArrowGraphToDiagram(DiagramArrowGraphModel diagramArrowGraph, ArrowGraphType graphType)
         {
             if (diagramArrowGraph == null)
             {
                 throw new ArgumentNullException(nameof(diagramArrowGraph));
             }
+
+            if (graphType == ArrowGraphType.GraphML)
+            {
+                return GenerateGraphML(diagramArrowGraph);
+            }
+            else if (graphType == ArrowGraphType.GraphViz)
+            {
+                return GenerateGraphViz(diagramArrowGraph);
+            }
+            else
+            {
+                throw new ArgumentException($"{graphType} is no valid", nameof(graphType));      
+            }
+        }
+
+        private static byte[] GenerateGraphML(DiagramArrowGraphModel diagramArrowGraph)
+        {
             graphml graphML = GraphMLBuilder.ToGraphML(diagramArrowGraph);
             byte[] output = null;
             using (var ms = new MemoryStream())
@@ -430,6 +447,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 output = ms.ToArray();
             }
             return output;
+        }
+
+        private static byte[] GenerateGraphViz(DiagramArrowGraphModel diagramArrowGraph)
+        {
+            var graphviz = GraphVizBuilder.ToGraphViz(diagramArrowGraph);
+
+            return Encoding.UTF8.GetBytes(graphviz);
         }
 
         #endregion

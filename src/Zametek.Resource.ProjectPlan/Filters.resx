@@ -153,6 +153,12 @@
   <data name="SaveGraphMLFileType" xml:space="preserve">
     <value>GraphML</value>
   </data>
+  <data name="SaveGraphVizFileExtension" xml:space="preserve">
+    <value>.dot</value>
+  </data>
+  <data name="SaveGraphVizFileType" xml:space="preserve">
+    <value>GraphViz</value>
+  </data>
   <data name="SaveProjectPlanFileExtension" xml:space="preserve">
     <value>.zpp</value>
   </data>

@@ -520,6 +520,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export to GraphViz.
+        /// </summary>
+        public static string Label_ExportGraphViz {
+            get {
+                return ResourceManager.GetString("Label_ExportGraphViz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Export as costs:.
         /// </summary>
         public static string Label_ExportResourceChartAsCosts {

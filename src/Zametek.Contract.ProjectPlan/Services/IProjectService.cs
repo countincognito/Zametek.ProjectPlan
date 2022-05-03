@@ -11,6 +11,6 @@ namespace Zametek.Contract.ProjectPlan
 
         ResourceSeriesSetModel CalculateResourceSeriesSet(IEnumerable<ResourceScheduleModel> resourceSchedules, IEnumerable<ResourceModel> resources, double defaultUnitCost);
 
-        byte[] ExportArrowGraphToDiagram(DiagramArrowGraphModel diagramArrowGraph);
+        byte[] ExportArrowGraphToDiagram(DiagramArrowGraphModel diagramArrowGraph, ArrowGraphType graphType);
     }
 }
