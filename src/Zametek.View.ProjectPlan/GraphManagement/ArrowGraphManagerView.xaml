@@ -61,6 +61,16 @@
                 </Setter.Value>
             </Setter>
             <Setter Property="DisplayForSelfLoopedEdges" Value="False"/>
+
+            <Setter Property="ToolTip">
+                <Setter.Value>
+                    <Border BorderBrush="Black" BorderThickness="2" CornerRadius="8" UseLayoutRounding="True">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="{Binding AttachNode.Edge.Name}" Margin="4" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style TargetType="{x:Type graphxCtrl:EdgeControl}">
