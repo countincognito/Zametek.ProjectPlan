@@ -9,6 +9,7 @@ using System.Windows;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Event.ProjectPlan;
+using Zametek.ViewModel.ProjectPlan;
 using Zametek.Wpf.Core;
 
 namespace Zametek.View.ProjectPlan
@@ -115,7 +116,7 @@ namespace Zametek.View.ProjectPlan
             {
                 string directory = m_SettingService.PlanDirectory;
 
-                var filter = new FileDialogFileTypeFilter(
+                IFileDialogFileTypeFilter filter = new FileDialogFileTypeFilter(
                     Resource.ProjectPlan.Filters.SaveGraphMLFileType,
                     Resource.ProjectPlan.Filters.SaveGraphMLFileExtension
                     );
@@ -161,7 +162,7 @@ namespace Zametek.View.ProjectPlan
             {
                 string directory = m_SettingService.PlanDirectory;
 
-                var filter = new FileDialogFileTypeFilter(
+                IFileDialogFileTypeFilter filter = new FileDialogFileTypeFilter(
                     Resource.ProjectPlan.Filters.SaveGraphVizFileType,
                     Resource.ProjectPlan.Filters.SaveGraphVizFileExtension
                     );

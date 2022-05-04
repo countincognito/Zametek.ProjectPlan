@@ -1,4 +1,4 @@
-namespace Zametek.Contract.ProjectPlan
+namespace Zametek.Common.ProjectPlan
 {
     public enum ArrowGraphType
     {

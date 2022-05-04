@@ -1,8 +1,10 @@
 ﻿using System.Text;
+using Zametek.Contract.ProjectPlan;
 
-namespace Zametek.Contract.ProjectPlan
+namespace Zametek.ViewModel.ProjectPlan
 {
-    internal class FileTypeFilter : IFileTypeFilter
+    internal class FileTypeFilter
+        : IFileTypeFilter
     {
         public FileTypeFilter(string fileType, string fileExtension)
         {

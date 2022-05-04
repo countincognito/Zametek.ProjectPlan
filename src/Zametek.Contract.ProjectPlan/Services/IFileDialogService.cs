@@ -1,7 +1,4 @@
-﻿using System.Linq;
-using System.Text;
-
-namespace Zametek.Contract.ProjectPlan
+﻿namespace Zametek.Contract.ProjectPlan
 {
     public interface IFileDialogService
     {
@@ -9,8 +6,8 @@ namespace Zametek.Contract.ProjectPlan
 
         string Directory { get; }
 
-        bool ShowSaveDialog(string initialDirectory, FileDialogFileTypeFilter filter);
+        bool ShowSaveDialog(string initialDirectory, IFileDialogFileTypeFilter filter);
 
-        bool ShowOpenDialog(string initialDirectory, FileDialogFileTypeFilter filter);
+        bool ShowOpenDialog(string initialDirectory, IFileDialogFileTypeFilter filter);
     }
 }

@@ -12,7 +12,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private bool OpenResult(
         string initialDirectory,
-        FileDialogFileTypeFilter filter,
+        IFileDialogFileTypeFilter filter,
         FileDialog dlg
         )
         {
@@ -51,14 +51,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public bool ShowSaveDialog(
             string initialDirectory,
-            FileDialogFileTypeFilter filter)
+            IFileDialogFileTypeFilter filter)
         {
             return OpenResult(initialDirectory, filter, new SaveFileDialog());
         }
 
         public bool ShowOpenDialog(
             string initialDirectory,
-            FileDialogFileTypeFilter filter)
+            IFileDialogFileTypeFilter filter)
         {
             return OpenResult(initialDirectory, filter, new OpenFileDialog());
         }

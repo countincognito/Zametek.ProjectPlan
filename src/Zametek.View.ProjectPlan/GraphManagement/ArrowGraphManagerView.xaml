@@ -8,6 +8,7 @@
              xmlns:properties="clr-namespace:Zametek.Resource.ProjectPlan;assembly=Zametek.Resource.ProjectPlan"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:prism="http://prismlibrary.com/"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
@@ -71,6 +72,15 @@
                     </Border>
                 </Setter.Value>
             </Setter>
+
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=AttachNode.Edge.Name}" Value="{x:Null}">
+                    <Setter Property="ToolTip" Value="{x:Null}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=AttachNode.Edge.Name}" Value="{x:Static sys:String.Empty}">
+                    <Setter Property="ToolTip" Value="{x:Null}"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style TargetType="{x:Type graphxCtrl:EdgeControl}">

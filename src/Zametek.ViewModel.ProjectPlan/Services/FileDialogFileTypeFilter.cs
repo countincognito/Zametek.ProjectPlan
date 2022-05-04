@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Zametek.Contract.ProjectPlan;
 
-namespace Zametek.Contract.ProjectPlan
+namespace Zametek.ViewModel.ProjectPlan
 {
     public class FileDialogFileTypeFilter
+        : IFileDialogFileTypeFilter
     {
         private readonly List<FileTypeFilter> _filters = new List<FileTypeFilter>();
 
