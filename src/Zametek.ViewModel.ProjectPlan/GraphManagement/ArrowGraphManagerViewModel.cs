@@ -456,13 +456,13 @@ namespace Zametek.ViewModel.ProjectPlan
             private set;
         }
 
-        public byte[] ExportArrowGraphToDiagram(DiagramArrowGraphModel diagramArrowGraph)
+        public byte[] ExportArrowGraphToDiagram(DiagramArrowGraphModel diagramArrowGraph, ArrowGraphType graphType)
         {
             if (diagramArrowGraph == null)
             {
                 throw new ArgumentNullException(nameof(diagramArrowGraph));
             }
-            return m_ProjectService.ExportArrowGraphToDiagram(diagramArrowGraph);
+            return m_ProjectService.ExportArrowGraphToDiagram(diagramArrowGraph, graphType);
         }
 
         #endregion

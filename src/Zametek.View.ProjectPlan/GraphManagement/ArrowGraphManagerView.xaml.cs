@@ -139,7 +139,7 @@ namespace Zametek.View.ProjectPlan
                             File.WriteAllBytes(
                                 filename,
                                 ViewModel.ExportArrowGraphToDiagram(
-                                    ArrowGraphAreaCtrl.ToDiagramArrowGraph()));
+                                    ArrowGraphAreaCtrl.ToDiagramArrowGraph(), ArrowGraphType.GraphML));
                             m_SettingService.SetDirectory(filename);
                         }
                     }
@@ -153,6 +153,52 @@ namespace Zametek.View.ProjectPlan
                     MessageBoxButton.OKCancel,
                     MessageBoxImage.Error);
             }
+        }
+
+        private void ExportGraphViz_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string directory = m_SettingService.PlanDirectory;
+
+                var filter = new FileDialogFileTypeFilter(
+                    Resource.ProjectPlan.Filters.SaveGraphVizFileType,
+                    Resource.ProjectPlan.Filters.SaveGraphVizFileExtension
+                    );
+
+                bool result = m_FileDialogService.ShowSaveDialog(directory, filter);
+
+                if (result)
+                {
+                    {
+                        string filename = m_FileDialogService.Filename;
+                        if (string.IsNullOrWhiteSpace(filename))
+                        {
+                            MessageBox.Show(
+                                Resource.ProjectPlan.Resources.Message_EmptyFilename,
+                                Resource.ProjectPlan.Resources.Title_Error,
+                                MessageBoxButton.OKCancel,
+                                MessageBoxImage.Error);
+                        }
+                        else
+                        {
+                            File.WriteAllBytes(
+                                filename,
+                                ViewModel.ExportArrowGraphToDiagram(
+                                    ArrowGraphAreaCtrl.ToDiagramArrowGraph(), ArrowGraphType.GraphViz));
+                            m_SettingService.SetDirectory(filename);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show(
+                    ex.Message,
+                    Resource.ProjectPlan.Resources.Title_Error,
+                    MessageBoxButton.OKCancel,
+                    MessageBoxImage.Error);
+            }            
         }
 
         #endregion

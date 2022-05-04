@@ -270,6 +270,9 @@
   <data name="Label_ExportGraphML" xml:space="preserve">
     <value>Export to GraphML</value>
   </data>
+  <data name="Label_ExportGraphViz" xml:space="preserve">
+    <value>Export to GraphViz</value>
+  </data>
   <data name="Label_ExportResourceChartAsCosts" xml:space="preserve">
     <value>Export as costs:</value>
   </data>
