@@ -7,6 +7,7 @@ using System.Data;
 using System.Xml;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -21,27 +22,31 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ProjectPlanModel.ProjectStart)
         };
 
+        private static readonly IList<string> s_ActivityColumnTitles = new List<string>
+        {
+            nameof(ActivityModel.Id),
+            nameof(ActivityModel.Name),
+            nameof(ActivityModel.TargetResources),
+            nameof(ActivityModel.TargetResourceOperator),
+            nameof(ActivityModel.AllocatedToResources),
+            nameof(ActivityModel.HasNoCost),
+            nameof(ActivityModel.Duration),
+            nameof(ActivityModel.MinimumFreeSlack),
+            nameof(ActivityModel.MinimumEarliestStartTime),
+            nameof(ActivityModel.MinimumEarliestStartDateTime),
+            nameof(ActivityModel.MaximumLatestFinishTime),
+            nameof(ActivityModel.MaximumLatestFinishDateTime),
+            nameof(ActivityModel.Notes)
+        };
 
-
-
-
-
-
-
-
-
-
-
+        private static readonly IList<string> s_DependentActivityColumnTitles = new List<string>
+        {
+            nameof(DependentActivityModel.Dependencies)
+        };
 
         private const int c_DefaultMinutesPerDay = 60 * 60 * 8;
 
         #endregion
-
-
-
-
-
-
 
         private static DataTable SheetToDataTable(ISheet sheet!!)
         {
@@ -52,11 +57,14 @@ namespace Zametek.ViewModel.ProjectPlan
             for (int i = 0; i < cellCount; i++)
             {
                 ICell cell = titleRow.GetCell(i);
-                if (cell is not null
-                    && !string.IsNullOrWhiteSpace(cell.ToString()))
+
+                if (cell is null || string.IsNullOrWhiteSpace(cell.ToString()))
                 {
-                    dtTable.Columns.Add(cell.ToString());
+                    cellCount = i;
+                    break;
                 }
+
+                dtTable.Columns.Add(cell.ToString());
             }
 
             List<string> rowList = new();
@@ -70,15 +78,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 for (int j = row.FirstCellNum; j < cellCount; j++)
                 {
-                    if (row.GetCell(j) is not null)
-                    {
-                        string? content = row.GetCell(j).ToString();
+                    ICell cell = row.GetCell(j);
+                    string content = cell?.ToString() ?? string.Empty;
+                    rowList.Add(content);
 
-                        if (!string.IsNullOrWhiteSpace(content))
-                        {
-                            rowList.Add(content);
-                        }
-                    }
+
+                    //if (row.GetCell(j) is not null)
+                    //{
+                    //    string? content = row.GetCell(j).ToString();
+
+                    //    if (!string.IsNullOrWhiteSpace(content))
+                    //    {
+                    //        rowList.Add(content);
+                    //    }
+                    //}
                 }
                 if (rowList.Count > 0)
                 {
@@ -89,23 +102,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             return dtTable;
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         #region IProjectFileImport Members
 
@@ -425,38 +421,16 @@ namespace Zametek.ViewModel.ProjectPlan
             return await Task.Run(() => ImportMicrosoftProjectXmlFile(filename));
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         public ProjectImportModel ImportProjectXlsxFile(string filename)
         {
-
-
             using FileStream file = new(filename, FileMode.Open, FileAccess.Read);
 
             IWorkbook workbook = new XSSFWorkbook(file);
-
-            if (workbook is null)
-            {
-                return new ProjectImportModel();
-            }
+            DateTimeOffset projectStart = new(DateTime.Today);
+            List<DependentActivityModel> dependentActivities = new();
 
             {
-                ISheet? sheet = workbook.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral);
-
+                ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral);
                 if (sheet is not null)
                 {
                     DataTable dtTable = SheetToDataTable(sheet);
@@ -475,28 +449,198 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     foreach (DataRow row in dtTable.Rows)
                     {
-                        DateTimeOffset projectStart = new(DateTime.Today);
-
                         foreach (string columnName in columnNames)
                         {
-
-                            var a = row[columnName];
-
-
-
-                            //columnName.ValueSwitchOn()
-                            //    .Case(nameof(ProjectImportModel.ProjectStart),
-                            //        x =>
-                            //        {
-                            //            if (DateTime.TryParse(x.ToString(), out DateTime ps))
-                            //            {
-                            //                projectStart = new DateTimeOffset(ps);
-                            //            }
-                            //        });
+                            columnName.ValueSwitchOn()
+                                .Case(nameof(ProjectImportModel.ProjectStart),
+                                    name =>
+                                    {
+                                        if (DateTime.TryParse(row[name]?.ToString(), out DateTime output))
+                                        {
+                                            projectStart = new DateTimeOffset(output);
+                                        }
+                                    });
                         }
                     }
                 }
             }
+            {
+                ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivities);
+                if (sheet is not null)
+                {
+                    DataTable dtTable = SheetToDataTable(sheet);
+                    DataColumnCollection columns = dtTable.Columns;
+
+                    // Check columns.
+                    var activityColumns = new List<DataColumn>();
+                    var dependentActivityColumns = new List<DataColumn>();
+
+                    foreach (string title in s_ActivityColumnTitles)
+                    {
+                        if (columns.Contains(title))
+                        {
+                            activityColumns.Add(columns[title]);
+                        }
+                    }
+                    foreach (string title in s_DependentActivityColumnTitles)
+                    {
+                        if (columns.Contains(title))
+                        {
+                            dependentActivityColumns.Add(columns[title]);
+                        }
+                    }
+
+                    foreach (DataRow row in dtTable.Rows)
+                    {
+                        int? id = 0;
+                        string name = string.Empty;
+                        List<int> targetResources = new();
+                        var targetResourceOperator = LogicalOperator.AND;
+                        bool hasNoCost = false;
+                        int duration = 0;
+                        int? minimumFreeSlack = null;
+                        int? minimumEarliestStartTime = null;
+                        DateTimeOffset? minimumEarliestStartDateTime = null;
+                        int? maximumLatestFinishTime = null;
+                        DateTimeOffset? maximumLatestFinishDateTime = null;
+                        string notes = string.Empty;
+                        List<int> dependencies = new();
+
+                        foreach (DataColumn column in activityColumns)
+                        {
+                            column.ColumnName.ValueSwitchOn()
+                                .Case(nameof(ActivityModel.Id),
+                                    colName =>
+                                    {
+                                        if (int.TryParse(row[column]?.ToString(), out int output))
+                                        {
+                                            id = output;
+                                        }
+                                    })
+                                .Case(nameof(ActivityModel.Name),
+                                    colName => name = row[column]?.ToString() ?? string.Empty)
+                                .Case(nameof(ActivityModel.TargetResources),
+                                    colName =>
+                                    {
+                                        string targetResourcesString = row[column]?.ToString() ?? string.Empty;
+                                        foreach (string targetResource in targetResourcesString.Split(DependenciesStringValidationRule.Separator))
+                                        {
+                                            if (int.TryParse(targetResource, out int output))
+                                            {
+                                                targetResources.Add(output);
+                                            }
+                                        }
+                                    })
+                                .Case(nameof(ActivityModel.TargetResourceOperator),
+                                    colName => targetResourceOperator = row[column]?.ToString().GetValueFromDescription<LogicalOperator>() ?? default)
+                                .Case(nameof(ActivityModel.HasNoCost),
+                                    colName =>
+                                    {
+                                        if (bool.TryParse(row[column]?.ToString(), out bool output))
+                                        {
+                                            hasNoCost = output;
+                                        }
+                                    })
+                                .Case(nameof(ActivityModel.Duration),
+                                    colName =>
+                                    {
+                                        if (int.TryParse(row[column]?.ToString(), out int output))
+                                        {
+                                            duration = output;
+                                        }
+                                    })
+                                .Case(nameof(ActivityModel.MinimumFreeSlack),
+                                    colName =>
+                                    {
+                                        if (int.TryParse(row[column]?.ToString(), out int output))
+                                        {
+                                            minimumFreeSlack = output;
+                                        }
+                                    })
+                                .Case(nameof(ActivityModel.MinimumEarliestStartTime),
+                                    colName =>
+                                    {
+                                        if (int.TryParse(row[column]?.ToString(), out int output))
+                                        {
+                                            minimumEarliestStartTime = output;
+                                        }
+                                    })
+                                .Case(nameof(ActivityModel.MinimumEarliestStartDateTime),
+                                    colName =>
+                                    {
+                                        if (DateTime.TryParse(row[column]?.ToString(), out DateTime output))
+                                        {
+                                            minimumEarliestStartDateTime = new DateTimeOffset(output);
+                                        }
+                                    })
+                                .Case(nameof(ActivityModel.MaximumLatestFinishTime),
+                                    colName =>
+                                    {
+                                        if (int.TryParse(row[column]?.ToString(), out int output))
+                                        {
+                                            maximumLatestFinishTime = output;
+                                        }
+                                    })
+                                .Case(nameof(ActivityModel.MaximumLatestFinishDateTime),
+                                    colName =>
+                                    {
+                                        if (DateTime.TryParse(row[column]?.ToString(), out DateTime output))
+                                        {
+                                            maximumLatestFinishDateTime = new DateTimeOffset(output);
+                                        }
+                                    })
+                                .Case(nameof(ActivityModel.Notes),
+                                    colName => notes = row[column]?.ToString() ?? string.Empty);
+                        }
+                        foreach (DataColumn column in dependentActivityColumns)
+                        {
+                            column.ColumnName.ValueSwitchOn()
+                                .Case(nameof(DependentActivityModel.Dependencies),
+                                    colName =>
+                                    {
+                                        string dependenciesString = row[column]?.ToString() ?? string.Empty;
+                                        foreach (string dependency in dependenciesString.Split(DependenciesStringValidationRule.Separator))
+                                        {
+                                            if (int.TryParse(dependency, out int output))
+                                            {
+                                                dependencies.Add(output);
+                                            }
+                                        }
+                                    });
+                        }
+
+                        if (id is not null)
+                        {
+                            dependentActivities.Add(new DependentActivityModel
+                            {
+                                Activity = new ActivityModel
+                                {
+                                    Id = id.GetValueOrDefault(),
+                                    Name = name,
+                                    TargetResources = targetResources,
+                                    TargetResourceOperator = targetResourceOperator,
+                                    HasNoCost = hasNoCost,
+                                    Duration = duration,
+                                    MinimumFreeSlack = minimumFreeSlack,
+                                    MinimumEarliestStartTime = minimumEarliestStartTime,
+                                    MinimumEarliestStartDateTime = minimumEarliestStartDateTime,
+                                    MaximumLatestFinishTime = maximumLatestFinishTime,
+                                    MaximumLatestFinishDateTime = maximumLatestFinishDateTime,
+                                    Notes = notes
+                                },
+                                Dependencies = dependencies
+                            });
+                        }
+                    }
+
+                }
+            }
+
+            return new ProjectImportModel
+            {
+                ProjectStart = projectStart,
+                DependentActivities = dependentActivities,
+            };
 
 
 
@@ -513,8 +657,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-
-            throw new NotImplementedException();
         }
 
         #endregion
