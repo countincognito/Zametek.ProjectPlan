@@ -19,7 +19,7 @@ namespace Zametek.Resource.ProjectPlan {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Filters {
@@ -61,146 +61,218 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .mpp.
+        ///   Looks up a localized string similar to Excel.
         /// </summary>
-        public static string ImportMicrosoftProjectFileExtension {
+        public static string Filter_ExcelFileType {
             get {
-                return ResourceManager.GetString("ImportMicrosoftProjectFileExtension", resourceCulture);
+                return ResourceManager.GetString("Filter_ExcelFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to xlsx.
+        /// </summary>
+        public static string Filter_ExcelXlsxFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_ExcelXlsxFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to graphml.
+        /// </summary>
+        public static string Filter_GraphMLFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_GraphMLFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GraphML.
+        /// </summary>
+        public static string Filter_GraphMLFileType {
+            get {
+                return ResourceManager.GetString("Filter_GraphMLFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to dot.
+        /// </summary>
+        public static string Filter_GraphVizFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_GraphVizFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GraphViz.
+        /// </summary>
+        public static string Filter_GraphVizFileType {
+            get {
+                return ResourceManager.GetString("Filter_GraphVizFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to bmp.
+        /// </summary>
+        public static string Filter_ImageBmpFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_ImageBmpFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BMP Image.
+        /// </summary>
+        public static string Filter_ImageBmpFileType {
+            get {
+                return ResourceManager.GetString("Filter_ImageBmpFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Image.
+        /// </summary>
+        public static string Filter_ImageFileType {
+            get {
+                return ResourceManager.GetString("Filter_ImageFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to gif.
+        /// </summary>
+        public static string Filter_ImageGifFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_ImageGifFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GIF Image.
+        /// </summary>
+        public static string Filter_ImageGifFileType {
+            get {
+                return ResourceManager.GetString("Filter_ImageGifFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to jpeg.
+        /// </summary>
+        public static string Filter_ImageJpegFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_ImageJpegFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to JPEG Image.
+        /// </summary>
+        public static string Filter_ImageJpegFileType {
+            get {
+                return ResourceManager.GetString("Filter_ImageJpegFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to png.
+        /// </summary>
+        public static string Filter_ImagePngFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_ImagePngFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PNG Image.
+        /// </summary>
+        public static string Filter_ImagePngFileType {
+            get {
+                return ResourceManager.GetString("Filter_ImagePngFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to svg.
+        /// </summary>
+        public static string Filter_ImageSvgFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_ImageSvgFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SVG Image.
+        /// </summary>
+        public static string Filter_ImageSvgFileType {
+            get {
+                return ResourceManager.GetString("Filter_ImageSvgFileType", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to MS Project.
         /// </summary>
-        public static string ImportMicrosoftProjectFileType {
+        public static string Filter_MicrosoftProjectFileType {
             get {
-                return ResourceManager.GetString("ImportMicrosoftProjectFileType", resourceCulture);
+                return ResourceManager.GetString("Filter_MicrosoftProjectFileType", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .xml.
+        ///   Looks up a localized string similar to mpp.
         /// </summary>
-        public static string ImportMicrosoftProjectXMLFileExtension {
+        public static string Filter_MicrosoftProjectMppFileExtension {
             get {
-                return ResourceManager.GetString("ImportMicrosoftProjectXMLFileExtension", resourceCulture);
+                return ResourceManager.GetString("Filter_MicrosoftProjectMppFileExtension", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MS Project XML.
+        ///   Looks up a localized string similar to xml.
         /// </summary>
-        public static string ImportMicrosoftProjectXMLFileType {
+        public static string Filter_MicrosoftProjectXmlFileExtension {
             get {
-                return ResourceManager.GetString("ImportMicrosoftProjectXMLFileType", resourceCulture);
+                return ResourceManager.GetString("Filter_MicrosoftProjectXmlFileExtension", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .json.
+        ///   Looks up a localized string similar to zpp.
         /// </summary>
-        public static string ImportProjectJsonFileExtension {
+        public static string Filter_ProjectPlanFileExtension {
             get {
-                return ResourceManager.GetString("ImportProjectJsonFileExtension", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Project Json.
-        /// </summary>
-        public static string ImportProjectJsonFileType {
-            get {
-                return ResourceManager.GetString("ImportProjectJsonFileType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to .zpp.
-        /// </summary>
-        public static string OpenProjectPlanFileExtension {
-            get {
-                return ResourceManager.GetString("OpenProjectPlanFileExtension", resourceCulture);
+                return ResourceManager.GetString("Filter_ProjectPlanFileExtension", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Project Plan.
         /// </summary>
-        public static string OpenProjectPlanFileType {
+        public static string Filter_ProjectPlanFileType {
             get {
-                return ResourceManager.GetString("OpenProjectPlanFileType", resourceCulture);
+                return ResourceManager.GetString("Filter_ProjectPlanFileType", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .csv.
+        ///   Looks up a localized string similar to xlsx.
         /// </summary>
-        public static string SaveCsvFileExtension {
+        public static string Filter_ProjectXlsxFileExtension {
             get {
-                return ResourceManager.GetString("SaveCsvFileExtension", resourceCulture);
+                return ResourceManager.GetString("Filter_ProjectXlsxFileExtension", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Comma Separated Values.
+        ///   Looks up a localized string similar to Excel.
         /// </summary>
-        public static string SaveCsvFileType {
+        public static string Filter_ProjectXlsxFileType {
             get {
-                return ResourceManager.GetString("SaveCsvFileType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to .graphml.
-        /// </summary>
-        public static string SaveGraphMLFileExtension {
-            get {
-                return ResourceManager.GetString("SaveGraphMLFileExtension", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to GraphML.
-        /// </summary>
-        public static string SaveGraphMLFileType {
-            get {
-                return ResourceManager.GetString("SaveGraphMLFileType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to .graphml.
-        /// </summary>
-        public static string SaveGraphVizFileExtension {
-            get {
-                return ResourceManager.GetString("SaveGraphVizFileExtension", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to GraphML.
-        /// </summary>
-        public static string SaveGraphVizFileType {
-            get {
-                return ResourceManager.GetString("SaveGraphVizFileType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to .zpp.
-        /// </summary>
-        public static string SaveProjectPlanFileExtension {
-            get {
-                return ResourceManager.GetString("SaveProjectPlanFileExtension", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Project Plan.
-        /// </summary>
-        public static string SaveProjectPlanFileType {
-            get {
-                return ResourceManager.GetString("SaveProjectPlanFileType", resourceCulture);
+                return ResourceManager.GetString("Filter_ProjectXlsxFileType", resourceCulture);
             }
         }
     }

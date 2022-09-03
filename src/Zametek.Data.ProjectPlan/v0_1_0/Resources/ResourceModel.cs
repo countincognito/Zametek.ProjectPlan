@@ -1,23 +1,22 @@
-﻿using System;
-using Zametek.Maths.Graphs;
+﻿using Zametek.Maths.Graphs;
 
 namespace Zametek.Data.ProjectPlan.v0_1_0
 {
     [Serializable]
-    public class ResourceModel
+    public record ResourceModel
     {
-        public int Id { get; set; }
+        public int Id { get; init; }
 
-        public string Name { get; set; }
+        public string? Name { get; init; }
 
-        public bool IsExplicitTarget { get; set; }
+        public bool IsExplicitTarget { get; init; }
 
-        public InterActivityAllocationType InterActivityAllocationType { get; set; }
+        public InterActivityAllocationType InterActivityAllocationType { get; init; }
 
-        public double UnitCost { get; set; }
+        public double UnitCost { get; init; }
 
-        public int DisplayOrder { get; set; }
+        public int DisplayOrder { get; init; }
 
-        public ColorFormatModel ColorFormat { get; set; }
+        public ColorFormatModel? ColorFormat { get; init; }
     }
 }

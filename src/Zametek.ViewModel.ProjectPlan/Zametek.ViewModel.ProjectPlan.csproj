@@ -1,26 +1,29 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <UseWPF>true</UseWPF>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<EnablePreviewFeatures>True</EnablePreviewFeatures>
+	<LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="9.0.0" />
-    <PackageReference Include="CsvHelper" Version="15.0.5" />
-    <PackageReference Include="FluentDateTime" Version="2.0.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="OxyPlot.Wpf" Version="2.0.0" />
-    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="1.4.3" />
+	<PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="0.10.16" />
+    <PackageReference Include="Dock.Model.ReactiveUI" Version="0.10.18.1" />
+    <PackageReference Include="FluentDateTime" Version="2.1.0" />
+    <PackageReference Include="net.sf.mpxj" Version="10.9.1" />
+    <PackageReference Include="NPOI" Version="2.5.6" />
+    <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-Preview1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.1" />
+    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="1.5.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Contract.ProjectPlan\Zametek.Contract.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Data.ProjectPlan\Zametek.Data.ProjectPlan.csproj" />
-    <ProjectReference Include="..\Zametek.Event.ProjectPlan\Zametek.Event.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
   </ItemGroup>
 

@@ -15,7 +15,6 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<ActivityNodeModel, v0_1_0.ActivityNodeModel>().ReverseMap();
             CreateMap<ScheduledActivityModel, v0_1_0.ScheduledActivityModel>().ReverseMap();
 
-            CreateMap<CircularDependencyModel, v0_1_0.CircularDependencyModel>().ReverseMap();
             CreateMap<DependentActivityModel, v0_1_0.DependentActivityModel>().ReverseMap();
 
             CreateMap<ColorFormatModel, v0_1_0.ColorFormatModel>().ReverseMap();
@@ -28,10 +27,7 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<EventNodeModel, v0_1_0.EventNodeModel>().ReverseMap();
 
             CreateMap<ArrowGraphModel, v0_1_0.ArrowGraphModel>().ReverseMap();
-            //CreateMap<GraphCompilationModel, v0_1_0.GraphCompilationModel>().ReverseMap();
             CreateMap<VertexGraphModel, v0_1_0.VertexGraphModel>().ReverseMap();
-
-            //CreateMap<ProjectPlanModel, v0_1_0.ProjectPlanModel>().ReverseMap();
 
             CreateMap<ResourceModel, v0_1_0.ResourceModel>().ReverseMap();
             CreateMap<ResourceScheduleModel, v0_1_0.ResourceScheduleModel>().ReverseMap();
@@ -43,11 +39,6 @@ namespace Zametek.Data.ProjectPlan
             #endregion
 
             #region v0.2.0
-
-            CreateMap<GraphCompilationErrorsModel, v0_2_0.GraphCompilationErrorsModel>().ReverseMap();
-            CreateMap<GraphCompilationModel, v0_2_0.GraphCompilationModel>().ReverseMap();
-
-            CreateMap<ProjectPlanModel, v0_2_0.ProjectPlanModel>().ReverseMap();
 
             #endregion
 
@@ -66,7 +57,6 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<v0_1_0.DependentActivityModel, v0_2_1.DependentActivityModel>().ReverseMap();
 
             CreateMap<ArrowGraphModel, v0_2_1.ArrowGraphModel>().ReverseMap();
-            CreateMap<GraphCompilationErrorsModel, v0_2_1.GraphCompilationErrorsModel>().ReverseMap();
             CreateMap<GraphCompilationModel, v0_2_1.GraphCompilationModel>().ReverseMap();
             CreateMap<VertexGraphModel, v0_2_1.VertexGraphModel>().ReverseMap();
             CreateMap<v0_1_0.ArrowGraphModel, v0_2_1.ArrowGraphModel>().ReverseMap();
@@ -77,7 +67,40 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<v0_1_0.ResourceModel, v0_2_1.ResourceModel>().ReverseMap();
             CreateMap<v0_1_0.ResourceScheduleModel, v0_2_1.ResourceScheduleModel>().ReverseMap();
 
-            CreateMap<ProjectPlanModel, v0_2_1.ProjectPlanModel>().ReverseMap();
+            #endregion
+
+            #region v0.3.0
+
+            CreateMap<ActivityEdgeModel, v0_3_0.ActivityEdgeModel>().ReverseMap();
+            CreateMap<v0_2_1.ActivityEdgeModel, v0_3_0.ActivityEdgeModel>().ReverseMap();
+
+            CreateMap<ActivityNodeModel, v0_3_0.ActivityNodeModel>().ReverseMap();
+            CreateMap<v0_2_1.ActivityNodeModel, v0_3_0.ActivityNodeModel>().ReverseMap();
+
+            CreateMap<ActivityModel, v0_3_0.ActivityModel>().ReverseMap();
+            CreateMap<v0_2_1.ActivityModel, v0_3_0.ActivityModel>().ReverseMap();
+
+            CreateMap<TrackerModel, v0_3_0.TrackerModel>().ReverseMap();
+
+            CreateMap<DependentActivityModel, v0_3_0.DependentActivityModel>().ReverseMap();
+            CreateMap<v0_2_1.DependentActivityModel, v0_3_0.DependentActivityModel>().ReverseMap();
+
+            CreateMap<EventNodeModel, v0_3_0.EventNodeModel>().ReverseMap();
+            CreateMap<v0_1_0.EventNodeModel, v0_3_0.EventNodeModel>().ReverseMap();
+
+            CreateMap<ArrowGraphModel, v0_3_0.ArrowGraphModel>().ReverseMap();
+            CreateMap<v0_2_1.ArrowGraphModel, v0_3_0.ArrowGraphModel>().ReverseMap();
+            CreateMap<GraphCompilationErrorModel, v0_3_0.GraphCompilationErrorModel>().ReverseMap();
+            CreateMap<GraphCompilationModel, v0_3_0.GraphCompilationModel>().ReverseMap();
+
+            CreateMap<ResourceModel, v0_3_0.ResourceModel>().ReverseMap();
+            CreateMap<ResourceScheduleModel, v0_3_0.ResourceScheduleModel>().ReverseMap();
+            CreateMap<v0_2_1.ResourceModel, v0_3_0.ResourceModel>()
+                .ForMember(dest => dest.ColorFormat, opt => opt.Condition(src => src.ColorFormat is not null))
+                .ReverseMap();
+            CreateMap<v0_2_1.ResourceScheduleModel, v0_3_0.ResourceScheduleModel>().ReverseMap();
+
+            CreateMap<ProjectPlanModel, v0_3_0.ProjectPlanModel>().ReverseMap();
 
             #endregion
         }

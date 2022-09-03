@@ -1,25 +1,14 @@
 ﻿using AutoMapper;
-using System;
-using System.Collections.Generic;
 
 namespace Zametek.Data.ProjectPlan.v0_2_1
 {
     public static class Converter
     {
-        public static ProjectPlanModel Upgrade(IMapper mapper, v0_2_0.ProjectPlanModel projectPlan)
+        public static ProjectPlanModel Upgrade(IMapper mapper!!, v0_2_0.ProjectPlanModel projectPlan!!)
         {
-            if (mapper == null)
-            {
-                throw new ArgumentNullException(nameof(mapper));
-            }
-            if (projectPlan == null)
-            {
-                throw new ArgumentNullException(nameof(projectPlan));
-            }
+            GraphCompilationErrorsModel? errors = null;
 
-            GraphCompilationErrorsModel errors = null;
-
-            if (projectPlan.GraphCompilation.Errors != null)
+            if (projectPlan.GraphCompilation?.Errors != null)
             {
                 errors = new GraphCompilationErrorsModel
                 {
@@ -38,13 +27,13 @@ namespace Zametek.Data.ProjectPlan.v0_2_1
                 ResourceSettings = projectPlan.ResourceSettings,
                 GraphCompilation = new GraphCompilationModel
                 {
-                    DependentActivities = mapper.Map<List<v0_1_0.DependentActivityModel>, List<DependentActivityModel>>(projectPlan.GraphCompilation.DependentActivities),
-                    ResourceSchedules = mapper.Map<List<v0_1_0.ResourceScheduleModel>, List<ResourceScheduleModel>>(projectPlan.GraphCompilation.ResourceSchedules),
+                    DependentActivities = mapper.Map<List<v0_1_0.DependentActivityModel>, List<DependentActivityModel>>(projectPlan.GraphCompilation?.DependentActivities ?? new List<v0_1_0.DependentActivityModel>()),
+                    ResourceSchedules = mapper.Map<List<v0_1_0.ResourceScheduleModel>, List<ResourceScheduleModel>>(projectPlan.GraphCompilation?.ResourceSchedules ?? new List<v0_1_0.ResourceScheduleModel>()),
                     Errors = errors,
-                    CyclomaticComplexity = projectPlan.GraphCompilation.CyclomaticComplexity,
-                    Duration = projectPlan.GraphCompilation.Duration,
+                    CyclomaticComplexity = projectPlan.GraphCompilation?.CyclomaticComplexity ?? default,
+                    Duration = projectPlan.GraphCompilation?.Duration ?? default,
                 },
-                ArrowGraph = mapper.Map<v0_1_0.ArrowGraphModel, ArrowGraphModel>(projectPlan.ArrowGraph),
+                ArrowGraph = mapper.Map<v0_1_0.ArrowGraphModel, ArrowGraphModel>(projectPlan.ArrowGraph ?? new v0_1_0.ArrowGraphModel()),
                 HasStaleOutputs = projectPlan.HasStaleOutputs,
             };
         }

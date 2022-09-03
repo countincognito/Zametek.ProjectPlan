@@ -1,0 +1,217 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:i="using:Avalonia.Xaml.Interactivity"
+	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 xmlns:properties="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:oxy="using:OxyPlot.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Zametek.View.ProjectPlan.TrackingManagerView">
+	<UserControl.Resources>
+		<local:NullableIntConverter x:Key="nullableIntConverter"/>
+		<local:BooleanAndConverter x:Key="booleanAndConverter"/>
+		<local:BooleanOrConverter x:Key="booleanOrConverter"/>
+	</UserControl.Resources>
+
+	<DockPanel Margin="7">
+		<DockPanel DockPanel.Dock="Right"
+                   Margin="11,0,0,0">
+			<Label VerticalContentAlignment="Center"
+				   HorizontalContentAlignment="Left"
+				   Height="25"
+				   DockPanel.Dock="Top"
+				   IsTabStop="False"
+				   Margin="0,0,0,3"
+				   Content="{x:Static properties:Labels.Label_AvailableFrom}"/>
+
+			<TextBlock VerticalAlignment="Center"
+					   HorizontalAlignment="Left"
+					   Height="25"
+					   DockPanel.Dock="Top"
+					   IsTabStop="False"
+					   Margin="0,0,0,11"
+					   Text="{Binding Path=StartTime, Mode=OneWay}"/>
+
+			<Label VerticalContentAlignment="Center"
+				   HorizontalContentAlignment="Left"
+				   Height="25"
+				   DockPanel.Dock="Top"
+				   IsTabStop="False"
+				   Margin="0,0,0,3"
+				   Content="{x:Static properties:Labels.Label_To}"/>
+
+			<TextBlock VerticalAlignment="Center"
+					   HorizontalAlignment="Left"
+					   Height="25"
+					   DockPanel.Dock="Top"
+					   IsTabStop="False"
+					   Margin="0,0,0,11"
+					   Text="{Binding Path=EndTime, Mode=OneWay}"/>
+			
+			<Button DockPanel.Dock="Top"
+                    IsTabStop="True"
+                    Margin="0,0,0,7"
+                    Height="25"
+					Width="75"
+                    VerticalAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding Path=AddTrackersCommand, Mode=OneWay}"
+                    Content="{x:Static properties:Labels.Label_AddColumn}"/>
+
+			<Button DockPanel.Dock="Top"
+					IsTabStop="True"
+                    Margin="0,0,0,11"
+                    Height="25"
+					Width="75"
+                    VerticalAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding Path=RemoveTrackersCommand, Mode=OneWay}"
+                    Content="{x:Static properties:Labels.Label_DeleteColumn}"/>
+
+			<Label VerticalContentAlignment="Center"
+				   HorizontalContentAlignment="Left"
+				   DockPanel.Dock="Top"
+				   IsTabStop="True"
+				   Margin="0,0,0,3"
+				   Height="25"
+				   Content="{x:Static properties:Labels.Label_StartDay}"/>
+
+			<ComboBox DockPanel.Dock="Top"
+					  IsTabStop="True"
+					  Margin="0,0,0,11"
+					  Height="25"
+					  Width="75"
+					  VerticalAlignment="Center"
+					  VerticalContentAlignment="Center"
+					  Items="{Binding Path=AvailableStartColumns, Mode=OneWay}"
+					  SelectedItem="{Binding Path=StartColumnSelector, Mode=TwoWay}">
+				<ComboBox.ItemTemplate>
+					<DataTemplate>
+						<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
+
+			<Label VerticalContentAlignment="Center"
+				   HorizontalContentAlignment="Left"
+				   DockPanel.Dock="Top"
+				   IsTabStop="True"
+				   Margin="0,0,0,3"
+				   Height="25"
+				   Content="{x:Static properties:Labels.Label_DaysShown}"/>
+			
+			<ComboBox DockPanel.Dock="Top"
+					  IsTabStop="True"
+					  Margin="0,0,0,11"
+					  Height="25"
+					  Width="75"
+					  VerticalAlignment="Center"
+				      VerticalContentAlignment="Center"
+				      Items="{Binding Path=AvailableColumnsShown, Mode=OneWay}"
+				      SelectedItem="{Binding Path=ColumnsShownSelector, Mode=TwoWay}">
+				<ComboBox.ItemTemplate>
+					<DataTemplate>
+						<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
+
+			<Grid/>
+		</DockPanel>
+
+		<Border Name="viewBorder"
+				BorderThickness="2"
+				BorderBrush="DarkGray">
+			<i:Interaction.Behaviors>
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{StaticResource booleanOrConverter}">
+							<MultiBinding.Bindings>
+								<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="Red" />
+				</ia:DataTriggerBehavior>
+
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{StaticResource booleanAndConverter}">
+							<MultiBinding.Bindings>
+								<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="DarkGray" />
+				</ia:DataTriggerBehavior>
+			</i:Interaction.Behaviors>
+
+			<DataGrid Name="trackingData"
+					  FrozenColumnCount="1"
+					  AutoGenerateColumns="False"
+					  RowHeight="30"
+					  SelectionMode="Single"
+					  CanUserResizeColumns="False"
+					  CanUserSortColumns="False"
+					  GridLinesVisibility="All"
+					  CanUserReorderColumns="False"
+					  local:DataGridColumnSyncher.ItemsSource="{Binding Path=Activities, Mode=OneWay}"
+				      local:DataGridColumnSyncher.StartColumnIndex="{Binding Path=StartColumnIndex, Mode=OneWay}"
+				      local:DataGridColumnSyncher.EndColumnIndex="{Binding Path=EndColumnIndex, Mode=OneWay}"
+				      local:DataGridColumnSyncher.ColumnType="{x:Type local:DataGridTrackingColumn}"
+				      local:DataGridColumnSyncher.DateTimeCalculator="{Binding Path=DateTimeCalculator, Mode=OneTime}"
+				      local:DataGridColumnSyncher.ShowDates="{Binding Path=ShowDates, Mode=OneWay}"
+				      local:DataGridColumnSyncher.ProjectStart="{Binding Path=ProjectStart, Mode=OneWay}">
+				<DataGrid.Styles>
+					<Style Selector="DataGridRow:not(:pointerover) DockPanel.editable">
+						<Setter Property="Background" Value="LightYellow"/>
+					</Style>
+					<Style Selector="DataGridRow:not(:selected) DockPanel.editable">
+						<Setter Property="Background" Value="LightYellow"/>
+					</Style>
+					<Style Selector="DataGridRow:pointerover DockPanel.editable">
+						<Setter Property="Background" Value="Khaki"/>
+					</Style>
+					<Style Selector="DataGridRow:selected DockPanel.editable">
+						<Setter Property="Background" Value="DarkKhaki"/>
+					</Style>
+				</DataGrid.Styles>
+
+				<DataGrid.Columns>
+					<DataGridTemplateColumn CanUserResize="False"
+											CanUserReorder="False"
+											CanUserSort="False"
+											IsReadOnly="True"
+											Width="25">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{x:Static properties:Labels.Label_Id}"
+											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_Id}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{Binding Path=Id, Mode=OneWay}"
+											   ToolTip.Tip="{Binding Path=Name, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+				</DataGrid.Columns>
+			</DataGrid>
+		</Border>
+	</DockPanel>
+</UserControl>

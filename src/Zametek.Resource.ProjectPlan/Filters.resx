@@ -117,52 +117,76 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ImportMicrosoftProjectFileExtension" xml:space="preserve">
-    <value>.mpp</value>
+  <data name="Filter_ExcelFileType" xml:space="preserve">
+    <value>Excel</value>
   </data>
-  <data name="ImportMicrosoftProjectFileType" xml:space="preserve">
-    <value>MS Project</value>
+  <data name="Filter_ExcelXlsxFileExtension" xml:space="preserve">
+    <value>xlsx</value>
   </data>
-  <data name="ImportMicrosoftProjectXMLFileExtension" xml:space="preserve">
-    <value>.xml</value>
+  <data name="Filter_GraphMLFileExtension" xml:space="preserve">
+    <value>graphml</value>
   </data>
-  <data name="ImportMicrosoftProjectXMLFileType" xml:space="preserve">
-    <value>MS Project XML</value>
-  </data>
-  <data name="ImportProjectJsonFileExtension" xml:space="preserve">
-    <value>.json</value>
-  </data>
-  <data name="ImportProjectJsonFileType" xml:space="preserve">
-    <value>Project Json</value>
-  </data>
-  <data name="OpenProjectPlanFileExtension" xml:space="preserve">
-    <value>.zpp</value>
-  </data>
-  <data name="OpenProjectPlanFileType" xml:space="preserve">
-    <value>Project Plan</value>
-  </data>
-  <data name="SaveCsvFileExtension" xml:space="preserve">
-    <value>.csv</value>
-  </data>
-  <data name="SaveCsvFileType" xml:space="preserve">
-    <value>Comma Separated Values</value>
-  </data>
-  <data name="SaveGraphMLFileExtension" xml:space="preserve">
-    <value>.graphml</value>
-  </data>
-  <data name="SaveGraphMLFileType" xml:space="preserve">
+  <data name="Filter_GraphMLFileType" xml:space="preserve">
     <value>GraphML</value>
   </data>
-  <data name="SaveGraphVizFileExtension" xml:space="preserve">
-    <value>.dot</value>
+  <data name="Filter_GraphVizFileExtension" xml:space="preserve">
+    <value>dot</value>
   </data>
-  <data name="SaveGraphVizFileType" xml:space="preserve">
+  <data name="Filter_GraphVizFileType" xml:space="preserve">
     <value>GraphViz</value>
   </data>
-  <data name="SaveProjectPlanFileExtension" xml:space="preserve">
-    <value>.zpp</value>
+  <data name="Filter_ImageBmpFileExtension" xml:space="preserve">
+    <value>bmp</value>
   </data>
-  <data name="SaveProjectPlanFileType" xml:space="preserve">
+  <data name="Filter_ImageBmpFileType" xml:space="preserve">
+    <value>BMP Image</value>
+  </data>
+  <data name="Filter_ImageFileType" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="Filter_ImageGifFileExtension" xml:space="preserve">
+    <value>gif</value>
+  </data>
+  <data name="Filter_ImageGifFileType" xml:space="preserve">
+    <value>GIF Image</value>
+  </data>
+  <data name="Filter_ImageJpegFileExtension" xml:space="preserve">
+    <value>jpeg</value>
+  </data>
+  <data name="Filter_ImageJpegFileType" xml:space="preserve">
+    <value>JPEG Image</value>
+  </data>
+  <data name="Filter_ImagePngFileExtension" xml:space="preserve">
+    <value>png</value>
+  </data>
+  <data name="Filter_ImagePngFileType" xml:space="preserve">
+    <value>PNG Image</value>
+  </data>
+  <data name="Filter_ImageSvgFileExtension" xml:space="preserve">
+    <value>svg</value>
+  </data>
+  <data name="Filter_ImageSvgFileType" xml:space="preserve">
+    <value>SVG Image</value>
+  </data>
+  <data name="Filter_MicrosoftProjectFileType" xml:space="preserve">
+    <value>MS Project</value>
+  </data>
+  <data name="Filter_MicrosoftProjectMppFileExtension" xml:space="preserve">
+    <value>mpp</value>
+  </data>
+  <data name="Filter_MicrosoftProjectXmlFileExtension" xml:space="preserve">
+    <value>xml</value>
+  </data>
+  <data name="Filter_ProjectPlanFileExtension" xml:space="preserve">
+    <value>zpp</value>
+  </data>
+  <data name="Filter_ProjectPlanFileType" xml:space="preserve">
     <value>Project Plan</value>
+  </data>
+  <data name="Filter_ProjectXlsxFileExtension" xml:space="preserve">
+    <value>xlsx</value>
+  </data>
+  <data name="Filter_ProjectXlsxFileType" xml:space="preserve">
+    <value>Excel</value>
   </data>
 </root>

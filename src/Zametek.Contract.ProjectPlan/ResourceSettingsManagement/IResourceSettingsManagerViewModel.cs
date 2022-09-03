@@ -5,20 +5,26 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IResourceSettingsManagerViewModel
     {
+        bool IsBusy { get; }
+
+        bool HasStaleOutputs { get; }
+
+        bool HasCompilationErrors { get; }
+
+        bool HasResources { get; }
+
         double DefaultUnitCost { get; set; }
 
         bool DisableResources { get; set; }
 
-        bool ActivateResources { get; }
+        bool AreSettingsUpdated { get; set; }
 
-        ObservableCollection<IManagedResourceViewModel> Resources { get; }
-
-        IManagedResourceViewModel SelectedResource { get; }
+        ReadOnlyObservableCollection<IManagedResourceViewModel> Resources { get; }
 
         ICommand SetSelectedManagedResourcesCommand { get; }
 
         ICommand AddManagedResourceCommand { get; }
 
-        ICommand RemoveManagedResourceCommand { get; }
+        ICommand RemoveManagedResourcesCommand { get; }
     }
 }

@@ -1,16 +1,12 @@
-﻿using System;
-
-namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public class CostsModel
+    public record CostsModel
     {
-        public double DirectCost { get; set; }
+        public double? Direct { get; init; }
 
-        public double IndirectCost { get; set; }
+        public double? Indirect { get; init; }
 
-        public double OtherCost { get; set; }
-
-        public double TotalCost { get; set; }
+        public double? Other { get; init; }
     }
 }

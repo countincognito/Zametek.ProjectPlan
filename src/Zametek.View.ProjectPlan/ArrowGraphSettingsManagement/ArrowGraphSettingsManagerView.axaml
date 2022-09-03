@@ -1,0 +1,339 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:i="using:Avalonia.Xaml.Interactivity"
+	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 xmlns:controls="using:Avalonia.Controls"
+			 xmlns:properties="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:colorpicker="using:Egorozh.ColorPicker.Dialog"
+			 xmlns:sys="using:System"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Zametek.View.ProjectPlan.ArrowGraphSettingsManagerView">
+	<UserControl.Resources>
+		<local:BooleanAndConverter x:Key="booleanAndConverter"/>
+		<local:BooleanOrConverter x:Key="booleanOrConverter"/>
+		<local:ColorFormatToColorConverter x:Key="colorFormatToColorConverter"/>
+
+		<local:ManagedActivitySeveritySortComparer x:Key="slackLimitSortComparer" SortMemberPath="SlackLimit"/>
+		<local:ManagedActivitySeveritySortComparer x:Key="criticalityWeightSortComparer" SortMemberPath="CriticalityWeight"/>
+		<local:ManagedActivitySeveritySortComparer x:Key="fibonacciWeightSortComparer" SortMemberPath="FibonacciWeight"/>
+		<local:ManagedActivitySeveritySortComparer x:Key="colorFormatSortComparer" SortMemberPath="ColorFormat"/>
+	</UserControl.Resources>
+
+	<DockPanel Margin="7">
+		<DockPanel DockPanel.Dock="Right"
+                   Margin="11,0,0,0">
+			<Button DockPanel.Dock="Top"
+                    IsTabStop="True"
+                    Margin="0,0,0,7"
+                    Height="25" Width="75"
+                    VerticalAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding Path=AddManagedActivitySeverityCommand, Mode=OneWay}"
+                    Content="{x:Static properties:Labels.Label_AddManagedActivitySeverity}"/>
+
+			<Button DockPanel.Dock="Top"
+					IsTabStop="True"
+                    Margin="0,0,0,11"
+                    Height="25" Width="75"
+                    VerticalAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding Path=RemoveManagedActivitySeveritiesCommand, Mode=OneWay}"
+                    Content="{x:Static properties:Labels.Label_DeleteManagedActivitySeverities}"/>
+
+			<Grid/>
+		</DockPanel>
+
+		<Border Name="viewBorder"
+				BorderThickness="2"
+				BorderBrush="DarkGray">
+			<i:Interaction.Behaviors>
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{StaticResource booleanOrConverter}">
+							<MultiBinding.Bindings>
+								<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="Red" />
+				</ia:DataTriggerBehavior>
+
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{StaticResource booleanAndConverter}">
+							<MultiBinding.Bindings>
+								<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="DarkGray" />
+				</ia:DataTriggerBehavior>
+			</i:Interaction.Behaviors>
+
+			<DataGrid Name="activitySeverities"
+					  RowHeight="30"
+					  Items="{Binding Path=ActivitySeverities, Mode=OneWay}"
+					  SelectionMode="Extended"
+					  CanUserResizeColumns="True"
+					  CanUserSortColumns="True"
+					  GridLinesVisibility="All"
+					  CanUserReorderColumns="True">
+				<DataGrid.Styles>
+					<Style Selector="DataGridRow:not(:pointerover) Grid.editable">
+						<Setter Property="Background" Value="LightYellow"/>
+					</Style>
+					<Style Selector="DataGridRow:not(:selected) Grid.editable">
+						<Setter Property="Background" Value="LightYellow"/>
+					</Style>
+					<Style Selector="DataGridRow:pointerover Grid.editable">
+						<Setter Property="Background" Value="Khaki"/>
+					</Style>
+					<Style Selector="DataGridRow:selected Grid.editable">
+						<Setter Property="Background" Value="DarkKhaki"/>
+					</Style>
+				</DataGrid.Styles>
+
+				<i:Interaction.Behaviors>
+					<ia:EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #activitySeveritiesGrid}">
+						<ia:InvokeCommandAction Command="{Binding Path=SetSelectedManagedActivitySeveritiesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
+					</ia:EventTriggerBehavior>
+				</i:Interaction.Behaviors>
+
+				<DataGrid.Columns>
+					<DataGridTemplateColumn CanUserResize="True"
+											CanUserReorder="True"
+											CanUserSort="True"
+											CustomSortComparer="{StaticResource slackLimitSortComparer}"
+											Width="75">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{x:Static properties:Labels.Label_SlackLimit}"
+											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_SlackLimit}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid Name="slackLimitGrid"
+									  VerticalAlignment="Stretch"
+									  Classes="editable">
+									<i:Interaction.Behaviors>
+										<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
+											<ia:ChangePropertyAction TargetObject="{Binding #slackLimitGrid}" PropertyName="Background" Value="White" />
+										</ia:DataTriggerBehavior>
+									</i:Interaction.Behaviors>
+									<TextBlock Name="slackLimitTextBlock"
+											   VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Background="Transparent"
+											   Text="{Binding Path=SlackLimit, Mode=OneWay}">
+										<i:Interaction.Behaviors>
+											<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
+												<ia:ChangePropertyAction TargetObject="{Binding #slackLimitTextBlock}" PropertyName="IsVisible" Value="False" />
+											</ia:DataTriggerBehavior>
+										</i:Interaction.Behaviors>
+									</TextBlock>
+									<TextBlock Name="maxTextBlock"
+											   VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Background="White"
+											   Foreground="Black"
+											   IsVisible="False"
+											   Text="{x:Static properties:Labels.Label_Max}">
+										<i:Interaction.Behaviors>
+											<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
+												<ia:ChangePropertyAction TargetObject="{Binding #maxTextBlock}" PropertyName="IsVisible" Value="True" />
+											</ia:DataTriggerBehavior>
+										</i:Interaction.Behaviors>
+									</TextBlock>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+						<DataGridTemplateColumn.CellEditingTemplate>
+							<DataTemplate>
+								<Grid Name="slackLimitEditableGrid"
+									  VerticalAlignment="Stretch">
+									<i:Interaction.Behaviors>
+										<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
+											<ia:ChangePropertyAction TargetObject="{Binding #slackLimitEditableGrid}" PropertyName="Background" Value="White" />
+										</ia:DataTriggerBehavior>
+									</i:Interaction.Behaviors>
+									<TextBox Name="slackLimitTextBox"
+											 Text="{Binding Path=SlackLimit, Mode=TwoWay}"
+											 VerticalAlignment="Center"
+											 Foreground="Black"
+											 Margin="0"
+											 Padding="3">
+										<i:Interaction.Behaviors>
+											<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
+												<ia:ChangePropertyAction TargetObject="{Binding #slackLimitTextBox}" PropertyName="IsVisible" Value="False" />
+											</ia:DataTriggerBehavior>
+										</i:Interaction.Behaviors>
+									</TextBox>
+									<TextBlock Name="maxEditableTextBlock"
+											   VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Background="White"
+											   Foreground="Black"
+											   IsVisible="False"
+											   Text="{x:Static properties:Labels.Label_Max}">
+										<i:Interaction.Behaviors>
+											<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
+												<ia:ChangePropertyAction TargetObject="{Binding #maxEditableTextBlock}" PropertyName="IsVisible" Value="True" />
+											</ia:DataTriggerBehavior>
+										</i:Interaction.Behaviors>
+									</TextBlock>
+									<!--<NumericUpDown Value="{Binding Path=SlackLimit, Mode=TwoWay}"
+											   VerticalAlignment="Center"
+											   ShowButtonSpinner="False"
+											   Foreground="Black"
+											   Margin="0"
+											   Padding="0"
+											   Minimum="0"/>-->
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellEditingTemplate>
+					</DataGridTemplateColumn>
+
+					<DataGridTemplateColumn CanUserResize="True"
+											CanUserReorder="True"
+											CanUserSort="True"
+											CustomSortComparer="{StaticResource criticalityWeightSortComparer}"
+											Width="110">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{x:Static properties:Labels.Label_CriticalityWeight}"
+											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_CriticalityWeight}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch"
+									  Classes="editable">
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Background="Transparent"
+											   Text="{Binding Path=CriticalityWeight, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+						<DataGridTemplateColumn.CellEditingTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<TextBox Text="{Binding Path=CriticalityWeight, Mode=TwoWay}"
+												   VerticalAlignment="Center"
+												   Foreground="Black"
+												   Margin="0"
+												   Padding="3"/>
+
+									<!--<NumericUpDown Value="{Binding Path=CriticalityWeight, Mode=TwoWay}"
+											   VerticalAlignment="Center"
+											   ShowButtonSpinner="False"
+											   Foreground="Black"
+											   Margin="0"
+											   Padding="0"
+											   Minimum="0"/>-->
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellEditingTemplate>
+					</DataGridTemplateColumn>
+
+					<DataGridTemplateColumn CanUserResize="True"
+											CanUserReorder="True"
+											CanUserSort="True"
+											CustomSortComparer="{StaticResource fibonacciWeightSortComparer}"
+											Width="110">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{x:Static properties:Labels.Label_FibonacciWeight}"
+											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_FibonacciWeight}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch"
+									  Classes="editable">
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Background="Transparent"
+											   Text="{Binding Path=FibonacciWeight, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+						<DataGridTemplateColumn.CellEditingTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<TextBox Text="{Binding Path=FibonacciWeight, Mode=TwoWay}"
+												   VerticalAlignment="Center"
+												   Foreground="Black"
+												   Margin="0"
+												   Padding="3"/>
+
+									<!--<NumericUpDown Value="{Binding Path=FibonacciWeight, Mode=TwoWay}"
+											   VerticalAlignment="Center"
+											   ShowButtonSpinner="False"
+											   Foreground="Black"
+											   Margin="0"
+											   Padding="0"
+											   Minimum="0"/>-->
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellEditingTemplate>
+					</DataGridTemplateColumn>
+
+					<DataGridTemplateColumn CanUserResize="True"
+											CanUserReorder="True"
+											CanUserSort="True"
+											IsReadOnly="True"
+											CustomSortComparer="{StaticResource colorFormatSortComparer}"
+											Width="45">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{x:Static properties:Labels.Label_ColorFormat}"
+											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_ColorFormat}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch"
+									  Classes="editable">
+									<colorpicker:ColorPickerButton Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}}"
+																   Cursor="Hand"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+				</DataGrid.Columns>
+			</DataGrid>
+		</Border>
+	</DockPanel>
+</UserControl>

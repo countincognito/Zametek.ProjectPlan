@@ -1,0 +1,93 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:i="using:Avalonia.Xaml.Interactivity"
+	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 xmlns:properties="using:Zametek.Resource.ProjectPlan"
+			 xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Zametek.View.ProjectPlan.ArrowGraphManagerView">
+	<UserControl.Resources>
+		<local:BooleanAndConverter x:Key="booleanAndConverter"/>
+		<local:BooleanOrConverter x:Key="booleanOrConverter"/>
+	</UserControl.Resources>
+
+	<DockPanel Margin="7">
+		<Border Name="viewBorder"
+				BorderThickness="2"
+				BorderBrush="DarkGray">
+			<i:Interaction.Behaviors>
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{StaticResource booleanOrConverter}">
+							<MultiBinding.Bindings>
+								<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="Red" />
+				</ia:DataTriggerBehavior>
+
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{StaticResource booleanAndConverter}">
+							<MultiBinding.Bindings>
+								<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="DarkGray" />
+				</ia:DataTriggerBehavior>
+			</i:Interaction.Behaviors>
+
+			<DockPanel>
+				<DockPanel Width="250"
+						   DockPanel.Dock="Top">
+					<TextBlock Margin="0,11,11,11"
+							   DockPanel.Dock="Right"
+							   Text="x"/>
+					<TextBlock Margin="0,11,0,11"
+							   DockPanel.Dock="Right"
+							   Text="{Binding ElementName=zoomer, Path=Value, Mode=OneWay, StringFormat=\{0:N1\}}"/>
+					<Slider Name="zoomer"
+							Orientation="Horizontal"
+							Value="1"
+							PointerWheelChanged="Slider_PointerWheelChanged"
+							Minimum="0.5" Maximum="5"
+							Margin="11"/>
+				</DockPanel>
+
+				<ScrollViewer PointerPressed="ScrollViewer_PointerPressed"
+							  PointerReleased="ScrollViewer_PointerReleased"
+							  PointerMoved="ScrollViewer_PointerMoved"
+							  HorizontalScrollBarVisibility="Auto"
+							  VerticalScrollBarVisibility="Auto">
+					<ScrollViewer.ContextMenu>
+						<ContextMenu>
+							<MenuItem Header="{x:Static properties:Menus.Menu_SaveAs}"
+									  Command="{Binding Path=SaveArrowGraphImageFileCommand, Mode=OneWay}"/>
+						</ContextMenu>
+					</ScrollViewer.ContextMenu>
+					<LayoutTransformControl Classes="screen pdf" >
+						<LayoutTransformControl.LayoutTransform>
+							<ScaleTransform ScaleX="{Binding Value, ElementName=zoomer, Mode=TwoWay}"
+											ScaleY="{Binding Value, ElementName=zoomer, Mode=TwoWay}"/>
+						</LayoutTransformControl.LayoutTransform>
+
+						<!--Use the Grid to ensure the image is centered during zoom-->
+						<Grid>
+							<Image Stretch="None"
+								   Source="{Binding Path=ArrowGraphImage, Mode=OneWay}"
+								   RenderTransformOrigin="0.5,0.5">
+							</Image>
+						</Grid>
+					</LayoutTransformControl>
+				</ScrollViewer>
+			</DockPanel>
+		</Border>
+	</DockPanel>
+</UserControl>

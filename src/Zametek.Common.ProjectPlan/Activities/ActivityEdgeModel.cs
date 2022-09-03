@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public class ActivityEdgeModel
+    public record ActivityEdgeModel
     {
-        public ActivityModel Content { get; set; }
+        public ActivityModel Content { get; init; } = new ActivityModel();
     }
 }

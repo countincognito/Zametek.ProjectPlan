@@ -1,30 +1,40 @@
-﻿using Prism.Mvvm;
+﻿using ReactiveUI;
 using System.Globalization;
+using System.Reactive.Linq;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class SelectableResourceViewModel
-        : BindableBase
+        : ViewModelBase, IDisposable
     {
         #region Fields
 
-        private string m_Name;
-        private bool m_IsSelected;
+        private readonly ResourceSelectorViewModel m_ResourceSelectorViewModel;
+        private readonly IDisposable? m_ResourceSelectorSub;
 
         #endregion
 
         #region Ctors
 
-        public SelectableResourceViewModel(int id, string name, bool isSelected)
-            : this(id, name)
-        {
-            m_IsSelected = isSelected;
-        }
-
-        public SelectableResourceViewModel(int id, string name)
+        public SelectableResourceViewModel(
+            int id,
+            string name!!,
+            bool isSelected,
+            ResourceSelectorViewModel resourceSelectorViewModel!!)
         {
             Id = id;
             m_Name = name;
+            IsSelected = isSelected;
+            m_ResourceSelectorViewModel = resourceSelectorViewModel;
+
+            m_DisplayName = this
+                .WhenAnyValue(x => x.Name)
+                .Select(x => string.IsNullOrWhiteSpace(x) ? Id.ToString(CultureInfo.InvariantCulture) : x)
+                .ToProperty(this, x => x.DisplayName);
+
+            m_ResourceSelectorSub = this
+                .WhenAnyValue(x => x.IsSelected)
+                .Subscribe(x => m_ResourceSelectorViewModel.RaiseTargetResourcesPropertiesChanged());
         }
 
         #endregion
@@ -36,33 +46,54 @@ namespace Zametek.ViewModel.ProjectPlan
             get;
         }
 
+        private string m_Name;
         public string Name
         {
-            get
-            {
-                return m_Name;
-            }
-            set
-            {
-                m_Name = value;
-                RaisePropertyChanged();
-                RaisePropertyChanged(nameof(DisplayName));
-            }
+            get => m_Name;
+            set => this.RaiseAndSetIfChanged(ref m_Name, value);
         }
 
-        public string DisplayName => string.IsNullOrWhiteSpace(Name) ? Id.ToString(CultureInfo.InvariantCulture) : Name;
+        private readonly ObservableAsPropertyHelper<string> m_DisplayName;
+        public string DisplayName => m_DisplayName.Value;
 
+        private bool m_IsSelected;
         public bool IsSelected
         {
-            get
+            get => m_IsSelected;
+            set => this.RaiseAndSetIfChanged(ref m_IsSelected, value);
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        private bool m_Disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (m_Disposed)
             {
-                return m_IsSelected;
+                return;
             }
-            set
+
+            if (disposing)
             {
-                m_IsSelected = value;
-                RaisePropertyChanged();
+                // TODO: dispose managed state (managed objects).
+                m_ResourceSelectorSub?.Dispose();
             }
+
+            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+            // TODO: set large fields to null.
+
+            m_Disposed = true;
+        }
+
+        public void Dispose()
+        {
+            // Dispose of unmanaged resources.
+            Dispose(true);
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
         }
 
         #endregion

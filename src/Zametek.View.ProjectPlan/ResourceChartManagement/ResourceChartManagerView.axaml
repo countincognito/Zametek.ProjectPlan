@@ -1,0 +1,60 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:i="using:Avalonia.Xaml.Interactivity"
+	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 xmlns:properties="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:oxy="using:OxyPlot.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Zametek.View.ProjectPlan.ResourceChartManagerView">
+	<UserControl.Resources>
+		<local:BooleanAndConverter x:Key="booleanAndConverter"/>
+		<local:BooleanOrConverter x:Key="booleanOrConverter"/>
+	</UserControl.Resources>
+
+	<DockPanel Margin="7">
+		<Border Name="viewBorder"
+				BorderThickness="2"
+				BorderBrush="DarkGray">
+			<i:Interaction.Behaviors>
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{StaticResource booleanOrConverter}">
+							<MultiBinding.Bindings>
+								<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="Red" />
+				</ia:DataTriggerBehavior>
+
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{StaticResource booleanAndConverter}">
+							<MultiBinding.Bindings>
+								<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="DarkGray" />
+				</ia:DataTriggerBehavior>
+			</i:Interaction.Behaviors>
+
+			<Grid>
+				<Grid.ContextMenu>
+					<ContextMenu>
+						<MenuItem Header="{x:Static properties:Menus.Menu_SaveAs}"
+								  Command="{Binding Path=SaveResourceChartImageFileCommand, Mode=OneWay}"/>
+					</ContextMenu>
+				</Grid.ContextMenu>
+				<oxy:PlotView x:Name="oxyplot"
+							  Model="{Binding Path=ResourceChartPlotModel, Mode=OneWay}"
+							  Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
+			</Grid>
+		</Border>
+	</DockPanel>
+</UserControl>

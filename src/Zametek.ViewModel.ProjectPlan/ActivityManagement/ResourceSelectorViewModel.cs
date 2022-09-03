@@ -1,14 +1,11 @@
-﻿using Prism.Mvvm;
-using System;
-using System.Collections.Generic;
+﻿using ReactiveUI;
 using System.Collections.ObjectModel;
-using System.Linq;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ResourceSelectorViewModel
-        : BindableBase
+        : ViewModelBase, IDisposable
     {
         #region Fields
 
@@ -21,17 +18,17 @@ namespace Zametek.ViewModel.ProjectPlan
         public ResourceSelectorViewModel()
         {
             m_Lock = new object();
-            TargetResources = new ObservableCollection<SelectableResourceViewModel>();
+            m_TargetResources = new ObservableCollection<SelectableResourceViewModel>();
+            m_ReadOnlyTargetResources = new ReadOnlyObservableCollection<SelectableResourceViewModel>(m_TargetResources);
         }
 
         #endregion
 
         #region Properties
 
-        public ObservableCollection<SelectableResourceViewModel> TargetResources
-        {
-            get;
-        }
+        private readonly ObservableCollection<SelectableResourceViewModel> m_TargetResources;
+        private readonly ReadOnlyObservableCollection<SelectableResourceViewModel> m_ReadOnlyTargetResources;
+        public ReadOnlyObservableCollection<SelectableResourceViewModel> TargetResources => m_ReadOnlyTargetResources;
 
         public string TargetResourcesString
         {
@@ -64,30 +61,43 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Public Methods
 
-        public void SetTargetResources(IEnumerable<ResourceModel> targetResources, HashSet<int> selectedTargetResources)
+        public void SetTargetResources(
+            IEnumerable<ResourceModel> targetResources!!,
+            HashSet<int> selectedTargetResources!!)
         {
-            if (targetResources == null)
-            {
-                throw new ArgumentNullException(nameof(targetResources));
-            }
-            if (selectedTargetResources == null)
-            {
-                throw new ArgumentNullException(nameof(selectedTargetResources));
-            }
 
             lock (m_Lock)
             {
-                TargetResources.Clear();
+                m_TargetResources.Clear();
                 foreach (ResourceModel targetResource in targetResources)
                 {
-                    TargetResources.Add(
+                    m_TargetResources.Add(
                         new SelectableResourceViewModel(
                             targetResource.Id,
                             targetResource.Name,
-                            selectedTargetResources.Contains(targetResource.Id)));
+                            selectedTargetResources.Contains(targetResource.Id),
+                            this));
                 }
             }
-            RaisePropertyChanged(nameof(TargetResourcesString));
+            RaiseTargetResourcesPropertiesChanged();
+        }
+
+        public void ClearTargetResources()
+        {
+            lock (m_Lock)
+            {
+                foreach (IDisposable targetResource in TargetResources)
+                {
+                    targetResource.Dispose();
+                }
+                m_TargetResources.Clear();
+            }
+        }
+
+        public void RaiseTargetResourcesPropertiesChanged()
+        {
+            this.RaisePropertyChanged(nameof(TargetResources));
+            this.RaisePropertyChanged(nameof(TargetResourcesString));
         }
 
         #endregion
@@ -100,5 +110,40 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         #endregion
+
+        #region IDisposable Members
+
+        private bool m_Disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (m_Disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                // TODO: dispose managed state (managed objects).
+                ClearTargetResources();
+            }
+
+            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+            // TODO: set large fields to null.
+
+            m_Disposed = true;
+        }
+
+        public void Dispose()
+        {
+            // Dispose of unmanaged resources.
+            Dispose(true);
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
+
+
     }
 }

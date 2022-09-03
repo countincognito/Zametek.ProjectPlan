@@ -1,24 +1,22 @@
-﻿using System;
-
-namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public class DiagramNodeModel
+    public record DiagramNodeModel
     {
-        public int Id { get; set; }
+        public int Id { get; init; }
 
-        public double X { get; set; }
+        public double X { get; init; }
 
-        public double Y { get; set; }
+        public double Y { get; init; }
 
-        public double Height { get; set; }
+        public double Height { get; init; }
 
-        public double Width { get; set; }
+        public double Width { get; init; }
 
-        public string FillColorHexCode { get; set; }
+        public string? FillColorHexCode { get; init; }
 
-        public string BorderColorHexCode { get; set; }
+        public string? BorderColorHexCode { get; init; }
 
-        public string Text { get; set; }
+        public string? Text { get; init; }
     }
 }

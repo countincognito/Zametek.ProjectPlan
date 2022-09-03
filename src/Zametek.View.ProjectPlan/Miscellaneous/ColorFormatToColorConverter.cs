@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Avalonia.Data.Converters;
+using Avalonia.Media;
+using System;
+using Avalonia;
 using System.Globalization;
-using System.Windows;
-using System.Windows.Data;
-using System.Windows.Media;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
@@ -12,21 +12,21 @@ namespace Zametek.View.ProjectPlan
     {
         #region IValueConverter Members
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var input = value as ColorFormatModel;
-            if (input == null)
+            if (input is null)
             {
-                return DependencyProperty.UnsetValue;
+                return AvaloniaProperty.UnsetValue;
             }
             return Color.FromArgb(input.A, input.R, input.G, input.B);
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (!(value is Color))
+            if (value is not Color)
             {
-                return DependencyProperty.UnsetValue;
+                return AvaloniaProperty.UnsetValue;
             }
             var input = (Color)value;
             return new ColorFormatModel

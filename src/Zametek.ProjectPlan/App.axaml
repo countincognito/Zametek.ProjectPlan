@@ -1,0 +1,27 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="using:Zametek.View.ProjectPlan"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:local="using:Zametek.ProjectPlan"
+             x:Class="Zametek.ProjectPlan.App">
+    <Application.DataTemplates>
+        <v:ViewLocator />
+    </Application.DataTemplates>
+
+	<Application.Styles>
+		<!-- Keep this near the top otherwise it screws up the Popup ListBox in the Resource Selector in Activities Manager -->
+		<StyleInclude Source="avares://Egorozh.ColorPicker.Avalonia.Dialog/Themes/Default.axaml" />
+		<StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseLight.xaml"/>
+		<StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml"/>
+		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Default.xaml"/>
+		<StyleInclude Source="avares://Dock.Avalonia/Themes/DockDefaultTheme.axaml"/>
+
+
+		<!--<StyleInclude Source="resm:Avalonia.Themes.Default.DefaultTheme.xaml?assembly=Avalonia.Themes.Default"/>
+		<StyleInclude Source="resm:Avalonia.Themes.Default.Accents.BaseLight.xaml?assembly=Avalonia.Themes.Default"/>-->
+		<!--<StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>-->
+
+		<StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>
+
+	</Application.Styles>
+</Application>

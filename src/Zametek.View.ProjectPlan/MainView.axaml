@@ -1,0 +1,162 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="Zametek.View.ProjectPlan.MainView"
+		xmlns:i="using:Avalonia.Xaml.Interactivity"
+		xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+		xmlns:properties="using:Zametek.Resource.ProjectPlan"
+		xmlns:controls="using:Avalonia.Controls"
+		xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
+        Icon="resm:Zametek.Resource.ProjectPlan.Icons.zpp.ico?assembly=Zametek.Resource.ProjectPlan"
+		Name="mainview"
+        Title="{Binding Path=ProjectTitle, Mode=OneWay}">
+	<Window.Resources>
+		<Cursor x:Key="WaitCursor">Wait</Cursor>
+		<Cursor x:Key="ArrowCursor">Arrow</Cursor>
+	</Window.Resources>
+
+	<Window.KeyBindings>
+		<KeyBinding Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}" Gesture="Ctrl+O" />
+		<KeyBinding Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}" Gesture="Ctrl+S" />
+		<KeyBinding Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}" Gesture="Ctrl+D" />
+		<KeyBinding Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}" Gesture="Ctrl+B" />
+	</Window.KeyBindings>
+
+	<i:Interaction.Behaviors>
+		<ia:DataTriggerBehavior Binding="{Binding Path=IsBusy}" ComparisonCondition="Equal" Value="true">
+			<ia:ChangePropertyAction TargetObject="{Binding #mainview}" PropertyName="Cursor" Value="{DynamicResource WaitCursor}" />
+		</ia:DataTriggerBehavior>
+		<ia:DataTriggerBehavior Binding="{Binding Path=IsBusy}" ComparisonCondition="Equal" Value="false">
+			<ia:ChangePropertyAction TargetObject="{Binding #mainview}" PropertyName="Cursor" Value="{DynamicResource ArrowCursor}" />
+		</ia:DataTriggerBehavior>
+	</i:Interaction.Behaviors>
+
+	<DockPanel Name="maindock" Margin="7">
+		<i:Interaction.Behaviors>
+			<ia:DataTriggerBehavior Binding="{Binding Path=IsBusy}" ComparisonCondition="Equal" Value="true">
+				<ia:ChangePropertyAction TargetObject="{Binding #maindock}" PropertyName="IsEnabled" Value="false" />
+			</ia:DataTriggerBehavior>
+			<ia:DataTriggerBehavior Binding="{Binding Path=IsBusy}" ComparisonCondition="Equal" Value="false">
+				<ia:ChangePropertyAction TargetObject="{Binding #maindock}" PropertyName="IsEnabled" Value="true" />
+			</ia:DataTriggerBehavior>
+		</i:Interaction.Behaviors>
+
+		<Menu DockPanel.Dock="Top"
+              Padding="3">
+			<MenuItem Header="{x:Static properties:Menus.Menu_File}">
+				<MenuItem Header="{x:Static properties:Menus.Menu_Open}"
+                          Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
+						  InputGesture="Ctrl+O"/>
+				<Separator />
+				<MenuItem Header="{x:Static properties:Menus.Menu_Save}"
+                          Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"
+						  InputGesture="Ctrl+S"/>
+				<MenuItem Header="{x:Static properties:Menus.Menu_SaveAs}"
+						  Command="{Binding Path=SaveAsProjectPlanFileCommand, Mode=OneWay}"/>
+				<Separator />
+				<MenuItem Header="{x:Static properties:Menus.Menu_Import}"
+                          Command="{Binding Path=ImportProjectFileCommand, Mode=OneWay}"/>
+				<MenuItem Header="{x:Static properties:Menus.Menu_Export}"
+                          Command="{Binding Path=ExportProjectFileCommand, Mode=OneWay}"/>
+				<Separator />
+				<MenuItem Header="{x:Static properties:Menus.Menu_Close}"
+                          Command="{Binding Path=CloseProjectPlanCommand, Mode=OneWay}"/>
+			</MenuItem>
+
+			<MenuItem Header="{x:Static properties:Menus.Menu_Settings}">
+				<MenuItem Header="{x:Static properties:Menus.Menu_ShowDates}"
+						  Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}"
+						  InputGesture="Ctrl+D">
+					<MenuItem.Icon>
+						<CheckBox BorderThickness="0"
+								  IsHitTestVisible="False"
+								  IsChecked="{Binding Path=ShowDates, Mode=OneWay}" />
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="{x:Static properties:Menus.Menu_UseBusinessDays}"
+						  Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}"
+						  InputGesture="Ctrl+B">
+					<MenuItem.Icon>
+						<CheckBox BorderThickness="0"
+								  IsHitTestVisible="False"
+								  IsChecked="{Binding Path=UseBusinessDays, Mode=OneWay}" />
+					</MenuItem.Icon>
+				</MenuItem>
+			</MenuItem>
+
+			<MenuItem Header="{x:Static properties:Menus.Menu_Compile}">
+				<MenuItem Header="{x:Static properties:Menus.Menu_Compile}"
+                          Command="{Binding Path=CompileCommand, Mode=OneWay}"/>
+				<MenuItem Header="{x:Static properties:Menus.Menu_AutoCompile}"
+						  Command="{Binding Path=ToggleAutoCompileCommand, Mode=OneWay}">
+					<MenuItem.Icon>
+						<CheckBox BorderThickness="0"
+								  IsHitTestVisible="False"
+								  IsChecked="{Binding Path=AutoCompile, Mode=OneWay}" />
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="{x:Static properties:Menus.Menu_TransitiveReduction}"
+                          Command="{Binding Path=TransitiveReductionCommand, Mode=OneWay}"/>
+			</MenuItem>
+			<MenuItem Header="{x:Static properties:Menus.Menu_Help}">
+				<MenuItem Header="{x:Static properties:Menus.Menu_Documentation}"
+                          Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+                          CommandParameter="{x:Static properties:Links.Link_Documentation}"/>
+				<Separator />
+				<MenuItem Header="{x:Static properties:Menus.Menu_ReportIssue}"
+                          Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+                          CommandParameter="{x:Static properties:Links.Link_ReportIssue}"/>
+				<Separator />
+				<MenuItem Header="{x:Static properties:Menus.Menu_Donate}"
+                          Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+                          CommandParameter="{x:Static properties:Links.Link_Donate}"/>
+				<MenuItem Header="{x:Static properties:Menus.Menu_ViewLicense}"
+                          Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+                          CommandParameter="{x:Static properties:Links.Link_ViewLicense}"/>
+				<Separator />
+				
+				
+				
+				
+				<MenuItem Header="{x:Static properties:Menus.Menu_About}"
+                          Command="{Binding Path=OpenAboutCommand, Mode=OneWay}"/>
+				
+				
+				
+				
+				
+			</MenuItem>
+		</Menu>
+
+		<DockPanel DockPanel.Dock="Bottom"
+                   Margin="0,11,0,0">
+			<Label DockPanel.Dock="Left"
+                   IsTabStop="False"
+                   Content="{x:Static properties:Labels.Label_ProjectStart}"
+                   Height="25"
+                   Margin="0,0,7,0"/>
+			<CalendarDatePicker DockPanel.Dock="Left"
+								SelectedDate="{Binding Path=ProjectStartDateTime, Mode=TwoWay}"
+								Margin="0,0,11,0"
+								Padding="3"
+								IsTodayHighlighted="True"
+								VerticalAlignment="Center"/>
+			<Grid />
+		</DockPanel>
+
+
+
+
+
+		<idc:DockControl Layout="{Binding Path=Layout, Mode=OneWay}" DockProperties.IsDragEnabled="False" />
+
+
+
+
+
+
+
+	</DockPanel>
+</Window>

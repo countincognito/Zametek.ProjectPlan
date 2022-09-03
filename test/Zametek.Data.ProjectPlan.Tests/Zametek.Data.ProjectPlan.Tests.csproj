@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <EnablePreviewFeatures>True</EnablePreviewFeatures>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="TestFiles\test_v0_1_0.zpp" />
+    <None Remove="TestFiles\test_v0_2_0.zpp" />
+    <None Remove="TestFiles\test_v0_2_1.zpp" />
+    <None Remove="TestFiles\test_v0_3_0.zpp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="TestFiles\test_v0_1_0.zpp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\test_v0_2_0.zpp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\test_v0_3_0.zpp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\test_v0_2_1.zpp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="6.7.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="3.1.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Zametek.Data.ProjectPlan\Zametek.Data.ProjectPlan.csproj" />
+  </ItemGroup>
+
+</Project>

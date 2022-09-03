@@ -1,503 +1,176 @@
-﻿using AutoMapper;
-using Prism;
-using Prism.Commands;
-using Prism.Events;
-using Prism.Interactivity.InteractionRequest;
-using System;
-using System.Collections.Generic;
+﻿using Avalonia.Controls;
+using ReactiveUI;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Controls;
+using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Event.ProjectPlan;
-using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ActivitiesManagerViewModel
-        : PropertyChangedPubSubViewModel, IActivitiesManagerViewModel, IActiveAware
+        : ToolViewModelBase, IActivitiesManagerViewModel
     {
         #region Fields
 
         private readonly object m_Lock;
 
         private readonly ICoreViewModel m_CoreViewModel;
-        private readonly IMapper m_Mapper;
-        private readonly IEventAggregator m_EventService;
-
-        private readonly InteractionRequest<Notification> m_NotificationInteractionRequest;
-
-        private SubscriptionToken m_ManagedActivityUpdatedSubscriptionToken;
-        private SubscriptionToken m_ProjectStartUpdatedSubscriptionToken;
-        private SubscriptionToken m_UseBusinessDaysUpdatedSubscriptionToken;
-        private SubscriptionToken m_ShowDatesUpdatedSubscriptionToken;
-
-        private bool m_IsActive;
+        private readonly IDialogService m_DialogService;
 
         #endregion
 
         #region Ctors
 
         public ActivitiesManagerViewModel(
-            ICoreViewModel coreViewModel,
-            IMapper mapper,
-            IEventAggregator eventService)
-            : base(eventService)
+            ICoreViewModel coreViewModel!!,
+            IDialogService dialogService!!)
         {
             m_Lock = new object();
-            m_CoreViewModel = coreViewModel ?? throw new ArgumentNullException(nameof(coreViewModel));
-            m_Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
+            m_CoreViewModel = coreViewModel;
+            m_DialogService = dialogService;
+            SelectedActivities = new ConcurrentDictionary<int, IManagedActivityViewModel>();
+            m_HasActivities = false;
 
-            SelectedActivities = new ObservableCollection<IManagedActivityViewModel>();
+            SetSelectedManagedActivitiesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedActivities);
+            AddManagedActivityCommand = ReactiveCommand.CreateFromTask(AddManagedActivityAsync);
+            RemoveManagedActivitiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitiesAsync, this.WhenAnyValue(am => am.HasActivities));
 
-            m_NotificationInteractionRequest = new InteractionRequest<Notification>();
+            m_IsBusy = this
+                .WhenAnyValue(am => am.m_CoreViewModel.IsBusy)
+                .ToProperty(this, am => am.IsBusy);
 
-            InitializeCommands();
-            SubscribeToEvents();
+            m_HasStaleOutputs = this
+                .WhenAnyValue(am => am.m_CoreViewModel.HasStaleOutputs)
+                .ToProperty(this, am => am.HasStaleOutputs);
 
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.IsBusy), nameof(IsBusy), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasStaleOutputs), nameof(HasStaleOutputs), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.HasCompilationErrors), nameof(HasCompilationErrors), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.CompilationOutput), nameof(CompilationOutput), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ShowDates), nameof(ShowDates), ThreadOption.BackgroundThread);
-            SubscribePropertyChanged(m_CoreViewModel, nameof(m_CoreViewModel.ShowDates), nameof(ShowDays), ThreadOption.BackgroundThread);
+            m_ShowDates = this
+                .WhenAnyValue(am => am.m_CoreViewModel.ShowDates)
+                .ToProperty(this, am => am.ShowDates);
+
+            m_HasCompilationErrors = this
+                .WhenAnyValue(am => am.m_CoreViewModel.HasCompilationErrors)
+                .ToProperty(this, am => am.HasCompilationErrors);
+
+            Id = Resource.ProjectPlan.Titles.Title_ActivitiesView;
+            Title = Resource.ProjectPlan.Titles.Title_ActivitiesView;
         }
 
         #endregion
 
         #region Properties
 
-        private bool IsProjectUpdated
-        {
-            set
-            {
-                m_CoreViewModel.IsProjectUpdated = value;
-            }
-        }
-
-        //private bool UseBusinessDays => m_CoreViewModel.UseBusinessDays;
-
-        //private DateTime ProjectStart => m_CoreViewModel.ProjectStart;
-
-        #endregion
-
-        #region Commands
-
-        public DelegateCommandBase InternalSetSelectedManagedActivitiesCommand
-        {
-            get;
-            private set;
-        }
-
-        private void SetSelectedManagedActivities(SelectionChangedEventArgs args)
-        {
-            if (args?.AddedItems != null)
-            {
-                SelectedActivities.AddRange(args?.AddedItems.OfType<ManagedActivityViewModel>());
-            }
-            if (args?.RemovedItems != null)
-            {
-                foreach (var managedActivityViewModel in args?.RemovedItems.OfType<ManagedActivityViewModel>())
-                {
-                    SelectedActivities.Remove(managedActivityViewModel);
-                }
-            }
-            RaisePropertyChanged(nameof(SelectedActivity));
-            RaiseCanExecuteChangedAllCommands();
-        }
-
-        private DelegateCommandBase InternalAddManagedActivityCommand
-        {
-            get;
-            set;
-        }
-
-        private async void AddManagedActivity()
-        {
-            await DoAddManagedActivityAsync().ConfigureAwait(true);
-        }
-
-        private bool CanAddManagedActivity()
-        {
-            return true;
-        }
-
-        private DelegateCommandBase InternalRemoveManagedActivityCommand
-        {
-            get;
-            set;
-        }
-
-        private async void RemoveManagedActivity()
-        {
-            await DoRemoveManagedActivityAsync().ConfigureAwait(true);
-        }
-
-        private bool CanRemoveManagedActivity()
-        {
-            return SelectedActivities.Any();
-        }
+        public IDictionary<int, IManagedActivityViewModel> SelectedActivities { get; }
 
         #endregion
 
         #region Private Methods
 
-        private void InitializeCommands()
+        private void SetSelectedManagedActivities(SelectionChangedEventArgs args)
         {
-            SetSelectedManagedActivitiesCommand =
-                InternalSetSelectedManagedActivitiesCommand =
-                    new DelegateCommand<SelectionChangedEventArgs>(SetSelectedManagedActivities);
-            AddManagedActivityCommand =
-                InternalAddManagedActivityCommand =
-                    new DelegateCommand(AddManagedActivity, CanAddManagedActivity);
-            RemoveManagedActivityCommand =
-                InternalRemoveManagedActivityCommand =
-                    new DelegateCommand(RemoveManagedActivity, CanRemoveManagedActivity);
-        }
-
-        private void RaiseCanExecuteChangedAllCommands()
-        {
-            InternalSetSelectedManagedActivitiesCommand.RaiseCanExecuteChanged();
-            InternalAddManagedActivityCommand.RaiseCanExecuteChanged();
-            InternalRemoveManagedActivityCommand.RaiseCanExecuteChanged();
-        }
-
-        private void SubscribeToEvents()
-        {
-            m_ManagedActivityUpdatedSubscriptionToken =
-                m_EventService.GetEvent<PubSubEvent<ManagedActivityUpdatedPayload>>()
-                    .Subscribe(async payload =>
-                    {
-                        IsProjectUpdated = true;
-                        await UpdateActivitiesTargetResourceDependenciesAsync().ConfigureAwait(true);
-                        await DoAutoCompileAsync().ConfigureAwait(true);
-                    }, ThreadOption.BackgroundThread);
-            m_ProjectStartUpdatedSubscriptionToken =
-                m_EventService.GetEvent<PubSubEvent<ProjectStartUpdatedPayload>>()
-                    .Subscribe(async payload =>
-                    {
-                        IsProjectUpdated = true;
-                        await UpdateActivitiesProjectStartAsync().ConfigureAwait(true);
-                        await DoAutoCompileAsync().ConfigureAwait(true);
-                    }, ThreadOption.BackgroundThread);
-            m_UseBusinessDaysUpdatedSubscriptionToken =
-                m_EventService.GetEvent<PubSubEvent<UseBusinessDaysUpdatedPayload>>()
-                    .Subscribe(async payload =>
-                    {
-                        IsProjectUpdated = true;
-                        await UpdateActivitiesUseBusinessDaysAsync().ConfigureAwait(true);
-                        await DoAutoCompileAsync().ConfigureAwait(true);
-                    }, ThreadOption.BackgroundThread);
-            m_ShowDatesUpdatedSubscriptionToken =
-                m_EventService.GetEvent<PubSubEvent<ShowDatesUpdatedPayload>>()
-                    .Subscribe(async payload =>
-                    {
-                        await SetCompilationOutputAsync().ConfigureAwait(true);
-                        PublishGraphCompilationUpdatedPayload();
-                    }, ThreadOption.BackgroundThread);
-        }
-
-        private void UnsubscribeFromEvents()
-        {
-            m_EventService.GetEvent<PubSubEvent<ManagedActivityUpdatedPayload>>()
-                .Unsubscribe(m_ManagedActivityUpdatedSubscriptionToken);
-            m_EventService.GetEvent<PubSubEvent<ProjectStartUpdatedPayload>>()
-                .Unsubscribe(m_ProjectStartUpdatedSubscriptionToken);
-            m_EventService.GetEvent<PubSubEvent<UseBusinessDaysUpdatedPayload>>()
-                .Unsubscribe(m_UseBusinessDaysUpdatedSubscriptionToken);
-            m_EventService.GetEvent<PubSubEvent<ShowDatesUpdatedPayload>>()
-                .Unsubscribe(m_ShowDatesUpdatedSubscriptionToken);
-        }
-
-        private void PublishGraphCompilationUpdatedPayload()
-        {
-            m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
-                .Publish(new GraphCompilationUpdatedPayload());
-        }
-
-        private async Task UpdateActivitiesTargetResourceDependenciesAsync()
-        {
-            await Task.Run(() =>
+            lock (m_Lock)
             {
-                m_CoreViewModel.RecordRedoUndo(() =>
+                if (args.AddedItems is not null)
                 {
-                    m_CoreViewModel.UpdateActivitiesTargetResourceDependencies();
-                });
-            }).ConfigureAwait(true);
-        }
-
-        private async Task UpdateActivitiesProjectStartAsync()
-        {
-            await Task.Run(() => m_CoreViewModel.UpdateActivitiesProjectStart()).ConfigureAwait(true);
-        }
-
-        private async Task UpdateActivitiesUseBusinessDaysAsync()
-        {
-            await Task.Run(() => m_CoreViewModel.UpdateActivitiesUseBusinessDays()).ConfigureAwait(true);
-        }
-
-        private async Task RunAutoCompileAsync()
-        {
-            await Task.Run(() => m_CoreViewModel.RunAutoCompile()).ConfigureAwait(true);
-        }
-
-        private async Task SetCompilationOutputAsync()
-        {
-            await Task.Run(() => m_CoreViewModel.SetCompilationOutput()).ConfigureAwait(true);
-        }
-
-        private void DispatchNotification(string title, object content)
-        {
-            m_NotificationInteractionRequest.Raise(
-                new Notification
-                {
-                    Title = title,
-                    Content = content
-                });
-        }
-
-        #endregion
-
-        #region Public Methods
-
-        public async Task DoAutoCompileAsync()
-        {
-            try
-            {
-                IsBusy = true;
-                HasStaleOutputs = true;
-                IsProjectUpdated = true;
-                await RunAutoCompileAsync().ConfigureAwait(true);
-            }
-            catch (Exception ex)
-            {
-                DispatchNotification(
-                    Resource.ProjectPlan.Resources.Title_Error,
-                    ex.Message);
-            }
-            finally
-            {
-                IsBusy = false;
-                RaiseCanExecuteChangedAllCommands();
-            }
-        }
-
-        public async Task DoAddManagedActivityAsync()
-        {
-            try
-            {
-                IsBusy = true;
-
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.RecordRedoUndo(() =>
+                    foreach (var managedActivityViewModel in args.AddedItems.OfType<ManagedActivityViewModel>())
                     {
-                        m_CoreViewModel.AddManagedActivity();
-                    });
+                        SelectedActivities.TryAdd(managedActivityViewModel.Id, managedActivityViewModel);
+                    }
+                }
+                if (args.RemovedItems is not null)
+                {
+                    foreach (var managedActivityViewModel in args.RemovedItems.OfType<ManagedActivityViewModel>())
+                    {
+                        SelectedActivities.Remove(managedActivityViewModel.Id);
+                    }
                 }
 
-                HasStaleOutputs = true;
-                IsProjectUpdated = true;
-
-                await RunAutoCompileAsync().ConfigureAwait(true);
-            }
-            catch (Exception ex)
-            {
-                DispatchNotification(
-                    Resource.ProjectPlan.Resources.Title_Error,
-                    ex.Message);
-            }
-            finally
-            {
-                IsBusy = false;
-                RaiseCanExecuteChangedAllCommands();
+                HasActivities = SelectedActivities.Any();
             }
         }
 
-        public async Task DoRemoveManagedActivityAsync()
+        private async Task AddManagedActivityAsync()
         {
             try
             {
-                IsBusy = true;
-
                 lock (m_Lock)
                 {
-                    IEnumerable<IDependentActivity<int, int>> dependentActivities = SelectedActivities.ToList();
-                    var activityIds = new HashSet<int>(dependentActivities.Select(x => x.Id));
+                    m_CoreViewModel.AddManagedActivity();
+                }
+                await RunAutoCompileAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    ex.Message);
+            }
+        }
+
+        private async Task RemoveManagedActivitiesAsync()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    ICollection<int> activityIds = SelectedActivities.Keys;
 
                     if (!activityIds.Any())
                     {
                         return;
                     }
 
-                    m_CoreViewModel.RecordRedoUndo(() =>
-                    {
-                        m_CoreViewModel.RemoveManagedActivities(activityIds);
-                    });
+                    m_CoreViewModel.RemoveManagedActivities(activityIds);
                 }
-
-                HasStaleOutputs = true;
-                IsProjectUpdated = true;
-
-                await RunAutoCompileAsync().ConfigureAwait(true);
+                await RunAutoCompileAsync();
             }
             catch (Exception ex)
             {
-                DispatchNotification(
-                    Resource.ProjectPlan.Resources.Title_Error,
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
                     ex.Message);
             }
-            finally
-            {
-                SelectedActivities.Clear();
-                RaisePropertyChanged(nameof(Activities));
-                RaisePropertyChanged(nameof(SelectedActivities));
-                IsBusy = false;
-                RaiseCanExecuteChangedAllCommands();
-            }
         }
+
+        private async Task RunAutoCompileAsync() => await Task.Run(() => m_CoreViewModel.RunAutoCompile());
 
         #endregion
 
         #region IActivityManagerViewModel Members
 
-        public string Title => Resource.ProjectPlan.Resources.Label_ActivitiesViewTitle;
+        private readonly ObservableAsPropertyHelper<bool> m_IsBusy;
+        public bool IsBusy => m_IsBusy.Value;
 
-        public IInteractionRequest NotificationInteractionRequest => m_NotificationInteractionRequest;
+        private readonly ObservableAsPropertyHelper<bool> m_HasStaleOutputs;
+        public bool HasStaleOutputs => m_HasStaleOutputs.Value;
 
-        public bool IsBusy
+        private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
+        public bool ShowDates => m_ShowDates.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
+        public bool HasCompilationErrors => m_HasCompilationErrors.Value;
+
+        private bool m_HasActivities;
+        public bool HasActivities
         {
-            get
-            {
-                return m_CoreViewModel.IsBusy;
-            }
-            private set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.IsBusy = value;
-                }
-                RaisePropertyChanged();
-            }
-        }
-
-        public bool HasStaleOutputs
-        {
-            get
-            {
-                return m_CoreViewModel.HasStaleOutputs;
-            }
-            private set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.HasStaleOutputs = value;
-                }
-                RaisePropertyChanged();
-            }
-        }
-
-        public bool ShowDates
-        {
-            get
-            {
-                return m_CoreViewModel.ShowDates;
-            }
-        }
-
-        public bool ShowDays
-        {
-            get
-            {
-                return !ShowDates;
-            }
-        }
-
-        public bool HasCompilationErrors
-        {
-            get
-            {
-                return m_CoreViewModel.HasCompilationErrors;
-            }
-            private set
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.HasCompilationErrors = value;
-                }
-                RaisePropertyChanged();
-            }
-        }
-
-        public string CompilationOutput
-        {
-            get
-            {
-                return m_CoreViewModel.CompilationOutput;
-            }
-        }
-
-        public ObservableCollection<IManagedActivityViewModel> Activities => m_CoreViewModel.Activities;
-
-        public ObservableCollection<IManagedActivityViewModel> SelectedActivities
-        {
-            get;
-        }
-
-        public IManagedActivityViewModel SelectedActivity
-        {
-            get
-            {
-                if (SelectedActivities.Count == 1)
-                {
-                    return SelectedActivities.FirstOrDefault();
-                }
-                return null;
-            }
-        }
-
-        public ICommand SetSelectedManagedActivitiesCommand
-        {
-            get;
-            private set;
-        }
-
-        public ICommand AddManagedActivityCommand
-        {
-            get;
-            private set;
-        }
-
-        public ICommand RemoveManagedActivityCommand
-        {
-            get;
-            private set;
-        }
-
-        #endregion
-
-        #region IActiveAware Members
-
-        public event EventHandler IsActiveChanged;
-
-        public bool IsActive
-        {
-            get
-            {
-                return m_IsActive;
-            }
+            get => m_HasActivities;
             set
             {
-                if (m_IsActive != value)
+                lock (m_Lock)
                 {
-                    m_IsActive = value;
-                    IsActiveChanged?.Invoke(this, new EventArgs());
+                    m_HasActivities = value;
+                    this.RaisePropertyChanged();
                 }
             }
         }
+
+        public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_CoreViewModel.Activities;
+
+        public ICommand SetSelectedManagedActivitiesCommand { get; }
+
+        public ICommand AddManagedActivityCommand { get; }
+
+        public ICommand RemoveManagedActivitiesCommand { get; }
 
         #endregion
     }

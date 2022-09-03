@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:i="using:Avalonia.Xaml.Interactivity"
+	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 xmlns:properties="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Zametek.View.ProjectPlan.OutputManagerView">
+	<UserControl.Resources>
+		<local:BooleanAndConverter x:Key="booleanAndConverter"/>
+		<local:BooleanOrConverter x:Key="booleanOrConverter"/>
+	</UserControl.Resources>
+
+	<DockPanel Margin="7">
+		<Border Name="viewBorder"
+				BorderThickness="2"
+				BorderBrush="DarkGray"
+                Background="LightGray">
+			<i:Interaction.Behaviors>
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{StaticResource booleanOrConverter}">
+							<MultiBinding.Bindings>
+								<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+
+					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="Red" />
+				</ia:DataTriggerBehavior>
+
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{StaticResource booleanAndConverter}">
+							<MultiBinding.Bindings>
+								<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+
+					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="DarkGray" />
+				</ia:DataTriggerBehavior>
+			</i:Interaction.Behaviors>
+
+			<TextBox Name="outputText"
+					 Text="{Binding Path=CompilationOutput, Mode=OneWay}"
+					 TextWrapping="Wrap"
+					 AcceptsReturn="True"
+					 Background="White"
+					 ScrollViewer.VerticalScrollBarVisibility="Auto"
+					 IsReadOnly="True">
+				<i:Interaction.Behaviors>
+					<ia:DataTriggerBehavior Value="True">
+						<ia:DataTriggerBehavior.Binding>
+							<MultiBinding Converter="{StaticResource booleanOrConverter}">
+								<MultiBinding.Bindings>
+									<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+									<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+								</MultiBinding.Bindings>
+							</MultiBinding>
+						</ia:DataTriggerBehavior.Binding>
+
+						<ia:ChangePropertyAction PropertyName="Foreground" TargetObject="#outputText" Value="Red" />
+					</ia:DataTriggerBehavior>
+
+					<ia:DataTriggerBehavior Value="True">
+						<ia:DataTriggerBehavior.Binding>
+							<MultiBinding Converter="{StaticResource booleanAndConverter}">
+								<MultiBinding.Bindings>
+									<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+									<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+								</MultiBinding.Bindings>
+							</MultiBinding>
+						</ia:DataTriggerBehavior.Binding>
+
+						<ia:ChangePropertyAction PropertyName="Foreground" TargetObject="#outputText" Value="Black" />
+					</ia:DataTriggerBehavior>
+				</i:Interaction.Behaviors>
+			</TextBox>
+		</Border>
+	</DockPanel>
+</UserControl>

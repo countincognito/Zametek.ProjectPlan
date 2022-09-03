@@ -1,303 +1,523 @@
 ﻿using AutoMapper;
-using Prism.Commands;
-using Prism.Events;
-using System;
-using System.Collections.Generic;
+using DynamicData;
+using DynamicData.Binding;
+using ReactiveUI;
 using System.Collections.ObjectModel;
-using System.Globalization;
-using System.Linq;
+using System.Diagnostics;
+using System.Reactive.Linq;
 using System.Text;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Event.ProjectPlan;
 using Zametek.Maths.Graphs;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class CoreViewModel
-        : PropertyChangedPubSubViewModel, ICoreViewModel
+        : ViewModelBase, ICoreViewModel, IDisposable
     {
         #region Fields
 
         private readonly object m_Lock;
 
-        private const int c_MaxUndoRedoStackSize = 25;
-        private readonly LimitedSizeStack<UndoRedoCommandPair> m_UndoStack;
-        private readonly LimitedSizeStack<UndoRedoCommandPair> m_RedoStack;
+        private readonly VertexGraphCompiler<int, int, IDependentActivity<int, int>> m_VertexGraphCompiler;
 
-        private readonly IProjectService m_ProjectService;
         private readonly ISettingService m_SettingService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
-        private readonly VertexGraphCompiler<int, int, IDependentActivity<int, int>> m_VertexGraphCompiler;
-        private bool m_IsBusy;
-        private DateTime m_ProjectStart;
-        private bool m_IsProjectUpdated;
-        private bool m_ShowDates;
-        private bool m_UseBusinessDays;
-        private bool m_HasStaleOutputs;
-        private bool m_AutoCompile;
-        private bool m_HasCompilationErrors;
-        private IGraphCompilation<int, int, IDependentActivity<int, int>> m_GraphCompilation;
-        private string m_CompilationOutput;
-        private ArrowGraphModel m_ArrowGraphModel;
-        private ArrowGraphSettingsModel m_ArrowGraphSettingsModel;
-        private ResourceSettingsModel m_ResourceSettingsModel;
-        private MetricsModel m_MetricsModel;
-        private int? m_CyclomaticComplexity;
-        private int? m_Duration;
-        private double? m_DurationManMonths;
-        private double? m_DirectCost;
-        private double? m_IndirectCost;
-        private double? m_OtherCost;
-        private double? m_TotalCost;
-
         private readonly IMapper m_Mapper;
-        private readonly IEventAggregator m_EventService;
+
+        private readonly IDisposable? m_CyclomaticComplexitySub;
+        private readonly IDisposable? m_AreActivitiesUncompiledSub;
+        private readonly IDisposable? m_CompileOnSettingsUpdateSub;
+        private readonly IDisposable? m_BuildArrowGraphSub;
+        private readonly IDisposable? m_BuildResourceSeriesSetSub;
+        private readonly IDisposable? m_BuildTrackingSeriesSetSub;
 
         #endregion
 
         #region Ctors
 
         public CoreViewModel(
-            IProjectService projectService,
-            ISettingService settingService,
-            IApplicationCommands applicationCommands,
-            IDateTimeCalculator dateTimeCalculator,
-            IMapper mapper,
-            IEventAggregator eventService)
-            : base(eventService)
+            ISettingService settingService!!,
+            IDateTimeCalculator dateTimeCalculator!!,
+            IMapper mapper!!)
         {
             m_Lock = new object();
-            m_UndoStack = new LimitedSizeStack<UndoRedoCommandPair>(c_MaxUndoRedoStackSize);
-            m_RedoStack = new LimitedSizeStack<UndoRedoCommandPair>(c_MaxUndoRedoStackSize);
-            m_ProjectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
-            m_SettingService = settingService ?? throw new ArgumentNullException(nameof(settingService));
-            ApplicationCommands = applicationCommands ?? throw new ArgumentNullException(nameof(applicationCommands));
-            m_DateTimeCalculator = dateTimeCalculator ?? throw new ArgumentNullException(nameof(dateTimeCalculator));
-            m_Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            m_EventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
-
             m_VertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
-            Activities = new ObservableCollection<IManagedActivityViewModel>();
-            InitializeCommands();
-            ClearSettings();
-        }
+            m_SettingService = settingService;
+            m_DateTimeCalculator = dateTimeCalculator;
+            m_Mapper = mapper;
 
-        #endregion
+            m_IsBusy = false;
+            m_HasStaleOutputs = false;
+            m_ProjectStart = new DateTimeOffset(DateTime.Today);
+            m_ResourceSettings = new ResourceSettingsModel();
+            m_Activities = new ObservableCollection<IManagedActivityViewModel>();
+            m_ReadOnlyActivities = new ReadOnlyObservableCollection<IManagedActivityViewModel>(m_Activities);
+            m_ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
+            m_ResourceSettings = m_SettingService.DefaultResourceSettings;
+            m_GraphCompilation = new GraphCompilation<int, int, DependentActivity<int, int>>(
+                Enumerable.Empty<DependentActivity<int, int>>(),
+                Enumerable.Empty<IResourceSchedule<int, int>>());
+            m_ArrowGraph = new ArrowGraphModel();
+            m_ResourceSeriesSet = new ResourceSeriesSetModel();
+            m_TrackingSeriesSet = new TrackingSeriesSetModel();
 
-        #region Commands
+            m_ProjectTitle = this
+                .WhenAnyValue(core => core.m_SettingService.ProjectTitle)
+                .ToProperty(this, core => core.ProjectTitle);
 
-        private void ReplaceCoreState(CoreStateModel coreState)
-        {
-            SetCoreState(coreState);
-        }
+            m_HasCompilationErrors = this
+                .WhenAnyValue(
+                    core => core.GraphCompilation,
+                    compilation => compilation.CompilationErrors.Any())
+                .ToProperty(this, core => core.HasCompilationErrors);
 
-        private bool CanReplaceCoreState(CoreStateModel coreState)
-        {
-            return true;
-        }
+            m_CyclomaticComplexitySub = this
+                .WhenAnyValue(core => core.GraphCompilation)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => BuildCyclomaticComplexity());
 
-        private void Undo()
-        {
-            lock (m_Lock)
-            {
-                UndoRedoCommandPair undoRedoCommandPair = m_UndoStack.Pop();
-                undoRedoCommandPair.UndoCommand.Execute(undoRedoCommandPair.UndoParameter);
-                m_RedoStack.Push(undoRedoCommandPair);
-                RaiseCanExecuteChangedAllCommands();
-            }
-        }
+            m_Duration = this
+                .WhenAnyValue(
+                    core => core.GraphCompilation, core => core.HasCompilationErrors,
+                    (compilation, hasCompilationErrors) => hasCompilationErrors ? (int?)null : m_VertexGraphCompiler.Duration)
+                .ToProperty(this, core => core.Duration);
 
-        private bool CanUndo()
-        {
-            return m_UndoStack.Any();
-        }
+            m_AreActivitiesUncompiledSub = m_ReadOnlyActivities
+                .ToObservableChangeSet()
+                .AutoRefresh(activity => activity.IsCompiled) // Subscribe only to IsCompiled property changes
+                .Filter(activity => !activity.IsCompiled)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(changeSet =>
+                {
+                    if (!IsBusy && changeSet.Replaced > 0) // Replaced counts the individually updated items.
+                    {
+                        RunAutoCompile();
+                    }
+                });
 
-        private void Redo()
-        {
-            lock (m_Lock)
-            {
-                UndoRedoCommandPair undoRedoCommandPair = m_RedoStack.Pop();
-                undoRedoCommandPair.RedoCommand.Execute(undoRedoCommandPair.RedoParameter);
-                m_UndoStack.Push(undoRedoCommandPair);
-                RaiseCanExecuteChangedAllCommands();
-            }
-        }
+            m_CompileOnSettingsUpdateSub = this
+                .WhenAnyValue(
+                    core => core.ResourceSettings,
+                    core => core.ArrowGraphSettings,
+                    core => core.UseBusinessDays)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ =>
+                {
+                    if (!IsBusy)
+                    {
+                        RunAutoCompile();
+                    }
+                });
 
-        private bool CanRedo()
-        {
-            return m_RedoStack.Any();
+            m_BuildArrowGraphSub = this
+                .WhenAnyValue(core => core.GraphCompilation)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => BuildArrowGraph());
+
+            m_BuildResourceSeriesSetSub = this
+                .WhenAnyValue(
+                    core => core.GraphCompilation,
+                    core => core.ResourceSettings)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => BuildResourceSeriesSet());
+
+            m_BuildTrackingSeriesSetSub = this
+                .WhenAnyValue(core => core.GraphCompilation)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => BuildTrackingSeriesSet());
         }
 
         #endregion
 
         #region Private Methods
 
-        private void InitializeCommands()
-        {
-            ApplicationCommands.UndoCommand = new DelegateCommand(Undo, CanUndo);
-            ApplicationCommands.RedoCommand = new DelegateCommand(Redo, CanRedo);
-        }
-
-        private void RaiseCanExecuteChangedAllCommands()
-        {
-            ApplicationCommands.UndoCommand.RaiseCanExecuteChanged();
-            ApplicationCommands.RedoCommand.RaiseCanExecuteChanged();
-        }
-
-        private CoreStateModel GetCoreState()
+        private void BuildArrowGraph()
         {
             lock (m_Lock)
             {
-                IEnumerable<IDependentActivity<int, int>> activities = Activities.Select(x => (IDependentActivity<int, int>)x.CloneObject());
+                ArrowGraph = new ArrowGraphModel();
 
-                return new CoreStateModel
+                if (!HasCompilationErrors)
                 {
-                    ArrowGraphSettings = ArrowGraphSettings.CloneObject(),
-                    ResourceSettings = ResourceSettings.CloneObject(),
-                    DependentActivities = m_Mapper.Map<IEnumerable<IDependentActivity<int, int>>, IEnumerable<DependentActivityModel>>(activities),
-                    ProjectStart = ProjectStart,
-                    UseBusinessDays = UseBusinessDays,
-                    ShowDates = ShowDates,
-                };
-            }
-        }
+                    IEnumerable<IDependentActivity<int, int>> dependentActivities =
+                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int>)x.CloneObject());
 
-        private void SetCoreState(CoreStateModel coreState)
-        {
-            if (coreState is null)
-            {
-                return;
-            }
-
-            lock (m_Lock)
-            {
-                try
-                {
-                    IsBusy = true;
-
-                    ClearManagedActivities();
-
-                    m_ArrowGraphSettingsModel = coreState.ArrowGraphSettings;
-                    m_ResourceSettingsModel = coreState.ResourceSettings;
-
-                    m_ProjectStart = coreState.ProjectStart;
-                    m_UseBusinessDays = coreState.UseBusinessDays;
-                    m_ShowDates = coreState.ShowDates;
-                    RaisePropertyChanged(nameof(ProjectStart));
-                    RaisePropertyChanged(nameof(UseBusinessDays));
-                    RaisePropertyChanged(nameof(ShowDates));
-
-                    AddManagedActivities(new HashSet<DependentActivityModel>(coreState.DependentActivities));
-
-                    RunAutoCompile();
-
-                    RecordCoreState();
-                }
-                finally
-                {
-                    IsBusy = false;
-                }
-            }
-        }
-
-        private void PublishGraphCompiledPayload()
-        {
-            m_EventService.GetEvent<PubSubEvent<GraphCompiledPayload>>()
-                .Publish(new GraphCompiledPayload());
-        }
-
-        private void PublishGraphCompilationUpdatedPayload()
-        {
-            m_EventService.GetEvent<PubSubEvent<GraphCompilationUpdatedPayload>>()
-                .Publish(new GraphCompilationUpdatedPayload());
-        }
-
-        private string BuildCircularDependenciesErrorMessage(IEnumerable<ICircularDependency<int>> circularDependencies)
-        {
-            if (circularDependencies == null)
-            {
-                return string.Empty;
-            }
-            var output = new StringBuilder();
-            output.AppendLine($@">{Resource.ProjectPlan.Resources.Message_CircularDependencies}");
-            foreach (CircularDependency<int> circularDependency in circularDependencies)
-            {
-                output.AppendLine(string.Join(@" -> ", circularDependency.Dependencies));
-            }
-            return output.ToString();
-        }
-
-        private string BuildMissingDependenciesErrorMessage(IEnumerable<int> missingDependencies)
-        {
-            if (missingDependencies == null)
-            {
-                return string.Empty;
-            }
-            var output = new StringBuilder();
-            output.AppendLine($@">{Resource.ProjectPlan.Resources.Message_MissingDependencies}");
-            foreach (int missingDependency in missingDependencies)
-            {
-                IList<int> activities = Activities
-                    .Where(x => x.Dependencies.Contains(missingDependency))
-                    .Select(x => x.Id)
-                    .ToList();
-                output.AppendFormat(CultureInfo.InvariantCulture, $@"{missingDependency} -> ");
-                output.AppendLine(string.Join(@", ", activities));
-            }
-            return output.ToString();
-        }
-
-        private string BuildInvalidConstraintsErrorMessage(IEnumerable<int> invalidConstraints)
-        {
-            if (invalidConstraints == null)
-            {
-                return string.Empty;
-            }
-            var output = new StringBuilder();
-            output.AppendLine($@">{Resource.ProjectPlan.Resources.Message_InvalidConstraints} {string.Join(@", ", invalidConstraints)}");
-            return output.ToString();
-        }
-
-        private string BuildActivitySchedules(IEnumerable<ResourceSeriesModel> resourceSeriesSet)
-        {
-            lock (m_Lock)
-            {
-                if (resourceSeriesSet == null)
-                {
-                    return string.Empty;
-                }
-
-                var output = new StringBuilder();
-
-                foreach (ResourceSeriesModel resourceSeries in resourceSeriesSet)
-                {
-                    IEnumerable<ScheduledActivityModel> scheduledActivities = resourceSeries?.ResourceSchedule?.ScheduledActivities;
-                    if (scheduledActivities == null)
+                    if (dependentActivities.Any())
                     {
-                        continue;
-                    }
-                    output.AppendLine($@">{resourceSeries.Title}");
-                    int previousFinishTime = 0;
-                    foreach (ScheduledActivityModel scheduledActivity in scheduledActivities)
-                    {
-                        int startTime = scheduledActivity.StartTime;
-                        int finishTime = scheduledActivity.FinishTime;
-                        if (startTime > previousFinishTime)
+                        var arrowGraphCompiler = new ArrowGraphCompiler<int, int, IDependentActivity<int, int>>();
+                        foreach (IDependentActivity<int, int> dependentActivity in dependentActivities)
                         {
-                            string from = ChartHelper.FormatScheduleOutput(previousFinishTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-                            string to = ChartHelper.FormatScheduleOutput(startTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-                            output.AppendLine($@"*** {from} -> {to} ***");
+                            dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
+                            dependentActivity.ResourceDependencies.Clear();
+                            arrowGraphCompiler.AddActivity(dependentActivity);
                         }
-                        string start = ChartHelper.FormatScheduleOutput(startTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-                        string finish = ChartHelper.FormatScheduleOutput(finishTime, ShowDates, ProjectStart, m_DateTimeCalculator);
-                        output.AppendLine($@"{Resource.ProjectPlan.Resources.Label_Activity} {scheduledActivity.Id}: {start} -> {finish}");
-                        previousFinishTime = finishTime;
+
+                        arrowGraphCompiler.Compile();
+                        Graph<int, IDependentActivity<int, int>, IEvent<int>>? arrowGraph = arrowGraphCompiler.ToGraph();
+
+                        if (arrowGraph is null)
+                        {
+                            throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotBuildArrowGraph);
+                        }
+
+                        ArrowGraph = m_Mapper.Map<Graph<int, IDependentActivity<int, int>, IEvent<int>>, ArrowGraphModel>(arrowGraph);
                     }
-                    output.AppendLine();
                 }
-                return output.ToString();
+            }
+        }
+
+        private static ResourceSeriesSetModel CalculateResourceSeriesSet(
+            IEnumerable<ResourceScheduleModel> resourceSchedules!!,
+            IEnumerable<ResourceModel> resources!!,
+            double defaultUnitCost)
+        {
+            var resourceSeriesSet = new ResourceSeriesSetModel();
+            var resourceLookup = resources.ToDictionary(x => x.Id);
+
+            if (resourceSchedules.Any())
+            {
+                IDictionary<int, ColorFormatModel> colorFormatLookup = resources.ToDictionary(x => x.Id, x => x.ColorFormat);
+                int finishTime = resourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
+                int spareResourceCount = 1;
+
+                // Scheduled resource series.
+                // These are the series that apply to scheduled activities (whether allocated to named or unnamed resources).
+                IList<ResourceSeriesModel> scheduledSeriesSet = new List<ResourceSeriesModel>();
+
+                foreach (ResourceScheduleModel resourceSchedule in resourceSchedules)
+                {
+                    var stringBuilder = new StringBuilder();
+                    InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
+                    ColorFormatModel color = ColorHelper.RandomColor();
+                    double unitCost = defaultUnitCost;
+                    int displayOrder = 0;
+
+                    if (resourceSchedule.Resource.Id != default
+                        && resourceLookup.TryGetValue(resourceSchedule.Resource.Id, out ResourceModel? resource))
+                    {
+                        int resourceId = resource.Id;
+                        interActivityAllocationType = resource.InterActivityAllocationType;
+                        if (string.IsNullOrWhiteSpace(resource.Name))
+                        {
+                            stringBuilder.Append($@"{Resource.ProjectPlan.Labels.Label_Resource} {resourceId}");
+                        }
+                        else
+                        {
+                            stringBuilder.Append($@"{resource.Name}");
+                        }
+
+                        if (colorFormatLookup.TryGetValue(resourceId, out ColorFormatModel? colorFormat))
+                        {
+                            color = colorFormat;
+                        }
+
+                        unitCost = resource.UnitCost;
+                        displayOrder = resource.DisplayOrder;
+                    }
+                    else
+                    {
+                        stringBuilder.Append($@"{Resource.ProjectPlan.Labels.Label_Resource} {spareResourceCount}");
+                        spareResourceCount++;
+                    }
+
+                    var series = new ResourceSeriesModel
+                    {
+                        Title = stringBuilder.ToString(),
+                        ColorFormat = color,
+                        UnitCost = unitCost,
+                        DisplayOrder = displayOrder,
+                        ResourceSchedule = resourceSchedule,
+                        InterActivityAllocationType = interActivityAllocationType,
+                    };
+
+                    scheduledSeriesSet.Add(series);
+                }
+
+                // Unscheduled resource series.
+                // These are the series that apply to named resources that need to be included, even if they are not
+                // scheduled to specific activities.
+                var unscheduledSeriesSet = new List<ResourceSeriesModel>();
+                var unscheduledResourceSeriesLookup = new Dictionary<int, ResourceSeriesModel>();
+
+                IEnumerable<ResourceModel> unscheduledResources = resources
+                    .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect);
+
+                foreach (ResourceModel resource in unscheduledResources)
+                {
+                    int resourceId = resource.Id;
+                    var stringBuilder = new StringBuilder();
+
+                    if (string.IsNullOrWhiteSpace(resource.Name))
+                    {
+                        stringBuilder.Append($@"{Resource.ProjectPlan.Labels.Label_Resource} {resourceId}");
+                    }
+                    else
+                    {
+                        stringBuilder.Append($@"{resource.Name}");
+                    }
+
+                    string title = stringBuilder.ToString();
+                    var series = new ResourceSeriesModel
+                    {
+                        Title = title,
+                        InterActivityAllocationType = resource.InterActivityAllocationType,
+                        ResourceSchedule = new ResourceScheduleModel
+                        {
+                            Resource = resource,
+                            ActivityAllocation = new List<bool>(Enumerable.Repeat(true, finishTime)),
+                            FinishTime = finishTime
+                        },
+                        ColorFormat = resource.ColorFormat != null ? resource.ColorFormat.CloneObject() : ColorHelper.RandomColor(),
+                        UnitCost = resource.UnitCost,
+                        DisplayOrder = resource.DisplayOrder,
+                    };
+
+                    unscheduledSeriesSet.Add(series);
+                    unscheduledResourceSeriesLookup.Add(resourceId, series);
+                }
+
+                // Combined resource series.
+                // The intersection of the scheduled and unscheduled series.
+                var combinedScheduled = new List<ResourceSeriesModel>();
+                var unscheduledSeriesAlreadyIncluded = new HashSet<int>();
+
+                foreach (ResourceSeriesModel scheduledSeries in scheduledSeriesSet)
+                {
+                    IList<bool> values = new List<bool>(Enumerable.Repeat(false, finishTime));
+                    if (scheduledSeries.ResourceSchedule.Resource.Id != default)
+                    {
+                        int resourceId = scheduledSeries.ResourceSchedule.Resource.Id;
+                        if (unscheduledResourceSeriesLookup.TryGetValue(resourceId, out ResourceSeriesModel? unscheduledResourceSeries))
+                        {
+                            values = scheduledSeries.ResourceSchedule.ActivityAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.ActivityAllocation, (x, y) => x || y).ToList();
+                            unscheduledSeriesAlreadyIncluded.Add(resourceId);
+                        }
+                        else
+                        {
+                            values = scheduledSeries.ResourceSchedule.ActivityAllocation.ToList();
+                        }
+                    }
+                    else
+                    {
+                        values = scheduledSeries.ResourceSchedule.ActivityAllocation.ToList();
+                    }
+
+                    scheduledSeries.ResourceSchedule.ActivityAllocation.Clear();
+                    scheduledSeries.ResourceSchedule.ActivityAllocation.AddRange(values);
+                    combinedScheduled.Add(scheduledSeries);
+                }
+
+                // Finally, add the unscheduled series that have not already been included above.
+
+                // Prepend so that they might be displayed first after sorting.
+                List<ResourceSeriesModel> combined = unscheduledSeriesSet
+                    .Where(x => !unscheduledSeriesAlreadyIncluded.Contains(x.ResourceSchedule.Resource.Id))
+                    .ToList();
+
+                combined.AddRange(combinedScheduled);
+
+                resourceSeriesSet.ResourceSchedules.AddRange(resourceSchedules);
+                resourceSeriesSet.Scheduled.AddRange(scheduledSeriesSet);
+                resourceSeriesSet.Unscheduled.AddRange(unscheduledSeriesSet);
+                resourceSeriesSet.Combined.AddRange(combined.OrderBy(x => x.DisplayOrder));
+            }
+
+            return resourceSeriesSet;
+        }
+
+        private void BuildResourceSeriesSet()
+        {
+            lock (m_Lock)
+            {
+                var resourceSeriesSet = new ResourceSeriesSetModel();
+
+                if (!HasCompilationErrors)
+                {
+                    IList<ResourceModel> resourceModels = ResourceSettings.Resources;
+
+                    IList<ResourceScheduleModel> resourceScheduleModels =
+                        m_Mapper.Map<IEnumerable<IResourceSchedule<int, int>>, IList<ResourceScheduleModel>>(GraphCompilation.ResourceSchedules);
+
+                    resourceSeriesSet = CalculateResourceSeriesSet(
+                        resourceScheduleModels,
+                        resourceModels,
+                        ResourceSettings.DefaultUnitCost);
+                }
+
+                ResourceSeriesSet = resourceSeriesSet;
+            }
+        }
+
+        private static TrackingSeriesSetModel CalculateTrackingSeriesSet(IEnumerable<ActivityModel> activities!!)
+        {
+            IList<ActivityModel> orderedActivities = activities
+                .Select(x => x.CloneObject())
+                .OrderBy(x => x.EarliestFinishTime.GetValueOrDefault())
+                .ThenBy(x => x.EarliestStartTime.GetValueOrDefault())
+                .ToList();
+
+            // Plan.
+            List<TrackingPointModel> planPointSeries = new()
+            {
+                // Starting point.
+                new TrackingPointModel()
+            };
+
+            // Progress.
+            List<TrackingPointModel> progressPointSeries = new()
+            {
+                new TrackingPointModel()
+            };
+
+            // Effort.
+            List<TrackingPointModel> effortPointSeries = new()
+            {
+                new TrackingPointModel()
+            };
+
+            if (orderedActivities.Any())
+            {
+                double totalTime = Convert.ToDouble(orderedActivities.Sum(s => s.Duration));
+
+                // Plan.
+                if (orderedActivities.All(x => x.EarliestFinishTime.HasValue))
+                {
+                    int runningTotalTime = 0;
+                    foreach (ActivityModel activity in orderedActivities)
+                    {
+                        int time = activity.EarliestFinishTime.GetValueOrDefault();
+                        runningTotalTime += activity.Duration;
+                        double percentage = totalTime == 0 ? 0.0 : 100.0 * runningTotalTime / totalTime;
+                        planPointSeries.Add(new TrackingPointModel
+                        {
+                            Time = time,
+                            ActivityId = activity.Id,
+                            ActivityName = activity.Name,
+                            Value = runningTotalTime,
+                            ValuePercentage = percentage
+                        });
+                    }
+                }
+
+                // Progress and Effort.
+                int runningEffort = 0;
+
+                for (int timeIndex = 0; timeIndex < totalTime; timeIndex++)
+                {
+                    // Calculate percentage progress at each time index.
+                    double timeIndexRunningProgress = 0.0;
+                    bool includePoints = false;
+                    var includedActivities = new List<ActivityModel>();
+
+                    foreach (ActivityModel activity in orderedActivities)
+                    {
+                        if (timeIndex < activity.Trackers.Count)
+                        {
+                            var tracker = activity.Trackers[timeIndex];
+
+                            Debug.Assert(tracker.Index == timeIndex);
+                            Debug.Assert(tracker.Time == timeIndex);
+
+                            timeIndexRunningProgress += activity.Duration * (tracker.PercentageComplete / 100.0);
+
+                            if (tracker.IsIncluded)
+                            {
+                                runningEffort++;
+                                includedActivities.Add(activity);
+                            }
+
+                            includePoints = true;
+                        }
+                    }
+
+                    if (includePoints)
+                    {
+                        double progressPercentage = totalTime == 0 ? 0.0 : 100.0 * timeIndexRunningProgress / totalTime;
+                        double effortPercentage = totalTime == 0 ? 0.0 : 100.0 * runningEffort / totalTime;
+                        int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
+
+                        foreach (ActivityModel includedActivity in includedActivities.OrderBy(x => x.Id))
+                        {
+                            progressPointSeries.Add(new TrackingPointModel
+                            {
+                                Time = time,
+                                ActivityId = includedActivity.Id,
+                                ActivityName = includedActivity.Name,
+                                Value = timeIndexRunningProgress,
+                                ValuePercentage = progressPercentage
+                            });
+
+                            effortPointSeries.Add(new TrackingPointModel
+                            {
+                                Time = time,
+                                ActivityId = includedActivity.Id,
+                                ActivityName = includedActivity.Name,
+                                Value = runningEffort,
+                                ValuePercentage = effortPercentage
+                            });
+                        }
+
+                    }
+                }
+            }
+
+            var trackingSeriesSet = new TrackingSeriesSetModel
+            {
+                Plan = planPointSeries,
+                Progress = progressPointSeries,
+                Effort = effortPointSeries
+            };
+            return trackingSeriesSet;
+        }
+
+        private void BuildTrackingSeriesSet()
+        {
+            lock (m_Lock)
+            {
+                var trackingSeriesSet = new TrackingSeriesSetModel();
+
+                if (!HasCompilationErrors)
+                {
+                    IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(Activities);
+                    trackingSeriesSet = CalculateTrackingSeriesSet(activityModels);
+                }
+
+                TrackingSeriesSet = trackingSeriesSet;
+            }
+        }
+
+        private static int CalculateCyclomaticComplexity(IEnumerable<IDependentActivity<int, int>> dependentActivities!!)
+        {
+            var vertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
+            foreach (DependentActivity<int, int> dependentActivity in dependentActivities)
+            {
+                dependentActivity.ResourceDependencies.Clear();
+                vertexGraphCompiler.AddActivity(dependentActivity);
+            }
+            vertexGraphCompiler.TransitiveReduction();
+            return vertexGraphCompiler.CyclomaticComplexity;
+        }
+
+        private void BuildCyclomaticComplexity()
+        {
+            lock (m_Lock)
+            {
+                CyclomaticComplexity = null;
+
+                if (!HasCompilationErrors)
+                {
+                    IEnumerable<IDependentActivity<int, int>> dependentActivities =
+                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int>)x.CloneObject());
+
+                    if (!dependentActivities.Any())
+                    {
+                        return;
+                    }
+
+                    CyclomaticComplexity = CalculateCyclomaticComplexity(dependentActivities);
+                }
             }
         }
 
@@ -305,851 +525,702 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region ICoreViewModel Members
 
+        private readonly ObservableAsPropertyHelper<string> m_ProjectTitle;
+        public string ProjectTitle
+        {
+            get => m_ProjectTitle.Value;
+            set
+            {
+                lock (m_Lock) m_SettingService.SetTitle(value);
+            }
+        }
+
+        private bool m_IsBusy;
         public bool IsBusy
         {
-            get
+            get => m_IsBusy;
+            private set
             {
-                return m_IsBusy;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_IsBusy = value;
-                }
-                RaisePropertyChanged();
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_IsBusy, value);
             }
         }
 
-        public DateTime ProjectStart
-        {
-            get
-            {
-                return m_ProjectStart;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_ProjectStart = value;
-                    RecordCoreState();
-                }
-                RaisePropertyChanged();
-            }
-        }
-
+        private bool m_IsProjectUpdated;
         public bool IsProjectUpdated
         {
-            get
-            {
-                return m_IsProjectUpdated;
-            }
+            get => m_IsProjectUpdated;
             set
             {
                 lock (m_Lock)
                 {
-                    m_IsProjectUpdated = value;
+                    HasStaleOutputs = value;
+                    this.RaiseAndSetIfChanged(ref m_IsProjectUpdated, value);
                 }
-                RaisePropertyChanged();
             }
         }
 
+        private bool m_HasStaleOutputs;
+        public bool HasStaleOutputs
+        {
+            get => m_HasStaleOutputs;
+            set
+            {
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_HasStaleOutputs, value);
+            }
+        }
+
+        private DateTimeOffset m_ProjectStart;
+        public DateTimeOffset ProjectStart
+        {
+            get => m_ProjectStart;
+            set
+            {
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
+                    this.RaisePropertyChanged(nameof(ProjectStartDateTime));
+                    this.RaisePropertyChanged(nameof(ProjectStartTimeOffset));
+                    IsProjectUpdated = true;
+                }
+            }
+        }
+
+        public DateTime ProjectStartDateTime
+        {
+            get => m_ProjectStart.DateTime;
+            set
+            {
+                lock (m_Lock)
+                {
+                    ProjectStart = new DateTimeOffset(value, ProjectStartTimeOffset);
+                }
+            }
+        }
+
+        public TimeSpan ProjectStartTimeOffset
+        {
+            get => m_ProjectStart.Offset;
+            set
+            {
+                lock (m_Lock)
+                {
+                    ProjectStart = new DateTimeOffset(ProjectStartDateTime, value);
+                }
+            }
+        }
+
+        private bool m_ShowDates;
         public bool ShowDates
         {
-            get
-            {
-                return m_ShowDates;
-            }
+            get => m_ShowDates;
             set
             {
-                lock (m_Lock)
-                {
-                    m_ShowDates = value;
-                    RecordCoreState();
-                }
-                RaisePropertyChanged();
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_ShowDates, value);
             }
         }
 
+        private bool m_UseBusinessDays;
         public bool UseBusinessDays
         {
-            get
-            {
-                return m_UseBusinessDays;
-            }
+            get => m_UseBusinessDays;
             set
             {
                 lock (m_Lock)
                 {
                     m_UseBusinessDays = value;
-                    m_DateTimeCalculator.UseBusinessDays(value);
-                    RecordCoreState();
+                    if (m_UseBusinessDays)
+                    {
+                        m_DateTimeCalculator.Mode = DateTimeCalculatorMode.BusinessDays;
+                    }
+                    else
+                    {
+                        m_DateTimeCalculator.Mode = DateTimeCalculatorMode.AllDays;
+                    }
+                    IsProjectUpdated = true;
+                    this.RaisePropertyChanged();
                 }
-                RaisePropertyChanged();
             }
         }
 
-        public bool HasStaleOutputs
-        {
-            get
-            {
-                return m_HasStaleOutputs;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_HasStaleOutputs = value;
-                }
-                RaisePropertyChanged();
-            }
-        }
-
+        private bool m_AutoCompile;
         public bool AutoCompile
         {
-            get
-            {
-                return m_AutoCompile;
-            }
+            get => m_AutoCompile;
             set
             {
-                lock (m_Lock)
-                {
-                    m_AutoCompile = value;
-                }
-                RaisePropertyChanged();
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_AutoCompile, value);
             }
         }
 
-        public bool HasCompilationErrors
-        {
-            get
-            {
-                return m_HasCompilationErrors;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_HasCompilationErrors = value;
-                }
-                RaisePropertyChanged();
-            }
-        }
+        private readonly ObservableCollection<IManagedActivityViewModel> m_Activities;
+        private readonly ReadOnlyObservableCollection<IManagedActivityViewModel> m_ReadOnlyActivities;
+        public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_ReadOnlyActivities;
 
-        public IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation
-        {
-            get
-            {
-                return m_GraphCompilation;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_GraphCompilation = value;
-                }
-                RaisePropertyChanged();
-            }
-        }
-
-        public string CompilationOutput
-        {
-            get
-            {
-                return m_CompilationOutput;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_CompilationOutput = value;
-                }
-                RaisePropertyChanged();
-            }
-        }
-
-        public ArrowGraphModel ArrowGraph
-        {
-            get
-            {
-                return m_ArrowGraphModel;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_ArrowGraphModel = value;
-                }
-                RaisePropertyChanged();
-            }
-        }
-
-        public MetricsModel Metrics
-        {
-            get
-            {
-                return m_MetricsModel;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_MetricsModel = value;
-                }
-                RaisePropertyChanged();
-            }
-        }
-
-        public ObservableCollection<IManagedActivityViewModel> Activities
-        {
-            get;
-        }
-
+        private ArrowGraphSettingsModel m_ArrowGraphSettings;
         public ArrowGraphSettingsModel ArrowGraphSettings
         {
-            get
-            {
-                return m_ArrowGraphSettingsModel;
-            }
-            private set
+            get => m_ArrowGraphSettings;
+            set
             {
                 lock (m_Lock)
                 {
-                    m_ArrowGraphSettingsModel = value;
+                    m_ArrowGraphSettings = value;
+                    IsProjectUpdated = true;
+                    this.RaisePropertyChanged();
                 }
-                RaisePropertyChanged();
             }
         }
 
+        private ResourceSettingsModel m_ResourceSettings;
         public ResourceSettingsModel ResourceSettings
         {
-            get
+            get => m_ResourceSettings;
+            set
             {
-                return m_ResourceSettingsModel;
+                lock (m_Lock)
+                {
+                    m_ResourceSettings = value;
+                    IsProjectUpdated = true;
+                    this.RaisePropertyChanged();
+                }
             }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
+        public bool HasCompilationErrors => m_HasCompilationErrors.Value;
+
+        private IGraphCompilation<int, int, IDependentActivity<int, int>> m_GraphCompilation;
+        public IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation
+        {
+            get => m_GraphCompilation;
+            private set
+            {
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_GraphCompilation, value);
+            }
+        }
+
+        private ArrowGraphModel m_ArrowGraph;
+        public ArrowGraphModel ArrowGraph
+        {
+            get => m_ArrowGraph;
             private set
             {
                 lock (m_Lock)
                 {
-                    m_ResourceSettingsModel = value;
+                    //m_ArrowGraph = value;
+                    //this.RaisePropertyChanged();
+                    this.RaiseAndSetIfChanged(ref m_ArrowGraph, value);
                 }
-                RaisePropertyChanged();
             }
         }
 
+        private ResourceSeriesSetModel m_ResourceSeriesSet;
         public ResourceSeriesSetModel ResourceSeriesSet
         {
-            get;
-            private set;
+            get => m_ResourceSeriesSet;
+            private set
+            {
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_ResourceSeriesSet, value);
+            }
         }
 
-        public IApplicationCommands ApplicationCommands
+        private TrackingSeriesSetModel m_TrackingSeriesSet;
+        public TrackingSeriesSetModel TrackingSeriesSet
         {
-            get;
+            get => m_TrackingSeriesSet;
+            private set
+            {
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_TrackingSeriesSet, value);
+            }
         }
 
+        private int? m_CyclomaticComplexity;
         public int? CyclomaticComplexity
         {
-            get
+            get => m_CyclomaticComplexity;
+            private set
             {
-                return m_CyclomaticComplexity;
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_CyclomaticComplexity, value);
             }
-            set
+        }
+
+        private readonly ObservableAsPropertyHelper<int?> m_Duration;
+        public int? Duration => m_Duration.Value;
+
+        public void ClearSettings()
+        {
+            bool oldIsBusy = IsBusy;
+            try
             {
+                IsBusy = true;
                 lock (m_Lock)
                 {
-                    m_CyclomaticComplexity = value;
+                    ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
+                    ResourceSettings = m_SettingService.DefaultResourceSettings;
                 }
-                RaisePropertyChanged();
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
             }
         }
 
-        public int? Duration
+        public void ResetProject()
         {
-            get
+            bool oldIsBusy = IsBusy;
+            try
             {
-                return m_Duration;
-            }
-            set
-            {
+                IsBusy = true;
                 lock (m_Lock)
                 {
-                    m_Duration = value;
+                    ClearManagedActivities();
+
+                    ClearSettings();
+
+                    GraphCompilation = new GraphCompilation<int, int, DependentActivity<int, int>>(
+                        Enumerable.Empty<DependentActivity<int, int>>(),
+                        Enumerable.Empty<IResourceSchedule<int, int>>());
+
+                    ArrowGraph = new ArrowGraphModel();
+
+                    IsProjectUpdated = false;
+                    HasStaleOutputs = false;
+
+                    m_SettingService.Reset();
                 }
-                RaisePropertyChanged();
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
             }
         }
 
-        public double? DurationManMonths
+        public void ProcessProjectImport(ProjectImportModel projectImportModel)
         {
-            get
+            bool oldIsBusy = IsBusy;
+            try
             {
-                return m_DurationManMonths;
-            }
-            set
-            {
+                IsBusy = true;
                 lock (m_Lock)
                 {
-                    m_DurationManMonths = value;
+                    ResetProject();
+
+                    // Project Start Date.
+                    ProjectStart = projectImportModel.ProjectStart;
+
+                    // Resources.
+                    var resourceSettings = m_SettingService.DefaultResourceSettings.CloneObject();
+
+                    foreach (ResourceModel resource in projectImportModel.Resources)
+                    {
+                        resourceSettings.Resources.Add(resource);
+                    }
+
+                    ResourceSettings = resourceSettings;
+
+                    // Activities.
+                    // Be sure to set the ResourceSettings first, so that the activities know
+                    // which resources are being referred to when marking them as selected.
+                    AddManagedActivities(projectImportModel.DependentActivities);
+
+                    IsProjectUpdated = false;
+                    HasStaleOutputs = true;
                 }
-                RaisePropertyChanged();
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
             }
         }
 
-        public double? DirectCost
+        public void ProcessProjectPlan(ProjectPlanModel projectPlanModel)
         {
-            get
+            bool oldIsBusy = IsBusy;
+            try
             {
-                return m_DirectCost;
-            }
-            set
-            {
+                IsBusy = true;
                 lock (m_Lock)
                 {
-                    m_DirectCost = value;
+                    ResetProject();
+
+                    // Project Start Date.
+                    ProjectStart = projectPlanModel.ProjectStart;
+
+                    // Resource Settings.
+                    ResourceSettings = projectPlanModel.ResourceSettings;
+
+                    // Arrow Graph Settings.
+                    ArrowGraphSettings = projectPlanModel.ArrowGraphSettings;
+
+                    // Compilation.
+                    GraphCompilation = m_Mapper.Map<GraphCompilation<int, int, DependentActivity<int, int>>>(projectPlanModel.GraphCompilation);
+
+                    // Activities.
+                    AddManagedActivities(new HashSet<DependentActivityModel>(projectPlanModel.DependentActivities));
+
+                    // Arrow Graph.
+                    ArrowGraph = projectPlanModel.ArrowGraph;
+
+                    IsProjectUpdated = false;
+                    HasStaleOutputs = projectPlanModel.HasStaleOutputs;
                 }
-                RaisePropertyChanged();
-                RaisePropertyChanged(nameof(Efficiency));
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
             }
         }
 
-        public double? IndirectCost
+        public ProjectPlanModel BuildProjectPlan()
         {
-            get
+            bool oldIsBusy = IsBusy;
+            try
             {
-                return m_IndirectCost;
-            }
-            set
-            {
+                IsBusy = true;
                 lock (m_Lock)
                 {
-                    m_IndirectCost = value;
+                    var graphCompilation = m_Mapper.Map<IGraphCompilation<int, int, IDependentActivity<int, int>>, GraphCompilationModel>(GraphCompilation);
+
+                    return new ProjectPlanModel
+                    {
+                        Version = Data.ProjectPlan.Versions.v0_3_0,
+                        ProjectStart = ProjectStart,
+                        DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(Activities),
+                        ResourceSettings = ResourceSettings.CloneObject(),
+                        ArrowGraphSettings = ArrowGraphSettings.CloneObject(),
+                        GraphCompilation = graphCompilation,
+                        ArrowGraph = ArrowGraph.CloneObject(),
+                        HasStaleOutputs = HasStaleOutputs
+                    };
                 }
-                RaisePropertyChanged();
             }
-        }
-
-        public double? OtherCost
-        {
-            get
+            finally
             {
-                return m_OtherCost;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_OtherCost = value;
-                }
-                RaisePropertyChanged();
-            }
-        }
-
-        public double? TotalCost
-        {
-            get
-            {
-                return m_TotalCost;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_TotalCost = value;
-                }
-                RaisePropertyChanged();
-                RaisePropertyChanged(nameof(Efficiency));
-            }
-        }
-
-        public double? Efficiency
-        {
-            get
-            {
-                if (!TotalCost.HasValue || TotalCost.Value == 0)
-                {
-                    return null;
-                }
-                return DirectCost / TotalCost;
-            }
-        }
-
-        public CoreStateModel CoreState
-        {
-            get;
-            private set;
-        }
-
-        public void RecordCoreState()
-        {
-            lock (m_Lock)
-            {
-                CoreState = GetCoreState();
-            }
-        }
-
-        public void RecordRedoUndo(Action action)
-        {
-            if (action is null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            lock (m_Lock)
-            {
-                CoreStateModel before = CoreState;
-                action();
-                CoreStateModel after = GetCoreState();
-
-                ClearRedoStack();
-                m_UndoStack.Push(new UndoRedoCommandPair(
-                    new DelegateCommand<CoreStateModel>(ReplaceCoreState, CanReplaceCoreState), before,
-                    new DelegateCommand<CoreStateModel>(ReplaceCoreState, CanReplaceCoreState), after));
-
-                RaiseCanExecuteChangedAllCommands();
-            }
-        }
-
-        public void ClearUndoStack()
-        {
-            lock (m_Lock)
-            {
-                m_UndoStack.Clear();
-                RecordCoreState();
-            }
-        }
-
-        public void ClearRedoStack()
-        {
-            lock (m_Lock)
-            {
-                m_RedoStack.Clear();
+                IsBusy = oldIsBusy;
             }
         }
 
         public void AddManagedActivity()
         {
-            lock (m_Lock)
+            bool oldIsBusy = IsBusy;
+            try
             {
-                var activityId = m_VertexGraphCompiler.GetNextActivityId();
-
-                var set = new HashSet<DependentActivityModel>();
-                set.Add(new DependentActivityModel
+                IsBusy = true;
+                lock (m_Lock)
                 {
-                    Activity = new ActivityModel
+                    var activityId = m_VertexGraphCompiler.GetNextActivityId();
+                    var set = new HashSet<DependentActivityModel>
                     {
-                        Id = activityId,
-                        Duration = 0,
-                        TargetResources = new List<int>(),
-                        AllocatedToResources = new List<int>(),
-                    },
-                    Dependencies = new List<int>(),
-                    ResourceDependencies = new List<int>(),
-                });
-                AddManagedActivities(set);
+                        new DependentActivityModel
+                        {
+                            Activity = new ActivityModel
+                            {
+                                Id = activityId
+                            }
+                        }
+                    };
+                    AddManagedActivities(set);
+                }
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
             }
         }
 
-        public void AddManagedActivities(HashSet<DependentActivityModel> dependentActivities)
+        public void AddManagedActivities(IEnumerable<DependentActivityModel> dependentActivityModels)
         {
-            if (dependentActivities == null)
+            bool oldIsBusy = IsBusy;
+            try
             {
-                throw new ArgumentNullException(nameof(dependentActivities));
-            }
-
-            lock (m_Lock)
-            {
-                foreach (DependentActivityModel dependentActivity in dependentActivities)
+                IsBusy = true;
+                lock (m_Lock)
                 {
-                    var dateTimeCalculator = new DateTimeCalculator();
-                    dateTimeCalculator.UseBusinessDays(UseBusinessDays);
+                    // Check that the number of trackers across each activity is consistent.
+                    // Make them match the highest number.
+                    int maxCurrentTrackers = Activities
+                        .Select(x => x.Trackers.Count).DefaultIfEmpty().Max();
 
-                    var activity = new ManagedActivityViewModel(
-                        m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity),
-                        ProjectStart,
-                        dependentActivity.Activity?.MinimumEarliestStartDateTime,
-                        dependentActivity.Activity?.MaximumLatestFinishDateTime,
-                        ResourceSettings.Resources,
-                        dateTimeCalculator,
-                        m_EventService);
+                    int maxNewTrackers = dependentActivityModels
+                        .Select(x => x.Activity.Trackers.Count).DefaultIfEmpty().Max();
 
-                    if (m_VertexGraphCompiler.AddActivity(activity))
+                    int maxTrackers = Math.Max(maxCurrentTrackers, maxNewTrackers);
+
+                    foreach (DependentActivityModel dependentActivity in dependentActivityModels)
                     {
-                        Activities.Add(activity);
-                    }
-                }
+                        int trackerDifference = maxTrackers - dependentActivity.Activity.Trackers.Count;
 
-                RecordCoreState();
+                        if (trackerDifference > 0)
+                        {
+                            dependentActivity.Activity.Trackers.AddRange(Enumerable.Repeat(new TrackerModel(), trackerDifference));
+                        }
+
+                        var activity = new ManagedActivityViewModel(
+                            this,
+                            m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity),
+                            m_DateTimeCalculator,
+                            m_VertexGraphCompiler,
+                            ProjectStart,
+                            dependentActivity.Activity.Trackers,
+                            dependentActivity.Activity.MinimumEarliestStartDateTime,
+                            dependentActivity.Activity.MaximumLatestFinishDateTime);
+
+                        if (m_VertexGraphCompiler.AddActivity(activity))
+                        {
+                            m_Activities.Add(activity);
+                        }
+                        else
+                        {
+                            activity.Dispose();
+                        }
+                    }
+
+                    IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
             }
         }
 
-        public void RemoveManagedActivities(HashSet<int> dependentActivityIds)
+        public void RemoveManagedActivities(IEnumerable<int> dependentActivityIds)
         {
-            if (dependentActivityIds == null)
+            bool oldIsBusy = IsBusy;
+            try
             {
-                throw new ArgumentNullException(nameof(dependentActivityIds));
-            }
-
-            lock (m_Lock)
-            {
-                IEnumerable<IManagedActivityViewModel> dependentActivities = Activities.Where(x => dependentActivityIds.Contains(x.Id)).ToList();
-
-                foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
+                IsBusy = true;
+                lock (m_Lock)
                 {
-                    if (m_VertexGraphCompiler.RemoveActivity(dependentActivity.Id))
-                    {
-                        Activities.Remove(dependentActivity);
-                    }
-                }
+                    IEnumerable<IManagedActivityViewModel> dependentActivities = Activities
+                        .Where(x => dependentActivityIds.Contains(x.Id))
+                        .ToList();
 
-                RecordCoreState();
+                    foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
+                    {
+                        if (m_VertexGraphCompiler.RemoveActivity(dependentActivity.Id))
+                        {
+                            m_Activities.Remove(dependentActivity);
+                            dependentActivity.Dispose();
+                        }
+                    }
+
+                    IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
             }
         }
 
         public void ClearManagedActivities()
         {
-            lock (m_Lock)
+            bool oldIsBusy = IsBusy;
+            try
             {
-                Activities.Clear();
-                m_VertexGraphCompiler.Reset();
-            }
-        }
-
-        public void UpdateArrowGraphSettings(ArrowGraphSettingsModel arrowGraphSettings)
-        {
-            if (arrowGraphSettings is null)
-            {
-                throw new ArgumentNullException(nameof(arrowGraphSettings));
-            }
-
-            lock (m_Lock)
-            {
-                ArrowGraphSettings = arrowGraphSettings;
-                RecordCoreState();
-            }
-        }
-
-        public void UpdateResourceSettings(ResourceSettingsModel resourceSettings)
-        {
-            if (resourceSettings == null)
-            {
-                throw new ArgumentNullException(nameof(resourceSettings));
-            }
-
-            lock (m_Lock)
-            {
-
-                ResourceSettings = resourceSettings;
-
-                foreach (IManagedActivityViewModel activity in Activities)
+                IsBusy = true;
+                lock (m_Lock)
                 {
-                    activity.SetTargetResources(ResourceSettings.Resources.Select(x => x.CloneObject()));
-                }
-
-                RecordCoreState();
-            }
-        }
-
-        public void UpdateActivitiesTargetResourceDependencies()
-        {
-            lock (m_Lock)
-            {
-                foreach (IManagedActivityViewModel activity in Activities.Where(x => x.HasUpdatedDependencies))
-                {
-                    m_VertexGraphCompiler.SetActivityDependencies(activity.Id, new HashSet<int>(activity.UpdatedDependencies));
-                    activity.UpdatedDependencies.Clear();
-                    activity.HasUpdatedDependencies = false;
-                }
-
-                RecordCoreState();
-            }
-        }
-
-        public void UpdateActivitiesAllocatedToResources()
-        {
-            lock (m_Lock)
-            {
-                foreach (IManagedActivityViewModel activity in Activities)
-                {
-                    activity.UpdateAllocatedToResources();
-                }
-            }
-        }
-
-        public void UpdateActivitiesProjectStart()
-        {
-            lock (m_Lock)
-            {
-                foreach (IManagedActivityViewModel activity in Activities)
-                {
-                    activity.ProjectStart = ProjectStart;
-                }
-            }
-        }
-
-        public void UpdateActivitiesUseBusinessDays()
-        {
-            lock (m_Lock)
-            {
-                foreach (IManagedActivityViewModel activity in Activities)
-                {
-                    activity.UseBusinessDays(UseBusinessDays);
-                }
-            }
-        }
-
-        public int RunCalculateResourcedCyclomaticComplexity()
-        {
-            lock (m_Lock)
-            {
-                int resourcedCyclomaticComplexity = 0;
-
-                // Cyclomatic complexity is calculated against the transitively reduced
-                // vertex graph, where resource dependencies are taken into account along
-                // with regular dependencies.
-                if (GraphCompilation != null
-                    && !HasCompilationErrors
-                    && !HasStaleOutputs
-                    && !ResourceSettings.AreDisabled)
-                {
-                    IList<IDependentActivity<int, int>> dependentActivities =
-                        GraphCompilation.DependentActivities
-                        .Select(x => (IDependentActivity<int, int>)x.CloneObject())
-                        .ToList();
-
-                    if (dependentActivities.Any())
+                    foreach (IDisposable activity in Activities)
                     {
-                        var vertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
-                        foreach (DependentActivity<int, int> dependentActivity in dependentActivities)
-                        {
-                            dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
-                            dependentActivity.ResourceDependencies.Clear();
-                            vertexGraphCompiler.AddActivity(dependentActivity);
-                        }
+                        activity.Dispose();
+                    }
+                    m_Activities.Clear();
+                    m_VertexGraphCompiler.Reset();
+                }
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
+            }
+        }
 
-                        vertexGraphCompiler.TransitiveReduction();
-                        resourcedCyclomaticComplexity = vertexGraphCompiler.CyclomaticComplexity;
+        public void AddTrackers()
+        {
+            bool oldIsBusy = IsBusy;
+            try
+            {
+                IsBusy = true;
+                lock (m_Lock)
+                {
+                    foreach (IManagedActivityViewModel activity in Activities)
+                    {
+                        activity.AddTracker();
+                    }
+                    IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
+            }
+        }
+
+        public void RemoveTrackers()
+        {
+            bool oldIsBusy = IsBusy;
+            try
+            {
+                IsBusy = true;
+                lock (m_Lock)
+                {
+                    foreach (IManagedActivityViewModel activity in Activities)
+                    {
+                        activity.RemoveTracker();
+                    }
+                    IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
+            }
+        }
+
+        public void ReviseTrackers()
+        {
+            bool oldIsBusy = IsBusy;
+            try
+            {
+                IsBusy = true;
+                lock (m_Lock)
+                {
+                    foreach (IManagedActivityViewModel activity in Activities)
+                    {
+                        int runningPercentageCompleted = 0;
+                        bool activeUpdate = false;
+
+                        foreach (ITrackerViewModel tracker in activity.Trackers)
+                        {
+                            if (tracker.IsUpdated)
+                            {
+                                if (tracker.PercentageComplete >= runningPercentageCompleted)
+                                {
+                                    activeUpdate = true;
+                                    runningPercentageCompleted = tracker.PercentageComplete;
+                                }
+                            }
+
+                            if (activeUpdate || tracker.PercentageComplete < runningPercentageCompleted)
+                            {
+                                tracker.PercentageComplete = runningPercentageCompleted;
+                            }
+
+                            tracker.IsUpdated = false;
+                            runningPercentageCompleted = tracker.PercentageComplete;
+                        }
                     }
                 }
-
-                return resourcedCyclomaticComplexity;
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
             }
         }
 
         public void RunCompile()
         {
-            lock (m_Lock)
+            bool oldIsBusy = IsBusy;
+            try
             {
-                UpdateActivitiesTargetResourceDependencies();
-
-                var availableResources = new List<IResource<int>>();
-                if (!ResourceSettings.AreDisabled)
+                IsBusy = true;
+                lock (m_Lock)
                 {
-                    availableResources.AddRange(m_Mapper.Map<IEnumerable<ResourceModel>, IEnumerable<Resource<int>>>(ResourceSettings.Resources));
-                }
+                    ReviseTrackers();
 
-                GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
-
-                Duration = m_VertexGraphCompiler.Duration;
-
-                DurationManMonths = CalculateDurationManMonths();
-
-                UpdateActivitiesAllocatedToResources();
-
-                CalculateResourceSeriesSet();
-
-                SetCompilationOutput();
-
-                CalculateCosts();
-
-                IsProjectUpdated = true;
-
-                // Cyclomatic complexity is calculated against the vertex graph without resource dependencies.
-                CyclomaticComplexity = null;
-
-                if (!HasCompilationErrors)
-                {
-                    IList<IDependentActivity<int, int>> dependentActivities =
-                        GraphCompilation.DependentActivities
-                        .Select(x => (IDependentActivity<int, int>)x.CloneObject())
-                        .ToList();
-
-                    if (dependentActivities.Any())
+                    var availableResources = new List<IResource<int>>();
+                    if (!ResourceSettings.AreDisabled)
                     {
-                        var vertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
-                        foreach (DependentActivity<int, int> dependentActivity in dependentActivities)
-                        {
-                            dependentActivity.ResourceDependencies.Clear();
-                            vertexGraphCompiler.AddActivity(dependentActivity);
-                        }
-
-                        vertexGraphCompiler.TransitiveReduction();
-                        CyclomaticComplexity = vertexGraphCompiler.CyclomaticComplexity;
+                        availableResources.AddRange(m_Mapper.Map<IEnumerable<ResourceModel>, IEnumerable<Resource<int>>>(ResourceSettings.Resources));
                     }
+
+                    GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
+                    IsProjectUpdated = true;
+                    HasStaleOutputs = false;
                 }
-
-                HasStaleOutputs = false;
             }
-
-            PublishGraphCompiledPayload();
-            PublishGraphCompilationUpdatedPayload();
+            finally
+            {
+                IsBusy = oldIsBusy;
+            }
         }
 
         public void RunAutoCompile()
         {
-            if (AutoCompile)
+            bool oldIsBusy = IsBusy;
+            try
             {
-                RunCompile();
+                IsBusy = true;
+                lock (m_Lock)
+                {
+                    if (AutoCompile)
+                    {
+                        RunCompile();
+                    }
+                }
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
             }
         }
 
         public void RunTransitiveReduction()
         {
-            lock (m_Lock)
+            bool oldIsBusy = IsBusy;
+            try
             {
-                UpdateActivitiesTargetResourceDependencies();
-                m_VertexGraphCompiler.Compile(new List<IResource<int>>());
-                m_VertexGraphCompiler.TransitiveReduction();
-                RunCompile();
+                IsBusy = true;
+                lock (m_Lock)
+                {
+                    m_VertexGraphCompiler.Compile(new List<IResource<int>>());
+                    m_VertexGraphCompiler.TransitiveReduction();
+                    RunCompile();
+                }
+            }
+            finally
+            {
+                IsBusy = oldIsBusy;
             }
         }
 
-        public void SetCompilationOutput()
+        #endregion
+
+        #region IDisposable Members
+
+        private bool m_Disposed = false;
+
+        protected virtual void Dispose(bool disposing)
         {
-            lock (m_Lock)
+            if (m_Disposed)
             {
-                IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation = GraphCompilation;
-                CompilationOutput = string.Empty;
-                HasCompilationErrors = false;
-                if (graphCompilation == null)
-                {
-                    return;
-                }
-                var output = new StringBuilder();
-
-                if (graphCompilation.Errors != null)
-                {
-                    if (graphCompilation.Errors.AllResourcesExplicitTargetsButNotAllActivitiesTargeted)
-                    {
-                        HasCompilationErrors = true;
-                        output.AppendLine($@">{Resource.ProjectPlan.Resources.Message_AllResourcesExplicitTargetsNotAllActivitiesTargeted}");
-                    }
-
-                    if (graphCompilation.Errors.CircularDependencies.Any())
-                    {
-                        HasCompilationErrors = true;
-                        output.Append(BuildCircularDependenciesErrorMessage(graphCompilation.Errors.CircularDependencies));
-                    }
-
-                    if (graphCompilation.Errors.MissingDependencies.Any())
-                    {
-                        HasCompilationErrors = true;
-                        output.Append(BuildMissingDependenciesErrorMessage(graphCompilation.Errors.MissingDependencies));
-                    }
-
-                    if (graphCompilation.Errors.InvalidConstraints.Any())
-                    {
-                        HasCompilationErrors = true;
-                        output.Append(BuildInvalidConstraintsErrorMessage(graphCompilation.Errors.InvalidConstraints));
-                    }
-                }
-
-                if (ResourceSeriesSet?.Scheduled != null
-                    && ResourceSeriesSet.Scheduled.Any()
-                    && !HasCompilationErrors)
-                {
-                    output.Append(BuildActivitySchedules(ResourceSeriesSet.Scheduled));
-                }
-
-                if (HasCompilationErrors)
-                {
-                    output.Insert(0, Environment.NewLine);
-                    output.Insert(0, $@">{Resource.ProjectPlan.Resources.Message_CompilationErrors}");
-                }
-
-                CompilationOutput = output.ToString();
+                return;
             }
+
+            if (disposing)
+            {
+                // TODO: dispose managed state (managed objects).
+                m_CyclomaticComplexitySub?.Dispose();
+                m_AreActivitiesUncompiledSub?.Dispose();
+                m_CompileOnSettingsUpdateSub?.Dispose();
+                m_BuildArrowGraphSub?.Dispose();
+                m_BuildResourceSeriesSetSub?.Dispose();
+                m_BuildTrackingSeriesSetSub?.Dispose();
+            }
+
+            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+            // TODO: set large fields to null.
+
+            m_Disposed = true;
         }
 
-        public void CalculateResourceSeriesSet()
+        public void Dispose()
         {
-            lock (m_Lock)
-            {
-                ClearResourceSeriesSet();
-
-                IEnumerable<IResourceSchedule<int, int>> resourceSchedules = GraphCompilation?.ResourceSchedules;
-                IList<ResourceModel> resources = ResourceSettings.Resources;
-
-                if (resourceSchedules == null || resources == null)
-                {
-                    return;
-                }
-
-                ResourceSeriesSet = m_ProjectService.CalculateResourceSeriesSet(
-                    m_Mapper.Map<IEnumerable<IResourceSchedule<int, int>>, IList<ResourceScheduleModel>>(resourceSchedules),
-                    resources,
-                    ResourceSettings.DefaultUnitCost);
-            }
-        }
-
-        public void ClearResourceSeriesSet()
-        {
-            lock (m_Lock)
-            {
-                ResourceSeriesSet = null;
-            }
-        }
-
-        public void CalculateCosts()
-        {
-            lock (m_Lock)
-            {
-                ClearCosts();
-
-                if (HasCompilationErrors)
-                {
-                    return;
-                }
-
-                CostsModel costs = ResourceSeriesSet != null ? m_ProjectService.CalculateProjectCosts(ResourceSeriesSet) : new CostsModel();
-                DirectCost = costs.DirectCost;
-                IndirectCost = costs.IndirectCost;
-                OtherCost = costs.OtherCost;
-                TotalCost = costs.TotalCost;
-            }
-        }
-
-        public double CalculateDurationManMonths()
-        {
-            lock (m_Lock)
-            {
-                int? durationManDays = Duration;
-                if (!durationManDays.HasValue)
-                {
-                    return 0;
-                }
-                m_DateTimeCalculator.UseBusinessDays(UseBusinessDays);
-                int daysPerWeek = m_DateTimeCalculator.DaysPerWeek;
-                return durationManDays.GetValueOrDefault() / (daysPerWeek * 52 / 12.0);
-            }
-        }
-
-        public void ClearCosts()
-        {
-            lock (m_Lock)
-            {
-                DirectCost = null;
-                IndirectCost = null;
-                OtherCost = null;
-                TotalCost = null;
-            }
-        }
-
-        public void ClearSettings()
-        {
-            ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
-            ResourceSettings = m_SettingService.DefaultResourceSettings;
+            // Dispose of unmanaged resources.
+            Dispose(true);
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
         }
 
         #endregion

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Zametek.Common.ProjectPlan;
+using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -18,6 +19,8 @@ namespace Zametek.ViewModel.ProjectPlan
             CreateMap<EventModel, Event<int>>()
                 .ConstructUsing(src => new Event<int>(src.Id, src.EarliestFinishTime, src.LatestFinishTime))
                 .ReverseMap();
+
+            CreateMap<TrackerViewModel, TrackerModel>();
 
             CreateMap<ActivityModel, Activity<int, int>>()
                 .ConstructUsing(src => new Activity<int, int>(src.Id, src.Duration))
@@ -40,9 +43,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ConstructUsing(src => new Activity<int, int>(src.Activity.Id, src.Activity.Duration))
                 .BeforeMap((src, dest, ctx) =>
                 {
-                    ctx.Mapper.Map<ActivityModel, Activity<int, int>>(src.Activity, dest);
+                    ctx.Mapper.Map(src.Activity, dest);
                 });
-            //.ReverseMap();
 
             CreateMap<DependentActivityModel, DependentActivity<int, int>>()
                 .ConstructUsing(src => new DependentActivity<int, int>(src.Activity.Id, src.Activity.Duration))
@@ -63,11 +65,26 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ForMember(src => src.Dependencies, opt => opt.Ignore())
                 .ForMember(src => src.ResourceDependencies, opt => opt.Ignore())
                 .ReverseMap()
+                .ConstructUsing((src, ctx) =>
+                {
+                    return new DependentActivityModel
+                    {
+                        Activity = ctx.Mapper.Map<Activity<int, int>, ActivityModel>(src)
+                    };
+                })
                 .BeforeMap((src, dest, ctx) =>
                 {
-                    dest.Dependencies = src.Dependencies.ToList();
-                    dest.ResourceDependencies = src.ResourceDependencies.ToList();
-                    dest.Activity = ctx.Mapper.Map<Activity<int, int>, ActivityModel>(src);
+                    dest.Dependencies.Clear();
+                    foreach (int dependencyId in src.Dependencies)
+                    {
+                        dest.Dependencies.Add(dependencyId);
+                    }
+
+                    dest.ResourceDependencies.Clear();
+                    foreach (int resourceDependencyId in src.ResourceDependencies)
+                    {
+                        dest.ResourceDependencies.Add(resourceDependencyId);
+                    }
                 })
                 .ForMember(src => src.Dependencies, opt => opt.Ignore())
                 .ForMember(src => src.ResourceDependencies, opt => opt.Ignore());
@@ -75,16 +92,31 @@ namespace Zametek.ViewModel.ProjectPlan
             CreateMap<ManagedActivityViewModel, ActivityModel>();
 
             CreateMap<ManagedActivityViewModel, DependentActivityModel>()
+                .ConstructUsing((src, ctx) =>
+                {
+                    return new DependentActivityModel
+                    {
+                        Activity = ctx.Mapper.Map<ManagedActivityViewModel, ActivityModel>(src)
+                    };
+                })
                 .BeforeMap((src, dest, ctx) =>
                 {
-                    dest.Dependencies = src.Dependencies.ToList();
-                    dest.ResourceDependencies = src.ResourceDependencies.ToList();
-                    dest.Activity = ctx.Mapper.Map<ManagedActivityViewModel, ActivityModel>(src);
+                    dest.Dependencies.Clear();
+                    foreach (int dependencyId in src.Dependencies)
+                    {
+                        dest.Dependencies.Add(dependencyId);
+                    }
+
+                    dest.ResourceDependencies.Clear();
+                    foreach (int resourceDependencyId in src.ResourceDependencies)
+                    {
+                        dest.ResourceDependencies.Add(resourceDependencyId);
+                    }
                 })
                 .ForMember(src => src.Dependencies, opt => opt.Ignore())
                 .ForMember(src => src.ResourceDependencies, opt => opt.Ignore());
 
-            CreateMap<ResourceScheduleModel, ResourceSchedule<int, int>>()
+            CreateMap<ResourceScheduleModel, IResourceSchedule<int, int>>()
                 .ConstructUsing((src, ctx) =>
                 {
                     ResourceScheduleBuilder<int, int> resourceScheduleBuilder =
@@ -97,50 +129,31 @@ namespace Zametek.ViewModel.ProjectPlan
                         resourceScheduleBuilder.AppendActivityWithoutChecks(scheduledActivity);
                     }
 
-                    return resourceScheduleBuilder.ToResourceSchedule(src.FinishTime) as ResourceSchedule<int, int>;
-                })
-                .ReverseMap();
+                    return resourceScheduleBuilder.ToResourceSchedule(src.FinishTime);
+                });
 
-            CreateMap<ScheduledActivityModel, ScheduledActivity<int>>()
-                .ConstructUsing(src => new ScheduledActivity<int>(src.Id, src.Name, src.HasNoCost, src.Duration, src.StartTime, src.FinishTime))
-                .ReverseMap();
+            CreateMap<ResourceSchedule<int, int>, ResourceScheduleModel>()
+                .ForMember(src => src.Resource, opt => opt.Condition(src => src.Resource is not null));
 
-            CreateMap<GraphCompilationErrorsModel, GraphCompilationErrors<int>>()
-                .ConstructUsing((src, ctx) =>
-                    new GraphCompilationErrors<int>(
-                        src.AllResourcesExplicitTargetsButNotAllActivitiesTargeted,
-                        ctx.Mapper.Map<IEnumerable<CircularDependencyModel>,
-                        IEnumerable<CircularDependency<int>>>(src.CircularDependencies),
-                        src.MissingDependencies,
-                        src.InvalidConstraints))
-                .ReverseMap();
+            CreateMap<ScheduledActivityModel, IScheduledActivity<int>>()
+                .ConstructUsing(src => new ScheduledActivity<int>(src.Id, src.Name, src.HasNoCost, src.Duration, src.StartTime, src.FinishTime));
 
-            CreateMap<CircularDependencyModel, CircularDependency<int>>()
-                .ConstructUsing(src => new CircularDependency<int>(src.Dependencies))
+            CreateMap<ScheduledActivity<int>, ScheduledActivityModel>();
+
+            CreateMap<GraphCompilationErrorModel, GraphCompilationError>()
+                .ConstructUsing(src => new GraphCompilationError(src.ErrorCode, src.ErrorMessage))
                 .ReverseMap();
 
             CreateMap<GraphCompilationModel, GraphCompilation<int, int, DependentActivity<int, int>>>()
                 .ConstructUsing((src, ctx) =>
                 {
-                    if (src.Errors != null)
-                    {
-                        return new GraphCompilation<int, int, DependentActivity<int, int>>(
-                            ctx.Mapper.Map<IEnumerable<DependentActivityModel>, IEnumerable<DependentActivity<int, int>>>(src.DependentActivities),
-                            ctx.Mapper.Map<IEnumerable<ResourceScheduleModel>, IEnumerable<ResourceSchedule<int, int>>>(src.ResourceSchedules),
-                            ctx.Mapper.Map<GraphCompilationErrorsModel, GraphCompilationErrors<int>>(src.Errors));
-                    }
-                    else
-                    {
-                        return new GraphCompilation<int, int, DependentActivity<int, int>>(
-                            ctx.Mapper.Map<IEnumerable<DependentActivityModel>, IEnumerable<DependentActivity<int, int>>>(src.DependentActivities),
-                            ctx.Mapper.Map<IEnumerable<ResourceScheduleModel>, IEnumerable<ResourceSchedule<int, int>>>(src.ResourceSchedules));
-                    }
+                    return new GraphCompilation<int, int, DependentActivity<int, int>>(
+                        ctx.Mapper.Map<IEnumerable<DependentActivityModel>, IEnumerable<DependentActivity<int, int>>>(src.DependentActivities),
+                        ctx.Mapper.Map<IEnumerable<ResourceScheduleModel>, IEnumerable<ResourceSchedule<int, int>>>(src.ResourceSchedules),
+                        ctx.Mapper.Map<IEnumerable<GraphCompilationErrorModel>, IEnumerable<GraphCompilationError>>(src.CompilationErrors));
                 });
-            //.ReverseMap();
-
 
             CreateMap<IGraphCompilation<int, int, IDependentActivity<int, int>>, GraphCompilationModel>();
-
 
             CreateMap<ActivityEdgeModel, Edge<int, IDependentActivity<int, int>>>()
                 .ConstructUsing((src, ctx) => new Edge<int, IDependentActivity<int, int>>(ctx.Mapper.Map<ActivityModel, DependentActivity<int, int>>(src.Content)))
@@ -173,22 +186,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ReverseMap()
                 .BeforeMap((src, dest) =>
                 {
+                    dest.IncomingEdges.Clear();
                     if (src.NodeType != NodeType.Start && src.NodeType != NodeType.Isolated)
                     {
-                        dest.IncomingEdges = src.IncomingEdges.ToList();
-                    }
-                    else
-                    {
-                        dest.IncomingEdges = new List<int>();
+                        foreach (int incomingEdgeId in src.IncomingEdges)
+                        {
+                            dest.IncomingEdges.Add(incomingEdgeId);
+                        }
                     }
 
+                    dest.OutgoingEdges.Clear();
                     if (src.NodeType != NodeType.End && src.NodeType != NodeType.Isolated)
                     {
-                        dest.OutgoingEdges = src.OutgoingEdges.ToList();
-                    }
-                    else
-                    {
-                        dest.OutgoingEdges = new List<int>();
+                        foreach (int outgoingEdgeId in src.OutgoingEdges)
+                        {
+                            dest.OutgoingEdges.Add(outgoingEdgeId);
+                        }
                     }
                 })
                 .ForMember(src => src.IncomingEdges, opt => opt.Ignore())

@@ -1,27 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using Zametek.Maths.Graphs;
+﻿using Zametek.Maths.Graphs;
 
 namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Object is a DTO")]
-    public class ResourceSeriesModel
+    public record ResourceSeriesModel
     {
-        public int? ResourceId { get; set; }
+        public string Title { get; init; } = string.Empty;
 
-        public string Title { get; set; }
+        public InterActivityAllocationType InterActivityAllocationType { get; init; }
 
-        public InterActivityAllocationType InterActivityAllocationType { get; set; }
+        public ResourceScheduleModel ResourceSchedule { get; init; } = new ResourceScheduleModel();
 
-        public List<int> Values { get; set; }
+        public ColorFormatModel ColorFormat { get; init; } = new ColorFormatModel();
 
-        public ResourceScheduleModel ResourceSchedule { get; set; }
+        public double UnitCost { get; init; }
 
-        public ColorFormatModel ColorFormat { get; set; }
-
-        public double UnitCost { get; set; }
-
-        public int DisplayOrder { get; set; }
+        public int DisplayOrder { get; init; }
     }
 }

@@ -1,9 +1,8 @@
-﻿using Prism.Commands;
-using Prism.Interactivity.InteractionRequest;
-using System.Collections.Generic;
+﻿using Avalonia.Controls;
+using Avalonia.Data;
+using ReactiveUI;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Windows.Controls;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -11,271 +10,339 @@ using Zametek.Contract.ProjectPlan;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ResourceSettingsManagerViewModel
-        : BasicConfirmationViewModel, IResourceSettingsManagerViewModel
+        : ToolViewModelBase, IResourceSettingsManagerViewModel, IDisposable
     {
+        #region Fields
+
+        private readonly object m_Lock;
+        private ResourceSettingsModel m_Current;
+
+        private readonly ICoreViewModel m_CoreViewModel;
+        private readonly ISettingService m_SettingService;
+        private readonly IDialogService m_DialogService;
+
+        private readonly IDisposable? m_ProcessResourceSettingsSub;
+        private readonly IDisposable? m_UpdateResourceSettingsSub;
+
+        #endregion
+
         #region Ctors
 
-        public ResourceSettingsManagerViewModel()
-            : base()
+        public ResourceSettingsManagerViewModel(
+            ICoreViewModel coreViewModel!!,
+            ISettingService settingService!!,
+            IDialogService dialogService!!)
         {
-            SelectedResources = new ObservableCollection<IManagedResourceViewModel>();
-            OnClose = ClearSelectedResources;
-            InitializeCommands();
+            m_Lock = new object();
+            m_Current = new ResourceSettingsModel();
+            m_CoreViewModel = coreViewModel;
+            m_SettingService = settingService;
+            m_DialogService = dialogService;
+            SelectedResources = new ConcurrentDictionary<int, IManagedResourceViewModel>();
+            m_HasResources = false;
+            m_AreSettingsUpdated = false; ;
+
+            m_Resources = new ObservableCollection<IManagedResourceViewModel>();
+            m_ReadOnlyResources = new ReadOnlyObservableCollection<IManagedResourceViewModel>(m_Resources);
+
+            SetSelectedManagedResourcesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedResources);
+            AddManagedResourceCommand = ReactiveCommand.CreateFromTask(AddManagedResourceAsync);
+            RemoveManagedResourcesCommand = ReactiveCommand.CreateFromTask(RemoveManagedResourcesAsync, this.WhenAnyValue(rm => rm.HasResources));
+
+            m_IsBusy = this
+                .WhenAnyValue(rm => rm.m_CoreViewModel.IsBusy)
+                .ToProperty(this, rm => rm.IsBusy);
+
+            m_HasStaleOutputs = this
+                .WhenAnyValue(rm => rm.m_CoreViewModel.HasStaleOutputs)
+                .ToProperty(this, rm => rm.HasStaleOutputs);
+
+            m_HasCompilationErrors = this
+                .WhenAnyValue(rm => rm.m_CoreViewModel.HasCompilationErrors)
+                .ToProperty(this, rm => rm.HasCompilationErrors);
+
+            m_ProcessResourceSettingsSub = this
+                .WhenAnyValue(rm => rm.m_CoreViewModel.ResourceSettings)
+                .Subscribe(rs =>
+                {
+                    if (m_Current != rs)
+                    {
+                        ProcessSettings(rs);
+                    }
+                });
+
+            m_UpdateResourceSettingsSub = this
+                .WhenAnyValue(rm => rm.AreSettingsUpdated)
+                .Subscribe(areUpdated =>
+                {
+                    if (areUpdated)
+                    {
+                        UpdateResourceSettingsToCore();
+                    }
+                });
+
+            ProcessSettings(m_SettingService.DefaultResourceSettings);
+
+            Id = Resource.ProjectPlan.Titles.Title_ResourceSettingsView;
+            Title = Resource.ProjectPlan.Titles.Title_ResourceSettingsView;
         }
 
         #endregion
 
         #region Properties
 
-        public ObservableCollection<IManagedResourceViewModel> SelectedResources
-        {
-            get;
-        }
-
-        #endregion
-
-        #region Commands
-
-        public DelegateCommandBase InternalSetSelectedManagedResourcesCommand
-        {
-            get;
-            private set;
-        }
-
-        private DelegateCommandBase InternalAddManagedResourceCommand
-        {
-            get;
-            set;
-        }
-
-        private DelegateCommandBase InternalRemoveManagedResourceCommand
-        {
-            get;
-            set;
-        }
-
-        private void SetSelectedManagedResources(SelectionChangedEventArgs args)
-        {
-            if (args?.AddedItems != null)
-            {
-                SelectedResources.AddRange(args?.AddedItems.OfType<IManagedResourceViewModel>());
-            }
-            if (args?.RemovedItems != null)
-            {
-                foreach (var managedResourceViewModel in args?.RemovedItems.OfType<IManagedResourceViewModel>())
-                {
-                    SelectedResources.Remove(managedResourceViewModel);
-                }
-            }
-            RaisePropertyChanged(nameof(SelectedResource));
-            RaiseCanExecuteChangedAllCommands();
-        }
-
-        private void AddManagedResource()
-        {
-            DoAddManagedResource();
-        }
-
-        private bool CanAddManagedResource()
-        {
-            return true;
-        }
-
-        private void RemoveManagedResource()
-        {
-            DoRemoveManagedResource();
-        }
-
-        private bool CanRemoveManagedResource()
-        {
-            return SelectedResources.Any();
-        }
-
-        #endregion
-
-        #region Public Methods
-
-        public void DoAddManagedResource()
-        {
-            int resourceId = GetNextResourceId();
-            Resources.Add(
-                new ManagedResourceViewModel(
-                    new ResourceModel
-                    {
-                        Id = resourceId,
-                        IsExplicitTarget = true,
-                        ColorFormat = new ColorFormatModel(),
-                        UnitCost = DefaultUnitCost
-                    }));
-            RaisePropertyChanged(nameof(Resources));
-            RaisePropertyChanged(nameof(SelectedResources));
-            RaiseCanExecuteChangedAllCommands();
-        }
-
-        public void DoRemoveManagedResource()
-        {
-            IEnumerable<IManagedResourceViewModel> managedResources = SelectedResources.ToList();
-            if (!managedResources.Any())
-            {
-                return;
-            }
-            foreach (IManagedResourceViewModel managedResource in managedResources)
-            {
-                Resources.Remove(managedResource);
-            }
-            SelectedResources.Clear();
-            RaisePropertyChanged(nameof(Resources));
-            RaisePropertyChanged(nameof(SelectedResources));
-            RaiseCanExecuteChangedAllCommands();
-        }
+        public IDictionary<int, IManagedResourceViewModel> SelectedResources { get; }
 
         #endregion
 
         #region Private Methods
 
-        private void InitializeCommands()
+        private int GetNextId()
         {
-            SetSelectedManagedResourcesCommand =
-                InternalSetSelectedManagedResourcesCommand =
-                    new DelegateCommand<SelectionChangedEventArgs>(SetSelectedManagedResources);
-            AddManagedResourceCommand =
-                InternalAddManagedResourceCommand =
-                    new DelegateCommand(AddManagedResource, CanAddManagedResource);
-            RemoveManagedResourceCommand =
-                InternalRemoveManagedResourceCommand =
-                    new DelegateCommand(RemoveManagedResource, CanRemoveManagedResource);
+            lock (m_Lock)
+            {
+                return Resources.Select(x => x.Id).DefaultIfEmpty().Max() + 1;
+            }
         }
 
-        private void RaiseCanExecuteChangedAllCommands()
+        private void SetSelectedManagedResources(SelectionChangedEventArgs args)
         {
-            InternalSetSelectedManagedResourcesCommand.RaiseCanExecuteChanged();
-            InternalAddManagedResourceCommand.RaiseCanExecuteChanged();
-            InternalRemoveManagedResourceCommand.RaiseCanExecuteChanged();
+            lock (m_Lock)
+            {
+                if (args.AddedItems is not null)
+                {
+                    foreach (var managedResourceViewModel in args.AddedItems.OfType<IManagedResourceViewModel>())
+                    {
+                        SelectedResources.TryAdd(managedResourceViewModel.Id, managedResourceViewModel);
+                    }
+                }
+                if (args.RemovedItems is not null)
+                {
+                    foreach (var managedResourceViewModel in args.RemovedItems.OfType<IManagedResourceViewModel>())
+                    {
+                        SelectedResources.Remove(managedResourceViewModel.Id);
+                    }
+                }
+
+                HasResources = SelectedResources.Any();
+            }
         }
 
-        private void ClearSelectedResources()
+        private async Task AddManagedResourceAsync()
         {
-            SelectedResources.Clear();
+            try
+            {
+                lock (m_Lock)
+                {
+                    int resourceId = GetNextId();
+                    m_Resources.Add(
+                        new ManagedResourceViewModel(
+                            this,
+                            new ResourceModel
+                            {
+                                Id = resourceId,
+                                IsExplicitTarget = true,
+                                UnitCost = DefaultUnitCost,
+                                ColorFormat = ColorHelper.RandomColor()
+                            }));
+                }
+                UpdateResourceSettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    ex.Message);
+            }
         }
 
-        private int GetNextResourceId()
+        private async Task RemoveManagedResourcesAsync()
         {
-            return Resources.Select(x => x.Id).DefaultIfEmpty().Max() + 1;
+            try
+            {
+                lock (m_Lock)
+                {
+                    ICollection<IManagedResourceViewModel> resources = SelectedResources.Values;
+
+                    if (!resources.Any())
+                    {
+                        return;
+                    }
+
+                    foreach (IManagedResourceViewModel resouce in resources)
+                    {
+                        m_Resources.Remove(resouce);
+                        resouce.Dispose();
+                    }
+                }
+                UpdateResourceSettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    ex.Message);
+            }
+        }
+
+        private void UpdateResourceSettingsToCore()
+        {
+            lock (m_Lock)
+            {
+                var resourceSettings = new ResourceSettingsModel
+                {
+                    Resources = Resources.Select(x => new ResourceModel
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        IsExplicitTarget = x.IsExplicitTarget,
+                        InterActivityAllocationType = x.InterActivityAllocationType,
+                        UnitCost = x.UnitCost,
+                        DisplayOrder = x.DisplayOrder,
+                        ColorFormat = x.ColorFormat
+                    }).ToList(),
+
+                    DefaultUnitCost = DefaultUnitCost,
+                    AreDisabled = DisableResources
+                };
+
+                if (m_Current != resourceSettings)
+                {
+                    m_Current = resourceSettings;
+                    m_CoreViewModel.ResourceSettings = m_Current;
+                }
+            }
+            AreSettingsUpdated = false;
+        }
+
+        private void ProcessSettings(ResourceSettingsModel resourceSettings!!)
+        {
+            lock (m_Lock)
+            {
+                m_DefaultUnitCost = resourceSettings.DefaultUnitCost;
+                this.RaisePropertyChanged(nameof(DefaultUnitCost));
+
+                m_DisableResources = resourceSettings.AreDisabled;
+                this.RaisePropertyChanged(nameof(DisableResources));
+
+                m_Resources.Clear();
+                foreach (ResourceModel resouce in resourceSettings.Resources)
+                {
+                    m_Resources.Add(new ManagedResourceViewModel(this, resouce));
+                }
+            }
+            AreSettingsUpdated = false;
         }
 
         #endregion
 
-        #region Overrides
+        #region IResourceSettingsManagerViewModel Members
 
-        public override INotification Notification
+        private readonly ObservableAsPropertyHelper<bool> m_IsBusy;
+        public bool IsBusy => m_IsBusy.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasStaleOutputs;
+        public bool HasStaleOutputs => m_HasStaleOutputs.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
+        public bool HasCompilationErrors => m_HasCompilationErrors.Value;
+
+        private bool m_HasResources;
+        public bool HasResources
         {
-            get
-            {
-                return base.Notification;
-            }
+            get => m_HasResources;
             set
             {
-                base.Notification = value;
-                RaisePropertyChanged(nameof(Resources));
-                RaisePropertyChanged(nameof(DefaultUnitCost));
-                RaisePropertyChanged(nameof(DisableResources));
-                RaisePropertyChanged(nameof(ActivateResources));
+                lock (m_Lock)
+                {
+                    m_HasResources = value;
+                    this.RaisePropertyChanged();
+                }
             }
         }
 
-        #endregion
-
-        #region IResourcesManagerViewModel Members
-
+        private double m_DefaultUnitCost;
         public double DefaultUnitCost
         {
-            get
-            {
-                var notification = (ResourceSettingsManagerConfirmation)Notification;
-                if (notification != null)
-                {
-                    return notification.DefaultUnitCost;
-                }
-                return 1.0;
-            }
+            get => m_DefaultUnitCost;
             set
             {
-                var notification = (ResourceSettingsManagerConfirmation)Notification;
-                if (notification != null)
+                if (value < 0)
                 {
-                    notification.DefaultUnitCost = value;
-                    RaisePropertyChanged();
+                    throw new DataValidationException(Resource.ProjectPlan.Messages.Message_UnitCostMustBeGreaterThanZero);
+                }
+
+                if (m_DefaultUnitCost != value)
+                {
+                    this.RaiseAndSetIfChanged(ref m_DefaultUnitCost, value);
+                    AreSettingsUpdated = true;
                 }
             }
         }
 
+        private bool m_DisableResources;
         public bool DisableResources
         {
-            get
-            {
-                var notification = (ResourceSettingsManagerConfirmation)Notification;
-                if (notification != null)
-                {
-                    return notification.AreDisabled;
-                }
-                return false;
-            }
+            get => m_DisableResources;
             set
             {
-                var notification = (ResourceSettingsManagerConfirmation)Notification;
-                if (notification != null)
+                if (m_DisableResources != value)
                 {
-                    notification.AreDisabled = value;
-                    RaisePropertyChanged();
-                    RaisePropertyChanged(nameof(ActivateResources));
+                    this.RaiseAndSetIfChanged(ref m_DisableResources, value);
+                    AreSettingsUpdated = true;
                 }
             }
         }
 
-        public bool ActivateResources
+        private bool m_AreSettingsUpdated;
+        public bool AreSettingsUpdated
         {
-            get
+            get => m_AreSettingsUpdated;
+            set => this.RaiseAndSetIfChanged(ref m_AreSettingsUpdated, value);
+        }
+
+        private readonly ObservableCollection<IManagedResourceViewModel> m_Resources;
+        private readonly ReadOnlyObservableCollection<IManagedResourceViewModel> m_ReadOnlyResources;
+        public ReadOnlyObservableCollection<IManagedResourceViewModel> Resources => m_ReadOnlyResources;
+
+        public ICommand SetSelectedManagedResourcesCommand { get; }
+
+        public ICommand AddManagedResourceCommand { get; }
+
+        public ICommand RemoveManagedResourcesCommand { get; }
+
+        #endregion
+
+        #region IDisposable Members
+
+        private bool m_Disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (m_Disposed)
             {
-                return !DisableResources;
+                return;
             }
-        }
 
-        public ObservableCollection<IManagedResourceViewModel> Resources
-        {
-            get
+            if (disposing)
             {
-                return ((ResourceSettingsManagerConfirmation)Notification).Resources;
+                // TODO: dispose managed state (managed objects).
+                m_ProcessResourceSettingsSub?.Dispose();
+                m_UpdateResourceSettingsSub?.Dispose();
             }
+
+            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+            // TODO: set large fields to null.
+
+            m_Disposed = true;
         }
 
-        public IManagedResourceViewModel SelectedResource
+        public void Dispose()
         {
-            get
-            {
-                if (SelectedResources.Count == 1)
-                {
-                    return SelectedResources.FirstOrDefault();
-                }
-                return null;
-            }
-        }
-
-        public ICommand SetSelectedManagedResourcesCommand
-        {
-            get;
-            private set;
-        }
-
-        public ICommand AddManagedResourceCommand
-        {
-            get;
-            private set;
-        }
-
-        public ICommand RemoveManagedResourceCommand
-        {
-            get;
-            private set;
+            // Dispose of unmanaged resources.
+            Dispose(true);
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
         }
 
         #endregion

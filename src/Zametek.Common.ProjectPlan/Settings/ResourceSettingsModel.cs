@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Object is a DTO")]
-    public class ResourceSettingsModel
+    public record ResourceSettingsModel
     {
-        public List<ResourceModel> Resources { get; set; }
+        public List<ResourceModel> Resources { get; init; } = new List<ResourceModel>();
 
-        public double DefaultUnitCost { get; set; }
+        public double DefaultUnitCost { get; init; }
 
-        public bool AreDisabled { get; set; }
+        public bool AreDisabled { get; init; }
     }
 }

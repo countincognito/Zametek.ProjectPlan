@@ -1,114 +1,77 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Contract.ProjectPlan
 {
     public interface ICoreViewModel
-        : IPropertyChangedPubSubViewModel
     {
-        bool IsBusy { get; set; }
+        string ProjectTitle { get; set; }
 
-        DateTime ProjectStart { get; set; }
+        bool IsBusy { get; }
 
         bool IsProjectUpdated { get; set; }
+
+        bool HasStaleOutputs { get; set; }
+
+        DateTimeOffset ProjectStart { get; set; }
+
+        DateTime ProjectStartDateTime { get; set; }
+
+        TimeSpan ProjectStartTimeOffset { get; }
 
         bool ShowDates { get; set; }
 
         bool UseBusinessDays { get; set; }
 
-        bool HasStaleOutputs { get; set; }
-
         bool AutoCompile { get; set; }
 
-        bool HasCompilationErrors { get; set; }
+        ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
 
-        IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation { get; set; }
+        ArrowGraphSettingsModel ArrowGraphSettings { get; set; }
 
-        string CompilationOutput { get; set; }
+        ResourceSettingsModel ResourceSettings { get; set; }
 
-        ArrowGraphModel ArrowGraph { get; set; }
+        bool HasCompilationErrors { get; }
 
-        ObservableCollection<IManagedActivityViewModel> Activities { get; }
+        IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation { get; }
+
+        ArrowGraphModel ArrowGraph { get; }
 
         ResourceSeriesSetModel ResourceSeriesSet { get; }
 
-        ArrowGraphSettingsModel ArrowGraphSettings { get; }
+        TrackingSeriesSetModel TrackingSeriesSet { get; }
 
-        ResourceSettingsModel ResourceSettings { get; }
+        int? CyclomaticComplexity { get; }
 
-        MetricsModel Metrics { get; set; }
+        int? Duration { get; }
 
-        IApplicationCommands ApplicationCommands { get; }
+        void ClearSettings();
 
-        int? CyclomaticComplexity { get; set; }
+        void ResetProject();
 
-        int? Duration { get; set; }
+        void ProcessProjectImport(ProjectImportModel projectImportModel);
 
-        double? DurationManMonths { get; set; }
+        void ProcessProjectPlan(ProjectPlanModel projectPlanModel);
 
-        double? DirectCost { get; set; }
-
-        double? IndirectCost { get; set; }
-
-        double? OtherCost { get; set; }
-
-        double? TotalCost { get; set; }
-
-        double? Efficiency { get; }
-
-        public CoreStateModel CoreState { get; }
-
-        void RecordCoreState();
-
-        void RecordRedoUndo(Action action);
-
-        void ClearUndoStack();
-
-        void ClearRedoStack();
+        ProjectPlanModel BuildProjectPlan();
 
         void AddManagedActivity();
 
-        void AddManagedActivities(HashSet<DependentActivityModel> dependentActivities);
+        void AddManagedActivities(IEnumerable<DependentActivityModel> dependentActivityModels);
 
-        void RemoveManagedActivities(HashSet<int> dependentActivities);
+        void RemoveManagedActivities(IEnumerable<int> dependentActivities);
 
         void ClearManagedActivities();
 
-        void UpdateArrowGraphSettings(ArrowGraphSettingsModel arrowGraphSettings);
+        void AddTrackers();
 
-        void UpdateResourceSettings(ResourceSettingsModel resourceSettings);
-
-        void UpdateActivitiesTargetResourceDependencies();
-
-        void UpdateActivitiesAllocatedToResources();
-
-        void UpdateActivitiesProjectStart();
-
-        void UpdateActivitiesUseBusinessDays();
-
-        int RunCalculateResourcedCyclomaticComplexity();
-
-        double CalculateDurationManMonths();
+        void RemoveTrackers();
 
         void RunCompile();
 
         void RunAutoCompile();
 
         void RunTransitiveReduction();
-
-        void SetCompilationOutput();
-
-        void CalculateResourceSeriesSet();
-
-        void ClearResourceSeriesSet();
-
-        void CalculateCosts();
-
-        void ClearCosts();
-
-        void ClearSettings();
     }
 }

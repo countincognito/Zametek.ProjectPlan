@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Zametek.Data.ProjectPlan.v0_1_0
+﻿namespace Zametek.Data.ProjectPlan.v0_1_0
 {
     [Serializable]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Object is a DTO")]
-    public class ArrowGraphModel
+    public record ArrowGraphModel
     {
-        public List<ActivityEdgeModel> Edges { get; set; }
+        public List<ActivityEdgeModel> Edges { get; init; } = new List<ActivityEdgeModel>();
 
-        public List<EventNodeModel> Nodes { get; set; }
+        public List<EventNodeModel> Nodes { get; init; } = new List<EventNodeModel>();
 
-        public bool IsStale { get; set; }
+        public bool IsStale { get; init; }
     }
 }

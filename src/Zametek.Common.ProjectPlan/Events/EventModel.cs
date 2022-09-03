@@ -1,14 +1,12 @@
-﻿using System;
-
-namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public class EventModel
+    public record EventModel
     {
-        public int Id { get; set; }
+        public int Id { get; init; }
 
-        public int? EarliestFinishTime { get; set; }
+        public int? EarliestFinishTime { get; init; }
 
-        public int? LatestFinishTime { get; set; }
+        public int? LatestFinishTime { get; init; }
     }
 }

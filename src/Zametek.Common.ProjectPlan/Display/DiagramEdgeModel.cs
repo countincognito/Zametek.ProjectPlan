@@ -1,26 +1,24 @@
-﻿using System;
-
-namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public class DiagramEdgeModel
+    public record DiagramEdgeModel
     {
-        public int Id { get; set; }
+        public int Id { get; init; }
 
-        public string Name { get; set; }
+        public string? Name { get; init; }
 
-        public int SourceId { get; set; }
+        public int SourceId { get; init; }
 
-        public int TargetId { get; set; }
+        public int TargetId { get; init; }
 
-        public EdgeDashStyle DashStyle { get; set; }
+        public EdgeDashStyle DashStyle { get; init; }
 
-        public string ForegroundColorHexCode { get; set; }
+        public string? ForegroundColorHexCode { get; init; }
 
-        public double StrokeThickness { get; set; }
+        public double StrokeThickness { get; init; }
 
-        public string Label { get; set; }
+        public string? Label { get; init; }
 
-        public bool ShowLabel { get; set; }
+        public bool ShowLabel { get; init; }
     }
 }

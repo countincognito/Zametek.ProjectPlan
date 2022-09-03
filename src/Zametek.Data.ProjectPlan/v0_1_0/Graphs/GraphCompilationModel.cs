@@ -1,24 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Zametek.Data.ProjectPlan.v0_1_0
+﻿namespace Zametek.Data.ProjectPlan.v0_1_0
 {
     [Serializable]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Object is a DTO")]
-    public class GraphCompilationModel
+    public record GraphCompilationModel
     {
-        public bool AllResourcesExplicitTargetsButNotAllActivitiesTargeted { get; set; }
+        public bool AllResourcesExplicitTargetsButNotAllActivitiesTargeted { get; init; }
 
-        public List<CircularDependencyModel> CircularDependencies { get; set; }
+        public List<CircularDependencyModel> CircularDependencies { get; init; } = new List<CircularDependencyModel>();
 
-        public List<int> MissingDependencies { get; set; }
+        public List<int> MissingDependencies { get; init; } = new List<int>();
 
-        public List<DependentActivityModel> DependentActivities { get; set; }
+        public List<DependentActivityModel> DependentActivities { get; init; } = new List<DependentActivityModel>();
 
-        public List<ResourceScheduleModel> ResourceSchedules { get; set; }
+        public List<ResourceScheduleModel> ResourceSchedules { get; init; } = new List<ResourceScheduleModel>();
 
-        public int CyclomaticComplexity { get; set; }
+        public int CyclomaticComplexity { get; init; }
 
-        public int Duration { get; set; }
+        public int Duration { get; init; }
     }
 }

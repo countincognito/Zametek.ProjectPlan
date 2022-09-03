@@ -1,16 +1,14 @@
-﻿using System;
-
-namespace Zametek.Data.ProjectPlan.v0_1_0
+﻿namespace Zametek.Data.ProjectPlan.v0_1_0
 {
     [Serializable]
-    public class ActivitySeverityModel
+    public record ActivitySeverityModel
     {
-        public int SlackLimit { get; set; }
+        public int SlackLimit { get; init; }
 
-        public double CriticalityWeight { get; set; }
+        public double CriticalityWeight { get; init; }
 
-        public double FibonacciWeight { get; set; }
+        public double FibonacciWeight { get; init; }
 
-        public ColorFormatModel ColorFormat { get; set; }
+        public ColorFormatModel? ColorFormat { get; init; }
     }
 }

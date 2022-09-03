@@ -1,11 +1,14 @@
-﻿using Zametek.Common.ProjectPlan;
+﻿using System.ComponentModel;
+using Zametek.Common.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IManagedResourceViewModel
+        : IResource<int>, IDisposable, INotifyPropertyChanged
     {
-        int Id { get; }
+        int DisplayOrder { get; set; }
 
-        ResourceModel Resource { get; }
+        ColorFormatModel ColorFormat { get; set; }
     }
 }

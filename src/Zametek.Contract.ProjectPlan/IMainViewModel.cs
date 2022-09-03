@@ -1,31 +1,18 @@
-﻿using Prism.Interactivity.InteractionRequest;
-using System;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using Zametek.Common.ProjectPlan;
+﻿using System.Windows.Input;
 
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IMainViewModel
-        : INamed
     {
-        IInteractionRequest ConfirmationInteractionRequest { get; }
-
-        IInteractionRequest NotificationInteractionRequest { get; }
-
-        IInteractionRequest ResourceSettingsManagerInteractionRequest { get; }
-
-        IInteractionRequest ArrowGraphSettingsManagerInteractionRequest { get; }
-
-        IInteractionRequest AboutInteractionRequest { get; }
+        string ProjectTitle { get; }
 
         bool IsBusy { get; }
 
-        string Title { get; }
-
         bool IsProjectUpdated { get; }
 
-        DateTime ProjectStart { get; set; }
+        DateTimeOffset ProjectStart { get; set; }
+
+        DateTime ProjectStartDateTime { get; set; }
 
         bool ShowDates { get; set; }
 
@@ -33,33 +20,25 @@ namespace Zametek.Contract.ProjectPlan
 
         bool AutoCompile { get; set; }
 
-        ArrowGraphSettingsModel ArrowGraphSettings { get; }
-
-        ResourceSettingsModel ResourceSettings { get; }
-
-        IApplicationCommands ApplicationCommands { get; }
-
         ICommand OpenProjectPlanFileCommand { get; }
 
         ICommand SaveProjectPlanFileCommand { get; }
 
         ICommand SaveAsProjectPlanFileCommand { get; }
 
-        ICommand ImportProjectCommand { get; }
+        ICommand ImportProjectFileCommand { get; }
 
-        ICommand CloseProjectCommand { get; }
+        ICommand ExportProjectFileCommand { get; }
 
-        ICommand OpenResourceSettingsCommand { get; }
-
-        ICommand OpenArrowGraphSettingsCommand { get; }
+        ICommand CloseProjectPlanCommand { get; }
 
         ICommand ToggleShowDatesCommand { get; }
 
         ICommand ToggleUseBusinessDaysCommand { get; }
 
-        ICommand CalculateResourcedCyclomaticComplexityCommand { get; }
-
         ICommand CompileCommand { get; }
+
+        ICommand ToggleAutoCompileCommand { get; }
 
         ICommand TransitiveReductionCommand { get; }
 
@@ -67,8 +46,24 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand OpenAboutCommand { get; }
 
-        ICommand ExportScenariosCommand { get; }
+        void CloseLayout();
 
-        Task DoOpenProjectPlanFileAsync(string fileName = null);
+        void ResetLayout();
+
+        Task OpenProjectPlanFileAsync();
+
+        Task SaveProjectPlanFileAsync();
+
+        Task SaveAsProjectPlanFileAsync();
+
+        Task ImportProjectFileAsync();
+
+        Task ExportProjectFileAsync();
+
+        Task CloseProjectPlanAsync();
+
+        Task OpenHyperLinkAsync(string hyperlink);
+
+        Task OpenAboutAsync();
     }
 }

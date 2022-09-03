@@ -1,37 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using Zametek.Maths.Graphs;
+﻿using Zametek.Maths.Graphs;
 
 namespace Zametek.Data.ProjectPlan.v0_1_0
 {
     [Serializable]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Object is a DTO")]
-    public class ActivityModel
+    public record ActivityModel
     {
-        public int Id { get; set; }
+        public int Id { get; init; }
 
-        public string Name { get; set; }
+        public string? Name { get; init; }
 
-        public List<int> TargetResources { get; set; }
+        public List<int> TargetResources { get; init; } = new List<int>();
 
-        public LogicalOperator TargetResourceOperator { get; set; }
+        public LogicalOperator TargetResourceOperator { get; init; }
 
-        public List<int> AllocatedToResources { get; set; }
+        public List<int> AllocatedToResources { get; init; } = new List<int>();
 
-        public bool CanBeRemoved { get; set; }
+        public bool CanBeRemoved { get; init; }
 
-        public int Duration { get; set; }
+        public int Duration { get; init; }
 
-        public int? FreeSlack { get; set; }
+        public int? FreeSlack { get; init; }
 
-        public int? EarliestStartTime { get; set; }
+        public int? EarliestStartTime { get; init; }
 
-        public int? LatestFinishTime { get; set; }
+        public int? LatestFinishTime { get; init; }
 
-        public int? MinimumFreeSlack { get; set; }
+        public int? MinimumFreeSlack { get; init; }
 
-        public int? MinimumEarliestStartTime { get; set; }
+        public int? MinimumEarliestStartTime { get; init; }
 
-        public DateTime? MinimumEarliestStartDateTime { get; set; }
+        public DateTime? MinimumEarliestStartDateTime { get; init; }
     }
 }

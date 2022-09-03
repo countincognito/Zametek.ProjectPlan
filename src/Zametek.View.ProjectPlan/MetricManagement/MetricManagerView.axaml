@@ -1,0 +1,214 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:i="using:Avalonia.Xaml.Interactivity"
+	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 xmlns:properties="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Zametek.View.ProjectPlan.MetricManagerView">
+	<UserControl.Resources>
+		<local:BooleanAndConverter x:Key="booleanAndConverter"/>
+		<local:BooleanOrConverter x:Key="booleanOrConverter"/>
+	</UserControl.Resources>
+
+	<DockPanel Margin="7">
+		<Border Name="viewBorder"
+				BorderThickness="2"
+				BorderBrush="DarkGray"
+                Background="LightGray">
+			<i:Interaction.Behaviors>
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{StaticResource booleanOrConverter}">
+							<MultiBinding.Bindings>
+								<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="Red" />
+				</ia:DataTriggerBehavior>
+
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{StaticResource booleanAndConverter}">
+							<MultiBinding.Bindings>
+								<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="DarkGray" />
+				</ia:DataTriggerBehavior>
+			</i:Interaction.Behaviors>
+
+			<Grid Margin="7">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="80"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="80"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="80"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="80"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<Label Grid.Column="0" Grid.Row="0"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_ActivityRisk}"/>
+				<TextBlock Grid.Column="1" Grid.Row="0"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=ActivityRisk, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+
+				<Label Grid.Column="0" Grid.Row="1"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_ActivityRiskWithStdDevCorrection}"/>
+				<TextBlock Grid.Column="1" Grid.Row="1"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=ActivityRiskWithStdDevCorrection, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+
+				<Label Grid.Column="0" Grid.Row="2"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_CriticalityRisk}"/>
+				<TextBlock Grid.Column="1" Grid.Row="2"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=CriticalityRisk, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+
+				<Label Grid.Column="0" Grid.Row="3"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_FibonacciRisk}"/>
+				<TextBlock Grid.Column="1" Grid.Row="3"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=FibonacciRisk, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+
+
+
+				<Label Grid.Column="2" Grid.Row="1"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_GeometricActivityRisk}"/>
+				<TextBlock Grid.Column="3" Grid.Row="1"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=GeometricActivityRisk, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+
+				<Label Grid.Column="2" Grid.Row="2"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_GeometricCriticalityRisk}"/>
+				<TextBlock Grid.Column="3" Grid.Row="2"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=GeometricCriticalityRisk, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+
+				<Label Grid.Column="2" Grid.Row="3"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_GeometricFibonacciRisk}"/>
+				<TextBlock Grid.Column="3" Grid.Row="3"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=GeometricFibonacciRisk, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+
+
+
+				<Label Grid.Column="4" Grid.Row="1"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_CyclomaticComplexity}"/>
+				<TextBlock Grid.Column="5" Grid.Row="1"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=CyclomaticComplexity, Mode=OneWay, StringFormat=\{0:N0\}}"/>
+
+				<Label Grid.Column="4" Grid.Row="2"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_DurationManMonths}"/>
+				<TextBlock Grid.Column="5" Grid.Row="2"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=DurationManMonths, Mode=OneWay, StringFormat=\{0:N1\}}"/>
+
+				<Label Grid.Column="4" Grid.Row="3"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_Efficiency}"/>
+				<TextBlock Grid.Column="5" Grid.Row="3"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=Efficiency, Mode=OneWay, StringFormat=\{0:P1\}}"/>
+
+
+
+				<Label Grid.Column="6" Grid.Row="0"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_DirectCost}"/>
+				<TextBlock Grid.Column="7" Grid.Row="0"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=DirectCost, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+
+				<Label Grid.Column="6" Grid.Row="1"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_IndirectCost}"/>
+				<TextBlock Grid.Column="7" Grid.Row="1"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=IndirectCost, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+
+				<Label Grid.Column="6" Grid.Row="2"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_OtherCost}"/>
+				<TextBlock Grid.Column="7" Grid.Row="2"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=OtherCost, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+
+				<Label Grid.Column="6" Grid.Row="3"
+                       VerticalContentAlignment="Center"
+                       HorizontalContentAlignment="Right"
+                       Content="{x:Static properties:Labels.Label_TotalCost}"/>
+				<TextBlock Grid.Column="7" Grid.Row="3"
+                           VerticalAlignment="Center"
+                           Margin="7,0,0,0"
+                           FontWeight="Bold"
+                           Text="{Binding Path=TotalCost, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+			</Grid>
+		</Border>
+	</DockPanel>
+</UserControl>

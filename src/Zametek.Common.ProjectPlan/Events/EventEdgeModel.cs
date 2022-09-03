@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public class EventEdgeModel
+    public record EventEdgeModel
     {
-        public EventModel Content { get; set; }
+        public EventModel Content { get; init; } = new EventModel();
     }
 }

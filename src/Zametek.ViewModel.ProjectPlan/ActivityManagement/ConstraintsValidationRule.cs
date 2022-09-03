@@ -1,43 +1,25 @@
-﻿using System.Globalization;
-using System.Windows.Controls;
-using System.Windows.Data;
-
-namespace Zametek.ViewModel.ProjectPlan
+﻿namespace Zametek.ViewModel.ProjectPlan
 {
     public class ConstraintsValidationRule
-        : ValidationRule
     {
-        public override ValidationResult Validate(object value, CultureInfo culture)
+        public static string? Validate(
+            int? minimumFreeSlack,
+            int? minimumEarliestStartTime,
+            int? maximumLatestFinishTime,
+            int duration)
         {
-            var bindingGroup = value as BindingGroup;
-
-            if (bindingGroup != null)
+            if (minimumFreeSlack.HasValue && maximumLatestFinishTime.HasValue)
             {
-                // Loop through binding sources - could be multiple.
-
-                foreach (var bindingSource in bindingGroup.Items)
-                {
-                    var managedActivityViewModel = bindingSource as ManagedActivityViewModel;
-
-                    if (managedActivityViewModel != null)
-                    {
-                        if (managedActivityViewModel.MinimumFreeSlack.HasValue
-                            && managedActivityViewModel.MaximumLatestFinishTime.HasValue)
-                        {
-                            return new ValidationResult(false, Resource.ProjectPlan.Resources.Label_CannotSetMinimumFreeSlackAndMaximumLatestFinishTimeAtSameTime);
-                        }
-
-                        if (managedActivityViewModel.MinimumEarliestStartTime.HasValue
-                            && managedActivityViewModel.MaximumLatestFinishTime.HasValue
-                            && (managedActivityViewModel.MaximumLatestFinishTime.Value - managedActivityViewModel.MinimumEarliestStartTime.Value) < managedActivityViewModel.Duration)
-                        {
-                            return new ValidationResult(false, Resource.ProjectPlan.Resources.Label_MinimumEarliestStartTimeToMaximumLatestFinishTimeMustBeGreaterThanOrEqualToDuration);
-                        }
-                    }
-                }
+                return Resource.ProjectPlan.Labels.Label_CannotSetMinimumFreeSlackAndMaximumLatestFinishTimeAtSameTime;
             }
 
-            return ValidationResult.ValidResult;
+            if (minimumEarliestStartTime.HasValue && maximumLatestFinishTime.HasValue
+                && (maximumLatestFinishTime.Value - minimumEarliestStartTime.Value) < duration)
+            {
+                return Resource.ProjectPlan.Labels.Label_MinimumEarliestStartTimeToMaximumLatestFinishTimeMustBeGreaterThanOrEqualToDuration;
+            }
+
+            return null;
         }
     }
 }

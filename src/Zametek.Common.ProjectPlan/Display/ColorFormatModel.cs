@@ -1,16 +1,14 @@
-﻿using System;
-
-namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public class ColorFormatModel
+    public record ColorFormatModel
     {
-        public byte A { get; set; }
+        public byte A { get; init; }
 
-        public byte R { get; set; }
+        public byte R { get; init; }
 
-        public byte G { get; set; }
+        public byte G { get; init; }
 
-        public byte B { get; set; }
+        public byte B { get; init; }
     }
 }

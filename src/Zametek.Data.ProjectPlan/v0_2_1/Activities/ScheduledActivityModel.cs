@@ -1,20 +1,18 @@
-﻿using System;
-
-namespace Zametek.Data.ProjectPlan.v0_2_1
+﻿namespace Zametek.Data.ProjectPlan.v0_2_1
 {
     [Serializable]
-    public class ScheduledActivityModel
+    public record ScheduledActivityModel
     {
-        public int Id { get; set; }
+        public int Id { get; init; }
 
-        public string Name { get; set; }
+        public string? Name { get; init; }
 
-        public bool HasNoCost { get; set; }
+        public bool HasNoCost { get; init; }
 
-        public int Duration { get; set; }
+        public int Duration { get; init; }
 
-        public int StartTime { get; set; }
+        public int StartTime { get; init; }
 
-        public int FinishTime { get; set; }
+        public int FinishTime { get; init; }
     }
 }

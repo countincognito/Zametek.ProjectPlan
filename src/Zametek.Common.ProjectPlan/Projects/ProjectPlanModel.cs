@@ -1,26 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Object is a DTO")]
-    public class ProjectPlanModel
+    public record ProjectPlanModel
     {
-        public string Version { get; set; }
+        public string Version { get; init; } = string.Empty;
 
-        public DateTime ProjectStart { get; set; }
+        public DateTimeOffset ProjectStart { get; init; }
 
-        public List<DependentActivityModel> DependentActivities { get; set; }
+        public List<DependentActivityModel> DependentActivities { get; init; } = new List<DependentActivityModel>();
 
-        public ArrowGraphSettingsModel ArrowGraphSettings { get; set; }
+        public ArrowGraphSettingsModel ArrowGraphSettings { get; init; } = new ArrowGraphSettingsModel();
 
-        public ResourceSettingsModel ResourceSettings { get; set; }
+        public ResourceSettingsModel ResourceSettings { get; init; } = new ResourceSettingsModel();
 
-        public GraphCompilationModel GraphCompilation { get; set; }
+        public GraphCompilationModel GraphCompilation { get; init; } = new GraphCompilationModel();
 
-        public ArrowGraphModel ArrowGraph { get; set; }
+        public ArrowGraphModel ArrowGraph { get; init; } = new ArrowGraphModel();
 
-        public bool HasStaleOutputs { get; set; }
+        public bool HasStaleOutputs { get; init; }
     }
 }

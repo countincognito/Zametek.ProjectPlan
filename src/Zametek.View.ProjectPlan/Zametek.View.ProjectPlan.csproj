@@ -1,25 +1,47 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <UseWPF>true</UseWPF>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <!--Avalonia doesen't support TrimMode=link currently,but we are working on that https://github.com/AvaloniaUI/Avalonia/issues/6892 -->
+    <TrimMode>copyused</TrimMode>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+	<EnablePreviewFeatures>True</EnablePreviewFeatures>
+	<LangVersion>preview</LangVersion>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="4.6.82" />
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Zametek.Prism.AvalonDock.Core" Version="0.1.0" />
-    <PackageReference Include="Zametek.Windows.AvalonDock.Core" Version="0.2.0" />
-    <PackageReference Include="Zametek.Windows.Interactivity.Core" Version="0.1.0" />
+    <None Remove=".gitignore" />
+    <None Remove="Assets\avalonia-logo.ico" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\nGantt.Core\nGantt.Core.csproj" />
+    <AvaloniaResource Include="Assets\avalonia-logo.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <!--This helps with theme dll-s trimming.
+	If you will publish your application in self-contained mode with p:PublishTrimmed=true and it will use Fluent theme Default theme will be trimmed from the output and vice versa.
+	https://github.com/AvaloniaUI/Avalonia/issues/5593 -->
+    <TrimmableAssembly Include="Avalonia.Themes.Fluent" />
+    <TrimmableAssembly Include="Avalonia.Themes.Default" />
+  </ItemGroup>
+  <ItemGroup>
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="0.10.18" />
+    <PackageReference Include="Dock.Avalonia" Version="0.10.18.1" />
+    <PackageReference Include="Egorozh.ColorPicker.Avalonia.Dialog" Version="0.10.17" />
+    <PackageReference Include="MessageBox.Avalonia" Version="2.1.0" />
+    <PackageReference Include="XamlNameReferenceGenerator" Version="1.3.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
   </ItemGroup>
-
+  <ItemGroup>
+    <Compile Update="ArrowGraphSettingsManagement\ArrowGraphSettingsManagerView.axaml.cs">
+      <DependentUpon>ArrowGraphSettingsManagerView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="TrackingManagement\TrackingManagerView.axaml.cs">
+      <DependentUpon>TrackingManagerView.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

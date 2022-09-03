@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace Zametek.Data.ProjectPlan.v0_2_1
+﻿namespace Zametek.Data.ProjectPlan.v0_2_1
 {
     [Serializable]
-    public class ActivityEdgeModel
+    public record ActivityEdgeModel
     {
-        public ActivityModel Content { get; set; }
+        public ActivityModel? Content { get; init; }
     }
 }
