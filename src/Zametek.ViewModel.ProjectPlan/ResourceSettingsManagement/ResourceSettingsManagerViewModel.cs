@@ -29,9 +29,9 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ResourceSettingsManagerViewModel(
-            ICoreViewModel coreViewModel!!,
-            ISettingService settingService!!,
-            IDialogService dialogService!!)
+            ICoreViewModel coreViewModel,//!!,
+            ISettingService settingService,//!!,
+            IDialogService dialogService)//!!)
         {
             m_Lock = new object();
             m_Current = new ResourceSettingsModel();
@@ -215,7 +215,7 @@ namespace Zametek.ViewModel.ProjectPlan
             AreSettingsUpdated = false;
         }
 
-        private void ProcessSettings(ResourceSettingsModel resourceSettings!!)
+        private void ProcessSettings(ResourceSettingsModel resourceSettings)//!!)
         {
             lock (m_Lock)
             {

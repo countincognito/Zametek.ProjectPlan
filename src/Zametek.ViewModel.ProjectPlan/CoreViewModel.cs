@@ -38,9 +38,9 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public CoreViewModel(
-            ISettingService settingService!!,
-            IDateTimeCalculator dateTimeCalculator!!,
-            IMapper mapper!!)
+            ISettingService settingService,//!!,
+            IDateTimeCalculator dateTimeCalculator,//!!,
+            IMapper mapper)//!!)
         {
             m_Lock = new object();
             m_VertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
@@ -169,8 +169,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static ResourceSeriesSetModel CalculateResourceSeriesSet(
-            IEnumerable<ResourceScheduleModel> resourceSchedules!!,
-            IEnumerable<ResourceModel> resources!!,
+            IEnumerable<ResourceScheduleModel> resourceSchedules,//!!,
+            IEnumerable<ResourceModel> resources,//!!,
             double defaultUnitCost)
         {
             var resourceSeriesSet = new ResourceSeriesSetModel();
@@ -350,7 +350,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static TrackingSeriesSetModel CalculateTrackingSeriesSet(IEnumerable<ActivityModel> activities!!)
+        private static TrackingSeriesSetModel CalculateTrackingSeriesSet(IEnumerable<ActivityModel> activities)//!!)
         {
             IList<ActivityModel> orderedActivities = activities
                 .Select(x => x.CloneObject())
@@ -488,7 +488,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static int CalculateCyclomaticComplexity(IEnumerable<IDependentActivity<int, int>> dependentActivities!!)
+        private static int CalculateCyclomaticComplexity(IEnumerable<IDependentActivity<int, int>> dependentActivities)//!!)
         {
             var vertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
             foreach (DependentActivity<int, int> dependentActivity in dependentActivities)
@@ -809,14 +809,35 @@ namespace Zametek.ViewModel.ProjectPlan
                     ProjectStart = projectImportModel.ProjectStart;
 
                     // Resources.
-                    var resourceSettings = m_SettingService.DefaultResourceSettings.CloneObject();
+                    ResourceSettingsModel resourceSettings = m_SettingService.DefaultResourceSettings.CloneObject();
+                    resourceSettings = resourceSettings with { DefaultUnitCost = projectImportModel.DefaultUnitCost };
 
-                    foreach (ResourceModel resource in projectImportModel.Resources)
+                    if (projectImportModel.Resources.Any())
                     {
-                        resourceSettings.Resources.Add(resource);
+                        resourceSettings.Resources.Clear();
+
+                        foreach (ResourceModel resource in projectImportModel.Resources)
+                        {
+                            resourceSettings.Resources.Add(resource);
+                        }
                     }
 
                     ResourceSettings = resourceSettings;
+
+                    // Arrow graph settings.
+                    ArrowGraphSettingsModel arrowGraphSettings = m_SettingService.DefaultArrowGraphSettings.CloneObject();
+
+                    if (projectImportModel.ActivitySeverities.Any())
+                    {
+                        arrowGraphSettings.ActivitySeverities.Clear();
+
+                        foreach (ActivitySeverityModel? activitySeverity in projectImportModel.ActivitySeverities)
+                        {
+                            arrowGraphSettings.ActivitySeverities.Add(activitySeverity);
+                        }
+                    }
+
+                    ArrowGraphSettings = arrowGraphSettings;
 
                     // Activities.
                     // Be sure to set the ResourceSettings first, so that the activities know

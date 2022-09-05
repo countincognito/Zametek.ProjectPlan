@@ -12,7 +12,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public ActivitySeverityLookup(IEnumerable<ActivitySeverityModel> activitySeverities!!)
+        public ActivitySeverityLookup(IEnumerable<ActivitySeverityModel> activitySeverities)//!!)
         {
             m_ActivitySeverities = activitySeverities.OrderBy(x => x.SlackLimit).ToList();
         }

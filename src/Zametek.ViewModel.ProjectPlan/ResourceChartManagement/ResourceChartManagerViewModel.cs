@@ -45,10 +45,10 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ResourceChartManagerViewModel(
-            ICoreViewModel coreViewModel!!,
-            ISettingService settingService!!,
-            IDialogService dialogService!!,
-            IDateTimeCalculator dateTimeCalculator!!)
+            ICoreViewModel coreViewModel,//!!,
+            ISettingService settingService,//!!,
+            IDialogService dialogService,//!!,
+            IDateTimeCalculator dateTimeCalculator)//!!)
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
@@ -144,8 +144,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static PlotModel BuildResourceChartPlotModel(
-            IDateTimeCalculator dateTimeCalculator!!,
-            ResourceSeriesSetModel resourceSeriesSet!!,
+            IDateTimeCalculator dateTimeCalculator,//!!,
+            ResourceSeriesSetModel resourceSeriesSet,//!!,
             bool showDates,
             DateTime projectStartDateTime)
         {
@@ -228,7 +228,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static Axis BuildResourceChartXAxis(
-            IDateTimeCalculator dateTimeCalculator!!,
+            IDateTimeCalculator dateTimeCalculator,//!!,
             int finishTime,
             bool showDates,
             DateTime projectStartDateTime)

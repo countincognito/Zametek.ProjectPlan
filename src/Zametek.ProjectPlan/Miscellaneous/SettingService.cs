@@ -108,18 +108,18 @@ namespace Zametek.ProjectPlan
             }
         }
 
-        public void SetFilePath(string filename!!)
+        public void SetFilePath(string filename)//!!)
         {
             SetTitle(filename);
             SetDirectory(filename);
         }
 
-        public void SetTitle(string filename!!)
+        public void SetTitle(string filename)//!!)
         {
             ProjectTitle = Path.GetFileNameWithoutExtension(filename);
         }
 
-        public void SetDirectory(string filename!!)
+        public void SetDirectory(string filename)//!!)
         {
             ProjectDirectory = Path.GetDirectoryName(filename) ?? string.Empty;
         }

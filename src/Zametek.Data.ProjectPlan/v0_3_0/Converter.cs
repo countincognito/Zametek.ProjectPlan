@@ -6,7 +6,9 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
 {
     public static class Converter
     {
-        public static ProjectPlanModel Upgrade(IMapper mapper!!, v0_2_1.ProjectPlanModel projectPlan!!)
+        public static ProjectPlanModel Upgrade(
+            IMapper mapper,//!!,
+            v0_2_1.ProjectPlanModel projectPlan)//!!)
         {
             var compilationErrors = new List<GraphCompilationErrorModel>();
 
@@ -71,8 +73,8 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
         }
 
         private static string BuildMissingDependenciesErrorMessage(
-            IEnumerable<int> missingDependencies!!,
-            IEnumerable<v0_2_1.DependentActivityModel> activityModels!!)
+            IEnumerable<int> missingDependencies,//!!,
+            IEnumerable<v0_2_1.DependentActivityModel> activityModels)//!!)
         {
             var output = new StringBuilder();
             output.AppendLine(@"Missing activity dependencies:");
@@ -89,7 +91,7 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
             return output.ToString();
         }
 
-        private static string BuildCircularDependenciesErrorMessage(IEnumerable<v0_1_0.CircularDependencyModel> circularDependencies!!)
+        private static string BuildCircularDependenciesErrorMessage(IEnumerable<v0_1_0.CircularDependencyModel> circularDependencies)//!!)
         {
             var output = new StringBuilder();
             output.AppendLine(@"Circular activity dependencies:");

@@ -6,7 +6,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Public Methods
 
-        public static graphml ToGraphML(DiagramArrowGraphModel diagramArrowGraph!!)
+        public static graphml ToGraphML(DiagramArrowGraphModel diagramArrowGraph)//!!)
         {
             IList<DiagramNodeModel> diagramNodes = diagramArrowGraph.Nodes.ToList();
             IList<DiagramEdgeModel> diagramEdges = diagramArrowGraph.Edges.ToList();
@@ -32,7 +32,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private static graphmlGraphNode BuildArrowGraphNode(DiagramNodeModel diagramNode!!)
+        private static graphmlGraphNode BuildArrowGraphNode(DiagramNodeModel diagramNode)//!!)
         {
             var outputNode = new graphmlGraphNode
             {
@@ -112,7 +112,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return outputNode;
         }
 
-        private static graphmlGraphEdge BuildArrowGraphEdge(DiagramEdgeModel diagramEdge!!)
+        private static graphmlGraphEdge BuildArrowGraphEdge(DiagramEdgeModel diagramEdge)//!!)
         {
             var outputEdge = new graphmlGraphEdge
             {
@@ -120,20 +120,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 source = FormatArrowGraphNodeId(diagramEdge.SourceId),
                 target = FormatArrowGraphNodeId(diagramEdge.TargetId)
             };
-
-            string dashStyle;
-            switch (diagramEdge.DashStyle)
+            string dashStyle = diagramEdge.DashStyle switch
             {
-                case EdgeDashStyle.Normal:
-                    dashStyle = @"line";
-                    break;
-                case EdgeDashStyle.Dashed:
-                    dashStyle = @"dashed";
-                    break;
-                default:
-                    throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_UnknownEdgeDashStyleValue} ""{diagramEdge.DashStyle}""");
-            }
-
+                EdgeDashStyle.Normal => @"line",
+                EdgeDashStyle.Dashed => @"dashed",
+                _ => throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_UnknownEdgeDashStyleValue} ""{diagramEdge.DashStyle}"""),
+            };
             outputEdge.data = new data
             {
                 key = @"d10",

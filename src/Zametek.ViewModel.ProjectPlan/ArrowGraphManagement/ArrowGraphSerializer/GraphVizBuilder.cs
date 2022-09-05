@@ -5,7 +5,7 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     public static class GraphVizBuilder
     {
-        public static string ToGraphViz(DiagramArrowGraphModel diagramArrowGraph!!)
+        public static string ToGraphViz(DiagramArrowGraphModel diagramArrowGraph)//!!)
         {
             var sb = new StringBuilder();
 

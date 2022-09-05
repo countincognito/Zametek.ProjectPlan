@@ -6,8 +6,6 @@
     <!--Avalonia doesen't support TrimMode=link currently,but we are working on that https://github.com/AvaloniaUI/Avalonia/issues/6892 -->
     <TrimMode>copyused</TrimMode>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-	<EnablePreviewFeatures>True</EnablePreviewFeatures>
-	<LangVersion>preview</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />

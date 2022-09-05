@@ -21,7 +21,7 @@ namespace Zametek.View.ProjectPlan
 
         #endregion
 
-        public DialogService(IMapper mapper!!)
+        public DialogService(IMapper mapper)//!!)
         {
             m_Mapper = mapper;
         }

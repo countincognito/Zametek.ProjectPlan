@@ -22,7 +22,7 @@ namespace Zametek.View.ProjectPlan
             AvaloniaXamlLoader.Load(this);
         }
 
-        private void ScrollViewer_PointerMoved(object? sender, PointerEventArgs e!!)
+        private void ScrollViewer_PointerMoved(object? sender, PointerEventArgs e)//!!)
         {
             var scrollViewer = sender as ScrollViewer;
             if (scrollViewer is not null
@@ -50,7 +50,7 @@ namespace Zametek.View.ProjectPlan
             }
         }
 
-        private void ScrollViewer_PointerPressed(object? sender, PointerPressedEventArgs e!!)
+        private void ScrollViewer_PointerPressed(object? sender, PointerPressedEventArgs e)//!!)
         {
             var scrollViewer = sender as ScrollViewer;
             if (scrollViewer is not null
@@ -66,7 +66,7 @@ namespace Zametek.View.ProjectPlan
             }
         }
 
-        private void Slider_PointerWheelChanged(object? sender, PointerWheelEventArgs e!!)
+        private void Slider_PointerWheelChanged(object? sender, PointerWheelEventArgs e)//!!)
         {
             var slider = sender as Slider;
             if (slider is not null)

@@ -2,7 +2,7 @@
 {
     public static class Converter
     {
-        public static ProjectPlanModel Upgrade(v0_1_0.ProjectPlanModel projectPlan!!)
+        public static ProjectPlanModel Upgrade(v0_1_0.ProjectPlanModel projectPlan)//!!)
         {
             GraphCompilationErrorsModel? errors = null;
             bool errorsExist = (projectPlan.GraphCompilation?.AllResourcesExplicitTargetsButNotAllActivitiesTargeted ?? false)

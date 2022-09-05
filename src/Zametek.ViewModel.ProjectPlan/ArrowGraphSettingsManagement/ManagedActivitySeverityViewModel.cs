@@ -18,9 +18,9 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ManagedActivitySeverityViewModel(
-            IArrowGraphSettingsManagerViewModel arrowGraphSettingsManagerViewModel!!,
+            IArrowGraphSettingsManagerViewModel arrowGraphSettingsManagerViewModel,//!!,
             Guid id,
-            ActivitySeverityModel activitySeverity!!)
+            ActivitySeverityModel activitySeverity)//!!)
         {
             m_ArrowGraphSettingsManagerViewModel = arrowGraphSettingsManagerViewModel;
             Id = id;

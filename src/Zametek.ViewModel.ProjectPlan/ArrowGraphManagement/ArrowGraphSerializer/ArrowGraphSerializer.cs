@@ -45,7 +45,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private static string BuildNodeLabel(EventModel eventModel!!)
+        private static string BuildNodeLabel(EventModel eventModel)//!!)
         {
             string labelText = string.Empty;
 
@@ -58,7 +58,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return labelText;
         }
 
-        private static DiagramNodeModel BuildDiagramNode(EventNodeModel eventNode!!)
+        private static DiagramNodeModel BuildDiagramNode(EventNodeModel eventNode)//!!)
         {
             EventModel eventModel = eventNode.Content;
 
@@ -78,7 +78,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         }
 
-        private static (bool isVisible, string labelText) BuildSingleLineEdgeLabel(ActivityModel activityModel!!)
+        private static (bool isVisible, string labelText) BuildSingleLineEdgeLabel(ActivityModel activityModel)//!!)
         {
             var labelText = new StringBuilder();
             bool isVisible = false;
@@ -115,7 +115,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return (isVisible, labelText.ToString());
         }
 
-        private static (bool isVisible, string labelText) BuildMultiLineEdgeLabel(ActivityModel activityModel!!)
+        private static (bool isVisible, string labelText) BuildMultiLineEdgeLabel(ActivityModel activityModel)//!!)
         {
             var labelText = new StringBuilder();
             bool isVisible = false;
@@ -155,8 +155,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static DiagramArrowGraphModel BuildArrowGraphDiagram(
-            ArrowGraphModel arrowGraphModel!!,
-            ArrowGraphSettingsModel arrowGraphSettingsModel!!,
+            ArrowGraphModel arrowGraphModel,//!!,
+            ArrowGraphSettingsModel arrowGraphSettingsModel,//!!,
             bool multiLineEdgeLabels = false)
         {
             // Perform validity check.

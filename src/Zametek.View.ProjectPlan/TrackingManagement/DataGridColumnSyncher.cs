@@ -118,7 +118,10 @@ namespace Zametek.View.ProjectPlan
 
 
 
-        private static void UpdateColumns(DataGrid dg!!, int? startColumnIndex, int? endColumnIndex)
+        private static void UpdateColumns(
+            DataGrid dg,//!!,
+            int? startColumnIndex,
+            int? endColumnIndex)
         {
             int initialColumnCount = GetInitialCount(dg).GetValueOrDefault();
             int currentColumnCount = dg.Columns.Count;

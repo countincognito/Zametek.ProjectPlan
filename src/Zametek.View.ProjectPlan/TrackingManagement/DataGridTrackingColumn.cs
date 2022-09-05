@@ -10,7 +10,7 @@ namespace Zametek.View.ProjectPlan
         private readonly int m_Index;
         private readonly string m_DisplayName;
 
-        public DataGridTrackingColumn(int index, string displayName!!)
+        public DataGridTrackingColumn(int index, string displayName)//!!)
         {
             m_Index = index;
             m_DisplayName = displayName;

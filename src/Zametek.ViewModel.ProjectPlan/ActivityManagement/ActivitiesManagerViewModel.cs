@@ -23,8 +23,8 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ActivitiesManagerViewModel(
-            ICoreViewModel coreViewModel!!,
-            IDialogService dialogService!!)
+            ICoreViewModel coreViewModel,//!!,
+            IDialogService dialogService)//!!)
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;

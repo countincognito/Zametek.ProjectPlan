@@ -10,7 +10,7 @@ namespace Zametek.ViewModel.ProjectPlan
             int days,
             bool showDates,
             DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator!!)
+            IDateTimeCalculator dateTimeCalculator)//!!)
         {
             if (showDates)
             {
@@ -25,7 +25,7 @@ namespace Zametek.ViewModel.ProjectPlan
             int days,
             bool showDates,
             DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator!!)
+            IDateTimeCalculator dateTimeCalculator)//!!)
         {
             double output = days;
             if (showDates)

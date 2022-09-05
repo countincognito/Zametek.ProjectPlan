@@ -44,10 +44,10 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public EarnedValueChartManagerViewModel(
-            ICoreViewModel coreViewModel!!,
-            ISettingService settingService!!,
-            IDialogService dialogService!!,
-            IDateTimeCalculator dateTimeCalculator!!)
+            ICoreViewModel coreViewModel,//!!,
+            ISettingService settingService,//!!,
+            IDialogService dialogService,//!!,
+            IDateTimeCalculator dateTimeCalculator)//!!)
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
@@ -143,8 +143,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static PlotModel BuildEarnedValueChartPlotModel(
-            IDateTimeCalculator dateTimeCalculator!!,
-            TrackingSeriesSetModel trackingSeriesSet!!,
+            IDateTimeCalculator dateTimeCalculator,//!!,
+            TrackingSeriesSetModel trackingSeriesSet,//!!,
             bool showDates,
             DateTime projectStartDateTime)
         {
@@ -180,8 +180,8 @@ namespace Zametek.ViewModel.ProjectPlan
             plotModel.Legends.Add(legend);
 
             void PopulateLineSeries(
-                LineSeries lineSeries!!,
-                IList<TrackingPointModel> pointSeries!!)
+                LineSeries lineSeries,//!!,
+                IList<TrackingPointModel> pointSeries)//!!)
             {
                 if (pointSeries.Any())
                 {
@@ -223,7 +223,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static Axis BuildEarnedValueChartXAxis(
-            IDateTimeCalculator dateTimeCalculator!!,
+            IDateTimeCalculator dateTimeCalculator,//!!,
             int finishTime,
             bool showDates,
             DateTime projectStartDateTime)

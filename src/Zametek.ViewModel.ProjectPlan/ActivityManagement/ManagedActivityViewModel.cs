@@ -36,10 +36,10 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ManagedActivityViewModel(
-            ICoreViewModel coreViewModel!!,
-            IDependentActivity<int, int> dependentActivity!!,
-            IDateTimeCalculator dateTimeCalculator!!,
-            VertexGraphCompiler<int, int, IDependentActivity<int, int>> vertexGraphCompiler!!,
+            ICoreViewModel coreViewModel,//!!,
+            IDependentActivity<int, int> dependentActivity,//!!,
+            IDateTimeCalculator dateTimeCalculator,//!!,
+            VertexGraphCompiler<int, int, IDependentActivity<int, int>> vertexGraphCompiler,//!!,
             DateTimeOffset projectStart,
             IEnumerable<TrackerModel>? trackers,
             DateTimeOffset? minimumEarliestStartDateTime,
@@ -310,7 +310,7 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(AllocatedToResourcesString));
         }
 
-        private void AddTrackers(IEnumerable<TrackerModel> trackerModels!!)
+        private void AddTrackers(IEnumerable<TrackerModel> trackerModels)//!!)
         {
             foreach (TrackerModel trackerModel in trackerModels)
             {

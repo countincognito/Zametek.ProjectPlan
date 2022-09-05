@@ -29,9 +29,9 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public TrackingManagerViewModel(
-            ICoreViewModel coreViewModel!!,
-            IDialogService dialogService!!,
-            IDateTimeCalculator dateTimeCalculator!!)
+            ICoreViewModel coreViewModel,//!!,
+            IDialogService dialogService,//!!,
+            IDateTimeCalculator dateTimeCalculator)//!!)
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;

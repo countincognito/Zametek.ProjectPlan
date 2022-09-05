@@ -18,9 +18,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public SelectableResourceViewModel(
             int id,
-            string name!!,
+            string name,//!!,
             bool isSelected,
-            ResourceSelectorViewModel resourceSelectorViewModel!!)
+            ResourceSelectorViewModel resourceSelectorViewModel)//!!)
         {
             Id = id;
             m_Name = name;

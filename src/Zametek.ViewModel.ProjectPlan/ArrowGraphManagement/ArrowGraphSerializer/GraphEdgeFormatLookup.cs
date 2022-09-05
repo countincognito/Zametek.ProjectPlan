@@ -23,7 +23,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public GraphEdgeFormatLookup(IEnumerable<EdgeTypeFormatModel> edgeTypeFormats!!)
+        public GraphEdgeFormatLookup(IEnumerable<EdgeTypeFormatModel> edgeTypeFormats)//!!)
         {
             m_EdgeTypeDashLookup = new Dictionary<EdgeType, EdgeDashStyle>();
             m_EdgeTypeWeightLookup = new Dictionary<EdgeType, int>();

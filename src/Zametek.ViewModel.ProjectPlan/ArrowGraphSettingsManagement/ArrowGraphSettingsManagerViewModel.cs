@@ -29,9 +29,9 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ArrowGraphSettingsManagerViewModel(
-            ICoreViewModel coreViewModel!!,
-            ISettingService settingService!!,
-            IDialogService dialogService!!)
+            ICoreViewModel coreViewModel,//!!,
+            ISettingService settingService,//!!,
+            IDialogService dialogService)//!!)
         {
             m_Lock = new object();
             m_Current = new ArrowGraphSettingsModel();
@@ -210,7 +210,7 @@ namespace Zametek.ViewModel.ProjectPlan
             AreSettingsUpdated = false;
         }
 
-        private void ProcessSettings(ArrowGraphSettingsModel arrowGraphSettings!!)
+        private void ProcessSettings(ArrowGraphSettingsModel arrowGraphSettings)//!!)
         {
             lock (m_Lock)
             {

@@ -51,7 +51,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return s_Whitespace.Replace(input, string.Empty);
         }
 
-        public static IList<int> Parse(string input!!)
+        public static IList<int> Parse(string input)//!!)
         {
             return input
                 .Split(new[] { Separator }, StringSplitOptions.RemoveEmptyEntries)

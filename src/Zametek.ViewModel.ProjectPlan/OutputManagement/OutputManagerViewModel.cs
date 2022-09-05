@@ -25,9 +25,9 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public OutputManagerViewModel(
-            ICoreViewModel coreViewModel!!,
-            IDialogService dialogService!!,
-            IDateTimeCalculator dateTimeCalculator!!)
+            ICoreViewModel coreViewModel,//!!,
+            IDialogService dialogService,//!!,
+            IDateTimeCalculator dateTimeCalculator)//!!)
         {
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
@@ -93,8 +93,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private static string CalculateActivitySchedules(
             bool showDates,
             DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator!!,
-            IEnumerable<ResourceSeriesModel> resourceSeriesCollection!!)
+            IDateTimeCalculator dateTimeCalculator,//!!,
+            IEnumerable<ResourceSeriesModel> resourceSeriesCollection)//!!)
         {
             var output = new StringBuilder();
 
@@ -128,8 +128,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private void BuildCompilationOutput(
-            IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation!!,
-            ResourceSeriesSetModel resourceSeriesSet!!)
+            IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation,//!!,
+            ResourceSeriesSetModel resourceSeriesSet)//!!)
         {
             lock (m_Lock)
             {

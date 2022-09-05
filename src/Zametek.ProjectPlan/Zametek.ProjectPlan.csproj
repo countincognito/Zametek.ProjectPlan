@@ -6,8 +6,6 @@
     <!--Avalonia doesen't support TrimMode=link currently,but we are working on that https://github.com/AvaloniaUI/Avalonia/issues/6892 -->
     <TrimMode>copyused</TrimMode>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-	<EnablePreviewFeatures>True</EnablePreviewFeatures>
-	<LangVersion>preview</LangVersion>
 	<UserSecretsId>ProjectPlan-515098bc-c9a8-47a9-a73d-a3d6104d2953</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
