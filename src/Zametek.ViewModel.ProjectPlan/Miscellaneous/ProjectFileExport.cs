@@ -452,7 +452,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     AddDateFromProjectStartCase(x, y, z, showDates, projectStart, dateTimeCalculator);
 
                 IRow titleRow = sheet.CreateRow(rowIndex);
-                // Title row (leave a gap for the Activity ID column).
+
+                // Title row (Activity ID column).
+                ICell iDCell = titleRow.CreateCell(titleColumnIndex);
+                iDCell.CellStyle = titleStyle;
+                AddToCell(nameof(ActivityModel.Id), iDCell, dateTimeTitleCellStyle);
                 titleColumnIndex++;
 
                 for (int i = 0; i < trackerCount; i++)

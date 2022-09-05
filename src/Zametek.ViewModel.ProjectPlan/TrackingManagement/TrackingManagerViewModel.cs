@@ -22,7 +22,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly IDisposable? m_RaiseTrackerCountSub;
 
-        private const int m_MaxAvailableColumnsShown = 10;
+        private const int m_MaxAvailableColumnsShown = 30;
 
         #endregion
 

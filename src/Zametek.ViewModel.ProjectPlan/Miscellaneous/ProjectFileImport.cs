@@ -427,8 +427,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             IWorkbook workbook = new XSSFWorkbook(file);
             DateTimeOffset projectStart = new(DateTime.Today);
-            List<DependentActivityModel> dependentActivities = new();
-            List<ResourceModel> resources = new();
+            Dictionary<int, DependentActivityModel> dependentActivities = new();
+            Dictionary<int, ResourceModel> resources = new();
             double defaultUnitCost = 1;
             List<ActivitySeverityModel> activitySeverities = new();
 
@@ -622,11 +622,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         if (id is not null)
                         {
-                            dependentActivities.Add(new DependentActivityModel
+                            int idVal = id.GetValueOrDefault();
+                            dependentActivities.TryAdd(idVal, new DependentActivityModel
                             {
                                 Activity = new ActivityModel
                                 {
-                                    Id = id.GetValueOrDefault(),
+                                    Id = idVal,
                                     Name = name,
                                     TargetResources = targetResources,
                                     TargetResourceOperator = targetResourceOperator,
@@ -734,10 +735,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         if (id is not null)
                         {
-                            resources.Add(new ResourceModel
+                            int idVal = id.GetValueOrDefault();
+                            resources.TryAdd(idVal, new ResourceModel
                             {
 
-                                Id = id.GetValueOrDefault(),
+                                Id = idVal,
                                 Name = name,
                                 IsExplicitTarget = isExplicitTarget,
                                 InterActivityAllocationType = interActivityAllocationType,
@@ -823,12 +825,92 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
             }
+            {
+                ISheet? percentageCompleteSheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetTrackerPercentageComplete);
+                ISheet? daysIncludedSheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetTrackerDaysIncluded);
+                if (percentageCompleteSheet is not null
+                    && daysIncludedSheet is not null)
+                {
+                    DataTable percentageCompleteTable = SheetToDataTable(percentageCompleteSheet);
+                    int percentageCompleteColumnCount = percentageCompleteTable.Columns.Count;
+                    int percentageCompleteRowCount = percentageCompleteTable.Rows.Count;
+
+                    DataTable daysIncludedTable = SheetToDataTable(daysIncludedSheet);
+                    int daysIncludedColumnCount = daysIncludedTable.Columns.Count;
+                    int daysIncludedRowCount = daysIncludedTable.Rows.Count;
+
+                    if (percentageCompleteColumnCount == daysIncludedColumnCount
+                        && percentageCompleteRowCount == daysIncludedRowCount)
+                    {
+                        for (int rowIndex = 0; rowIndex < percentageCompleteRowCount; rowIndex++)
+                        {
+                            DataRow percentageCompleteRow = percentageCompleteTable.Rows[rowIndex];
+                            DataRow daysIncludedRow = daysIncludedTable.Rows[rowIndex];
+
+                            // Check IDs.
+                            int columnIndex = 0;
+                            int? percentageCompleteId = null;
+                            int? daysIncludedId = null;
+
+                            {
+                                if (int.TryParse(percentageCompleteRow[columnIndex]?.ToString(), out int output))
+                                {
+                                    percentageCompleteId = output;
+                                }
+                            }
+                            {
+                                if (int.TryParse(daysIncludedRow[columnIndex]?.ToString(), out int output))
+                                {
+                                    daysIncludedId = output;
+                                }
+                            }
+
+                            if (percentageCompleteId.HasValue
+                                && daysIncludedId.HasValue
+                                && percentageCompleteId == daysIncludedId
+                                && dependentActivities.TryGetValue(percentageCompleteId.GetValueOrDefault(), out DependentActivityModel? dependentActivity))
+                            {
+                                dependentActivity.Activity.Trackers.Clear();
+
+                                for (columnIndex = 1; columnIndex < percentageCompleteColumnCount; columnIndex++)
+                                {
+                                    int percentageComplete = 0;
+                                    bool isIncluded = false;
+
+                                    {
+                                        if (int.TryParse(percentageCompleteRow[columnIndex]?.ToString(), out int output))
+                                        {
+                                            percentageComplete = output;
+                                        }
+                                    }
+                                    {
+                                        if (bool.TryParse(daysIncludedRow[columnIndex]?.ToString(), out bool output))
+                                        {
+                                            isIncluded = output;
+                                        }
+                                    }
+
+                                    int trackerIndex = columnIndex - 1;
+                                    dependentActivity.Activity.Trackers.Add(new TrackerModel
+                                    {
+                                        Index = trackerIndex,
+                                        Time = trackerIndex,
+                                        ActivityId = dependentActivity.Activity.Id,
+                                        PercentageComplete = percentageComplete,
+                                        IsIncluded = isIncluded
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             return new ProjectImportModel
             {
                 ProjectStart = projectStart,
-                DependentActivities = dependentActivities,
-                Resources = resources,
+                DependentActivities = dependentActivities.Values.ToList(),
+                Resources = resources.Values.ToList(),
                 DefaultUnitCost = defaultUnitCost,
                 ActivitySeverities = activitySeverities,
             };

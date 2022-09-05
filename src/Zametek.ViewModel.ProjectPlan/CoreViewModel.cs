@@ -707,8 +707,6 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    //m_ArrowGraph = value;
-                    //this.RaisePropertyChanged();
                     this.RaiseAndSetIfChanged(ref m_ArrowGraph, value);
                 }
             }
