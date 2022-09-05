@@ -49,6 +49,7 @@ namespace Zametek.View.ProjectPlan
             await ShowMessageBoxAsync(new MessageBoxStandardParams
             {
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                SizeToContent = SizeToContent.WidthAndHeight,
                 ContentTitle = title,
                 ContentMessage = message,
                 Markdown = markdown
@@ -135,6 +136,7 @@ namespace Zametek.View.ProjectPlan
                 ContentTitle = title,
                 ContentMessage = message,
                 ButtonDefinitions = ButtonEnum.YesNo,
+                Icon = Icon.Info,
                 Markdown = markdown
             });
             return result == ButtonResult.Yes;

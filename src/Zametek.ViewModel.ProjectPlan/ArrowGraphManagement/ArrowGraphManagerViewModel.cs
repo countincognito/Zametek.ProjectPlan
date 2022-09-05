@@ -1,19 +1,12 @@
 ﻿using Avalonia.Svg.Skia;
-using Microsoft.Msagl.Core.Geometry;
-using Microsoft.Msagl.Core.Geometry.Curves;
-using Microsoft.Msagl.Drawing;
-using Microsoft.Msagl.Miscellaneous;
 using ReactiveUI;
 using SkiaSharp;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Text;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Maths.Graphs;
 using Zametek.Utility;
-using System;
 
 namespace Zametek.ViewModel.ProjectPlan
 {

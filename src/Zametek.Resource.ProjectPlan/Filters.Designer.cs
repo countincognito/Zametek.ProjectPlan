@@ -241,6 +241,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to pdf.
+        /// </summary>
+        public static string Filter_PdfFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_PdfFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PDF.
+        /// </summary>
+        public static string Filter_PdfFileType {
+            get {
+                return ResourceManager.GetString("Filter_PdfFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to zpp.
         /// </summary>
         public static string Filter_ProjectPlanFileExtension {

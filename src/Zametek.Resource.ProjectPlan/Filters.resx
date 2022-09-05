@@ -177,6 +177,12 @@
   <data name="Filter_MicrosoftProjectXmlFileExtension" xml:space="preserve">
     <value>xml</value>
   </data>
+  <data name="Filter_PdfFileExtension" xml:space="preserve">
+    <value>pdf</value>
+  </data>
+  <data name="Filter_PdfFileType" xml:space="preserve">
+    <value>PDF</value>
+  </data>
   <data name="Filter_ProjectPlanFileExtension" xml:space="preserve">
     <value>zpp</value>
   </data>

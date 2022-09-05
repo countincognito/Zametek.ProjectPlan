@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -19,9 +20,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly object m_Lock;
 
-        private static readonly IList<IFileFilter> s_ImageFileFilters =
+        private static readonly IList<IFileFilter> s_ExportFileFilters =
             new List<IFileFilter>
             {
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_ImageJpegFileType,
+                    Extensions = new List<string>
+                    {
+                        Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension
+                    }
+                },
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ImagePngFileType,
@@ -30,6 +39,14 @@ namespace Zametek.ViewModel.ProjectPlan
                         Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension
                     }
                 },
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_PdfFileType,
+                    Extensions = new List<string>
+                    {
+                        Resource.ProjectPlan.Filters.Filter_PdfFileExtension
+                    }
+                }
             };
 
         private readonly ICoreViewModel m_CoreViewModel;
@@ -277,16 +294,49 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             else
             {
-                using var stream = File.OpenWrite(filename);
-
                 if (ImageBounds is Rect bounds)
                 {
-                    OxyPlot.Avalonia.PngExporter.Export(
-                        EarnedValueChartPlotModel,
-                        stream,
-                        Convert.ToInt32(bounds.Width),
-                        Convert.ToInt32(bounds.Height),
-                        OxyColors.White);
+                    string fileExtension = Path.GetExtension(filename);
+                    //byte[]? data = null;
+
+                    fileExtension.ValueSwitchOn()
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
+                        {
+                            using var stream = File.OpenWrite(filename);
+                            OxyPlot.SkiaSharp.JpegExporter.Export(
+                                EarnedValueChartPlotModel,
+                                stream,
+                                Convert.ToInt32(bounds.Width),
+                                Convert.ToInt32(bounds.Height),
+                                100);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
+                        {
+                            // Use Avalonia exporter so the background can be white.
+                            using var stream = File.OpenWrite(filename);
+                            OxyPlot.Avalonia.PngExporter.Export(
+                                EarnedValueChartPlotModel,
+                                stream,
+                                Convert.ToInt32(bounds.Width),
+                                Convert.ToInt32(bounds.Height),
+                                OxyColors.White);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
+                        {
+                            using var stream = File.OpenWrite(filename);
+                            OxyPlot.SkiaSharp.PdfExporter.Export(
+                                EarnedValueChartPlotModel,
+                                stream,
+                                Convert.ToInt32(bounds.Width),
+                                Convert.ToInt32(bounds.Height));
+                        })
+                        .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
+
+                    //if (data is not null)
+                    //{
+                    //    using var stream = File.OpenWrite(filename);
+                    //    await stream.WriteAsync(data);
+                    //}
                 }
             }
         }
@@ -297,7 +347,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 string projectTitle = m_SettingService.ProjectTitle;
                 string directory = m_SettingService.ProjectDirectory;
-                string? filename = await m_DialogService.ShowSaveFileDialogAsync(projectTitle, directory, s_ImageFileFilters);
+                string? filename = await m_DialogService.ShowSaveFileDialogAsync(projectTitle, directory, s_ExportFileFilters);
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
