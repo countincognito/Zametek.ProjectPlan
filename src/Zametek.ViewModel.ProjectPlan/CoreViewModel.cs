@@ -101,7 +101,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     core => core.ResourceSettings,
                     core => core.ArrowGraphSettings,
-                    core => core.UseBusinessDays)
+                    core => core.UseBusinessDays,
+                    core => core.ViewEarnedValueProjections)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ =>
                 {
@@ -350,7 +351,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static TrackingSeriesSetModel CalculateTrackingSeriesSet(IEnumerable<ActivityModel> activities)//!!)
+        private TrackingSeriesSetModel CalculateTrackingSeriesSet(IEnumerable<ActivityModel> activities)//!!)
         {
             IList<ActivityModel> orderedActivities = activities
                 .Select(x => x.CloneObject())
@@ -365,14 +366,33 @@ namespace Zametek.ViewModel.ProjectPlan
                 new TrackingPointModel()
             };
 
+            // Plan Projection.
+            List<TrackingPointModel> planProjectionPointSeries = new()
+            {
+                // Starting point.
+                new TrackingPointModel()
+            };
+
             // Progress.
             List<TrackingPointModel> progressPointSeries = new()
             {
                 new TrackingPointModel()
             };
 
+            // Progress Projection.
+            List<TrackingPointModel> progressProjectionPointSeries = new()
+            {
+                new TrackingPointModel()
+            };
+
             // Effort.
             List<TrackingPointModel> effortPointSeries = new()
+            {
+                new TrackingPointModel()
+            };
+
+            // Effort Projection.
+            List<TrackingPointModel> effortProjectionPointSeries = new()
             {
                 new TrackingPointModel()
             };
@@ -463,15 +483,65 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
+            if (ViewEarnedValueProjections)
+            {
+                planProjectionPointSeries.Add(planPointSeries.Last());
+
+                if (progressPointSeries.Count >= 2)
+                {
+                    var projectedLinearFit = MathNet.Numerics.Fit.LineThroughOrigin(
+                        progressPointSeries.Select(p => (double)p.Time).ToArray(),
+                        progressPointSeries.Select(p => p.Value).ToArray());
+
+                    var lastTrackingPoint = planPointSeries.Last();
+                    var projectedCompletion = lastTrackingPoint.Value / projectedLinearFit;
+
+                    progressProjectionPointSeries.Add(new TrackingPointModel
+                    {
+                        ActivityId = lastTrackingPoint.ActivityId,
+                        ActivityName = lastTrackingPoint.ActivityName,
+                        Value = lastTrackingPoint.Value,
+                        ValuePercentage = lastTrackingPoint.ValuePercentage,
+                        Time = (int)Math.Ceiling(projectedCompletion)
+                    });
+                }
+
+                if (effortPointSeries.Count >= 2)
+                {
+                    // we want to project effort out to the greater of the plan or the progress projection
+                    var projectedCompletion = Math.Max(progressProjectionPointSeries.Last().Time,
+                        planProjectionPointSeries.Last().Time);
+
+                    var projectedLinearFit = MathNet.Numerics.Fit.LineThroughOrigin(
+                        effortPointSeries.Select(p => (double)p.Time).ToArray(),
+                        effortPointSeries.Select(p => p.Value).ToArray());
+
+                    var lastTrackingPoint = planPointSeries.Last();
+                    var projectedFinalEffort = projectedLinearFit * projectedCompletion;
+
+                    effortProjectionPointSeries.Add(new TrackingPointModel
+                    {
+                        ActivityId = lastTrackingPoint.ActivityId,
+                        ActivityName = lastTrackingPoint.ActivityName,
+                        Value = projectedFinalEffort,
+                        ValuePercentage = (projectedFinalEffort / lastTrackingPoint.Value) * 100,
+                        Time = projectedCompletion
+                    });
+                }
+            }
+
             var trackingSeriesSet = new TrackingSeriesSetModel
             {
                 Plan = planPointSeries,
+                PlanProjection = planProjectionPointSeries,
                 Progress = progressPointSeries,
-                Effort = effortPointSeries
+                ProgressProjection = progressProjectionPointSeries,
+                Effort = effortPointSeries,
+                EffortProjection = effortProjectionPointSeries
             };
             return trackingSeriesSet;
         }
-
+        
         private void BuildTrackingSeriesSet()
         {
             lock (m_Lock)
@@ -639,6 +709,16 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsProjectUpdated = true;
                     this.RaisePropertyChanged();
                 }
+            }
+        }
+
+        private bool m_ViewEarnedValueProjections;
+        public bool ViewEarnedValueProjections
+        {
+            get => m_ViewEarnedValueProjections;
+            set
+            {
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_ViewEarnedValueProjections, value);
             }
         }
 

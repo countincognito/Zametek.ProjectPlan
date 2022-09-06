@@ -225,6 +225,9 @@
   <data name="Label_Effort" xml:space="preserve">
     <value>Effort</value>
   </data>
+  <data name="Label_EffortProjection" xml:space="preserve">
+    <value>Effort Projection</value>
+  </data>
   <data name="Label_FibonacciRisk" xml:space="preserve">
     <value>Fibonacci Risk:</value>
   </data>
@@ -303,8 +306,17 @@
   <data name="Label_Plan" xml:space="preserve">
     <value>Plan</value>
   </data>
+  <data name="Label_PlanProjection" xml:space="preserve">
+    <value>Plan Projection</value>
+  </data>
   <data name="Label_Progress" xml:space="preserve">
     <value>Progress</value>
+  </data>
+  <data name="Label_ProgressProjection" xml:space="preserve">
+    <value>Progress Projection</value>
+  </data>
+  <data name="Label_ProjectCompletion" xml:space="preserve">
+    <value>Project Completion</value>
   </data>
   <data name="Label_ProjectStart" xml:space="preserve">
     <value>Project Start:</value>

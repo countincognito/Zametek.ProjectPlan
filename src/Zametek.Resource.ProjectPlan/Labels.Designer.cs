@@ -385,6 +385,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Effort Projection.
+        /// </summary>
+        public static string Label_EffortProjection {
+            get {
+                return ResourceManager.GetString("Label_EffortProjection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fibonacci Risk:.
         /// </summary>
         public static string Label_FibonacciRisk {
@@ -620,11 +629,38 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Plan Projection.
+        /// </summary>
+        public static string Label_PlanProjection {
+            get {
+                return ResourceManager.GetString("Label_PlanProjection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Progress.
         /// </summary>
         public static string Label_Progress {
             get {
                 return ResourceManager.GetString("Label_Progress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Progress Projection.
+        /// </summary>
+        public static string Label_ProgressProjection {
+            get {
+                return ResourceManager.GetString("Label_ProgressProjection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project Completion.
+        /// </summary>
+        public static string Label_ProjectCompletion {
+            get {
+                return ResourceManager.GetString("Label_ProjectCompletion", resourceCulture);
             }
         }
         

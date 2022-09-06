@@ -55,6 +55,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(om => om.m_CoreViewModel.UseBusinessDays)
                 .ToProperty(this, om => om.UseBusinessDays);
 
+            m_ViewEarnedValueProjections = this
+                .WhenAnyValue(om => om.m_CoreViewModel.ViewEarnedValueProjections)
+                .ToProperty(this, om => om.ViewEarnedValueProjections);
+
             m_ProjectStart = this
                 .WhenAnyValue(om => om.m_CoreViewModel.ProjectStart)
                 .ToProperty(this, om => om.ProjectStart);
@@ -65,7 +69,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     om => om.m_CoreViewModel.ResourceSeriesSet,
                     om => om.ShowDates,
                     om => om.UseBusinessDays,
-                    om => om.ProjectStart)
+                    om => om.ProjectStart,
+                    om => om.ViewEarnedValueProjections)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async result => await BuildCompilationOutputAsync(result.Item1, result.Item2));
 
@@ -82,6 +87,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<bool> m_UseBusinessDays;
         public bool UseBusinessDays => m_UseBusinessDays.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_ViewEarnedValueProjections;
+        public bool ViewEarnedValueProjections => m_ViewEarnedValueProjections.Value;
 
         private readonly ObservableAsPropertyHelper<DateTimeOffset> m_ProjectStart;
         public DateTimeOffset ProjectStart => m_ProjectStart.Value;

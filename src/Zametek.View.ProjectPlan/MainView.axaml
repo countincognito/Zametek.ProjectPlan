@@ -22,6 +22,7 @@
 		<KeyBinding Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}" Gesture="Ctrl+S" />
 		<KeyBinding Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}" Gesture="Ctrl+D" />
 		<KeyBinding Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}" Gesture="Ctrl+B" />
+		<KeyBinding Command="{Binding Path=ToggleViewEarnedValueProjectionsCommand, Mode=OneWay}" Gesture="Ctrl+E" />
 	</Window.KeyBindings>
 
 	<i:Interaction.Behaviors>
@@ -82,6 +83,15 @@
 						<CheckBox BorderThickness="0"
 								  IsHitTestVisible="False"
 								  IsChecked="{Binding Path=UseBusinessDays, Mode=OneWay}" />
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="{x:Static properties:Menus.Menu_ViewEarnedValueProjections}"
+						  Command="{Binding Path=ToggleViewEarnedValueProjectionsCommand, Mode=OneWay}"
+						  InputGesture="Ctrl+E">
+					<MenuItem.Icon>
+						<CheckBox BorderThickness="0"
+								  IsHitTestVisible="False"
+								  IsChecked="{Binding Path=ViewEarnedValueProjections, Mode=OneWay}" />
 					</MenuItem.Icon>
 				</MenuItem>
 			</MenuItem>

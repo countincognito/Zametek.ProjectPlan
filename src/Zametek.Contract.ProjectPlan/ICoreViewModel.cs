@@ -24,6 +24,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool UseBusinessDays { get; set; }
 
+        bool ViewEarnedValueProjections { get; set; }
+
         bool AutoCompile { get; set; }
 
         ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }

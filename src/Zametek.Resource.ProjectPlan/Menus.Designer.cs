@@ -232,6 +232,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to View _Earned Value Projections.
+        /// </summary>
+        public static string Menu_ViewEarnedValueProjections {
+            get {
+                return ResourceManager.GetString("Menu_ViewEarnedValueProjections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to View License.
         /// </summary>
         public static string Menu_ViewLicense {
