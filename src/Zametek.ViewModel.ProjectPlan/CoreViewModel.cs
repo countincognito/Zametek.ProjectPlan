@@ -385,11 +385,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (orderedActivities.All(x => x.EarliestFinishTime.HasValue))
                 {
                     int runningTotalTime = 0;
-                    foreach (ActivityModel activity in orderedActivities)
+                    for (var index = 0; index < orderedActivities.Count; index++)
                     {
+                        ActivityModel activity = orderedActivities[index];
+                        
+
                         int time = activity.EarliestFinishTime.GetValueOrDefault();
                         runningTotalTime += activity.Duration;
                         double percentage = totalTime == 0 ? 0.0 : 100.0 * runningTotalTime / totalTime;
+
+                        // Don't write out the point on the graph if there's going to be a further point on the same time.
+                        // This prevents having a straight vertical segment on the graph
+                        if (index < orderedActivities.Count - 2 && activity.EarliestFinishTime == orderedActivities[index + 1].EarliestFinishTime)
+                        {
+                            continue;
+                        }
+
                         planPointSeries.Add(new TrackingPointModel
                         {
                             Time = time,
