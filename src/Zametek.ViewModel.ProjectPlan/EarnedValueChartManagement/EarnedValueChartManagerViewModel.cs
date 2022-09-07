@@ -172,22 +172,30 @@ namespace Zametek.ViewModel.ProjectPlan
             bool showProjections)
         {
             var plotModel = new PlotModel();
+            const double defaultMaxPercentage = 100.0;
 
             int chartEnd = trackingSeriesSet.Plan
-                .Concat(trackingSeriesSet.PlanProjection)
                 .Concat(trackingSeriesSet.Progress)
-                .Concat(trackingSeriesSet.ProgressProjection)
                 .Concat(trackingSeriesSet.Effort)
-                .Concat(trackingSeriesSet.EffortProjection)
                 .Select(x => x.Time).DefaultIfEmpty().Max();
 
             double maxPercentage = trackingSeriesSet.Plan
-                .Concat(trackingSeriesSet.PlanProjection)
                 .Concat(trackingSeriesSet.Progress)
-                .Concat(trackingSeriesSet.ProgressProjection)
                 .Concat(trackingSeriesSet.Effort)
-                .Concat(trackingSeriesSet.EffortProjection)
-                .Select(x => x.ValuePercentage).DefaultIfEmpty(100.0).Max();
+                .Select(x => x.ValuePercentage).DefaultIfEmpty(defaultMaxPercentage).Max();
+
+            if (showProjections)
+            {
+                chartEnd = Math.Max(chartEnd, trackingSeriesSet.PlanProjection
+                    .Concat(trackingSeriesSet.ProgressProjection)
+                    .Concat(trackingSeriesSet.EffortProjection)
+                    .Select(x => x.Time).DefaultIfEmpty().Max());
+
+                maxPercentage = Math.Max(maxPercentage, trackingSeriesSet.PlanProjection
+                    .Concat(trackingSeriesSet.ProgressProjection)
+                    .Concat(trackingSeriesSet.EffortProjection)
+                    .Select(x => x.ValuePercentage).DefaultIfEmpty(defaultMaxPercentage).Max());
+            }
 
             plotModel.Axes.Add(BuildEarnedValueChartXAxis(dateTimeCalculator, chartEnd, showDates, projectStartDateTime));
             plotModel.Axes.Add(BuildEarnedValueChartYAxis(maxPercentage));
@@ -219,7 +227,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     TextHorizontalAlignment = HorizontalAlignment.Left,
                     TextLinePosition = 0.05,
                     Type = LineAnnotationType.Horizontal,
-                    Y = 100
+                    Y = defaultMaxPercentage
                 });
             }
 
