@@ -10,11 +10,9 @@
 
     <Application.Name>Project Plan</Application.Name>
 
-    <!-- A blank native menu at least ensures that the About Avalonia option is hidden -->
     <NativeMenu.Menu>
         <NativeMenu>
-            <!-- I am unclear on how to bind a command from an App xaml file ... -->
-            <!-- <NativeMenuItem Header="About Project Plan" Command="{Binding Path=ShowAboutCommand}" /> -->
+            <NativeMenuItem Header="About Project Plan" Command="{Binding Path=OpenAboutCommand}" />
         </NativeMenu>
     </NativeMenu.Menu>
 

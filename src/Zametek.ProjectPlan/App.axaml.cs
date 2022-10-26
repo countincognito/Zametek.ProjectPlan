@@ -22,6 +22,8 @@ namespace Zametek.ProjectPlan
         {
             IMainViewModel mainViewModel = GetRequiredService<IMainViewModel>();
 
+            DataContext = mainViewModel;
+
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
             {
                 MainView mainView = new()
