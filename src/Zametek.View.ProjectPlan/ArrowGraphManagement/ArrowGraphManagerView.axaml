@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:i="using:Avalonia.Xaml.Interactivity"
 	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
-			 xmlns:properties="using:Zametek.Resource.ProjectPlan"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -68,7 +68,7 @@
 							  VerticalScrollBarVisibility="Auto">
 					<ScrollViewer.ContextMenu>
 						<ContextMenu>
-							<MenuItem Header="{x:Static properties:Menus.Menu_SaveAs}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
 									  Command="{Binding Path=SaveArrowGraphImageFileCommand, Mode=OneWay}"/>
 						</ContextMenu>
 					</ScrollViewer.ContextMenu>

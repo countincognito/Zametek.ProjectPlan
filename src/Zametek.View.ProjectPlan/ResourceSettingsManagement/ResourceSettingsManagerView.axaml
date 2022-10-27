@@ -5,7 +5,7 @@
 			 xmlns:i="using:Avalonia.Xaml.Interactivity"
 	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
 			 xmlns:controls="using:Avalonia.Controls"
-			 xmlns:properties="using:Zametek.Resource.ProjectPlan"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
 			 xmlns:colorpicker="using:Egorozh.ColorPicker.Dialog"
@@ -37,7 +37,7 @@
                     VerticalContentAlignment="Center"
 					IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
                     Command="{Binding Path=AddManagedResourceCommand, Mode=OneWay}"
-                    Content="{x:Static properties:Labels.Label_AddManagedResource}"/>
+                    Content="{x:Static resources:Labels.Label_AddManagedResource}"/>
 
 			<Button DockPanel.Dock="Top"
 					IsTabStop="True"
@@ -47,13 +47,13 @@
                     VerticalContentAlignment="Center"
 					IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
                     Command="{Binding Path=RemoveManagedResourcesCommand, Mode=OneWay}"
-                    Content="{x:Static properties:Labels.Label_DeleteManagedResources}"/>
+                    Content="{x:Static resources:Labels.Label_DeleteManagedResources}"/>
 
 			<Label DockPanel.Dock="Top"
 				   IsTabStop="False"
 				   VerticalAlignment="Center"
 				   VerticalContentAlignment="Center"
-				   Content="{x:Static properties:Labels.Label_DefaultUnitCost}"
+				   Content="{x:Static resources:Labels.Label_DefaultUnitCost}"
 				   Height="25"
 				   Margin="0,0,0,0"/>
 
@@ -78,7 +78,7 @@
 				   IsTabStop="False"
 				   VerticalAlignment="Center"
 				   VerticalContentAlignment="Center"
-				   Content="{x:Static properties:Labels.Label_DisableResources}"
+				   Content="{x:Static resources:Labels.Label_DisableResources}"
 				   Height="25"
 				   Margin="0,0,0,0"/>
 
@@ -166,8 +166,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_Id}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_Id}"/>
+											   Text="{x:Static resources:Labels.Label_Id}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -195,8 +195,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_IsExplicitTarget}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_IsExplicitTarget}"/>
+											   Text="{x:Static resources:Labels.Label_IsExplicitTarget}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsExplicitTarget}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -232,8 +232,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_InterActivityAllocationType}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_InterActivityAllocationType}"/>
+											   Text="{x:Static resources:Labels.Label_InterActivityAllocationType}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_InterActivityAllocationType}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -271,8 +271,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_UnitCost}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_UnitCost}"/>
+											   Text="{x:Static resources:Labels.Label_UnitCost}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_UnitCost}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -320,8 +320,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_DisplayOrder}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_DisplayOrder}"/>
+											   Text="{x:Static resources:Labels.Label_DisplayOrder}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_DisplayOrder}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -370,8 +370,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_ColorFormat}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_ColorFormat}"/>
+											   Text="{x:Static resources:Labels.Label_ColorFormat}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ColorFormat}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -397,8 +397,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_ResourceName}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_ResourceName}"/>
+											   Text="{x:Static resources:Labels.Label_ResourceName}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ResourceName}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>

@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:i="using:Avalonia.Xaml.Interactivity"
 	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
-			 xmlns:properties="using:Zametek.Resource.ProjectPlan"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:oxy="using:OxyPlot.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -24,7 +24,7 @@
 				   DockPanel.Dock="Top"
 				   IsTabStop="False"
 				   Margin="0,0,0,3"
-				   Content="{x:Static properties:Labels.Label_AvailableFrom}"/>
+				   Content="{x:Static resources:Labels.Label_AvailableFrom}"/>
 
 			<TextBlock VerticalAlignment="Center"
 					   HorizontalAlignment="Left"
@@ -40,7 +40,7 @@
 				   DockPanel.Dock="Top"
 				   IsTabStop="False"
 				   Margin="0,0,0,3"
-				   Content="{x:Static properties:Labels.Label_To}"/>
+				   Content="{x:Static resources:Labels.Label_To}"/>
 
 			<TextBlock VerticalAlignment="Center"
 					   HorizontalAlignment="Left"
@@ -58,7 +58,7 @@
                     VerticalAlignment="Center"
                     VerticalContentAlignment="Center"
                     Command="{Binding Path=AddTrackersCommand, Mode=OneWay}"
-                    Content="{x:Static properties:Labels.Label_AddColumn}"/>
+                    Content="{x:Static resources:Labels.Label_AddColumn}"/>
 
 			<Button DockPanel.Dock="Top"
 					IsTabStop="True"
@@ -68,7 +68,7 @@
                     VerticalAlignment="Center"
                     VerticalContentAlignment="Center"
                     Command="{Binding Path=RemoveTrackersCommand, Mode=OneWay}"
-                    Content="{x:Static properties:Labels.Label_DeleteColumn}"/>
+                    Content="{x:Static resources:Labels.Label_DeleteColumn}"/>
 
 			<Label VerticalContentAlignment="Center"
 				   HorizontalContentAlignment="Left"
@@ -76,7 +76,7 @@
 				   IsTabStop="True"
 				   Margin="0,0,0,3"
 				   Height="25"
-				   Content="{x:Static properties:Labels.Label_StartDay}"/>
+				   Content="{x:Static resources:Labels.Label_StartDay}"/>
 
 			<ComboBox DockPanel.Dock="Top"
 					  IsTabStop="True"
@@ -100,7 +100,7 @@
 				   IsTabStop="True"
 				   Margin="0,0,0,3"
 				   Height="25"
-				   Content="{x:Static properties:Labels.Label_DaysShown}"/>
+				   Content="{x:Static resources:Labels.Label_DaysShown}"/>
 			
 			<ComboBox DockPanel.Dock="Top"
 					  IsTabStop="True"
@@ -193,8 +193,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_Id}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_Id}"/>
+											   Text="{x:Static resources:Labels.Label_Id}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>

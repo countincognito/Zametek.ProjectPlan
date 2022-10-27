@@ -5,7 +5,7 @@
 			 xmlns:i="using:Avalonia.Xaml.Interactivity"
 	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
 		     xmlns:controls="using:Avalonia.Controls"
-			 xmlns:properties="using:Zametek.Resource.ProjectPlan"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
 			 xmlns:sys="using:System"
@@ -50,7 +50,7 @@
                     VerticalAlignment="Center"
                     VerticalContentAlignment="Center"
                     Command="{Binding Path=AddManagedActivityCommand, Mode=OneWay}"
-                    Content="{x:Static properties:Labels.Label_AddManagedActivity}"/>
+                    Content="{x:Static resources:Labels.Label_AddManagedActivity}"/>
 
 			<Button DockPanel.Dock="Top"
 					IsTabStop="True"
@@ -59,7 +59,7 @@
                     VerticalAlignment="Center"
                     VerticalContentAlignment="Center"
                     Command="{Binding Path=RemoveManagedActivitiesCommand, Mode=OneWay}"
-                    Content="{x:Static properties:Labels.Label_DeleteManagedActivity}"/>
+                    Content="{x:Static resources:Labels.Label_DeleteManagedActivity}"/>
 
 			<Grid/>
 		</DockPanel>
@@ -137,8 +137,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_Id}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_Id}"/>
+											   Text="{x:Static resources:Labels.Label_Id}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -165,8 +165,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_Duration}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_Duration}"/>
+											   Text="{x:Static resources:Labels.Label_Duration}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Duration}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -214,8 +214,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_ActivityName}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_ActivityName}"/>
+											   Text="{x:Static resources:Labels.Label_ActivityName}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ActivityName}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -255,8 +255,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_Dependencies}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_Dependencies}"/>
+											   Text="{x:Static resources:Labels.Label_Dependencies}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Dependencies}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -298,8 +298,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_ResourceDependencies}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_ResourceDependencies}"/>
+											   Text="{x:Static resources:Labels.Label_ResourceDependencies}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ResourceDependencies}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -328,8 +328,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_IsDummy}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_IsDummy}"/>
+											   Text="{x:Static resources:Labels.Label_IsDummy}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsDummy}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -361,8 +361,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_IsCritical}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_IsCritical}"/>
+											   Text="{x:Static resources:Labels.Label_IsCritical}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsCritical}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -394,8 +394,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_EarliestStartTime}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_EarliestStartTime}"/>
+											   Text="{x:Static resources:Labels.Label_EarliestStartTime}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_EarliestStartTime}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -432,8 +432,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_LatestStartTime}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_LatestStartTime}"/>
+											   Text="{x:Static resources:Labels.Label_LatestStartTime}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_LatestStartTime}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -470,8 +470,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_EarliestFinishTime}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_EarliestFinishTime}"/>
+											   Text="{x:Static resources:Labels.Label_EarliestFinishTime}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_EarliestFinishTime}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -508,8 +508,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_LatestFinishTime}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_LatestFinishTime}"/>
+											   Text="{x:Static resources:Labels.Label_LatestFinishTime}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_LatestFinishTime}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -546,8 +546,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_TotalSlack}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_TotalSlack}"/>
+											   Text="{x:Static resources:Labels.Label_TotalSlack}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_TotalSlack}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -577,8 +577,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_FreeSlack}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_FreeSlack}"/>
+											   Text="{x:Static resources:Labels.Label_FreeSlack}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_FreeSlack}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -608,8 +608,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_InterferingSlack}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_InterferingSlack}"/>
+											   Text="{x:Static resources:Labels.Label_InterferingSlack}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_InterferingSlack}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -637,8 +637,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_MinimumFreeSlack}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_MinimumFreeSlack}"/>
+											   Text="{x:Static resources:Labels.Label_MinimumFreeSlack}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_MinimumFreeSlack}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -688,8 +688,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_MinimumEarliestStartTime}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_MinimumEarliestStartTime}"/>
+											   Text="{x:Static resources:Labels.Label_MinimumEarliestStartTime}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_MinimumEarliestStartTime}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -757,8 +757,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_MaximumLatestFinishTime}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_MaximumLatestFinishTime}"/>
+											   Text="{x:Static resources:Labels.Label_MaximumLatestFinishTime}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_MaximumLatestFinishTime}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -826,8 +826,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_TargetResources}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_TargetResources}"/>
+											   Text="{x:Static resources:Labels.Label_TargetResources}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_TargetResources}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -911,8 +911,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_HasNoCost}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_HasNoCost}"/>
+											   Text="{x:Static resources:Labels.Label_HasNoCost}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_HasNoCost}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -950,8 +950,8 @@
 											   TextAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_TargetResourceOperator}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_TargetResourceOperator}"/>
+											   Text="{x:Static resources:Labels.Label_TargetResourceOperator}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_TargetResourceOperator}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -990,8 +990,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_AllocatedToResources}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_AllocatedToResources}"/>
+											   Text="{x:Static resources:Labels.Label_AllocatedToResources}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_AllocatedToResources}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -1018,8 +1018,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_Notes}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_Notes}"/>
+											   Text="{x:Static resources:Labels.Label_Notes}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Notes}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>

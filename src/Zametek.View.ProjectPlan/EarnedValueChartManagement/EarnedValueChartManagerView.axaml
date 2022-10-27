@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:i="using:Avalonia.Xaml.Interactivity"
 	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
-			 xmlns:properties="using:Zametek.Resource.ProjectPlan"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:oxy="using:OxyPlot.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -47,7 +47,7 @@
 			<Grid>
 				<Grid.ContextMenu>
 					<ContextMenu>
-						<MenuItem Header="{x:Static properties:Menus.Menu_SaveAs}"
+						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
 								  Command="{Binding Path=SaveEarnedValueChartImageFileCommand, Mode=OneWay}"/>
 					</ContextMenu>
 				</Grid.ContextMenu>

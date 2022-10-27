@@ -6,7 +6,7 @@
         x:Class="Zametek.View.ProjectPlan.MainView"
 		xmlns:i="using:Avalonia.Xaml.Interactivity"
 		xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
-		xmlns:properties="using:Zametek.Resource.ProjectPlan"
+		xmlns:resources="using:Zametek.Resource.ProjectPlan"
 		xmlns:controls="using:Avalonia.Controls"
 		xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
         Icon="resm:Zametek.Resource.ProjectPlan.Icons.zpp.ico?assembly=Zametek.Resource.ProjectPlan"
@@ -46,28 +46,28 @@
 
 		<Menu DockPanel.Dock="Top"
               Padding="3">
-			<MenuItem Header="{x:Static properties:Menus.Menu_File}">
-				<MenuItem Header="{x:Static properties:Menus.Menu_Open}"
+			<MenuItem Header="{x:Static resources:Menus.Menu_File}">
+				<MenuItem Header="{x:Static resources:Menus.Menu_Open}"
                           Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
 						  InputGesture="Ctrl+O"/>
 				<Separator />
-				<MenuItem Header="{x:Static properties:Menus.Menu_Save}"
+				<MenuItem Header="{x:Static resources:Menus.Menu_Save}"
                           Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"
 						  InputGesture="Ctrl+S"/>
-				<MenuItem Header="{x:Static properties:Menus.Menu_SaveAs}"
+				<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
 						  Command="{Binding Path=SaveAsProjectPlanFileCommand, Mode=OneWay}"/>
 				<Separator />
-				<MenuItem Header="{x:Static properties:Menus.Menu_Import}"
+				<MenuItem Header="{x:Static resources:Menus.Menu_Import}"
                           Command="{Binding Path=ImportProjectFileCommand, Mode=OneWay}"/>
-				<MenuItem Header="{x:Static properties:Menus.Menu_Export}"
+				<MenuItem Header="{x:Static resources:Menus.Menu_Export}"
                           Command="{Binding Path=ExportProjectFileCommand, Mode=OneWay}"/>
 				<Separator />
-				<MenuItem Header="{x:Static properties:Menus.Menu_Close}"
+				<MenuItem Header="{x:Static resources:Menus.Menu_Close}"
                           Command="{Binding Path=CloseProjectPlanCommand, Mode=OneWay}"/>
 			</MenuItem>
 
-			<MenuItem Header="{x:Static properties:Menus.Menu_Settings}">
-				<MenuItem Header="{x:Static properties:Menus.Menu_ShowDates}"
+			<MenuItem Header="{x:Static resources:Menus.Menu_Settings}">
+				<MenuItem Header="{x:Static resources:Menus.Menu_ShowDates}"
 						  Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}"
 						  InputGesture="Ctrl+D">
 					<MenuItem.Icon>
@@ -76,7 +76,7 @@
 								  IsChecked="{Binding Path=ShowDates, Mode=OneWay}" />
 					</MenuItem.Icon>
 				</MenuItem>
-				<MenuItem Header="{x:Static properties:Menus.Menu_UseBusinessDays}"
+				<MenuItem Header="{x:Static resources:Menus.Menu_UseBusinessDays}"
 						  Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}"
 						  InputGesture="Ctrl+B">
 					<MenuItem.Icon>
@@ -85,7 +85,7 @@
 								  IsChecked="{Binding Path=UseBusinessDays, Mode=OneWay}" />
 					</MenuItem.Icon>
 				</MenuItem>
-				<MenuItem Header="{x:Static properties:Menus.Menu_ViewEarnedValueProjections}"
+				<MenuItem Header="{x:Static resources:Menus.Menu_ViewEarnedValueProjections}"
 						  Command="{Binding Path=ToggleViewEarnedValueProjectionsCommand, Mode=OneWay}"
 						  InputGesture="Ctrl+E">
 					<MenuItem.Icon>
@@ -96,10 +96,10 @@
 				</MenuItem>
 			</MenuItem>
 
-			<MenuItem Header="{x:Static properties:Menus.Menu_Compile}">
-				<MenuItem Header="{x:Static properties:Menus.Menu_Compile}"
+			<MenuItem Header="{x:Static resources:Menus.Menu_Compile}">
+				<MenuItem Header="{x:Static resources:Menus.Menu_Compile}"
                           Command="{Binding Path=CompileCommand, Mode=OneWay}"/>
-				<MenuItem Header="{x:Static properties:Menus.Menu_AutoCompile}"
+				<MenuItem Header="{x:Static resources:Menus.Menu_AutoCompile}"
 						  Command="{Binding Path=ToggleAutoCompileCommand, Mode=OneWay}">
 					<MenuItem.Icon>
 						<CheckBox BorderThickness="0"
@@ -107,30 +107,30 @@
 								  IsChecked="{Binding Path=AutoCompile, Mode=OneWay}" />
 					</MenuItem.Icon>
 				</MenuItem>
-				<MenuItem Header="{x:Static properties:Menus.Menu_TransitiveReduction}"
+				<MenuItem Header="{x:Static resources:Menus.Menu_TransitiveReduction}"
                           Command="{Binding Path=TransitiveReductionCommand, Mode=OneWay}"/>
 			</MenuItem>
-			<MenuItem Header="{x:Static properties:Menus.Menu_Help}">
-				<MenuItem Header="{x:Static properties:Menus.Menu_Documentation}"
+			<MenuItem Header="{x:Static resources:Menus.Menu_Help}">
+				<MenuItem Header="{x:Static resources:Menus.Menu_Documentation}"
                           Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-                          CommandParameter="{x:Static properties:Links.Link_Documentation}"/>
+                          CommandParameter="{x:Static resources:Links.Link_Documentation}"/>
 				<Separator />
-				<MenuItem Header="{x:Static properties:Menus.Menu_ReportIssue}"
+				<MenuItem Header="{x:Static resources:Menus.Menu_ReportIssue}"
                           Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-                          CommandParameter="{x:Static properties:Links.Link_ReportIssue}"/>
+                          CommandParameter="{x:Static resources:Links.Link_ReportIssue}"/>
 				<Separator />
-				<MenuItem Header="{x:Static properties:Menus.Menu_Donate}"
+				<MenuItem Header="{x:Static resources:Menus.Menu_Donate}"
                           Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-                          CommandParameter="{x:Static properties:Links.Link_Donate}"/>
-				<MenuItem Header="{x:Static properties:Menus.Menu_ViewLicense}"
+                          CommandParameter="{x:Static resources:Links.Link_Donate}"/>
+				<MenuItem Header="{x:Static resources:Menus.Menu_ViewLicense}"
                           Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-                          CommandParameter="{x:Static properties:Links.Link_ViewLicense}"/>
+                          CommandParameter="{x:Static resources:Links.Link_ViewLicense}"/>
 				<Separator />
 				
 				
 				
 				
-				<MenuItem Header="{x:Static properties:Menus.Menu_About}"
+				<MenuItem Header="{x:Static resources:Menus.Menu_About}"
                           Command="{Binding Path=OpenAboutCommand, Mode=OneWay}"/>
 				
 				
@@ -144,7 +144,7 @@
                    Margin="0,11,0,0">
 			<Label DockPanel.Dock="Left"
                    IsTabStop="False"
-                   Content="{x:Static properties:Labels.Label_ProjectStart}"
+                   Content="{x:Static resources:Labels.Label_ProjectStart}"
                    Height="25"
                    Margin="0,0,7,0"/>
 			<CalendarDatePicker DockPanel.Dock="Left"

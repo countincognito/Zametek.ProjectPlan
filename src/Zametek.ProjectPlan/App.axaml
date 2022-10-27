@@ -4,15 +4,15 @@
              xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
              xmlns:local="using:Zametek.ProjectPlan"
              x:Class="Zametek.ProjectPlan.App"
-		     xmlns:properties="using:Zametek.Resource.ProjectPlan"
-			 Name="{x:Static properties:Titles.Title_ProjectPlan}">
+		     xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			 Name="{x:Static resources:Titles.Title_ProjectPlan}">
     <Application.DataTemplates>
         <v:ViewLocator />
     </Application.DataTemplates>
 
     <NativeMenu.Menu>
         <NativeMenu>
-            <NativeMenuItem Header="{x:Static properties:Menus.Menu_About}" Command="{Binding Path=OpenAboutCommand}" />
+            <NativeMenuItem Header="{x:Static resources:Menus.Menu_About}" Command="{Binding Path=OpenAboutCommand}" />
         </NativeMenu>
     </NativeMenu.Menu>
 

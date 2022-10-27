@@ -5,7 +5,7 @@
 			 xmlns:i="using:Avalonia.Xaml.Interactivity"
 	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
 			 xmlns:controls="using:Avalonia.Controls"
-			 xmlns:properties="using:Zametek.Resource.ProjectPlan"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:colorpicker="using:Egorozh.ColorPicker.Dialog"
 			 xmlns:sys="using:System"
@@ -32,7 +32,7 @@
                     VerticalAlignment="Center"
                     VerticalContentAlignment="Center"
                     Command="{Binding Path=AddManagedActivitySeverityCommand, Mode=OneWay}"
-                    Content="{x:Static properties:Labels.Label_AddManagedActivitySeverity}"/>
+                    Content="{x:Static resources:Labels.Label_AddManagedActivitySeverity}"/>
 
 			<Button DockPanel.Dock="Top"
 					IsTabStop="True"
@@ -41,7 +41,7 @@
                     VerticalAlignment="Center"
                     VerticalContentAlignment="Center"
                     Command="{Binding Path=RemoveManagedActivitySeveritiesCommand, Mode=OneWay}"
-                    Content="{x:Static properties:Labels.Label_DeleteManagedActivitySeverities}"/>
+                    Content="{x:Static resources:Labels.Label_DeleteManagedActivitySeverities}"/>
 
 			<Grid/>
 		</DockPanel>
@@ -116,8 +116,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_SlackLimit}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_SlackLimit}"/>
+											   Text="{x:Static resources:Labels.Label_SlackLimit}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_SlackLimit}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -150,7 +150,7 @@
 											   Background="White"
 											   Foreground="Black"
 											   IsVisible="False"
-											   Text="{x:Static properties:Labels.Label_Max}">
+											   Text="{x:Static resources:Labels.Label_Max}">
 										<i:Interaction.Behaviors>
 											<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
 												<ia:ChangePropertyAction TargetObject="{Binding #maxTextBlock}" PropertyName="IsVisible" Value="True" />
@@ -188,7 +188,7 @@
 											   Background="White"
 											   Foreground="Black"
 											   IsVisible="False"
-											   Text="{x:Static properties:Labels.Label_Max}">
+											   Text="{x:Static resources:Labels.Label_Max}">
 										<i:Interaction.Behaviors>
 											<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
 												<ia:ChangePropertyAction TargetObject="{Binding #maxEditableTextBlock}" PropertyName="IsVisible" Value="True" />
@@ -218,8 +218,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_CriticalityWeight}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_CriticalityWeight}"/>
+											   Text="{x:Static resources:Labels.Label_CriticalityWeight}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_CriticalityWeight}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -267,8 +267,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_FibonacciWeight}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_FibonacciWeight}"/>
+											   Text="{x:Static resources:Labels.Label_FibonacciWeight}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_FibonacciWeight}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
@@ -317,8 +317,8 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Text="{x:Static properties:Labels.Label_ColorFormat}"
-											   ToolTip.Tip="{x:Static properties:ToolTips.ToolTip_ColorFormat}"/>
+											   Text="{x:Static resources:Labels.Label_ColorFormat}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ColorFormat}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
