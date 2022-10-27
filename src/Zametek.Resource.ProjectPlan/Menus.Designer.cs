@@ -61,7 +61,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to About.
+        ///   Looks up a localized string similar to About Project Plan.
         /// </summary>
         public static string Menu_About {
             get {
