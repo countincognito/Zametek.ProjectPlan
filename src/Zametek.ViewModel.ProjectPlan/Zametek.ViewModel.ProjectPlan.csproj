@@ -12,7 +12,7 @@
     <PackageReference Include="Dock.Model.ReactiveUI" Version="0.10.18.1" />
     <PackageReference Include="FluentDateTime" Version="2.1.0" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
-    <PackageReference Include="net.sf.mpxj" Version="10.10.0" />
+    <PackageReference Include="net.sf.mpxj" Version="10.14.1" />
     <PackageReference Include="NPOI" Version="2.5.6" />
     <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-Preview1" />
     <PackageReference Include="OxyPlot.SkiaSharp" Version="2.1.0" />
