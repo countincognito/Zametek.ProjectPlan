@@ -782,7 +782,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_DateTimeCalculator);
 
             using var stream = File.OpenWrite(filename);
-            workbook.Write(stream);
+            workbook.Write(stream, leaveOpen: false);
         }
 
         public async Task ExportProjectPlanFileAsync(

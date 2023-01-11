@@ -27,7 +27,7 @@
     <PackageReference Include="Dock.Avalonia" Version="0.10.18.1" />
     <PackageReference Include="Egorozh.ColorPicker.Avalonia.Dialog" Version="0.10.17" />
     <PackageReference Include="MessageBox.Avalonia" Version="2.1.0" />
-    <PackageReference Include="XamlNameReferenceGenerator" Version="1.4.2" />
+    <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj" />
