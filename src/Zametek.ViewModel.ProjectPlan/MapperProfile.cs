@@ -1,8 +1,5 @@
 ﻿using AutoMapper;
-using System.Collections.Generic;
-using System.Linq;
 using Zametek.Common.ProjectPlan;
-using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -132,11 +129,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     return resourceScheduleBuilder.ToResourceSchedule(src.FinishTime);
                 });
 
+            CreateMap<ResourceScheduleModel, ResourceSchedule<int, int>>()
+                .ConstructUsing((src, ctx) => (ResourceSchedule<int, int>)ctx.Mapper.Map<ResourceScheduleModel, IResourceSchedule<int, int>>(src));
+
             CreateMap<ResourceSchedule<int, int>, ResourceScheduleModel>()
                 .ForMember(src => src.Resource, opt => opt.Condition(src => src.Resource is not null));
 
-            CreateMap<ScheduledActivityModel, IScheduledActivity<int>>()
+            CreateMap<ScheduledActivityModel, ScheduledActivity<int>>()
                 .ConstructUsing(src => new ScheduledActivity<int>(src.Id, src.Name, src.HasNoCost, src.Duration, src.StartTime, src.FinishTime));
+
+            CreateMap<ScheduledActivityModel, IScheduledActivity<int>>()
+                .ConstructUsing((src, ctx) => ctx.Mapper.Map<ScheduledActivityModel, ScheduledActivity<int>>(src));
 
             CreateMap<ScheduledActivity<int>, ScheduledActivityModel>();
 
