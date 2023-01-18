@@ -106,6 +106,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Gantt Chart.
+        /// </summary>
+        public static string Title_GanttChartView {
+            get {
+                return ResourceManager.GetString("Title_GanttChartView", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Metrics.
         /// </summary>
         public static string Title_Metrics {

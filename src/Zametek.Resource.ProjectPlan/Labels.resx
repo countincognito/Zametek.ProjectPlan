@@ -237,6 +237,9 @@
   <data name="Label_FreeSlack" xml:space="preserve">
     <value>FS</value>
   </data>
+  <data name="Label_GanttAxisTitle" xml:space="preserve">
+    <value>TBC later</value>
+  </data>
   <data name="Label_GeometricActivityRisk" xml:space="preserve">
     <value>Geometric (Act.) Risk:</value>
   </data>

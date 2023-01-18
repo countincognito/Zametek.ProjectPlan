@@ -421,6 +421,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to TBC later.
+        /// </summary>
+        public static string Label_GanttAxisTitle {
+            get {
+                return ResourceManager.GetString("Label_GanttAxisTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Geometric (Act.) Risk:.
         /// </summary>
         public static string Label_GeometricActivityRisk {

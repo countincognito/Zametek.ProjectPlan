@@ -132,6 +132,9 @@
   <data name="Title_Error" xml:space="preserve">
     <value>Error</value>
   </data>
+  <data name="Title_GanttChartView" xml:space="preserve">
+    <value>Gantt Chart</value>
+  </data>
   <data name="Title_Metrics" xml:space="preserve">
     <value>Metrics</value>
   </data>

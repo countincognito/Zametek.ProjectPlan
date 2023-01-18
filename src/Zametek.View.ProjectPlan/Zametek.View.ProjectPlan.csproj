@@ -42,4 +42,7 @@
       <DependentUpon>TrackingManagerView.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <UpToDateCheckInput Remove="GanttChartManagement\GanttChartManagerView.axaml" />
+  </ItemGroup>
 </Project>
