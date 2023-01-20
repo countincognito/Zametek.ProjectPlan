@@ -225,7 +225,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 IEnumerable<ResourceSeriesModel> scheduledResourceSeries = resourceSeriesSet.Scheduled
                     .Where(x => x.ResourceSchedule.ScheduledActivities.Any());
 
-                var scheduledActivitiesSet = new List<IList<ScheduledActivityModel>>();
+                // Record the resource name, and the scheduled activities (in order).
+
+                var scheduledResourceActivitiesSet = new List<(string ResourceName, IList<ScheduledActivityModel> ScheduledActivities)>();
 
                 foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeries)
                 {
@@ -233,20 +235,20 @@ namespace Zametek.ViewModel.ProjectPlan
                         .ResourceSchedule.ScheduledActivities
                         .OrderByDescending(x => x.StartTime)
                         .ToList();
-                    scheduledActivitiesSet.Add(orderedScheduledActivities);
+                    scheduledResourceActivitiesSet.Add(
+                        (resourceSeries.Title, orderedScheduledActivities));
                 }
 
-                var orderedScheduleActivitiesSet = scheduledActivitiesSet
-                    .OrderByDescending(x => x.OrderBy(y => y.StartTime)
+                // Order the set according to the start times of the first activity for each resource.
+
+                var orderedScheduledResourceActivitiesSet = scheduledResourceActivitiesSet
+                    .OrderByDescending(x => x.ScheduledActivities.OrderBy(y => y.StartTime)
                         .FirstOrDefault()?.StartTime ?? 0)
                     .ToList();
 
-
-
-                foreach (IList<ScheduledActivityModel> orderedScheduledActivities in orderedScheduleActivitiesSet)
+                foreach ((string resourceName, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
                 {
-                    //ResourceScheduleModel resourceSchedule = resourceSeries.ResourceSchedule;
-                    //IEnumerable<ScheduledActivityModel> scheduledActivities = resourceSchedule.ScheduledActivities.OrderByDescending(x => x.StartTime);
+                    IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
                     IDictionary<int, IDependentActivity<int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
                     int resourceStartTime = orderedScheduledActivities.LastOrDefault()?.StartTime ?? 0;
@@ -257,7 +259,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // IntervalBarItems are added in reverse order to how they will be displayed.
                     // So, this item will appear at the bottom of the grouping.
 
-                    series.Items.Add(new IntervalBarItem());
+                    series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
                     labels.Add(string.Empty);
 
                     // Now add the scheduled activities (again, in reverse display order).
@@ -305,7 +307,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                  MaximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStartDateTime, dateTimeCalculator),
                                  MinimumY = minimumY,
                                  MaximumY = maximumY,
-                                 //ToolTip = resourceSchedule.Resource.Name,
+                                 ToolTip = resourceName,
                                  Fill = OxyColor.FromAColor(10, OxyColors.Blue),
                                  Stroke = OxyColors.Black,
                                  StrokeThickness = 1
@@ -315,7 +317,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 // Add an extra row for padding.
                 // This item will appear at the top of the grouping.
-                series.Items.Add(new IntervalBarItem());
+                series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
                 labels.Add(string.Empty);
             }
             else
