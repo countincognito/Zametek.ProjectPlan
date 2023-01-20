@@ -220,24 +220,37 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (groupByResource)
             {
-
-
-
-
+                // Find all the resource series with at least 1 scheduled activity.
 
                 IEnumerable<ResourceSeriesModel> scheduledResourceSeries = resourceSeriesSet.Scheduled
-                    .Where(x => x.ResourceSchedule.ScheduledActivities.Any())
-                    .OrderBy(x => x.ResourceSchedule.ScheduledActivities.OrderBy(y => y.StartTime).FirstOrDefault()?.StartTime ?? 0);
+                    .Where(x => x.ResourceSchedule.ScheduledActivities.Any());
 
+                var scheduledActivitiesSet = new List<IList<ScheduledActivityModel>>();
 
                 foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeries)
                 {
-                    ResourceScheduleModel resourceSchedule = resourceSeries.ResourceSchedule;
-                    IEnumerable<ScheduledActivityModel> scheduledActivities = resourceSchedule.ScheduledActivities.OrderByDescending(x => x.StartTime);
+                    IList<ScheduledActivityModel> orderedScheduledActivities = resourceSeries
+                        .ResourceSchedule.ScheduledActivities
+                        .OrderByDescending(x => x.StartTime)
+                        .ToList();
+                    scheduledActivitiesSet.Add(orderedScheduledActivities);
+                }
+
+                var orderedScheduleActivitiesSet = scheduledActivitiesSet
+                    .OrderByDescending(x => x.OrderBy(y => y.StartTime)
+                        .FirstOrDefault()?.StartTime ?? 0)
+                    .ToList();
+
+
+
+                foreach (IList<ScheduledActivityModel> orderedScheduledActivities in orderedScheduleActivitiesSet)
+                {
+                    //ResourceScheduleModel resourceSchedule = resourceSeries.ResourceSchedule;
+                    //IEnumerable<ScheduledActivityModel> scheduledActivities = resourceSchedule.ScheduledActivities.OrderByDescending(x => x.StartTime);
                     IDictionary<int, IDependentActivity<int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
-                    int resourceStartTime = scheduledActivities.LastOrDefault()?.StartTime ?? 0;
-                    int resourceFinishTime = scheduledActivities.FirstOrDefault()?.FinishTime ?? 0;
+                    int resourceStartTime = orderedScheduledActivities.LastOrDefault()?.StartTime ?? 0;
+                    int resourceFinishTime = orderedScheduledActivities.FirstOrDefault()?.FinishTime ?? 0;
                     int minimumY = labels.Count;
 
                     // Add an extra row for padding.
@@ -249,7 +262,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Now add the scheduled activities (again, in reverse display order).
 
-                    foreach (ScheduledActivityModel scheduledActivity in scheduledActivities)
+                    foreach (ScheduledActivityModel scheduledActivity in orderedScheduledActivities)
                     {
                         if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity<int, int>? activity))
                         {
@@ -292,7 +305,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                  MaximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStartDateTime, dateTimeCalculator),
                                  MinimumY = minimumY,
                                  MaximumY = maximumY,
-                                 ToolTip = resourceSchedule.Resource.Name,
+                                 //ToolTip = resourceSchedule.Resource.Name,
                                  Fill = OxyColor.FromAColor(10, OxyColors.Blue),
                                  Stroke = OxyColors.Black,
                                  StrokeThickness = 1
