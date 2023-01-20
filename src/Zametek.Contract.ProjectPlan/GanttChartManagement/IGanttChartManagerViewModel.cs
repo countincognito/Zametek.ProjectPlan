@@ -10,6 +10,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
+        bool GroupByResource { get; set; }
+
+        bool AnnotateResources { get; set; }
+
         ICommand SaveGanttChartImageFileCommand { get; }
     }
 }

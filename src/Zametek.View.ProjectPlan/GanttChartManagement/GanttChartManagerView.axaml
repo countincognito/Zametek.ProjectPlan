@@ -15,6 +15,48 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
+		<DockPanel DockPanel.Dock="Right"
+                   Margin="11,0,0,0">
+			<Label VerticalContentAlignment="Center"
+				   HorizontalContentAlignment="Left"
+				   Height="25"
+				   DockPanel.Dock="Top"
+				   IsTabStop="False"
+				   Margin="0,0,0,3"
+				   Content="{x:Static resources:Labels.Label_GroupByResource}"/>
+
+			<ToggleSwitch DockPanel.Dock="Top"
+					      IsTabStop="False"
+					      Margin="0,0,0,11"
+					      VerticalAlignment="Center"
+					      VerticalContentAlignment="Center"
+						  HorizontalAlignment="Center"
+						  HorizontalContentAlignment="Center"
+					      IsChecked="{Binding Path=GroupByResource, Mode=TwoWay}"/>
+
+			<DockPanel DockPanel.Dock="Top"
+					   IsEnabled="{Binding Path=GroupByResource, Mode=OneWay}">
+				<Label VerticalContentAlignment="Center"
+					   HorizontalContentAlignment="Left"
+					   Height="25"
+					   DockPanel.Dock="Top"
+					   IsTabStop="False"
+					   Margin="0,0,0,3"
+					   Content="{x:Static resources:Labels.Label_AnnotateResources}"/>
+
+				<ToggleSwitch DockPanel.Dock="Top"
+							  IsTabStop="False"
+							  Margin="0,0,0,11"
+							  VerticalAlignment="Center"
+							  VerticalContentAlignment="Center"
+							  HorizontalAlignment="Center"
+							  HorizontalContentAlignment="Center"
+							  IsChecked="{Binding Path=AnnotateResources, Mode=TwoWay}"/>
+			</DockPanel>
+
+			<Grid/>
+		</DockPanel>
+
 		<Border Name="viewBorder"
 				BorderThickness="2"
 				BorderBrush="DarkGray">
@@ -51,11 +93,9 @@
 								  Command="{Binding Path=SaveGanttChartImageFileCommand, Mode=OneWay}"/>
 					</ContextMenu>
 				</Grid.ContextMenu>
-				<ScrollViewer>
-					<oxy:PlotView x:Name="oxyplot"
-								  Model="{Binding Path=GanttChartPlotModel, Mode=OneWay}"
-								  Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
-				</ScrollViewer>
+				<oxy:PlotView x:Name="oxyplot"
+							  Model="{Binding Path=GanttChartPlotModel, Mode=OneWay}"
+							  Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
 			</Grid>
 		</Border>
 	</DockPanel>

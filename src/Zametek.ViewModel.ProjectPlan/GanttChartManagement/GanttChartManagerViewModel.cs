@@ -101,6 +101,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
                     rcm => rcm.m_CoreViewModel.ArrowGraphSettings,
                     rcm => rcm.m_CoreViewModel.ShowDates,
+                    rcm => rcm.GroupByResource,
+                    rcm => rcm.AnnotateResources,
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async result =>
@@ -111,7 +113,9 @@ namespace Zametek.ViewModel.ProjectPlan
                         result.Item2,
                         result.Item3,
                         result.Item4,
-                        result.Item5);
+                        result.Item5,
+                        result.Item6,
+                        result.Item7);
                 });
 
             Id = Resource.ProjectPlan.Titles.Title_GanttChartView;
@@ -147,6 +151,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceSeriesSetModel resourceSeriesSet,
             ArrowGraphSettingsModel arrowGraphSettings,
             bool showDates,
+            bool groupByResource,
+            bool annotateResources,
             DateTime projectStartDateTime)
         {
             try
@@ -159,6 +165,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         resourceSeriesSet,
                         arrowGraphSettings,
                         showDates,
+                        groupByResource,
+                        annotateResources,
                         projectStartDateTime);
                 }
             }
@@ -178,23 +186,15 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceSeriesSetModel resourceSeriesSet,//!!,
             ArrowGraphSettingsModel arrowGraphSettings,//!!
             bool showDates,
+            bool groupByResource,
+            bool annotateResources,
             DateTime projectStartDateTime)
         {
             var plotModel = new PlotModel();
 
-            IEnumerable<ResourceSeriesModel> scheduledResourceSeries = resourceSeriesSet.Scheduled.OrderBy(x => x.DisplayOrder);
-
             int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
 
             plotModel.Axes.Add(BuildResourceChartXAxis(dateTimeCalculator, finishTime, showDates, projectStartDateTime));
-
-
-            IDictionary<int, IDependentActivity<int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
-
-
-
-
-
 
             var legend = new OxyPlot.Legends.Legend
             {
@@ -202,184 +202,145 @@ namespace Zametek.ViewModel.ProjectPlan
                 LegendBackground = OxyColor.FromAColor(200, OxyColors.White),
                 LegendPosition = LegendPosition.RightMiddle,
                 LegendPlacement = LegendPlacement.Outside,
-                //LegendOrientation = this.LegendOrientation,
-                //LegendItemOrder = this.LegendItemOrder,
-                //LegendItemAlignment = this.LegendItemAlignment,
-                //LegendSymbolPlacement = this.LegendSymbolPlacement,
-                //LegendMaxWidth = this.LegendMaxWidth,
-                //LegendMaxHeight = this.LegendMaxHeight
             };
 
             plotModel.Legends.Add(legend);
             plotModel.IsLegendVisible = false;
 
-
-
-
-
             var colorFormatLookup = new SlackColorFormatLookup(arrowGraphSettings.ActivitySeverities);
-
-
-
 
             var series = new IntervalBarSeries
             {
-                Title = "IntervalBarSeries 1",
+                Title = Resource.ProjectPlan.Labels.Label_GanttChartSeries,
                 LabelFormatString = @"",
-                TrackerFormatString = "{1}: {2}\n{3}: {4}",
+                TrackerFormatString = $"{Resource.ProjectPlan.Labels.Label_Activity}: {{2}}\n{Resource.ProjectPlan.Labels.Label_Start}: {{4}}\n{Resource.ProjectPlan.Labels.Label_End}: {{5}}",
             };
+
             var labels = new List<string>();
 
-
-
-
-
-            foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeries)
+            if (groupByResource)
             {
-                if (resourceSeries != null)
+
+
+
+
+
+                IEnumerable<ResourceSeriesModel> scheduledResourceSeries = resourceSeriesSet.Scheduled
+                    .Where(x => x.ResourceSchedule.ScheduledActivities.Any())
+                    .OrderBy(x => x.ResourceSchedule.ScheduledActivities.OrderBy(y => y.StartTime).FirstOrDefault()?.StartTime ?? 0);
+
+
+                foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeries)
                 {
                     ResourceScheduleModel resourceSchedule = resourceSeries.ResourceSchedule;
+                    IEnumerable<ScheduledActivityModel> scheduledActivities = resourceSchedule.ScheduledActivities.OrderByDescending(x => x.StartTime);
+                    IDictionary<int, IDependentActivity<int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
-                    if (resourceSchedule != null)
+                    int resourceStartTime = scheduledActivities.LastOrDefault()?.StartTime ?? 0;
+                    int resourceFinishTime = scheduledActivities.FirstOrDefault()?.FinishTime ?? 0;
+                    int minimumY = labels.Count;
+
+                    // Add an extra row for padding.
+                    // IntervalBarItems are added in reverse order to how they will be displayed.
+                    // So, this item will appear at the bottom of the grouping.
+
+                    series.Items.Add(new IntervalBarItem());
+                    labels.Add(string.Empty);
+
+                    // Now add the scheduled activities (again, in reverse display order).
+
+                    foreach (ScheduledActivityModel scheduledActivity in scheduledActivities)
                     {
-                        //GanttRowGroup rowGroup = GanttChartAreaCtrl.CreateGanttRowGroup(resourceSeries.Title);
-
-                        foreach (ScheduledActivityModel scheduledActivity in resourceSchedule.ScheduledActivities.OrderByDescending(x => x.StartTime))
+                        if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity<int, int>? activity))
                         {
-                            if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity<int, int>? activity))
+                            if (activity.EarliestStartTime.HasValue
+                                && activity.EarliestFinishTime.HasValue
+                                && activity.Duration > 0)
                             {
-                                Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);// ?? Colors.DodgerBlue;
+                                string id = activity.Id.ToString(CultureInfo.InvariantCulture);
+                                string label = string.IsNullOrWhiteSpace(activity.Name) ? id : $"{activity.Name} ({id})";
+                                Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
 
+                                var backgroundColor = OxyColor.FromArgb(
+                                      slackColor.A,
+                                      slackColor.R,
+                                      slackColor.G,
+                                      slackColor.B);
 
-                                string label = string.IsNullOrWhiteSpace(scheduledActivity.Name) ? scheduledActivity.Id.ToString(CultureInfo.InvariantCulture) : scheduledActivity.Name;
-                                //GanttRow row = GanttChartAreaCtrl.CreateGanttRow(rowGroup, name);
-
-                                if (activity.EarliestStartTime.HasValue
-                                    && activity.EarliestFinishTime.HasValue)
+                                var item = new IntervalBarItem
                                 {
+                                    Title = label,
+                                    Start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
+                                    End = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
+                                    Color = backgroundColor,
+                                };
 
-                                    var backgroundColor = OxyColor.FromArgb(
-                                          slackColor.A,
-                                          slackColor.R,
-                                          slackColor.G,
-                                          slackColor.B);
-
-                                    var item = new IntervalBarItem
-                                    {
-                                        Title = label,
-                                        Start = ChartHelper.CalculateChartTimeXValue(scheduledActivity.StartTime, showDates, projectStartDateTime, dateTimeCalculator),
-                                        End = ChartHelper.CalculateChartTimeXValue(scheduledActivity.FinishTime, showDates, projectStartDateTime, dateTimeCalculator),
-                                        Color = backgroundColor,
-                                    };
-
-                                    series.Items.Add(item);
-                                    labels.Add(label);
-                                }
+                                series.Items.Add(item);
+                                labels.Add(label);
                             }
                         }
+                    }
+
+                    int maximumY = labels.Count;
+
+                    if (annotateResources)
+                    {
+                        plotModel.Annotations.Add(
+                             new OxyPlot.Annotations.RectangleAnnotation
+                             {
+                                 MinimumX = ChartHelper.CalculateChartTimeXValue(resourceStartTime, showDates, projectStartDateTime, dateTimeCalculator),
+                                 MaximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStartDateTime, dateTimeCalculator),
+                                 MinimumY = minimumY,
+                                 MaximumY = maximumY,
+                                 ToolTip = resourceSchedule.Resource.Name,
+                                 Fill = OxyColor.FromAColor(10, OxyColors.Blue),
+                                 Stroke = OxyColors.Black,
+                                 StrokeThickness = 1
+                             });
+                    }
+                }
+
+                // Add an extra row for padding.
+                // This item will appear at the top of the grouping.
+                series.Items.Add(new IntervalBarItem());
+                labels.Add(string.Empty);
+            }
+            else
+            {
+                // Add all the activities (in reverse display order).
+
+                foreach (IDependentActivity<int, int> activity in graphCompilation.DependentActivities.OrderByDescending(x => x.EarliestStartTime))
+                {
+                    if (activity.EarliestStartTime.HasValue
+                        && activity.EarliestFinishTime.HasValue
+                        && activity.Duration > 0)
+                    {
+                        string id = activity.Id.ToString(CultureInfo.InvariantCulture);
+                        string label = string.IsNullOrWhiteSpace(activity.Name) ? id : $"{activity.Name} ({id})";
+                        Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
+
+                        var backgroundColor = OxyColor.FromArgb(
+                              slackColor.A,
+                              slackColor.R,
+                              slackColor.G,
+                              slackColor.B);
+
+                        var item = new IntervalBarItem
+                        {
+                            Title = label,
+                            Start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
+                            End = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
+                            Color = backgroundColor,
+                        };
+
+                        series.Items.Add(item);
+                        labels.Add(label);
                     }
                 }
             }
 
-
-
-
-            plotModel.Annotations.Add(new OxyPlot.Annotations.RectangleAnnotation { MinimumX = 20, MaximumX = 70, MinimumY = 10, MaximumY = 40, TextRotation = 10, Text = "RectangleAnnotation", ToolTip = "This is a tooltip for the RectangleAnnotation", Fill = OxyColor.FromAColor(10, OxyColors.Blue), Stroke = OxyColors.Black, StrokeThickness = 2 });
-
-
-
             plotModel.Axes.Add(BuildResourceChartYAxis(labels));
-
             plotModel.Series.Add(series);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            //if (combinedResourceSeries.Any())
-            //{
-            //    IList<int> total = new List<int>();
-
-            //    foreach (ResourceSeriesModel series in combinedResourceSeries)
-            //    {
-            //        if (series != null)
-            //        {
-            //            var color = OxyColor.FromArgb(
-            //                series.ColorFormat.A,
-            //                series.ColorFormat.R,
-            //                series.ColorFormat.G,
-            //                series.ColorFormat.B);
-
-            //            var areaSeries = new AreaSeries
-            //            {
-            //                //Smooth = false,
-            //                StrokeThickness = 0.0,
-            //                Title = series.Title,
-            //                Fill = color,
-            //                Color = color
-            //            };
-
-            //            if (series.ResourceSchedule.ActivityAllocation.Any())
-            //            {
-            //                // Mark the start of the plot.
-            //                areaSeries.Points.Add(new DataPoint(0.0, 0.0));
-            //                areaSeries.Points2.Add(new DataPoint(0.0, 0.0));
-
-            //                for (int i = 0; i < series.ResourceSchedule.ActivityAllocation.Count; i++)
-            //                {
-            //                    bool j = series.ResourceSchedule.ActivityAllocation[i];
-            //                    if (i >= total.Count)
-            //                    {
-            //                        total.Add(0);
-            //                    }
-            //                    int dayNumber = i + 1;
-            //                    areaSeries.Points.Add(
-            //                        new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStartDateTime, dateTimeCalculator),
-            //                        total[i]));
-            //                    total[i] += j ? 1 : 0;
-            //                    areaSeries.Points2.Add(
-            //                        new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStartDateTime, dateTimeCalculator),
-            //                        total[i]));
-            //                }
-            //            }
-
-            //            plotModel.Series.Add(areaSeries);
-            //        }
-            //    }
-            //}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             return plotModel;
         }
 
@@ -536,6 +497,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
+
+        private bool m_GroupByResource;
+        public bool GroupByResource
+        {
+            get => m_GroupByResource;
+            set => this.RaiseAndSetIfChanged(ref m_GroupByResource, value);
+        }
+
+        private bool m_AnnotateResources;
+        public bool AnnotateResources
+        {
+            get => m_AnnotateResources;
+            set => this.RaiseAndSetIfChanged(ref m_AnnotateResources, value);
+        }
 
         public ICommand SaveGanttChartImageFileCommand { get; }
 

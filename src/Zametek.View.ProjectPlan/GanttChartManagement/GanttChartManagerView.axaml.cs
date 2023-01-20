@@ -12,8 +12,9 @@ namespace Zametek.View.ProjectPlan
         {
             InitializeComponent();
             var oxyplot = this.FindControl<PlotView>("oxyplot");
-            //oxyplot.ActualController.UnbindMouseDown(OxyMouseButton.Right);
-            //oxyplot.ActualController.UnbindMouseWheel();
+            oxyplot.ActualController.UnbindMouseDown(OxyMouseButton.Right);
+            oxyplot.ActualController.BindMouseDown(OxyMouseButton.Left, OxyModifierKeys.Control, PlotCommands.PanAt);
+            oxyplot.ActualController.BindMouseDown(OxyMouseButton.Left, PlotCommands.HoverTrack);
         }
 
         private void InitializeComponent()

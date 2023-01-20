@@ -144,6 +144,9 @@
   <data name="Label_AllocatedToResources" xml:space="preserve">
     <value>Allocated to Resources</value>
   </data>
+  <data name="Label_AnnotateResources" xml:space="preserve">
+    <value>Annotate Resources</value>
+  </data>
   <data name="Label_AppName" xml:space="preserve">
     <value>Project Plan</value>
   </data>
@@ -228,6 +231,9 @@
   <data name="Label_EffortProjection" xml:space="preserve">
     <value>Effort Projection</value>
   </data>
+  <data name="Label_End" xml:space="preserve">
+    <value>End</value>
+  </data>
   <data name="Label_FibonacciRisk" xml:space="preserve">
     <value>Fibonacci Risk:</value>
   </data>
@@ -238,7 +244,10 @@
     <value>FS</value>
   </data>
   <data name="Label_GanttAxisTitle" xml:space="preserve">
-    <value>TBC later</value>
+    <value>Scheduled Tasks</value>
+  </data>
+  <data name="Label_GanttChartSeries" xml:space="preserve">
+    <value>Scheduled Tasks</value>
   </data>
   <data name="Label_GeometricActivityRisk" xml:space="preserve">
     <value>Geometric (Act.) Risk:</value>
@@ -248,6 +257,9 @@
   </data>
   <data name="Label_GeometricFibonacciRisk" xml:space="preserve">
     <value>Geometric (Fib.) Risk:</value>
+  </data>
+  <data name="Label_GroupByResource" xml:space="preserve">
+    <value>Group by Resource</value>
   </data>
   <data name="Label_HasNoCost" xml:space="preserve">
     <value>No Cost</value>
@@ -341,6 +353,9 @@
   </data>
   <data name="Label_SlackLimit" xml:space="preserve">
     <value>Slack Limit</value>
+  </data>
+  <data name="Label_Start" xml:space="preserve">
+    <value>Start</value>
   </data>
   <data name="Label_StartDay" xml:space="preserve">
     <value>Start day:</value>

@@ -142,6 +142,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annotate Resources.
+        /// </summary>
+        public static string Label_AnnotateResources {
+            get {
+                return ResourceManager.GetString("Label_AnnotateResources", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Project Plan.
         /// </summary>
         public static string Label_AppName {
@@ -394,6 +403,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to End.
+        /// </summary>
+        public static string Label_End {
+            get {
+                return ResourceManager.GetString("Label_End", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fibonacci Risk:.
         /// </summary>
         public static string Label_FibonacciRisk {
@@ -421,11 +439,20 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TBC later.
+        ///   Looks up a localized string similar to Scheduled Tasks.
         /// </summary>
         public static string Label_GanttAxisTitle {
             get {
                 return ResourceManager.GetString("Label_GanttAxisTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scheduled Tasks.
+        /// </summary>
+        public static string Label_GanttChartSeries {
+            get {
+                return ResourceManager.GetString("Label_GanttChartSeries", resourceCulture);
             }
         }
         
@@ -453,6 +480,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_GeometricFibonacciRisk {
             get {
                 return ResourceManager.GetString("Label_GeometricFibonacciRisk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group by Resource.
+        /// </summary>
+        public static string Label_GroupByResource {
+            get {
+                return ResourceManager.GetString("Label_GroupByResource", resourceCulture);
             }
         }
         
@@ -733,6 +769,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_SlackLimit {
             get {
                 return ResourceManager.GetString("Label_SlackLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start.
+        /// </summary>
+        public static string Label_Start {
+            get {
+                return ResourceManager.GetString("Label_Start", resourceCulture);
             }
         }
         
