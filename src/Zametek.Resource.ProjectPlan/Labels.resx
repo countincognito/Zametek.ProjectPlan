@@ -151,7 +151,7 @@
     <value>Project Plan</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>Version 0.7.0</value>
+    <value>Version 0.7.1</value>
   </data>
   <data name="Label_Author" xml:space="preserve">
     <value>Riccardo M Bennett-Lovsey</value>
@@ -166,7 +166,7 @@
     <value>Color</value>
   </data>
   <data name="Label_Copyright" xml:space="preserve">
-    <value>Copyright (c) 2022</value>
+    <value>Copyright (c) 2023</value>
   </data>
   <data name="Label_CriticalityRisk" xml:space="preserve">
     <value>Criticality Risk:</value>

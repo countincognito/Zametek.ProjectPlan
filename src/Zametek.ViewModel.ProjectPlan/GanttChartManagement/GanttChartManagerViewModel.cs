@@ -241,9 +241,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 // Order the set according to the start times of the first activity for each resource.
 
-                var orderedScheduledResourceActivitiesSet = scheduledResourceActivitiesSet
+                IList<(string, IList<ScheduledActivityModel>)> orderedScheduledResourceActivitiesSet = scheduledResourceActivitiesSet
                     .OrderByDescending(x => x.ScheduledActivities.OrderBy(y => y.StartTime)
                         .FirstOrDefault()?.StartTime ?? 0)
+                    .ThenBy(x => x.ScheduledActivities.OrderBy(y => y.StartTime)
+                        .LastOrDefault()?.FinishTime ?? 0)
                     .ToList();
 
                 foreach ((string resourceName, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
@@ -324,7 +326,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // Add all the activities (in reverse display order).
 
-                foreach (IDependentActivity<int, int> activity in graphCompilation.DependentActivities.OrderByDescending(x => x.EarliestStartTime))
+                IOrderedEnumerable<IDependentActivity<int, int>> orderedActivities = graphCompilation
+                    .DependentActivities
+                    .OrderByDescending(x => x.EarliestStartTime)
+                    .ThenByDescending(x => x.TotalSlack);
+
+                foreach (IDependentActivity<int, int> activity in orderedActivities)
                 {
                     if (activity.EarliestStartTime.HasValue
                         && activity.EarliestFinishTime.HasValue
