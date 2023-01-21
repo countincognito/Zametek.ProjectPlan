@@ -244,10 +244,10 @@
     <value>FS</value>
   </data>
   <data name="Label_GanttAxisTitle" xml:space="preserve">
-    <value>Scheduled Tasks</value>
+    <value>Scheduled Activities</value>
   </data>
   <data name="Label_GanttChartSeries" xml:space="preserve">
-    <value>Scheduled Tasks</value>
+    <value>Scheduled Activities</value>
   </data>
   <data name="Label_GeometricActivityRisk" xml:space="preserve">
     <value>Geometric (Act.) Risk:</value>

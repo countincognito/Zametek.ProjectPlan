@@ -439,7 +439,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Scheduled Tasks.
+        ///   Looks up a localized string similar to Scheduled Activities.
         /// </summary>
         public static string Label_GanttAxisTitle {
             get {
@@ -448,7 +448,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Scheduled Tasks.
+        ///   Looks up a localized string similar to Scheduled Activities.
         /// </summary>
         public static string Label_GanttChartSeries {
             get {
