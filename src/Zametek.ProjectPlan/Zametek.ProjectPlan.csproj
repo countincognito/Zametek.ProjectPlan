@@ -2,7 +2,7 @@
   <PropertyGroup>
 	<OutputType>WinExe</OutputType>
 	<TargetFramework>net6.0</TargetFramework>
-	<PublishSingleFile>true</PublishSingleFile>
+	<PublishSingleFile Condition="'$(Configuration)' == 'Release'">true</PublishSingleFile>
 	<SelfContained>true</SelfContained>
 	<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	<PublishReadyToRun>false</PublishReadyToRun>
@@ -11,9 +11,13 @@
     <TrimMode>copyused</TrimMode>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
 	<UserSecretsId>ProjectPlan-515098bc-c9a8-47a9-a73d-a3d6104d2953</UserSecretsId>
+	<ApplicationIcon>zpp.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="zpp.ico" />
   </ItemGroup>
   <ItemGroup>
     <!--This helps with theme dll-s trimming.
