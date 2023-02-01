@@ -159,7 +159,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsExplicitTarget = true,
                     Name = mpxjResource.getName(),
                     DisplayOrder = id,
-                    ColorFormat = new ColorFormatModel()
+                    ColorFormat = ColorHelper.RandomColor()
                 };
                 resources.Add(resource);
             }
