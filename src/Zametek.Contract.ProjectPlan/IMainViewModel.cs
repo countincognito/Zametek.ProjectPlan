@@ -56,6 +56,8 @@ namespace Zametek.Contract.ProjectPlan
 
         Task OpenProjectPlanFileAsync();
 
+        Task OpenProjectPlanFileAsync(string? filename);
+
         Task SaveProjectPlanFileAsync();
 
         Task SaveAsProjectPlanFileAsync();

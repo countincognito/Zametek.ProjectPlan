@@ -1,10 +1,10 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using ReactiveUI;
 using Splat;
 using System;
 using System.ComponentModel;
+using System.Linq;
 using Zametek.Contract.ProjectPlan;
 using Zametek.View.ProjectPlan;
 
@@ -83,6 +83,12 @@ namespace Zametek.ProjectPlan
                 desktopLifetime.Exit += (a, b) =>
                 {
                     mainViewModel.CloseLayout();
+                };
+
+                desktopLifetime.Startup += async (sender, args) =>
+                {
+                    string? input = args?.Args?.FirstOrDefault();
+                    await mainViewModel.OpenProjectPlanFileAsync(input);
                 };
             }
             //else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewLifetime)

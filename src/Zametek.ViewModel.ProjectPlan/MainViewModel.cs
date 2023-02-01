@@ -356,6 +356,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ResetProject() => m_CoreViewModel.ResetProject();
 
+        private async Task OpenProjectPlanFileInternalAsync(string? filename)
+        {
+            if (!string.IsNullOrWhiteSpace(filename))
+            {
+                ProjectPlanModel planModel = await m_ProjectFileOpen.OpenProjectPlanFileAsync(filename);
+                ProcessProjectPlan(planModel);
+                m_SettingService.SetFilePath(filename);
+                await RunAutoCompileAsync();
+            }
+        }
+
         private async Task SaveProjectPlanFileInternalAsync(string? filename)
         {
             if (string.IsNullOrWhiteSpace(filename))
@@ -527,14 +538,34 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 string directory = m_SettingService.ProjectDirectory;
                 string? filename = await m_DialogService.ShowOpenFileDialogAsync(string.Empty, directory, s_ProjectPlanFileFilters);
+                await OpenProjectPlanFileInternalAsync(filename);
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    ex.Message);
+                ResetProject();
+            }
+        }
 
-                if (!string.IsNullOrWhiteSpace(filename))
+        public async Task OpenProjectPlanFileAsync(string? filename)
+        {
+            try
+            {
+                if (IsProjectUpdated)
                 {
-                    ProjectPlanModel planModel = await m_ProjectFileOpen.OpenProjectPlanFileAsync(filename);
-                    ProcessProjectPlan(planModel);
-                    m_SettingService.SetFilePath(filename);
-                    await RunAutoCompileAsync();
+                    bool confirmation = await m_DialogService.ShowConfirmationAsync(
+                        Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                        Resource.ProjectPlan.Messages.Message_UnsavedChanges);
+
+                    if (!confirmation)
+                    {
+                        return;
+                    }
                 }
+
+                await OpenProjectPlanFileInternalAsync(filename);
             }
             catch (Exception ex)
             {
