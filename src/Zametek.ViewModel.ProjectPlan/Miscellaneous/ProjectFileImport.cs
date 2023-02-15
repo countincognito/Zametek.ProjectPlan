@@ -274,7 +274,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Name = name,
                         DisplayOrder = resourceId,
                         UnitCost = cost,
-                        ColorFormat = new ColorFormatModel()
+                        ColorFormat = ColorHelper.RandomColor()
                     };
                     resources.Add(resource);
                     resourceUidToIdLookup.Add(resourceUid, resourceId);
