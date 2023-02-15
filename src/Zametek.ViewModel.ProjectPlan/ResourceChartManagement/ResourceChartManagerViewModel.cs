@@ -62,11 +62,15 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ResourceChartManagerViewModel(
-            ICoreViewModel coreViewModel,//!!,
-            ISettingService settingService,//!!,
-            IDialogService dialogService,//!!,
-            IDateTimeCalculator dateTimeCalculator)//!!)
+            ICoreViewModel coreViewModel,
+            ISettingService settingService,
+            IDialogService dialogService,
+            IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(settingService);
+            ArgumentNullException.ThrowIfNull(dialogService);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
@@ -161,11 +165,13 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static PlotModel BuildResourceChartPlotModel(
-            IDateTimeCalculator dateTimeCalculator,//!!,
-            ResourceSeriesSetModel resourceSeriesSet,//!!,
+            IDateTimeCalculator dateTimeCalculator,
+            ResourceSeriesSetModel resourceSeriesSet,
             bool showDates,
             DateTime projectStartDateTime)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(resourceSeriesSet);
             var plotModel = new PlotModel();
             IEnumerable<ResourceSeriesModel> combinedResourceSeries = resourceSeriesSet.Combined.OrderBy(x => x.DisplayOrder);
             int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
@@ -245,11 +251,12 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static Axis BuildResourceChartXAxis(
-            IDateTimeCalculator dateTimeCalculator,//!!,
+            IDateTimeCalculator dateTimeCalculator,
             int finishTime,
             bool showDates,
             DateTime projectStartDateTime)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             if (finishTime != default)
             {
                 double minValue = ChartHelper.CalculateChartTimeXValue(0, showDates, projectStartDateTime, dateTimeCalculator);

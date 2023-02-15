@@ -1,5 +1,4 @@
-﻿using Avalonia.Controls;
-using Avalonia.Data;
+﻿using Avalonia.Data;
 using ReactiveUI;
 using System.Collections;
 using System.Collections.ObjectModel;
@@ -36,15 +35,19 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ManagedActivityViewModel(
-            ICoreViewModel coreViewModel,//!!,
-            IDependentActivity<int, int> dependentActivity,//!!,
-            IDateTimeCalculator dateTimeCalculator,//!!,
-            VertexGraphCompiler<int, int, IDependentActivity<int, int>> vertexGraphCompiler,//!!,
+            ICoreViewModel coreViewModel,
+            IDependentActivity<int, int> dependentActivity,
+            IDateTimeCalculator dateTimeCalculator,
+            VertexGraphCompiler<int, int, IDependentActivity<int, int>> vertexGraphCompiler,
             DateTimeOffset projectStart,
             IEnumerable<TrackerModel>? trackers,
             DateTimeOffset? minimumEarliestStartDateTime,
             DateTimeOffset? maximumLatestFinishDateTime)
         {
+            ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(dependentActivity);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(vertexGraphCompiler);
             m_CoreViewModel = coreViewModel;
             DependentActivity = dependentActivity;
             m_DateTimeCalculator = dateTimeCalculator;
@@ -310,8 +313,9 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(AllocatedToResourcesString));
         }
 
-        private void AddTrackers(IEnumerable<TrackerModel> trackerModels)//!!)
+        private void AddTrackers(IEnumerable<TrackerModel> trackerModels)
         {
+            ArgumentNullException.ThrowIfNull(trackerModels);
             foreach (TrackerModel trackerModel in trackerModels)
             {
                 Trackers.Add(new TrackerViewModel(

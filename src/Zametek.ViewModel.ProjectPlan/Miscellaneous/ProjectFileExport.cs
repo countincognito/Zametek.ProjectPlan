@@ -1,4 +1,5 @@
-﻿using NPOI.SS.UserModel;
+﻿using com.sun.tools.javac.jvm;
+using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.Collections;
 using System.Diagnostics;
@@ -84,8 +85,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public ProjectFileExport(IDateTimeCalculator dateTimeCalculator)//!!)
+        public ProjectFileExport(IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             m_DateTimeCalculator = dateTimeCalculator;
         }
 
@@ -95,12 +97,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static void DateFromProjectStart(
             int time,
-            ICell cell,//!!,
-            ICellStyle dateTimeStyle,//!!,
+            ICell cell,
+            ICellStyle dateTimeStyle,
             bool showDates,
             DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator)//!!)
+            IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(cell);
+            ArgumentNullException.ThrowIfNull(dateTimeStyle);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             if (showDates)
             {
                 cell.CellStyle = dateTimeStyle;
@@ -114,12 +119,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static TypeSwitch<object?> AddDateFromProjectStartCase(
             TypeSwitch<object?> typeSwitch,
-            ICell cell,//!!,
-            ICellStyle dateTimeStyle,//!!,
+            ICell cell,
+            ICellStyle dateTimeStyle,
             bool showDates,
             DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator)//!!)
+            IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(typeSwitch);
+            ArgumentNullException.ThrowIfNull(cell);
+            ArgumentNullException.ThrowIfNull(dateTimeStyle);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             return typeSwitch.Case<int>(time => DateFromProjectStart(time, cell, dateTimeStyle, showDates, projectStart, dateTimeCalculator));
         }
 
@@ -127,8 +136,9 @@ namespace Zametek.ViewModel.ProjectPlan
             string columnTitle,
             bool showDates,
             DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator)//!!)
+            IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             Func<TypeSwitch<object?>, ICell, ICellStyle, TypeSwitch<object?>>? output = null;
 
             TypeSwitch<object?> appendCaseCheck(TypeSwitch<object?> x, ICell y, ICellStyle z) =>
@@ -147,8 +157,9 @@ namespace Zametek.ViewModel.ProjectPlan
             string columnTitle,
             bool showDates,
             DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator)//!!)
+            IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             Func<TypeSwitch<object?>, ICell, ICellStyle, TypeSwitch<object?>>? output = null;
 
             TypeSwitch<object?> appendCaseCheck(TypeSwitch<object?> x, ICell y, ICellStyle z) =>
@@ -162,10 +173,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static void AddToCell(
             object? content,
-            ICell cell,//!!,
-            ICellStyle dateTimeStyle,//!!,
+            ICell cell,
+            ICellStyle dateTimeStyle,
             Func<TypeSwitch<object?>, ICell, ICellStyle, TypeSwitch<object?>>? appendCaseCheck = null)
         {
+            ArgumentNullException.ThrowIfNull(cell);
+            ArgumentNullException.ThrowIfNull(dateTimeStyle);
             TypeSwitch<object?> typeSwitch = content.TypeSwitchOn();
 
             if (appendCaseCheck is not null)
@@ -200,10 +213,13 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static void WriteGeneralToWorkbook(
-            ProjectPlanModel projectPlan,//!!,
-            IWorkbook workbook,//!!,
-            ICellStyle titleStyle)//!!)
+            ProjectPlanModel projectPlan,
+            IWorkbook workbook,
+            ICellStyle titleStyle)
         {
+            ArgumentNullException.ThrowIfNull(projectPlan);
+            ArgumentNullException.ThrowIfNull(workbook);
+            ArgumentNullException.ThrowIfNull(titleStyle);
             ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
             dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
 
@@ -260,13 +276,17 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static void WriteActivitiesToWorkbook(
-            IEnumerable<DependentActivityModel> dependentActivities,//!!,
-            IWorkbook workbook,//!!,
-            ICellStyle titleStyle,//!!,
+            IEnumerable<DependentActivityModel> dependentActivities,
+            IWorkbook workbook,
+            ICellStyle titleStyle,
             bool showDates,
             DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator)//!!)
+            IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(dependentActivities);
+            ArgumentNullException.ThrowIfNull(workbook);
+            ArgumentNullException.ThrowIfNull(titleStyle);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
             dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
 
@@ -359,12 +379,16 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static void WriteItemsToWorkbook<T>(
-            IEnumerable<T> items,//!!,
-            IEnumerable<string> columnTitles,//!!,
-            string sheetTitle,
-            IWorkbook workbook,//!!,
-            ICellStyle titleStyle)//!!)
+            IEnumerable<T> items,
+            IEnumerable<string> columnTitles,
+            string sheetTitle,//!!,
+            IWorkbook workbook,
+            ICellStyle titleStyle)
         {
+            ArgumentNullException.ThrowIfNull(items);
+            ArgumentNullException.ThrowIfNull(columnTitles);
+            ArgumentNullException.ThrowIfNull(workbook);
+            ArgumentNullException.ThrowIfNull(titleStyle);
             ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
             dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
 
@@ -424,15 +448,20 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static void WriteTrackersToWorkbook<T>(
-            IEnumerable<ActivityModel> activities,//!!,
-            Func<TrackerModel, T> trackerFunc,//!!,
-            string sheetTitle,
-            IWorkbook workbook,//!!,
-            ICellStyle titleStyle,//!!,
+            IEnumerable<ActivityModel> activities,
+            Func<TrackerModel, T> trackerFunc,
+            string sheetTitle,//!!,
+            IWorkbook workbook,
+            ICellStyle titleStyle,
             bool showDates,
             DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator)//!!)
+            IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(activities);
+            ArgumentNullException.ThrowIfNull(trackerFunc);
+            ArgumentNullException.ThrowIfNull(workbook);
+            ArgumentNullException.ThrowIfNull(titleStyle);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
             dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
 
@@ -507,15 +536,20 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static void WriteResourceChartToWorkbook<T>(
-            ResourceSeriesSetModel resourceSeriesSet,//!!,
-            Func<ResourceSeriesModel, int, T> resourceseriesFunc,//!!,
-            string sheetTitle,
-            IWorkbook workbook,//!!,
-            ICellStyle titleStyle,//!!,
+            ResourceSeriesSetModel resourceSeriesSet,
+            Func<ResourceSeriesModel, int, T> resourceseriesFunc,
+            string sheetTitle,//!!,
+            IWorkbook workbook,
+            ICellStyle titleStyle,
             bool showDates,
             DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator)//!!)
+            IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(resourceSeriesSet);
+            ArgumentNullException.ThrowIfNull(resourceseriesFunc);
+            ArgumentNullException.ThrowIfNull(workbook);
+            ArgumentNullException.ThrowIfNull(titleStyle);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
             dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
 
@@ -589,14 +623,18 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static void WriteEarnedValueChartToWorkbook(
-            IEnumerable<TrackingPointModel> trackingPoints,//!!,
-            string sheetTitle,
-            IWorkbook workbook,//!!,
-            ICellStyle titleStyle,//!!,
+            IEnumerable<TrackingPointModel> trackingPoints,
+            string sheetTitle,//!!,
+            IWorkbook workbook,
+            ICellStyle titleStyle,
             bool showDates,
             DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator)//!!)
+            IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(trackingPoints);
+            ArgumentNullException.ThrowIfNull(workbook);
+            ArgumentNullException.ThrowIfNull(titleStyle);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
             dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
 

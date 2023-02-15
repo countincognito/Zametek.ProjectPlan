@@ -19,9 +19,11 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ManagedResourceViewModel(
-            IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,//!!,
-            ResourceModel resource)//!!)
+            IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
+            ResourceModel resource)
         {
+            ArgumentNullException.ThrowIfNull(resourceSettingsManagerViewModel);
+            ArgumentNullException.ThrowIfNull(resource);
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;
             Id = resource.Id;
             m_Name = resource.Name;

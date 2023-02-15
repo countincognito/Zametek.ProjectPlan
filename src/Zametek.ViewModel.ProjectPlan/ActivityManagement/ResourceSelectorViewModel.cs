@@ -62,10 +62,11 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Public Methods
 
         public void SetTargetResources(
-            IEnumerable<ResourceModel> targetResources,//!!,
-            HashSet<int> selectedTargetResources)//!!)
+            IEnumerable<ResourceModel> targetResources,
+            HashSet<int> selectedTargetResources)
         {
-
+            ArgumentNullException.ThrowIfNull(targetResources);
+            ArgumentNullException.ThrowIfNull(selectedTargetResources);
             lock (m_Lock)
             {
                 m_TargetResources.Clear();

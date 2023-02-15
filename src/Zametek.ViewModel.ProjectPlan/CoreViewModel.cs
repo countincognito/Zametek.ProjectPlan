@@ -38,10 +38,13 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public CoreViewModel(
-            ISettingService settingService,//!!,
-            IDateTimeCalculator dateTimeCalculator,//!!,
-            IMapper mapper)//!!)
+            ISettingService settingService,
+            IDateTimeCalculator dateTimeCalculator,
+            IMapper mapper)
         {
+            ArgumentNullException.ThrowIfNull(settingService);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(mapper);
             m_Lock = new object();
             m_VertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
             m_SettingService = settingService;
@@ -169,10 +172,12 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static ResourceSeriesSetModel CalculateResourceSeriesSet(
-            IEnumerable<ResourceScheduleModel> resourceSchedules,//!!,
-            IEnumerable<ResourceModel> resources,//!!,
+            IEnumerable<ResourceScheduleModel> resourceSchedules,
+            IEnumerable<ResourceModel> resources,
             double defaultUnitCost)
         {
+            ArgumentNullException.ThrowIfNull(resourceSchedules);
+            ArgumentNullException.ThrowIfNull(resources);
             var resourceSeriesSet = new ResourceSeriesSetModel();
             var resourceLookup = resources.ToDictionary(x => x.Id);
 
@@ -350,8 +355,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static TrackingSeriesSetModel CalculateTrackingSeriesSet(IEnumerable<ActivityModel> activities)//!!)
+        private static TrackingSeriesSetModel CalculateTrackingSeriesSet(IEnumerable<ActivityModel> activities)
         {
+            ArgumentNullException.ThrowIfNull(activities);
             IList<ActivityModel> orderedActivities = activities
                 .Select(x => x.CloneObject())
                 .OrderBy(x => x.EarliestFinishTime.GetValueOrDefault())
@@ -566,8 +572,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static int CalculateCyclomaticComplexity(IEnumerable<IDependentActivity<int, int>> dependentActivities)//!!)
+        private static int CalculateCyclomaticComplexity(IEnumerable<IDependentActivity<int, int>> dependentActivities)
         {
+            ArgumentNullException.ThrowIfNull(dependentActivities);
             var vertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
             foreach (DependentActivity<int, int> dependentActivity in dependentActivities)
             {

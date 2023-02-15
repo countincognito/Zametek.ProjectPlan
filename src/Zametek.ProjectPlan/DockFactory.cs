@@ -26,16 +26,16 @@ namespace Zametek.ProjectPlan
         private readonly IDockable m_ResourceSettingsManagerViewModel;
 
         public DockFactory(
-            IActivitiesManagerViewModel activitiesManagerViewModel,//!!,
-            ITrackingManagerViewModel trackingManagerViewModel,//!!,
-            IMetricManagerViewModel metricManagerViewModel,//!!,
-            IOutputManagerViewModel outputManagerViewModel,//!!,
-            IArrowGraphManagerViewModel arrowGraphManagerViewModel,//!!,
-            IResourceChartManagerViewModel resourceChartManagerViewModel,//!!,
-            IGanttChartManagerViewModel ganttChartManagerViewModel,//!!,
-            IEarnedValueChartManagerViewModel earnedValueChartManagerViewModel,//!!,
-            IArrowGraphSettingsManagerViewModel arrowGraphSettingsManagerViewModel,//!!,
-            IResourceSettingsManagerViewModel resourceSettingsManagerViewModel)//!!)
+            IActivitiesManagerViewModel activitiesManagerViewModel,
+            ITrackingManagerViewModel trackingManagerViewModel,
+            IMetricManagerViewModel metricManagerViewModel,
+            IOutputManagerViewModel outputManagerViewModel,
+            IArrowGraphManagerViewModel arrowGraphManagerViewModel,
+            IResourceChartManagerViewModel resourceChartManagerViewModel,
+            IGanttChartManagerViewModel ganttChartManagerViewModel,
+            IEarnedValueChartManagerViewModel earnedValueChartManagerViewModel,
+            IArrowGraphSettingsManagerViewModel arrowGraphSettingsManagerViewModel,
+            IResourceSettingsManagerViewModel resourceSettingsManagerViewModel)
         {
             m_ActivitiesManagerViewModel = activitiesManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(activitiesManagerViewModel));
             m_TrackingManagerViewModel = trackingManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(trackingManagerViewModel));
@@ -149,7 +149,7 @@ namespace Zametek.ProjectPlan
             return rootDock;
         }
 
-        public override void InitLayout(IDockable layout)//!!)
+        public override void InitLayout(IDockable layout)
         {
             ArgumentNullException.ThrowIfNull(layout);
 

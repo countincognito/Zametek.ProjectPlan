@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using OxyPlot;
+using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Legends;
 using OxyPlot.Series;
@@ -7,7 +8,6 @@ using ReactiveUI;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Input;
-using OxyPlot.Annotations;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
@@ -62,11 +62,15 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public EarnedValueChartManagerViewModel(
-            ICoreViewModel coreViewModel,//!!,
-            ISettingService settingService,//!!,
-            IDialogService dialogService,//!!,
-            IDateTimeCalculator dateTimeCalculator)//!!)
+            ICoreViewModel coreViewModel,
+            ISettingService settingService,
+            IDialogService dialogService,
+            IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(settingService);
+            ArgumentNullException.ThrowIfNull(dialogService);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
@@ -165,12 +169,14 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static PlotModel BuildEarnedValueChartPlotModel(
-            IDateTimeCalculator dateTimeCalculator,//!!,
-            TrackingSeriesSetModel trackingSeriesSet,//!!,
+            IDateTimeCalculator dateTimeCalculator,
+            TrackingSeriesSetModel trackingSeriesSet,
             bool showDates,
             DateTime projectStartDateTime,
             bool showProjections)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(trackingSeriesSet);
             var plotModel = new PlotModel();
             const double defaultMaxPercentage = 100.0;
 
@@ -232,9 +238,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             void PopulateLineSeries(
-                LineSeries lineSeries,//!!,
-                IList<TrackingPointModel> pointSeries)//!!)
+                LineSeries lineSeries,
+                IList<TrackingPointModel> pointSeries)
             {
+                ArgumentNullException.ThrowIfNull(lineSeries);
+                ArgumentNullException.ThrowIfNull(pointSeries);
                 if (pointSeries.Any())
                 {
                     foreach (TrackingPointModel planPoint in pointSeries)
@@ -314,11 +322,12 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static Axis BuildEarnedValueChartXAxis(
-            IDateTimeCalculator dateTimeCalculator,//!!,
+            IDateTimeCalculator dateTimeCalculator,
             int chartEnd,
             bool showDates,
             DateTime projectStartDateTime)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             if (chartEnd != default)
             {
                 double minValue = ChartHelper.CalculateChartTimeXValue(0, showDates, projectStartDateTime, dateTimeCalculator);

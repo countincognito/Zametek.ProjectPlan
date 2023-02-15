@@ -18,10 +18,12 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ManagedActivitySeverityViewModel(
-            IArrowGraphSettingsManagerViewModel arrowGraphSettingsManagerViewModel,//!!,
+            IArrowGraphSettingsManagerViewModel arrowGraphSettingsManagerViewModel,
             Guid id,
-            ActivitySeverityModel activitySeverity)//!!)
+            ActivitySeverityModel activitySeverity)
         {
+            ArgumentNullException.ThrowIfNull(arrowGraphSettingsManagerViewModel);
+            ArgumentNullException.ThrowIfNull(activitySeverity);
             m_ArrowGraphSettingsManagerViewModel = arrowGraphSettingsManagerViewModel;
             Id = id;
             m_SlackLimit = activitySeverity.SlackLimit;

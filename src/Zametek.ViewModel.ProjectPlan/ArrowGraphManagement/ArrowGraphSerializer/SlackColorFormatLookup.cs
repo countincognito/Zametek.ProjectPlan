@@ -13,8 +13,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public SlackColorFormatLookup(IEnumerable<ActivitySeverityModel> activitySeverities)//!!)
+        public SlackColorFormatLookup(IEnumerable<ActivitySeverityModel> activitySeverities)
         {
+            ArgumentNullException.ThrowIfNull(activitySeverities);
             m_ActivitySeverities = activitySeverities.OrderBy(x => x.SlackLimit).ToList();
         }
 
@@ -26,6 +27,7 @@ namespace Zametek.ViewModel.ProjectPlan
             int? totalSlack,
             Func<byte, byte, byte, byte, T> func)
         {
+            ArgumentNullException.ThrowIfNull(func);
             if (!totalSlack.HasValue)
             {
                 return func(byte.MaxValue, 0, 0, 0);

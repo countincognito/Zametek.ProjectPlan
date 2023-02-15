@@ -5,8 +5,9 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     public static class GraphVizBuilder
     {
-        public static string ToGraphViz(DiagramArrowGraphModel diagramArrowGraph)//!!)
+        public static string ToGraphViz(DiagramArrowGraphModel diagramArrowGraph)
         {
+            ArgumentNullException.ThrowIfNull(diagramArrowGraph);
             var sb = new StringBuilder();
 
             _ = sb.Append("digraph Arrow {\nrankdir=LR;\n");

@@ -45,8 +45,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private static string BuildNodeLabel(EventModel eventModel)//!!)
+        private static string BuildNodeLabel(EventModel eventModel)
         {
+            ArgumentNullException.ThrowIfNull(eventModel);
             string labelText = string.Empty;
 
             if (eventModel.EarliestFinishTime is not null
@@ -58,8 +59,9 @@ namespace Zametek.ViewModel.ProjectPlan
             return labelText;
         }
 
-        private static DiagramNodeModel BuildDiagramNode(EventNodeModel eventNode)//!!)
+        private static DiagramNodeModel BuildDiagramNode(EventNodeModel eventNode)
         {
+            ArgumentNullException.ThrowIfNull(eventNode);
             EventModel eventModel = eventNode.Content;
 
             return new DiagramNodeModel
@@ -78,8 +80,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         }
 
-        private static (bool isVisible, string labelText) BuildSingleLineEdgeLabel(ActivityModel activityModel)//!!)
+        private static (bool isVisible, string labelText) BuildSingleLineEdgeLabel(ActivityModel activityModel)
         {
+            ArgumentNullException.ThrowIfNull(activityModel);
             var labelText = new StringBuilder();
             bool isVisible = false;
 
@@ -115,8 +118,9 @@ namespace Zametek.ViewModel.ProjectPlan
             return (isVisible, labelText.ToString());
         }
 
-        private static (bool isVisible, string labelText) BuildMultiLineEdgeLabel(ActivityModel activityModel)//!!)
+        private static (bool isVisible, string labelText) BuildMultiLineEdgeLabel(ActivityModel activityModel)
         {
+            ArgumentNullException.ThrowIfNull(activityModel);
             var labelText = new StringBuilder();
             bool isVisible = false;
 
@@ -155,10 +159,12 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static DiagramArrowGraphModel BuildArrowGraphDiagram(
-            ArrowGraphModel arrowGraphModel,//!!,
-            ArrowGraphSettingsModel arrowGraphSettingsModel,//!!,
+            ArrowGraphModel arrowGraphModel,
+            ArrowGraphSettingsModel arrowGraphSettingsModel,
             bool multiLineEdgeLabels = false)
         {
+            ArgumentNullException.ThrowIfNull(arrowGraphModel);
+            ArgumentNullException.ThrowIfNull(arrowGraphSettingsModel);
             // Perform validity check.
             IList<EventNodeModel> nodeModels = arrowGraphModel.Nodes;
             IDictionary<int, EventNodeModel> nodeModelLookup = nodeModels.ToDictionary(x => x.Content.Id);
@@ -291,6 +297,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ArrowGraphModel arrowGraph,
             ArrowGraphSettingsModel arrowGraphSettings)
         {
+            ArgumentNullException.ThrowIfNull(arrowGraph);
+            ArgumentNullException.ThrowIfNull(arrowGraphSettings);
             DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, arrowGraphSettings);
 
             // Fill the graph.

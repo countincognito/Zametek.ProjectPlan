@@ -5,9 +5,11 @@ namespace Zametek.Data.ProjectPlan.v0_2_1
     public static class Converter
     {
         public static ProjectPlanModel Upgrade(
-            IMapper mapper,//!!,
-            v0_2_0.ProjectPlanModel projectPlan)//!!)
+            IMapper mapper,
+            v0_2_0.ProjectPlanModel projectPlan)
         {
+            ArgumentNullException.ThrowIfNull(mapper);
+            ArgumentNullException.ThrowIfNull(projectPlan);
             GraphCompilationErrorsModel? errors = null;
 
             if (projectPlan.GraphCompilation?.Errors != null)

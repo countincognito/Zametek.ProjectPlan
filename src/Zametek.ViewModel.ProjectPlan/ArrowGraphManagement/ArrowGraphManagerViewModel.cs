@@ -67,11 +67,15 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ArrowGraphManagerViewModel(
-            ICoreViewModel coreViewModel,//!!,
-            ISettingService settingService,//!!,
-            IDialogService dialogService,//!!,
-            IArrowGraphSerializer arrowGraphExport)//!!)
+            ICoreViewModel coreViewModel,
+            ISettingService settingService,
+            IDialogService dialogService,
+            IArrowGraphSerializer arrowGraphExport)
         {
+            ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(settingService);
+            ArgumentNullException.ThrowIfNull(dialogService);
+            ArgumentNullException.ThrowIfNull(arrowGraphExport);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;

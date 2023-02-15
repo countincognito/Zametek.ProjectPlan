@@ -4,6 +4,7 @@ using MessageBox.Avalonia;
 using MessageBox.Avalonia.BaseWindows.Base;
 using MessageBox.Avalonia.DTO;
 using MessageBox.Avalonia.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,8 +22,9 @@ namespace Zametek.View.ProjectPlan
 
         #endregion
 
-        public DialogService(IMapper mapper)//!!)
+        public DialogService(IMapper mapper)
         {
+            ArgumentNullException.ThrowIfNull(mapper);
             m_Mapper = mapper;
         }
 

@@ -26,10 +26,13 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public MetricManagerViewModel(
-            ICoreViewModel coreViewModel,//!!,
-            IDateTimeCalculator dateTimeCalculator,//!!,
-            IMapper mapper)//!!)
+            ICoreViewModel coreViewModel,
+            IDateTimeCalculator dateTimeCalculator,
+            IMapper mapper)
         {
+            ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(mapper);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
             m_DateTimeCalculator = dateTimeCalculator;
@@ -165,25 +168,30 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Private Methods
 
         private static double CalculateCriticalityRisk(
-            IEnumerable<ActivityModel> activities,//!!,
-            ActivitySeverityLookup activitySeverityLookup)//!!)
+            IEnumerable<ActivityModel> activities,
+            ActivitySeverityLookup activitySeverityLookup)
         {
+            ArgumentNullException.ThrowIfNull(activities);
+            ArgumentNullException.ThrowIfNull(activitySeverityLookup);
             double numerator = activities.Sum(activity => activitySeverityLookup.FindSlackCriticalityWeight(activity.TotalSlack));
             double denominator = activitySeverityLookup.CriticalCriticalityWeight() * activities.Count();
             return numerator / denominator;
         }
 
         private static double CalculateFibonacciRisk(
-            IEnumerable<ActivityModel> activities,//!!,
-            ActivitySeverityLookup activitySeverityLookup)//!!)
+            IEnumerable<ActivityModel> activities,
+            ActivitySeverityLookup activitySeverityLookup)
         {
+            ArgumentNullException.ThrowIfNull(activities);
+            ArgumentNullException.ThrowIfNull(activitySeverityLookup);
             double numerator = activities.Sum(activity => activitySeverityLookup.FindSlackFibonacciWeight(activity.TotalSlack));
             double denominator = activitySeverityLookup.CriticalFibonacciWeight() * activities.Count();
             return numerator / denominator;
         }
 
-        private static double CalculateActivityRisk(IEnumerable<ActivityModel> activities)//!!)
+        private static double CalculateActivityRisk(IEnumerable<ActivityModel> activities)
         {
+            ArgumentNullException.ThrowIfNull(activities);
             double numerator = 0.0;
             double maxTotalSlack = 0.0;
             foreach (ActivityModel activity in activities.Where(x => x.TotalSlack.HasValue))
@@ -199,8 +207,9 @@ namespace Zametek.ViewModel.ProjectPlan
             return 1.0 - (numerator / denominator);
         }
 
-        private static double CalculateActivityRiskWithStdDevCorrection(IEnumerable<ActivityModel> activities)//!!)
+        private static double CalculateActivityRiskWithStdDevCorrection(IEnumerable<ActivityModel> activities)
         {
+            ArgumentNullException.ThrowIfNull(activities);
             double numerator = 0.0;
             double maxTotalSlack = 0.0;
 
@@ -236,9 +245,11 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static double CalculateGeometricCriticalityRisk(
-            IEnumerable<ActivityModel> activities,//!!,
-            ActivitySeverityLookup activitySeverityLookup)//!!)
+            IEnumerable<ActivityModel> activities,
+            ActivitySeverityLookup activitySeverityLookup)
         {
+            ArgumentNullException.ThrowIfNull(activities);
+            ArgumentNullException.ThrowIfNull(activitySeverityLookup);
             double numerator = 1.0;
             foreach (ActivityModel activity in activities)
             {
@@ -250,9 +261,11 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static double CalculateGeometricFibonacciRisk(
-            IEnumerable<ActivityModel> activities,//!!,
-            ActivitySeverityLookup activitySeverityLookup)//!!)
+            IEnumerable<ActivityModel> activities,
+            ActivitySeverityLookup activitySeverityLookup)
         {
+            ArgumentNullException.ThrowIfNull(activities);
+            ArgumentNullException.ThrowIfNull(activitySeverityLookup);
             double numerator = 1.0;
             foreach (ActivityModel activity in activities)
             {
@@ -263,8 +276,9 @@ namespace Zametek.ViewModel.ProjectPlan
             return numerator / denominator;
         }
 
-        private static double CalculateGeometricActivityRisk(IEnumerable<ActivityModel> activities)//!!)
+        private static double CalculateGeometricActivityRisk(IEnumerable<ActivityModel> activities)
         {
+            ArgumentNullException.ThrowIfNull(activities);
             double numerator = 1.0;
             double maxTotalSlack = 0.0;
             foreach (ActivityModel activity in activities.Where(x => x.TotalSlack.HasValue))
@@ -283,9 +297,11 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static MetricsModel CalculateProjectMetrics(
-            IEnumerable<ActivityModel> activities,//!!,
-            IEnumerable<ActivitySeverityModel> activitySeverities)//!!)
+            IEnumerable<ActivityModel> activities,
+            IEnumerable<ActivitySeverityModel> activitySeverities)
         {
+            ArgumentNullException.ThrowIfNull(activities);
+            ArgumentNullException.ThrowIfNull(activitySeverities);
             var activitySeverityLookup = new ActivitySeverityLookup(activitySeverities);
             return new MetricsModel
             {
@@ -299,8 +315,9 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private void BuildMetrics(IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation)//!!)
+        private void BuildMetrics(IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation)
         {
+            ArgumentNullException.ThrowIfNull(graphCompilation);
             lock (m_Lock)
             {
                 Metrics = new MetricsModel();
@@ -325,8 +342,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static CostsModel CalculateProjectCosts(IList<ResourceSeriesModel> resourceSeriesModels)//!!)
+        private static CostsModel CalculateProjectCosts(IList<ResourceSeriesModel> resourceSeriesModels)
         {
+            ArgumentNullException.ThrowIfNull(resourceSeriesModels);
             return new CostsModel
             {
                 Direct = resourceSeriesModels
@@ -341,8 +359,9 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private void BuildCosts(ResourceSeriesSetModel resourceSeriesSet)//!!)
+        private void BuildCosts(ResourceSeriesSetModel resourceSeriesSet)
         {
+            ArgumentNullException.ThrowIfNull(resourceSeriesSet);
             lock (m_Lock)
             {
                 Costs = new CostsModel();

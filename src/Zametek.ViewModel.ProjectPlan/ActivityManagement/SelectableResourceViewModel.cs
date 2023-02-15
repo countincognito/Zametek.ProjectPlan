@@ -20,8 +20,9 @@ namespace Zametek.ViewModel.ProjectPlan
             int id,
             string name,//!!,
             bool isSelected,
-            ResourceSelectorViewModel resourceSelectorViewModel)//!!)
+            ResourceSelectorViewModel resourceSelectorViewModel)
         {
+            ArgumentNullException.ThrowIfNull(resourceSelectorViewModel);
             Id = id;
             m_Name = name;
             IsSelected = isSelected;

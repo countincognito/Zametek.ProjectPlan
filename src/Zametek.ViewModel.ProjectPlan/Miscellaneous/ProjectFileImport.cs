@@ -69,8 +69,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        private static DataTable SheetToDataTable(ISheet sheet)//!!)
+        private static DataTable SheetToDataTable(ISheet sheet)
         {
+            ArgumentNullException.ThrowIfNull(sheet);
             DataTable dtTable = new();
             IRow titleRow = sheet.GetRow(0);
             int cellCount = titleRow.LastCellNum;

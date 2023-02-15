@@ -25,10 +25,13 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public OutputManagerViewModel(
-            ICoreViewModel coreViewModel,//!!,
-            IDialogService dialogService,//!!,
-            IDateTimeCalculator dateTimeCalculator)//!!)
+            ICoreViewModel coreViewModel,
+            IDialogService dialogService,
+            IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(dialogService);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
             m_DialogService = dialogService;
@@ -93,9 +96,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private static string CalculateActivitySchedules(
             bool showDates,
             DateTimeOffset projectStart,
-            IDateTimeCalculator dateTimeCalculator,//!!,
-            IEnumerable<ResourceSeriesModel> resourceSeriesCollection)//!!)
+            IDateTimeCalculator dateTimeCalculator,
+            IEnumerable<ResourceSeriesModel> resourceSeriesCollection)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(resourceSeriesCollection);
             var output = new StringBuilder();
 
             foreach (ResourceSeriesModel resourceSeries in resourceSeriesCollection)
@@ -128,9 +133,11 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private void BuildCompilationOutput(
-            IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation,//!!,
-            ResourceSeriesSetModel resourceSeriesSet)//!!)
+            IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation,
+            ResourceSeriesSetModel resourceSeriesSet)
         {
+            ArgumentNullException.ThrowIfNull(graphCompilation);
+            ArgumentNullException.ThrowIfNull(resourceSeriesSet);
             lock (m_Lock)
             {
                 CompilationOutput = string.Empty;

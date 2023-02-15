@@ -80,15 +80,23 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public MainViewModel(
-            IFactory dockFactory,//!!,
-            ICoreViewModel coreViewModel,//!!,
-            IProjectFileImport projectFileImport,//!!,
-            IProjectFileExport projectFileExport,//!!,
-            IProjectFileOpen projectFileOpen,//!!,
-            IProjectFileSave projectFileSave,//!!,
-            ISettingService settingService,//!!,
-            IDialogService dialogService)//!!)
+            IFactory dockFactory,
+            ICoreViewModel coreViewModel,
+            IProjectFileImport projectFileImport,
+            IProjectFileExport projectFileExport,
+            IProjectFileOpen projectFileOpen,
+            IProjectFileSave projectFileSave,
+            ISettingService settingService,
+            IDialogService dialogService)
         {
+            ArgumentNullException.ThrowIfNull(dockFactory);
+            ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(projectFileImport);
+            ArgumentNullException.ThrowIfNull(projectFileExport);
+            ArgumentNullException.ThrowIfNull(projectFileOpen);
+            ArgumentNullException.ThrowIfNull(projectFileSave);
+            ArgumentNullException.ThrowIfNull(settingService);
+            ArgumentNullException.ThrowIfNull(dialogService);
             m_Lock = new object();
             m_DockFactory = dockFactory;
             m_CoreViewModel = coreViewModel;

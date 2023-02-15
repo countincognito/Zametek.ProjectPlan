@@ -29,10 +29,13 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ResourceSettingsManagerViewModel(
-            ICoreViewModel coreViewModel,//!!,
-            ISettingService settingService,//!!,
-            IDialogService dialogService)//!!)
+            ICoreViewModel coreViewModel,
+            ISettingService settingService,
+            IDialogService dialogService)
         {
+            ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(settingService);
+            ArgumentNullException.ThrowIfNull(dialogService);
             m_Lock = new object();
             m_Current = new ResourceSettingsModel();
             m_CoreViewModel = coreViewModel;
@@ -215,8 +218,9 @@ namespace Zametek.ViewModel.ProjectPlan
             AreSettingsUpdated = false;
         }
 
-        private void ProcessSettings(ResourceSettingsModel resourceSettings)//!!)
+        private void ProcessSettings(ResourceSettingsModel resourceSettings)
         {
+            ArgumentNullException.ThrowIfNull(resourceSettings);
             lock (m_Lock)
             {
                 m_DefaultUnitCost = resourceSettings.DefaultUnitCost;

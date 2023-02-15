@@ -1,7 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Media;
 using OxyPlot;
-using OxyPlot.Avalonia;
 using OxyPlot.Axes;
 using OxyPlot.Legends;
 using OxyPlot.Series;
@@ -66,11 +65,15 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public GanttChartManagerViewModel(
-            ICoreViewModel coreViewModel,//!!,
-            ISettingService settingService,//!!,
-            IDialogService dialogService,//!!,
-            IDateTimeCalculator dateTimeCalculator)//!!)
+            ICoreViewModel coreViewModel,
+            ISettingService settingService,
+            IDialogService dialogService,
+            IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(settingService);
+            ArgumentNullException.ThrowIfNull(dialogService);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
@@ -181,15 +184,19 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static PlotModel BuildGanttChartPlotModel(
-            IDateTimeCalculator dateTimeCalculator,//!!,
-            IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation,//!!,
-            ResourceSeriesSetModel resourceSeriesSet,//!!,
-            ArrowGraphSettingsModel arrowGraphSettings,//!!
+            IDateTimeCalculator dateTimeCalculator,
+            IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation,
+            ResourceSeriesSetModel resourceSeriesSet,
+            ArrowGraphSettingsModel arrowGraphSettings,
             bool showDates,
             bool groupByResource,
             bool annotateResources,
             DateTime projectStartDateTime)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(graphCompilation);
+            ArgumentNullException.ThrowIfNull(resourceSeriesSet);
+            ArgumentNullException.ThrowIfNull(arrowGraphSettings);
             var plotModel = new PlotModel();
 
             int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
@@ -367,11 +374,12 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static OxyPlot.Axes.Axis BuildResourceChartXAxis(
-            IDateTimeCalculator dateTimeCalculator,//!!,
+            IDateTimeCalculator dateTimeCalculator,
             int finishTime,
             bool showDates,
             DateTime projectStartDateTime)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             if (finishTime != default)
             {
                 double minValue = ChartHelper.CalculateChartTimeXValue(-1, showDates, projectStartDateTime, dateTimeCalculator);
@@ -416,8 +424,9 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private static OxyPlot.Axes.Axis BuildResourceChartYAxis(IEnumerable<string> labels)//!!)
+        private static OxyPlot.Axes.Axis BuildResourceChartYAxis(IEnumerable<string> labels)
         {
+            ArgumentNullException.ThrowIfNull(labels);
             var categoryAxis = new OxyPlot.Axes.CategoryAxis
             {
                 Position = AxisPosition.Left,

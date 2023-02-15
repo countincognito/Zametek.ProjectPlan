@@ -6,8 +6,9 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Public Methods
 
-        public static graphml ToGraphML(DiagramArrowGraphModel diagramArrowGraph)//!!)
+        public static graphml ToGraphML(DiagramArrowGraphModel diagramArrowGraph)
         {
+            ArgumentNullException.ThrowIfNull(diagramArrowGraph);
             IList<DiagramNodeModel> diagramNodes = diagramArrowGraph.Nodes.ToList();
             IList<DiagramEdgeModel> diagramEdges = diagramArrowGraph.Edges.ToList();
             var graph = new graphmlGraph
@@ -32,8 +33,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private static graphmlGraphNode BuildArrowGraphNode(DiagramNodeModel diagramNode)//!!)
+        private static graphmlGraphNode BuildArrowGraphNode(DiagramNodeModel diagramNode)
         {
+            ArgumentNullException.ThrowIfNull(diagramNode);
             var outputNode = new graphmlGraphNode
             {
                 id = FormatArrowGraphNodeId(diagramNode.Id),
@@ -112,8 +114,9 @@ namespace Zametek.ViewModel.ProjectPlan
             return outputNode;
         }
 
-        private static graphmlGraphEdge BuildArrowGraphEdge(DiagramEdgeModel diagramEdge)//!!)
+        private static graphmlGraphEdge BuildArrowGraphEdge(DiagramEdgeModel diagramEdge)
         {
+            ArgumentNullException.ThrowIfNull(diagramEdge);
             var outputEdge = new graphmlGraphEdge
             {
                 id = FormatArrowGraphEdgeId(diagramEdge.Id),
