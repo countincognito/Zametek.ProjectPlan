@@ -1,6 +1,5 @@
 ﻿using net.sf.mpxj.MpxjUtilities;
 using net.sf.mpxj.reader;
-using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.Data;
@@ -142,14 +141,15 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ProjectReader reader = ProjectReaderUtility.getProjectReader(filename);
             net.sf.mpxj.ProjectFile mpx = reader.read(filename);
-            net.sf.mpxj.ProjectProperties props = mpx.getProjectProperties();
-            DateTimeOffset projectStart = props.getStartDate().ToDateTime();
+            net.sf.mpxj.ProjectProperties? props = mpx.getProjectProperties();
+            DateTimeOffset projectStart = props?.getStartDate()?.ToDateTime() ?? DateTimeOffset.Now;
             TimeSpan projectStartOffset = projectStart.Offset;
 
             var resources = new List<ResourceModel>();
+
             foreach (net.sf.mpxj.Resource mpxjResource in mpx.getResources().ToIEnumerable<net.sf.mpxj.Resource>())
             {
-                int id = mpxjResource.getID().intValue();
+                int id = mpxjResource.getID()?.intValue() ?? default;
                 if (id == 0)
                 {
                     continue;
@@ -158,7 +158,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     Id = id,
                     IsExplicitTarget = true,
-                    Name = mpxjResource.getName(),
+                    Name = mpxjResource.getName() ?? string.Empty,
                     DisplayOrder = id,
                     ColorFormat = ColorHelper.RandomColor()
                 };
@@ -168,27 +168,33 @@ namespace Zametek.ViewModel.ProjectPlan
             var dependentActivities = new List<DependentActivityModel>();
             foreach (net.sf.mpxj.Task mpxjTask in mpx.getTasks().ToIEnumerable<net.sf.mpxj.Task>())
             {
-                int id = mpxjTask.getID().intValue();
+                int id = mpxjTask.getID()?.intValue() ?? default;
                 if (id == 0)
                 {
                     continue;
                 }
-                string name = mpxjTask.getName();
-                int duration = Convert.ToInt32(mpxjTask.getDuration().getDuration());
+                int duration = Convert.ToInt32(mpxjTask.getDuration()?.getDuration() ?? default);
 
                 DateTimeOffset? minimumEarliestStartDateTime = null;
                 if (mpxjTask.getConstraintType() == net.sf.mpxj.ConstraintType.START_NO_EARLIER_THAN)
                 {
-                    // Ensure each value has the same offset as the project start;
-                    minimumEarliestStartDateTime = new DateTimeOffset(mpxjTask.getConstraintDate().ToDateTime(), projectStartOffset);
+                    DateTime? mpxContraintDate = mpxjTask.getConstraintDate()?.ToDateTime();
+
+                    if (mpxContraintDate is not null)
+                    {
+                        // Ensure each value has the same offset as the project start;
+                        minimumEarliestStartDateTime = new DateTimeOffset(mpxContraintDate.GetValueOrDefault(), projectStartOffset);
+                    }
                 }
 
                 var targetResources = new List<int>();
                 foreach (net.sf.mpxj.ResourceAssignment resourceAssignment in mpxjTask.getResourceAssignments().ToIEnumerable<net.sf.mpxj.ResourceAssignment>())
                 {
-                    if (resourceAssignment.getResource() is not null)
+                    int? mpxResourceId = resourceAssignment.getResource()?.getID()?.intValue();
+
+                    if (mpxResourceId is not null)
                     {
-                        targetResources.Add(resourceAssignment.getResource().getID().intValue());
+                        targetResources.Add(mpxResourceId.GetValueOrDefault());
                     }
                 }
 
@@ -198,7 +204,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     foreach (net.sf.mpxj.Relation pred in preds.ToIEnumerable<net.sf.mpxj.Relation>())
                     {
-                        dependencies.Add(pred.getTargetTask().getID().intValue());
+                        int? mpxPredId = pred.getTargetTask()?.getID()?.intValue();
+
+                        if (mpxPredId is not null)
+                        {
+                            dependencies.Add(mpxPredId.GetValueOrDefault());
+                        }
                     }
                 }
                 var dependentActivity = new DependentActivityModel
@@ -206,7 +217,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Activity = new ActivityModel
                     {
                         Id = id,
-                        Name = name,
+                        Name = mpxjTask.getName() ?? string.Empty,
                         TargetResources = targetResources,
                         Duration = duration,
                         MinimumEarliestStartDateTime = minimumEarliestStartDateTime

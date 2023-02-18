@@ -147,13 +147,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ConstructUsing(src => new GraphCompilationError(src.ErrorCode, src.ErrorMessage))
                 .ReverseMap();
 
+            CreateMap<GraphCompilationErrorModel, IGraphCompilationError>()
+                .ConstructUsing((src, ctx) => ctx.Mapper.Map<GraphCompilationErrorModel, GraphCompilationError>(src));
+
             CreateMap<GraphCompilationModel, GraphCompilation<int, int, DependentActivity<int, int>>>()
                 .ConstructUsing((src, ctx) =>
                 {
+                    var dependentActivities = ctx.Mapper.Map<IEnumerable<DependentActivityModel>, IEnumerable<DependentActivity<int, int>>>(src.DependentActivities);
+                    var resourceSchedules = ctx.Mapper.Map<IEnumerable<ResourceScheduleModel>, IEnumerable<ResourceSchedule<int, int>>>(src.ResourceSchedules);
+                    var compilationErrors = ctx.Mapper.Map<IEnumerable<GraphCompilationErrorModel>, IEnumerable<GraphCompilationError>>(src.CompilationErrors);
+
                     return new GraphCompilation<int, int, DependentActivity<int, int>>(
-                        ctx.Mapper.Map<IEnumerable<DependentActivityModel>, IEnumerable<DependentActivity<int, int>>>(src.DependentActivities),
-                        ctx.Mapper.Map<IEnumerable<ResourceScheduleModel>, IEnumerable<ResourceSchedule<int, int>>>(src.ResourceSchedules),
-                        ctx.Mapper.Map<IEnumerable<GraphCompilationErrorModel>, IEnumerable<GraphCompilationError>>(src.CompilationErrors));
+                        dependentActivities,
+                        resourceSchedules,
+                        compilationErrors);
                 });
 
             CreateMap<IGraphCompilation<int, int, IDependentActivity<int, int>>, GraphCompilationModel>();
