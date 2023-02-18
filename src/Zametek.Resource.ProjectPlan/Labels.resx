@@ -381,4 +381,7 @@
   <data name="Label_UnitCost" xml:space="preserve">
     <value>Unit Cost</value>
   </data>
+  <data name="Label_ViewProjections" xml:space="preserve">
+    <value>View Projections</value>
+  </data>
 </root>

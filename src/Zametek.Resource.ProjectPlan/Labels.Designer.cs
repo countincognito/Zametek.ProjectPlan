@@ -852,5 +852,14 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_UnitCost", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to View Projections.
+        /// </summary>
+        public static string Label_ViewProjections {
+            get {
+                return ResourceManager.GetString("Label_ViewProjections", resourceCulture);
+            }
+        }
     }
 }

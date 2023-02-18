@@ -140,7 +140,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             ToggleShowDatesCommand = ReactiveCommand.Create(ToggleShowDates);
             ToggleUseBusinessDaysCommand = ReactiveCommand.Create(ToggleUseBusinessDays);
-            ToggleViewEarnedValueProjectionsCommand = ReactiveCommand.Create(ToggleViewEarnedValueProjections);
 
             CompileCommand = ReactiveCommand.CreateFromTask(RunCompileAsync);
             ToggleAutoCompileCommand = ReactiveCommand.Create(ToggleAutoCompile);
@@ -189,10 +188,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.UseBusinessDays)
                 .ToProperty(this, main => main.UseBusinessDays);
 
-            m_ViewEarnedValueProjections = this
-                .WhenAnyValue(main => main.m_CoreViewModel.ViewEarnedValueProjections)
-                .ToProperty(this, main => main.ViewEarnedValueProjections);
-
             m_AutoCompile = this
                 .WhenAnyValue(main => main.m_CoreViewModel.AutoCompile)
                 .ToProperty(this, main => main.AutoCompile);
@@ -200,7 +195,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CoreViewModel.UseBusinessDays = true;
             m_CoreViewModel.IsProjectUpdated = false;
             m_CoreViewModel.AutoCompile = true;
-            m_CoreViewModel.ViewEarnedValueProjections = true;
+            m_CoreViewModel.ViewEarnedValueProjections = false;
 
 #if DEBUG
             DebugFactoryEvents(m_DockFactory);
@@ -346,8 +341,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleUseBusinessDays() => UseBusinessDays = !UseBusinessDays;
 
-        private void ToggleViewEarnedValueProjections() => ViewEarnedValueProjections = !ViewEarnedValueProjections;
-
         private void ToggleAutoCompile() => AutoCompile = !AutoCompile;
 
         private void ProcessProjectImport(ProjectImportModel importModel) => m_CoreViewModel.ProcessProjectImport(importModel);
@@ -452,16 +445,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<bool> m_ViewEarnedValueProjections;
-        public bool ViewEarnedValueProjections
-        {
-            get => m_ViewEarnedValueProjections.Value;
-            set
-            {
-                lock (m_Lock) m_CoreViewModel.ViewEarnedValueProjections = value;
-            }
-        }
-
         private readonly ObservableAsPropertyHelper<bool> m_AutoCompile;
         public bool AutoCompile
         {
@@ -487,8 +470,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand ToggleShowDatesCommand { get; }
 
         public ICommand ToggleUseBusinessDaysCommand { get; }
-
-        public ICommand ToggleViewEarnedValueProjectionsCommand { get; }
 
         public ICommand CompileCommand { get; }
 

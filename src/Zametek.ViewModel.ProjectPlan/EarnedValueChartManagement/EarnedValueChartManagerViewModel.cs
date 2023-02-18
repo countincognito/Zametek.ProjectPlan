@@ -95,6 +95,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, rcm => rcm.HasCompilationErrors);
 
+            m_ViewProjections = this
+                .WhenAnyValue(main => main.m_CoreViewModel.ViewEarnedValueProjections)
+                .ToProperty(this, main => main.ViewProjections);
+
             m_BuildEarnedValueChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.TrackingSeriesSet,
@@ -138,6 +142,8 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Private Methods
+
+        private void ToggleViewProjections() => ViewProjections = !ViewProjections;
 
         private async Task<PlotModel> BuildEarnedValueChartPlotModelAsync(
             IDateTimeCalculator dateTimeCalculator,
@@ -457,6 +463,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_ViewProjections;
+        public bool ViewProjections
+        {
+            get => m_ViewProjections.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.ViewEarnedValueProjections = value;
+            }
+        }
 
         public ICommand SaveEarnedValueChartImageFileCommand { get; }
 

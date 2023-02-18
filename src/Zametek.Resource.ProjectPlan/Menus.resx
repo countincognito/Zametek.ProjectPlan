@@ -174,9 +174,6 @@
   <data name="Menu_UseBusinessDays" xml:space="preserve">
     <value>Use _Business Days</value>
   </data>
-  <data name="Menu_ViewEarnedValueProjections" xml:space="preserve">
-    <value>View _Earned Value Projections</value>
-  </data>
   <data name="Menu_ViewLicense" xml:space="preserve">
     <value>View License</value>
   </data>

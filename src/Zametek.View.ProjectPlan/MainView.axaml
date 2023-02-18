@@ -85,15 +85,6 @@
 								  IsChecked="{Binding Path=UseBusinessDays, Mode=OneWay}" />
 					</MenuItem.Icon>
 				</MenuItem>
-				<MenuItem Header="{x:Static resources:Menus.Menu_ViewEarnedValueProjections}"
-						  Command="{Binding Path=ToggleViewEarnedValueProjectionsCommand, Mode=OneWay}"
-						  InputGesture="Ctrl+E">
-					<MenuItem.Icon>
-						<CheckBox BorderThickness="0"
-								  IsHitTestVisible="False"
-								  IsChecked="{Binding Path=ViewEarnedValueProjections, Mode=OneWay}" />
-					</MenuItem.Icon>
-				</MenuItem>
 			</MenuItem>
 
 			<MenuItem Header="{x:Static resources:Menus.Menu_Compile}">
