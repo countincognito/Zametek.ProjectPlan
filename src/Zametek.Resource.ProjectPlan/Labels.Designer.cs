@@ -574,6 +574,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Not Active.
+        /// </summary>
+        public static string Label_IsInactive {
+            get {
+                return ResourceManager.GetString("Label_IsInactive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to LFT.
         /// </summary>
         public static string Label_LatestFinishTime {

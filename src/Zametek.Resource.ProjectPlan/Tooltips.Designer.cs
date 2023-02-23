@@ -223,6 +223,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Not Active.
+        /// </summary>
+        public static string ToolTip_IsInactive {
+            get {
+                return ResourceManager.GetString("ToolTip_IsInactive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Latest Finish Time.
         /// </summary>
         public static string ToolTip_LatestFinishTime {

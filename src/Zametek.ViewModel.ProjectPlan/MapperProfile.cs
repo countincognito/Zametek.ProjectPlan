@@ -10,7 +10,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public MapperProfile()
         {
             CreateMap<ResourceModel, Resource<int>>()
-                .ConstructUsing(src => new Resource<int>(src.Id, src.Name, src.IsExplicitTarget, src.InterActivityAllocationType, src.UnitCost, src.AllocationOrder))
+                .ConstructUsing(src => new Resource<int>(src.Id, src.Name, src.IsExplicitTarget, src.IsInactive, src.InterActivityAllocationType, src.UnitCost, src.AllocationOrder))
                 .ReverseMap();
 
             CreateMap<EventModel, Event<int>>()

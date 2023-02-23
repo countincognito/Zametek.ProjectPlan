@@ -19,6 +19,7 @@
 
 		<local:ManagedResourceSortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
 		<local:ManagedResourceSortComparer x:Key="isExplicitTargetSortComparer" SortMemberPath="IsExplicitTarget"/>
+		<local:ManagedResourceSortComparer x:Key="isInactiveSortComparer" SortMemberPath="IsInactive"/>
 		<local:ManagedResourceSortComparer x:Key="interActivityAllocationTypeSortComparer" SortMemberPath="InterActivityAllocationType"/>
 		<local:ManagedResourceSortComparer x:Key="unitCostSortComparer" SortMemberPath="UnitCost"/>
 		<local:ManagedResourceSortComparer x:Key="displayOrderSortComparer" SortMemberPath="DisplayOrder"/>
@@ -220,6 +221,58 @@
 						</DataGridTemplateColumn.CellTemplate>
 					</DataGridTemplateColumn>
 
+
+
+
+
+
+
+					<DataGridTemplateColumn CanUserResize="True"
+											CanUserReorder="True"
+											CanUserSort="True"
+											IsReadOnly="True"
+											CustomSortComparer="{StaticResource isInactiveSortComparer}"
+											Width="85">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{x:Static resources:Labels.Label_IsInactive}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsInactive}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch"
+									  Classes="editable">
+									<ToggleSwitch VerticalAlignment="Center"
+											      HorizontalAlignment="Center"
+											      Margin="0"
+											      Padding="3"
+											      IsChecked="{Binding Path=IsInactive, Mode=TwoWay}"/>
+									<!--<CheckBox VerticalAlignment="Center"
+											  HorizontalAlignment="Center"
+											  Margin="0"
+											  Padding="3"
+											  Background="White"
+											  IsChecked="{Binding Path=IsExplicitTarget, Mode=TwoWay}"/>-->
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
 					<DataGridTemplateColumn CanUserResize="True"
 											CanUserReorder="True"
 											CanUserSort="True"

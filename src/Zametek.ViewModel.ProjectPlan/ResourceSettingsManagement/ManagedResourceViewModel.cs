@@ -28,6 +28,7 @@ namespace Zametek.ViewModel.ProjectPlan
             Id = resource.Id;
             m_Name = resource.Name;
             m_IsExplicitTarget = resource.IsExplicitTarget;
+            m_IsInactive = resource.IsInactive;
             m_InterActivityAllocationType = resource.InterActivityAllocationType;
             m_UnitCost = resource.UnitCost;
             m_AllocationOrder = resource.AllocationOrder;
@@ -58,6 +59,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     BeginEdit();
                     m_IsExplicitTarget = value;
+                    EndEdit();
+                }
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsInactive;
+        public bool IsInactive
+        {
+            get => m_IsInactive;
+            set
+            {
+                if (m_IsInactive != value)
+                {
+                    BeginEdit();
+                    m_IsInactive = value;
                     EndEdit();
                 }
                 this.RaisePropertyChanged();
@@ -117,7 +134,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public object CloneObject()
         {
-            return new Resource<int>(Id, Name, IsExplicitTarget, InterActivityAllocationType, UnitCost, AllocationOrder);
+            return new Resource<int>(Id, Name, IsExplicitTarget, IsInactive, InterActivityAllocationType, UnitCost, AllocationOrder);
         }
 
         #endregion

@@ -11,6 +11,8 @@ namespace Zametek.Common.ProjectPlan
 
         public bool IsExplicitTarget { get; init; }
 
+        public bool IsInactive { get; init; }
+
         public InterActivityAllocationType InterActivityAllocationType { get; init; }
 
         public double UnitCost { get; init; }

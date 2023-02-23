@@ -145,6 +145,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             {
                                 Id = resourceId,
                                 IsExplicitTarget = true,
+                                IsInactive = false,
                                 UnitCost = DefaultUnitCost,
                                 ColorFormat = ColorHelper.RandomColor()
                             }));
@@ -199,6 +200,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Id = x.Id,
                         Name = x.Name,
                         IsExplicitTarget = x.IsExplicitTarget,
+                        IsInactive = x.IsInactive,
                         InterActivityAllocationType = x.InterActivityAllocationType,
                         UnitCost = x.UnitCost,
                         DisplayOrder = x.DisplayOrder,

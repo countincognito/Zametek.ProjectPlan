@@ -288,6 +288,9 @@
   <data name="Label_IsExplicitTarget" xml:space="preserve">
     <value>Explicit Target</value>
   </data>
+  <data name="Label_IsInactive" xml:space="preserve">
+    <value>Not Active</value>
+  </data>
   <data name="Label_LatestFinishTime" xml:space="preserve">
     <value>LFT</value>
   </data>

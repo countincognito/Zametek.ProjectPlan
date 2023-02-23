@@ -2,6 +2,7 @@
 using net.sf.mpxj.reader;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
+using org.omg.PortableInterceptor;
 using System.Data;
 using System.Xml;
 using Zametek.Common.ProjectPlan;
@@ -49,6 +50,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ResourceModel.Id),
             nameof(ResourceModel.Name),
             nameof(ResourceModel.IsExplicitTarget),
+            nameof(ResourceModel.IsInactive),
             nameof(ResourceModel.InterActivityAllocationType),
             nameof(ResourceModel.UnitCost),
             nameof(ResourceModel.DisplayOrder),
@@ -158,6 +160,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     Id = id,
                     IsExplicitTarget = true,
+                    IsInactive = false,
                     Name = mpxjResource.getName() ?? string.Empty,
                     DisplayOrder = id,
                     ColorFormat = ColorHelper.RandomColor()
@@ -282,6 +285,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         Id = resourceId,
                         IsExplicitTarget = true,
+                        IsInactive = false,
                         Name = name,
                         DisplayOrder = resourceId,
                         UnitCost = cost,
@@ -681,6 +685,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         int? id = 0;
                         string name = string.Empty;
                         bool isExplicitTarget = false;
+                        bool isInactive = false;
                         InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
                         double unitCost = 0.0;
                         int displayOrder = 0;
@@ -706,6 +711,14 @@ namespace Zametek.ViewModel.ProjectPlan
                                         if (bool.TryParse(row[colName]?.ToString(), out bool output))
                                         {
                                             isExplicitTarget = output;
+                                        }
+                                    })
+                                .Case(nameof(ResourceModel.IsInactive),
+                                    colName =>
+                                    {
+                                        if (bool.TryParse(row[colName]?.ToString(), out bool output))
+                                        {
+                                            isInactive = output;
                                         }
                                     })
                                 .Case(nameof(ResourceModel.InterActivityAllocationType),
@@ -754,6 +767,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 Id = idVal,
                                 Name = name,
                                 IsExplicitTarget = isExplicitTarget,
+                                IsInactive = isInactive,
                                 InterActivityAllocationType = interActivityAllocationType,
                                 UnitCost = unitCost,
                                 DisplayOrder = displayOrder,

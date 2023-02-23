@@ -55,6 +55,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ResourceModel.Id),
             nameof(ResourceModel.Name),
             nameof(ResourceModel.IsExplicitTarget),
+            nameof(ResourceModel.IsInactive),
             nameof(ResourceModel.InterActivityAllocationType),
             nameof(ResourceModel.UnitCost),
             nameof(ResourceModel.DisplayOrder),

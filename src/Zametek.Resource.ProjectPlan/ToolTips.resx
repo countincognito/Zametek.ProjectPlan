@@ -171,6 +171,9 @@
   <data name="ToolTip_IsExplicitTarget" xml:space="preserve">
     <value>Explicit Target</value>
   </data>
+  <data name="ToolTip_IsInactive" xml:space="preserve">
+    <value>Not Active</value>
+  </data>
   <data name="ToolTip_LatestFinishTime" xml:space="preserve">
     <value>Latest Finish Time</value>
   </data>
