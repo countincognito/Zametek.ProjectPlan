@@ -60,6 +60,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly IDisposable? m_BuildGanttChartPlotModelSub;
 
+        private const double c_ExportLabelHeightCorrection = 1.2;
+
         #endregion
 
         #region Ctors
@@ -203,7 +205,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             plotModel.Axes.Add(BuildResourceChartXAxis(dateTimeCalculator, finishTime, showDates, projectStartDateTime));
 
-            var legend = new OxyPlot.Legends.Legend
+            var legend = new Legend
             {
                 LegendBorder = OxyColors.Black,
                 LegendBackground = OxyColor.FromAColor(200, OxyColors.White),
@@ -373,7 +375,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return plotModel;
         }
 
-        private static OxyPlot.Axes.Axis BuildResourceChartXAxis(
+        private static Axis BuildResourceChartXAxis(
             IDateTimeCalculator dateTimeCalculator,
             int finishTime,
             bool showDates,
@@ -387,7 +389,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (showDates)
                 {
-                    return new OxyPlot.Axes.DateTimeAxis
+                    return new DateTimeAxis
                     {
                         Position = AxisPosition.Bottom,
                         AbsoluteMinimum = minValue,
@@ -401,7 +403,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     };
                 }
 
-                return new OxyPlot.Axes.LinearAxis
+                return new LinearAxis
                 {
                     Position = AxisPosition.Bottom,
                     AbsoluteMinimum = minValue,
@@ -413,7 +415,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Title = Resource.ProjectPlan.Labels.Label_TimeAxisTitle
                 };
             }
-            return new OxyPlot.Axes.LinearAxis
+            return new LinearAxis
             {
                 Position = AxisPosition.Bottom,
                 MajorGridlineStyle = LineStyle.Solid,
@@ -424,10 +426,10 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private static OxyPlot.Axes.Axis BuildResourceChartYAxis(IEnumerable<string> labels)
+        private static Axis BuildResourceChartYAxis(IEnumerable<string> labels)
         {
             ArgumentNullException.ThrowIfNull(labels);
-            var categoryAxis = new OxyPlot.Axes.CategoryAxis
+            var categoryAxis = new CategoryAxis
             {
                 Position = AxisPosition.Left,
                 AbsoluteMinimum = -1,
@@ -451,7 +453,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (ImageBounds is Rect bounds)
                 {
                     string fileExtension = Path.GetExtension(filename);
-                    //byte[]? data = null;
+
+                    int width = Math.Abs(Convert.ToInt32(bounds.Width));
+                    int height = 0;
+
+                    CategoryAxis? yAxis = GanttChartPlotModel.DefaultYAxis as CategoryAxis;
+
+                    if (yAxis != null)
+                    {
+                        int labelCount = yAxis.ActualLabels.Count;
+                        height = Convert.ToInt32(GanttChartPlotModel.DefaultFontSize * labelCount * c_ExportLabelHeightCorrection);
+                    }
+
+                    if (height <= 0)
+                    {
+                        height = Math.Abs(Convert.ToInt32(bounds.Height));
+                    }
 
                     fileExtension.ValueSwitchOn()
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
@@ -460,9 +477,9 @@ namespace Zametek.ViewModel.ProjectPlan
                             OxyPlot.SkiaSharp.JpegExporter.Export(
                                 GanttChartPlotModel,
                                 stream,
-                                Convert.ToInt32(bounds.Width),
-                                Convert.ToInt32(bounds.Height),
-                                100);
+                                width,
+                                height,
+                                200);
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
                         {
@@ -471,8 +488,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             OxyPlot.Avalonia.PngExporter.Export(
                                 GanttChartPlotModel,
                                 stream,
-                                Convert.ToInt32(bounds.Width),
-                                Convert.ToInt32(bounds.Height),
+                                width,
+                                height,
                                 OxyColors.White);
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
@@ -481,8 +498,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             OxyPlot.SkiaSharp.PdfExporter.Export(
                                 GanttChartPlotModel,
                                 stream,
-                                Convert.ToInt32(bounds.Width),
-                                Convert.ToInt32(bounds.Height));
+                                width,
+                                height);
                         })
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
 
