@@ -12,12 +12,12 @@
     <PackageReference Include="Dock.Model.ReactiveUI" Version="0.10.18.1" />
     <PackageReference Include="FluentDateTime" Version="2.1.0" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
-    <PackageReference Include="net.sf.mpxj" Version="11.0.0" />
+    <PackageReference Include="net.sf.mpxj" Version="11.1.0" />
     <PackageReference Include="NPOI" Version="2.6.0" />
 	  <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-Preview1" />
 	  <PackageReference Include="OxyPlot.SkiaSharp" Version="2.1.2" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.3" />
-    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="1.5.0-alpha8" />
+    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="1.5.2" />
   </ItemGroup>
 
   <ItemGroup>

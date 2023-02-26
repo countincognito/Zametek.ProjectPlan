@@ -13,6 +13,7 @@
     <None Remove="TestFiles\test_v0_2_0.zpp" />
     <None Remove="TestFiles\test_v0_2_1.zpp" />
     <None Remove="TestFiles\test_v0_3_0.zpp" />
+    <None Remove="TestFiles\test_v0_3_1.zpp" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,6 +21,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="TestFiles\test_v0_2_0.zpp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\test_v0_3_1.zpp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="TestFiles\test_v0_3_0.zpp">
@@ -32,7 +36,7 @@
 
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="6.10.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
