@@ -261,8 +261,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            byte mainLineOpacity = (byte)(showProjections ? 100 : 255);
-            double mainStrokeThickness = showProjections ? 1.0 : 2.0;
+            byte mainLineOpacity = 255;
+            double mainStrokeThickness = 2.0;
+
+            byte projectionLineOpacity = 100;
+            double projectionStrokeThickness = 1.0;
 
             PopulateLineSeries(
                 new LineSeries
@@ -279,7 +282,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     new LineSeries
                     {
                         Title = Resource.ProjectPlan.Labels.Label_PlanProjection,
-                        Color = OxyColors.Blue
+                        Color = OxyColor.FromAColor(projectionLineOpacity, OxyColors.Blue),
+                        StrokeThickness = projectionStrokeThickness
                     },
                     trackingSeriesSet.PlanProjection);
             }
@@ -299,7 +303,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     new LineSeries
                     {
                         Title = Resource.ProjectPlan.Labels.Label_ProgressProjection,
-                        Color = OxyColors.Green
+                        Color = OxyColor.FromAColor(projectionLineOpacity, OxyColors.Green),
+                        StrokeThickness = projectionStrokeThickness
                     },
                     trackingSeriesSet.ProgressProjection);
             }
@@ -319,7 +324,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     new LineSeries
                     {
                         Title = Resource.ProjectPlan.Labels.Label_EffortProjection,
-                        Color = OxyColors.Red
+                        Color = OxyColor.FromAColor(projectionLineOpacity, OxyColors.Red),
+                        StrokeThickness = projectionStrokeThickness
                     },
                     trackingSeriesSet.EffortProjection);
             }

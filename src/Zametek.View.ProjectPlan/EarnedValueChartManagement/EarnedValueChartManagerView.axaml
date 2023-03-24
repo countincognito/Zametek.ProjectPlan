@@ -33,46 +33,9 @@
 						  HorizontalAlignment="Center"
 						  HorizontalContentAlignment="Center"
 					      IsChecked="{Binding Path=ViewProjections, Mode=TwoWay}"/>
-
-			<!--<DockPanel DockPanel.Dock="Top"
-					   IsEnabled="{Binding Path=GroupByResource, Mode=OneWay}">
-				<Label VerticalContentAlignment="Center"
-					   HorizontalContentAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_AnnotateResources}"/>
-
-				<ToggleSwitch DockPanel.Dock="Top"
-							  IsTabStop="False"
-							  Margin="0,0,0,11"
-							  VerticalAlignment="Center"
-							  VerticalContentAlignment="Center"
-							  HorizontalAlignment="Center"
-							  HorizontalContentAlignment="Center"
-							  IsChecked="{Binding Path=AnnotateResources, Mode=TwoWay}"/>
-			</DockPanel>-->
-
 			<Grid/>
 		</DockPanel>
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+
 		<Border Name="viewBorder"
 				BorderThickness="2"
 				BorderBrush="DarkGray">

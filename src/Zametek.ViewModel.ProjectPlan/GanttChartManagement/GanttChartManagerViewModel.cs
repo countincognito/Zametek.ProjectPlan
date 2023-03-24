@@ -456,6 +456,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     int width = Math.Abs(Convert.ToInt32(bounds.Width));
                     int height = 0;
+                    int boundedHeight = Math.Abs(Convert.ToInt32(bounds.Height));
 
                     CategoryAxis? yAxis = GanttChartPlotModel.DefaultYAxis as CategoryAxis;
 
@@ -465,9 +466,9 @@ namespace Zametek.ViewModel.ProjectPlan
                         height = Convert.ToInt32(GanttChartPlotModel.DefaultFontSize * labelCount * c_ExportLabelHeightCorrection);
                     }
 
-                    if (height <= 0)
+                    if (height <= boundedHeight)
                     {
-                        height = Math.Abs(Convert.ToInt32(bounds.Height));
+                        height = boundedHeight;
                     }
 
                     fileExtension.ValueSwitchOn()
