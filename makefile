@@ -7,5 +7,8 @@ help:
 build: ## Compile all projects in the ProjectPlan solution
 	dotnet build
 
-run: build ## Start ProjectPlan
-	dotnet run --project src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj
+run-linux: build ## Start ProjectPlan in Linux
+	dotnet run --os linux --project src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj
+
+run-mac: build ## Start ProjectPlan in macOS
+	dotnet run --os osx --project src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj
