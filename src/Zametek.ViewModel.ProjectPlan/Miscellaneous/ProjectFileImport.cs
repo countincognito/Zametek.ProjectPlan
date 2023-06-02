@@ -2,7 +2,6 @@
 using net.sf.mpxj.reader;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
-using org.omg.PortableInterceptor;
 using System.Data;
 using System.Xml;
 using Zametek.Common.ProjectPlan;
@@ -66,8 +65,6 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivitySeverityModel.ColorFormat)
         };
 
-        private const int c_DefaultMinutesPerDay = 60 * 60 * 8;
-
         #endregion
 
         private static DataTable SheetToDataTable(ISheet sheet)
@@ -127,8 +124,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     @$"{Resource.ProjectPlan.Messages.Message_UnableToImportFile} {filename}");
 
             fileExtension.ValueSwitchOn()
-                .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFileExtension}", _ => func = ImportMicrosoftProjectMppFile)
-                .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFileExtension}", _ => func = ImportMicrosoftProjectXmlFile)
+                .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFileExtension}", _ => func = ImportMicrosoftProjectFile)
+                .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFileExtension}", _ => func = ImportMicrosoftProjectFile)
                 .Case($".{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}", _ => func = ImportProjectXlsxFile);
 
             return func(filename);
@@ -139,19 +136,19 @@ namespace Zametek.ViewModel.ProjectPlan
             return await Task.Run(() => ImportProjectFile(filename));
         }
 
-        public ProjectImportModel ImportMicrosoftProjectMppFile(string filename)
+        public ProjectImportModel ImportMicrosoftProjectFile(string filename)
         {
-            ProjectReader reader = ProjectReaderUtility.getProjectReader(filename);
-            net.sf.mpxj.ProjectFile mpx = reader.read(filename);
-            net.sf.mpxj.ProjectProperties? props = mpx.getProjectProperties();
-            DateTimeOffset projectStart = props?.getStartDate()?.ToDateTime() ?? DateTimeOffset.Now;
+            var reader = new UniversalProjectReader();
+            net.sf.mpxj.ProjectFile mpxjProjectFile = reader.read(filename);
+            net.sf.mpxj.ProjectProperties? props = mpxjProjectFile.ProjectProperties;
+            DateTimeOffset projectStart = props?.StartDate?.ToDateTime() ?? DateTimeOffset.Now;
             TimeSpan projectStartOffset = projectStart.Offset;
 
             var resources = new List<ResourceModel>();
 
-            foreach (net.sf.mpxj.Resource mpxjResource in mpx.getResources().ToIEnumerable<net.sf.mpxj.Resource>())
+            foreach (net.sf.mpxj.Resource mpxjResource in mpxjProjectFile.Resources.ToIEnumerable<net.sf.mpxj.Resource>())
             {
-                int id = mpxjResource.getID()?.intValue() ?? default;
+                int id = mpxjResource.ID?.intValue() ?? default;
                 if (id == 0)
                 {
                     continue;
@@ -161,7 +158,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Id = id,
                     IsExplicitTarget = true,
                     IsInactive = false,
-                    Name = mpxjResource.getName() ?? string.Empty,
+                    Name = mpxjResource.Name ?? string.Empty,
                     DisplayOrder = id,
                     ColorFormat = ColorHelper.RandomColor()
                 };
@@ -169,65 +166,17 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             var dependentActivities = new List<DependentActivityModel>();
-            foreach (net.sf.mpxj.Task mpxjTask in mpx.getTasks().ToIEnumerable<net.sf.mpxj.Task>())
+            foreach (net.sf.mpxj.Task mpxjTask in mpxjProjectFile.Tasks.ToIEnumerable<net.sf.mpxj.Task>())
             {
-                int id = mpxjTask.getID()?.intValue() ?? default;
-                if (id == 0)
+                foreach (net.sf.mpxj.Task descendantTask in GetDescendantTasks(mpxjTask))
                 {
-                    continue;
-                }
-                int duration = Convert.ToInt32(mpxjTask.getDuration()?.getDuration() ?? default);
+                    DependentActivityModel? dependentActivity = ConvertTask(descendantTask, projectStartOffset);
 
-                DateTimeOffset? minimumEarliestStartDateTime = null;
-                if (mpxjTask.getConstraintType() == net.sf.mpxj.ConstraintType.START_NO_EARLIER_THAN)
-                {
-                    DateTime? mpxContraintDate = mpxjTask.getConstraintDate()?.ToDateTime();
-
-                    if (mpxContraintDate is not null)
+                    if (dependentActivity is not null)
                     {
-                        // Ensure each value has the same offset as the project start;
-                        minimumEarliestStartDateTime = new DateTimeOffset(mpxContraintDate.GetValueOrDefault(), projectStartOffset);
+                        dependentActivities.Add(dependentActivity);
                     }
                 }
-
-                var targetResources = new List<int>();
-                foreach (net.sf.mpxj.ResourceAssignment resourceAssignment in mpxjTask.getResourceAssignments().ToIEnumerable<net.sf.mpxj.ResourceAssignment>())
-                {
-                    int? mpxResourceId = resourceAssignment.getResource()?.getID()?.intValue();
-
-                    if (mpxResourceId is not null)
-                    {
-                        targetResources.Add(mpxResourceId.GetValueOrDefault());
-                    }
-                }
-
-                var dependencies = new List<int>();
-                java.util.List? preds = mpxjTask.getPredecessors();
-                if (preds is not null && !preds.isEmpty())
-                {
-                    foreach (net.sf.mpxj.Relation pred in preds.ToIEnumerable<net.sf.mpxj.Relation>())
-                    {
-                        int? mpxPredId = pred.getTargetTask()?.getID()?.intValue();
-
-                        if (mpxPredId is not null)
-                        {
-                            dependencies.Add(mpxPredId.GetValueOrDefault());
-                        }
-                    }
-                }
-                var dependentActivity = new DependentActivityModel
-                {
-                    Activity = new ActivityModel
-                    {
-                        Id = id,
-                        Name = mpxjTask.getName() ?? string.Empty,
-                        TargetResources = targetResources,
-                        Duration = duration,
-                        MinimumEarliestStartDateTime = minimumEarliestStartDateTime
-                    },
-                    Dependencies = dependencies,
-                };
-                dependentActivities.Add(dependentActivity);
             }
 
             return new ProjectImportModel
@@ -238,204 +187,98 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        public ProjectImportModel ImportMicrosoftProjectXmlFile(string filename)
+
+
+        private IEnumerable<net.sf.mpxj.Task> GetDescendantTasks(net.sf.mpxj.Task mpxjTask)
         {
-            var xDoc = new XmlDocument();
-            var nsMan = new XmlNamespaceManager(xDoc.NameTable);
-            nsMan.AddNamespace(@"ns", "http://schemas.microsoft.com/project");
-            xDoc.Load(filename);
-
-            string? projectStartText = xDoc[@"Project"]?[@"StartDate"]?.InnerText;
-            DateTimeOffset projectStart =
-                projectStartText is not null
-                ? XmlConvert.ToDateTimeOffset(projectStartText)
-                : new DateTimeOffset(DateTime.Today);
-            TimeSpan projectStartOffset = projectStart.Offset;
-
-            string? minutesPerDayText = xDoc[@"Project"]?[@"MinutesPerDay"]?.InnerText;
-            int minutesPerDay =
-                minutesPerDayText is not null
-                ? XmlConvert.ToInt32(minutesPerDayText)
-                : c_DefaultMinutesPerDay;
-
-            // Resources.
-            var resources = new List<ResourceModel>();
-            var resourceUidToIdLookup = new Dictionary<int, int>();
-
-            XmlNodeList? projectResources = xDoc[@"Project"]?[@"Resources"]?.ChildNodes;
-            if (projectResources is not null)
+            if (mpxjTask.HasChildTasks())
             {
-                foreach (XmlNode projectResource in projectResources)
+                foreach (net.sf.mpxj.Task childTask in mpxjTask.ChildTasks.ToIEnumerable<net.sf.mpxj.Task>())
                 {
-                    string? resourceUidText = projectResource[@"UID"]?.InnerText;
-                    int resourceUid = resourceUidText is not null ? XmlConvert.ToInt32(resourceUidText) : 0;
-
-                    string? resourceIdText = projectResource[@"ID"]?.InnerText;
-                    int resourceId = resourceIdText is not null ? XmlConvert.ToInt32(resourceIdText) : 0;
-
-                    if (resourceUid == 0 || resourceId == 0)
+                    foreach (net.sf.mpxj.Task grandChildTask in GetDescendantTasks(childTask))
                     {
-                        continue;
-                    }
-
-                    string name = projectResource[@"Name"]?.InnerText ?? string.Empty;
-                    string? costText = projectResource[@"Cost"]?.InnerText;
-                    double cost = costText is not null ? XmlConvert.ToDouble(costText) : 0.0;
-                    var resource = new ResourceModel
-                    {
-                        Id = resourceId,
-                        IsExplicitTarget = true,
-                        IsInactive = false,
-                        Name = name,
-                        DisplayOrder = resourceId,
-                        UnitCost = cost,
-                        ColorFormat = ColorHelper.RandomColor()
-                    };
-                    resources.Add(resource);
-                    resourceUidToIdLookup.Add(resourceUid, resourceId);
-                }
-            }
-
-            // Tasks.
-            var taskUidToIdLookup = new Dictionary<int, int>();
-
-            XmlNodeList? projectTasks = xDoc[@"Project"]?[@"Tasks"]?.ChildNodes;
-            if (projectTasks is not null)
-            {
-                foreach (XmlNode projectTask in projectTasks)
-                {
-                    string? taskUidText = projectTask[@"UID"]?.InnerText;
-                    int taskUid = taskUidText is not null ? XmlConvert.ToInt32(taskUidText) : 0;
-
-                    string? taskIdText = projectTask[@"ID"]?.InnerText;
-                    int taskId = taskIdText is not null ? XmlConvert.ToInt32(taskIdText) : 0;
-
-                    if (taskUid == 0 || taskId == 0)
-                    {
-                        continue;
-                    }
-
-                    taskUidToIdLookup.Add(taskUid, taskId);
-                }
-            }
-
-            // Resource assignments.
-            var resourceAssignmentLookup = new Dictionary<int, IList<int>>();
-
-            XmlNodeList? projectAssignments = xDoc[@"Project"]?[@"Assignments"]?.ChildNodes;
-            if (projectAssignments is not null)
-            {
-                foreach (XmlNode projectAssignment in projectAssignments)
-                {
-                    string? taskUidText = projectAssignment[@"TaskUID"]?.InnerText;
-                    int taskUid = taskUidText is not null ? XmlConvert.ToInt32(taskUidText) : 0;
-
-                    string? resourceUidText = projectAssignment[@"ResourceUID"]?.InnerText;
-                    int resourceUid = resourceUidText is not null ? XmlConvert.ToInt32(resourceUidText) : 0;
-
-                    if (taskUid == 0 || resourceUid == 0)
-                    {
-                        continue;
-                    }
-
-                    if (taskUidToIdLookup.TryGetValue(taskUid, out int taskId)
-                        && resourceUidToIdLookup.TryGetValue(resourceUid, out int resourceId))
-                    {
-                        if (!resourceAssignmentLookup.TryGetValue(taskId, out IList<int>? resourceAssignments))
-                        {
-                            resourceAssignments = new List<int>();
-                            resourceAssignmentLookup.Add(taskId, resourceAssignments);
-                        }
-
-                        resourceAssignments.Add(resourceId);
+                        yield return grandChildTask;
                     }
                 }
             }
-
-            // Cycle through tasks.
-            var dependentActivities = new List<DependentActivityModel>();
-            if (projectTasks is not null)
+            else
             {
-                foreach (XmlNode projectTask in projectTasks)
-                {
-                    string? taskIdText = projectTask[@"ID"]?.InnerText;
-                    int taskId = taskIdText is not null ? XmlConvert.ToInt32(taskIdText) : 0;
-
-                    if (taskId == 0)
-                    {
-                        continue;
-                    }
-
-                    string name = projectTask[@"Name"]?.InnerText ?? string.Empty;
-
-                    string? totalDurationMinutesText = projectTask[@"Duration"]?.InnerText;
-                    double totalDurationMinutes = totalDurationMinutesText is not null ? XmlConvert.ToTimeSpan(totalDurationMinutesText).TotalMinutes : 0.0;
-                    int durationDays = Convert.ToInt32(totalDurationMinutes / minutesPerDay);
-
-                    DateTimeOffset? minimumEarliestStartDateTime = null;
-                    string? constraintTypeText = projectTask[@"ConstraintType"]?.InnerText;
-                    if (string.Equals(constraintTypeText, @"4", StringComparison.OrdinalIgnoreCase)) // START_NO_EARLIER_THAN
-                    {
-                        string? constraintDateText = projectTask[@"ConstraintDate"]?.InnerText;
-
-                        // Ensure each value has the same offset as the project start;
-                        minimumEarliestStartDateTime =
-                            constraintDateText is not null
-                            ? new DateTimeOffset(XmlConvert.ToDateTime(constraintDateText, XmlDateTimeSerializationMode.Unspecified), projectStartOffset)
-                            : null;
-                    }
-
-                    if (!resourceAssignmentLookup.TryGetValue(taskId, out IList<int>? targetResources))
-                    {
-                        targetResources = new List<int>();
-                    }
-
-                    var dependencies = new List<int>();
-                    XmlNodeList? predecessorNodes = projectTask.SelectNodes(@"./ns:PredecessorLink", nsMan);
-                    if (predecessorNodes is not null)
-                    {
-                        // Do not forget namespaces.
-                        // https://stackoverflow.com/questions/33125519/how-to-get-text-from-ms-projects-xml-file-in-c
-                        foreach (XmlNode predecessorNode in predecessorNodes)
-                        {
-                            string? predecessorUidText = predecessorNode[@"PredecessorUID"]?.InnerText;
-                            int predecessorUid = predecessorUidText is not null ? XmlConvert.ToInt32(predecessorUidText) : 0;
-
-                            if (predecessorUid == 0)
-                            {
-                                continue;
-                            }
-
-                            if (taskUidToIdLookup.TryGetValue(predecessorUid, out int predecessorId))
-                            {
-                                dependencies.Add(predecessorId);
-                            }
-                        }
-                    }
-
-                    var dependentActivity = new DependentActivityModel
-                    {
-                        Activity = new ActivityModel
-                        {
-                            Id = taskId,
-                            Name = name,
-                            TargetResources = targetResources.ToList(),
-                            Duration = durationDays,
-                            MinimumEarliestStartDateTime = minimumEarliestStartDateTime
-                        },
-                        Dependencies = dependencies
-                    };
-                    dependentActivities.Add(dependentActivity);
-                }
+                yield return mpxjTask;
             }
-
-            return new ProjectImportModel
-            {
-                ProjectStart = projectStart,
-                DependentActivities = dependentActivities,
-                Resources = resources
-            };
         }
+
+
+
+
+        private DependentActivityModel? ConvertTask(
+            net.sf.mpxj.Task mpxjTask,
+            TimeSpan projectStartOffset)
+        {
+            int id = mpxjTask.ID?.intValue() ?? default;
+            if (id == 0)
+            {
+                return null;
+            }
+            int duration = Convert.ToInt32(mpxjTask.Duration?.Duration ?? default);
+
+            DateTimeOffset? minimumEarliestStartDateTime = null;
+            if (mpxjTask.ConstraintType == net.sf.mpxj.ConstraintType.START_NO_EARLIER_THAN)
+            {
+                DateTime? mpxContraintDate = mpxjTask.ConstraintDate?.ToDateTime();
+
+                if (mpxContraintDate is not null)
+                {
+                    // Ensure each value has the same offset as the project start;
+                    minimumEarliestStartDateTime = new DateTimeOffset(mpxContraintDate.GetValueOrDefault(), projectStartOffset);
+                }
+            }
+
+            var targetResources = new List<int>();
+            foreach (net.sf.mpxj.ResourceAssignment resourceAssignment in mpxjTask.ResourceAssignments.ToIEnumerable<net.sf.mpxj.ResourceAssignment>())
+            {
+                int? mpxResourceId = resourceAssignment.Resource?.ID?.intValue();
+
+                if (mpxResourceId is not null)
+                {
+                    targetResources.Add(mpxResourceId.GetValueOrDefault());
+                }
+            }
+
+            var dependencies = new List<int>();
+            java.util.List? preds = mpxjTask.Predecessors;
+            if (preds is not null && !preds.isEmpty())
+            {
+                foreach (net.sf.mpxj.Relation pred in preds.ToIEnumerable<net.sf.mpxj.Relation>())
+                {
+                    int? mpxPredId = pred.TargetTask?.ID?.intValue();
+
+                    if (mpxPredId is not null)
+                    {
+                        dependencies.Add(mpxPredId.GetValueOrDefault());
+                    }
+                }
+            }
+            var dependentActivity = new DependentActivityModel
+            {
+                Activity = new ActivityModel
+                {
+                    Id = id,
+                    Name = mpxjTask.Name ?? string.Empty,
+                    TargetResources = targetResources,
+                    Duration = duration,
+                    MinimumEarliestStartDateTime = minimumEarliestStartDateTime
+                },
+                Dependencies = dependencies,
+            };
+            return dependentActivity;
+        }
+
+
+
+
+
+
+
 
         public ProjectImportModel ImportProjectXlsxFile(string filename)
         {

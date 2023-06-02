@@ -8,9 +8,7 @@ namespace Zametek.Contract.ProjectPlan
 
         Task<ProjectImportModel> ImportProjectFileAsync(string filename);
 
-        ProjectImportModel ImportMicrosoftProjectMppFile(string filename);
-
-        ProjectImportModel ImportMicrosoftProjectXmlFile(string filename);
+        ProjectImportModel ImportMicrosoftProjectFile(string filename);
 
         ProjectImportModel ImportProjectXlsxFile(string filename);
     }

@@ -12,3 +12,6 @@ run-linux: build ## Start ProjectPlan in Linux
 
 run-mac: build ## Start ProjectPlan in macOS
 	dotnet run --os osx --project src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj
+
+publish-win: build ## -p:PublishTrimmed=true -p:PublishReadyToRun=true
+	dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os win --output publish/win src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj
