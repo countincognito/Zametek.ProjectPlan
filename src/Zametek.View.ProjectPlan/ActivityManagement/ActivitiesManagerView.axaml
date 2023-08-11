@@ -860,7 +860,7 @@
 												  Padding="3"
 												  IsEnabled="True"/>
 									<Popup Name="ResourceSelectorToggledPopup"
-										   StaysOpen="False"
+										   IsLightDismissEnabled="False"
 										   IsOpen="{Binding Path=IsChecked, ElementName=ResourceSelectorTogglePopupButton, Mode=TwoWay}">
 										<ItemsPresenter Items="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}">
 											<ItemsPresenter.ItemTemplate>
