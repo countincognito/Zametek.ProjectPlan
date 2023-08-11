@@ -40,7 +40,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Extensions = new List<string>
                     {
                         Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFileExtension,
-                        Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFileExtension
+                        //Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFileExtension
                     }
                 },
                 new FileFilter

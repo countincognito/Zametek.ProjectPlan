@@ -1,4 +1,5 @@
 ﻿using net.sf.mpxj.MpxjUtilities;
+using net.sf.mpxj.mspdi;
 using net.sf.mpxj.reader;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
@@ -65,6 +66,10 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivitySeverityModel.ColorFormat)
         };
 
+        private static readonly int[] s_FilterTaskIds = { 0 };
+
+        private static readonly int[] s_FilterResourceIds = { 0 };
+
         #endregion
 
         private static DataTable SheetToDataTable(ISheet sheet)
@@ -113,172 +118,6 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         #region IProjectFileImport Members
-
-        public ProjectImportModel ImportProjectFile(string filename)
-        {
-            string fileExtension = Path.GetExtension(filename);
-
-            Func<string, ProjectImportModel> func =
-                filename => throw new ArgumentOutOfRangeException(
-                    nameof(filename),
-                    @$"{Resource.ProjectPlan.Messages.Message_UnableToImportFile} {filename}");
-
-            fileExtension.ValueSwitchOn()
-                .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFileExtension}", _ => func = ImportMicrosoftProjectFile)
-                .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFileExtension}", _ => func = ImportMicrosoftProjectFile)
-                .Case($".{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}", _ => func = ImportProjectXlsxFile);
-
-            return func(filename);
-        }
-
-        public async Task<ProjectImportModel> ImportProjectFileAsync(string filename)
-        {
-            return await Task.Run(() => ImportProjectFile(filename));
-        }
-
-        public ProjectImportModel ImportMicrosoftProjectFile(string filename)
-        {
-            var reader = new UniversalProjectReader();
-            net.sf.mpxj.ProjectFile mpxjProjectFile = reader.read(filename);
-            net.sf.mpxj.ProjectProperties? props = mpxjProjectFile.ProjectProperties;
-            DateTimeOffset projectStart = props?.StartDate?.ToDateTime() ?? DateTimeOffset.Now;
-            TimeSpan projectStartOffset = projectStart.Offset;
-
-            var resources = new List<ResourceModel>();
-
-            foreach (net.sf.mpxj.Resource mpxjResource in mpxjProjectFile.Resources.ToIEnumerable<net.sf.mpxj.Resource>())
-            {
-                int id = mpxjResource.ID?.intValue() ?? default;
-                if (id == 0)
-                {
-                    continue;
-                }
-                var resource = new ResourceModel
-                {
-                    Id = id,
-                    IsExplicitTarget = true,
-                    IsInactive = false,
-                    Name = mpxjResource.Name ?? string.Empty,
-                    DisplayOrder = id,
-                    ColorFormat = ColorHelper.RandomColor()
-                };
-                resources.Add(resource);
-            }
-
-            var dependentActivities = new List<DependentActivityModel>();
-            foreach (net.sf.mpxj.Task mpxjTask in mpxjProjectFile.Tasks.ToIEnumerable<net.sf.mpxj.Task>())
-            {
-                foreach (net.sf.mpxj.Task descendantTask in GetDescendantTasks(mpxjTask))
-                {
-                    DependentActivityModel? dependentActivity = ConvertTask(descendantTask, projectStartOffset);
-
-                    if (dependentActivity is not null)
-                    {
-                        dependentActivities.Add(dependentActivity);
-                    }
-                }
-            }
-
-            return new ProjectImportModel
-            {
-                ProjectStart = projectStart,
-                DependentActivities = dependentActivities,
-                Resources = resources
-            };
-        }
-
-
-
-        private IEnumerable<net.sf.mpxj.Task> GetDescendantTasks(net.sf.mpxj.Task mpxjTask)
-        {
-            if (mpxjTask.HasChildTasks())
-            {
-                foreach (net.sf.mpxj.Task childTask in mpxjTask.ChildTasks.ToIEnumerable<net.sf.mpxj.Task>())
-                {
-                    foreach (net.sf.mpxj.Task grandChildTask in GetDescendantTasks(childTask))
-                    {
-                        yield return grandChildTask;
-                    }
-                }
-            }
-            else
-            {
-                yield return mpxjTask;
-            }
-        }
-
-
-
-
-        private DependentActivityModel? ConvertTask(
-            net.sf.mpxj.Task mpxjTask,
-            TimeSpan projectStartOffset)
-        {
-            int id = mpxjTask.ID?.intValue() ?? default;
-            if (id == 0)
-            {
-                return null;
-            }
-            int duration = Convert.ToInt32(mpxjTask.Duration?.Duration ?? default);
-
-            DateTimeOffset? minimumEarliestStartDateTime = null;
-            if (mpxjTask.ConstraintType == net.sf.mpxj.ConstraintType.START_NO_EARLIER_THAN)
-            {
-                DateTime? mpxContraintDate = mpxjTask.ConstraintDate?.ToDateTime();
-
-                if (mpxContraintDate is not null)
-                {
-                    // Ensure each value has the same offset as the project start;
-                    minimumEarliestStartDateTime = new DateTimeOffset(mpxContraintDate.GetValueOrDefault(), projectStartOffset);
-                }
-            }
-
-            var targetResources = new List<int>();
-            foreach (net.sf.mpxj.ResourceAssignment resourceAssignment in mpxjTask.ResourceAssignments.ToIEnumerable<net.sf.mpxj.ResourceAssignment>())
-            {
-                int? mpxResourceId = resourceAssignment.Resource?.ID?.intValue();
-
-                if (mpxResourceId is not null)
-                {
-                    targetResources.Add(mpxResourceId.GetValueOrDefault());
-                }
-            }
-
-            var dependencies = new List<int>();
-            java.util.List? preds = mpxjTask.Predecessors;
-            if (preds is not null && !preds.isEmpty())
-            {
-                foreach (net.sf.mpxj.Relation pred in preds.ToIEnumerable<net.sf.mpxj.Relation>())
-                {
-                    int? mpxPredId = pred.TargetTask?.ID?.intValue();
-
-                    if (mpxPredId is not null)
-                    {
-                        dependencies.Add(mpxPredId.GetValueOrDefault());
-                    }
-                }
-            }
-            var dependentActivity = new DependentActivityModel
-            {
-                Activity = new ActivityModel
-                {
-                    Id = id,
-                    Name = mpxjTask.Name ?? string.Empty,
-                    TargetResources = targetResources,
-                    Duration = duration,
-                    MinimumEarliestStartDateTime = minimumEarliestStartDateTime
-                },
-                Dependencies = dependencies,
-            };
-            return dependentActivity;
-        }
-
-
-
-
-
-
-
 
         public ProjectImportModel ImportProjectXlsxFile(string filename)
         {
@@ -783,6 +622,177 @@ namespace Zametek.ViewModel.ProjectPlan
                 DefaultUnitCost = defaultUnitCost,
                 ActivitySeverities = activitySeverities,
             };
+        }
+
+        public ProjectImportModel ImportProjectFile(string filename)
+        {
+            string fileExtension = Path.GetExtension(filename);
+
+            Func<string, ProjectImportModel> func =
+                filename => throw new ArgumentOutOfRangeException(
+                    nameof(filename),
+                    @$"{Resource.ProjectPlan.Messages.Message_UnableToImportFile} {filename}");
+
+            fileExtension.ValueSwitchOn()
+                .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFileExtension}", _ => func = ImportMicrosoftProjectFile)
+                .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFileExtension}", _ => func = ImportMicrosoftProjectFile)
+                .Case($".{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}", _ => func = ImportProjectXlsxFile);
+
+            return func(filename);
+        }
+
+        public async Task<ProjectImportModel> ImportProjectFileAsync(string filename)
+        {
+            return await Task.Run(() => ImportProjectFile(filename));
+        }
+
+        public ProjectImportModel ImportMicrosoftProjectFile(string filename)
+        {
+            var reader = new UniversalProjectReader();
+            net.sf.mpxj.ProjectFile mpxjProjectFile = reader.read(filename);
+            net.sf.mpxj.ProjectProperties? props = mpxjProjectFile.ProjectProperties;
+            DateTimeOffset projectStart = props?.StartDate?.ToDateTime() ?? DateTimeOffset.Now;
+            TimeSpan projectStartOffset = projectStart.Offset;
+
+            var resources = new List<ResourceModel>();
+
+            foreach (net.sf.mpxj.Resource mpxjResource in mpxjProjectFile.Resources.ToIEnumerable<net.sf.mpxj.Resource>())
+            {
+                int id = mpxjResource.ID?.intValue() ?? default;
+                if (s_FilterResourceIds.Contains(id))
+                {
+                    continue;
+                }
+                var resource = new ResourceModel
+                {
+                    Id = id,
+                    IsExplicitTarget = true,
+                    IsInactive = false,
+                    Name = mpxjResource.Name ?? string.Empty,
+                    DisplayOrder = id,
+                    ColorFormat = ColorHelper.RandomColor()
+                };
+                resources.Add(resource);
+            }
+
+            var dependentActivities = new List<DependentActivityModel>();
+            foreach (net.sf.mpxj.Task mpxjTask in mpxjProjectFile.Tasks.ToIEnumerable<net.sf.mpxj.Task>())
+            {
+                int id = mpxjTask.ID?.intValue() ?? default;
+                if (s_FilterTaskIds.Contains(id))
+                {
+                    continue;
+                }
+
+                foreach (net.sf.mpxj.Task descendantTask in GetDescendantTasks(mpxjTask))
+                {
+                    DependentActivityModel? dependentActivity = ConvertTask(descendantTask, projectStartOffset);
+
+                    if (dependentActivity is not null)
+                    {
+                        dependentActivities.Add(dependentActivity);
+                    }
+                }
+            }
+
+            return new ProjectImportModel
+            {
+                ProjectStart = projectStart,
+                DependentActivities = dependentActivities,
+                Resources = resources
+            };
+        }
+
+        private IEnumerable<net.sf.mpxj.Task> GetDescendantTasks(net.sf.mpxj.Task parentTask)
+        {
+            if (parentTask.HasChildTasks())
+            {
+                parentTask.Duration = net.sf.mpxj.Duration.getInstance(0.0, parentTask.Duration.Units);
+
+                foreach (net.sf.mpxj.Task childTask in parentTask.ChildTasks.ToIEnumerable<net.sf.mpxj.Task>())
+                {
+                    if (childTask.Predecessors.isEmpty())
+                    {
+                        var relation = new net.sf.mpxj.Relation(
+                            childTask,
+                            parentTask,
+                            net.sf.mpxj.RelationType.START_FINISH,
+                            net.sf.mpxj.Duration.getInstance(0.0, childTask.Duration.Units));
+                        childTask.Predecessors.add(relation);
+                    }
+
+                    foreach (net.sf.mpxj.Task grandChildTask in GetDescendantTasks(childTask))
+                    {
+                        yield return grandChildTask;
+                    }
+
+                    yield return childTask;
+                }
+            }
+            yield return parentTask;
+        }
+
+        private static DependentActivityModel? ConvertTask(
+            net.sf.mpxj.Task mpxjTask,
+            TimeSpan projectStartOffset)
+        {
+            int id = mpxjTask.ID?.intValue() ?? default;
+            if (s_FilterTaskIds.Contains(id))
+            {
+                return null;
+            }
+            int duration = Convert.ToInt32(mpxjTask.Duration?.Duration ?? default);
+
+            DateTimeOffset? minimumEarliestStartDateTime = null;
+            if (mpxjTask.ConstraintType == net.sf.mpxj.ConstraintType.START_NO_EARLIER_THAN)
+            {
+                DateTime? mpxContraintDate = mpxjTask.ConstraintDate?.ToDateTime();
+
+                if (mpxContraintDate is not null)
+                {
+                    // Ensure each value has the same offset as the project start;
+                    minimumEarliestStartDateTime = new DateTimeOffset(mpxContraintDate.GetValueOrDefault(), projectStartOffset);
+                }
+            }
+
+            var targetResources = new List<int>();
+            foreach (net.sf.mpxj.ResourceAssignment resourceAssignment in mpxjTask.ResourceAssignments.ToIEnumerable<net.sf.mpxj.ResourceAssignment>())
+            {
+                int? mpxResourceId = resourceAssignment.Resource?.ID?.intValue();
+
+                if (mpxResourceId is not null)
+                {
+                    targetResources.Add(mpxResourceId.GetValueOrDefault());
+                }
+            }
+
+            var dependencies = new List<int>();
+            java.util.List? preds = mpxjTask.Predecessors;
+            if (preds is not null && !preds.isEmpty())
+            {
+                foreach (net.sf.mpxj.Relation pred in preds.ToIEnumerable<net.sf.mpxj.Relation>())
+                {
+                    int? mpxPredId = pred.TargetTask?.ID?.intValue();
+
+                    if (mpxPredId is not null)
+                    {
+                        dependencies.Add(mpxPredId.GetValueOrDefault());
+                    }
+                }
+            }
+            var dependentActivity = new DependentActivityModel
+            {
+                Activity = new ActivityModel
+                {
+                    Id = id,
+                    Name = mpxjTask.Name ?? string.Empty,
+                    TargetResources = targetResources,
+                    Duration = duration,
+                    MinimumEarliestStartDateTime = minimumEarliestStartDateTime
+                },
+                Dependencies = dependencies,
+            };
+            return dependentActivity;
         }
 
         #endregion
