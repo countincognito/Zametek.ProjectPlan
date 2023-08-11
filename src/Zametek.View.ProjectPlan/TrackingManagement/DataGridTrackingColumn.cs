@@ -65,9 +65,10 @@ namespace Zametek.View.ProjectPlan
                 {
                     [!ToolTip.TipProperty] = new Binding($@"Trackers[{m_Index}].DisplayName", BindingMode.OneWay),
                     VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
-                    Classes = new Classes(new [] { "editable" })
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch
                 };
+
+                mainDockPanel.Classes.Add(@"editable");
 
                 var percentageNumericUpDown = new NumericUpDown
                 {

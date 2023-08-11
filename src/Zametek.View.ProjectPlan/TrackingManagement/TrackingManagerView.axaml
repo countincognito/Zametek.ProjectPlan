@@ -85,7 +85,7 @@
 					  Width="75"
 					  VerticalAlignment="Center"
 					  VerticalContentAlignment="Center"
-					  Items="{Binding Path=AvailableStartColumns, Mode=OneWay}"
+					  ItemsSource="{Binding Path=AvailableStartColumns, Mode=OneWay}"
 					  SelectedItem="{Binding Path=StartColumnSelector, Mode=TwoWay}">
 				<ComboBox.ItemTemplate>
 					<DataTemplate>
@@ -109,7 +109,7 @@
 					  Width="75"
 					  VerticalAlignment="Center"
 				      VerticalContentAlignment="Center"
-				      Items="{Binding Path=AvailableColumnsShown, Mode=OneWay}"
+				      ItemsSource="{Binding Path=AvailableColumnsShown, Mode=OneWay}"
 				      SelectedItem="{Binding Path=ColumnsShownSelector, Mode=TwoWay}">
 				<ComboBox.ItemTemplate>
 					<DataTemplate>

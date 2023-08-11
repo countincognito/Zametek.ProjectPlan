@@ -77,7 +77,7 @@
 
 			<DataGrid Name="activitySeverities"
 					  RowHeight="30"
-					  Items="{Binding Path=ActivitySeverities, Mode=OneWay}"
+				      ItemsSource="{Binding Path=ActivitySeverities, Mode=OneWay}"
 					  SelectionMode="Extended"
 					  CanUserResizeColumns="True"
 					  CanUserSortColumns="True"

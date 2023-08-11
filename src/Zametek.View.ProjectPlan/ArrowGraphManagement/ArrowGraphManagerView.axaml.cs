@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Markup.Xaml;
 using System;
 
 namespace Zametek.View.ProjectPlan
@@ -16,11 +15,6 @@ namespace Zametek.View.ProjectPlan
         public ArrowGraphManagerView()
         {
             InitializeComponent();
-        }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
         }
 
         private void ScrollViewer_PointerMoved(object? sender, PointerEventArgs e)

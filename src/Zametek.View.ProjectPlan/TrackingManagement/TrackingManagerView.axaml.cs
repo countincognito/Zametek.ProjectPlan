@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -9,11 +8,6 @@ namespace Zametek.View.ProjectPlan
         public TrackingManagerView()
         {
             InitializeComponent();
-        }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
         }
     }
 }

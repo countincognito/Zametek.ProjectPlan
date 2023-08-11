@@ -127,7 +127,7 @@
 
 			<DataGrid Name="resourcesGrid"
 					  RowHeight="30"
-					  Items="{Binding Path=Resources, Mode=OneWay}"
+				      ItemsSource="{Binding Path=Resources, Mode=OneWay}"
 					  SelectionMode="Extended"
 					  CanUserResizeColumns="True"
 					  CanUserSortColumns="True"
@@ -305,7 +305,7 @@
 						</DataGridTemplateColumn.CellTemplate>
 						<DataGridTemplateColumn.CellEditingTemplate>
 							<DataTemplate>
-								<ComboBox Items="{Binding Source={local:EnumBindingSource {x:Type zmg:InterActivityAllocationType}}}"
+								<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:InterActivityAllocationType}}}"
 										  SelectedItem="{Binding Path=InterActivityAllocationType, Mode=TwoWay}"
 										  Foreground="Black"
 										  Background="White"/>

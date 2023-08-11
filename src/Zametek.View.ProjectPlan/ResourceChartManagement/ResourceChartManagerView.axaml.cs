@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using OxyPlot;
 using OxyPlot.Avalonia;
 
@@ -11,14 +10,9 @@ namespace Zametek.View.ProjectPlan
         public ResourceChartManagerView()
         {
             InitializeComponent();
-            var oxyplot = this.FindControl<PlotView>("oxyplot");
+            var oxyplot = this.FindControl<PlotView>("oxyplot"); // TODO remove and use x:Name reference
             oxyplot.ActualController.UnbindMouseDown(OxyMouseButton.Right);
             oxyplot.ActualController.UnbindMouseWheel();
-        }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
         }
     }
 }

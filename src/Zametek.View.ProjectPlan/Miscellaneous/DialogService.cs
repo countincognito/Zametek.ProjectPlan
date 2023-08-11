@@ -1,9 +1,8 @@
 ﻿using AutoMapper;
 using Avalonia.Controls;
-using MessageBox.Avalonia;
-using MessageBox.Avalonia.BaseWindows.Base;
-using MessageBox.Avalonia.DTO;
-using MessageBox.Avalonia.Enums;
+using MsBox.Avalonia.Base;
+using MsBox.Avalonia.Dto;
+using MsBox.Avalonia.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,8 +32,8 @@ namespace Zametek.View.ProjectPlan
         private async Task<ButtonResult> ShowMessageBoxAsync(MessageBoxStandardParams standardParams)
         {
             standardParams.WindowIcon = m_Parent!.Icon;
-            IMsBoxWindow<ButtonResult>? msg = MessageBoxManager.GetMessageBoxStandardWindow(standardParams);
-            return await msg.ShowDialog(m_Parent);
+            IMsBox<ButtonResult>? msg = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(standardParams);
+            return await msg.ShowAsPopupAsync(m_Parent);
         }
 
         #endregion

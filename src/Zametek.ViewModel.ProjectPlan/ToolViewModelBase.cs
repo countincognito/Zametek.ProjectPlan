@@ -1,4 +1,4 @@
-using Dock.Model.ReactiveUI.Controls;
+using Dock.Model.Avalonia.Controls;
 
 namespace Zametek.ViewModel.ProjectPlan
 {

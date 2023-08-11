@@ -97,7 +97,7 @@
 					  FrozenColumnCount="1"
 					  AutoGenerateColumns="False"
 					  RowHeight="30"
-					  Items="{Binding Path=Activities, Mode=OneWay}"
+					  ItemsSource="{Binding Path=Activities, Mode=OneWay}"
 					  SelectionMode="Extended"
 					  CanUserResizeColumns="True"
 					  CanUserSortColumns="True"
@@ -862,8 +862,8 @@
 									<Popup Name="ResourceSelectorToggledPopup"
 										   IsLightDismissEnabled="False"
 										   IsOpen="{Binding Path=IsChecked, ElementName=ResourceSelectorTogglePopupButton, Mode=TwoWay}">
-										<ItemsPresenter Items="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}">
-											<ItemsPresenter.ItemTemplate>
+										<ItemsControl ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}">
+											<ItemsControl>
 												<DataTemplate>
 													<Grid Background="White">
 														<CheckBox Padding="4"
@@ -872,16 +872,16 @@
 																  IsChecked="{Binding Path=IsSelected, Mode=TwoWay}"/>
 													</Grid>
 												</DataTemplate>
-											</ItemsPresenter.ItemTemplate>
-											<ItemsPresenter.ItemsPanel>
+											</ItemsControl>
+											<ItemsControl.ItemsPanel>
 												<ItemsPanelTemplate>
 													<StackPanel Orientation="Vertical"/>
 												</ItemsPanelTemplate>
-											</ItemsPresenter.ItemsPanel>
-										</ItemsPresenter>
+											</ItemsControl.ItemsPanel>
+										</ItemsControl>
 
 
-										<!--<ListBox Items="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}">
+										<!--<ListBox ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}">
 											<ListBox.ItemTemplate>
 												<DataTemplate>
 													<DockPanel>
@@ -970,7 +970,7 @@
 						</DataGridTemplateColumn.CellTemplate>
 						<DataGridTemplateColumn.CellEditingTemplate>
 							<DataTemplate>
-								<ComboBox Items="{Binding Source={local:EnumBindingSource {x:Type zmg:LogicalOperator}}}"
+								<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:LogicalOperator}}}"
 										  SelectedItem="{Binding Path=TargetResourceOperator, Mode=TwoWay}"
 										  Foreground="Black"
 										  Background="White"/>

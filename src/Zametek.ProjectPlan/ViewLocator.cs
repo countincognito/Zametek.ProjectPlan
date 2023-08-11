@@ -9,7 +9,7 @@ namespace Zametek.View.ProjectPlan
     public class ViewLocator
         : IDataTemplate
     {
-        public IControl Build(object data)
+        public Control Build(object data)
         {
             var name = data.GetType().AssemblyQualifiedName!.Replace("ViewModel", "View");
             var type = Type.GetType(name);
