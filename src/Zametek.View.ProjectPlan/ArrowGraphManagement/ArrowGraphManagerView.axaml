@@ -7,6 +7,8 @@
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 x:DataType="vm:ArrowGraphManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ArrowGraphManagerView">
 	<UserControl.Resources>

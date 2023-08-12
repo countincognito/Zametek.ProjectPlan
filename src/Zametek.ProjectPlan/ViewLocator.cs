@@ -4,7 +4,7 @@ using System;
 using Splat;
 using Zametek.ViewModel.ProjectPlan;
 
-namespace Zametek.View.ProjectPlan
+namespace Zametek.ProjectPlan
 {
     public class ViewLocator
         : IDataTemplate

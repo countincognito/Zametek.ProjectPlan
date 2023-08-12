@@ -204,7 +204,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         InterActivityAllocationType = x.InterActivityAllocationType,
                         UnitCost = x.UnitCost,
                         DisplayOrder = x.DisplayOrder,
-                        ColorFormat = x.ColorFormat
+                        ColorFormat = ColorHelper.RandomColor() //x.ColorFormat
                     }).ToList(),
 
                     DefaultUnitCost = DefaultUnitCost,

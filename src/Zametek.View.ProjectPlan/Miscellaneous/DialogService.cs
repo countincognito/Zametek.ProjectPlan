@@ -33,7 +33,7 @@ namespace Zametek.View.ProjectPlan
         {
             standardParams.WindowIcon = m_Parent!.Icon;
             IMsBox<ButtonResult>? msg = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(standardParams);
-            return await msg.ShowAsPopupAsync(m_Parent);
+            return await msg.ShowWindowDialogAsync(m_Parent);
         }
 
         #endregion

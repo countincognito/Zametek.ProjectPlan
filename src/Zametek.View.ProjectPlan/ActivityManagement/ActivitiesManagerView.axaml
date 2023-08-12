@@ -7,9 +7,11 @@
 		     xmlns:controls="using:Avalonia.Controls"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
 			 xmlns:sys="using:System"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:DataType="vm:ActivitiesManagerViewModel"
              x:Class="Zametek.View.ProjectPlan.ActivitiesManagerView">
 	<UserControl.Resources>
 		<local:NullableIntConverter x:Key="nullableIntConverter"/>
@@ -839,6 +841,7 @@
 											   Margin="0"
 											   Padding="3"
 											   Background="Transparent"
+											   x:DataType="vm:ManagedActivityViewModel"
 											   Text="{Binding Path=ResourceSelector.TargetResourcesString, Mode=OneWay}"/>
 								</Grid>
 							</DataTemplate>
@@ -854,6 +857,7 @@
 									</Grid.Styles>
 									<ToggleButton Name="ResourceSelectorTogglePopupButton"
 												  HorizontalContentAlignment="Left"
+												  x:DataType="vm:ManagedActivityViewModel"
 												  Content="{Binding Path=ResourceSelector.TargetResourcesString, Mode=OneWay}"
 												  Background="Transparent"
 												  Margin="0"
@@ -862,9 +866,10 @@
 									<Popup Name="ResourceSelectorToggledPopup"
 										   IsLightDismissEnabled="False"
 										   IsOpen="{Binding Path=IsChecked, ElementName=ResourceSelectorTogglePopupButton, Mode=TwoWay}">
-										<ItemsControl ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}">
+										<ItemsControl x:DataType="vm:ManagedActivityViewModel"
+													  ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}">
 											<ItemsControl>
-												<DataTemplate>
+												<DataTemplate x:DataType="vm:SelectableResourceViewModel">
 													<Grid Background="White">
 														<CheckBox Padding="4"
 																  Margin="4,0"

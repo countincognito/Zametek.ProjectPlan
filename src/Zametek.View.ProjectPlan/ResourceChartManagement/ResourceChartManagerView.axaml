@@ -7,6 +7,8 @@
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:oxy="using:OxyPlot.Avalonia"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 x:DataType="vm:ResourceChartManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ResourceChartManagerView">
 	<UserControl.Resources>

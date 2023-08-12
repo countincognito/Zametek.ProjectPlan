@@ -144,7 +144,5 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         #endregion
-
-
     }
 }

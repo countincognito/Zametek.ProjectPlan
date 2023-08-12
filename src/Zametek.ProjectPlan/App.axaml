@@ -4,10 +4,14 @@
              xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
              xmlns:local="using:Zametek.ProjectPlan"
              x:Class="Zametek.ProjectPlan.App"
+			 xmlns:dialog="clr-namespace:Egorozh.ColorPicker.Dialog;assembly=Egorozh.ColorPicker.Avalonia.Dialog"
 		     xmlns:resources="using:Zametek.Resource.ProjectPlan"
-			 Name="{x:Static resources:Titles.Title_ProjectPlan}">
+			 x:DataType="vm:MainViewModel"
+			 Name="{x:Static resources:Titles.Title_ProjectPlan}"
+			 RequestedThemeVariant="Light">
+             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
     <Application.DataTemplates>
-        <v:ViewLocator />
+        <local:ViewLocator />
     </Application.DataTemplates>
 
     <NativeMenu.Menu>
@@ -19,17 +23,34 @@
     <Application.Styles>
         <!-- Keep this near the top otherwise it screws up the Popup ListBox in the Resource Selector in Activities Manager -->
         <!--<StyleInclude Source="avares://Egorozh.ColorPicker.Avalonia.Dialog/Themes/Default.axaml" />-->
-        <!--<StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseLight.xaml"/>-->
-		<!--<StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml"/>-->
-		<!--<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Default.xaml"/>-->
-		<!--<StyleInclude Source="avares://Dock.Avalonia/Themes/DockDefaultTheme.axaml"/>-->
+        <!--<StyleInclude Source="avares://Avalonia.Themes.Simple /Accents/BaseLight.xaml"/>-->
+		<!--<StyleInclude Source="avares://Egorozh.ColorPicker.Avalonia.Dialog/Themes/Default.axaml" />-->
 
 
-		<!--<StyleInclude Source="resm:Avalonia.Themes.Default.DefaultTheme.xaml?assembly=Avalonia.Themes.Default"/>
-        <StyleInclude Source="resm:Avalonia.Themes.Default.Accents.BaseLight.xaml?assembly=Avalonia.Themes.Default"/>-->
+		<SimpleTheme />
+		<!--<dialog:SimpleColorTheme Mode="Dark"/>-->
+		<!--<FluentTheme />-->
+		<!--<dialog:FluentColorPickerTheme Mode="Light" />-->
+		<!--<dialog:SimpleColorTheme Mode="Light"/>-->
+
+
+		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
+
+		<!--<StyleInclude Source="avares://Avalonia.Themes.Fluent/FluentTheme.xaml"/>
+		<StyleInclude Source="avares://Avalonia.Themes.Simple/SimpleTheme.xaml"/>-->
+		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml"/>
+		<StyleInclude Source="avares://Dock.Avalonia/Themes/DockSimpleTheme.axaml" />
+
+
+		<!--<StyleInclude Source="resm:Avalonia.Themes.Simple.SimpleTheme.xaml?assembly=Avalonia.Themes.Simple"/>-->
+        <!--<StyleInclude Source="resm:Avalonia.Themes.Simple.Accents.BaseLight.xaml?assembly=Avalonia.Themes.Simple"/>-->
         <!--<StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>-->
 
         <!--<StyleInclude Source="avares:OxyPlot.Avalonia.Themes.Default.xaml"/>-->
 
+
+		<!-- Add the line below to get OxyPlot UI theme applied. -->
+		<!--<StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>-->
+		
     </Application.Styles>
 </Application>

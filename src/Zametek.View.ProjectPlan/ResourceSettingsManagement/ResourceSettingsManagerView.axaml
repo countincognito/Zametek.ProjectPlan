@@ -8,8 +8,10 @@
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
-			 xmlns:colorpicker="using:Egorozh.ColorPicker.Dialog"
 			 xmlns:sys="using:System"
+			 xmlns:cp="clr-namespace:ThemeEditor.Controls.ColorPicker;assembly=ThemeEditor.Controls.ColorPicker"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 x:DataType="vm:ResourceSettingsManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ResourceSettingsManagerView">
 	<UserControl.Resources>
@@ -430,13 +432,23 @@
 						</DataGridTemplateColumn.HeaderTemplate>
 						<DataGridTemplateColumn.CellTemplate>
 							<DataTemplate>
-								<Grid VerticalAlignment="Stretch"
-									  Classes="editable">
-									<colorpicker:ColorPickerButton Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}}"
-																   Cursor="Hand"/>
+								<Grid VerticalAlignment="Stretch">
+									<!--Classes="editable">-->
+									<ColorPicker Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}}"
+												 Cursor="Hand"  />
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.CellTemplate>
+
+						<!--<DataGridTemplateColumn.CellEditingTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<ColorPicker Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}}"
+												 Cursor="Hand"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellEditingTemplate>-->
+						
 					</DataGridTemplateColumn>
 
 					<DataGridTemplateColumn CanUserResize="True"

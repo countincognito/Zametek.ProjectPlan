@@ -7,8 +7,9 @@
 			 xmlns:controls="using:Avalonia.Controls"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
-			 xmlns:colorpicker="using:Egorozh.ColorPicker.Dialog"
 			 xmlns:sys="using:System"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 x:DataType="vm:ArrowGraphSettingsManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ArrowGraphSettingsManagerView">
 	<UserControl.Resources>
@@ -99,8 +100,11 @@
 				</DataGrid.Styles>
 
 				<i:Interaction.Behaviors>
-					<ia:EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #activitySeveritiesGrid}">
-						<ia:InvokeCommandAction Command="{Binding Path=SetSelectedManagedActivitySeveritiesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
+					<ia:EventTriggerBehavior EventName="SelectionChanged"
+											 SourceObject="{Binding #activitySeverities}">
+						<ia:InvokeCommandAction x:DataType="vm:ArrowGraphSettingsManagerViewModel"
+												Command="{Binding Path=SetSelectedManagedActivitySeveritiesCommand, Mode=OneWay}"
+												PassEventArgsToCommand="True" />
 					</ia:EventTriggerBehavior>
 				</i:Interaction.Behaviors>
 
@@ -326,8 +330,8 @@
 							<DataTemplate>
 								<Grid VerticalAlignment="Stretch"
 									  Classes="editable">
-									<colorpicker:ColorPickerButton Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}}"
-																   Cursor="Hand"/>
+									<ColorPicker Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}}"
+												 Cursor="Hand"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.CellTemplate>

@@ -9,6 +9,8 @@
 		xmlns:resources="using:Zametek.Resource.ProjectPlan"
 		xmlns:controls="using:Avalonia.Controls"
 		xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
+		xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+		x:DataType="vm:MainViewModel"
         Icon="resm:Zametek.Resource.ProjectPlan.Icons.zpp.ico?assembly=Zametek.Resource.ProjectPlan"
 		Name="mainview"
         Title="{Binding Path=ProjectTitle, Mode=OneWay}">
@@ -18,11 +20,18 @@
 	</Window.Resources>
 
 	<Window.KeyBindings>
-		<KeyBinding Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}" Gesture="Ctrl+O" />
-		<KeyBinding Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}" Gesture="Ctrl+S" />
-		<KeyBinding Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}" Gesture="Ctrl+D" />
-		<KeyBinding Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}" Gesture="Ctrl+B" />
-		<KeyBinding Command="{Binding Path=ToggleViewEarnedValueProjectionsCommand, Mode=OneWay}" Gesture="Ctrl+E" />
+		<KeyBinding x:DataType="vm:MainViewModel"
+					Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
+					Gesture="Ctrl+O" />
+		<KeyBinding x:DataType="vm:MainViewModel"
+					Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"
+					Gesture="Ctrl+S" />
+		<KeyBinding x:DataType="vm:MainViewModel"
+					Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}"
+					Gesture="Ctrl+D" />
+		<KeyBinding x:DataType="vm:MainViewModel"
+					Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}"
+					Gesture="Ctrl+B" />
 	</Window.KeyBindings>
 
 	<i:Interaction.Behaviors>
