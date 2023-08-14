@@ -4,7 +4,6 @@
              xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
              xmlns:local="using:Zametek.ProjectPlan"
              x:Class="Zametek.ProjectPlan.App"
-			 xmlns:dialog="clr-namespace:Egorozh.ColorPicker.Dialog;assembly=Egorozh.ColorPicker.Avalonia.Dialog"
 		     xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 x:DataType="vm:MainViewModel"
 			 Name="{x:Static resources:Titles.Title_ProjectPlan}"
@@ -28,7 +27,7 @@
 
 
 		<SimpleTheme />
-		<!--<dialog:SimpleColorTheme Mode="Dark"/>-->
+		<!--<dialog:FluentColorPickerTheme />-->
 		<!--<FluentTheme />-->
 		<!--<dialog:FluentColorPickerTheme Mode="Light" />-->
 		<!--<dialog:SimpleColorTheme Mode="Light"/>-->

@@ -9,7 +9,7 @@
   <ItemGroup>
 	<PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
     <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0" />
-    <PackageReference Include="Dock.Model.Mvvm" Version="11.0.0" />
+    <PackageReference Include="Dock.Model.ReactiveUI" Version="11.0.0-preview6" />
     <PackageReference Include="FluentDateTime" Version="2.1.0" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <PackageReference Include="net.sf.mpxj-for-csharp" Version="12.0.2" />
