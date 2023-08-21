@@ -33,6 +33,7 @@
 		<!--<dialog:SimpleColorTheme Mode="Light"/>-->
 
 
+		<!--<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />-->
 		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
 
 		<!--<StyleInclude Source="avares://Avalonia.Themes.Fluent/FluentTheme.xaml"/>
