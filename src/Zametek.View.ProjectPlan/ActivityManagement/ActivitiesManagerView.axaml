@@ -868,7 +868,7 @@
 										   IsOpen="{Binding Path=IsChecked, ElementName=ResourceSelectorTogglePopupButton, Mode=TwoWay}">
 										<ItemsControl x:DataType="vm:ManagedActivityViewModel"
 													  ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}">
-											<ItemsControl>
+											<ItemsControl.ItemTemplate>
 												<DataTemplate x:DataType="vm:SelectableResourceViewModel">
 													<Grid Background="White">
 														<CheckBox Padding="4"
@@ -877,7 +877,7 @@
 																  IsChecked="{Binding Path=IsSelected, Mode=TwoWay}"/>
 													</Grid>
 												</DataTemplate>
-											</ItemsControl>
+											</ItemsControl.ItemTemplate>
 											<ItemsControl.ItemsPanel>
 												<ItemsPanelTemplate>
 													<StackPanel Orientation="Vertical"/>

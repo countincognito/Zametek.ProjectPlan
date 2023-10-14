@@ -171,7 +171,12 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             var dependentActivities = new List<DependentActivityModel>();
-            foreach (net.sf.mpxj.Task mpxjTask in mpxjProjectFile.Tasks.ToIEnumerable<net.sf.mpxj.Task>())
+
+            IList<net.sf.mpxj.Task> mpxjTasks = mpxjProjectFile.Tasks.ToIEnumerable<net.sf.mpxj.Task>().ToList();
+            //var mpxjTaskLookup = new Dictionary<int, net.sf.mpxj.Task>();
+
+
+            foreach (net.sf.mpxj.Task mpxjTask in mpxjTasks)
             {
                 int id = mpxjTask.ID?.intValue() ?? default;
                 if (s_FilterTaskIds.Contains(id))
@@ -185,10 +190,25 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (dependentActivity is not null)
                     {
+                        //mpxjTaskLookup.Add(dependentActivity.Activity.Id, descendantTask);
                         dependentActivities.Add(dependentActivity);
                     }
                 }
             }
+
+
+
+            //// Correct for nested task dependencies.
+            //foreach (DependentActivityModel dependentActivity in dependentActivities)
+            //{
+            //    dependentActivity.de
+
+
+
+            //}
+
+
+
 
             return new ProjectImportModel
             {
@@ -264,7 +284,7 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private IEnumerable<net.sf.mpxj.Task> GetDescendantTasks(net.sf.mpxj.Task parentTask)
+        private static IEnumerable<net.sf.mpxj.Task> GetDescendantTasks(net.sf.mpxj.Task parentTask)
         {
             if (parentTask.HasChildTasks())
             {

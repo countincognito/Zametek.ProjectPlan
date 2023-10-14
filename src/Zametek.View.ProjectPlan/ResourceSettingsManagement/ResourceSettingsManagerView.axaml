@@ -127,6 +127,7 @@
 			</i:Interaction.Behaviors>
 
 			<DataGrid Name="resourcesGrid"
+					  AutoGenerateColumns="False"
 					  RowHeight="30"
 				      ItemsSource="{Binding Path=Resources, Mode=OneWay}"
 					  SelectionMode="Extended"
@@ -259,7 +260,7 @@
 											  Margin="0"
 											  Padding="3"
 											  Background="White"
-											  IsChecked="{Binding Path=IsExplicitTarget, Mode=TwoWay}"/>-->
+											  IsChecked="{Binding Path=IsInactive, Mode=TwoWay}"/>-->
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.CellTemplate>

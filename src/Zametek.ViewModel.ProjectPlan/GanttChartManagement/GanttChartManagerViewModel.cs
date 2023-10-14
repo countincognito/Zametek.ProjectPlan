@@ -185,7 +185,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return new PlotModel();
         }
 
-        private static PlotModel BuildGanttChartPlotModel(
+        private PlotModel BuildGanttChartPlotModel(
             IDateTimeCalculator dateTimeCalculator,
             IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation,
             ResourceSeriesSetModel resourceSeriesSet,

@@ -126,17 +126,8 @@
                           Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
                           CommandParameter="{x:Static resources:Links.Link_ViewLicense}"/>
 				<Separator />
-				
-				
-				
-				
 				<MenuItem Header="{x:Static resources:Menus.Menu_About}"
                           Command="{Binding Path=OpenAboutCommand, Mode=OneWay}"/>
-				
-				
-				
-				
-				
 			</MenuItem>
 		</Menu>
 
@@ -156,17 +147,8 @@
 			<Grid />
 		</DockPanel>
 
-
-
-
-
-		<idc:DockControl Layout="{Binding Path=Layout, Mode=OneWay}" DockProperties.IsDragEnabled="False" />
-
-
-
-
-
-
+		<idc:DockControl Layout="{Binding Path=Layout, Mode=OneWay}"
+						 DockProperties.IsDragEnabled="False" />
 
 	</DockPanel>
 </Window>
