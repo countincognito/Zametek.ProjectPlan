@@ -190,6 +190,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (descendantActivity is not null)
                     {
+                        // TODO: filter out activities that have already been added.
+
                         //mpxjTaskLookup.Add(dependentActivity.Activity.Id, descendantTask);
                         dependentActivities.Add(descendantActivity);
                     }
