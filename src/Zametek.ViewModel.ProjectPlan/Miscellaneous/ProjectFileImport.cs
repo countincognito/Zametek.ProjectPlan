@@ -186,12 +186,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (net.sf.mpxj.Task descendantTask in GetDescendantTasks(mpxjTask))
                 {
-                    DependentActivityModel? dependentActivity = ConvertTask(descendantTask, projectStartOffset);
+                    DependentActivityModel? descendantActivity = ConvertTask(descendantTask, projectStartOffset);
 
-                    if (dependentActivity is not null)
+                    if (descendantActivity is not null)
                     {
                         //mpxjTaskLookup.Add(dependentActivity.Activity.Id, descendantTask);
-                        dependentActivities.Add(dependentActivity);
+                        dependentActivities.Add(descendantActivity);
                     }
                 }
             }
