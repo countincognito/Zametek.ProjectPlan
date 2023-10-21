@@ -1,10 +1,8 @@
 ﻿using net.sf.mpxj.MpxjUtilities;
-using net.sf.mpxj.mspdi;
 using net.sf.mpxj.reader;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.Data;
-using System.Xml;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -173,8 +171,6 @@ namespace Zametek.ViewModel.ProjectPlan
             var dependentActivities = new List<DependentActivityModel>();
 
             IList<net.sf.mpxj.Task> mpxjTasks = mpxjProjectFile.Tasks.ToIEnumerable<net.sf.mpxj.Task>().ToList();
-            //var mpxjTaskLookup = new Dictionary<int, net.sf.mpxj.Task>();
-
 
             foreach (net.sf.mpxj.Task mpxjTask in mpxjTasks)
             {
@@ -184,33 +180,64 @@ namespace Zametek.ViewModel.ProjectPlan
                     continue;
                 }
 
-                foreach (net.sf.mpxj.Task descendantTask in GetDescendantTasks(mpxjTask))
+                java.util.List? preds = mpxjTask.Predecessors;
+                if (preds is not null
+                    && !preds.isEmpty())
                 {
-                    DependentActivityModel? descendantActivity = ConvertTask(descendantTask, projectStartOffset);
-
-                    if (descendantActivity is not null)
+                    foreach (net.sf.mpxj.Relation pred in preds.ToIEnumerable<net.sf.mpxj.Relation>().ToList())
                     {
-                        // TODO: filter out activities that have already been added.
+                        // For every dependency that is also a parent task, add all its children as dependencies.
 
-                        //mpxjTaskLookup.Add(dependentActivity.Activity.Id, descendantTask);
-                        dependentActivities.Add(descendantActivity);
+                        foreach (net.sf.mpxj.Task descendantTask in GetDescendantTasks(pred.TargetTask))
+                        {
+                            int? descendantTaskId = descendantTask.ID?.intValue();
+
+                            if (descendantTaskId is not null
+                                && id != descendantTaskId)
+                            {
+                                var relation = new net.sf.mpxj.Relation(
+                                    mpxjTask,
+                                    descendantTask,
+                                    net.sf.mpxj.RelationType.START_FINISH,
+                                    net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units));
+                                mpxjTask.Predecessors.add(relation);
+                            }
+                        }
                     }
                 }
+
+                // Add parent tasks as predecessors.
+
+                net.sf.mpxj.Task parentTask = mpxjTask.ParentTask;
+
+                if (parentTask is not null)
+                {
+                    int parentId = parentTask.ID?.intValue() ?? default;
+                    if (!s_FilterTaskIds.Contains(parentId))
+                    {
+                        var relation = new net.sf.mpxj.Relation(
+                            mpxjTask,
+                            parentTask,
+                            net.sf.mpxj.RelationType.START_FINISH,
+                            net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units));
+                        mpxjTask.Predecessors.add(relation);
+                    }
+                }
+
+                // If the task is a parent task, ignore duration.
+
+                if (mpxjTask.HasChildTasks())
+                {
+                    mpxjTask.Duration = net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units);
+                }
+
+                DependentActivityModel? dependentActivity = ConvertTask(mpxjTask, projectStartOffset);
+
+                if (dependentActivity is not null)
+                {
+                    dependentActivities.Add(dependentActivity);
+                }
             }
-
-
-
-            //// Correct for nested task dependencies.
-            //foreach (DependentActivityModel dependentActivity in dependentActivities)
-            //{
-            //    dependentActivity.de
-
-
-
-            //}
-
-
-
 
             return new ProjectImportModel
             {
@@ -290,20 +317,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             if (parentTask.HasChildTasks())
             {
-                parentTask.Duration = net.sf.mpxj.Duration.getInstance(0.0, parentTask.Duration.Units);
-
                 foreach (net.sf.mpxj.Task childTask in parentTask.ChildTasks.ToIEnumerable<net.sf.mpxj.Task>())
                 {
-                    if (childTask.Predecessors.isEmpty())
-                    {
-                        var relation = new net.sf.mpxj.Relation(
-                            childTask,
-                            parentTask,
-                            net.sf.mpxj.RelationType.START_FINISH,
-                            net.sf.mpxj.Duration.getInstance(0.0, childTask.Duration.Units));
-                        childTask.Predecessors.add(relation);
-                    }
-
                     foreach (net.sf.mpxj.Task grandChildTask in GetDescendantTasks(childTask))
                     {
                         yield return grandChildTask;
@@ -324,6 +339,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 return null;
             }
+
             int duration = Convert.ToInt32(mpxjTask.Duration?.Duration ?? default);
 
             DateTimeOffset? minimumEarliestStartDateTime = null;
@@ -355,11 +371,11 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 foreach (net.sf.mpxj.Relation pred in preds.ToIEnumerable<net.sf.mpxj.Relation>())
                 {
-                    int? mpxPredId = pred.TargetTask?.ID?.intValue();
+                    int? dependentTaskId = pred.TargetTask?.ID?.intValue();
 
-                    if (mpxPredId is not null)
+                    if (dependentTaskId is not null)
                     {
-                        dependencies.Add(mpxPredId.GetValueOrDefault());
+                        dependencies.Add(dependentTaskId.GetValueOrDefault());
                     }
                 }
             }
