@@ -9,22 +9,29 @@ namespace Zametek.ProjectPlan
     public class ViewLocator
         : IDataTemplate
     {
-        public Control Build(object data)
+        public Control Build(object? data)
         {
-            var name = data.GetType().AssemblyQualifiedName!.Replace("ViewModel", "View");
-            var type = Type.GetType(name);
-
-            if (type != null)
+            if (data is not null)
             {
-                return (Control)Locator.Current.GetService(type) ?? (Control)Activator.CreateInstance(type)!;
+                var name = data.GetType().AssemblyQualifiedName!.Replace("ViewModel", "View");
+                var type = Type.GetType(name);
+
+                if (type != null)
+                {
+                    return Locator.Current.GetService(type) as Control ?? (Control)Activator.CreateInstance(type)!;
+                }
+                else
+                {
+                    return new TextBlock { Text = "Not Found: " + name };
+                }
             }
             else
             {
-                return new TextBlock { Text = "Not Found: " + name };
+                return new TextBlock { Text = "Data object is null" };
             }
         }
 
-        public bool Match(object data)
+        public bool Match(object? data)
         {
             return data is ViewModelBase || data is ToolViewModelBase;
         }

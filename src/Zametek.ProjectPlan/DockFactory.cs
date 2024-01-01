@@ -153,7 +153,7 @@ namespace Zametek.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(layout);
 
-            ContextLocator = new Dictionary<string, Func<object>>
+            ContextLocator = new Dictionary<string, Func<object?>>
             {
             };
 
@@ -162,7 +162,7 @@ namespace Zametek.ProjectPlan
                 ["Root"] = () => m_RootDock,
             };
 
-            HostWindowLocator = new Dictionary<string, Func<IHostWindow>>
+            HostWindowLocator = new Dictionary<string, Func<IHostWindow?>>
             {
                 [nameof(IDockWindow)] = () => new HostWindow()
             };

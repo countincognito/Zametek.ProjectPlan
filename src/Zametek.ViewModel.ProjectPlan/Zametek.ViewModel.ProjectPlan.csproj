@@ -8,15 +8,15 @@
 
   <ItemGroup>
 	<PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
-    <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0.3" />
-    <PackageReference Include="Dock.Model.ReactiveUI" Version="11.0.0.2" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0.9" />
+    <PackageReference Include="Dock.Model.ReactiveUI" Version="11.0.0.5" />
     <PackageReference Include="FluentDateTime" Version="2.1.0" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
-    <PackageReference Include="net.sf.mpxj-for-csharp" Version="12.2.0" />
+    <PackageReference Include="net.sf.mpxj-for-csharp" Version="12.5.0" />
     <PackageReference Include="NPOI" Version="2.6.2" />
 	<PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-Avalonia11" />
 	<PackageReference Include="OxyPlot.SkiaSharp" Version="2.1.2" />
-	<PackageReference Include="Avalonia.ReactiveUI" Version="11.0.4" />
+	<PackageReference Include="Avalonia.ReactiveUI" Version="11.0.6" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.6" />
     <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="1.5.2" />
   </ItemGroup>
