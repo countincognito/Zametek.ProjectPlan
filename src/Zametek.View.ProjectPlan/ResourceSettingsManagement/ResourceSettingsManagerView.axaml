@@ -97,6 +97,7 @@
 		</DockPanel>
 
 		<DataGrid Name="resourcesGrid"
+				  FrozenColumnCount="1"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
 				  ItemsSource="{Binding Path=Resources, Mode=OneWay}"
