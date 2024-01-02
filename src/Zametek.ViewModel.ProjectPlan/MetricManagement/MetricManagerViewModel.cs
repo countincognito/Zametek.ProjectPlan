@@ -60,12 +60,12 @@ namespace Zametek.ViewModel.ProjectPlan
             m_BuildMetricsSub = this
                 .WhenAnyValue(mm => mm.m_CoreViewModel.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(compilation => BuildMetrics(compilation));
+                .Subscribe(BuildMetrics);
 
             m_BuildCostsSub = this
                 .WhenAnyValue(mm => mm.m_CoreViewModel.ResourceSeriesSet)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(resourceSeriesSet => BuildCosts(resourceSeriesSet));
+                .Subscribe(BuildCosts);
 
             m_CriticalityRisk = this
                 .WhenAnyValue(mm => mm.Metrics, metrics => metrics.Criticality)

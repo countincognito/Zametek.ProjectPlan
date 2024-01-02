@@ -493,7 +493,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No Cost.
+        ///   Looks up a localized string similar to Ignore Cost.
         /// </summary>
         public static string Label_HasNoCost {
             get {
@@ -574,7 +574,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Not Active.
+        ///   Looks up a localized string similar to Ignore.
         /// </summary>
         public static string Label_IsInactive {
             get {
@@ -643,6 +643,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_MinimumFreeSlack {
             get {
                 return ResourceManager.GetString("Label_MinimumFreeSlack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No.
+        /// </summary>
+        public static string Label_No {
+            get {
+                return ResourceManager.GetString("Label_No", resourceCulture);
             }
         }
         
@@ -868,6 +877,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_ViewProjections {
             get {
                 return ResourceManager.GetString("Label_ViewProjections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Yes.
+        /// </summary>
+        public static string Label_Yes {
+            get {
+                return ResourceManager.GetString("Label_Yes", resourceCulture);
             }
         }
     }

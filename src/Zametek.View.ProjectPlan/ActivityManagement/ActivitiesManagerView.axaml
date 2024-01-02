@@ -15,7 +15,6 @@
              x:Class="Zametek.View.ProjectPlan.ActivitiesManagerView">
 	<UserControl.Resources>
 		<local:NullableIntConverter x:Key="nullableIntConverter"/>
-		<local:BooleanAndConverter x:Key="booleanAndConverter"/>
 		<local:BooleanOrConverter x:Key="booleanOrConverter"/>
 
 		<local:ManagedActivitySortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
@@ -84,7 +83,7 @@
 
 				<ia:DataTriggerBehavior Value="True">
 					<ia:DataTriggerBehavior.Binding>
-						<MultiBinding Converter="{StaticResource booleanAndConverter}">
+						<MultiBinding Converter="{x:Static BoolConverters.And}">
 							<MultiBinding.Bindings>
 								<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
 								<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
@@ -929,6 +928,8 @@
 											      HorizontalAlignment="Center"
 											      Margin="0"
 											      Padding="3"
+												  OffContent="{x:Static resources:Labels.Label_No}"
+												  OnContent="{x:Static resources:Labels.Label_Yes}"
 											      IsChecked="{Binding Path=HasNoCost, Mode=TwoWay}"/>
 
 

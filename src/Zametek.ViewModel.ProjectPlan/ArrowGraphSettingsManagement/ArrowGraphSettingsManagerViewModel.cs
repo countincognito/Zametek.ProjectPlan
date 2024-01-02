@@ -2,6 +2,7 @@
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -67,6 +68,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ProcessArrowGraphSettingsSub = this
                 .WhenAnyValue(rm => rm.m_CoreViewModel.ArrowGraphSettings)
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(rs =>
                 {
                     if (m_Current != rs)
@@ -77,6 +79,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_UpdateArrowGraphSettingsSub = this
                 .WhenAnyValue(rm => rm.AreSettingsUpdated)
+                .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(areUpdated =>
                 {
                     if (areUpdated)

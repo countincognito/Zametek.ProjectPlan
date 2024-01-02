@@ -2,8 +2,10 @@
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Data;
+using ReactiveUI;
 using System;
 using System.Collections;
+using System.Reactive.Linq;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
 using Zametek.ViewModel.ProjectPlan;
@@ -15,10 +17,10 @@ namespace Zametek.View.ProjectPlan
     {
         static DataGridColumnSyncher()
         {
-            ItemsSourceProperty.Changed.Subscribe(x => HandleItemsSourceChanged(x.Sender, x.NewValue.GetValueOrDefault<IEnumerable?>()));
-            StartColumnIndexProperty.Changed.Subscribe(x => HandleStartColumnIndexChanged(x.Sender, x.NewValue.GetValueOrDefault<int?>()));
-            EndColumnIndexProperty.Changed.Subscribe(x => HandleEndColumnIndexChanged(x.Sender, x.NewValue.GetValueOrDefault<int?>()));
-            ColumnTypeProperty.Changed.Subscribe(x => HandleColumnTypeChanged(x.Sender, x.NewValue.GetValueOrDefault<Type?>()));
+            ItemsSourceProperty.Changed.ObserveOn(RxApp.MainThreadScheduler).Subscribe(x => HandleItemsSourceChanged(x.Sender, x.NewValue.GetValueOrDefault<IEnumerable?>()));
+            StartColumnIndexProperty.Changed.ObserveOn(RxApp.MainThreadScheduler).Subscribe(x => HandleStartColumnIndexChanged(x.Sender, x.NewValue.GetValueOrDefault<int?>()));
+            EndColumnIndexProperty.Changed.ObserveOn(RxApp.MainThreadScheduler).Subscribe(x => HandleEndColumnIndexChanged(x.Sender, x.NewValue.GetValueOrDefault<int?>()));
+            ColumnTypeProperty.Changed.ObserveOn(RxApp.MainThreadScheduler).Subscribe(x => HandleColumnTypeChanged(x.Sender, x.NewValue.GetValueOrDefault<Type?>()));
         }
 
 

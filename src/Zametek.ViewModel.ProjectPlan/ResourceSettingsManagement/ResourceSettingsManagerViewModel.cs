@@ -3,6 +3,7 @@ using Avalonia.Data;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -66,6 +67,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ProcessResourceSettingsSub = this
                 .WhenAnyValue(rm => rm.m_CoreViewModel.ResourceSettings)
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(rs =>
                 {
                     if (m_Current != rs)
@@ -76,6 +78,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_UpdateResourceSettingsSub = this
                 .WhenAnyValue(rm => rm.AreSettingsUpdated)
+                .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(areUpdated =>
                 {
                     if (areUpdated)
@@ -234,7 +237,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_Resources.Clear();
                 foreach (ResourceModel resouce in resourceSettings.Resources)
                 {
-                    m_Resources.Add(new ManagedResourceViewModel(this, resouce));
+                    m_Resources.Add(new ManagedResourceViewModel(
+                        this,
+                        resouce));
                 }
             }
             AreSettingsUpdated = false;

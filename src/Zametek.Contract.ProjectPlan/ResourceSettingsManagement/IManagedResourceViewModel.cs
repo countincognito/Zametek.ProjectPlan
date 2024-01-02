@@ -5,8 +5,22 @@ using Zametek.Maths.Graphs;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IManagedResourceViewModel
-        : IResource<int>, IDisposable, INotifyPropertyChanged
+        : IDisposable, INotifyPropertyChanged
     {
+        int Id { get; }
+
+        string Name { get; set; }
+
+        bool IsExplicitTarget { get; set; }
+
+        bool IsInactive { get; set; }
+
+        InterActivityAllocationType InterActivityAllocationType { get; set; }
+
+        double UnitCost { get; set; }
+
+        int AllocationOrder { get; set; }
+
         int DisplayOrder { get; set; }
 
         ColorFormatModel ColorFormat { get; set; }

@@ -90,7 +90,9 @@
 					      VerticalAlignment="Center"
 					      VerticalContentAlignment="Center"
 						  HorizontalAlignment="Center"
-						  HorizontalContentAlignment="Center"
+					      HorizontalContentAlignment="Center"
+					      OffContent="{x:Static resources:Labels.Label_No}"
+					      OnContent="{x:Static resources:Labels.Label_Yes}"
 					      IsChecked="{Binding Path=DisableResources, Mode=TwoWay}"/>
 
 			<Grid/>
@@ -151,8 +153,11 @@
 				</DataGrid.Styles>
 
 				<i:Interaction.Behaviors>
-					<ia:EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #resourcesGrid}">
-						<ia:InvokeCommandAction Command="{Binding Path=SetSelectedManagedResourcesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
+					<ia:EventTriggerBehavior EventName="SelectionChanged"
+											 SourceObject="{Binding #resourcesGrid}">
+						<ia:InvokeCommandAction x:DataType="vm:ResourceSettingsManagerViewModel"
+												Command="{Binding Path=SetSelectedManagedResourcesCommand, Mode=OneWay}"
+												PassEventArgsToCommand="True" />
 					</ia:EventTriggerBehavior>
 				</i:Interaction.Behaviors>
 
@@ -211,6 +216,8 @@
 											      HorizontalAlignment="Center"
 											      Margin="0"
 											      Padding="3"
+						                          OffContent="{x:Static resources:Labels.Label_No}"
+						                          OnContent="{x:Static resources:Labels.Label_Yes}"
 											      IsChecked="{Binding Path=IsExplicitTarget, Mode=TwoWay}"/>
 									<!--<CheckBox VerticalAlignment="Center"
 											  HorizontalAlignment="Center"
@@ -254,6 +261,8 @@
 											      HorizontalAlignment="Center"
 											      Margin="0"
 											      Padding="3"
+						                          OffContent="{x:Static resources:Labels.Label_No}"
+						                          OnContent="{x:Static resources:Labels.Label_Yes}"
 											      IsChecked="{Binding Path=IsInactive, Mode=TwoWay}"/>
 									<!--<CheckBox VerticalAlignment="Center"
 											  HorizontalAlignment="Center"
@@ -265,16 +274,16 @@
 							</DataTemplate>
 						</DataGridTemplateColumn.CellTemplate>
 					</DataGridTemplateColumn>
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
+
+
+
+
+
+
+
+
+
+
 					<DataGridTemplateColumn CanUserResize="True"
 											CanUserReorder="True"
 											CanUserSort="True"

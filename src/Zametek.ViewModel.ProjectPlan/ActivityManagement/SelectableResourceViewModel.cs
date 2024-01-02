@@ -35,6 +35,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ResourceSelectorSub = this
                 .WhenAnyValue(x => x.IsSelected)
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x => m_ResourceSelectorViewModel.RaiseTargetResourcesPropertiesChanged());
         }
 

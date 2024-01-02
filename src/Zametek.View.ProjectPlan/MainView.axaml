@@ -10,6 +10,7 @@
 		xmlns:controls="using:Avalonia.Controls"
 		xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
 		xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+		xmlns:local="using:Zametek.View.ProjectPlan"
 		x:DataType="vm:MainViewModel"
         Icon="resm:Zametek.Resource.ProjectPlan.Icons.zpp.ico?assembly=Zametek.Resource.ProjectPlan"
 		Name="mainview"
@@ -43,16 +44,8 @@
 		</ia:DataTriggerBehavior>
 	</i:Interaction.Behaviors>
 
-	<DockPanel Name="maindock" Margin="7">
-		<i:Interaction.Behaviors>
-			<ia:DataTriggerBehavior Binding="{Binding Path=IsBusy}" ComparisonCondition="Equal" Value="true">
-				<ia:ChangePropertyAction TargetObject="{Binding #maindock}" PropertyName="IsEnabled" Value="false" />
-			</ia:DataTriggerBehavior>
-			<ia:DataTriggerBehavior Binding="{Binding Path=IsBusy}" ComparisonCondition="Equal" Value="false">
-				<ia:ChangePropertyAction TargetObject="{Binding #maindock}" PropertyName="IsEnabled" Value="true" />
-			</ia:DataTriggerBehavior>
-		</i:Interaction.Behaviors>
-
+	<DockPanel Margin="7"
+			   IsEnabled="{Binding Path=!IsBusy, Mode=OneWay}">
 		<Menu DockPanel.Dock="Top"
               Padding="3">
 			<MenuItem Header="{x:Static resources:Menus.Menu_File}">

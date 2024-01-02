@@ -4,7 +4,9 @@ using Avalonia.Data;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Xaml.Interactivity;
+using ReactiveUI;
 using System;
+using System.Reactive.Linq;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -13,7 +15,7 @@ namespace Zametek.View.ProjectPlan
     {
         static ColorPickerLostFocusUpdateBindingBehavior()
         {
-            ColorProperty.Changed.Subscribe(e =>
+            ColorProperty.Changed.ObserveOn(RxApp.MainThreadScheduler).Subscribe(e =>
             {
                 ((ColorPickerLostFocusUpdateBindingBehavior)e.Sender).OnBindingValueChanged();
             });

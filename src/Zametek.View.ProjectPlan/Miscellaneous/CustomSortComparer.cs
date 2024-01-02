@@ -11,13 +11,10 @@ namespace Zametek.View.ProjectPlan
     public abstract class CustomSortComparer<T>
         : AvaloniaObject, IComparer<T>, IComparer where T : class
     {
-        public static readonly StyledProperty<string> SortMemberPathProperty =
-            AvaloniaProperty.Register<CustomSortComparer<T>, string>(nameof(SortMemberPath));
-
-        public string SortMemberPath
+        public abstract string SortMemberPath
         {
-            get { return GetValue(SortMemberPathProperty); }
-            set { SetValue(SortMemberPathProperty, value); }
+            get;
+            set;
         }
 
         public static object? GetNestedPropertyValue(

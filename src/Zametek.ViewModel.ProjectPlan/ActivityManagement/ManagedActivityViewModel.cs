@@ -27,7 +27,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable? m_DateTimeCalculatorSub;
         private readonly IDisposable? m_CompilationSub;
 
-        private static readonly string[] s_NoErrors = Array.Empty<string>();
+        private static readonly string[] s_NoErrors = [];
         private readonly IDictionary<string, List<string>> m_ErrorsByPropertyName;
 
         #endregion
@@ -90,18 +90,22 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ProjectStartSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.ProjectStart)
+                .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(x => ProjectStart = x);
 
             m_ResourceSettingsSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.ResourceSettings)
+                .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(x => ResourceSettings = x);
 
             m_DateTimeCalculatorSub = this
                 .WhenAnyValue(x => x.m_DateTimeCalculator.Mode)
+                .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(x => UpdateEarliestStartAndLatestFinishDateTimes());
 
             m_CompilationSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.GraphCompilation)
+                .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(x => SetAsCompiled());
 
             m_IsCompiled = false;

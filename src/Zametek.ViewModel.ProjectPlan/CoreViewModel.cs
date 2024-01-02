@@ -83,8 +83,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_Duration = this
                 .WhenAnyValue(
-                    core => core.GraphCompilation, core => core.HasCompilationErrors,
-                    (compilation, hasCompilationErrors) => hasCompilationErrors ? (int?)null : m_VertexGraphCompiler.Duration)
+                    core => core.HasCompilationErrors,
+                    hasCompilationErrors => hasCompilationErrors ? (int?)null : m_VertexGraphCompiler.Duration)
                 .ToProperty(this, core => core.Duration);
 
             m_AreActivitiesUncompiledSub = m_ReadOnlyActivities
@@ -94,9 +94,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(changeSet =>
                 {
-                    if (!IsBusy && changeSet.Replaced > 0) // Replaced counts the individually updated items.
+                    lock (m_Lock)
                     {
-                        RunAutoCompile();
+                        if (!IsBusy && changeSet.TotalChanges > 0) // Replaced only counts the individually updated items.
+                        {
+                            RunAutoCompile();
+                        }
                     }
                 });
 
@@ -108,9 +111,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ =>
                 {
-                    if (!IsBusy)
+                    lock (m_Lock)
                     {
-                        RunAutoCompile();
+                        if (!IsBusy)
+                        {
+                            RunAutoCompile();
+                        }
                     }
                 });
 
@@ -121,8 +127,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_BuildResourceSeriesSetSub = this
                 .WhenAnyValue(
-                    core => core.GraphCompilation,
-                    core => core.ResourceSettings)
+                    core => core.GraphCompilation)//,
+                                                  //core => core.ResourceSettings)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildResourceSeriesSet());
 
@@ -845,9 +851,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
                     ResourceSettings = m_SettingService.DefaultResourceSettings;
                 }
@@ -863,9 +869,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     ClearManagedActivities();
 
                     ClearSettings();
@@ -893,9 +899,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     ResetProject();
 
                     // Project Start Date.
@@ -952,9 +958,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     ResetProject();
 
                     // Project Start Date.
@@ -990,9 +996,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     var graphCompilation = m_Mapper.Map<IGraphCompilation<int, int, IDependentActivity<int, int>>, GraphCompilationModel>(GraphCompilation);
 
                     return new ProjectPlanModel
@@ -1019,9 +1025,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     var activityId = m_VertexGraphCompiler.GetNextActivityId();
                     var set = new HashSet<DependentActivityModel>
                     {
@@ -1047,9 +1053,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     // Check that the number of trackers across each activity is consistent.
                     // Make them match the highest number.
                     int maxCurrentTrackers = Activities
@@ -1103,9 +1109,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     IEnumerable<IManagedActivityViewModel> dependentActivities = Activities
                         .Where(x => dependentActivityIds.Contains(x.Id))
                         .ToList();
@@ -1133,9 +1139,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     foreach (IDisposable activity in Activities)
                     {
                         activity.Dispose();
@@ -1155,9 +1161,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     foreach (IManagedActivityViewModel activity in Activities)
                     {
                         activity.AddTracker();
@@ -1176,9 +1182,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     foreach (IManagedActivityViewModel activity in Activities)
                     {
                         activity.RemoveTracker();
@@ -1197,9 +1203,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     foreach (IManagedActivityViewModel activity in Activities)
                     {
                         int runningPercentageCompleted = 0;
@@ -1238,9 +1244,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     ReviseTrackers();
 
                     var availableResources = new List<IResource<int>>();
@@ -1265,9 +1271,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     if (AutoCompile)
                     {
                         RunCompile();
@@ -1285,9 +1291,9 @@ namespace Zametek.ViewModel.ProjectPlan
             bool oldIsBusy = IsBusy;
             try
             {
-                IsBusy = true;
                 lock (m_Lock)
                 {
+                    IsBusy = true;
                     m_VertexGraphCompiler.Compile(new List<IResource<int>>());
                     m_VertexGraphCompiler.TransitiveReduction();
                     RunCompile();

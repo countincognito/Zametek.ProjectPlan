@@ -262,7 +262,7 @@
     <value>Group by Resource</value>
   </data>
   <data name="Label_HasNoCost" xml:space="preserve">
-    <value>No Cost</value>
+    <value>Ignore Cost</value>
   </data>
   <data name="Label_Id" xml:space="preserve">
     <value>ID</value>
@@ -289,7 +289,7 @@
     <value>Explicit Target</value>
   </data>
   <data name="Label_IsInactive" xml:space="preserve">
-    <value>Not Active</value>
+    <value>Ignore</value>
   </data>
   <data name="Label_LatestFinishTime" xml:space="preserve">
     <value>LFT</value>
@@ -311,6 +311,9 @@
   </data>
   <data name="Label_MinimumFreeSlack" xml:space="preserve">
     <value>Minimum FS</value>
+  </data>
+  <data name="Label_No" xml:space="preserve">
+    <value>No</value>
   </data>
   <data name="Label_Notes" xml:space="preserve">
     <value>Notes</value>
@@ -386,5 +389,8 @@
   </data>
   <data name="Label_ViewProjections" xml:space="preserve">
     <value>View Projections</value>
+  </data>
+  <data name="Label_Yes" xml:space="preserve">
+    <value>Yes</value>
   </data>
 </root>
