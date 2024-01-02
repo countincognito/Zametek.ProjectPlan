@@ -180,6 +180,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.ProjectStartDateTime)
                 .ToProperty(this, main => main.ProjectStartDateTime);
 
+            m_HasStaleOutputs = this
+                .WhenAnyValue(main => main.m_CoreViewModel.HasStaleOutputs)
+                .ToProperty(this, main => main.HasStaleOutputs);
+
+            m_HasCompilationErrors = this
+                .WhenAnyValue(main => main.m_CoreViewModel.HasCompilationErrors)
+                .ToProperty(this, main => main.HasCompilationErrors);
+
             m_ShowDates = this
                 .WhenAnyValue(main => main.m_CoreViewModel.ShowDates)
                 .ToProperty(this, main => main.ShowDates);
@@ -424,6 +432,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock) m_CoreViewModel.ProjectStartDateTime = value;
             }
         }
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasStaleOutputs;
+        public bool HasStaleOutputs => m_HasStaleOutputs.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
+        public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
         private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
         public bool ShowDates

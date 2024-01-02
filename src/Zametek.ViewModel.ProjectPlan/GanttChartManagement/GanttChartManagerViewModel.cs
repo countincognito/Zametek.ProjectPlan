@@ -185,7 +185,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return new PlotModel();
         }
 
-        private PlotModel BuildGanttChartPlotModel(
+        private static PlotModel BuildGanttChartPlotModel(
             IDateTimeCalculator dateTimeCalculator,
             IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation,
             ResourceSeriesSetModel resourceSeriesSet,
@@ -227,145 +227,148 @@ namespace Zametek.ViewModel.ProjectPlan
 
             var labels = new List<string>();
 
-            if (groupByResource)
+            if (!graphCompilation.CompilationErrors.Any())
             {
-                // Find all the resource series with at least 1 scheduled activity.
-
-                IEnumerable<ResourceSeriesModel> scheduledResourceSeries = resourceSeriesSet.Scheduled
-                    .Where(x => x.ResourceSchedule.ScheduledActivities.Any());
-
-                // Record the resource name, and the scheduled activities (in order).
-
-                var scheduledResourceActivitiesSet = new List<(string ResourceName, IList<ScheduledActivityModel> ScheduledActivities)>();
-
-                foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeries)
+                if (groupByResource)
                 {
-                    IList<ScheduledActivityModel> orderedScheduledActivities = resourceSeries
-                        .ResourceSchedule.ScheduledActivities
-                        .OrderByDescending(x => x.StartTime)
-                        .ToList();
-                    scheduledResourceActivitiesSet.Add(
-                        (resourceSeries.Title, orderedScheduledActivities));
-                }
+                    // Find all the resource series with at least 1 scheduled activity.
 
-                // Order the set according to the start times of the first activity for each resource.
+                    IEnumerable<ResourceSeriesModel> scheduledResourceSeries = resourceSeriesSet.Scheduled
+                        .Where(x => x.ResourceSchedule.ScheduledActivities.Any());
 
-                IList<(string, IList<ScheduledActivityModel>)> orderedScheduledResourceActivitiesSet = scheduledResourceActivitiesSet
-                    .OrderByDescending(x => x.ScheduledActivities.OrderBy(y => y.StartTime)
-                        .FirstOrDefault()?.StartTime ?? 0)
-                    .ThenBy(x => x.ScheduledActivities.OrderBy(y => y.StartTime)
-                        .LastOrDefault()?.FinishTime ?? 0)
-                    .ToList();
+                    // Record the resource name, and the scheduled activities (in order).
 
-                foreach ((string resourceName, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
-                {
-                    IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
-                    IDictionary<int, IDependentActivity<int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
+                    var scheduledResourceActivitiesSet = new List<(string ResourceName, IList<ScheduledActivityModel> ScheduledActivities)>();
 
-                    int resourceStartTime = orderedScheduledActivities.LastOrDefault()?.StartTime ?? 0;
-                    int resourceFinishTime = orderedScheduledActivities.FirstOrDefault()?.FinishTime ?? 0;
-                    int minimumY = labels.Count;
-
-                    // Add an extra row for padding.
-                    // IntervalBarItems are added in reverse order to how they will be displayed.
-                    // So, this item will appear at the bottom of the grouping.
-
-                    series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
-                    labels.Add(string.Empty);
-
-                    // Now add the scheduled activities (again, in reverse display order).
-
-                    foreach (ScheduledActivityModel scheduledActivity in orderedScheduledActivities)
+                    foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeries)
                     {
-                        if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity<int, int>? activity))
+                        IList<ScheduledActivityModel> orderedScheduledActivities = resourceSeries
+                            .ResourceSchedule.ScheduledActivities
+                            .OrderByDescending(x => x.StartTime)
+                            .ToList();
+                        scheduledResourceActivitiesSet.Add(
+                            (resourceSeries.Title, orderedScheduledActivities));
+                    }
+
+                    // Order the set according to the start times of the first activity for each resource.
+
+                    IList<(string, IList<ScheduledActivityModel>)> orderedScheduledResourceActivitiesSet = scheduledResourceActivitiesSet
+                        .OrderByDescending(x => x.ScheduledActivities.OrderBy(y => y.StartTime)
+                            .FirstOrDefault()?.StartTime ?? 0)
+                        .ThenBy(x => x.ScheduledActivities.OrderBy(y => y.StartTime)
+                            .LastOrDefault()?.FinishTime ?? 0)
+                        .ToList();
+
+                    foreach ((string resourceName, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
+                    {
+                        IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
+                        IDictionary<int, IDependentActivity<int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
+
+                        int resourceStartTime = orderedScheduledActivities.LastOrDefault()?.StartTime ?? 0;
+                        int resourceFinishTime = orderedScheduledActivities.FirstOrDefault()?.FinishTime ?? 0;
+                        int minimumY = labels.Count;
+
+                        // Add an extra row for padding.
+                        // IntervalBarItems are added in reverse order to how they will be displayed.
+                        // So, this item will appear at the bottom of the grouping.
+
+                        series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
+                        labels.Add(string.Empty);
+
+                        // Now add the scheduled activities (again, in reverse display order).
+
+                        foreach (ScheduledActivityModel scheduledActivity in orderedScheduledActivities)
                         {
-                            if (activity.EarliestStartTime.HasValue
-                                && activity.EarliestFinishTime.HasValue
-                                && activity.Duration > 0)
+                            if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity<int, int>? activity))
                             {
-                                string id = activity.Id.ToString(CultureInfo.InvariantCulture);
-                                string label = string.IsNullOrWhiteSpace(activity.Name) ? id : $"{activity.Name} ({id})";
-                                Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
-
-                                var backgroundColor = OxyColor.FromArgb(
-                                      slackColor.A,
-                                      slackColor.R,
-                                      slackColor.G,
-                                      slackColor.B);
-
-                                var item = new IntervalBarItem
+                                if (activity.EarliestStartTime.HasValue
+                                    && activity.EarliestFinishTime.HasValue
+                                    && activity.Duration > 0)
                                 {
-                                    Title = label,
-                                    Start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
-                                    End = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
-                                    Color = backgroundColor,
-                                };
+                                    string id = activity.Id.ToString(CultureInfo.InvariantCulture);
+                                    string label = string.IsNullOrWhiteSpace(activity.Name) ? id : $"{activity.Name} ({id})";
+                                    Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
 
-                                series.Items.Add(item);
-                                labels.Add(label);
+                                    var backgroundColor = OxyColor.FromArgb(
+                                          slackColor.A,
+                                          slackColor.R,
+                                          slackColor.G,
+                                          slackColor.B);
+
+                                    var item = new IntervalBarItem
+                                    {
+                                        Title = label,
+                                        Start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
+                                        End = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
+                                        Color = backgroundColor,
+                                    };
+
+                                    series.Items.Add(item);
+                                    labels.Add(label);
+                                }
                             }
+                        }
+
+                        int maximumY = labels.Count;
+
+                        if (annotateResources)
+                        {
+                            plotModel.Annotations.Add(
+                                 new OxyPlot.Annotations.RectangleAnnotation
+                                 {
+                                     MinimumX = ChartHelper.CalculateChartTimeXValue(resourceStartTime, showDates, projectStartDateTime, dateTimeCalculator),
+                                     MaximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStartDateTime, dateTimeCalculator),
+                                     MinimumY = minimumY,
+                                     MaximumY = maximumY,
+                                     ToolTip = resourceName,
+                                     Fill = OxyColor.FromAColor(10, OxyColors.Blue),
+                                     Stroke = OxyColors.Black,
+                                     StrokeThickness = 1
+                                 });
                         }
                     }
 
-                    int maximumY = labels.Count;
-
-                    if (annotateResources)
-                    {
-                        plotModel.Annotations.Add(
-                             new OxyPlot.Annotations.RectangleAnnotation
-                             {
-                                 MinimumX = ChartHelper.CalculateChartTimeXValue(resourceStartTime, showDates, projectStartDateTime, dateTimeCalculator),
-                                 MaximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStartDateTime, dateTimeCalculator),
-                                 MinimumY = minimumY,
-                                 MaximumY = maximumY,
-                                 ToolTip = resourceName,
-                                 Fill = OxyColor.FromAColor(10, OxyColors.Blue),
-                                 Stroke = OxyColors.Black,
-                                 StrokeThickness = 1
-                             });
-                    }
+                    // Add an extra row for padding.
+                    // This item will appear at the top of the grouping.
+                    series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
+                    labels.Add(string.Empty);
                 }
-
-                // Add an extra row for padding.
-                // This item will appear at the top of the grouping.
-                series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
-                labels.Add(string.Empty);
-            }
-            else
-            {
-                // Add all the activities (in reverse display order).
-
-                IOrderedEnumerable<IDependentActivity<int, int>> orderedActivities = graphCompilation
-                    .DependentActivities
-                    .OrderByDescending(x => x.EarliestStartTime)
-                    .ThenByDescending(x => x.TotalSlack);
-
-                foreach (IDependentActivity<int, int> activity in orderedActivities)
+                else
                 {
-                    if (activity.EarliestStartTime.HasValue
-                        && activity.EarliestFinishTime.HasValue
-                        && activity.Duration > 0)
+                    // Add all the activities (in reverse display order).
+
+                    IOrderedEnumerable<IDependentActivity<int, int>> orderedActivities = graphCompilation
+                        .DependentActivities
+                        .OrderByDescending(x => x.EarliestStartTime)
+                        .ThenByDescending(x => x.TotalSlack);
+
+                    foreach (IDependentActivity<int, int> activity in orderedActivities)
                     {
-                        string id = activity.Id.ToString(CultureInfo.InvariantCulture);
-                        string label = string.IsNullOrWhiteSpace(activity.Name) ? id : $"{activity.Name} ({id})";
-                        Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
-
-                        var backgroundColor = OxyColor.FromArgb(
-                              slackColor.A,
-                              slackColor.R,
-                              slackColor.G,
-                              slackColor.B);
-
-                        var item = new IntervalBarItem
+                        if (activity.EarliestStartTime.HasValue
+                            && activity.EarliestFinishTime.HasValue
+                            && activity.Duration > 0)
                         {
-                            Title = label,
-                            Start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
-                            End = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
-                            Color = backgroundColor,
-                        };
+                            string id = activity.Id.ToString(CultureInfo.InvariantCulture);
+                            string label = string.IsNullOrWhiteSpace(activity.Name) ? id : $"{activity.Name} ({id})";
+                            Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
 
-                        series.Items.Add(item);
-                        labels.Add(label);
+                            var backgroundColor = OxyColor.FromArgb(
+                                  slackColor.A,
+                                  slackColor.R,
+                                  slackColor.G,
+                                  slackColor.B);
+
+                            var item = new IntervalBarItem
+                            {
+                                Title = label,
+                                Start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
+                                End = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
+                                Color = backgroundColor,
+                            };
+
+                            series.Items.Add(item);
+                            labels.Add(label);
+                        }
                     }
                 }
             }

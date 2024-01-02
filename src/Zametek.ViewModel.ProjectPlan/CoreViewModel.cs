@@ -105,6 +105,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_CompileOnSettingsUpdateSub = this
                 .WhenAnyValue(
+                    core => core.ProjectStart,
                     core => core.ResourceSettings,
                     core => core.ArrowGraphSettings,
                     core => core.UseBusinessDays)
@@ -668,10 +669,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
+                    IsProjectUpdated = true;
                     this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
                     this.RaisePropertyChanged(nameof(ProjectStartDateTime));
                     this.RaisePropertyChanged(nameof(ProjectStartTimeOffset));
-                    IsProjectUpdated = true;
                 }
             }
         }

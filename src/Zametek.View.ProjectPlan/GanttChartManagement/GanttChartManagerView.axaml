@@ -12,8 +12,6 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.GanttChartManagerView">
 	<UserControl.Resources>
-		<local:BooleanAndConverter x:Key="booleanAndConverter"/>
-		<local:BooleanOrConverter x:Key="booleanOrConverter"/>
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
@@ -63,46 +61,16 @@
 			<Grid/>
 		</DockPanel>
 
-		<Border Name="viewBorder"
-				BorderThickness="2"
-				BorderBrush="DarkGray">
-			<i:Interaction.Behaviors>
-				<ia:DataTriggerBehavior Value="True">
-					<ia:DataTriggerBehavior.Binding>
-						<MultiBinding Converter="{StaticResource booleanOrConverter}">
-							<MultiBinding.Bindings>
-								<Binding Path="HasCompilationErrors" Mode="OneWay"/>
-								<Binding Path="HasStaleOutputs" Mode="OneWay"/>
-							</MultiBinding.Bindings>
-						</MultiBinding>
-					</ia:DataTriggerBehavior.Binding>
-					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="Red" />
-				</ia:DataTriggerBehavior>
-
-				<ia:DataTriggerBehavior Value="True">
-					<ia:DataTriggerBehavior.Binding>
-						<MultiBinding Converter="{StaticResource booleanAndConverter}">
-							<MultiBinding.Bindings>
-								<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
-								<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
-							</MultiBinding.Bindings>
-						</MultiBinding>
-					</ia:DataTriggerBehavior.Binding>
-					<ia:ChangePropertyAction PropertyName="BorderBrush" TargetObject="#viewBorder" Value="DarkGray" />
-				</ia:DataTriggerBehavior>
-			</i:Interaction.Behaviors>
-
-			<Grid>
-				<Grid.ContextMenu>
-					<ContextMenu>
-						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-								  Command="{Binding Path=SaveGanttChartImageFileCommand, Mode=OneWay}"/>
-					</ContextMenu>
-				</Grid.ContextMenu>
-				<oxy:PlotView x:Name="oxyplot"
-							  Model="{Binding Path=GanttChartPlotModel, Mode=OneWay}"
-							  Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
-			</Grid>
-		</Border>
+		<Grid>
+			<Grid.ContextMenu>
+				<ContextMenu>
+					<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+							  Command="{Binding Path=SaveGanttChartImageFileCommand, Mode=OneWay}"/>
+				</ContextMenu>
+			</Grid.ContextMenu>
+			<oxy:PlotView x:Name="oxyplot"
+						  Model="{Binding Path=GanttChartPlotModel, Mode=OneWay}"
+						  Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
+		</Grid>
 	</DockPanel>
 </UserControl>

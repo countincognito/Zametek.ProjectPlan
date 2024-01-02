@@ -14,6 +14,10 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTime ProjectStartDateTime { get; set; }
 
+        bool HasStaleOutputs { get; }
+
+        bool HasCompilationErrors { get; }
+
         bool ShowDates { get; set; }
 
         bool UseBusinessDays { get; set; }

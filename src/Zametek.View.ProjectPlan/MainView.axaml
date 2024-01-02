@@ -36,18 +36,47 @@
 	</Window.KeyBindings>
 
 	<i:Interaction.Behaviors>
-		<ia:DataTriggerBehavior Binding="{Binding Path=IsBusy}" ComparisonCondition="Equal" Value="true">
+		<ia:DataTriggerBehavior Binding="{Binding Path=IsBusy}" ComparisonCondition="Equal" Value="True">
 			<ia:ChangePropertyAction TargetObject="{Binding #mainview}" PropertyName="Cursor" Value="{DynamicResource WaitCursor}" />
 		</ia:DataTriggerBehavior>
-		<ia:DataTriggerBehavior Binding="{Binding Path=IsBusy}" ComparisonCondition="Equal" Value="false">
+		<ia:DataTriggerBehavior Binding="{Binding Path=IsBusy}" ComparisonCondition="Equal" Value="False">
 			<ia:ChangePropertyAction TargetObject="{Binding #mainview}" PropertyName="Cursor" Value="{DynamicResource ArrowCursor}" />
 		</ia:DataTriggerBehavior>
 	</i:Interaction.Behaviors>
 
 	<DockPanel Margin="7"
 			   IsEnabled="{Binding Path=!IsBusy, Mode=OneWay}">
-		<Menu DockPanel.Dock="Top"
+
+		<Menu DockPanel.Dock="Top" Name="mainmenu"
               Padding="3">
+			<i:Interaction.Behaviors>
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{x:Static BoolConverters.Or}">
+							<MultiBinding.Bindings>
+								<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+					<ia:ChangePropertyAction PropertyName="Background" TargetObject="#mainmenu" Value="Red" />
+					<!--<ia:ChangePropertyAction PropertyName="Foreground" TargetObject="#mainmenu" Value="White" />-->
+				</ia:DataTriggerBehavior>
+
+				<ia:DataTriggerBehavior Value="True">
+					<ia:DataTriggerBehavior.Binding>
+						<MultiBinding Converter="{x:Static BoolConverters.And}">
+							<MultiBinding.Bindings>
+								<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</ia:DataTriggerBehavior.Binding>
+					<ia:ChangePropertyAction PropertyName="Background" TargetObject="#mainmenu" Value="White" />
+					<!--<ia:ChangePropertyAction PropertyName="Foreground" TargetObject="#mainmenu" Value="Black" />-->
+				</ia:DataTriggerBehavior>
+			</i:Interaction.Behaviors>
+
 			<MenuItem Header="{x:Static resources:Menus.Menu_File}">
 				<MenuItem Header="{x:Static resources:Menus.Menu_Open}"
                           Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
@@ -125,12 +154,13 @@
 		</Menu>
 
 		<DockPanel DockPanel.Dock="Bottom"
-                   Margin="0,11,0,0">
+				   Margin="0,11,0,0">
+
 			<Label DockPanel.Dock="Left"
-                   IsTabStop="False"
-                   Content="{x:Static resources:Labels.Label_ProjectStart}"
-                   Height="25"
-                   Margin="0,0,7,0"/>
+				   IsTabStop="False"
+				   Content="{x:Static resources:Labels.Label_ProjectStart}"
+				   Height="25"
+				   Margin="0,0,7,0"/>
 			<CalendarDatePicker DockPanel.Dock="Left"
 								SelectedDate="{Binding Path=ProjectStartDateTime, Mode=TwoWay}"
 								Margin="0,0,11,0"
@@ -142,6 +172,5 @@
 
 		<idc:DockControl Layout="{Binding Path=Layout, Mode=OneWay}"
 						 DockProperties.IsDragEnabled="False" />
-
 	</DockPanel>
 </Window>
