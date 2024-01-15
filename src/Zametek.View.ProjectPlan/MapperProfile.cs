@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
@@ -9,7 +9,10 @@ namespace Zametek.View.ProjectPlan
     {
         public MapperProfile()
         {
-            CreateMap<IFileFilter, FileDialogFilter>().ReverseMap();
+            CreateMap<IFileFilter, FilePickerFileType>().ReverseMap();
+
+
+
         }
     }
 }

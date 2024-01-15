@@ -30,26 +30,26 @@ namespace Zametek.ViewModel.ProjectPlan
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ImageJpegFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ImageJpegFilePattern
+                    ]
                 },
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ImagePngFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ImagePngFilePattern
+                    ]
                 },
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_PdfFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_PdfFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_PdfFilePattern
+                    ]
                 }
             };
 
@@ -234,7 +234,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Find all the resource series with at least 1 scheduled activity.
 
                     IEnumerable<ResourceSeriesModel> scheduledResourceSeries = resourceSeriesSet.Scheduled
-                        .Where(x => x.ResourceSchedule.ScheduledActivities.Any());
+                        .Where(x => x.ResourceSchedule.ScheduledActivities.Count != 0);
 
                     // Record the resource name, and the scheduled activities (in order).
 
@@ -429,7 +429,7 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private static Axis BuildResourceChartYAxis(IEnumerable<string> labels)
+        private static CategoryAxis BuildResourceChartYAxis(IEnumerable<string> labels)
         {
             ArgumentNullException.ThrowIfNull(labels);
             var categoryAxis = new CategoryAxis
@@ -461,9 +461,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     int height = 0;
                     int boundedHeight = Math.Abs(Convert.ToInt32(bounds.Height));
 
-                    CategoryAxis? yAxis = GanttChartPlotModel.DefaultYAxis as CategoryAxis;
-
-                    if (yAxis != null)
+                    if (GanttChartPlotModel.DefaultYAxis is CategoryAxis yAxis)
                     {
                         int labelCount = yAxis.ActualLabels.Count;
                         height = Convert.ToInt32(GanttChartPlotModel.DefaultFontSize * labelCount * c_ExportLabelHeightCorrection);

@@ -24,10 +24,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ProjectPlanFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_ProjectPlanFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ProjectPlanFilePattern
+                    ]
                 }
             };
 
@@ -37,19 +37,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_MicrosoftProjectFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFileExtension,
-                        //Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFilePattern,
+                        //Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFilePattern
+                    ]
                 },
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ProjectXlsxFilePattern
+                    ]
                 }
             };
 
@@ -59,10 +59,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ExcelFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_ExcelXlsxFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ExcelXlsxFilePattern
+                    ]
                 }
             };
 
@@ -540,7 +540,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
                 string directory = m_SettingService.ProjectDirectory;
-                string? filename = await m_DialogService.ShowOpenFileDialogAsync(string.Empty, directory, s_ProjectPlanFileFilters);
+                string? filename = await m_DialogService.ShowOpenFileDialogAsync(directory, s_ProjectPlanFileFilters);
                 await OpenProjectPlanFileInternalAsync(filename);
             }
             catch (Exception ex)
@@ -642,7 +642,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
                 string directory = m_SettingService.ProjectDirectory;
-                string? filename = await m_DialogService.ShowOpenFileDialogAsync(string.Empty, directory, s_ImportFileFilters);
+                string? filename = await m_DialogService.ShowOpenFileDialogAsync(directory, s_ImportFileFilters);
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {

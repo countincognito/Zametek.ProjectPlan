@@ -41,10 +41,10 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
 
-            m_AvailableStartColumns = new ObservableCollection<IColumnSelectorViewModel>();
+            m_AvailableStartColumns = [];
             AvailableStartColumns = new ReadOnlyObservableCollection<IColumnSelectorViewModel>(m_AvailableStartColumns);
 
-            m_AvailableColumnsShown = new ObservableCollection<IColumnCountViewModel>();
+            m_AvailableColumnsShown = [];
             AvailableColumnsShown = new ReadOnlyObservableCollection<IColumnCountViewModel>(m_AvailableColumnsShown);
 
             AddTrackersCommand = ReactiveCommand.CreateFromTask(AddTrackersAsync);

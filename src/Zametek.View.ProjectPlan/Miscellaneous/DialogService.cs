@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using MsBox.Avalonia.Base;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using OxyPlot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -144,25 +146,27 @@ namespace Zametek.View.ProjectPlan
         }
 
         public async Task<string?> ShowOpenFileDialogAsync(
-            string initialFilename,
             string initialDirectory,
             IList<IFileFilter> fileFilters)
         {
-            var dlg = new OpenFileDialog
-            {
-                AllowMultiple = false,
-                InitialFileName = initialFilename,
-                Directory = initialDirectory,
-                Filters = m_Mapper.Map<IList<IFileFilter>, List<FileDialogFilter>>(fileFilters)
-            };
+            var topLevel = TopLevel.GetTopLevel(m_Parent);
 
-            if (m_Parent is null)
+            if (topLevel is null)
             {
                 return null;
             }
 
-            string[]? files = await dlg.ShowAsync(m_Parent);
-            return files?.FirstOrDefault();
+            var filters = m_Mapper.Map<IList<IFileFilter>, List<FilePickerFileType>>(fileFilters);
+
+            var options = new FilePickerOpenOptions
+            {
+                AllowMultiple = false,
+                SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(initialDirectory),
+                FileTypeFilter = filters.AsReadOnlyList()
+            };
+
+            IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+            return files?.FirstOrDefault()?.Path?.AbsolutePath;
         }
 
         public async Task<string?> ShowSaveFileDialogAsync(
@@ -170,19 +174,24 @@ namespace Zametek.View.ProjectPlan
             string initialDirectory,
             IList<IFileFilter> fileFilters)
         {
-            var dlg = new SaveFileDialog
-            {
-                InitialFileName = initialFilename,
-                Directory = initialDirectory,
-                Filters = m_Mapper.Map<IList<IFileFilter>, List<FileDialogFilter>>(fileFilters)
-            };
+            var topLevel = TopLevel.GetTopLevel(m_Parent);
 
-            if (m_Parent is null)
+            if (topLevel is null)
             {
                 return null;
             }
 
-            return await dlg.ShowAsync(m_Parent);
+            var filters = m_Mapper.Map<IList<IFileFilter>, List<FilePickerFileType>>(fileFilters);
+
+            var options = new FilePickerSaveOptions
+            {
+                SuggestedFileName = initialFilename,
+                SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(initialDirectory),
+                FileTypeChoices = filters.AsReadOnlyList()
+            };
+
+            IStorageFile? files = await topLevel.StorageProvider.SaveFilePickerAsync(options);
+            return files?.Path?.AbsolutePath;
         }
 
         #endregion

@@ -23,34 +23,34 @@ namespace Zametek.ViewModel.ProjectPlan
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ImageJpegFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ImageJpegFilePattern
+                    ]
                 },
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ImagePngFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ImagePngFilePattern
+                    ]
                 },
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_GraphMLFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_GraphMLFilePattern
+                    ]
                 },
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_GraphVizFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_GraphVizFilePattern
+                    ]
                 }
             };
 

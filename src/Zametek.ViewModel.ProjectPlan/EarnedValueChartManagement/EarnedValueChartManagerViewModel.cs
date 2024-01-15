@@ -27,26 +27,26 @@ namespace Zametek.ViewModel.ProjectPlan
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ImageJpegFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ImageJpegFilePattern
+                    ]
                 },
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ImagePngFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ImagePngFilePattern
+                    ]
                 },
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_PdfFileType,
-                    Extensions = new List<string>
-                    {
-                        Resource.ProjectPlan.Filters.Filter_PdfFileExtension
-                    }
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_PdfFilePattern
+                    ]
                 }
             };
 
@@ -368,7 +368,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return new LinearAxis();
         }
 
-        private static Axis BuildEarnedValueChartYAxis(double maximum)
+        private static LinearAxis BuildEarnedValueChartYAxis(double maximum)
         {
             return new LinearAxis
             {

@@ -22,8 +22,10 @@ using System.Xml.Serialization;
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://graphml.graphdrawing.org/xmlns")]
 [System.Xml.Serialization.XmlRootAttribute(Namespace="http://graphml.graphdrawing.org/xmlns", IsNullable=false)]
+#pragma warning disable CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
 public partial class data {
-    
+#pragma warning restore CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
+
     private string resourcesField;
     
     private ShapeNode shapeNodeField;
@@ -1411,8 +1413,10 @@ public partial class PolyLineEdgeBendStyle {
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://graphml.graphdrawing.org/xmlns")]
 [System.Xml.Serialization.XmlRootAttribute(Namespace="http://graphml.graphdrawing.org/xmlns", IsNullable=false)]
+#pragma warning disable CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
 public partial class graphml {
-    
+#pragma warning restore CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
+
     private object[] itemsField;
     
     /// <remarks/>

@@ -16,7 +16,7 @@
 
         Task<bool> ShowConfirmationAsync(string title, string message, bool markdown = false);
 
-        Task<string?> ShowOpenFileDialogAsync(string initialFilename, string initialDirectory, IList<IFileFilter> fileFilters);
+        Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters);
 
         Task<string?> ShowSaveFileDialogAsync(string initialFilename, string initialDirectory, IList<IFileFilter> fileFilters);
     }

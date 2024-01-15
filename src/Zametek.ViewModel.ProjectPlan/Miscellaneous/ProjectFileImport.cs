@@ -64,9 +64,9 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivitySeverityModel.ColorFormat)
         };
 
-        private static readonly int[] s_FilterTaskIds = { 0 };
+        private static readonly int[] s_FilterTaskIds = [0];
 
-        private static readonly int[] s_FilterResourceIds = { 0 };
+        private static readonly int[] s_FilterResourceIds = [0];
 
         #endregion
 
@@ -90,7 +90,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 dtTable.Columns.Add(cell.ToString());
             }
 
-            List<string> rowList = new();
+            List<string> rowList = [];
             for (int i = sheet.FirstRowNum + 1; i <= sheet.LastRowNum; i++)
             {
                 IRow row = sheet.GetRow(i);
@@ -306,10 +306,10 @@ namespace Zametek.ViewModel.ProjectPlan
             return new ProjectImportModel
             {
                 ProjectStart = projectStart,
-                DependentActivities = dependentActivities.Values.ToList(),
-                Resources = resources.Values.ToList(),
+                DependentActivities = [.. dependentActivities.Values],
+                Resources = [.. resources.Values],
                 DefaultUnitCost = defaultUnitCost,
-                ActivitySeverities = activitySeverities.ToList(),
+                ActivitySeverities = [.. activitySeverities],
             };
         }
 
@@ -396,7 +396,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static IDictionary<int, DependentActivityModel> ImportWorksheetActivities(IWorkbook? workbook)
         {
-            Dictionary<int, DependentActivityModel> dependentActivities = new();
+            Dictionary<int, DependentActivityModel> dependentActivities = [];
             ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivities);
             if (sheet is not null)
             {
@@ -426,7 +426,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int? id = 0;
                     string name = string.Empty;
-                    List<int> targetResources = new();
+                    List<int> targetResources = [];
                     var targetResourceOperator = LogicalOperator.AND;
                     bool hasNoCost = false;
                     int duration = 0;
@@ -436,7 +436,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     int? maximumLatestFinishTime = null;
                     DateTimeOffset? maximumLatestFinishDateTime = null;
                     string notes = string.Empty;
-                    List<int> dependencies = new();
+                    List<int> dependencies = [];
 
                     foreach (string columnName in activityColumnNames)
                     {
@@ -571,7 +571,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static IDictionary<int, ResourceModel> ImportWorksheetResources(IWorkbook? workbook)
         {
-            Dictionary<int, ResourceModel> resources = new();
+            Dictionary<int, ResourceModel> resources = [];
             ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetResources);
             if (sheet is not null)
             {
@@ -691,7 +691,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static IList<ActivitySeverityModel> ImportWorksheetActivitySeverities(IWorkbook? workbook)
         {
-            List<ActivitySeverityModel> activitySeverities = new();
+            List<ActivitySeverityModel> activitySeverities = [];
             ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivitySeverities);
             if (sheet is not null)
             {

@@ -120,17 +120,23 @@
   <data name="Filter_ExcelFileType" xml:space="preserve">
     <value>Excel</value>
   </data>
-  <data name="Filter_ExcelXlsxFileExtension" xml:space="preserve">
-    <value>xlsx</value>
+  <data name="Filter_ExcelXlsxFilePattern" xml:space="preserve">
+    <value>*.xlsx</value>
   </data>
   <data name="Filter_GraphMLFileExtension" xml:space="preserve">
     <value>graphml</value>
+  </data>
+  <data name="Filter_GraphMLFilePattern" xml:space="preserve">
+    <value>*.graphml</value>
   </data>
   <data name="Filter_GraphMLFileType" xml:space="preserve">
     <value>GraphML</value>
   </data>
   <data name="Filter_GraphVizFileExtension" xml:space="preserve">
     <value>dot</value>
+  </data>
+  <data name="Filter_GraphVizFilePattern" xml:space="preserve">
+    <value>*.dot</value>
   </data>
   <data name="Filter_GraphVizFileType" xml:space="preserve">
     <value>GraphViz</value>
@@ -153,11 +159,17 @@
   <data name="Filter_ImageJpegFileExtension" xml:space="preserve">
     <value>jpeg</value>
   </data>
+  <data name="Filter_ImageJpegFilePattern" xml:space="preserve">
+    <value>*.jpeg</value>
+  </data>
   <data name="Filter_ImageJpegFileType" xml:space="preserve">
     <value>JPEG Image</value>
   </data>
   <data name="Filter_ImagePngFileExtension" xml:space="preserve">
     <value>png</value>
+  </data>
+  <data name="Filter_ImagePngFilePattern" xml:space="preserve">
+    <value>*.png</value>
   </data>
   <data name="Filter_ImagePngFileType" xml:space="preserve">
     <value>PNG Image</value>
@@ -174,11 +186,20 @@
   <data name="Filter_MicrosoftProjectMppFileExtension" xml:space="preserve">
     <value>mpp</value>
   </data>
+  <data name="Filter_MicrosoftProjectMppFilePattern" xml:space="preserve">
+    <value>*.mpp</value>
+  </data>
   <data name="Filter_MicrosoftProjectXmlFileExtension" xml:space="preserve">
     <value>xml</value>
   </data>
+  <data name="Filter_MicrosoftProjectXmlFilePattern" xml:space="preserve">
+    <value>*.xml</value>
+  </data>
   <data name="Filter_PdfFileExtension" xml:space="preserve">
     <value>pdf</value>
+  </data>
+  <data name="Filter_PdfFilePattern" xml:space="preserve">
+    <value>*.pdf</value>
   </data>
   <data name="Filter_PdfFileType" xml:space="preserve">
     <value>PDF</value>
@@ -186,11 +207,17 @@
   <data name="Filter_ProjectPlanFileExtension" xml:space="preserve">
     <value>zpp</value>
   </data>
+  <data name="Filter_ProjectPlanFilePattern" xml:space="preserve">
+    <value>*.zpp</value>
+  </data>
   <data name="Filter_ProjectPlanFileType" xml:space="preserve">
     <value>Project Plan</value>
   </data>
   <data name="Filter_ProjectXlsxFileExtension" xml:space="preserve">
     <value>xlsx</value>
+  </data>
+  <data name="Filter_ProjectXlsxFilePattern" xml:space="preserve">
+    <value>*.xlsx</value>
   </data>
   <data name="Filter_ProjectXlsxFileType" xml:space="preserve">
     <value>Excel</value>

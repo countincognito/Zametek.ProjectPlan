@@ -32,13 +32,25 @@ namespace Zametek.View.ProjectPlan
 
         protected override void OnAttached()
         {
-            AssociatedObject.LostFocus += OnLostFocus;
+            ColorPicker? cp = AssociatedObject;
+
+            if (cp is not null)
+            {
+                cp.LostFocus += OnLostFocus;
+            }
+
             base.OnAttached();
         }
 
         protected override void OnDetaching()
         {
-            AssociatedObject.LostFocus -= OnLostFocus;
+            ColorPicker? cp = AssociatedObject;
+
+            if (cp is not null)
+            {
+                cp.LostFocus -= OnLostFocus;
+            }
+
             base.OnDetaching();
         }
 

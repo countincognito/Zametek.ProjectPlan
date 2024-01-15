@@ -2,8 +2,8 @@
 {
     public interface IFileFilter
     {
-        string? Name { get; init; }
+        string Name { get; init; }
 
-        List<string> Extensions { get; init; }
+        List<string> Patterns { get; init; }
     }
 }

@@ -5,8 +5,8 @@ namespace Zametek.ViewModel.ProjectPlan
     public class FileFilter
         : IFileFilter
     {
-        public string? Name { get; init; }
+        public string Name { get; init; } = string.Empty;
 
-        public List<string> Extensions { get; init; } = new List<string>();
+        public List<string> Patterns { get; init; } = [];
     }
 }

@@ -70,11 +70,11 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to xlsx.
+        ///   Looks up a localized string similar to *.xlsx.
         /// </summary>
-        public static string Filter_ExcelXlsxFileExtension {
+        public static string Filter_ExcelXlsxFilePattern {
             get {
-                return ResourceManager.GetString("Filter_ExcelXlsxFileExtension", resourceCulture);
+                return ResourceManager.GetString("Filter_ExcelXlsxFilePattern", resourceCulture);
             }
         }
         
@@ -84,6 +84,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Filter_GraphMLFileExtension {
             get {
                 return ResourceManager.GetString("Filter_GraphMLFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to *.graphml.
+        /// </summary>
+        public static string Filter_GraphMLFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_GraphMLFilePattern", resourceCulture);
             }
         }
         
@@ -102,6 +111,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Filter_GraphVizFileExtension {
             get {
                 return ResourceManager.GetString("Filter_GraphVizFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to *.dot.
+        /// </summary>
+        public static string Filter_GraphVizFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_GraphVizFilePattern", resourceCulture);
             }
         }
         
@@ -169,6 +187,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to *.jpeg.
+        /// </summary>
+        public static string Filter_ImageJpegFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_ImageJpegFilePattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to JPEG Image.
         /// </summary>
         public static string Filter_ImageJpegFileType {
@@ -183,6 +210,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Filter_ImagePngFileExtension {
             get {
                 return ResourceManager.GetString("Filter_ImagePngFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to *.png.
+        /// </summary>
+        public static string Filter_ImagePngFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_ImagePngFilePattern", resourceCulture);
             }
         }
         
@@ -232,6 +268,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to *.mpp.
+        /// </summary>
+        public static string Filter_MicrosoftProjectMppFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_MicrosoftProjectMppFilePattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to xml.
         /// </summary>
         public static string Filter_MicrosoftProjectXmlFileExtension {
@@ -241,11 +286,29 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to *.xml.
+        /// </summary>
+        public static string Filter_MicrosoftProjectXmlFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_MicrosoftProjectXmlFilePattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to pdf.
         /// </summary>
         public static string Filter_PdfFileExtension {
             get {
                 return ResourceManager.GetString("Filter_PdfFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to *.pdf.
+        /// </summary>
+        public static string Filter_PdfFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_PdfFilePattern", resourceCulture);
             }
         }
         
@@ -268,6 +331,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to *.zpp.
+        /// </summary>
+        public static string Filter_ProjectPlanFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_ProjectPlanFilePattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Project Plan.
         /// </summary>
         public static string Filter_ProjectPlanFileType {
@@ -282,6 +354,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Filter_ProjectXlsxFileExtension {
             get {
                 return ResourceManager.GetString("Filter_ProjectXlsxFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to *.xlsx.
+        /// </summary>
+        public static string Filter_ProjectXlsxFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_ProjectXlsxFilePattern", resourceCulture);
             }
         }
         
