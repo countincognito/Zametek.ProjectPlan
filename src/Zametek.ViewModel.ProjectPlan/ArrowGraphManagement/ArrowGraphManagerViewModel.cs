@@ -167,8 +167,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    var source = new SvgSource();
-                    source.FromSvg(arrowGraphData);
+                    var source = SvgSource.LoadFromSvg(arrowGraphData);
                     return new SvgImage
                     {
                         Source = source
