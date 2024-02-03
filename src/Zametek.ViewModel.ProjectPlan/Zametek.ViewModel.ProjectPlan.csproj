@@ -18,7 +18,7 @@
 	<PackageReference Include="OxyPlot.SkiaSharp" Version="2.1.2" />
 	<PackageReference Include="Avalonia.ReactiveUI" Version="11.0.7" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.7" />
-    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="1.5.2" />
+    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>

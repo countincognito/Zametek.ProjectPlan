@@ -12,8 +12,7 @@ namespace Zametek.View.ProjectPlan
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            var input = value as IConvertible;
-            if (input is null)
+            if (value is not IConvertible)
             {
                 return StandardCursorType.None;
             }

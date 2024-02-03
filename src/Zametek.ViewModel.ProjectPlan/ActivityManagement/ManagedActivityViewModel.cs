@@ -28,7 +28,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable? m_CompilationSub;
 
         private static readonly string[] s_NoErrors = [];
-        private readonly IDictionary<string, List<string>> m_ErrorsByPropertyName;
+        private readonly Dictionary<string, List<string>> m_ErrorsByPropertyName;
 
         #endregion
 
@@ -55,7 +55,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_MinimumEarliestStartDateTime = minimumEarliestStartDateTime;
             m_MaximumLatestFinishDateTime = maximumLatestFinishDateTime;
             m_VertexGraphCompiler = vertexGraphCompiler;
-            m_ErrorsByPropertyName = new Dictionary<string, List<string>>();
+            m_ErrorsByPropertyName = [];
             ResourceSelector = new ResourceSelectorViewModel();
             m_ResourceSettings = m_CoreViewModel.ResourceSettings;
             RefreshResourceSelector();
@@ -78,7 +78,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 SetMaximumLatestFinishTimes(MaximumLatestFinishTime);
             }
 
-            Trackers = new ObservableCollection<ITrackerViewModel>();
+            Trackers = [];
             if (trackers is not null)
             {
                 AddTrackers(trackers);
@@ -342,7 +342,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             else
             {
-                m_ErrorsByPropertyName.Add(propertyName, new List<string> { error });
+                m_ErrorsByPropertyName.Add(propertyName, [error]);
             }
             ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
             this.RaisePropertyChanged(nameof(HasErrors));
@@ -350,11 +350,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void RemoveErrors(string propertyName)
         {
-            if (m_ErrorsByPropertyName.ContainsKey(propertyName))
-            {
-                m_ErrorsByPropertyName.Remove(propertyName);
-                ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
-            }
+            m_ErrorsByPropertyName.Remove(propertyName);
+            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
             this.RaisePropertyChanged(nameof(HasErrors));
         }
 
@@ -461,10 +458,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get
             {
-                return string.Join(DependenciesStringValidationRule.Separator, ResourceSelector
-                    .TargetResources.Where(x => AllocatedToResources.Contains(x.Id))
-                    .OrderBy(x => x.Id)
-                    .Select(x => x.DisplayName));
+                HashSet<int> allocatedToResources = AllocatedToResources;
+                return ResourceSelector.GetAllocatedToResourcesString(allocatedToResources);
             }
         }
 
@@ -798,7 +793,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region INotifyDataErrorInfo Members
 
-        public bool HasErrors => m_ErrorsByPropertyName.Any();
+        public bool HasErrors => m_ErrorsByPropertyName.Count != 0;
 
         public IEnumerable GetErrors(string? propertyName)
         {

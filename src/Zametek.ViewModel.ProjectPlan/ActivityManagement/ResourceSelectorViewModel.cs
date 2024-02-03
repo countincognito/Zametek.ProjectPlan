@@ -18,7 +18,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public ResourceSelectorViewModel()
         {
             m_Lock = new object();
-            m_TargetResources = new ObservableCollection<SelectableResourceViewModel>();
+            m_TargetResources = [];
             m_ReadOnlyTargetResources = new ReadOnlyObservableCollection<SelectableResourceViewModel>(m_TargetResources);
         }
 
@@ -60,6 +60,19 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Public Methods
+
+        public string GetAllocatedToResourcesString(HashSet<int> allocatedToResources)
+        {
+            ArgumentNullException.ThrowIfNull(allocatedToResources);
+            lock (m_Lock)
+            {
+                return string.Join(
+                    DependenciesStringValidationRule.Separator,
+                    TargetResources.Where(x => allocatedToResources.Contains(x.Id))
+                        .OrderBy(x => x.Id)
+                        .Select(x => x.DisplayName));
+            }
+        }
 
         public void SetTargetResources(
             IEnumerable<ResourceModel> targetResources,

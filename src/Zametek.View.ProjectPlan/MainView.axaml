@@ -15,11 +15,6 @@
         Icon="resm:Zametek.Resource.ProjectPlan.Icons.zpp.ico?assembly=Zametek.Resource.ProjectPlan"
 		Name="mainview"
         Title="{Binding Path=ProjectTitle, Mode=OneWay}">
-	<Window.Resources>
-		<Cursor x:Key="WaitCursor">Wait</Cursor>
-		<Cursor x:Key="ArrowCursor">Arrow</Cursor>
-	</Window.Resources>
-
 	<Window.KeyBindings>
 		<KeyBinding x:DataType="vm:MainViewModel"
 					Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
@@ -35,20 +30,10 @@
 					Gesture="Ctrl+B" />
 	</Window.KeyBindings>
 
-	<i:Interaction.Behaviors>
-		<ia:DataTriggerBehavior Binding="{Binding Path=IsBusy}" ComparisonCondition="Equal" Value="True">
-			<ia:ChangePropertyAction TargetObject="{Binding #mainview}" PropertyName="Cursor" Value="{DynamicResource WaitCursor}" />
-		</ia:DataTriggerBehavior>
-		<ia:DataTriggerBehavior Binding="{Binding Path=IsBusy}" ComparisonCondition="Equal" Value="False">
-			<ia:ChangePropertyAction TargetObject="{Binding #mainview}" PropertyName="Cursor" Value="{DynamicResource ArrowCursor}" />
-		</ia:DataTriggerBehavior>
-	</i:Interaction.Behaviors>
-
 	<DockPanel Margin="7"
 			   IsEnabled="{Binding Path=!IsBusy, Mode=OneWay}">
-
 		<Menu DockPanel.Dock="Top" Name="mainmenu"
-              Padding="3">
+			  Padding="3">
 			<i:Interaction.Behaviors>
 				<ia:DataTriggerBehavior Value="True">
 					<ia:DataTriggerBehavior.Binding>
@@ -79,22 +64,22 @@
 
 			<MenuItem Header="{x:Static resources:Menus.Menu_File}">
 				<MenuItem Header="{x:Static resources:Menus.Menu_Open}"
-                          Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
+						  Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
 						  InputGesture="Ctrl+O"/>
 				<Separator />
 				<MenuItem Header="{x:Static resources:Menus.Menu_Save}"
-                          Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"
+						  Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"
 						  InputGesture="Ctrl+S"/>
 				<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
 						  Command="{Binding Path=SaveAsProjectPlanFileCommand, Mode=OneWay}"/>
 				<Separator />
 				<MenuItem Header="{x:Static resources:Menus.Menu_Import}"
-                          Command="{Binding Path=ImportProjectFileCommand, Mode=OneWay}"/>
+						  Command="{Binding Path=ImportProjectFileCommand, Mode=OneWay}"/>
 				<MenuItem Header="{x:Static resources:Menus.Menu_Export}"
-                          Command="{Binding Path=ExportProjectFileCommand, Mode=OneWay}"/>
+						  Command="{Binding Path=ExportProjectFileCommand, Mode=OneWay}"/>
 				<Separator />
 				<MenuItem Header="{x:Static resources:Menus.Menu_Close}"
-                          Command="{Binding Path=CloseProjectPlanCommand, Mode=OneWay}"/>
+						  Command="{Binding Path=CloseProjectPlanCommand, Mode=OneWay}"/>
 			</MenuItem>
 
 			<MenuItem Header="{x:Static resources:Menus.Menu_Settings}">
@@ -120,7 +105,7 @@
 
 			<MenuItem Header="{x:Static resources:Menus.Menu_Compile}">
 				<MenuItem Header="{x:Static resources:Menus.Menu_Compile}"
-                          Command="{Binding Path=CompileCommand, Mode=OneWay}"/>
+						  Command="{Binding Path=CompileCommand, Mode=OneWay}"/>
 				<MenuItem Header="{x:Static resources:Menus.Menu_AutoCompile}"
 						  Command="{Binding Path=ToggleAutoCompileCommand, Mode=OneWay}">
 					<MenuItem.Icon>
@@ -130,26 +115,26 @@
 					</MenuItem.Icon>
 				</MenuItem>
 				<MenuItem Header="{x:Static resources:Menus.Menu_TransitiveReduction}"
-                          Command="{Binding Path=TransitiveReductionCommand, Mode=OneWay}"/>
+						  Command="{Binding Path=TransitiveReductionCommand, Mode=OneWay}"/>
 			</MenuItem>
 			<MenuItem Header="{x:Static resources:Menus.Menu_Help}">
 				<MenuItem Header="{x:Static resources:Menus.Menu_Documentation}"
-                          Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-                          CommandParameter="{x:Static resources:Links.Link_Documentation}"/>
+						  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+						  CommandParameter="{x:Static resources:Links.Link_Documentation}"/>
 				<Separator />
 				<MenuItem Header="{x:Static resources:Menus.Menu_ReportIssue}"
-                          Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-                          CommandParameter="{x:Static resources:Links.Link_ReportIssue}"/>
+						  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+						  CommandParameter="{x:Static resources:Links.Link_ReportIssue}"/>
 				<Separator />
 				<MenuItem Header="{x:Static resources:Menus.Menu_Donate}"
-                          Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-                          CommandParameter="{x:Static resources:Links.Link_Donate}"/>
+						  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+						  CommandParameter="{x:Static resources:Links.Link_Donate}"/>
 				<MenuItem Header="{x:Static resources:Menus.Menu_ViewLicense}"
-                          Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-                          CommandParameter="{x:Static resources:Links.Link_ViewLicense}"/>
+						  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+						  CommandParameter="{x:Static resources:Links.Link_ViewLicense}"/>
 				<Separator />
 				<MenuItem Header="{x:Static resources:Menus.Menu_About}"
-                          Command="{Binding Path=OpenAboutCommand, Mode=OneWay}"/>
+						  Command="{Binding Path=OpenAboutCommand, Mode=OneWay}"/>
 			</MenuItem>
 		</Menu>
 

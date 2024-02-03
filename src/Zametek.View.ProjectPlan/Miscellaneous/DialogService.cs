@@ -166,7 +166,16 @@ namespace Zametek.View.ProjectPlan
             };
 
             IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
-            return files?.FirstOrDefault()?.Path?.AbsolutePath;
+
+            Uri? path = files?.FirstOrDefault()?.Path;
+
+            if (path is not null
+                && path.IsFile)
+            {
+                return path.LocalPath;
+            }
+
+            return null;
         }
 
         public async Task<string?> ShowSaveFileDialogAsync(
@@ -190,8 +199,17 @@ namespace Zametek.View.ProjectPlan
                 FileTypeChoices = filters.AsReadOnlyList()
             };
 
-            IStorageFile? files = await topLevel.StorageProvider.SaveFilePickerAsync(options);
-            return files?.Path?.AbsolutePath;
+            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(options);
+
+            Uri? path = file?.Path;
+
+            if (path is not null
+                && path.IsFile)
+            {
+                return path.LocalPath;
+            }
+
+            return null;
         }
 
         #endregion
