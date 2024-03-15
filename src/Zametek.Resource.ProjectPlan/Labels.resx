@@ -289,7 +289,7 @@
     <value>Explicit Target</value>
   </data>
   <data name="Label_IsInactive" xml:space="preserve">
-    <value>Ignore</value>
+    <value>Disable</value>
   </data>
   <data name="Label_LatestFinishTime" xml:space="preserve">
     <value>LFT</value>

@@ -574,7 +574,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ignore.
+        ///   Looks up a localized string similar to Disable.
         /// </summary>
         public static string Label_IsInactive {
             get {

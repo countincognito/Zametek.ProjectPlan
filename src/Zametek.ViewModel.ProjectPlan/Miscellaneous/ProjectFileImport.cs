@@ -180,7 +180,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     continue;
                 }
 
-                java.util.List? preds = mpxjTask.Predecessors;
+                java.util.List? preds = mpxjTask.Predecessors; // Predecessors == Dependencies
                 if (preds is not null
                     && !preds.isEmpty())
                 {
@@ -195,12 +195,10 @@ namespace Zametek.ViewModel.ProjectPlan
                             if (descendantTaskId is not null
                                 && id != descendantTaskId)
                             {
-                                var relation = new net.sf.mpxj.Relation(
-                                    mpxjTask,
+                                mpxjTask.AddPredecessor(
                                     descendantTask,
                                     net.sf.mpxj.RelationType.START_FINISH,
                                     net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units));
-                                mpxjTask.Predecessors.add(relation);
                             }
                         }
                     }
@@ -215,12 +213,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     int parentId = parentTask.ID?.intValue() ?? default;
                     if (!s_FilterTaskIds.Contains(parentId))
                     {
-                        var relation = new net.sf.mpxj.Relation(
-                            mpxjTask,
+                        mpxjTask.AddPredecessor(
                             parentTask,
                             net.sf.mpxj.RelationType.START_FINISH,
                             net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units));
-                        mpxjTask.Predecessors.add(relation);
                     }
                 }
 
