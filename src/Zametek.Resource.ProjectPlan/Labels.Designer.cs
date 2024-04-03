@@ -205,7 +205,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Copyright (c) 2023.
+        ///   Looks up a localized string similar to Copyright (c) 2024.
         /// </summary>
         public static string Label_Copyright {
             get {
