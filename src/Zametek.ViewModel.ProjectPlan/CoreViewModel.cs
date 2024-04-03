@@ -584,11 +584,14 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(dependentActivities);
             var vertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
+
             foreach (var dependentActivity in dependentActivities.Cast<DependentActivity<int, int>>())
             {
+                dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
                 dependentActivity.ResourceDependencies.Clear();
                 vertexGraphCompiler.AddActivity(dependentActivity);
             }
+
             vertexGraphCompiler.TransitiveReduction();
             return vertexGraphCompiler.CyclomaticComplexity;
         }
