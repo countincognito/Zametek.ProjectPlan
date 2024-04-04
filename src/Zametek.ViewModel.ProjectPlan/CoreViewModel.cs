@@ -84,7 +84,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Duration = this
                 .WhenAnyValue(
                     core => core.HasCompilationErrors,
-                    hasCompilationErrors => hasCompilationErrors ? (int?)null : m_VertexGraphCompiler.Duration)
+                    core => core.GraphCompilation,
+                    (hasCompilationErrors, _) => hasCompilationErrors ? (int?)null : m_VertexGraphCompiler.Duration)
                 .ToProperty(this, core => core.Duration);
 
             m_AreActivitiesUncompiledSub = m_ReadOnlyActivities
@@ -1001,7 +1002,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     var graphCompilation = m_Mapper.Map<IGraphCompilation<int, int, IDependentActivity<int, int>>, GraphCompilationModel>(GraphCompilation);
 
-                    return new ProjectPlanModel
+                    var plan = new ProjectPlanModel
                     {
                         Version = Data.ProjectPlan.Versions.v0_3_0,
                         ProjectStart = ProjectStart,
@@ -1012,6 +1013,15 @@ namespace Zametek.ViewModel.ProjectPlan
                         ArrowGraph = ArrowGraph.CloneObject(),
                         HasStaleOutputs = HasStaleOutputs
                     };
+
+                    // Reorder activity dependencies so they are more readable.
+                    foreach (DependentActivityModel activityModel in plan.DependentActivities)
+                    {
+                        activityModel.Dependencies.Sort();
+                        activityModel.ResourceDependencies.Sort();
+                    }
+
+                    return plan;
                 }
             }
             finally
