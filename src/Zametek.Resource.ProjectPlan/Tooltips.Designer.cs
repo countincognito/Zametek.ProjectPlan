@@ -232,6 +232,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Phase.
+        /// </summary>
+        public static string ToolTip_IsPhase {
+            get {
+                return ResourceManager.GetString("ToolTip_IsPhase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Latest Finish Time.
         /// </summary>
         public static string ToolTip_LatestFinishTime {
@@ -331,6 +340,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Target Work Streams.
+        /// </summary>
+        public static string ToolTip_TargetWorkStreams {
+            get {
+                return ResourceManager.GetString("ToolTip_TargetWorkStreams", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Total Slack.
         /// </summary>
         public static string ToolTip_TotalSlack {
@@ -345,6 +363,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string ToolTip_UnitCost {
             get {
                 return ResourceManager.GetString("ToolTip_UnitCost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Work Stream Name.
+        /// </summary>
+        public static string ToolTip_WorkStreamName {
+            get {
+                return ResourceManager.GetString("ToolTip_WorkStreamName", resourceCulture);
             }
         }
     }

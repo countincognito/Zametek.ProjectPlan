@@ -24,6 +24,7 @@ namespace Zametek.ProjectPlan
         private readonly IDockable m_EarnedValueChartManagerViewModel;
         private readonly IDockable m_ArrowGraphSettingsManagerViewModel;
         private readonly IDockable m_ResourceSettingsManagerViewModel;
+        private readonly IDockable m_WorkStreamSettingsManagerViewModel;
 
         public DockFactory(
             IActivitiesManagerViewModel activitiesManagerViewModel,
@@ -35,7 +36,8 @@ namespace Zametek.ProjectPlan
             IGanttChartManagerViewModel ganttChartManagerViewModel,
             IEarnedValueChartManagerViewModel earnedValueChartManagerViewModel,
             IArrowGraphSettingsManagerViewModel arrowGraphSettingsManagerViewModel,
-            IResourceSettingsManagerViewModel resourceSettingsManagerViewModel)
+            IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
+            IWorkStreamSettingsManagerViewModel workStreamSettingsManagerViewModel)
         {
             m_ActivitiesManagerViewModel = activitiesManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(activitiesManagerViewModel));
             m_TrackingManagerViewModel = trackingManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(trackingManagerViewModel));
@@ -47,6 +49,7 @@ namespace Zametek.ProjectPlan
             m_EarnedValueChartManagerViewModel = earnedValueChartManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(earnedValueChartManagerViewModel));
             m_ArrowGraphSettingsManagerViewModel = arrowGraphSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(arrowGraphSettingsManagerViewModel));
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(resourceSettingsManagerViewModel));
+            m_WorkStreamSettingsManagerViewModel = workStreamSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(workStreamSettingsManagerViewModel));
         }
 
         public override IRootDock CreateLayout()
@@ -125,7 +128,8 @@ namespace Zametek.ProjectPlan
                                 IsCollapsable = false,
                                 VisibleDockables = CreateList(
                                     m_ResourceSettingsManagerViewModel,
-                                    m_ArrowGraphSettingsManagerViewModel),
+                                    m_ArrowGraphSettingsManagerViewModel,
+                                    m_WorkStreamSettingsManagerViewModel),
                                 Alignment = Alignment.Right,
                                 GripMode = GripMode.Visible
                             }

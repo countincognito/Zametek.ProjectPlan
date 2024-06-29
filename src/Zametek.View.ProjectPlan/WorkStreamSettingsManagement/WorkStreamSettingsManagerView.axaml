@@ -1,0 +1,236 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:i="using:Avalonia.Xaml.Interactivity"
+	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 xmlns:controls="using:Avalonia.Controls"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:sys="using:System"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 x:DataType="vm:WorkStreamSettingsManagerViewModel"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Zametek.View.ProjectPlan.WorkStreamSettingsManagerView">
+	<UserControl.Resources>
+		<local:ColorFormatToColorConverter x:Key="colorFormatToColorConverter"/>
+
+		<local:ManagedWorkStreamSortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
+		<local:ManagedWorkStreamSortComparer x:Key="isPhaseSortComparer" SortMemberPath="IsPhase"/>
+		<local:ManagedWorkStreamSortComparer x:Key="colorFormatSortComparer" SortMemberPath="ColorFormat"/>
+		<local:ManagedWorkStreamSortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
+	</UserControl.Resources>
+
+	<DockPanel Margin="7">
+		<DockPanel DockPanel.Dock="Right"
+                   Margin="11,0,0,0">
+			<Button DockPanel.Dock="Top"
+                    IsTabStop="True"
+                    Margin="0,0,0,7"
+                    Height="25" Width="75"
+                    VerticalAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding Path=AddManagedWorkStreamCommand, Mode=OneWay}"
+                    Content="{x:Static resources:Labels.Label_AddManagedWorkStream}"/>
+
+			<Button DockPanel.Dock="Top"
+					IsTabStop="True"
+                    Margin="0,0,0,11"
+                    Height="25" Width="75"
+                    VerticalAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding Path=RemoveManagedWorkStreamsCommand, Mode=OneWay}"
+                    Content="{x:Static resources:Labels.Label_DeleteManagedWorkStreams}"/>
+
+			<Grid/>
+		</DockPanel>
+
+		<DataGrid Name="workStreams"
+				  FrozenColumnCount="1"
+				  AutoGenerateColumns="False"
+				  RowHeight="30"
+				  ItemsSource="{Binding Path=WorkStreams, Mode=OneWay}"
+				  SelectionMode="Extended"
+				  CanUserResizeColumns="True"
+				  CanUserSortColumns="True"
+				  GridLinesVisibility="All"
+				  CanUserReorderColumns="True">
+			<DataGrid.Styles>
+				<Style Selector="DataGridRow:not(:pointerover) Grid.editable">
+					<Setter Property="Background" Value="LightYellow"/>
+				</Style>
+				<Style Selector="DataGridRow:not(:selected) Grid.editable">
+					<Setter Property="Background" Value="LightYellow"/>
+				</Style>
+				<Style Selector="DataGridRow:pointerover Grid.editable">
+					<Setter Property="Background" Value="Khaki"/>
+				</Style>
+				<Style Selector="DataGridRow:selected Grid.editable">
+					<Setter Property="Background" Value="DarkKhaki"/>
+				</Style>
+			</DataGrid.Styles>
+
+			<i:Interaction.Behaviors>
+				<ia:EventTriggerBehavior EventName="SelectionChanged"
+										 SourceObject="{Binding #workStreams}">
+					<ia:InvokeCommandAction x:DataType="vm:WorkStreamSettingsManagerViewModel"
+											Command="{Binding Path=SetSelectedManagedWorkStreamsCommand, Mode=OneWay}"
+											PassEventArgsToCommand="True" />
+				</ia:EventTriggerBehavior>
+			</i:Interaction.Behaviors>
+
+			<DataGrid.Columns>
+
+
+
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										IsReadOnly="True"
+										CustomSortComparer="{StaticResource idSortComparer}"
+										Width="50">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_Id}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Id, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										IsReadOnly="True"
+										CustomSortComparer="{StaticResource isPhaseSortComparer}"
+										Width="85">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_IsPhase}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsPhase}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<ToggleSwitch VerticalAlignment="Center"
+											  HorizontalAlignment="Center"
+											  Margin="0"
+											  Padding="3"
+											  OffContent="{x:Static resources:Labels.Label_No}"
+											  OnContent="{x:Static resources:Labels.Label_Yes}"
+											  IsChecked="{Binding Path=IsPhase, Mode=TwoWay}"/>
+								<!--<CheckBox VerticalAlignment="Center"
+											  HorizontalAlignment="Center"
+											  Margin="0"
+											  Padding="3"
+											  Background="White"
+											  IsChecked="{Binding Path=IsPhase, Mode=TwoWay}"/>-->
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+
+
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										IsReadOnly="True"
+										CustomSortComparer="{StaticResource colorFormatSortComparer}"
+										Width="45">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_ColorFormat}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ColorFormat}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<ColorPicker Cursor="Hand">
+									<Interaction.Behaviors>
+										<local:ColorPickerLostFocusUpdateBindingBehavior Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}}" />
+									</Interaction.Behaviors>
+								</ColorPicker>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										CustomSortComparer="{StaticResource nameSortComparer}"
+										Width="250">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_WorkStreamName}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_WorkStreamName}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Background="Transparent"
+										   Text="{Binding Path=Name, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBox Text="{Binding Path=Name, Mode=TwoWay}"
+										 Foreground="Black"
+										 VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
+				</DataGridTemplateColumn>
+
+
+
+
+			</DataGrid.Columns>
+		</DataGrid>
+	</DockPanel>
+</UserControl>

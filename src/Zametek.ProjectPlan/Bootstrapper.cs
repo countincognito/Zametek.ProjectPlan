@@ -33,6 +33,7 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<IOutputManagerViewModel, OutputManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IArrowGraphSettingsManagerViewModel, ArrowGraphSettingsManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IResourceSettingsManagerViewModel, ResourceSettingsManagerViewModel>();
+            SplatRegistrations.RegisterLazySingleton<IWorkStreamSettingsManagerViewModel, WorkStreamSettingsManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IMainViewModel, MainViewModel>();
             SplatRegistrations.RegisterLazySingleton<IFactory, DockFactory>();
 

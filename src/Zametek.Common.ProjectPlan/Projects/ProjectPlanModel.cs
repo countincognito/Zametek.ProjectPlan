@@ -13,6 +13,8 @@
 
         public ResourceSettingsModel ResourceSettings { get; init; } = new ResourceSettingsModel();
 
+        public WorkStreamSettingsModel WorkStreamSettings { get; init; } = new WorkStreamSettingsModel();
+
         public GraphCompilationModel GraphCompilation { get; init; } = new GraphCompilationModel();
 
         public ArrowGraphModel ArrowGraph { get; init; } = new ArrowGraphModel();

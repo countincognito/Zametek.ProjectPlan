@@ -21,6 +21,8 @@ namespace Zametek.Common.ProjectPlan
 
         public int AllocationOrder { get; init; }
 
+        public List<int> InterActivityPhases { get; init; } = [];
+
         public ColorFormatModel ColorFormat { get; init; } = new ColorFormatModel();
     }
 }

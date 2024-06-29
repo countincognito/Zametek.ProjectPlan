@@ -34,7 +34,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region IManagedResourceViewModel Members
+        #region IManagedActivitySeverityViewModel Members
 
         public Guid Id { get; }
 

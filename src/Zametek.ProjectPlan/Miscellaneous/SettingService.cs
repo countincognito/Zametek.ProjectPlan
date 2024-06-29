@@ -224,6 +224,8 @@ namespace Zametek.ProjectPlan
                 AreDisabled = false
             };
 
+        public WorkStreamSettingsModel DefaultWorkStreamSettings => new();
+
         //public void SetMainViewSettings(MainViewSettingsModel mainViewSettings)
         //{
         //    if (mainViewSettings is null)

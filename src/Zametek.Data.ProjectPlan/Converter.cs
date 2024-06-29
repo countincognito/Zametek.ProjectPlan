@@ -6,10 +6,16 @@ namespace Zametek.Data.ProjectPlan
     {
         private readonly static IMapper m_Mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
 
-        public static v0_3_1.ProjectPlanModel Format(Common.ProjectPlan.ProjectPlanModel projectPlan)
+        public static v0_3_2.ProjectPlanModel Format(Common.ProjectPlan.ProjectPlanModel projectPlan)
         {
             ArgumentNullException.ThrowIfNull(projectPlan);
-            return m_Mapper.Map<Common.ProjectPlan.ProjectPlanModel, v0_3_1.ProjectPlanModel>(projectPlan);
+            return m_Mapper.Map<Common.ProjectPlan.ProjectPlanModel, v0_3_2.ProjectPlanModel>(projectPlan);
+        }
+
+        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_3_2.ProjectPlanModel projectPlan)
+        {
+            ArgumentNullException.ThrowIfNull(projectPlan);
+            return m_Mapper.Map<v0_3_2.ProjectPlanModel, Common.ProjectPlan.ProjectPlanModel>(projectPlan);
         }
 
         public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_3_1.ProjectPlanModel projectPlan)

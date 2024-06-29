@@ -31,4 +31,9 @@
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Update="WorkStreamSettingsManagement\WorkStreamSettingsManagerView.axaml.cs">
+      <DependentUpon>WorkStreamSettingsManagerView.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

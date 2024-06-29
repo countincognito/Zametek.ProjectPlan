@@ -141,6 +141,9 @@
   <data name="Label_AddManagedResource" xml:space="preserve">
     <value>Add</value>
   </data>
+  <data name="Label_AddManagedWorkStream" xml:space="preserve">
+    <value>Add</value>
+  </data>
   <data name="Label_AllocatedToResources" xml:space="preserve">
     <value>Allocated to Resources</value>
   </data>
@@ -183,6 +186,9 @@
   <data name="Label_DaysShown" xml:space="preserve">
     <value>Days shown:</value>
   </data>
+  <data name="Label_Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
   <data name="Label_DefaultUnitCost" xml:space="preserve">
     <value>Default Unit Cost</value>
   </data>
@@ -196,6 +202,9 @@
     <value>Delete</value>
   </data>
   <data name="Label_DeleteManagedResources" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Label_DeleteManagedWorkStreams" xml:space="preserve">
     <value>Delete</value>
   </data>
   <data name="Label_Dependencies" xml:space="preserve">
@@ -291,6 +300,9 @@
   <data name="Label_IsInactive" xml:space="preserve">
     <value>Disable</value>
   </data>
+  <data name="Label_IsPhase" xml:space="preserve">
+    <value>Phase</value>
+  </data>
   <data name="Label_LatestFinishTime" xml:space="preserve">
     <value>LFT</value>
   </data>
@@ -372,6 +384,9 @@
   <data name="Label_TargetResources" xml:space="preserve">
     <value>Target Resources</value>
   </data>
+  <data name="Label_TargetWorkStreams" xml:space="preserve">
+    <value>Target Work Streams</value>
+  </data>
   <data name="Label_TimeAxisTitle" xml:space="preserve">
     <value>Time</value>
   </data>
@@ -389,6 +404,9 @@
   </data>
   <data name="Label_ViewProjections" xml:space="preserve">
     <value>View Projections</value>
+  </data>
+  <data name="Label_WorkStreamName" xml:space="preserve">
+    <value>Work Stream Name</value>
   </data>
   <data name="Label_Yes" xml:space="preserve">
     <value>Yes</value>

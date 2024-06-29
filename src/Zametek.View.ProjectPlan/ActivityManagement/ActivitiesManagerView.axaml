@@ -34,6 +34,7 @@
 		<local:ManagedActivitySortComparer x:Key="minimumEarliestStartTimeSortComparer" SortMemberPath="MinimumEarliestStartTime"/>
 		<local:ManagedActivitySortComparer x:Key="maximumLatestFinishTimeSortComparer" SortMemberPath="MaximumLatestFinishTime"/>
 		<local:ManagedActivitySortComparer x:Key="resourceSelectorTargetResourcesStringSortComparer" SortMemberPath="ResourceSelector.TargetResourcesString"/>
+		<!--<local:ManagedActivitySortComparer x:Key="resourceSelectorTargetResourcesStringSortComparer" SortMemberPath="ResourceSelector.TargetResourcesString"/>-->
 		<local:ManagedActivitySortComparer x:Key="hasNoCostSortComparer" SortMemberPath="HasNoCost"/>
 		<local:ManagedActivitySortComparer x:Key="targetResourceOperatorSortComparer" SortMemberPath="TargetResourceOperator"/>
 		<local:ManagedActivitySortComparer x:Key="allocatedToResourcesStringSortComparer" SortMemberPath="AllocatedToResourcesString"/>
@@ -785,6 +786,118 @@
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										Width="120">
+					<!--CustomSortComparer="{StaticResource workStreamSelectorTargetResourcesStringSortComparer}"-->
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_TargetWorkStreams}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_TargetWorkStreams}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Background="Transparent"
+										   x:DataType="vm:ManagedActivityViewModel"
+										   Text="{Binding Path=WorkStreamSelector.TargetWorkStreamsString, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<Grid.Styles>
+									<Style Selector="Popup > PopupRoot > Panel > VisualLayerManager > ContentPresenter#PART_ContentPresenter">
+										<Setter Property="BorderBrush" Value="Black" />
+										<Setter Property="BorderThickness" Value="1" />
+									</Style>
+								</Grid.Styles>
+								<ToggleButton Name="WorkStreamSelectorTogglePopupButton"
+											  HorizontalContentAlignment="Left"
+											  x:DataType="vm:ManagedActivityViewModel"
+											  Content="{Binding Path=WorkStreamSelector.TargetWorkStreamsString, Mode=OneWay}"
+											  Background="Transparent"
+											  Margin="0"
+											  Padding="3"
+											  IsEnabled="True"/>
+								<Popup Name="WorkStreamSelectorToggledPopup"
+									   IsLightDismissEnabled="False"
+									   IsOpen="{Binding Path=IsChecked, ElementName=WorkStreamSelectorTogglePopupButton, Mode=TwoWay}">
+									<ItemsControl x:DataType="vm:ManagedActivityViewModel"
+												  ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}">
+										<ItemsControl.ItemTemplate>
+											<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
+												<Grid Background="White">
+													<CheckBox Padding="4"
+															  Margin="4,0"
+															  Content="{Binding Path=DisplayName, Mode=OneWay}"
+															  IsChecked="{Binding Path=IsSelected, Mode=TwoWay}"/>
+												</Grid>
+											</DataTemplate>
+										</ItemsControl.ItemTemplate>
+										<ItemsControl.ItemsPanel>
+											<ItemsPanelTemplate>
+												<StackPanel Orientation="Vertical"/>
+											</ItemsPanelTemplate>
+										</ItemsControl.ItemsPanel>
+									</ItemsControl>
+
+
+									<!--<ListBox ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}">
+											<ListBox.ItemTemplate>
+												<DataTemplate>
+													<DockPanel>
+													
+													
+														<CheckBox Content="{Binding Path=DisplayName, Mode=OneWay}"
+																  IsChecked="{Binding Path=IsSelected, Mode=TwoWay}"/>
+													</DockPanel>
+												</DataTemplate>
+											</ListBox.ItemTemplate>
+										</ListBox>-->
+								</Popup>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
+				</DataGridTemplateColumn>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"

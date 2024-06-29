@@ -21,6 +21,8 @@ namespace Zametek.Contract.ProjectPlan
 
         public string AllocatedToResourcesString { get; }
 
+        HashSet<int> TargetWorkStreams { get; }
+
         DateTimeOffset? EarliestStartDateTimeOffset { get; }
 
         DateTimeOffset? LatestStartDateTimeOffset { get; }

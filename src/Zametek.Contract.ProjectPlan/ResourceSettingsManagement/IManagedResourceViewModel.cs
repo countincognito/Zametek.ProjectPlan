@@ -17,6 +17,8 @@ namespace Zametek.Contract.ProjectPlan
 
         InterActivityAllocationType InterActivityAllocationType { get; set; }
 
+        List<int> InterActivityPhases { get; set; }
+
         double UnitCost { get; set; }
 
         int AllocationOrder { get; set; }

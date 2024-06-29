@@ -185,5 +185,14 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Title_UntitledProject", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Work Stream Settings.
+        /// </summary>
+        public static string Title_WorkStreamSettingsView {
+            get {
+                return ResourceManager.GetString("Title_WorkStreamSettingsView", resourceCulture);
+            }
+        }
     }
 }

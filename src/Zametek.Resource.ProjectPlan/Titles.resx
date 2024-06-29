@@ -159,4 +159,7 @@
   <data name="Title_UntitledProject" xml:space="preserve">
     <value>Untitled</value>
   </data>
+  <data name="Title_WorkStreamSettingsView" xml:space="preserve">
+    <value>Work Stream Settings</value>
+  </data>
 </root>

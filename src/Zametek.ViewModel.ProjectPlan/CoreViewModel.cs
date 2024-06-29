@@ -59,6 +59,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ReadOnlyActivities = new ReadOnlyObservableCollection<IManagedActivityViewModel>(m_Activities);
             m_ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
+            m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
             m_GraphCompilation = new GraphCompilation<int, int, DependentActivity<int, int>>(
                 Enumerable.Empty<DependentActivity<int, int>>(),
                 Enumerable.Empty<IResourceSchedule<int, int>>());
@@ -112,6 +113,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     core => core.ProjectStart,
                     core => core.ResourceSettings,
                     core => core.ArrowGraphSettings,
+                    core => core.WorkStreamSettings,
                     core => core.UseBusinessDays)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ =>
@@ -793,6 +795,21 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private WorkStreamSettingsModel m_WorkStreamSettings;
+        public WorkStreamSettingsModel WorkStreamSettings
+        {
+            get => m_WorkStreamSettings;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_WorkStreamSettings = value;
+                    IsProjectUpdated = true;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
@@ -861,6 +878,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
                     ResourceSettings = m_SettingService.DefaultResourceSettings;
+                    WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
                 }
             }
             finally
@@ -909,6 +927,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Project Start Date.
                     ProjectStart = projectImportModel.ProjectStart;
+
+                    // Work Stream settings.
+                    WorkStreamSettingsModel workStreamSettings = m_SettingService.DefaultWorkStreamSettings.CloneObject();
+
+                    WorkStreamSettings = workStreamSettings;
+
+
+
+
 
                     // Resources.
                     ResourceSettingsModel resourceSettings = m_SettingService.DefaultResourceSettings.CloneObject();
@@ -974,6 +1001,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Arrow Graph Settings.
                     ArrowGraphSettings = projectPlanModel.ArrowGraphSettings;
 
+                    // Work Stream Settings.
+                    WorkStreamSettings = projectPlanModel.WorkStreamSettings;
+
                     // Compilation.
                     GraphCompilation = m_Mapper.Map<GraphCompilation<int, int, DependentActivity<int, int>>>(projectPlanModel.GraphCompilation);
 
@@ -1004,11 +1034,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     var plan = new ProjectPlanModel
                     {
-                        Version = Data.ProjectPlan.Versions.v0_3_0,
+                        Version = Data.ProjectPlan.Versions.v0_3_2,
                         ProjectStart = ProjectStart,
                         DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(Activities),
                         ResourceSettings = ResourceSettings.CloneObject(),
                         ArrowGraphSettings = ArrowGraphSettings.CloneObject(),
+                        WorkStreamSettings = WorkStreamSettings.CloneObject(),
                         GraphCompilation = graphCompilation,
                         ArrowGraph = ArrowGraph.CloneObject(),
                         HasStaleOutputs = HasStaleOutputs

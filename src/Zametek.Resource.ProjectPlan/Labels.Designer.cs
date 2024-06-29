@@ -133,6 +133,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string Label_AddManagedWorkStream {
+            get {
+                return ResourceManager.GetString("Label_AddManagedWorkStream", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Allocated to Resources.
         /// </summary>
         public static string Label_AllocatedToResources {
@@ -259,6 +268,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default.
+        /// </summary>
+        public static string Label_Default {
+            get {
+                return ResourceManager.GetString("Label_Default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Default Unit Cost.
         /// </summary>
         public static string Label_DefaultUnitCost {
@@ -300,6 +318,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_DeleteManagedResources {
             get {
                 return ResourceManager.GetString("Label_DeleteManagedResources", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Label_DeleteManagedWorkStreams {
+            get {
+                return ResourceManager.GetString("Label_DeleteManagedWorkStreams", resourceCulture);
             }
         }
         
@@ -583,6 +610,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Phase.
+        /// </summary>
+        public static string Label_IsPhase {
+            get {
+                return ResourceManager.GetString("Label_IsPhase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to LFT.
         /// </summary>
         public static string Label_LatestFinishTime {
@@ -827,6 +863,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Target Work Streams.
+        /// </summary>
+        public static string Label_TargetWorkStreams {
+            get {
+                return ResourceManager.GetString("Label_TargetWorkStreams", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Time.
         /// </summary>
         public static string Label_TimeAxisTitle {
@@ -877,6 +922,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_ViewProjections {
             get {
                 return ResourceManager.GetString("Label_ViewProjections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Work Stream Name.
+        /// </summary>
+        public static string Label_WorkStreamName {
+            get {
+                return ResourceManager.GetString("Label_WorkStreamName", resourceCulture);
             }
         }
         

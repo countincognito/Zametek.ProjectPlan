@@ -88,6 +88,19 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_InterActivityAllocationType, value);
         }
 
+
+
+
+        public List<int> InterActivityPhases
+        {
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+        }
+
+
+
+
+
         private double m_UnitCost;
         public double UnitCost
         {

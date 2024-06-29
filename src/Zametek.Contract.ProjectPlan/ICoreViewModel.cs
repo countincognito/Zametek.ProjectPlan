@@ -34,6 +34,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ResourceSettingsModel ResourceSettings { get; set; }
 
+        WorkStreamSettingsModel WorkStreamSettings { get; set; }
+
         bool HasCompilationErrors { get; }
 
         IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation { get; }

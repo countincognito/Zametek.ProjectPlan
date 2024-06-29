@@ -11,11 +11,13 @@ namespace Zametek.Common.ProjectPlan
 
         public string Notes { get; init; } = string.Empty;
 
-        public List<int> TargetResources { get; init; } = new List<int>();
+        public List<int> TargetWorkStreams { get; init; } = [];
+
+        public List<int> TargetResources { get; init; } = [];
 
         public LogicalOperator TargetResourceOperator { get; init; }
 
-        public List<int> AllocatedToResources { get; init; } = new List<int>();
+        public List<int> AllocatedToResources { get; init; } = [];
 
         public bool CanBeRemoved { get; init; }
 

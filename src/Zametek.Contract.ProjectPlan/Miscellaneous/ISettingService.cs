@@ -20,6 +20,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ResourceSettingsModel DefaultResourceSettings { get; }
 
+        WorkStreamSettingsModel DefaultWorkStreamSettings { get; }
+
         //void SetMainViewSettings(MainViewSettingsModel mainViewSettings);
 
         //MainViewSettingsModel MainViewSettings { get; }
