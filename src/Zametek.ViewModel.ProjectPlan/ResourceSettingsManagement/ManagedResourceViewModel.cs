@@ -1,9 +1,12 @@
 ﻿using Avalonia.Data;
 using ReactiveUI;
 using System.ComponentModel;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
+using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -12,18 +15,25 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
+        private readonly ICoreViewModel m_CoreViewModel;
         private readonly IResourceSettingsManagerViewModel m_ResourceSettingsManagerViewModel;
+        private readonly HashSet<int> m_TargetWorkStreams;
+
+        private readonly IDisposable? m_WorkStreamSettingsSub;
 
         #endregion
 
         #region Ctors
 
         public ManagedResourceViewModel(
+            ICoreViewModel coreViewModel,
             IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
             ResourceModel resource)
         {
+            ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(resourceSettingsManagerViewModel);
             ArgumentNullException.ThrowIfNull(resource);
+            m_CoreViewModel = coreViewModel;
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;
             Id = resource.Id;
             m_Name = resource.Name;
@@ -34,9 +44,79 @@ namespace Zametek.ViewModel.ProjectPlan
             m_AllocationOrder = resource.AllocationOrder;
             m_DisplayOrder = resource.DisplayOrder;
             m_ColorFormat = resource.ColorFormat;
+
+            m_TargetWorkStreams = new HashSet<int>(resource.InterActivityPhases);
+            WorkStreamSelector = new WorkStreamSelectorViewModel(phaseOnly: true);
+            m_WorkStreamSettings = m_CoreViewModel.WorkStreamSettings;
+            RefreshWorkStreamSelector();
+
+            m_WorkStreamSettingsSub = this
+                .WhenAnyValue(x => x.m_CoreViewModel.WorkStreamSettings)
+                .ObserveOn(Scheduler.CurrentThread)
+                .Subscribe(x => WorkStreamSettings = x);
         }
 
         #endregion
+
+
+
+
+
+        #region Properties
+
+
+        private WorkStreamSettingsModel m_WorkStreamSettings;
+        private WorkStreamSettingsModel WorkStreamSettings
+        {
+            get => m_WorkStreamSettings;
+            set
+            {
+                m_WorkStreamSettings = value;
+                SetNewTargetWorkStreams();
+            }
+        }
+
+        public WorkStreamSelectorViewModel WorkStreamSelector { get; }
+
+        #endregion
+
+
+
+
+
+
+
+
+
+
+        private void UpdateActivityTargetWorkStreams()
+        {
+            m_TargetWorkStreams.Clear();
+            m_TargetWorkStreams.UnionWith(WorkStreamSelector.SelectedWorkStreamIds);
+            this.RaisePropertyChanged(nameof(InterActivityPhases));
+            this.RaisePropertyChanged(nameof(WorkStreamSelector));
+        }
+
+        private void SetNewTargetWorkStreams()
+        {
+            UpdateActivityTargetWorkStreams();
+            RefreshWorkStreamSelector();
+            UpdateActivityTargetWorkStreams();
+        }
+
+        private void RefreshWorkStreamSelector()
+        {
+            var selectedTargetWorkStreams = new HashSet<int>(m_TargetWorkStreams);
+            IEnumerable<WorkStreamModel> targetWorkStreams = WorkStreamSettings.WorkStreams.Select(x => x.CloneObject());
+            WorkStreamSelector.SetTargetWorkStreams(targetWorkStreams, selectedTargetWorkStreams);
+        }
+
+
+
+
+
+
+
 
         #region IManagedResourceViewModel Members
 
@@ -91,11 +171,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-        public List<int> InterActivityPhases
-        {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
-        }
+        public HashSet<int> InterActivityPhases => m_TargetWorkStreams;
+
 
 
 
@@ -169,6 +246,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (m_isDirty)
             {
                 m_isDirty = false;
+                UpdateActivityTargetWorkStreams();
                 m_ResourceSettingsManagerViewModel.AreSettingsUpdated = true;
             }
         }
@@ -199,6 +277,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 //m_DateTimeCalculatorSub?.Dispose();
                 //m_CompilationSub?.Dispose();
                 //ResourceSelector.Dispose();
+                m_WorkStreamSettingsSub?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

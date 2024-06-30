@@ -803,7 +803,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										Width="120">
-					<!--CustomSortComparer="{StaticResource workStreamSelectorTargetResourcesStringSortComparer}"-->
+					<!--CustomSortComparer="{StaticResource workStreamSelectorTargetResourcesStringSortComparer}" TODO-->
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>

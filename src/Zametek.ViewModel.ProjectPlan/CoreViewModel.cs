@@ -13,16 +13,6 @@ using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-
-
-    public enum ReadyToCompile
-    {
-        No,
-        Yes
-    }
-
-
-
     public class CoreViewModel
         : ViewModelBase, ICoreViewModel, IDisposable
     {
@@ -111,10 +101,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         lock (m_Lock)
                         {
-                            if (!IsBusy && changeSet.TotalChanges > 0) // Replaced only counts the individually updated items.
-                            {
-                                RunAutoCompile();
-                            }
+                            IsReadyToCompile = ReadyToCompile.Yes;
                         }
                     }
                 });
@@ -1152,6 +1139,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             m_DateTimeCalculator,
                             m_VertexGraphCompiler,
                             ProjectStart,
+                            dependentActivity.Activity.TargetWorkStreams,
                             dependentActivity.Activity.Trackers,
                             dependentActivity.Activity.MinimumEarliestStartDateTime,
                             dependentActivity.Activity.MaximumLatestFinishDateTime);

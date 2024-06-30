@@ -46,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasResources = false;
             m_AreSettingsUpdated = false; ;
 
-            m_Resources = new ObservableCollection<IManagedResourceViewModel>();
+            m_Resources = [];
             m_ReadOnlyResources = new ReadOnlyObservableCollection<IManagedResourceViewModel>(m_Resources);
 
             SetSelectedManagedResourcesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedResources);
@@ -143,6 +143,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     int resourceId = GetNextId();
                     m_Resources.Add(
                         new ManagedResourceViewModel(
+                            m_CoreViewModel,
                             this,
                             new ResourceModel
                             {
@@ -205,6 +206,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         IsExplicitTarget = x.IsExplicitTarget,
                         IsInactive = x.IsInactive,
                         InterActivityAllocationType = x.InterActivityAllocationType,
+                        InterActivityPhases = [.. x.InterActivityPhases],
                         UnitCost = x.UnitCost,
                         DisplayOrder = x.DisplayOrder,
                         ColorFormat = x.ColorFormat
@@ -238,6 +240,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 foreach (ResourceModel resouce in resourceSettings.Resources)
                 {
                     m_Resources.Add(new ManagedResourceViewModel(
+                        m_CoreViewModel,
                         this,
                         resouce));
                 }

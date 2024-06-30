@@ -282,6 +282,9 @@
   <data name="Label_InterActivityAllocationType" xml:space="preserve">
     <value>Inter-activity Allocation</value>
   </data>
+  <data name="Label_InterActivityPhases" xml:space="preserve">
+    <value>Inter-activity Phases</value>
+  </data>
   <data name="Label_InterferingSlack" xml:space="preserve">
     <value>IS</value>
   </data>

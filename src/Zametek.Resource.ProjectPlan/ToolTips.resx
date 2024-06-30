@@ -159,6 +159,9 @@
   <data name="ToolTip_InterActivityAllocationType" xml:space="preserve">
     <value>Inter-activity Allocation</value>
   </data>
+  <data name="ToolTip_InterActivityPhases" xml:space="preserve">
+    <value>Inter-activity Phases</value>
+  </data>
   <data name="ToolTip_InterferingSlack" xml:space="preserve">
     <value>Interfering Slack</value>
   </data>

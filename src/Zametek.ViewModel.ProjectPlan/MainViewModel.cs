@@ -355,13 +355,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ProcessProjectPlan(ProjectPlanModel planModel) => m_CoreViewModel.ProcessProjectPlan(planModel);
 
-        private async Task<ProjectPlanModel> BuildProjectPlanAsync() => await Task.Run(() => m_CoreViewModel.BuildProjectPlan());
+        private async Task<ProjectPlanModel> BuildProjectPlanAsync() => await Task.Run(m_CoreViewModel.BuildProjectPlan);
 
-        private async Task RunCompileAsync() => await Task.Run(() => m_CoreViewModel.RunCompile());
+        private async Task RunCompileAsync() => await Task.Run(m_CoreViewModel.RunCompile);
 
-        private async Task RunAutoCompileAsync() => await Task.Run(() => m_CoreViewModel.RunAutoCompile());
+        private async Task RunAutoCompileAsync() => await Task.Run(m_CoreViewModel.RunAutoCompile);
 
-        private async Task RunTransitiveReductionAsync() => await Task.Run(() => m_CoreViewModel.RunTransitiveReduction());
+        private async Task RunTransitiveReductionAsync() => await Task.Run(m_CoreViewModel.RunTransitiveReduction);
 
         private void ResetProject() => m_CoreViewModel.ResetProject();
 

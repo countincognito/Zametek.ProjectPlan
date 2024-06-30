@@ -556,6 +556,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Inter-activity Phases.
+        /// </summary>
+        public static string Label_InterActivityPhases {
+            get {
+                return ResourceManager.GetString("Label_InterActivityPhases", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to IS.
         /// </summary>
         public static string Label_InterferingSlack {

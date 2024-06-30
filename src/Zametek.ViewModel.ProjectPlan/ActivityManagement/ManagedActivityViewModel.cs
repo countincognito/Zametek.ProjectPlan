@@ -43,6 +43,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IDateTimeCalculator dateTimeCalculator,
             VertexGraphCompiler<int, int, IDependentActivity<int, int>> vertexGraphCompiler,
             DateTimeOffset projectStart,
+            IEnumerable<int> targetWorkStreams,
             IEnumerable<TrackerModel>? trackers,
             DateTimeOffset? minimumEarliestStartDateTime,
             DateTimeOffset? maximumLatestFinishDateTime)
@@ -62,7 +63,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceSelector = new ResourceSelectorViewModel();
             m_ResourceSettings = m_CoreViewModel.ResourceSettings;
             RefreshResourceSelector();
-            m_TargetWorkStreams = new HashSet<int>();
+            m_TargetWorkStreams = new HashSet<int>(targetWorkStreams);
             WorkStreamSelector = new WorkStreamSelectorViewModel();
             m_WorkStreamSettings = m_CoreViewModel.WorkStreamSettings;
             RefreshWorkStreamSelector();
@@ -500,33 +501,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
-
-
-
-
-
-
-
-
-
         public HashSet<int> TargetWorkStreams => m_TargetWorkStreams;
-
-        //public string AllocatedToWorkStreamsString => throw new NotImplementedException();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         public HashSet<int> TargetResources => DependentActivity.TargetResources;
 
@@ -830,6 +805,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_isDirty = false;
                 UpdateActivityTargetResources();
+                UpdateActivityTargetWorkStreams();
                 m_CoreViewModel.IsProjectUpdated = true;
                 IsCompiled = false;
             }

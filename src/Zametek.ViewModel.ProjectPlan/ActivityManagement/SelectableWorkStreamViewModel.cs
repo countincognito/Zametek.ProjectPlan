@@ -19,12 +19,14 @@ namespace Zametek.ViewModel.ProjectPlan
         public SelectableWorkStreamViewModel(
             int id,
             string name,//!!,
+            bool isPhase,
             bool isSelected,
             WorkStreamSelectorViewModel workStreamSelectorViewModel)
         {
             ArgumentNullException.ThrowIfNull(workStreamSelectorViewModel);
             Id = id;
             m_Name = name;
+            m_IsPhase = isPhase;
             IsSelected = isSelected;
             m_WorkStreamSelectorViewModel = workStreamSelectorViewModel;
 
@@ -57,6 +59,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<string> m_DisplayName;
         public string DisplayName => m_DisplayName.Value;
+
+        private bool m_IsPhase;
+        public bool IsPhase
+        {
+            get => m_IsPhase;
+            set => this.RaiseAndSetIfChanged(ref m_IsPhase, value);
+        }
 
         private bool m_IsSelected;
         public bool IsSelected

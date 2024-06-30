@@ -10,14 +10,21 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
+        private readonly bool m_PhaseOnly;
 
         #endregion
 
         #region Ctors
 
         public WorkStreamSelectorViewModel()
+            : this(false)
+        {
+        }
+
+        public WorkStreamSelectorViewModel(bool phaseOnly)
         {
             m_Lock = new object();
+            m_PhaseOnly = phaseOnly;
             m_TargetWorkStreams = [];
             m_ReadOnlyTargetWorkStreams = new ReadOnlyObservableCollection<SelectableWorkStreamViewModel>(m_TargetWorkStreams);
         }
@@ -38,7 +45,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     return string.Join(
                         DependenciesStringValidationRule.Separator,
-                        TargetWorkStreams.Where(x => x.IsSelected).Select(x => x.DisplayName));
+                        TargetWorkStreams
+                            .Where(x => (!m_PhaseOnly && x.IsSelected)
+                                    || (m_PhaseOnly && x.IsSelected && x.IsPhase))
+                            .Select(x => x.DisplayName));
                 }
             }
         }
@@ -50,7 +60,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     return TargetWorkStreams
-                        .Where(x => x.IsSelected)
+                        .Where(x => (!m_PhaseOnly && x.IsSelected)
+                                || (m_PhaseOnly && x.IsSelected && x.IsPhase))
                         .Select(x => x.Id)
                         .ToList();
                 }
@@ -83,12 +94,13 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 m_TargetWorkStreams.Clear();
-                foreach (WorkStreamModel targetWorkStream in targetWorkStreams)
+                foreach (WorkStreamModel targetWorkStream in targetWorkStreams.Where(x => (!m_PhaseOnly) || (m_PhaseOnly && x.IsPhase)))
                 {
                     m_TargetWorkStreams.Add(
                         new SelectableWorkStreamViewModel(
                             targetWorkStream.Id,
                             targetWorkStream.Name,
+                            targetWorkStream.IsPhase,
                             selectedTargetWorkStreams.Contains(targetWorkStream.Id),
                             this));
                 }
