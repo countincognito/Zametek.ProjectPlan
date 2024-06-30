@@ -3,6 +3,7 @@ using ReactiveUI;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -90,28 +91,32 @@ namespace Zametek.ViewModel.ProjectPlan
                 AddTrackers(trackers);
             }
 
+            // We use Scheduler.CurrentThread here to ensure that wide sweeping changes,
+            // such as settings changes, are performed in the same thread from the CoreViewModel.
+            // That way they must complete before the CoreViewModel can proceed to compilation.
+
             m_ShowDates = this
                 .WhenAnyValue(x => x.m_CoreViewModel.ShowDates)
                 .ToProperty(this, x => x.ShowDates);
 
             m_ProjectStartSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.ProjectStart)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(x => ProjectStart = x);
 
             m_ResourceSettingsSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.ResourceSettings)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(x => ResourceSettings = x);
 
             m_WorkStreamSettingsSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.WorkStreamSettings)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(x => WorkStreamSettings = x);
 
             m_DateTimeCalculatorSub = this
                 .WhenAnyValue(x => x.m_DateTimeCalculator.Mode)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(x => UpdateEarliestStartAndLatestFinishDateTimes());
 
             m_CompilationSub = this

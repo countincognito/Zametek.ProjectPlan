@@ -13,6 +13,16 @@ using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
+
+
+    public enum ReadyToCompile
+    {
+        No,
+        Yes
+    }
+
+
+
     public class CoreViewModel
         : ViewModelBase, ICoreViewModel, IDisposable
     {
@@ -51,6 +61,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_Mapper = mapper;
 
+            m_IsReadyToCompile = ReadyToCompile.No;
             m_IsBusy = false;
             m_HasStaleOutputs = false;
             m_ProjectStart = new DateTimeOffset(DateTime.Today);
@@ -109,20 +120,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
 
             m_CompileOnSettingsUpdateSub = this
-                .WhenAnyValue(
-                    core => core.ProjectStart,
-                    core => core.ResourceSettings,
-                    core => core.ArrowGraphSettings,
-                    core => core.WorkStreamSettings,
-                    core => core.UseBusinessDays)
+                .WhenAnyValue(core => core.IsReadyToCompile)
+                //core => core.ProjectStart,
+                //core => core.ResourceSettings,
+                //core => core.ArrowGraphSettings,
+                //core => core.WorkStreamSettings,
+                //core => core.UseBusinessDays)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(_ =>
+                .Subscribe(isReady =>
                 {
-                    if (!IsBusy)
+                    if (isReady == ReadyToCompile.Yes
+                        && !IsBusy)
                     {
                         lock (m_Lock)
                         {
-                            if (!IsBusy)
+                            if (isReady == ReadyToCompile.Yes
+                                && !IsBusy)
                             {
                                 RunAutoCompile();
                             }
@@ -644,6 +657,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // We need to use an enum because raised changes on bools aren't always captured.
+        // https://github.com/reactiveui/ReactiveUI/issues/3846
+        private ReadyToCompile m_IsReadyToCompile;
+
+        // This should always be the last thing altered in order to trigger a compile.
+        public ReadyToCompile IsReadyToCompile
+        {
+            get => m_IsReadyToCompile;
+            private set
+            {
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_IsReadyToCompile, value);
+            }
+        }
+
         private bool m_IsProjectUpdated;
         public bool IsProjectUpdated
         {
@@ -680,6 +707,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
                     this.RaisePropertyChanged(nameof(ProjectStartDateTime));
                     this.RaisePropertyChanged(nameof(ProjectStartTimeOffset));
+                    IsReadyToCompile = ReadyToCompile.Yes;
                 }
             }
         }
@@ -737,6 +765,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                     IsProjectUpdated = true;
                     this.RaisePropertyChanged();
+                    IsReadyToCompile = ReadyToCompile.Yes;
                 }
             }
         }
@@ -776,6 +805,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_ArrowGraphSettings = value;
                     IsProjectUpdated = true;
                     this.RaisePropertyChanged();
+                    IsReadyToCompile = ReadyToCompile.Yes;
                 }
             }
         }
@@ -789,8 +819,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_ResourceSettings = value;
-                    IsProjectUpdated = true;
                     this.RaisePropertyChanged();
+                    IsProjectUpdated = true;
+                    IsReadyToCompile = ReadyToCompile.Yes;
                 }
             }
         }
@@ -806,6 +837,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_WorkStreamSettings = value;
                     IsProjectUpdated = true;
                     this.RaisePropertyChanged();
+                    IsReadyToCompile = ReadyToCompile.Yes;
                 }
             }
         }
@@ -1291,6 +1323,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
                     IsProjectUpdated = true;
                     HasStaleOutputs = false;
+                    IsReadyToCompile = ReadyToCompile.No;
                 }
             }
             finally
