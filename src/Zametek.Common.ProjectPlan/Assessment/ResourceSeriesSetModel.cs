@@ -3,12 +3,12 @@
     [Serializable]
     public record ResourceSeriesSetModel
     {
-        public List<ResourceScheduleModel> ResourceSchedules { get; init; } = new List<ResourceScheduleModel>();
+        public List<ResourceScheduleModel> ResourceSchedules { get; init; } = [];
 
-        public List<ResourceSeriesModel> Scheduled { get; init; } = new List<ResourceSeriesModel>();
+        public List<ResourceSeriesModel> Scheduled { get; init; } = [];
 
-        public List<ResourceSeriesModel> Unscheduled { get; init; } = new List<ResourceSeriesModel>();
+        public List<ResourceSeriesModel> Unscheduled { get; init; } = [];
 
-        public List<ResourceSeriesModel> Combined { get; init; } = new List<ResourceSeriesModel>();
+        public List<ResourceSeriesModel> Combined { get; init; } = [];
     }
 }

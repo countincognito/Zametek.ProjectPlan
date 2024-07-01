@@ -5,9 +5,9 @@
     {
         public ResourceModel Resource { get; init; } = new ResourceModel();
 
-        public List<ScheduledActivityModel> ScheduledActivities { get; init; } = new List<ScheduledActivityModel>();
+        public List<ScheduledActivityModel> ScheduledActivities { get; init; } = [];
 
-        public List<bool> ActivityAllocation { get; init; } = new List<bool>();
+        public List<bool> ActivityAllocation { get; init; } = [];
 
         public int FinishTime { get; init; }
     }
