@@ -108,6 +108,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_CompileOnSettingsUpdateSub = this
                 .WhenAnyValue(core => core.IsReadyToCompile)
+                //core => core.ProjectStart,
+                //core => core.ResourceSettings,
+                //core => core.ArrowGraphSettings,
+                //core => core.WorkStreamSettings,
+                //core => core.UseBusinessDays)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(isReady =>
                 {
@@ -178,12 +183,10 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static ResourceSeriesSetModel CalculateResourceSeriesSet(
-            IEnumerable<ActivityModel> activities,
             IEnumerable<ResourceScheduleModel> resourceSchedules,
             IEnumerable<ResourceModel> resources,
             double defaultUnitCost)
         {
-            ArgumentNullException.ThrowIfNull(activities);
             ArgumentNullException.ThrowIfNull(resourceSchedules);
             ArgumentNullException.ThrowIfNull(resources);
             var resourceSeriesSet = new ResourceSeriesSetModel();
@@ -191,57 +194,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (resourceSchedules.Any())
             {
-                // Find the range for each resource phase (phased work stream).
-                HashSet<int> resourcePhasesAllocated = resources.SelectMany(x => x.InterActivityPhases).Distinct().ToHashSet();
-
-                HashSet<int> workstreamsUsed = activities.SelectMany(x => x.TargetWorkStreams).Distinct().ToHashSet();
-
-                HashSet<int> resourcePhasesUsed = resourcePhasesAllocated.Intersect(workstreamsUsed).ToHashSet();
-
-                List<ActivityModel> orderedActivities = [.. activities.OrderBy(x => x.EarliestStartTime).ThenBy(x => x.LatestStartTime)];
-
-                var resourcePhaseStarts = new Dictionary<int, int>();
-                var resourcePhaseEnds = new Dictionary<int, int>();
-
-                foreach (ActivityModel activity in orderedActivities)
-                {
-                    foreach (int workStream in activity.TargetWorkStreams.Where(resourcePhasesUsed.Contains))
-                    {
-                        int earliestStartTime = activity.EarliestStartTime.GetValueOrDefault();
-                        int earliestEndTime = activity.EarliestFinishTime.GetValueOrDefault();
-
-                        // Gather the start times.
-                        if (resourcePhaseStarts.ContainsKey(workStream))
-                        {
-                            // We do nothing here, since the activities are ordered
-                            // then we won't be interested in any later start times.
-                        }
-                        else
-                        {
-                            resourcePhaseStarts.Add(workStream, earliestStartTime);
-                        }
-
-                        // Gather the end times.
-                        if (resourcePhaseEnds.ContainsKey(workStream))
-                        {
-                            int currentEndTime = resourcePhaseEnds[workStream];
-                            if (earliestEndTime > currentEndTime)
-                            {
-                                resourcePhaseEnds[workStream] = earliestEndTime;
-                            }
-                        }
-                        else
-                        {
-                            resourcePhaseEnds.Add(workStream, earliestEndTime);
-                        }
-                    }
-                }
-
-                // Check to make sure the key collections are the same.
-                Debug.Assert(resourcePhaseStarts.Keys.SequenceEqual(resourcePhaseEnds.Keys));
-
-                // Calculate the different resource series.
-
                 Dictionary<int, ColorFormatModel> colorFormatLookup = resources.ToDictionary(x => x.Id, x => x.ColorFormat);
                 int finishTime = resourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
                 int spareResourceCount = 1;
@@ -323,55 +275,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     string title = stringBuilder.ToString();
-
-                    // Calculate the activity allocation.
-
-                    List<bool> activityAllocation = new(Enumerable.Repeat(false, finishTime));
-
-                    // If no phases are used then assume the default (i.e. all days allocated).
-                    if (resource.InterActivityPhases.Count == 0)
-                    {
-                        for (int i = 0; i < activityAllocation.Count; i++)
-                        {
-                            activityAllocation[i] = true;
-                        }
-                    }
-                    // Otherwise fill in the allocations according to the start and end values
-                    // for the phases used.
-                    else
-                    {
-                        int start = 0;
-                        int end = 0;
-
-                        foreach (int phase in resource.InterActivityPhases)
-                        {
-                            if (resourcePhaseStarts.ContainsKey(phase)
-                                && resourcePhaseEnds.ContainsKey(phase))
-                            {
-                                start = resourcePhaseStarts[phase];
-                                end = resourcePhaseEnds[phase];
-                            }
-                        }
-
-                        for (int i = start; i < end; i++)
-                        {
-                            activityAllocation[i] = true;
-                        }
-                    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                     var series = new ResourceSeriesModel
                     {
                         Title = title,
@@ -379,7 +282,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         ResourceSchedule = new ResourceScheduleModel
                         {
                             Resource = resource,
-                            ActivityAllocation = activityAllocation,
+                            ActivityAllocation = new List<bool>(Enumerable.Repeat(true, finishTime)),
                             FinishTime = finishTime
                         },
                         ColorFormat = resource.ColorFormat != null ? resource.ColorFormat.CloneObject() : ColorHelper.RandomColor(),
@@ -390,19 +293,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     unscheduledSeriesSet.Add(series);
                     unscheduledResourceSeriesLookup.Add(resourceId, series);
                 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
                 // Combined resource series.
                 // The intersection of the scheduled and unscheduled series.
@@ -466,10 +356,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IList<ResourceScheduleModel> resourceScheduleModels =
                         m_Mapper.Map<IEnumerable<IResourceSchedule<int, int>>, IList<ResourceScheduleModel>>(GraphCompilation.ResourceSchedules);
 
-                    IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(Activities);
-
                     resourceSeriesSet = CalculateResourceSeriesSet(
-                        activityModels,
                         resourceScheduleModels,
                         resourceModels,
                         ResourceSettings.DefaultUnitCost);
