@@ -22,9 +22,18 @@ namespace Zametek.View.ProjectPlan
         private void MainView_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
             var vm = DataContext as IMainViewModel;
-            m_UpdateCursorSub = vm.WhenAnyValue(x => x.IsBusy)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(UpdateCursor);
+            m_UpdateCursorSub = vm.WhenAnyValue(
+                main => main.IsBusy,
+                main => main.IsOpening,
+                main => main.IsSaving,
+                main => main.IsSavingAs,
+                main => main.IsImporting,
+                main => main.IsExporting,
+                main => main.IsClosing,
+                (isBusy, isOpening, isSaving, isSavingAs, isImporting, isExporting, isClosing) =>
+                    isBusy || isOpening || isSaving || isSavingAs || isImporting || isExporting || isClosing)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(UpdateCursor);
         }
 
         private void MainView_Unloaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

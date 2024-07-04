@@ -8,6 +8,18 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsBusy { get; }
 
+        bool IsOpening { get; }
+
+        bool IsSaving { get; }
+
+        bool IsSavingAs { get; }
+
+        bool IsImporting { get; }
+
+        bool IsExporting { get; }
+
+        bool IsClosing { get; }
+
         bool IsProjectUpdated { get; }
 
         DateTimeOffset ProjectStart { get; set; }

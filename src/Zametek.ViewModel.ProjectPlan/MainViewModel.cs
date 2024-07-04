@@ -156,16 +156,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, main => main.ProjectTitle);
 
             m_IsBusy = this
-                .WhenAnyValue(
-                    main => main.IsOpening,
-                    main => main.IsSaving,
-                    main => main.IsSavingAs,
-                    main => main.IsImporting,
-                    main => main.IsExporting,
-                    main => main.IsClosing,
-                    main => main.m_CoreViewModel.IsBusy,
-                    (isOpening, isSaving, isSavingAs, isImporting, isExporting, isClosing, isBusy) =>
-                        isOpening || isSaving || isSavingAs || isImporting || isExporting || isClosing || isBusy)
+                .WhenAnyValue(main => main.m_CoreViewModel.IsBusy)
                 .ToProperty(this, x => x.IsBusy);
 
             m_IsProjectUpdated = this
@@ -226,24 +217,6 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_Layout;
             set => this.RaiseAndSetIfChanged(ref m_Layout, value);
         }
-
-        private readonly ObservableAsPropertyHelper<bool> m_IsOpening;
-        public bool IsOpening => m_IsOpening.Value;
-
-        private readonly ObservableAsPropertyHelper<bool> m_IsSaving;
-        public bool IsSaving => m_IsSaving.Value;
-
-        private readonly ObservableAsPropertyHelper<bool> m_IsSavingAs;
-        public bool IsSavingAs => m_IsSavingAs.Value;
-
-        private readonly ObservableAsPropertyHelper<bool> m_IsImporting;
-        public bool IsImporting => m_IsImporting.Value;
-
-        private readonly ObservableAsPropertyHelper<bool> m_IsExporting;
-        public bool IsExporting => m_IsExporting.Value;
-
-        private readonly ObservableAsPropertyHelper<bool> m_IsClosing;
-        public bool IsClosing => m_IsClosing.Value;
 
         #endregion
 
@@ -409,6 +382,24 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<bool> m_IsBusy;
         public bool IsBusy => m_IsBusy.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_IsOpening;
+        public bool IsOpening => m_IsOpening.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_IsSaving;
+        public bool IsSaving => m_IsSaving.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_IsSavingAs;
+        public bool IsSavingAs => m_IsSavingAs.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_IsImporting;
+        public bool IsImporting => m_IsImporting.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_IsExporting;
+        public bool IsExporting => m_IsExporting.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_IsClosing;
+        public bool IsClosing => m_IsClosing.Value;
 
         private readonly ObservableAsPropertyHelper<bool> m_IsProjectUpdated;
         public bool IsProjectUpdated => m_IsProjectUpdated.Value;
