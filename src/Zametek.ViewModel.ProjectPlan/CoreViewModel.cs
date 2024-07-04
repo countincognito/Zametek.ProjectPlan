@@ -958,11 +958,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Work Stream settings.
                     WorkStreamSettingsModel workStreamSettings = m_SettingService.DefaultWorkStreamSettings.CloneObject();
 
+                    if (projectImportModel.WorkStreams.Count != 0)
+                    {
+                        workStreamSettings.WorkStreams.Clear();
+
+                        foreach (WorkStreamModel workStream in projectImportModel.WorkStreams)
+                        {
+                            workStreamSettings.WorkStreams.Add(workStream);
+                        }
+                    }
+
                     WorkStreamSettings = workStreamSettings;
-
-
-
-
 
                     // Resources.
                     ResourceSettingsModel resourceSettings = m_SettingService.DefaultResourceSettings.CloneObject();
@@ -987,7 +993,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         arrowGraphSettings.ActivitySeverities.Clear();
 
-                        foreach (ActivitySeverityModel? activitySeverity in projectImportModel.ActivitySeverities)
+                        foreach (ActivitySeverityModel activitySeverity in projectImportModel.ActivitySeverities)
                         {
                             arrowGraphSettings.ActivitySeverities.Add(activitySeverity);
                         }

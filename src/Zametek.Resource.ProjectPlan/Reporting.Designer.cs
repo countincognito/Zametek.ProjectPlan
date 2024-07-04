@@ -185,5 +185,14 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Reporting_WorksheetTrackerPercentageComplete", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Work Streams.
+        /// </summary>
+        public static string Reporting_WorksheetWorkStreams {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetWorkStreams", resourceCulture);
+            }
+        }
     }
 }

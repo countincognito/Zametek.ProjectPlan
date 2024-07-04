@@ -5,12 +5,14 @@
     {
         public DateTimeOffset ProjectStart { get; init; }
 
-        public List<DependentActivityModel> DependentActivities { get; init; } = new List<DependentActivityModel>();
+        public List<DependentActivityModel> DependentActivities { get; init; } = [];
 
-        public List<ResourceModel> Resources { get; init; } = new List<ResourceModel>();
+        public List<ResourceModel> Resources { get; init; } = [];
 
         public double DefaultUnitCost { get; init; }
 
-        public List<ActivitySeverityModel> ActivitySeverities { get; init; } = new List<ActivitySeverityModel>();
+        public List<ActivitySeverityModel> ActivitySeverities { get; init; } = [];
+
+        public List<WorkStreamModel> WorkStreams { get; init; } = [];
     }
 }

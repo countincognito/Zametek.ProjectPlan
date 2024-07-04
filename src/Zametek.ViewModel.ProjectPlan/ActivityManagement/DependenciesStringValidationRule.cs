@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {

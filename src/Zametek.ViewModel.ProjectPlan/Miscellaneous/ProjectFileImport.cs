@@ -15,16 +15,17 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private static readonly IList<string> s_GeneralColumnTitles = new List<string>
-        {
+        private static readonly IList<string> s_GeneralColumnTitles =
+        [
             nameof(ProjectImportModel.ProjectStart),
             nameof(ProjectImportModel.DefaultUnitCost)
-        };
+        ];
 
-        private static readonly IList<string> s_ActivityColumnTitles = new List<string>
-        {
+        private static readonly IList<string> s_ActivityColumnTitles =
+        [
             nameof(ActivityModel.Id),
             nameof(ActivityModel.Name),
+            nameof(ActivityModel.TargetWorkStreams),
             nameof(ActivityModel.TargetResources),
             nameof(ActivityModel.TargetResourceOperator),
             nameof(ActivityModel.AllocatedToResources),
@@ -36,33 +37,42 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivityModel.MaximumLatestFinishTime),
             nameof(ActivityModel.MaximumLatestFinishDateTime),
             nameof(ActivityModel.Notes)
-        };
+        ];
 
-        private static readonly IList<string> s_DependentActivityColumnTitles = new List<string>
-        {
+        private static readonly IList<string> s_DependentActivityColumnTitles =
+        [
             nameof(DependentActivityModel.Dependencies)
-        };
+        ];
 
-        private static readonly IList<string> s_ResourceColumnTitles = new List<string>
-        {
+        private static readonly IList<string> s_ResourceColumnTitles =
+        [
             nameof(ResourceModel.Id),
             nameof(ResourceModel.Name),
             nameof(ResourceModel.IsExplicitTarget),
             nameof(ResourceModel.IsInactive),
             nameof(ResourceModel.InterActivityAllocationType),
+            nameof(ResourceModel.InterActivityPhases),
             nameof(ResourceModel.UnitCost),
             nameof(ResourceModel.DisplayOrder),
             nameof(ResourceModel.AllocationOrder),
             nameof(ResourceModel.ColorFormat)
-        };
+        ];
 
-        private static readonly IList<string> s_ActivitySeverityColumnTitles = new List<string>
-        {
+        private static readonly IList<string> s_ActivitySeverityColumnTitles =
+        [
             nameof(ActivitySeverityModel.SlackLimit),
             nameof(ActivitySeverityModel.CriticalityWeight),
             nameof(ActivitySeverityModel.FibonacciWeight),
             nameof(ActivitySeverityModel.ColorFormat)
-        };
+        ];
+
+        private static readonly IList<string> s_WorkStreamColumnTitles =
+        [
+            nameof(WorkStreamModel.Id),
+            nameof(WorkStreamModel.Name),
+            nameof(WorkStreamModel.IsPhase),
+            nameof(WorkStreamModel.ColorFormat)
+        ];
 
         private static readonly int[] s_FilterTaskIds = [0];
 
@@ -297,6 +307,8 @@ namespace Zametek.ViewModel.ProjectPlan
             IDictionary<int, DependentActivityModel> dependentActivities = ImportWorksheetActivities(workbook);
             IDictionary<int, ResourceModel> resources = ImportWorksheetResources(workbook);
             IList<ActivitySeverityModel> activitySeverities = ImportWorksheetActivitySeverities(workbook);
+            IDictionary<int, WorkStreamModel> workStreams = ImportWorksheetWorkStreams(workbook);
+
             dependentActivities = ImportWorksheetTrackers(workbook, dependentActivities);
 
             return new ProjectImportModel
@@ -306,6 +318,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Resources = [.. resources.Values],
                 DefaultUnitCost = defaultUnitCost,
                 ActivitySeverities = [.. activitySeverities],
+                WorkStreams = [.. workStreams.Values]
             };
         }
 
@@ -422,6 +435,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int? id = 0;
                     string name = string.Empty;
+                    List<int> targetWorkStreams = [];
                     List<int> targetResources = [];
                     var targetResourceOperator = LogicalOperator.AND;
                     bool hasNoCost = false;
@@ -447,6 +461,18 @@ namespace Zametek.ViewModel.ProjectPlan
                                 })
                             .Case(nameof(ActivityModel.Name),
                                 colName => name = row[colName]?.ToString() ?? string.Empty)
+                            .Case(nameof(ActivityModel.TargetWorkStreams),
+                                colName =>
+                                {
+                                    string targetWorkStreamsString = row[colName]?.ToString() ?? string.Empty;
+                                    foreach (string targetWorkStream in targetWorkStreamsString.Split(DependenciesStringValidationRule.Separator))
+                                    {
+                                        if (int.TryParse(targetWorkStream, out int output))
+                                        {
+                                            targetWorkStreams.Add(output);
+                                        }
+                                    }
+                                })
                             .Case(nameof(ActivityModel.TargetResources),
                                 colName =>
                                 {
@@ -546,6 +572,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             {
                                 Id = idVal,
                                 Name = name,
+                                TargetWorkStreams = targetWorkStreams,
                                 TargetResources = targetResources,
                                 TargetResourceOperator = targetResourceOperator,
                                 HasNoCost = hasNoCost,
@@ -591,6 +618,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     string name = string.Empty;
                     bool isExplicitTarget = false;
                     bool isInactive = false;
+                    List<int> interActivityPhases = [];
                     InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
                     double unitCost = 0.0;
                     int displayOrder = 0;
@@ -624,6 +652,18 @@ namespace Zametek.ViewModel.ProjectPlan
                                     if (bool.TryParse(row[colName]?.ToString(), out bool output))
                                     {
                                         isInactive = output;
+                                    }
+                                })
+                            .Case(nameof(ResourceModel.InterActivityPhases),
+                                colName =>
+                                {
+                                    string interActivityPhasesString = row[colName]?.ToString() ?? string.Empty;
+                                    foreach (string interActivityPhase in interActivityPhasesString.Split(DependenciesStringValidationRule.Separator))
+                                    {
+                                        if (int.TryParse(interActivityPhase, out int output))
+                                        {
+                                            interActivityPhases.Add(output);
+                                        }
                                     }
                                 })
                             .Case(nameof(ResourceModel.InterActivityAllocationType),
@@ -674,6 +714,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             IsExplicitTarget = isExplicitTarget,
                             IsInactive = isInactive,
                             InterActivityAllocationType = interActivityAllocationType,
+                            InterActivityPhases = interActivityPhases,
                             UnitCost = unitCost,
                             DisplayOrder = displayOrder,
                             AllocationOrder = allocationOrder,
@@ -760,6 +801,81 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
             return activitySeverities;
+        }
+
+        private static IDictionary<int, WorkStreamModel> ImportWorksheetWorkStreams(IWorkbook? workbook)
+        {
+            Dictionary<int, WorkStreamModel> workStreams = [];
+            ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetWorkStreams);
+            if (sheet is not null)
+            {
+                DataTable dtTable = SheetToDataTable(sheet);
+                DataColumnCollection columns = dtTable.Columns;
+
+                // Check columns.
+                var columnNames = new List<string>();
+
+                foreach (string title in s_WorkStreamColumnTitles)
+                {
+                    if (columns.Contains(title))
+                    {
+                        columnNames.Add(title);
+                    }
+                }
+
+                foreach (DataRow row in dtTable.Rows)
+                {
+                    int? id = 0;
+                    string name = string.Empty;
+                    bool isPhase = false;
+                    ColorFormatModel colorFormat = ColorHelper.RandomColor();
+
+                    foreach (string columnName in columnNames)
+                    {
+                        columnName.ValueSwitchOn()
+                            .Case(nameof(WorkStreamModel.Id),
+                                colName =>
+                                {
+                                    if (int.TryParse(row[colName]?.ToString(), out int output))
+                                    {
+                                        id = output;
+                                    }
+                                })
+                            .Case(nameof(WorkStreamModel.Name),
+                                colName => name = row[colName]?.ToString() ?? string.Empty)
+                            .Case(nameof(WorkStreamModel.IsPhase),
+                                colName =>
+                                {
+                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
+                                    {
+                                        isPhase = output;
+                                    }
+                                })
+                            .Case(nameof(WorkStreamModel.ColorFormat),
+                                colName =>
+                                {
+                                    string? hexCode = row[colName]?.ToString();
+                                    if (!string.IsNullOrWhiteSpace(hexCode))
+                                    {
+                                        colorFormat = ColorHelper.HtmlHexCodeToColorFormat(hexCode);
+                                    }
+                                });
+                    }
+
+                    if (id is not null)
+                    {
+                        int idVal = id.GetValueOrDefault();
+                        workStreams.TryAdd(idVal, new WorkStreamModel
+                        {
+                            Id = idVal,
+                            Name = name,
+                            IsPhase = isPhase,
+                            ColorFormat = colorFormat
+                        });
+                    }
+                }
+            }
+            return workStreams;
         }
 
         private static IDictionary<int, DependentActivityModel> ImportWorksheetTrackers(

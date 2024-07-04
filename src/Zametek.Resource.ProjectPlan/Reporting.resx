@@ -159,4 +159,7 @@
   <data name="Reporting_WorksheetTrackerPercentageComplete" xml:space="preserve">
     <value>Tracker (Percentage Complete)</value>
   </data>
+  <data name="Reporting_WorksheetWorkStreams" xml:space="preserve">
+    <value>Work Streams</value>
+  </data>
 </root>

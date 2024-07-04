@@ -1,5 +1,4 @@
-﻿using com.sun.tools.javac.jvm;
-using NPOI.SS.UserModel;
+﻿using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.Collections;
 using System.Diagnostics;
@@ -15,16 +14,17 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private static readonly IList<string> s_GeneralColumnTitles = new List<string>
-        {
+        private static readonly IList<string> s_GeneralColumnTitles =
+        [
             nameof(ProjectPlanModel.ProjectStart),
             nameof(ProjectPlanModel.ResourceSettings.DefaultUnitCost)
-        };
+        ];
 
-        private static readonly IList<string> s_ActivityColumnTitles = new List<string>
-        {
+        private static readonly IList<string> s_ActivityColumnTitles =
+        [
             nameof(ActivityModel.Id),
             nameof(ActivityModel.Name),
+            nameof(ActivityModel.TargetWorkStreams),
             nameof(ActivityModel.TargetResources),
             nameof(ActivityModel.TargetResourceOperator),
             nameof(ActivityModel.AllocatedToResources),
@@ -42,43 +42,52 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivityModel.MaximumLatestFinishTime),
             nameof(ActivityModel.MaximumLatestFinishDateTime),
             nameof(ActivityModel.Notes)
-        };
+        ];
 
-        private static readonly IList<string> s_DependentActivityColumnTitles = new List<string>
-        {
+        private static readonly IList<string> s_DependentActivityColumnTitles =
+        [
             nameof(DependentActivityModel.Dependencies),
             nameof(DependentActivityModel.ResourceDependencies)
-        };
+        ];
 
-        private static readonly IList<string> s_ResourceColumnTitles = new List<string>
-        {
+        private static readonly IList<string> s_ResourceColumnTitles =
+        [
             nameof(ResourceModel.Id),
             nameof(ResourceModel.Name),
             nameof(ResourceModel.IsExplicitTarget),
             nameof(ResourceModel.IsInactive),
             nameof(ResourceModel.InterActivityAllocationType),
+            nameof(ResourceModel.InterActivityPhases),
             nameof(ResourceModel.UnitCost),
             nameof(ResourceModel.DisplayOrder),
             nameof(ResourceModel.AllocationOrder),
             nameof(ResourceModel.ColorFormat)
-        };
+        ];
 
-        private static readonly IList<string> s_ActivitySeverityColumnTitles = new List<string>
-        {
+        private static readonly IList<string> s_ActivitySeverityColumnTitles =
+        [
             nameof(ActivitySeverityModel.SlackLimit),
             nameof(ActivitySeverityModel.CriticalityWeight),
             nameof(ActivitySeverityModel.FibonacciWeight),
             nameof(ActivitySeverityModel.ColorFormat)
-        };
+        ];
 
-        private static readonly IList<string> s_TrackingPointColumnTitles = new List<string>
-        {
+        private static readonly IList<string> s_WorkStreamColumnTitles =
+        [
+            nameof(WorkStreamModel.Id),
+            nameof(WorkStreamModel.Name),
+            nameof(WorkStreamModel.IsPhase),
+            nameof(WorkStreamModel.ColorFormat)
+        ];
+
+        private static readonly IList<string> s_TrackingPointColumnTitles =
+        [
             nameof(TrackingPointModel.Time),
             nameof(TrackingPointModel.ActivityId),
             nameof(TrackingPointModel.ActivityName),
             nameof(TrackingPointModel.Value),
             nameof(TrackingPointModel.ValuePercentage)
-        };
+        ];
 
         private readonly IDateTimeCalculator m_DateTimeCalculator;
 
@@ -188,10 +197,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             typeSwitch
-                .Case<string>(x => cell.SetCellValue(x))
+                .Case<string>(cell.SetCellValue)
                 .Case<int>(x => cell.SetCellValue(x))
-                .Case<double>(x => cell.SetCellValue(x))
-                .Case<bool>(x => cell.SetCellValue(x))
+                .Case<double>(cell.SetCellValue)
+                .Case<bool>(cell.SetCellValue)
                 .Case<ColorFormatModel>(x =>
                 {
                     cell.SetCellValue(ColorHelper.ColorFormatToHtmlHexCode(x));
@@ -744,6 +753,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectPlan.ArrowGraphSettings.ActivitySeverities,
                 s_ActivitySeverityColumnTitles,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetActivitySeverities,
+                workbook,
+                titleStyle);
+
+            WriteItemsToWorkbook(
+                projectPlan.WorkStreamSettings.WorkStreams,
+                s_WorkStreamColumnTitles,
+                Resource.ProjectPlan.Reporting.Reporting_WorksheetWorkStreams,
                 workbook,
                 titleStyle);
 
