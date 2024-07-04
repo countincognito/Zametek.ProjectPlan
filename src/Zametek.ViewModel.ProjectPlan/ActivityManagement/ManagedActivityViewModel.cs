@@ -21,8 +21,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private DateTimeOffset? m_MinimumEarliestStartDateTime;
         private DateTimeOffset? m_MaximumLatestFinishDateTime;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
-        private readonly HashSet<int> m_TargetWorkStreams;
-        private readonly VertexGraphCompiler<int, int, IDependentActivity<int, int>> m_VertexGraphCompiler;
+        private readonly VertexGraphCompiler<int, int, int, IDependentActivity<int, int, int>> m_VertexGraphCompiler;
 
         private readonly IDisposable? m_ProjectStartSub;
         private readonly IDisposable? m_ResourceSettingsSub;
@@ -39,11 +38,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ManagedActivityViewModel(
             ICoreViewModel coreViewModel,
-            IDependentActivity<int, int> dependentActivity,
+            IDependentActivity<int, int, int> dependentActivity,
             IDateTimeCalculator dateTimeCalculator,
-            VertexGraphCompiler<int, int, IDependentActivity<int, int>> vertexGraphCompiler,
+            VertexGraphCompiler<int, int, int, IDependentActivity<int, int, int>> vertexGraphCompiler,
             DateTimeOffset projectStart,
-            IEnumerable<int> targetWorkStreams,
             IEnumerable<TrackerModel>? trackers,
             DateTimeOffset? minimumEarliestStartDateTime,
             DateTimeOffset? maximumLatestFinishDateTime)
@@ -63,7 +61,6 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceSelector = new ResourceSelectorViewModel();
             m_ResourceSettings = m_CoreViewModel.ResourceSettings;
             RefreshResourceSelector();
-            m_TargetWorkStreams = new HashSet<int>(targetWorkStreams);
             WorkStreamSelector = new WorkStreamSelectorViewModel();
             m_WorkStreamSettings = m_CoreViewModel.WorkStreamSettings;
             RefreshWorkStreamSelector();
@@ -154,7 +151,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public IDependentActivity<int, int> DependentActivity { get; }
+        public IDependentActivity<int, int, int> DependentActivity { get; }
 
         public ResourceSelectorViewModel ResourceSelector { get; }
 
@@ -308,15 +305,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
-
-
-
-
-
-
-
-
         private void UpdateActivityTargetResources()
         {
             DependentActivity.TargetResources.Clear();
@@ -342,8 +330,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void UpdateActivityTargetWorkStreams()
         {
-            m_TargetWorkStreams.Clear();
-            m_TargetWorkStreams.UnionWith(WorkStreamSelector.SelectedWorkStreamIds);
+            DependentActivity.TargetWorkStreams.Clear();
+            DependentActivity.TargetWorkStreams.UnionWith(WorkStreamSelector.SelectedWorkStreamIds);
             this.RaisePropertyChanged(nameof(TargetWorkStreams));
             this.RaisePropertyChanged(nameof(WorkStreamSelector));
         }
@@ -357,7 +345,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void RefreshWorkStreamSelector()
         {
-            var selectedTargetWorkStreams = new HashSet<int>(m_TargetWorkStreams);
+            var selectedTargetWorkStreams = new HashSet<int>(DependentActivity.TargetWorkStreams);
             IEnumerable<WorkStreamModel> targetWorkStreams = WorkStreamSettings.WorkStreams.Select(x => x.CloneObject());
             WorkStreamSelector.SetTargetWorkStreams(targetWorkStreams, selectedTargetWorkStreams);
         }
@@ -501,7 +489,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public HashSet<int> TargetWorkStreams => m_TargetWorkStreams;
+        public HashSet<int> TargetWorkStreams => DependentActivity.TargetWorkStreams;
 
         public HashSet<int> TargetResources => DependentActivity.TargetResources;
 

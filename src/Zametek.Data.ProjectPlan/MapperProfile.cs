@@ -141,6 +141,8 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<ResourceSettingsModel, v0_3_2.ResourceSettingsModel>().ReverseMap();
             CreateMap<v0_3_1.ResourceSettingsModel, v0_3_2.ResourceSettingsModel>().ReverseMap();
 
+            CreateMap<WorkStreamModel, v0_3_2.WorkStreamModel>().ReverseMap();
+
             CreateMap<WorkStreamSettingsModel, v0_3_2.WorkStreamSettingsModel>().ReverseMap();
             CreateMap<WorkStreamSettingsModel, v0_3_2.WorkStreamSettingsModel>().ReverseMap();
 

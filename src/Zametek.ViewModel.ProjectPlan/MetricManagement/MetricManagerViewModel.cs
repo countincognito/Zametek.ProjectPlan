@@ -315,14 +315,14 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private void BuildMetrics(IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation)
+        private void BuildMetrics(IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation)
         {
             ArgumentNullException.ThrowIfNull(graphCompilation);
             lock (m_Lock)
             {
                 Metrics = new MetricsModel();
-                IEnumerable<IDependentActivity<int, int>> dependentActivities =
-                    graphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int>)x.CloneObject());
+                IEnumerable<IDependentActivity<int, int, int>> dependentActivities =
+                    graphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int, int>)x.CloneObject());
 
                 if (dependentActivities.Any())
                 {
@@ -332,8 +332,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     IEnumerable<ActivityModel> activities =
-                        m_Mapper.Map<IEnumerable<IActivity<int, int>>, IList<ActivityModel>>(
-                            dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int, int>)x));
+                        m_Mapper.Map<IEnumerable<IActivity<int, int, int>>, IList<ActivityModel>>(
+                            dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int, int, int>)x));
 
                     IEnumerable<ActivitySeverityModel> activitySeverities = m_CoreViewModel.ArrowGraphSettings.ActivitySeverities;
 

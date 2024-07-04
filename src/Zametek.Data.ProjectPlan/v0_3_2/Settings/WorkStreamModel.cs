@@ -1,7 +1,7 @@
 ﻿namespace Zametek.Data.ProjectPlan.v0_3_2
 {
     [Serializable]
-    public record ActivitySeverityModel
+    public record WorkStreamModel
     {
         public int Id { get; init; }
 

@@ -152,7 +152,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task<PlotModel> BuildGanttChartPlotModelAsync(
             IDateTimeCalculator dateTimeCalculator,
-            IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation,
+            IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
             ResourceSeriesSetModel resourceSeriesSet,
             ArrowGraphSettingsModel arrowGraphSettings,
             bool showDates,
@@ -187,7 +187,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static PlotModel BuildGanttChartPlotModel(
             IDateTimeCalculator dateTimeCalculator,
-            IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation,
+            IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
             ResourceSeriesSetModel resourceSeriesSet,
             ArrowGraphSettingsModel arrowGraphSettings,
             bool showDates,
@@ -262,7 +262,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach ((string resourceName, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
                     {
                         IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
-                        IDictionary<int, IDependentActivity<int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
+                        IDictionary<int, IDependentActivity<int, int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
                         int resourceStartTime = orderedScheduledActivities.LastOrDefault()?.StartTime ?? 0;
                         int resourceFinishTime = orderedScheduledActivities.FirstOrDefault()?.FinishTime ?? 0;
@@ -279,7 +279,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         foreach (ScheduledActivityModel scheduledActivity in orderedScheduledActivities)
                         {
-                            if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity<int, int>? activity))
+                            if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity<int, int, int>? activity))
                             {
                                 if (activity.EarliestStartTime.HasValue
                                     && activity.EarliestFinishTime.HasValue
@@ -337,12 +337,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     // Add all the activities (in reverse display order).
 
-                    IOrderedEnumerable<IDependentActivity<int, int>> orderedActivities = graphCompilation
+                    IOrderedEnumerable<IDependentActivity<int, int, int>> orderedActivities = graphCompilation
                         .DependentActivities
                         .OrderByDescending(x => x.EarliestStartTime)
                         .ThenByDescending(x => x.TotalSlack);
 
-                    foreach (IDependentActivity<int, int> activity in orderedActivities)
+                    foreach (IDependentActivity<int, int, int> activity in orderedActivities)
                     {
                         if (activity.EarliestStartTime.HasValue
                             && activity.EarliestFinishTime.HasValue

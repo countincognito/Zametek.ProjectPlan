@@ -1,6 +1,4 @@
-﻿using Zametek.Common.ProjectPlan;
-
-namespace Zametek.Data.ProjectPlan.v0_3_2
+﻿namespace Zametek.Data.ProjectPlan.v0_3_2
 {
     [Serializable]
     public record WorkStreamSettingsModel

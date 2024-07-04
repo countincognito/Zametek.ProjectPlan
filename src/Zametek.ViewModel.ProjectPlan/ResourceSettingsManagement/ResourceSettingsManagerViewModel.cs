@@ -3,6 +3,7 @@ using Avalonia.Data;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -86,6 +87,21 @@ namespace Zametek.ViewModel.ProjectPlan
                         UpdateResourceSettingsToCore();
                     }
                 });
+
+
+
+
+            //var m_UpdateResourceSettingsSub1 = this
+            //    .WhenAnyValue(rm => rm.m_CoreViewModel.WorkStreamSettings)
+            //    .ObserveOn(Scheduler.CurrentThread)
+            //    .Subscribe(areUpdated =>
+            //    {
+
+            //        UpdateResourceSettingsToCore();
+
+            //    });
+
+
 
             ProcessSettings(m_SettingService.DefaultResourceSettings);
 
@@ -193,7 +209,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private void UpdateResourceSettingsToCore()
+        public void UpdateResourceSettingsToCore()
         {
             lock (m_Lock)
             {

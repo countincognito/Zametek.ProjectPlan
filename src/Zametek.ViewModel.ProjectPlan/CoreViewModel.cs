@@ -2,8 +2,10 @@
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
 using Zametek.Common.ProjectPlan;
@@ -20,7 +22,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly object m_Lock;
 
-        private readonly VertexGraphCompiler<int, int, IDependentActivity<int, int>> m_VertexGraphCompiler;
+        private readonly VertexGraphCompiler<int, int, int, IDependentActivity<int, int, int>> m_VertexGraphCompiler;
 
         private readonly ISettingService m_SettingService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
@@ -46,7 +48,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(mapper);
             m_Lock = new object();
-            m_VertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
+            m_VertexGraphCompiler = new VertexGraphCompiler<int, int, int, IDependentActivity<int, int, int>>();
             m_SettingService = settingService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_Mapper = mapper;
@@ -61,9 +63,10 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
-            m_GraphCompilation = new GraphCompilation<int, int, DependentActivity<int, int>>(
-                Enumerable.Empty<DependentActivity<int, int>>(),
-                Enumerable.Empty<IResourceSchedule<int, int>>());
+            m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity<int, int, int>>(
+                Enumerable.Empty<DependentActivity<int, int, int>>(),
+                Enumerable.Empty<IResourceSchedule<int, int, int>>(),
+                Enumerable.Empty<IWorkStream<int>>());
             m_ArrowGraph = new ArrowGraphModel();
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
             m_TrackingSeriesSet = new TrackingSeriesSetModel();
@@ -113,7 +116,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 //core => core.ArrowGraphSettings,
                 //core => core.WorkStreamSettings,
                 //core => core.UseBusinessDays)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                //.ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(isReady =>
                 {
                     if (isReady == ReadyToCompile.Yes
@@ -160,13 +164,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!HasCompilationErrors)
                 {
-                    IEnumerable<IDependentActivity<int, int>> dependentActivities =
-                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int>)x.CloneObject());
+                    IEnumerable<IDependentActivity<int, int, int>> dependentActivities =
+                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int, int>)x.CloneObject());
 
                     if (dependentActivities.Any())
                     {
-                        var arrowGraphCompiler = new ArrowGraphCompiler<int, int, IDependentActivity<int, int>>();
-                        foreach (IDependentActivity<int, int> dependentActivity in dependentActivities)
+                        var arrowGraphCompiler = new ArrowGraphCompiler<int, int, int, IDependentActivity<int, int, int>>();
+                        foreach (IDependentActivity<int, int, int> dependentActivity in dependentActivities)
                         {
                             dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
                             dependentActivity.ResourceDependencies.Clear();
@@ -174,9 +178,9 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
 
                         arrowGraphCompiler.Compile();
-                        Graph<int, IDependentActivity<int, int>, IEvent<int>>? arrowGraph =
+                        Graph<int, IDependentActivity<int, int, int>, IEvent<int>>? arrowGraph =
                             arrowGraphCompiler.ToGraph() ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotBuildArrowGraph);
-                        ArrowGraph = m_Mapper.Map<Graph<int, IDependentActivity<int, int>, IEvent<int>>, ArrowGraphModel>(arrowGraph);
+                        ArrowGraph = m_Mapper.Map<Graph<int, IDependentActivity<int, int, int>, IEvent<int>>, ArrowGraphModel>(arrowGraph);
                     }
                 }
             }
@@ -197,6 +201,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Dictionary<int, ColorFormatModel> colorFormatLookup = resources.ToDictionary(x => x.Id, x => x.ColorFormat);
                 int finishTime = resourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
                 int spareResourceCount = 1;
+                //var resourceScheduleLookup = resourceSchedules.ToDictionary(x => x.Resource.Id);
 
                 // Scheduled resource series.
                 // These are the series that apply to scheduled activities (whether allocated to named or unnamed resources).
@@ -204,17 +209,72 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (ResourceScheduleModel resourceSchedule in resourceSchedules)
                 {
-                    var stringBuilder = new StringBuilder();
-                    InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
-                    ColorFormatModel color = ColorHelper.RandomColor();
-                    double unitCost = defaultUnitCost;
-                    int displayOrder = 0;
+                    if (resourceSchedule.ScheduledActivities.Count > 0)
+                    {
+                        var stringBuilder = new StringBuilder();
+                        InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
+                        ColorFormatModel color = ColorHelper.RandomColor();
+                        double unitCost = defaultUnitCost;
+                        int displayOrder = 0;
 
-                    if (resourceSchedule.Resource.Id != default
-                        && resourceLookup.TryGetValue(resourceSchedule.Resource.Id, out ResourceModel? resource))
+                        if (resourceSchedule.Resource.Id != default
+                            && resourceLookup.TryGetValue(resourceSchedule.Resource.Id, out ResourceModel? resource))
+                        {
+                            int resourceId = resource.Id;
+                            interActivityAllocationType = resource.InterActivityAllocationType;
+                            if (string.IsNullOrWhiteSpace(resource.Name))
+                            {
+                                stringBuilder.Append($@"{Resource.ProjectPlan.Labels.Label_Resource} {resourceId}");
+                            }
+                            else
+                            {
+                                stringBuilder.Append($@"{resource.Name}");
+                            }
+
+                            if (colorFormatLookup.TryGetValue(resourceId, out ColorFormatModel? colorFormat))
+                            {
+                                color = colorFormat;
+                            }
+
+                            unitCost = resource.UnitCost;
+                            displayOrder = resource.DisplayOrder;
+                        }
+                        else
+                        {
+                            stringBuilder.Append($@"{Resource.ProjectPlan.Labels.Label_Resource} {spareResourceCount}");
+                            spareResourceCount++;
+                        }
+
+                        var series = new ResourceSeriesModel
+                        {
+                            Title = stringBuilder.ToString(),
+                            ColorFormat = color,
+                            UnitCost = unitCost,
+                            DisplayOrder = displayOrder,
+                            ResourceSchedule = resourceSchedule,
+                            InterActivityAllocationType = interActivityAllocationType,
+                        };
+
+                        scheduledSeriesSet.Add(series);
+                    }
+                }
+
+                // Unscheduled resource series.
+                // These are the series that apply to named resources that need to be included, even if they are not
+                // scheduled to specific activities.
+                var unscheduledSeriesSet = new List<ResourceSeriesModel>();
+                var unscheduledResourceSeriesLookup = new Dictionary<int, ResourceSeriesModel>();
+
+                IEnumerable<ResourceScheduleModel> unscheduledResourceSchedules = resourceSchedules
+                    .Where(x => x.Resource.InterActivityAllocationType == InterActivityAllocationType.Indirect);
+
+                foreach (ResourceScheduleModel resourceSchedule in unscheduledResourceSchedules)
+                {
+                    if (resourceLookup.TryGetValue(resourceSchedule.Resource.Id, out ResourceModel? resource))
                     {
                         int resourceId = resource.Id;
-                        interActivityAllocationType = resource.InterActivityAllocationType;
+                        var stringBuilder = new StringBuilder();
+
                         if (string.IsNullOrWhiteSpace(resource.Name))
                         {
                             stringBuilder.Append($@"{Resource.ProjectPlan.Labels.Label_Resource} {resourceId}");
@@ -224,74 +284,21 @@ namespace Zametek.ViewModel.ProjectPlan
                             stringBuilder.Append($@"{resource.Name}");
                         }
 
-                        if (colorFormatLookup.TryGetValue(resourceId, out ColorFormatModel? colorFormat))
+                        string title = stringBuilder.ToString();
+
+                        var series = new ResourceSeriesModel
                         {
-                            color = colorFormat;
-                        }
+                            Title = title,
+                            InterActivityAllocationType = resource.InterActivityAllocationType,
+                            ResourceSchedule = resourceSchedule,
+                            ColorFormat = resource.ColorFormat != null ? resource.ColorFormat.CloneObject() : ColorHelper.RandomColor(),
+                            UnitCost = resource.UnitCost,
+                            DisplayOrder = resource.DisplayOrder,
+                        };
 
-                        unitCost = resource.UnitCost;
-                        displayOrder = resource.DisplayOrder;
+                        unscheduledSeriesSet.Add(series);
+                        unscheduledResourceSeriesLookup.Add(resourceId, series);
                     }
-                    else
-                    {
-                        stringBuilder.Append($@"{Resource.ProjectPlan.Labels.Label_Resource} {spareResourceCount}");
-                        spareResourceCount++;
-                    }
-
-                    var series = new ResourceSeriesModel
-                    {
-                        Title = stringBuilder.ToString(),
-                        ColorFormat = color,
-                        UnitCost = unitCost,
-                        DisplayOrder = displayOrder,
-                        ResourceSchedule = resourceSchedule,
-                        InterActivityAllocationType = interActivityAllocationType,
-                    };
-
-                    scheduledSeriesSet.Add(series);
-                }
-
-                // Unscheduled resource series.
-                // These are the series that apply to named resources that need to be included, even if they are not
-                // scheduled to specific activities.
-                var unscheduledSeriesSet = new List<ResourceSeriesModel>();
-                var unscheduledResourceSeriesLookup = new Dictionary<int, ResourceSeriesModel>();
-
-                IEnumerable<ResourceModel> unscheduledResources = resources
-                    .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect);
-
-                foreach (ResourceModel resource in unscheduledResources)
-                {
-                    int resourceId = resource.Id;
-                    var stringBuilder = new StringBuilder();
-
-                    if (string.IsNullOrWhiteSpace(resource.Name))
-                    {
-                        stringBuilder.Append($@"{Resource.ProjectPlan.Labels.Label_Resource} {resourceId}");
-                    }
-                    else
-                    {
-                        stringBuilder.Append($@"{resource.Name}");
-                    }
-
-                    string title = stringBuilder.ToString();
-                    var series = new ResourceSeriesModel
-                    {
-                        Title = title,
-                        InterActivityAllocationType = resource.InterActivityAllocationType,
-                        ResourceSchedule = new ResourceScheduleModel
-                        {
-                            Resource = resource,
-                            ActivityAllocation = new List<bool>(Enumerable.Repeat(true, finishTime)),
-                            FinishTime = finishTime
-                        },
-                        ColorFormat = resource.ColorFormat != null ? resource.ColorFormat.CloneObject() : ColorHelper.RandomColor(),
-                        UnitCost = resource.UnitCost,
-                        DisplayOrder = resource.DisplayOrder,
-                    };
-
-                    unscheduledSeriesSet.Add(series);
-                    unscheduledResourceSeriesLookup.Add(resourceId, series);
                 }
 
                 // Combined resource series.
@@ -354,7 +361,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IList<ResourceModel> resourceModels = ResourceSettings.Resources;
 
                     IList<ResourceScheduleModel> resourceScheduleModels =
-                        m_Mapper.Map<IEnumerable<IResourceSchedule<int, int>>, IList<ResourceScheduleModel>>(GraphCompilation.ResourceSchedules);
+                        m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity<int, int, int>>, IList<ResourceScheduleModel>>(GraphCompilation);
 
                     resourceSeriesSet = CalculateResourceSeriesSet(
                         resourceScheduleModels,
@@ -583,12 +590,12 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static int CalculateCyclomaticComplexity(IEnumerable<IDependentActivity<int, int>> dependentActivities)
+        private static int CalculateCyclomaticComplexity(IEnumerable<IDependentActivity<int, int, int>> dependentActivities)
         {
             ArgumentNullException.ThrowIfNull(dependentActivities);
-            var vertexGraphCompiler = new VertexGraphCompiler<int, int, IDependentActivity<int, int>>();
+            var vertexGraphCompiler = new VertexGraphCompiler<int, int, int, IDependentActivity<int, int, int>>();
 
-            foreach (var dependentActivity in dependentActivities.Cast<DependentActivity<int, int>>())
+            foreach (var dependentActivity in dependentActivities.Cast<DependentActivity<int, int, int>>())
             {
                 dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
                 dependentActivity.ResourceDependencies.Clear();
@@ -607,8 +614,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!HasCompilationErrors)
                 {
-                    IEnumerable<IDependentActivity<int, int>> dependentActivities =
-                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int>)x.CloneObject());
+                    IEnumerable<IDependentActivity<int, int, int>> dependentActivities =
+                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int, int>)x.CloneObject());
 
                     if (!dependentActivities.Any())
                     {
@@ -824,7 +831,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_WorkStreamSettings = value;
                     IsProjectUpdated = true;
                     this.RaisePropertyChanged();
-                    IsReadyToCompile = ReadyToCompile.Yes;
+
+
+                    // Trigger Resource Settings Manager update.
+
+
+                    //IsReadyToCompile = ReadyToCompile.Yes;
                 }
             }
         }
@@ -832,8 +844,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
-        private IGraphCompilation<int, int, IDependentActivity<int, int>> m_GraphCompilation;
-        public IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation
+        private IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> m_GraphCompilation;
+        public IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> GraphCompilation
         {
             get => m_GraphCompilation;
             private set
@@ -917,9 +929,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ClearSettings();
 
-                    GraphCompilation = new GraphCompilation<int, int, DependentActivity<int, int>>(
-                        Enumerable.Empty<DependentActivity<int, int>>(),
-                        Enumerable.Empty<IResourceSchedule<int, int>>());
+                    GraphCompilation = new GraphCompilation<int, int, int, DependentActivity<int, int, int>>(
+                        Enumerable.Empty<DependentActivity<int, int, int>>(),
+                        Enumerable.Empty<IResourceSchedule<int, int, int>>(),
+                        Enumerable.Empty<IWorkStream<int>>());
 
                     ArrowGraph = new ArrowGraphModel();
 
@@ -1014,17 +1027,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Project Start Date.
                     ProjectStart = projectPlanModel.ProjectStart;
 
+                    // Work Stream Settings.
+                    WorkStreamSettings = projectPlanModel.WorkStreamSettings;
+
                     // Resource Settings.
                     ResourceSettings = projectPlanModel.ResourceSettings;
 
                     // Arrow Graph Settings.
                     ArrowGraphSettings = projectPlanModel.ArrowGraphSettings;
 
-                    // Work Stream Settings.
-                    WorkStreamSettings = projectPlanModel.WorkStreamSettings;
-
                     // Compilation.
-                    GraphCompilation = m_Mapper.Map<GraphCompilation<int, int, DependentActivity<int, int>>>(projectPlanModel.GraphCompilation);
+                    GraphCompilation = m_Mapper.Map<GraphCompilation<int, int, int, DependentActivity<int, int, int>>>(projectPlanModel.GraphCompilation);
 
                     // Activities.
                     AddManagedActivities(new HashSet<DependentActivityModel>(projectPlanModel.DependentActivities));
@@ -1049,7 +1062,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    var graphCompilation = m_Mapper.Map<IGraphCompilation<int, int, IDependentActivity<int, int>>, GraphCompilationModel>(GraphCompilation);
+                    var graphCompilation = m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity<int, int, int>>, GraphCompilationModel>(GraphCompilation);
 
                     var plan = new ProjectPlanModel
                     {
@@ -1135,11 +1148,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         var activity = new ManagedActivityViewModel(
                             this,
-                            m_Mapper.Map<DependentActivityModel, DependentActivity<int, int>>(dependentActivity),
+                            m_Mapper.Map<DependentActivityModel, DependentActivity<int, int, int>>(dependentActivity),
                             m_DateTimeCalculator,
                             m_VertexGraphCompiler,
                             ProjectStart,
-                            dependentActivity.Activity.TargetWorkStreams,
                             dependentActivity.Activity.Trackers,
                             dependentActivity.Activity.MinimumEarliestStartDateTime,
                             dependentActivity.Activity.MaximumLatestFinishDateTime);
@@ -1302,13 +1314,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     ReviseTrackers();
 
-                    var availableResources = new List<IResource<int>>();
+                    var availableResources = new List<IResource<int, int>>();
                     if (!ResourceSettings.AreDisabled)
                     {
-                        availableResources.AddRange(m_Mapper.Map<IEnumerable<ResourceModel>, IEnumerable<Resource<int>>>(ResourceSettings.Resources));
+                        availableResources.AddRange(m_Mapper.Map<IEnumerable<ResourceModel>, IEnumerable<Resource<int, int>>>(ResourceSettings.Resources));
                     }
 
-                    GraphCompilation = m_VertexGraphCompiler.Compile(availableResources);
+                    var workStreams = new List<IWorkStream<int>>();
+                    workStreams.AddRange(m_Mapper.Map<IEnumerable<WorkStreamModel>, IEnumerable<WorkStream<int>>>(WorkStreamSettings.WorkStreams));
+
+
+
+                    GraphCompilation = m_VertexGraphCompiler.Compile(availableResources, workStreams);
                     IsProjectUpdated = true;
                     HasStaleOutputs = false;
                     IsReadyToCompile = ReadyToCompile.No;
@@ -1346,7 +1363,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    m_VertexGraphCompiler.Compile(new List<IResource<int>>());
+                    m_VertexGraphCompiler.Compile();
                     m_VertexGraphCompiler.TransitiveReduction();
                     RunCompile();
                 }

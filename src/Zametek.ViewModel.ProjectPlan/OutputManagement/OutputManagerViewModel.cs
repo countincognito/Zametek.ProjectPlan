@@ -133,7 +133,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private void BuildCompilationOutput(
-            IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation,
+            IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
             ResourceSeriesSetModel resourceSeriesSet)
         {
             ArgumentNullException.ThrowIfNull(graphCompilation);
@@ -169,7 +169,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private async Task BuildCompilationOutputAsync(
-            IGraphCompilation<int, int, IDependentActivity<int, int>> graphCompilation,
+            IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
             ResourceSeriesSetModel resourceSeriesSet)
         {
             try

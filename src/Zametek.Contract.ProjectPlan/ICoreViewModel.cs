@@ -38,7 +38,7 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
-        IGraphCompilation<int, int, IDependentActivity<int, int>> GraphCompilation { get; }
+        IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> GraphCompilation { get; }
 
         ArrowGraphModel ArrowGraph { get; }
 

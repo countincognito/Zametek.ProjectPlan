@@ -5,7 +5,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IManagedActivityViewModel
-        : IDependentActivity<int, int>, IDisposable, INotifyPropertyChanged
+        : IDependentActivity<int, int, int>, IDisposable, INotifyPropertyChanged
     {
         bool IsCompiled { get; }
 
@@ -20,8 +20,6 @@ namespace Zametek.Contract.ProjectPlan
         string ResourceDependenciesString { get; }
 
         public string AllocatedToResourcesString { get; }
-
-        HashSet<int> TargetWorkStreams { get; }
 
         DateTimeOffset? EarliestStartDateTimeOffset { get; }
 

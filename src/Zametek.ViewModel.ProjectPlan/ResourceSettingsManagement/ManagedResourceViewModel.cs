@@ -17,7 +17,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IResourceSettingsManagerViewModel m_ResourceSettingsManagerViewModel;
-        private readonly HashSet<int> m_TargetWorkStreams;
 
         private readonly IDisposable? m_WorkStreamSettingsSub;
 
@@ -58,12 +57,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-
-
-
-
         #region Properties
-
 
         private WorkStreamSettingsModel m_WorkStreamSettings;
         private WorkStreamSettingsModel WorkStreamSettings
@@ -79,15 +73,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public WorkStreamSelectorViewModel WorkStreamSelector { get; }
 
         #endregion
-
-
-
-
-
-
-
-
-
 
         private void UpdateActivityTargetWorkStreams()
         {
@@ -110,13 +95,6 @@ namespace Zametek.ViewModel.ProjectPlan
             IEnumerable<WorkStreamModel> targetWorkStreams = WorkStreamSettings.WorkStreams.Select(x => x.CloneObject());
             WorkStreamSelector.SetTargetWorkStreams(targetWorkStreams, selectedTargetWorkStreams);
         }
-
-
-
-
-
-
-
 
         #region IManagedResourceViewModel Members
 
@@ -168,15 +146,8 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_InterActivityAllocationType, value);
         }
 
-
-
-
+        private readonly HashSet<int> m_TargetWorkStreams;
         public HashSet<int> InterActivityPhases => m_TargetWorkStreams;
-
-
-
-
-
 
         private double m_UnitCost;
         public double UnitCost
@@ -224,7 +195,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public object CloneObject()
         {
-            return new Resource<int>(Id, Name, IsExplicitTarget, IsInactive, InterActivityAllocationType, UnitCost, AllocationOrder);
+            return new Resource<int, int>(Id, Name, IsExplicitTarget, IsInactive, InterActivityAllocationType, UnitCost, AllocationOrder, InterActivityPhases);
         }
 
         #endregion
