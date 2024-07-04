@@ -813,8 +813,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_ResourceSettings = value;
-                    this.RaisePropertyChanged();
                     IsProjectUpdated = true;
+                    this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
             }
@@ -831,12 +831,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_WorkStreamSettings = value;
                     IsProjectUpdated = true;
                     this.RaisePropertyChanged();
-
-
-                    // Trigger Resource Settings Manager update.
-
-
-                    //IsReadyToCompile = ReadyToCompile.Yes;
+                    IsReadyToCompile = ReadyToCompile.Yes;
                 }
             }
         }

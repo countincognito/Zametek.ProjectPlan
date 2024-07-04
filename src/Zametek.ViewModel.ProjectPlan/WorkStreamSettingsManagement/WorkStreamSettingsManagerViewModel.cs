@@ -212,7 +212,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_Current = workStreamSettings;
                     m_CoreViewModel.WorkStreamSettings = workStreamSettings;
-                    m_ResourceSettingsManagerViewModel.UpdateResourceSettingsToCore();
+                    m_ResourceSettingsManagerViewModel.AreSettingsUpdated = true;
                 }
             }
             AreSettingsUpdated = false;
