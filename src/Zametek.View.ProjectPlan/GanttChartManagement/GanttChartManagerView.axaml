@@ -8,6 +8,7 @@
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:oxy="using:OxyPlot.Avalonia"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:common="using:Zametek.Common.ProjectPlan"
 			 x:DataType="vm:GanttChartManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.GanttChartManagerView">
@@ -23,28 +24,30 @@
 				   DockPanel.Dock="Top"
 				   IsTabStop="False"
 				   Margin="0,0,0,3"
-				   Content="{x:Static resources:Labels.Label_GroupByResource}"/>
+				   Content="{x:Static resources:Labels.Label_GroupByMode}"/>
 
-			<ToggleSwitch DockPanel.Dock="Top"
-					      IsTabStop="False"
-					      Margin="0,0,0,11"
-					      VerticalAlignment="Center"
-					      VerticalContentAlignment="Center"
-						  HorizontalAlignment="Center"
-					      HorizontalContentAlignment="Center"
-					      OffContent="{x:Static resources:Labels.Label_No}"
-					      OnContent="{x:Static resources:Labels.Label_Yes}"
-					      IsChecked="{Binding Path=GroupByResource, Mode=TwoWay}"/>
+			<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:GroupByMode}}}"
+					  SelectedItem="{Binding Path=GroupByMode, Mode=TwoWay}"
+					  Foreground="Black"
+					  Background="White"
+					  DockPanel.Dock="Top"
+					  IsTabStop="False"
+					  Margin="0,0,0,11"
+					  Height="25"
+					  VerticalAlignment="Center"
+					  VerticalContentAlignment="Center"
+					  HorizontalAlignment="Stretch"
+					  HorizontalContentAlignment="Left"/>
 
 			<DockPanel DockPanel.Dock="Top"
-					   IsEnabled="{Binding Path=GroupByResource, Mode=OneWay}">
+					   IsEnabled="{Binding Path=GroupBy, Mode=OneWay}">
 				<Label VerticalContentAlignment="Center"
 					   HorizontalContentAlignment="Left"
 					   Height="25"
 					   DockPanel.Dock="Top"
 					   IsTabStop="False"
 					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_AnnotateResources}"/>
+					   Content="{x:Static resources:Labels.Label_AnnotateGroups}"/>
 
 				<ToggleSwitch DockPanel.Dock="Top"
 							  IsTabStop="False"
@@ -55,7 +58,7 @@
 						      HorizontalContentAlignment="Center"
 					          OffContent="{x:Static resources:Labels.Label_No}"
 					          OnContent="{x:Static resources:Labels.Label_Yes}"
-							  IsChecked="{Binding Path=AnnotateResources, Mode=TwoWay}"/>
+							  IsChecked="{Binding Path=AnnotateGroups, Mode=TwoWay}"/>
 			</DockPanel>
 
 			<Grid/>

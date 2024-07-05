@@ -151,11 +151,11 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Annotate Resources.
+        ///   Looks up a localized string similar to Annotate Groups.
         /// </summary>
-        public static string Label_AnnotateResources {
+        public static string Label_AnnotateGroups {
             get {
-                return ResourceManager.GetString("Label_AnnotateResources", resourceCulture);
+                return ResourceManager.GetString("Label_AnnotateGroups", resourceCulture);
             }
         }
         
@@ -511,11 +511,11 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Group by Resource.
+        ///   Looks up a localized string similar to Group by.
         /// </summary>
-        public static string Label_GroupByResource {
+        public static string Label_GroupByMode {
             get {
-                return ResourceManager.GetString("Label_GroupByResource", resourceCulture);
+                return ResourceManager.GetString("Label_GroupByMode", resourceCulture);
             }
         }
         

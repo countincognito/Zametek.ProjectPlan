@@ -147,8 +147,8 @@
   <data name="Label_AllocatedToResources" xml:space="preserve">
     <value>Allocated to Resources</value>
   </data>
-  <data name="Label_AnnotateResources" xml:space="preserve">
-    <value>Annotate Resources</value>
+  <data name="Label_AnnotateGroups" xml:space="preserve">
+    <value>Annotate Groups</value>
   </data>
   <data name="Label_AppName" xml:space="preserve">
     <value>Project Plan</value>
@@ -267,8 +267,8 @@
   <data name="Label_GeometricFibonacciRisk" xml:space="preserve">
     <value>Geometric (Fib.) Risk:</value>
   </data>
-  <data name="Label_GroupByResource" xml:space="preserve">
-    <value>Group by Resource</value>
+  <data name="Label_GroupByMode" xml:space="preserve">
+    <value>Group by</value>
   </data>
   <data name="Label_HasNoCost" xml:space="preserve">
     <value>Ignore Cost</value>

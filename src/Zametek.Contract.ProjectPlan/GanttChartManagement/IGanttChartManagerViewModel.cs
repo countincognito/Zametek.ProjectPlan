@@ -1,4 +1,5 @@
 ﻿using System.Windows.Input;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -10,9 +11,11 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
-        bool GroupByResource { get; set; }
+        GroupByMode GroupByMode { get; set; }
 
-        bool AnnotateResources { get; set; }
+        bool GroupBy { get; }
+
+        bool AnnotateGroups { get; set; }
 
         ICommand SaveGanttChartImageFileCommand { get; }
     }
