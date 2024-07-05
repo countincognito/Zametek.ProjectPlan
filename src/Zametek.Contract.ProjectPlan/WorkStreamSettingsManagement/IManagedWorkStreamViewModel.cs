@@ -12,6 +12,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsPhase { get; set; }
 
+        int DisplayOrder { get; set; }
+
         ColorFormatModel ColorFormat { get; set; }
     }
 }

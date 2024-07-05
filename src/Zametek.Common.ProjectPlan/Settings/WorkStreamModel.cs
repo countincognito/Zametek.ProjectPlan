@@ -9,6 +9,8 @@
 
         public bool IsPhase { get; init; }
 
+        public int DisplayOrder { get; init; }
+
         public ColorFormatModel ColorFormat { get; init; } = new ColorFormatModel();
     }
 }

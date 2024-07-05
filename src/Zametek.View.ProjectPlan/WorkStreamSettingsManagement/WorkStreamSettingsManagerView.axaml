@@ -17,6 +17,7 @@
 
 		<local:ManagedWorkStreamSortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
 		<local:ManagedWorkStreamSortComparer x:Key="isPhaseSortComparer" SortMemberPath="IsPhase"/>
+		<local:ManagedWorkStreamSortComparer x:Key="displayOrderSortComparer" SortMemberPath="DisplayOrder"/>
 		<local:ManagedWorkStreamSortComparer x:Key="colorFormatSortComparer" SortMemberPath="ColorFormat"/>
 		<local:ManagedWorkStreamSortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
 	</UserControl.Resources>
@@ -153,8 +154,59 @@
 				</DataGridTemplateColumn>
 
 
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										CustomSortComparer="{StaticResource displayOrderSortComparer}"
+										Width="85">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_DisplayOrder}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_DisplayOrder}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Background="Transparent"
+										   Text="{Binding Path=DisplayOrder, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBox Text="{Binding Path=DisplayOrder, Mode=TwoWay}"
+											   VerticalAlignment="Center"
+											   Foreground="Black"
+											   Margin="0"
+											   Padding="3"/>
 
+								<!--<NumericUpDown Value="{Binding Path=DisplayOrder, Mode=TwoWay}"
+											   VerticalAlignment="Center"
+											   ShowButtonSpinner="False"
+											   Foreground="Black"
+											   Margin="0"
+											   Padding="0"
+											   Minimum="0"/>-->
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
+				</DataGridTemplateColumn>
 
+				
+				
+				
+				
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"

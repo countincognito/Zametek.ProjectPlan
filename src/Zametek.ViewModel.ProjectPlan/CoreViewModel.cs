@@ -2,7 +2,6 @@
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reactive.Concurrency;
@@ -108,7 +107,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_CompileOnSettingsUpdateSub = this
                 .WhenAnyValue(core => core.IsReadyToCompile)
-                //core => core.ProjectStart,
+                //core => core.ProjectStart, // TODO
                 //core => core.ResourceSettings,
                 //core => core.ArrowGraphSettings,
                 //core => core.WorkStreamSettings,

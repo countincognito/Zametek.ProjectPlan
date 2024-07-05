@@ -34,7 +34,7 @@
 		<local:ManagedActivitySortComparer x:Key="minimumEarliestStartTimeSortComparer" SortMemberPath="MinimumEarliestStartTime"/>
 		<local:ManagedActivitySortComparer x:Key="maximumLatestFinishTimeSortComparer" SortMemberPath="MaximumLatestFinishTime"/>
 		<local:ManagedActivitySortComparer x:Key="resourceSelectorTargetResourcesStringSortComparer" SortMemberPath="ResourceSelector.TargetResourcesString"/>
-		<!--<local:ManagedActivitySortComparer x:Key="resourceSelectorTargetResourcesStringSortComparer" SortMemberPath="ResourceSelector.TargetResourcesString"/>-->
+		<local:ManagedActivitySortComparer x:Key="workStreamSelectorTargetWorkStreamsStringSortComparer" SortMemberPath="WorkStreamSelector.TargetWorkStreamsString"/>
 		<local:ManagedActivitySortComparer x:Key="hasNoCostSortComparer" SortMemberPath="HasNoCost"/>
 		<local:ManagedActivitySortComparer x:Key="targetResourceOperatorSortComparer" SortMemberPath="TargetResourceOperator"/>
 		<local:ManagedActivitySortComparer x:Key="allocatedToResourcesStringSortComparer" SortMemberPath="AllocatedToResourcesString"/>
@@ -787,23 +787,11 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-
-
-
-
-
-
-
-
-
-
-
-
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
+										CustomSortComparer="{StaticResource workStreamSelectorTargetWorkStreamsStringSortComparer}"
 										Width="120">
-					<!--CustomSortComparer="{StaticResource workStreamSelectorTargetResourcesStringSortComparer}" TODO-->
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -885,19 +873,6 @@
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"

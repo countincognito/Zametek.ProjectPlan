@@ -71,6 +71,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(WorkStreamModel.Id),
             nameof(WorkStreamModel.Name),
             nameof(WorkStreamModel.IsPhase),
+            nameof(WorkStreamModel.DisplayOrder),
             nameof(WorkStreamModel.ColorFormat)
         ];
 
@@ -828,6 +829,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     int? id = 0;
                     string name = string.Empty;
                     bool isPhase = false;
+                    int displayOrder = 0;
                     ColorFormatModel colorFormat = ColorHelper.RandomColor();
 
                     foreach (string columnName in columnNames)
@@ -851,6 +853,14 @@ namespace Zametek.ViewModel.ProjectPlan
                                         isPhase = output;
                                     }
                                 })
+                            .Case(nameof(WorkStreamModel.DisplayOrder),
+                                colName =>
+                                {
+                                    if (int.TryParse(row[colName]?.ToString(), out int output))
+                                    {
+                                        displayOrder = output;
+                                    }
+                                })
                             .Case(nameof(WorkStreamModel.ColorFormat),
                                 colName =>
                                 {
@@ -870,6 +880,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Id = idVal,
                             Name = name,
                             IsPhase = isPhase,
+                            DisplayOrder = displayOrder,
                             ColorFormat = colorFormat
                         });
                     }

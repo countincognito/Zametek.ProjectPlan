@@ -7,7 +7,6 @@ using OxyPlot.Series;
 using ReactiveUI;
 using System.Data;
 using System.Globalization;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Input;
@@ -108,25 +107,30 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_BuildGanttChartPlotModelSub = this
                 .WhenAnyValue(
-                    rcm => rcm.m_CoreViewModel.GraphCompilation,
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
+                    rcm => rcm.m_CoreViewModel.ResourceSettings,
                     rcm => rcm.m_CoreViewModel.ArrowGraphSettings,
+                    rcm => rcm.m_CoreViewModel.WorkStreamSettings,
+                    rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
                     rcm => rcm.m_CoreViewModel.ShowDates,
+                    rcm => rcm.m_CoreViewModel.GraphCompilation,
                     rcm => rcm.GroupByMode,
                     rcm => rcm.AnnotateGroups,
-                    rcm => rcm.m_CoreViewModel.ProjectStartDateTime)
+                    (a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i))
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async result =>
                 {
                     GanttChartPlotModel = await BuildGanttChartPlotModelAsync(
                         m_DateTimeCalculator,
-                        result.Item1,
-                        result.Item2,
-                        result.Item3,
-                        result.Item4,
-                        result.Item5,
-                        result.Item6,
-                        result.Item7);
+                        result.a,
+                        result.b,
+                        result.c,
+                        result.d,
+                        result.e,
+                        result.f,
+                        result.g,
+                        result.h,
+                        result.i);
                 });
 
             Id = Resource.ProjectPlan.Titles.Title_GanttChartView;
@@ -158,13 +162,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task<PlotModel> BuildGanttChartPlotModelAsync(
             IDateTimeCalculator dateTimeCalculator,
-            IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
             ResourceSeriesSetModel resourceSeriesSet,
+            ResourceSettingsModel resourceSettings,
             ArrowGraphSettingsModel arrowGraphSettings,
+            WorkStreamSettingsModel workStreamSettings,
+            DateTime projectStartDateTime,
             bool showDates,
+            IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
             GroupByMode groupByMode,
-            bool annotateGroups,
-            DateTime projectStartDateTime)
+            bool annotateGroups)
         {
             try
             {
@@ -172,13 +178,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     return BuildGanttChartPlotModel(
                         dateTimeCalculator,
-                        graphCompilation,
                         resourceSeriesSet,
+                        resourceSettings,
                         arrowGraphSettings,
+                        workStreamSettings,
+                        projectStartDateTime,
                         showDates,
+                        graphCompilation,
                         groupByMode,
-                        annotateGroups,
-                        projectStartDateTime);
+                        annotateGroups);
                 }
             }
             catch (Exception ex)
@@ -193,18 +201,22 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static PlotModel BuildGanttChartPlotModel(
             IDateTimeCalculator dateTimeCalculator,
-            IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
             ResourceSeriesSetModel resourceSeriesSet,
+            ResourceSettingsModel resourceSettingsSettings,
             ArrowGraphSettingsModel arrowGraphSettings,
+            WorkStreamSettingsModel workStreamSettings,
+            DateTime projectStartDateTime,
             bool showDates,
+            IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
             GroupByMode groupByMode,
-            bool annotateGroups,
-            DateTime projectStartDateTime)
+            bool annotateGroups)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            ArgumentNullException.ThrowIfNull(graphCompilation);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
+            ArgumentNullException.ThrowIfNull(resourceSettingsSettings);
             ArgumentNullException.ThrowIfNull(arrowGraphSettings);
+            ArgumentNullException.ThrowIfNull(workStreamSettings);
+            ArgumentNullException.ThrowIfNull(graphCompilation);
             var plotModel = new PlotModel();
 
             int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
@@ -286,7 +298,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             // Record the resource name, and the scheduled activities (in order).
 
-                            var scheduledResourceActivitiesSet = new List<(string ResourceName, IList<ScheduledActivityModel> ScheduledActivities)>();
+                            var scheduledResourceActivitiesSet = new List<(string ResourceName, int DisplayOrder, IList<ScheduledActivityModel> ScheduledActivities)>();
 
                             foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeries)
                             {
@@ -294,19 +306,20 @@ namespace Zametek.ViewModel.ProjectPlan
                                     .ResourceSchedule.ScheduledActivities
                                     .OrderByDescending(x => x.StartTime)];
                                 scheduledResourceActivitiesSet.Add(
-                                    (resourceSeries.Title, orderedScheduledActivities));
+                                    (resourceSeries.Title, resourceSeries.DisplayOrder, orderedScheduledActivities));
                             }
 
                             // Order the set according to the start times of the first activity for each resource.
 
-                            IList<(string, IList<ScheduledActivityModel>)> orderedScheduledResourceActivitiesSet = scheduledResourceActivitiesSet
-                                .OrderByDescending(x => x.ScheduledActivities.OrderBy(y => y.StartTime)
-                                    .FirstOrDefault()?.StartTime ?? 0)
+                            IList<(string, int, IList<ScheduledActivityModel>)> orderedScheduledResourceActivitiesSet = scheduledResourceActivitiesSet
+                                .OrderBy(x => x.DisplayOrder)
                                 .ThenBy(x => x.ScheduledActivities.OrderBy(y => y.StartTime)
+                                    .FirstOrDefault()?.StartTime ?? 0)
+                                .ThenByDescending(x => x.ScheduledActivities.OrderBy(y => y.FinishTime)
                                     .LastOrDefault()?.FinishTime ?? 0)
                                 .ToList();
 
-                            foreach ((string resourceName, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
+                            foreach ((string resourceName, int displayOrder, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
                             {
                                 IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
                                 Dictionary<int, IDependentActivity<int, int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);

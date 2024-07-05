@@ -20,6 +20,7 @@
 		<local:ManagedResourceSortComparer x:Key="isExplicitTargetSortComparer" SortMemberPath="IsExplicitTarget"/>
 		<local:ManagedResourceSortComparer x:Key="isInactiveSortComparer" SortMemberPath="IsInactive"/>
 		<local:ManagedResourceSortComparer x:Key="interActivityAllocationTypeSortComparer" SortMemberPath="InterActivityAllocationType"/>
+		<local:ManagedResourceSortComparer x:Key="workStreamSelectorTargetWorkStreamsStringSortComparer" SortMemberPath="WorkStreamSelector.TargetWorkStreamsString"/>
 		<local:ManagedResourceSortComparer x:Key="unitCostSortComparer" SortMemberPath="UnitCost"/>
 		<local:ManagedResourceSortComparer x:Key="displayOrderSortComparer" SortMemberPath="DisplayOrder"/>
 		<local:ManagedResourceSortComparer x:Key="colorFormatSortComparer" SortMemberPath="ColorFormat"/>
@@ -293,42 +294,11 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
+										CustomSortComparer="{StaticResource workStreamSelectorTargetWorkStreamsStringSortComparer}"
 										Width="120">
-					<!--CustomSortComparer="{StaticResource workStreamSelectorTargetResourcesStringSortComparer}" TODO-->
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -410,22 +380,6 @@
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"

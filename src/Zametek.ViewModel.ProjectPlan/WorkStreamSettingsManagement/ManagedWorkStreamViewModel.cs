@@ -26,6 +26,7 @@ namespace Zametek.ViewModel.ProjectPlan
             Id = workStream.Id;
             m_Name = workStream.Name;
             m_IsPhase = workStream.IsPhase;
+            m_DisplayOrder = workStream.DisplayOrder;
             m_ColorFormat = workStream.ColorFormat;
         }
 
@@ -58,6 +59,22 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private int m_DisplayOrder;
+        public int DisplayOrder
+        {
+            get => m_DisplayOrder;
+            set
+            {
+                if (m_DisplayOrder != value)
+                {
+                    BeginEdit();
+                    m_DisplayOrder = value;
+                    EndEdit();
+                }
+                this.RaisePropertyChanged();
+            }
+        }
+
         private ColorFormatModel m_ColorFormat;
         public ColorFormatModel ColorFormat
         {
@@ -81,6 +98,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Id = Id,
                 Name = Name,
                 IsPhase = IsPhase,
+                DisplayOrder = DisplayOrder,
                 ColorFormat = ColorFormat,
             };
         }

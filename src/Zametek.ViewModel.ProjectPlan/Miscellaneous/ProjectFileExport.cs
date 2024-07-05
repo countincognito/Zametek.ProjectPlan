@@ -77,6 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(WorkStreamModel.Id),
             nameof(WorkStreamModel.Name),
             nameof(WorkStreamModel.IsPhase),
+            nameof(WorkStreamModel.DisplayOrder),
             nameof(WorkStreamModel.ColorFormat)
         ];
 

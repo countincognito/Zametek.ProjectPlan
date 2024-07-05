@@ -1,5 +1,6 @@
-﻿namespace Zametek.ViewModel.ProjectPlan
+﻿namespace Zametek.Common.ProjectPlan
 {
+    [Serializable]
     public enum ReadyToCompile
     {
         No,
