@@ -53,19 +53,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public static IList<int> Parse(string input)//!!)
         {
-            return input
+            return [.. input
                 .Split(new[] { Separator }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(int.Parse)
                 .Distinct()
-                .OrderBy(x => x)
-                .ToList();
+                .OrderBy(x => x)];
         }
 
         public static (IEnumerable<int>? output, string? errorMessage) Validate(string? value, int id)
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                return (Enumerable.Empty<int>(), null);
+                return ([], null);
             }
             string stripped = StripWhitespace(value);
             if (!s_StrippedMatch?.IsMatch(stripped) ?? false)
@@ -81,7 +80,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 return (output, null);
             }
-            return (Enumerable.Empty<int>(), null);
+            return ([], null);
         }
 
         #endregion

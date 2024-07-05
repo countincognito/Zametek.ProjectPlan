@@ -25,8 +25,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly object m_Lock;
 
         private static readonly IList<IFileFilter> s_ExportFileFilters =
-            new List<IFileFilter>
-            {
+            [
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ImageJpegFileType,
@@ -51,7 +50,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Resource.ProjectPlan.Filters.Filter_PdfFilePattern
                     ]
                 }
-            };
+            ];
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
@@ -242,10 +241,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeries)
                     {
-                        IList<ScheduledActivityModel> orderedScheduledActivities = resourceSeries
+                        IList<ScheduledActivityModel> orderedScheduledActivities = [.. resourceSeries
                             .ResourceSchedule.ScheduledActivities
-                            .OrderByDescending(x => x.StartTime)
-                            .ToList();
+                            .OrderByDescending(x => x.StartTime)];
                         scheduledResourceActivitiesSet.Add(
                             (resourceSeries.Title, orderedScheduledActivities));
                     }
@@ -262,7 +260,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach ((string resourceName, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
                     {
                         IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
-                        IDictionary<int, IDependentActivity<int, int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
+                        Dictionary<int, IDependentActivity<int, int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
                         int resourceStartTime = orderedScheduledActivities.LastOrDefault()?.StartTime ?? 0;
                         int resourceFinishTime = orderedScheduledActivities.FirstOrDefault()?.FinishTime ?? 0;

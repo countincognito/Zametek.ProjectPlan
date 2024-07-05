@@ -19,8 +19,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly object m_Lock;
 
         private static readonly IList<IFileFilter> s_ProjectPlanFileFilters =
-            new List<IFileFilter>
-            {
+            [
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ProjectPlanFileType,
@@ -29,11 +28,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         Resource.ProjectPlan.Filters.Filter_ProjectPlanFilePattern
                     ]
                 }
-            };
+            ];
 
         private static readonly IList<IFileFilter> s_ImportFileFilters =
-            new List<IFileFilter>
-            {
+            [
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_MicrosoftProjectFileType,
@@ -51,11 +49,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         Resource.ProjectPlan.Filters.Filter_ProjectXlsxFilePattern
                     ]
                 }
-            };
+            ];
 
         private static readonly IList<IFileFilter> s_ExportFileFilters =
-            new List<IFileFilter>
-            {
+            [
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ExcelFileType,
@@ -64,7 +61,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Resource.ProjectPlan.Filters.Filter_ExcelXlsxFilePattern
                     ]
                 }
-            };
+            ];
 
         private readonly IFactory m_DockFactory;
         private readonly ICoreViewModel m_CoreViewModel;

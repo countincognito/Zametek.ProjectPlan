@@ -18,8 +18,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly object m_Lock;
 
         private static readonly IList<IFileFilter> s_ExportFileFilters =
-            new List<IFileFilter>
-            {
+            [
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ImageJpegFileType,
@@ -52,7 +51,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Resource.ProjectPlan.Filters.Filter_GraphVizFilePattern
                     ]
                 }
-            };
+            ];
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;

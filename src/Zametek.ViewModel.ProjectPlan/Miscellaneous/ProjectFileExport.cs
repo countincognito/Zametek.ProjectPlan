@@ -224,7 +224,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static void WriteGeneralToWorkbook(
             ProjectPlanModel projectPlan,
-            IWorkbook workbook,
+            XSSFWorkbook workbook,
             ICellStyle titleStyle)
         {
             ArgumentNullException.ThrowIfNull(projectPlan);
@@ -287,7 +287,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static void WriteActivitiesToWorkbook(
             IEnumerable<DependentActivityModel> dependentActivities,
-            IWorkbook workbook,
+            XSSFWorkbook workbook,
             ICellStyle titleStyle,
             bool showDates,
             DateTimeOffset projectStart,
@@ -392,7 +392,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IEnumerable<T> items,
             IEnumerable<string> columnTitles,
             string sheetTitle,//!!,
-            IWorkbook workbook,
+            XSSFWorkbook workbook,
             ICellStyle titleStyle)
         {
             ArgumentNullException.ThrowIfNull(items);
@@ -461,7 +461,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IEnumerable<ActivityModel> activities,
             Func<TrackerModel, T> trackerFunc,
             string sheetTitle,//!!,
-            IWorkbook workbook,
+            XSSFWorkbook workbook,
             ICellStyle titleStyle,
             bool showDates,
             DateTimeOffset projectStart,
@@ -549,7 +549,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceSeriesSetModel resourceSeriesSet,
             Func<ResourceSeriesModel, int, T> resourceseriesFunc,
             string sheetTitle,//!!,
-            IWorkbook workbook,
+            XSSFWorkbook workbook,
             ICellStyle titleStyle,
             bool showDates,
             DateTimeOffset projectStart,
@@ -635,7 +635,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static void WriteEarnedValueChartToWorkbook(
             IEnumerable<TrackingPointModel> trackingPoints,
             string sheetTitle,//!!,
-            IWorkbook workbook,
+            XSSFWorkbook workbook,
             ICellStyle titleStyle,
             bool showDates,
             DateTimeOffset projectStart,
@@ -719,7 +719,7 @@ namespace Zametek.ViewModel.ProjectPlan
             bool showDates,
             string filename)
         {
-            IWorkbook workbook = new XSSFWorkbook();
+            var workbook = new XSSFWorkbook();
             IFont titleFont = workbook.CreateFont();
 
             titleFont.IsBold = true;

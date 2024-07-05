@@ -117,7 +117,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 if (rowList.Count > 0)
                 {
-                    dtTable.Rows.Add(rowList.ToArray());
+                    dtTable.Rows.Add([.. rowList]);
                 }
                 rowList.Clear();
             }
@@ -257,7 +257,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             using FileStream file = new(filename, FileMode.Open, FileAccess.Read);
 
-            IWorkbook workbook = new XSSFWorkbook(file);
+            var workbook = new XSSFWorkbook(file);
             DateTimeOffset projectStart = new(DateTime.Today);
 
             double defaultUnitCost = 1;
@@ -403,7 +403,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return dependentActivity;
         }
 
-        private static IDictionary<int, DependentActivityModel> ImportWorksheetActivities(IWorkbook? workbook)
+        private static Dictionary<int, DependentActivityModel> ImportWorksheetActivities(XSSFWorkbook? workbook)
         {
             Dictionary<int, DependentActivityModel> dependentActivities = [];
             ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivities);
@@ -592,7 +592,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return dependentActivities;
         }
 
-        private static IDictionary<int, ResourceModel> ImportWorksheetResources(IWorkbook? workbook)
+        private static Dictionary<int, ResourceModel> ImportWorksheetResources(XSSFWorkbook? workbook)
         {
             Dictionary<int, ResourceModel> resources = [];
             ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetResources);
@@ -726,7 +726,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return resources;
         }
 
-        private static IList<ActivitySeverityModel> ImportWorksheetActivitySeverities(IWorkbook? workbook)
+        private static List<ActivitySeverityModel> ImportWorksheetActivitySeverities(XSSFWorkbook? workbook)
         {
             List<ActivitySeverityModel> activitySeverities = [];
             ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivitySeverities);
@@ -803,7 +803,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return activitySeverities;
         }
 
-        private static IDictionary<int, WorkStreamModel> ImportWorksheetWorkStreams(IWorkbook? workbook)
+        private static Dictionary<int, WorkStreamModel> ImportWorksheetWorkStreams(XSSFWorkbook? workbook)
         {
             Dictionary<int, WorkStreamModel> workStreams = [];
             ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetWorkStreams);
@@ -879,7 +879,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static IDictionary<int, DependentActivityModel> ImportWorksheetTrackers(
-            IWorkbook? workbook,
+            XSSFWorkbook? workbook,
             IDictionary<int, DependentActivityModel> dependentActivities)
         {
             ISheet? percentageCompleteSheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetTrackerPercentageComplete);

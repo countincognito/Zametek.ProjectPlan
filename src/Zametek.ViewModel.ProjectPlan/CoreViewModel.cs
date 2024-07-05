@@ -63,10 +63,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
-            m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity<int, int, int>>(
-                Enumerable.Empty<DependentActivity<int, int, int>>(),
-                Enumerable.Empty<IResourceSchedule<int, int, int>>(),
-                Enumerable.Empty<IWorkStream<int>>());
+            m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity<int, int, int>>([], [], []);
             m_ArrowGraph = new ArrowGraphModel();
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
             m_TrackingSeriesSet = new TrackingSeriesSetModel();
@@ -319,12 +316,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                         else
                         {
-                            values = scheduledSeries.ResourceSchedule.ActivityAllocation.ToList();
+                            values = [.. scheduledSeries.ResourceSchedule.ActivityAllocation];
                         }
                     }
                     else
                     {
-                        values = scheduledSeries.ResourceSchedule.ActivityAllocation.ToList();
+                        values = [.. scheduledSeries.ResourceSchedule.ActivityAllocation];
                     }
 
                     scheduledSeries.ResourceSchedule.ActivityAllocation.Clear();
@@ -376,11 +373,10 @@ namespace Zametek.ViewModel.ProjectPlan
         private static TrackingSeriesSetModel CalculateTrackingSeriesSet(IEnumerable<ActivityModel> activities)
         {
             ArgumentNullException.ThrowIfNull(activities);
-            IList<ActivityModel> orderedActivities = activities
+            IList<ActivityModel> orderedActivities = [.. activities
                 .Select(x => x.CloneObject())
                 .OrderBy(x => x.EarliestFinishTime.GetValueOrDefault())
-                .ThenBy(x => x.EarliestStartTime.GetValueOrDefault())
-                .ToList();
+                .ThenBy(x => x.EarliestStartTime.GetValueOrDefault())];
 
             // Plan.
             List<TrackingPointModel> planPointSeries =
@@ -924,10 +920,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ClearSettings();
 
-                    GraphCompilation = new GraphCompilation<int, int, int, DependentActivity<int, int, int>>(
-                        Enumerable.Empty<DependentActivity<int, int, int>>(),
-                        Enumerable.Empty<IResourceSchedule<int, int, int>>(),
-                        Enumerable.Empty<IWorkStream<int>>());
+                    GraphCompilation = new GraphCompilation<int, int, int, DependentActivity<int, int, int>>([], [], []);
 
                     ArrowGraph = new ArrowGraphModel();
 
