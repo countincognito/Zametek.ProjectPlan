@@ -192,6 +192,9 @@
   <data name="Label_DefaultUnitCost" xml:space="preserve">
     <value>Default Unit Cost</value>
   </data>
+  <data name="Label_DefaultWorkStream" xml:space="preserve">
+    <value>Default</value>
+  </data>
   <data name="Label_DeleteColumn" xml:space="preserve">
     <value>Delete</value>
   </data>

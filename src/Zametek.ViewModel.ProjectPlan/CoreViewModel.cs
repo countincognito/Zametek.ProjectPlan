@@ -107,12 +107,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_CompileOnSettingsUpdateSub = this
                 .WhenAnyValue(core => core.IsReadyToCompile)
-                //core => core.ProjectStart, // TODO
-                //core => core.ResourceSettings,
-                //core => core.ArrowGraphSettings,
-                //core => core.WorkStreamSettings,
-                //core => core.UseBusinessDays)
-                //.ObserveOn(RxApp.TaskpoolScheduler)
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(isReady =>
                 {

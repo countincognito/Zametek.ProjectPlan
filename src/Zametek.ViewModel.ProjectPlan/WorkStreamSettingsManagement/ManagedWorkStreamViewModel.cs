@@ -63,16 +63,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public int DisplayOrder
         {
             get => m_DisplayOrder;
-            set
-            {
-                if (m_DisplayOrder != value)
-                {
-                    BeginEdit();
-                    m_DisplayOrder = value;
-                    EndEdit();
-                }
-                this.RaisePropertyChanged();
-            }
+            set => this.RaiseAndSetIfChanged(ref m_DisplayOrder, value);
         }
 
         private ColorFormatModel m_ColorFormat;

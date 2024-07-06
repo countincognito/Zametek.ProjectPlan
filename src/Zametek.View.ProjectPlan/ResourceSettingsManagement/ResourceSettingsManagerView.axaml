@@ -325,7 +325,9 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch">
+							<Grid VerticalAlignment="Stretch"
+							      x:DataType="vm:ManagedResourceViewModel"
+								  IsEnabled="{Binding Path=InterActivityAllocationIsIndirect, Mode=OneWay}">
 								<Grid.Styles>
 									<Style Selector="Popup > PopupRoot > Panel > VisualLayerManager > ContentPresenter#PART_ContentPresenter">
 										<Setter Property="BorderBrush" Value="Black" />

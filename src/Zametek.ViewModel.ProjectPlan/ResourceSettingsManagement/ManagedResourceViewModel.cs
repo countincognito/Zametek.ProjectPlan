@@ -49,6 +49,12 @@ namespace Zametek.ViewModel.ProjectPlan
             m_WorkStreamSettings = m_CoreViewModel.WorkStreamSettings;
             RefreshWorkStreamSelector();
 
+            m_InterActivityAllocationIsIndirect = this
+                .WhenAnyValue(
+                    core => core.InterActivityAllocationType,
+                    (interActivityAllocationType) => interActivityAllocationType == InterActivityAllocationType.Indirect)
+                .ToProperty(this, x => x.InterActivityAllocationIsIndirect);
+
             m_WorkStreamSettingsSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.WorkStreamSettings)
                 .ObserveOn(Scheduler.CurrentThread)
@@ -58,6 +64,9 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Properties
+
+        private readonly ObservableAsPropertyHelper<bool> m_InterActivityAllocationIsIndirect;
+        public bool InterActivityAllocationIsIndirect => m_InterActivityAllocationIsIndirect.Value;
 
         private WorkStreamSettingsModel m_WorkStreamSettings;
         private WorkStreamSettingsModel WorkStreamSettings

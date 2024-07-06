@@ -8,6 +8,7 @@ using ReactiveUI;
 using System.Data;
 using System.Globalization;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -117,7 +118,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.GroupByMode,
                     rcm => rcm.AnnotateGroups,
                     (a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i))
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(async result =>
                 {
                     GanttChartPlotModel = await BuildGanttChartPlotModelAsync(
@@ -219,6 +220,11 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(graphCompilation);
             var plotModel = new PlotModel();
 
+            if (graphCompilation.DependentActivities.Count() == 0)
+            {
+                return plotModel;
+            }
+
             int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
 
             plotModel.Axes.Add(BuildResourceChartXAxis(dateTimeCalculator, finishTime, showDates, projectStartDateTime));
@@ -309,7 +315,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                     (resourceSeries.Title, resourceSeries.DisplayOrder, orderedScheduledActivities));
                             }
 
-                            // Order the set according to the start times of the first activity for each resource.
+                            // Order the set according to the display order, followed by the start times of the first activity for each resource.
 
                             IList<(string, int, IList<ScheduledActivityModel>)> orderedScheduledResourceActivitiesSet = scheduledResourceActivitiesSet
                                 .OrderBy(x => x.DisplayOrder)
@@ -399,15 +405,24 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             // Pivot the scheduled activities so that they are grouped by work stream IDs.
 
-                            // Gather all the used work streams.
+                            // Gather all the used work stream
 
-                            var workStreamLookup = new Dictionary<int, string>();
+                            var workStreamLookup = new Dictionary<int, WorkStreamModel>();
 
-                            workStreamLookup.TryAdd(default, @"Default");
+                            // Include a catch-all work stream as default.
 
-                            foreach (IWorkStream<int> workStream in graphCompilation.WorkStreams)
+                            workStreamLookup.TryAdd(
+                                default,
+                                new()
+                                {
+                                    Id = default,
+                                    Name = Resource.ProjectPlan.Labels.Label_DefaultWorkStream,
+                                    DisplayOrder = -1
+                                });
+
+                            foreach (WorkStreamModel workStream in workStreamSettings.WorkStreams)
                             {
-                                workStreamLookup.TryAdd(workStream.Id, workStream.Name);
+                                workStreamLookup.TryAdd(workStream.Id, workStream);
                             }
 
                             // Go through all the activities (in reverse display order).
@@ -424,11 +439,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 .DistinctBy(x => x.Id)
                                 .ToDictionary(x => x.Id);
 
-
-
-
-                            //
-
+                            // Split the activities according to work stream ID.
 
                             Dictionary<int, IList<ScheduledActivityModel>> activitiesByWorkStream = [];
 
@@ -464,20 +475,24 @@ namespace Zametek.ViewModel.ProjectPlan
                                 }
                             }
 
-                            // Order the set according to the start times of the first activity for each resource.
+                            // Check all the work stream IDs that are used can be found in the lookup.
+                            // Otherwise return early.
 
-                            IList<(int, IList<ScheduledActivityModel>)> orderedActivitiesByWorkStream = activitiesByWorkStream
-                                .OrderByDescending(x => x.Value.OrderBy(y => y.StartTime)
-                                    .FirstOrDefault()?.StartTime ?? 0)
+                            if (!activitiesByWorkStream.Keys.ToHashSet().IsSubsetOf(workStreamLookup.Keys))
+                            {
+                                return plotModel;
+                            }
+
+                            // Order the set according to display order, followed by the start times of the first activity for each work stream.
+
+                            IList<(int WorkStreamId, IList<ScheduledActivityModel>)> orderedActivitiesByWorkStream = activitiesByWorkStream
+                                .OrderBy(x => workStreamLookup[x.Key].DisplayOrder)
                                 .ThenBy(x => x.Value.OrderBy(y => y.StartTime)
+                                    .FirstOrDefault()?.StartTime ?? 0)
+                                .ThenByDescending(x => x.Value.OrderBy(y => y.FinishTime)
                                     .LastOrDefault()?.FinishTime ?? 0)
                                 .Select(x => (x.Key, x.Value))
                                 .ToList();
-
-
-
-                            //// Record the work stream name, and the scheduled activities (in order).
-
 
                             foreach ((int workStreamId, IList<ScheduledActivityModel> scheduledActivities) in orderedActivitiesByWorkStream)
                             {
@@ -540,7 +555,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                              MaximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStartDateTime, dateTimeCalculator),
                                              MinimumY = minimumY,
                                              MaximumY = maximumY,
-                                             ToolTip = $@"work stream {workStreamId}",
+                                             ToolTip = workStreamLookup[workStreamId].Name,
                                              Fill = OxyColor.FromAColor(10, OxyColors.Blue),
                                              Stroke = OxyColors.Black,
                                              StrokeThickness = 1
@@ -552,25 +567,6 @@ namespace Zametek.ViewModel.ProjectPlan
                             // This item will appear at the top of the grouping.
                             series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
                             labels.Add(string.Empty);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                         }
 
                         break;

@@ -286,6 +286,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default.
+        /// </summary>
+        public static string Label_DefaultWorkStream {
+            get {
+                return ResourceManager.GetString("Label_DefaultWorkStream", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Label_DeleteColumn {
