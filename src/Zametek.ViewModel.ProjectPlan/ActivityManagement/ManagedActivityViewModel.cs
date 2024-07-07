@@ -453,15 +453,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     //SetError(nameof(DependenciesString), errorMessage); // TODO
                     throw new DataValidationException(errorMessage);
                 }
-                else
+
+                if (updatedDependencies is not null)
                 {
-                    if (updatedDependencies is not null)
-                    {
-                        m_VertexGraphCompiler.SetActivityDependencies(Id, new HashSet<int>(updatedDependencies));
-                    }
-                    this.RaisePropertyChanged();
-                    this.RaisePropertyChanged(nameof(Dependencies));
+                    m_VertexGraphCompiler.SetActivityDependencies(Id, new HashSet<int>(updatedDependencies));
                 }
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged(nameof(Dependencies));
             }
         }
 
