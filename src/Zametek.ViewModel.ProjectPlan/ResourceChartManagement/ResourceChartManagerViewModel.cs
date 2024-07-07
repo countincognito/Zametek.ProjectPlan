@@ -22,8 +22,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly object m_Lock;
 
         private static readonly IList<IFileFilter> s_ExportFileFilters =
-            new List<IFileFilter>
-            {
+            [
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ImageJpegFileType,
@@ -48,7 +47,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Resource.ProjectPlan.Filters.Filter_PdfFilePattern
                     ]
                 }
-            };
+            ];
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
@@ -197,7 +196,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (combinedResourceSeries.Any())
             {
-                IList<int> total = new List<int>();
+                IList<int> total = [];
 
                 foreach (ResourceSeriesModel series in combinedResourceSeries)
                 {
@@ -218,7 +217,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Color = color
                         };
 
-                        if (series.ResourceSchedule.ActivityAllocation.Any())
+                        if (series.ResourceSchedule.ActivityAllocation.Count != 0)
                         {
                             // Mark the start of the plot.
                             areaSeries.Points.Add(new DataPoint(0.0, 0.0));
@@ -285,7 +284,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return new LinearAxis();
         }
 
-        private static Axis BuildResourceChartYAxis()
+        private static LinearAxis BuildResourceChartYAxis()
         {
             return new LinearAxis
             {

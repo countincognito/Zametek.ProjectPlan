@@ -446,20 +446,22 @@ namespace Zametek.ViewModel.ProjectPlan
             get => string.Join(DependenciesStringValidationRule.Separator, Dependencies.OrderBy(x => x));
             set
             {
-                //RemoveErrors(nameof(DependenciesString));
+                //RemoveErrors(nameof(DependenciesString)); // TODO
                 (IEnumerable<int>? updatedDependencies, string? errorMessage) = DependenciesStringValidationRule.Validate(value, Id);
                 if (errorMessage is not null)
                 {
-                    //SetError(nameof(DependenciesString), errorMessage);
+                    //SetError(nameof(DependenciesString), errorMessage); // TODO
                     throw new DataValidationException(errorMessage);
                 }
-
-                if (updatedDependencies is not null)
+                else
                 {
-                    m_VertexGraphCompiler.SetActivityDependencies(Id, new HashSet<int>(updatedDependencies));
+                    if (updatedDependencies is not null)
+                    {
+                        m_VertexGraphCompiler.SetActivityDependencies(Id, new HashSet<int>(updatedDependencies));
+                    }
+                    this.RaisePropertyChanged();
+                    this.RaisePropertyChanged(nameof(Dependencies));
                 }
-                this.RaisePropertyChanged();
-                this.RaisePropertyChanged(nameof(Dependencies));
             }
         }
 
@@ -731,8 +733,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 time = tracker.Time + 1;
             }
 
-            AddTrackers(new[]
-            {
+            AddTrackers(
+            [
                 new TrackerModel
                 {
                     Index = count,
@@ -740,7 +742,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ActivityId = Id,
                     PercentageComplete = percentageComplete
                 }
-            });
+            ]);
         }
 
         public void RemoveTracker()

@@ -130,9 +130,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe(_ => BuildArrowGraph());
 
             m_BuildResourceSeriesSetSub = this
-                .WhenAnyValue(
-                    core => core.GraphCompilation)//,
-                                                  //core => core.ResourceSettings)
+                .WhenAnyValue(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildResourceSeriesSet());
 

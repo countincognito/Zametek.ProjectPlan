@@ -220,7 +220,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(graphCompilation);
             var plotModel = new PlotModel();
 
-            if (graphCompilation.DependentActivities.Count() == 0)
+            if (!graphCompilation.DependentActivities.Any())
             {
                 return plotModel;
             }
@@ -330,8 +330,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                 IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
                                 Dictionary<int, IDependentActivity<int, int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
-                                int resourceStartTime = orderedScheduledActivities.LastOrDefault()?.StartTime ?? 0;
-                                int resourceFinishTime = orderedScheduledActivities.FirstOrDefault()?.FinishTime ?? 0;
+                                int resourceStartTime = orderedScheduledActivities.Select(x => x.StartTime).DefaultIfEmpty().Min();
+                                int resourceFinishTime = orderedScheduledActivities.Select(x => x.FinishTime).DefaultIfEmpty().Max();
                                 int minimumY = labels.Count;
 
                                 // Add an extra row for padding.
@@ -499,8 +499,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                 IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
                                 Dictionary<int, IDependentActivity<int, int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
-                                int resourceStartTime = orderedScheduledActivities.LastOrDefault()?.StartTime ?? 0;
-                                int resourceFinishTime = orderedScheduledActivities.FirstOrDefault()?.FinishTime ?? 0;
+                                int workStreamStartTime = orderedScheduledActivities.Select(x => x.StartTime).DefaultIfEmpty().Min();
+                                int workStreamFinishTime = orderedScheduledActivities.Select(x => x.FinishTime).DefaultIfEmpty().Max();
                                 int minimumY = labels.Count;
 
                                 // Add an extra row for padding.
@@ -551,8 +551,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                     plotModel.Annotations.Add(
                                          new OxyPlot.Annotations.RectangleAnnotation
                                          {
-                                             MinimumX = ChartHelper.CalculateChartTimeXValue(resourceStartTime, showDates, projectStartDateTime, dateTimeCalculator),
-                                             MaximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStartDateTime, dateTimeCalculator),
+                                             MinimumX = ChartHelper.CalculateChartTimeXValue(workStreamStartTime, showDates, projectStartDateTime, dateTimeCalculator),
+                                             MaximumX = ChartHelper.CalculateChartTimeXValue(workStreamFinishTime, showDates, projectStartDateTime, dateTimeCalculator),
                                              MinimumY = minimumY,
                                              MaximumY = maximumY,
                                              ToolTip = workStreamLookup[workStreamId].Name,

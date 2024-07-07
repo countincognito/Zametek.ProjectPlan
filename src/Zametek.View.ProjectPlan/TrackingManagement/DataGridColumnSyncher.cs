@@ -189,7 +189,7 @@ namespace Zametek.View.ProjectPlan
             return element.GetValue(ColumnTypeProperty);
         }
 
-        private static void HandleColumnTypeChanged(AvaloniaObject element, Type? newValue)
+        private static void HandleColumnTypeChanged(AvaloniaObject _, Type? newValue)
         {
             // Check columnTypeValue is actually a DataGridColumn.
             if (newValue is not null

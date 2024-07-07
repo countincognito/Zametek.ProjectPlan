@@ -313,7 +313,9 @@
 					<DataGridTemplateColumn.CellTemplate>
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
-								  Classes="editable">
+								  Classes="editable"
+								  x:DataType="vm:ManagedResourceViewModel"
+								  IsEnabled="{Binding Path=InterActivityAllocationIsIndirect, Mode=OneWay}">
 								<TextBlock VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
