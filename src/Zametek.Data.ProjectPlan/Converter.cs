@@ -21,7 +21,7 @@ namespace Zametek.Data.ProjectPlan
         public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_3_1.ProjectPlanModel projectPlan)
         {
             ArgumentNullException.ThrowIfNull(projectPlan);
-            return m_Mapper.Map<v0_3_1.ProjectPlanModel, Common.ProjectPlan.ProjectPlanModel>(projectPlan);
+            return Upgrade(v0_3_2.Converter.Upgrade(m_Mapper, projectPlan));
         }
 
         public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_3_0.ProjectPlanModel projectPlan)

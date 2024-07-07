@@ -14,6 +14,7 @@
     <None Remove="TestFiles\test_v0_2_1.zpp" />
     <None Remove="TestFiles\test_v0_3_0.zpp" />
     <None Remove="TestFiles\test_v0_3_1.zpp" />
+    <None Remove="TestFiles\test_v0_3_2.zpp" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,6 +31,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="TestFiles\test_v0_2_1.zpp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\test_v0_3_2.zpp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
