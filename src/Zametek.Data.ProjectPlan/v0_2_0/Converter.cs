@@ -15,8 +15,8 @@
                 errors = new GraphCompilationErrorsModel
                 {
                     AllResourcesExplicitTargetsButNotAllActivitiesTargeted = projectPlan.GraphCompilation?.AllResourcesExplicitTargetsButNotAllActivitiesTargeted ?? false,
-                    CircularDependencies = projectPlan.GraphCompilation?.CircularDependencies ?? new List<v0_1_0.CircularDependencyModel>(),
-                    MissingDependencies = projectPlan.GraphCompilation?.MissingDependencies ?? new List<int>(),
+                    CircularDependencies = projectPlan.GraphCompilation?.CircularDependencies ?? [],
+                    MissingDependencies = projectPlan.GraphCompilation?.MissingDependencies ?? [],
                 };
             }
 
@@ -28,8 +28,8 @@
                 ResourceSettings = projectPlan.ResourceSettings,
                 GraphCompilation = new GraphCompilationModel
                 {
-                    DependentActivities = projectPlan.GraphCompilation?.DependentActivities ?? new List<v0_1_0.DependentActivityModel>(),
-                    ResourceSchedules = projectPlan.GraphCompilation?.ResourceSchedules ?? new List<v0_1_0.ResourceScheduleModel>(),
+                    DependentActivities = projectPlan.GraphCompilation?.DependentActivities ?? [],
+                    ResourceSchedules = projectPlan.GraphCompilation?.ResourceSchedules ?? [],
                     Errors = errors,
                     CyclomaticComplexity = projectPlan.GraphCompilation?.CyclomaticComplexity ?? default,
                     Duration = projectPlan.GraphCompilation?.Duration ?? default,

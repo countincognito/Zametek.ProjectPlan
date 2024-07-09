@@ -5,7 +5,7 @@
     {
         public ResourceModel Resource { get; init; } = new ResourceModel();
 
-        public List<v0_2_1.ScheduledActivityModel> ScheduledActivities { get; init; } = new List<v0_2_1.ScheduledActivityModel>();
+        public List<v0_2_1.ScheduledActivityModel> ScheduledActivities { get; init; } = [];
 
         public int FinishTime { get; init; }
     }

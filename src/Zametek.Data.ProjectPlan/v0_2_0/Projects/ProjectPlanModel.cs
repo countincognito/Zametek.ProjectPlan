@@ -7,7 +7,7 @@
 
         public DateTime ProjectStart { get; init; }
 
-        public List<v0_1_0.DependentActivityModel> DependentActivities { get; init; } = new List<v0_1_0.DependentActivityModel>();
+        public List<v0_1_0.DependentActivityModel> DependentActivities { get; init; } = [];
 
         public v0_1_0.ArrowGraphSettingsModel? ArrowGraphSettings { get; init; }
 

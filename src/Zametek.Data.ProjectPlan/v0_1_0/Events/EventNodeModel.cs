@@ -9,8 +9,8 @@ namespace Zametek.Data.ProjectPlan.v0_1_0
 
         public EventModel? Content { get; init; }
 
-        public List<int> IncomingEdges { get; init; } = new List<int>();
+        public List<int> IncomingEdges { get; init; } = [];
 
-        public List<int> OutgoingEdges { get; init; } = new List<int>();
+        public List<int> OutgoingEdges { get; init; } = [];
     }
 }

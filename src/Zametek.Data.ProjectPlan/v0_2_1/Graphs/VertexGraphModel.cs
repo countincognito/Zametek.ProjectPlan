@@ -3,8 +3,8 @@
     [Serializable]
     public record VertexGraphModel
     {
-        public List<v0_1_0.EventEdgeModel> Edges { get; init; } = new List<v0_1_0.EventEdgeModel>();
+        public List<v0_1_0.EventEdgeModel> Edges { get; init; } = [];
 
-        public List<ActivityNodeModel> Nodes { get; init; } = new List<ActivityNodeModel>();
+        public List<ActivityNodeModel> Nodes { get; init; } = [];
     }
 }

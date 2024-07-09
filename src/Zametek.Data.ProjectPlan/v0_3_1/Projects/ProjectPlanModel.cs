@@ -7,7 +7,7 @@
 
         public DateTimeOffset ProjectStart { get; init; }
 
-        public List<v0_3_0.DependentActivityModel> DependentActivities { get; init; } = new List<v0_3_0.DependentActivityModel>();
+        public List<v0_3_0.DependentActivityModel> DependentActivities { get; init; } = [];
 
         public v0_1_0.ArrowGraphSettingsModel ArrowGraphSettings { get; init; } = new v0_1_0.ArrowGraphSettingsModel();
 

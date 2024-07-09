@@ -19,7 +19,7 @@ namespace Zametek.Data.ProjectPlan.v0_2_1
                     AllResourcesExplicitTargetsButNotAllActivitiesTargeted = projectPlan.GraphCompilation.Errors.AllResourcesExplicitTargetsButNotAllActivitiesTargeted,
                     CircularDependencies = projectPlan.GraphCompilation.Errors.CircularDependencies,
                     MissingDependencies = projectPlan.GraphCompilation.Errors.MissingDependencies,
-                    InvalidConstraints = new List<int>(),
+                    InvalidConstraints = [],
                 };
             }
 
@@ -31,8 +31,8 @@ namespace Zametek.Data.ProjectPlan.v0_2_1
                 ResourceSettings = projectPlan.ResourceSettings,
                 GraphCompilation = new GraphCompilationModel
                 {
-                    DependentActivities = mapper.Map<List<v0_1_0.DependentActivityModel>, List<DependentActivityModel>>(projectPlan.GraphCompilation?.DependentActivities ?? new List<v0_1_0.DependentActivityModel>()),
-                    ResourceSchedules = mapper.Map<List<v0_1_0.ResourceScheduleModel>, List<ResourceScheduleModel>>(projectPlan.GraphCompilation?.ResourceSchedules ?? new List<v0_1_0.ResourceScheduleModel>()),
+                    DependentActivities = mapper.Map<List<v0_1_0.DependentActivityModel>, List<DependentActivityModel>>(projectPlan.GraphCompilation?.DependentActivities ?? []),
+                    ResourceSchedules = mapper.Map<List<v0_1_0.ResourceScheduleModel>, List<ResourceScheduleModel>>(projectPlan.GraphCompilation?.ResourceSchedules ?? []),
                     Errors = errors,
                     CyclomaticComplexity = projectPlan.GraphCompilation?.CyclomaticComplexity ?? default,
                     Duration = projectPlan.GraphCompilation?.Duration ?? default,

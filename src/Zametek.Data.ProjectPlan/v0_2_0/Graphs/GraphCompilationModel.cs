@@ -3,9 +3,9 @@
     [Serializable]
     public record GraphCompilationModel
     {
-        public List<v0_1_0.DependentActivityModel> DependentActivities { get; init; } = new List<v0_1_0.DependentActivityModel>();
+        public List<v0_1_0.DependentActivityModel> DependentActivities { get; init; } = [];
 
-        public List<v0_1_0.ResourceScheduleModel> ResourceSchedules { get; init; } = new List<v0_1_0.ResourceScheduleModel>();
+        public List<v0_1_0.ResourceScheduleModel> ResourceSchedules { get; init; } = [];
 
         public GraphCompilationErrorsModel? Errors { get; init; }
 

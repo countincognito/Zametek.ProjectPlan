@@ -3,6 +3,6 @@
     [Serializable]
     public record CircularDependencyModel
     {
-        public List<int> Dependencies { get; init; } = new List<int>();
+        public List<int> Dependencies { get; init; } = [];
     }
 }

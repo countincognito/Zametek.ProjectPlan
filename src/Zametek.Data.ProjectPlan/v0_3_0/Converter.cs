@@ -18,7 +18,7 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
             {
 
                 // C0010
-                if (projectPlan.GraphCompilation.Errors.MissingDependencies.Any())
+                if (projectPlan.GraphCompilation.Errors.MissingDependencies.Count != 0)
                 {
                     compilationErrors.Add(
                         new GraphCompilationErrorModel
@@ -31,7 +31,7 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
                 }
 
                 // C0020
-                if (projectPlan.GraphCompilation.Errors.CircularDependencies.Any())
+                if (projectPlan.GraphCompilation.Errors.CircularDependencies.Count != 0)
                 {
                     compilationErrors.Add(
                         new GraphCompilationErrorModel
@@ -63,8 +63,8 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
                 ResourceSettings = projectPlan.ResourceSettings ?? new v0_1_0.ResourceSettingsModel(),
                 GraphCompilation = new GraphCompilationModel
                 {
-                    DependentActivities = mapper.Map<List<v0_2_1.DependentActivityModel>, List<DependentActivityModel>>(projectPlan.GraphCompilation?.DependentActivities ?? new List<v0_2_1.DependentActivityModel>()),
-                    ResourceSchedules = mapper.Map<List<v0_2_1.ResourceScheduleModel>, List<ResourceScheduleModel>>(projectPlan.GraphCompilation?.ResourceSchedules ?? new List<v0_2_1.ResourceScheduleModel>()),
+                    DependentActivities = mapper.Map<List<v0_2_1.DependentActivityModel>, List<DependentActivityModel>>(projectPlan.GraphCompilation?.DependentActivities ?? []),
+                    ResourceSchedules = mapper.Map<List<v0_2_1.ResourceScheduleModel>, List<ResourceScheduleModel>>(projectPlan.GraphCompilation?.ResourceSchedules ?? []),
                     CompilationErrors = compilationErrors,
                     CyclomaticComplexity = projectPlan.GraphCompilation?.CyclomaticComplexity ?? default,
                     Duration = projectPlan.GraphCompilation?.Duration ?? default,

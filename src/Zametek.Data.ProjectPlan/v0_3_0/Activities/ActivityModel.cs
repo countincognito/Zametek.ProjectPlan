@@ -11,11 +11,11 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
 
         public string? Notes { get; init; }
 
-        public List<int> TargetResources { get; init; } = new List<int>();
+        public List<int> TargetResources { get; init; } = [];
 
         public LogicalOperator TargetResourceOperator { get; init; }
 
-        public List<int> AllocatedToResources { get; init; } = new List<int>();
+        public List<int> AllocatedToResources { get; init; } = [];
 
         public bool CanBeRemoved { get; init; }
 
@@ -39,6 +39,6 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
 
         public DateTimeOffset? MaximumLatestFinishDateTime { get; init; }
 
-        public List<TrackerModel> Trackers { get; init; } = new List<TrackerModel>();
+        public List<TrackerModel> Trackers { get; init; } = [];
     }
 }

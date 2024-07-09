@@ -3,9 +3,9 @@
     [Serializable]
     public record ArrowGraphModel
     {
-        public List<ActivityEdgeModel> Edges { get; init; } = new List<ActivityEdgeModel>();
+        public List<ActivityEdgeModel> Edges { get; init; } = [];
 
-        public List<EventNodeModel> Nodes { get; init; } = new List<EventNodeModel>();
+        public List<EventNodeModel> Nodes { get; init; } = [];
 
         public bool IsStale { get; init; }
     }

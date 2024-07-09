@@ -3,11 +3,11 @@
     [Serializable]
     public record GraphCompilationModel
     {
-        public List<v0_3_0.DependentActivityModel> DependentActivities { get; init; } = new List<v0_3_0.DependentActivityModel>();
+        public List<v0_3_0.DependentActivityModel> DependentActivities { get; init; } = [];
 
-        public List<ResourceScheduleModel> ResourceSchedules { get; init; } = new List<ResourceScheduleModel>();
+        public List<ResourceScheduleModel> ResourceSchedules { get; init; } = [];
 
-        public List<v0_3_0.GraphCompilationErrorModel> CompilationErrors { get; init; } = new List<v0_3_0.GraphCompilationErrorModel>();
+        public List<v0_3_0.GraphCompilationErrorModel> CompilationErrors { get; init; } = [];
 
         public int CyclomaticComplexity { get; init; }
 

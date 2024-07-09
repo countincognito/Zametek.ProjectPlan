@@ -9,11 +9,11 @@ namespace Zametek.Data.ProjectPlan.v0_1_0
 
         public string? Name { get; init; }
 
-        public List<int> TargetResources { get; init; } = new List<int>();
+        public List<int> TargetResources { get; init; } = [];
 
         public LogicalOperator TargetResourceOperator { get; init; }
 
-        public List<int> AllocatedToResources { get; init; } = new List<int>();
+        public List<int> AllocatedToResources { get; init; } = [];
 
         public bool CanBeRemoved { get; init; }
 

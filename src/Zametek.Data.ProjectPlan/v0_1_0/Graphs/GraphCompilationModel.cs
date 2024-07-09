@@ -5,13 +5,13 @@
     {
         public bool AllResourcesExplicitTargetsButNotAllActivitiesTargeted { get; init; }
 
-        public List<CircularDependencyModel> CircularDependencies { get; init; } = new List<CircularDependencyModel>();
+        public List<CircularDependencyModel> CircularDependencies { get; init; } = [];
 
-        public List<int> MissingDependencies { get; init; } = new List<int>();
+        public List<int> MissingDependencies { get; init; } = [];
 
-        public List<DependentActivityModel> DependentActivities { get; init; } = new List<DependentActivityModel>();
+        public List<DependentActivityModel> DependentActivities { get; init; } = [];
 
-        public List<ResourceScheduleModel> ResourceSchedules { get; init; } = new List<ResourceScheduleModel>();
+        public List<ResourceScheduleModel> ResourceSchedules { get; init; } = [];
 
         public int CyclomaticComplexity { get; init; }
 
