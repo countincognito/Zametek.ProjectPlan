@@ -1,7 +1,7 @@
-﻿using Avalonia.Data.Converters;
+﻿using Avalonia;
+using Avalonia.Data.Converters;
 using Avalonia.Media;
 using System;
-using Avalonia;
 using System.Globalization;
 using Zametek.Common.ProjectPlan;
 
@@ -14,8 +14,7 @@ namespace Zametek.View.ProjectPlan
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            var input = value as ColorFormatModel;
-            if (input is null)
+            if (value is not ColorFormatModel input)
             {
                 return AvaloniaProperty.UnsetValue;
             }

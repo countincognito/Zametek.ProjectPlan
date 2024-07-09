@@ -16,8 +16,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private const int c_NormalStrokeWeight = 2;
         private const int c_BoldStrokeWeight = 5;
 
-        private readonly IDictionary<EdgeType, EdgeDashStyle> m_EdgeTypeDashLookup;
-        private readonly IDictionary<EdgeType, int> m_EdgeTypeWeightLookup;
+        private readonly Dictionary<EdgeType, EdgeDashStyle> m_EdgeTypeDashLookup;
+        private readonly Dictionary<EdgeType, int> m_EdgeTypeWeightLookup;
 
         #endregion
 
@@ -26,8 +26,9 @@ namespace Zametek.ViewModel.ProjectPlan
         public GraphEdgeFormatLookup(IEnumerable<EdgeTypeFormatModel> edgeTypeFormats)
         {
             ArgumentNullException.ThrowIfNull(edgeTypeFormats);
-            m_EdgeTypeDashLookup = new Dictionary<EdgeType, EdgeDashStyle>();
-            m_EdgeTypeWeightLookup = new Dictionary<EdgeType, int>();
+            m_EdgeTypeDashLookup = [];
+            m_EdgeTypeWeightLookup = [];
+
             foreach (EdgeTypeFormatModel edgeTypeFormat in edgeTypeFormats)
             {
                 m_EdgeTypeDashLookup.Add(edgeTypeFormat.EdgeType, edgeTypeFormat.EdgeDashStyle);

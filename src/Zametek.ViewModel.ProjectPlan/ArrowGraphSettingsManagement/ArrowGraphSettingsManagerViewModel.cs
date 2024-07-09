@@ -39,7 +39,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dialogService);
             m_Lock = new object();
             m_Current = new ArrowGraphSettingsModel();
-            m_EdgeTypeFormats = new List<EdgeTypeFormatModel>();
+            m_EdgeTypeFormats = [];
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
@@ -47,7 +47,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasActivitySeverities = false;
             m_AreSettingsUpdated = false; ;
 
-            m_ActivitySeverities = new ObservableCollection<IManagedActivitySeverityViewModel>();
+            m_ActivitySeverities = [];
             m_ReadOnlyActivitySeverities = new ReadOnlyObservableCollection<IManagedActivitySeverityViewModel>(m_ActivitySeverities);
 
             SetSelectedManagedActivitySeveritiesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedActivitySeverities);
@@ -163,7 +163,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ICollection<IManagedActivitySeverityViewModel> activitySeverities = SelectedActivitySeverities.Values;
 
-                    if (!activitySeverities.Any())
+                    if (activitySeverities.Count == 0)
                     {
                         return;
                     }

@@ -1,7 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using System;
 using Splat;
+using System;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan

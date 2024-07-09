@@ -10,9 +10,6 @@ namespace Zametek.View.ProjectPlan
         public MapperProfile()
         {
             CreateMap<IFileFilter, FilePickerFileType>().ReverseMap();
-
-
-
         }
     }
 }

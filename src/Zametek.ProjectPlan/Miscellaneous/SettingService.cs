@@ -128,8 +128,7 @@ namespace Zametek.ProjectPlan
             new()
             {
                 EdgeTypeFormats = new List<EdgeTypeFormatModel>(
-                    new EdgeTypeFormatModel[]
-                    {
+                    [
                         new()
                         {
                             EdgeType = EdgeType.Activity,
@@ -154,10 +153,9 @@ namespace Zametek.ProjectPlan
                             EdgeDashStyle = EdgeDashStyle.Dashed,
                             EdgeWeightStyle = EdgeWeightStyle.Bold
                         }
-                    }),
+                    ]),
                 ActivitySeverities = new List<ActivitySeverityModel>(
-                    new ActivitySeverityModel[]
-                    {
+                    [
                         // Black.
                         new()
                         {
@@ -214,7 +212,7 @@ namespace Zametek.ProjectPlan
                                 B = 0
                             }
                         }
-                    })
+                    ])
             };
 
         public ResourceSettingsModel DefaultResourceSettings =>
@@ -225,36 +223,6 @@ namespace Zametek.ProjectPlan
             };
 
         public WorkStreamSettingsModel DefaultWorkStreamSettings => new();
-
-        //public void SetMainViewSettings(MainViewSettingsModel mainViewSettings)
-        //{
-        //    if (mainViewSettings is null)
-        //    {
-        //        throw new ArgumentNullException(nameof(mainViewSettings));
-        //    }
-
-        //    Settings.Default.Main_Maximized = mainViewSettings.Maximized;
-        //    Settings.Default.Main_Top = mainViewSettings.Top;
-        //    Settings.Default.Main_Left = mainViewSettings.Left;
-        //    Settings.Default.Main_Width = mainViewSettings.Width;
-        //    Settings.Default.Main_Height = mainViewSettings.Height;
-        //    Settings.Default.Save();
-        //}
-
-        //public MainViewSettingsModel MainViewSettings
-        //{
-        //    get 
-        //    {
-        //        return new MainViewSettingsModel
-        //        {
-        //            Maximized = Settings.Default.Main_Maximized,
-        //            Top = Settings.Default.Main_Top,
-        //            Left = Settings.Default.Main_Left,
-        //            Width = Settings.Default.Main_Width,
-        //            Height = Settings.Default.Main_Height,
-        //        };
-        //    }
-        //}
 
         public void Reset()
         {

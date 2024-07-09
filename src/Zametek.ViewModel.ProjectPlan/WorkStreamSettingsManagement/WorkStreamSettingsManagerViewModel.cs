@@ -49,7 +49,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasWorkStreams = false;
             m_AreSettingsUpdated = false; ;
 
-            m_WorkStreams = new ObservableCollection<IManagedWorkStreamViewModel>();
+            m_WorkStreams = [];
             m_ReadOnlyWorkStreams = new ReadOnlyObservableCollection<IManagedWorkStreamViewModel>(m_WorkStreams);
 
             SetSelectedManagedWorkStreamsCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedWorkStreams);
@@ -171,7 +171,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ICollection<IManagedWorkStreamViewModel> workStreams = SelectedWorkStreams.Values;
 
-                    if (!workStreams.Any())
+                    if (workStreams.Count == 0)
                     {
                         return;
                     }

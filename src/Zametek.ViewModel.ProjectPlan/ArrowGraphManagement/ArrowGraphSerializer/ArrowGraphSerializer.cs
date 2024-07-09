@@ -228,7 +228,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Fill the graph.
             List<DiagramNodeModel> diagramNodeModels = nodeModels.Select(BuildDiagramNode).ToList();
-            List<DiagramEdgeModel> diagramEdgeModels = new();
+            List<DiagramEdgeModel> diagramEdgeModels = [];
 
             foreach (ActivityEdgeModel activityEdge in edgeModels)
             {

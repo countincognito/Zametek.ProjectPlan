@@ -15,7 +15,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public ActivitySeverityLookup(IEnumerable<ActivitySeverityModel> activitySeverities)
         {
             ArgumentNullException.ThrowIfNull(activitySeverities);
-            m_ActivitySeverities = activitySeverities.OrderBy(x => x.SlackLimit).ToList();
+            m_ActivitySeverities = [.. activitySeverities.OrderBy(x => x.SlackLimit)];
         }
 
         #endregion

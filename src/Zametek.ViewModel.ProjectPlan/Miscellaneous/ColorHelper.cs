@@ -43,7 +43,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 string value = matches[0].Groups[1].Value;
                 byte[] bytes = Convert.FromHexString(value);
 
-                if (bytes.Count() == 3)
+                if (bytes.Length == 3)
                 {
                     return new ColorFormatModel
                     {
@@ -53,7 +53,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         A = byte.MaxValue
                     };
                 }
-                else if (bytes.Count() == 4)
+                else if (bytes.Length == 4)
                 {
                     return new ColorFormatModel
                     {

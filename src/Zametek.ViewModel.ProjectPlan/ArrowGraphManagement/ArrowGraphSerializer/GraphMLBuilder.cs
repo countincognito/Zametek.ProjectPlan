@@ -9,8 +9,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public static graphml ToGraphML(DiagramArrowGraphModel diagramArrowGraph)
         {
             ArgumentNullException.ThrowIfNull(diagramArrowGraph);
-            IList<DiagramNodeModel> diagramNodes = diagramArrowGraph.Nodes.ToList();
-            IList<DiagramEdgeModel> diagramEdges = diagramArrowGraph.Edges.ToList();
+            IList<DiagramNodeModel> diagramNodes = [.. diagramArrowGraph.Nodes];
+            IList<DiagramEdgeModel> diagramEdges = [.. diagramArrowGraph.Edges];
             var graph = new graphmlGraph
             {
                 id = @"G",
@@ -20,12 +20,12 @@ namespace Zametek.ViewModel.ProjectPlan
             };
             return new graphml
             {
-                Items = new object[]
-                {
+                Items =
+                [
                     new graphmlKey { @for = @"node", id = @"d6", yfilestype = @"nodegraphics" },
                     new graphmlKey { @for = @"edge", id = @"d10", yfilestype = @"edgegraphics" },
                     graph
-                }
+                ]
             };
         }
 

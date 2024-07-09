@@ -157,9 +157,7 @@ namespace Zametek.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(layout);
 
-            ContextLocator = new Dictionary<string, Func<object?>>
-            {
-            };
+            ContextLocator = [];
 
             DockableLocator = new Dictionary<string, Func<IDockable?>>()
             {

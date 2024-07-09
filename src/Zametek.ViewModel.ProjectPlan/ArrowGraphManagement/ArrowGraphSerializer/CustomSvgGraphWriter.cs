@@ -45,12 +45,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void WriteLabelText(string text, double xContainer, double fontSize)
         {
-            List<string> endOfLines = new()
-            {
+            List<string> endOfLines =
+            [
                 "\r\n",
                 "\r",
                 "\n"
-            };
+            ];
             List<string> textLines = (from it in Regex.Split(NodeSanitizer(text), "(\r\n|\r|\n)")
                                       where !endOfLines.Contains(it)
                                       select it).ToList();

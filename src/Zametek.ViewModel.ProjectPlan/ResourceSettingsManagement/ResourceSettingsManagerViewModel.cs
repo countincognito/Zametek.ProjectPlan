@@ -172,7 +172,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ICollection<IManagedResourceViewModel> resources = SelectedResources.Values;
 
-                    if (!resources.Any())
+                    if (resources.Count == 0)
                     {
                         return;
                     }
