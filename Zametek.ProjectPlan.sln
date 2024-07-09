@@ -23,6 +23,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.Contract.ProjectPla
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zametek.ProjectPlan", "src\Zametek.ProjectPlan\Zametek.ProjectPlan.csproj", "{2C0BC8E0-93A0-4C9B-8DDE-10649BBF4AB7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.ProjectPlan.CommandLine", "src\Zametek.ProjectPlan.CommandLine\Zametek.ProjectPlan.CommandLine.csproj", "{85174477-C943-4582-8813-2AF1871B72D8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +63,10 @@ Global
 		{2C0BC8E0-93A0-4C9B-8DDE-10649BBF4AB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C0BC8E0-93A0-4C9B-8DDE-10649BBF4AB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C0BC8E0-93A0-4C9B-8DDE-10649BBF4AB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{85174477-C943-4582-8813-2AF1871B72D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85174477-C943-4582-8813-2AF1871B72D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85174477-C943-4582-8813-2AF1871B72D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85174477-C943-4582-8813-2AF1871B72D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,6 +80,7 @@ Global
 		{77823337-05DF-4D28-BF52-CBA4CBB49531} = {2D8630E7-83F0-4159-B9C4-EAB17491B87F}
 		{AB70A35D-DF24-4D9A-B159-58167A7EAADB} = {00473AF6-71E3-4AF8-8036-79F8A167BD4F}
 		{2C0BC8E0-93A0-4C9B-8DDE-10649BBF4AB7} = {00473AF6-71E3-4AF8-8036-79F8A167BD4F}
+		{85174477-C943-4582-8813-2AF1871B72D8} = {00473AF6-71E3-4AF8-8036-79F8A167BD4F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FC2AE5E7-6877-4295-9E87-C83CA5C3FB40}
