@@ -22,10 +22,6 @@ namespace Zametek.Contract.ProjectPlan
 
         WorkStreamSettingsModel DefaultWorkStreamSettings { get; }
 
-        //void SetMainViewSettings(MainViewSettingsModel mainViewSettings);
-
-        //MainViewSettingsModel MainViewSettings { get; }
-
         void Reset();
     }
 }

@@ -370,130 +370,131 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ThenBy(x => x.EarliestStartTime.GetValueOrDefault())];
 
             // Plan.
-            List<TrackingPointModel> planPointSeries =
-            [
-                // Starting point.
-                new TrackingPointModel()
-            ];
-
-            // Plan Projection.
-            List<TrackingPointModel> planProjectionPointSeries =
-            [
-                // Starting point.
-                new TrackingPointModel()
-            ];
+            List<TrackingPointModel> planPointSeries = [];
 
             // Progress.
-            List<TrackingPointModel> progressPointSeries =
-            [
-                new TrackingPointModel()
-            ];
-
-            // Progress Projection.
-            List<TrackingPointModel> progressProjectionPointSeries =
-            [
-                new TrackingPointModel()
-            ];
+            List<TrackingPointModel> progressPointSeries = [];
 
             // Effort.
-            List<TrackingPointModel> effortPointSeries =
-            [
-                new TrackingPointModel()
-            ];
+            List<TrackingPointModel> effortPointSeries = [];
+
+            // Plan Projection.
+            List<TrackingPointModel> planProjectionPointSeries = [];
+
+            // Progress Projection.
+            List<TrackingPointModel> progressProjectionPointSeries = [];
 
             // Effort Projection.
-            List<TrackingPointModel> effortProjectionPointSeries =
-            [
-                new TrackingPointModel()
-            ];
+            List<TrackingPointModel> effortProjectionPointSeries = [];
 
-            if (orderedActivities.Any())
+            var trackingSeriesSet = new TrackingSeriesSetModel
             {
-                double totalTime = Convert.ToDouble(orderedActivities.Sum(s => s.Duration));
+                Plan = planPointSeries,
+                PlanProjection = planProjectionPointSeries,
+                Progress = progressPointSeries,
+                ProgressProjection = progressProjectionPointSeries,
+                Effort = effortPointSeries,
+                EffortProjection = effortProjectionPointSeries
+            };
 
-                // Plan.
-                if (orderedActivities.All(x => x.EarliestFinishTime.HasValue))
+            if (!orderedActivities.Any())
+            {
+                return trackingSeriesSet;
+            }
+
+            planPointSeries.Add(new TrackingPointModel());
+
+            double totalTime = Convert.ToDouble(orderedActivities.Sum(s => s.Duration));
+
+            // Plan.
+            if (orderedActivities.All(x => x.EarliestFinishTime.HasValue))
+            {
+                int runningTotalTime = 0;
+                foreach (ActivityModel activity in orderedActivities)
                 {
-                    int runningTotalTime = 0;
-                    foreach (ActivityModel activity in orderedActivities)
+                    int time = activity.EarliestFinishTime.GetValueOrDefault();
+                    runningTotalTime += activity.Duration;
+                    double percentage = totalTime == 0 ? 0.0 : 100.0 * runningTotalTime / totalTime;
+                    planPointSeries.Add(new TrackingPointModel
                     {
-                        int time = activity.EarliestFinishTime.GetValueOrDefault();
-                        runningTotalTime += activity.Duration;
-                        double percentage = totalTime == 0 ? 0.0 : 100.0 * runningTotalTime / totalTime;
-                        planPointSeries.Add(new TrackingPointModel
+                        Time = time,
+                        ActivityId = activity.Id,
+                        ActivityName = activity.Name,
+                        Value = runningTotalTime,
+                        ValuePercentage = percentage
+                    });
+                }
+            }
+
+            // Progress and Effort.
+            int runningEffort = 0;
+
+            progressPointSeries.Add(new TrackingPointModel());
+            effortPointSeries.Add(new TrackingPointModel());
+
+            for (int timeIndex = 0; timeIndex < totalTime; timeIndex++)
+            {
+                // Calculate percentage progress at each time index.
+                double timeIndexRunningProgress = 0.0;
+                bool includePoints = false;
+                var includedActivities = new List<ActivityModel>();
+
+                foreach (ActivityModel activity in orderedActivities)
+                {
+                    if (timeIndex < activity.Trackers.Count)
+                    {
+                        var tracker = activity.Trackers[timeIndex];
+
+                        Debug.Assert(tracker.Index == timeIndex);
+                        Debug.Assert(tracker.Time == timeIndex);
+
+                        timeIndexRunningProgress += activity.Duration * (tracker.PercentageComplete / 100.0);
+
+                        if (tracker.IsIncluded)
                         {
-                            Time = time,
-                            ActivityId = activity.Id,
-                            ActivityName = activity.Name,
-                            Value = runningTotalTime,
-                            ValuePercentage = percentage
-                        });
+                            runningEffort++;
+                            includedActivities.Add(activity);
+                        }
+
+                        includePoints = true;
                     }
                 }
 
-                // Progress and Effort.
-                int runningEffort = 0;
-
-                for (int timeIndex = 0; timeIndex < totalTime; timeIndex++)
+                if (includePoints)
                 {
-                    // Calculate percentage progress at each time index.
-                    double timeIndexRunningProgress = 0.0;
-                    bool includePoints = false;
-                    var includedActivities = new List<ActivityModel>();
+                    double progressPercentage = totalTime == 0 ? 0.0 : 100.0 * timeIndexRunningProgress / totalTime;
+                    double effortPercentage = totalTime == 0 ? 0.0 : 100.0 * runningEffort / totalTime;
+                    int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
 
-                    foreach (ActivityModel activity in orderedActivities)
+                    foreach (ActivityModel includedActivity in includedActivities.OrderBy(x => x.Id))
                     {
-                        if (timeIndex < activity.Trackers.Count)
+                        progressPointSeries.Add(new TrackingPointModel
                         {
-                            var tracker = activity.Trackers[timeIndex];
+                            Time = time,
+                            ActivityId = includedActivity.Id,
+                            ActivityName = includedActivity.Name,
+                            Value = timeIndexRunningProgress,
+                            ValuePercentage = progressPercentage
+                        });
 
-                            Debug.Assert(tracker.Index == timeIndex);
-                            Debug.Assert(tracker.Time == timeIndex);
-
-                            timeIndexRunningProgress += activity.Duration * (tracker.PercentageComplete / 100.0);
-
-                            if (tracker.IsIncluded)
-                            {
-                                runningEffort++;
-                                includedActivities.Add(activity);
-                            }
-
-                            includePoints = true;
-                        }
+                        effortPointSeries.Add(new TrackingPointModel
+                        {
+                            Time = time,
+                            ActivityId = includedActivity.Id,
+                            ActivityName = includedActivity.Name,
+                            Value = runningEffort,
+                            ValuePercentage = effortPercentage
+                        });
                     }
 
-                    if (includePoints)
-                    {
-                        double progressPercentage = totalTime == 0 ? 0.0 : 100.0 * timeIndexRunningProgress / totalTime;
-                        double effortPercentage = totalTime == 0 ? 0.0 : 100.0 * runningEffort / totalTime;
-                        int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
-
-                        foreach (ActivityModel includedActivity in includedActivities.OrderBy(x => x.Id))
-                        {
-                            progressPointSeries.Add(new TrackingPointModel
-                            {
-                                Time = time,
-                                ActivityId = includedActivity.Id,
-                                ActivityName = includedActivity.Name,
-                                Value = timeIndexRunningProgress,
-                                ValuePercentage = progressPercentage
-                            });
-
-                            effortPointSeries.Add(new TrackingPointModel
-                            {
-                                Time = time,
-                                ActivityId = includedActivity.Id,
-                                ActivityName = includedActivity.Name,
-                                Value = runningEffort,
-                                ValuePercentage = effortPercentage
-                            });
-                        }
-
-                    }
                 }
             }
 
             // Projections.
+
+            planProjectionPointSeries.Add(new TrackingPointModel());
+            progressProjectionPointSeries.Add(new TrackingPointModel());
+            effortProjectionPointSeries.Add(new TrackingPointModel());
 
             // Each series will always have at least one item.
             planProjectionPointSeries.Add(planPointSeries.Last());
@@ -549,15 +550,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            var trackingSeriesSet = new TrackingSeriesSetModel
-            {
-                Plan = planPointSeries,
-                PlanProjection = planProjectionPointSeries,
-                Progress = progressPointSeries,
-                ProgressProjection = progressProjectionPointSeries,
-                Effort = effortPointSeries,
-                EffortProjection = effortProjectionPointSeries
-            };
             return trackingSeriesSet;
         }
 

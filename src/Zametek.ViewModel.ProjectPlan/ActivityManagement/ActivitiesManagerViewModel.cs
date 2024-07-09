@@ -117,7 +117,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ICollection<int> activityIds = SelectedActivities.Keys;
 
-                    if (!activityIds.Any())
+                    if (activityIds.Count == 0)
                     {
                         return;
                     }

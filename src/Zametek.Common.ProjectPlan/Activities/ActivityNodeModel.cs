@@ -9,8 +9,8 @@ namespace Zametek.Common.ProjectPlan
 
         public ActivityModel Content { get; init; } = new ActivityModel();
 
-        public List<int> IncomingEdges { get; init; } = new List<int>();
+        public List<int> IncomingEdges { get; init; } = [];
 
-        public List<int> OutgoingEdges { get; init; } = new List<int>();
+        public List<int> OutgoingEdges { get; init; } = [];
     }
 }

@@ -25,43 +25,31 @@
         <!--<StyleInclude Source="avares://Avalonia.Themes.Simple /Accents/BaseLight.xaml"/>-->
 		<!--<StyleInclude Source="avares://Egorozh.ColorPicker.Avalonia.Dialog/Themes/Default.axaml" />-->
 
+		
 
 		<SimpleTheme />
-		<!--<dialog:FluentColorPickerTheme />-->
-		<!--<FluentTheme />-->
-		<!--<dialog:FluentColorPickerTheme Mode="Light" />-->
-		<!--<dialog:SimpleColorTheme Mode="Light"/>-->
-
-
-		<!--<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />-->
 		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
-
-		<!--<StyleInclude Source="avares://Avalonia.Themes.Fluent/FluentTheme.xaml"/>
-		<StyleInclude Source="avares://Avalonia.Themes.Simple/SimpleTheme.xaml"/>-->
+		
 		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml"/>
 		<StyleInclude Source="avares://Dock.Avalonia/Themes/DockSimpleTheme.axaml" />
-
-
-		<!--<StyleInclude Source="resm:Avalonia.Themes.Simple.SimpleTheme.xaml?assembly=Avalonia.Themes.Simple"/>-->
-        <!--<StyleInclude Source="resm:Avalonia.Themes.Simple.Accents.BaseLight.xaml?assembly=Avalonia.Themes.Simple"/>-->
-        <!--<StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>-->
-
-        <!--<StyleInclude Source="avares:OxyPlot.Avalonia.Themes.Default.xaml"/>-->
-
-
-		<!-- Add the line below to get OxyPlot UI theme applied. -->
-		<!--<StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>-->
-
-
-
-		<!-- Add the line below to get OxyPlot UI theme applied. -->
-		<!--<StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>-->
-
-		<!-- Add the line below to get OxyPlot UI theme applied in Avalonia 11. -->
+		
+		 <!--Add the line below to get OxyPlot UI theme applied in Avalonia 11.--> 
 		<StyleInclude Source="avares://OxyPlot.Avalonia/Themes/Default.axaml"/>
-		<!--<StyleInclude Source="avares://AvaloniaEdit/Themes/Simple/AvaloniaEdit.xaml"/>-->
 		
 		
+		
+		
+		<!--<FluentTheme />
+		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
+		
+		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+		<StyleInclude Source="avares://Dock.Avalonia/Themes/DockFluentTheme.axaml" />
+		
+		--><!-- Add the line below to get OxyPlot UI theme applied in Avalonia 11. --><!--
+		<StyleInclude Source="avares://OxyPlot.Avalonia/Themes/Default.axaml"/>-->
+		
+		
+	
 		
 		
     </Application.Styles>

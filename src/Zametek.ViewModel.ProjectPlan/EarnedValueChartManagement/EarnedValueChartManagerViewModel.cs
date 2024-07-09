@@ -22,8 +22,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly object m_Lock;
 
         private static readonly IList<IFileFilter> s_ExportFileFilters =
-            new List<IFileFilter>
-            {
+            [
                 new FileFilter
                 {
                     Name = Resource.ProjectPlan.Filters.Filter_ImageJpegFileType,
@@ -48,7 +47,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Resource.ProjectPlan.Filters.Filter_PdfFilePattern
                     ]
                 }
-            };
+            ];
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
@@ -143,8 +142,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private void ToggleViewProjections() => ViewProjections = !ViewProjections;
-
         private async Task<PlotModel> BuildEarnedValueChartPlotModelAsync(
             IDateTimeCalculator dateTimeCalculator,
             TrackingSeriesSetModel trackingSeriesSet,
@@ -184,6 +181,12 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(trackingSeriesSet);
             var plotModel = new PlotModel();
+
+            if (trackingSeriesSet.Plan.Count == 0)
+            {
+                return plotModel;
+            }
+
             const double defaultMaxPercentage = 100.0;
 
             int chartEnd = trackingSeriesSet.Plan

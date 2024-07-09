@@ -47,6 +47,6 @@ namespace Zametek.Common.ProjectPlan
 
         public DateTimeOffset? MaximumLatestFinishDateTime { get; init; }
 
-        public List<TrackerModel> Trackers { get; init; } = new List<TrackerModel>();
+        public List<TrackerModel> Trackers { get; init; } = [];
     }
 }

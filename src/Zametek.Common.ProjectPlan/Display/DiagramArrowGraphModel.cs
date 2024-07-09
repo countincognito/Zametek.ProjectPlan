@@ -3,8 +3,8 @@
     [Serializable]
     public record DiagramArrowGraphModel
     {
-        public List<DiagramEdgeModel> Edges { get; init; } = new List<DiagramEdgeModel>();
+        public List<DiagramEdgeModel> Edges { get; init; } = [];
 
-        public List<DiagramNodeModel> Nodes { get; init; } = new List<DiagramNodeModel>();
+        public List<DiagramNodeModel> Nodes { get; init; } = [];
     }
 }
