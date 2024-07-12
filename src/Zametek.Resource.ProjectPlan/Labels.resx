@@ -144,6 +144,9 @@
   <data name="Label_AddManagedWorkStream" xml:space="preserve">
     <value>Add</value>
   </data>
+  <data name="Label_AddMilestone" xml:space="preserve">
+    <value>Add Milestone</value>
+  </data>
   <data name="Label_AllocatedToResources" xml:space="preserve">
     <value>Allocated to Resources</value>
   </data>

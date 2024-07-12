@@ -2,6 +2,7 @@
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Contract.ProjectPlan;
@@ -52,7 +53,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_HasCompilationErrors = this
                 .WhenAnyValue(am => am.m_CoreViewModel.HasCompilationErrors)
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .ToProperty(this, am => am.HasCompilationErrors);
+
+            AddMilestoneCommand = ReactiveCommand.CreateFromTask(
+                AddMilestoneAsync,
+                this.WhenAnyValue(
+                    am => am.HasActivities,
+                    am => am.HasCompilationErrors,
+                    (bool hasActivities, bool hasCompilationErrors) => hasActivities && !hasCompilationErrors),
+                RxApp.MainThreadScheduler);
 
             Id = Resource.ProjectPlan.Titles.Title_ActivitiesView;
             Title = Resource.ProjectPlan.Titles.Title_ActivitiesView;
@@ -134,7 +144,32 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private async Task RunAutoCompileAsync() => await Task.Run(() => m_CoreViewModel.RunAutoCompile());
+        private async Task AddMilestoneAsync()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    ICollection<int> activityIds = SelectedActivities.Keys;
+
+                    if (activityIds.Count == 0)
+                    {
+                        return;
+                    }
+
+                    m_CoreViewModel.AddMilestone(activityIds);
+                }
+                await RunAutoCompileAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    ex.Message);
+            }
+        }
+
+        private async Task RunAutoCompileAsync() => await Task.Run(m_CoreViewModel.RunAutoCompile);
 
         #endregion
 
@@ -173,6 +208,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand AddManagedActivityCommand { get; }
 
         public ICommand RemoveManagedActivitiesCommand { get; }
+
+        public ICommand AddMilestoneCommand { get; }
 
         #endregion
     }
