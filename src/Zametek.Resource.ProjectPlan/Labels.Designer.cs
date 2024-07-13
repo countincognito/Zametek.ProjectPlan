@@ -142,6 +142,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add Milestone.
+        /// </summary>
+        public static string Label_AddMilestone {
+            get {
+                return ResourceManager.GetString("Label_AddMilestone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Allocated to Resources.
         /// </summary>
         public static string Label_AllocatedToResources {

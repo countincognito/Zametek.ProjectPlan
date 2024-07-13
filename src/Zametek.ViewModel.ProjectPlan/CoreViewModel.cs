@@ -1070,7 +1070,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void AddManagedActivity()
+        public int AddManagedActivity()
         {
             try
             {
@@ -1089,6 +1089,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     };
                     AddManagedActivities(set);
+                    return activityId;
                 }
             }
             finally
@@ -1173,6 +1174,68 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        public void AddMilestone(IEnumerable<int> dependentActivityIds)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+
+                    if (!HasCompilationErrors)
+                    {
+                        // Check the upstream activities to be milestoned are all present.
+                        IEnumerable<IManagedActivityViewModel> upstreamActivities = Activities
+                        .Where(x => dependentActivityIds.Contains(x.Id))
+                        .ToList();
+
+                        HashSet<int> upstreamActivityIds = upstreamActivities.Select(x => x.Id).ToHashSet();
+
+                        if (upstreamActivityIds.Count != 0)
+                        {
+                            // Create the milestone activity
+                            int milestoneId = AddManagedActivity();
+
+                            IManagedActivityViewModel? milestoneActivity = Activities
+                                     .Where(x => x.Id == milestoneId)
+                                     .FirstOrDefault();
+
+                            if (milestoneActivity != null)
+                            {
+                                // Now go through all the downstream activities, whose dependencies
+                                // contain the upstream activity IDs, and add the ID of the milestone.
+                                // Be sure to exclude the upstream activities themselves to avoid
+                                // circular dependencies.
+                                IEnumerable<IManagedActivityViewModel> downstreamActivities = Activities
+                                .Where(x => x.Dependencies.Intersect(upstreamActivityIds).Any())
+                                .Except(upstreamActivities)
+                                .ToList();
+
+                                // Repopulate the selected downstream activities' dependencies.
+                                // This time with the new milestone activity ID.
+                                foreach (IManagedActivityViewModel downstreamActivity in downstreamActivities)
+                                {
+                                    m_VertexGraphCompiler.SetActivityDependencies(
+                                        downstreamActivity.Id, [.. downstreamActivity.Dependencies, milestoneId]);
+                                }
+
+                                // Finally, add the upstream activities' IDs as dependencies
+                                // for the milestone activity.
+                                m_VertexGraphCompiler.SetActivityDependencies(
+                                    milestoneId, upstreamActivityIds);
+                            }
+                        }
+
+                        IsProjectUpdated = true;
+                    }
                 }
             }
             finally

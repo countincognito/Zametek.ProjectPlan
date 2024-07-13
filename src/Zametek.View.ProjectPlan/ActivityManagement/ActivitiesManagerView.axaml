@@ -62,6 +62,18 @@
                     Command="{Binding Path=RemoveManagedActivitiesCommand, Mode=OneWay}"
                     Content="{x:Static resources:Labels.Label_DeleteManagedActivity}"/>
 
+			<Button DockPanel.Dock="Bottom"
+					IsTabStop="True"
+                    Margin="0,0,0,0"
+                    Height="50" Width="75"
+                    VerticalAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding Path=AddMilestoneCommand, Mode=OneWay}">
+				<TextBlock TextAlignment="Center"
+						   TextWrapping="Wrap"
+						   Text="{x:Static resources:Labels.Label_AddMilestone}"/>
+			</Button>
+			
 			<Grid/>
 		</DockPanel>
 
