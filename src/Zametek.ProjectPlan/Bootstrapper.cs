@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Dock.Model.Core;
+using Microsoft.Extensions.Configuration.UserSecrets;
 using Splat;
+using System.Reflection;
 using Zametek.Contract.ProjectPlan;
 using Zametek.View.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
@@ -11,6 +13,12 @@ namespace Zametek.ProjectPlan
     {
         public static void Register()
         {
+            string secretsId = Assembly.GetExecutingAssembly().GetCustomAttribute<UserSecretsIdAttribute>()!.UserSecretsId;
+            string settingsFilename = PathHelper.GetSecretsPathFromSecretsId(secretsId);
+
+            var settingService = new SettingService(settingsFilename);
+            SplatRegistrations.RegisterConstant<ISettingService>(settingService);
+
             SplatRegistrations.SetupIOC();
 
             // ViewModels.
@@ -20,7 +28,6 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<IProjectFileExport, ProjectFileExport>();
             SplatRegistrations.RegisterLazySingleton<IProjectFileOpen, ProjectFileOpen>();
             SplatRegistrations.RegisterLazySingleton<IProjectFileSave, ProjectFileSave>();
-            SplatRegistrations.RegisterLazySingleton<ISettingService, SettingService>();
             SplatRegistrations.RegisterLazySingleton<IDialogService, DialogService>();
             SplatRegistrations.RegisterLazySingleton<ICoreViewModel, CoreViewModel>();
             SplatRegistrations.RegisterLazySingleton<IActivitiesManagerViewModel, ActivitiesManagerViewModel>();
