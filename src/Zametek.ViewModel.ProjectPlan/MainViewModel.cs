@@ -341,7 +341,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ProjectPlanModel planModel = await m_ProjectFileOpen.OpenProjectPlanFileAsync(filename);
                 ProcessProjectPlan(planModel);
-                m_SettingService.SetFilePath(filename);
+                m_SettingService.SetProjectFilePath(filename);
                 await RunAutoCompileAsync();
             }
         }
@@ -359,7 +359,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ProjectPlanModel projectPlan = await BuildProjectPlanAsync();
                 await m_ProjectFileSave.SaveProjectPlanFileAsync(projectPlan, filename);
                 m_CoreViewModel.IsProjectUpdated = false;
-                m_SettingService.SetFilePath(filename);
+                m_SettingService.SetProjectFilePath(filename);
             }
         }
 
@@ -636,7 +636,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ProjectImportModel importModel = await m_ProjectFileImport.ImportProjectFileAsync(filename);
                     ProcessProjectImport(importModel);
-                    m_SettingService.SetFilePath(filename);
+                    m_SettingService.SetProjectFilePath(filename);
                     await RunAutoCompileAsync();
                 }
             }
@@ -666,7 +666,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         m_CoreViewModel.TrackingSeriesSet,
                         ShowDates,
                         filename);
-                    m_SettingService.SetFilePath(filename);
+                    m_SettingService.SetProjectFilePath(filename);
                 }
             }
             catch (Exception ex)

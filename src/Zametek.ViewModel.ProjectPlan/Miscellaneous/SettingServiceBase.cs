@@ -4,17 +4,16 @@ using ReactiveUI;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
-using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class SettingService
+    public abstract class SettingServiceBase
         : ViewModelBase, ISettingService
     {
         #region Fields
 
         private readonly object m_Lock;
-        private Data.ProjectPlan.v0_3_0.FileSettingsModel m_FileSettingsModel;
+        protected Data.ProjectPlan.v0_3_0.FileSettingsModel m_FileSettingsModel;
 
         private static readonly double s_GoldenRatio = (1.0 + Math.Sqrt(5.0)) / 2.0;
 
@@ -22,24 +21,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public SettingService(string settingsFilename)
+        public SettingServiceBase(string settingsFilename)
         {
-            ArgumentNullException.ThrowIfNullOrWhiteSpace(settingsFilename);
             m_Lock = new object();
             m_ProjectTitle = string.Empty;
-
-            SettingsFilename = settingsFilename;
-
-            string? directory = Path.GetDirectoryName(SettingsFilename);
-
-            if (string.IsNullOrWhiteSpace(directory))
-            {
-                throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_UnableToDetermineUserSecretsPath);
-            }
-
-            Directory.CreateDirectory(directory);
-
             m_FileSettingsModel = new Data.ProjectPlan.v0_3_0.FileSettingsModel();
+            SettingsFilename = settingsFilename;
 
             if (File.Exists(SettingsFilename))
             {
@@ -58,18 +45,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        private void Save()
-        {
-            using StreamWriter writer = File.CreateText(SettingsFilename);
-            var jsonSerializer = JsonSerializer.Create(
-                new JsonSerializerSettings
-                {
-                    Formatting = Formatting.Indented,
-                    NullValueHandling = NullValueHandling.Ignore,
-                });
-            jsonSerializer.Serialize(writer, m_FileSettingsModel, m_FileSettingsModel.GetType());
-        }
-
         #region ISettingService Members
 
         public string SettingsFilename { get; init; }
@@ -78,43 +53,26 @@ namespace Zametek.ViewModel.ProjectPlan
         public string ProjectTitle
         {
             get => string.IsNullOrWhiteSpace(m_ProjectTitle) ? string.Empty : m_ProjectTitle;
-            private set
+            protected set
             {
                 lock (m_Lock) this.RaiseAndSetIfChanged(ref m_ProjectTitle, value);
             }
         }
 
-        public string ProjectDirectory
+        public abstract string ProjectDirectory { get; protected set; }
+
+        public void SetProjectFilePath(string filename)//!!)
         {
-            get
-            {
-                string directory = m_FileSettingsModel.ProjectPlanDirectory;
-                return string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory)
-                    ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-                    : directory;
-            }
-            private set
-            {
-                lock (m_Lock)
-                {
-                    m_FileSettingsModel = m_FileSettingsModel with { ProjectPlanDirectory = value };
-                    Save();
-                }
-            }
+            SetProjectTitle(filename);
+            SetProjectDirectory(filename);
         }
 
-        public void SetFilePath(string filename)//!!)
-        {
-            SetTitle(filename);
-            SetDirectory(filename);
-        }
-
-        public void SetTitle(string filename)//!!)
+        public void SetProjectTitle(string filename)//!!)
         {
             ProjectTitle = Path.GetFileNameWithoutExtension(filename);
         }
 
-        public void SetDirectory(string filename)//!!)
+        public void SetProjectDirectory(string filename)//!!)
         {
             ProjectDirectory = Path.GetDirectoryName(filename) ?? string.Empty;
         }

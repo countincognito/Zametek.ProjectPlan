@@ -10,11 +10,11 @@ namespace Zametek.Contract.ProjectPlan
 
         string ProjectDirectory { get; }
 
-        void SetFilePath(string filename);
+        void SetProjectFilePath(string filename);
 
-        void SetTitle(string filename);
+        void SetProjectTitle(string filename);
 
-        void SetDirectory(string filename);
+        void SetProjectDirectory(string filename);
 
         ArrowGraphSettingsModel DefaultArrowGraphSettings { get; }
 

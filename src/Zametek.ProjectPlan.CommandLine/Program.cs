@@ -3,6 +3,7 @@ using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
@@ -30,27 +31,27 @@ namespace Zametek.ProjectPlan.CommandLine
                         //    .ReadFrom.Configuration(context.Configuration)
                         //    .CreateLogger();
 
-                        //                    services.AddSingleton<ICoreViewModel, CoreViewModel>();
-                        //                    services.AddSingleton<ISettingService, SettingServiceViewModel>();
-                        //                    services.AddSingleton<ICoreViewModel, CoreViewModel>();
+                        services.AddSingleton<ICoreViewModel, CoreViewModel>();
+                        services.AddSingleton<ISettingService, SettingService>();
+                        services.AddSingleton<IDateTimeCalculator, DateTimeCalculator>();
 
-                        //                    SplatRegistrations.RegisterLazySingleton<IDialogService, DialogService>();
-                        //                    ISettingService settingService,
-                        //IDateTimeCalculator dateTimeCalculator,
-
-
-
+                        services.AddSingleton<IProjectFileImport, ProjectFileImport>();
+                        services.AddSingleton<IProjectFileExport, ProjectFileExport>();
+                        services.AddSingleton<IProjectFileOpen, ProjectFileOpen>();
+                        services.AddSingleton<IProjectFileSave, ProjectFileSave>();
 
 
-                        //var config = new MapperConfiguration(cfg =>
-                        //{
-                        //    cfg.AddProfile<Data.ProjectPlan.MapperProfile>();
-                        //    cfg.AddProfile<ViewModel.ProjectPlan.MapperProfile>();
-                        //    cfg.AddProfile<View.ProjectPlan.MapperProfile>();
-                        //});
-                        //IMapper mapper = config.CreateMapper();
 
-                        //SplatRegistrations.RegisterConstant(mapper);
+
+
+                        var config = new MapperConfiguration(cfg =>
+                        {
+                            cfg.AddProfile<Data.ProjectPlan.MapperProfile>();
+                            cfg.AddProfile<MapperProfile>();
+                        });
+                        IMapper mapper = config.CreateMapper();
+
+                        services.AddSingleton(mapper);
 
 
 
@@ -62,27 +63,70 @@ namespace Zametek.ProjectPlan.CommandLine
                         //// Set up our console output class
                         //services.AddSingleton<IConsoleOutput, ConsoleOutput>();
 
-                        //// Based upon verb/options, create services, including the task
-                        //var parserResult = Parser.Default.ParseArguments<CalculateOptions, StatisticsOptions>(args);
-                        //parserResult
-                        //    .WithParsed<CalculateOptions>(options =>
-                        //    {
-                        //        services.AddSingleton<ExpressionEvaluator>();
-                        //        services.AddSingleton(options);
-                        //        services.AddSingleton<ITaskFactory, CalculateTaskFactory>();
-                        //    })
-                        //    .WithParsed<StatisticsOptions>(options =>
-                        //    {
-                        //        services.AddSingleton(options);
-                        //        services.AddSingleton<ITaskFactory, StatisticsTaskFactory>();
-                        //    });
                     })
                     .UseSerilog()
                     .Build();
 
+
+
+
+
+
+                // Based upon verb/options, create services, including the task
+                var parserResult = Parser.Default.ParseArguments<CompileOptions>(args);
+                parserResult
+                    .WithParsed<CompileOptions>(options =>
+                    {
+                        var core = host.Services.GetRequiredService<ICoreViewModel>();
+                        var projectFileOpen = host.Services.GetRequiredService<IProjectFileOpen>();
+                        var projectFileSave = host.Services.GetRequiredService<IProjectFileSave>();
+                        var settingService = host.Services.GetRequiredService<ISettingService>();
+
+
+
+
+
+
+                        //services.AddSingleton<ExpressionEvaluator>();
+                        //services.AddSingleton(options);
+                        //services.AddSingleton<ITaskFactory, CalculateTaskFactory>();
+
+                        string? inputFilename = options.InputFilename;
+                        string? outputFilename = options.OutputFilename;
+
+                        if (!string.IsNullOrWhiteSpace(inputFilename)
+                            && !string.IsNullOrWhiteSpace(outputFilename))
+                        {
+                            ProjectPlanModel planModel = projectFileOpen.OpenProjectPlanFileAsync(inputFilename).Result;
+                            core.ProcessProjectPlan(planModel);
+
+                            settingService.SetProjectFilePath(inputFilename);
+                            core.RunCompile();
+
+
+
+                            var projectPlan = core.BuildProjectPlan();
+
+                            projectFileSave.SaveProjectPlanFileAsync(projectPlan, outputFilename).Wait();
+
+                        }
+
+
+
+                    });
+                //.WithParsed<StatisticsOptions>(options =>
+                //{
+                //    services.AddSingleton(options);
+                //    services.AddSingleton<ITaskFactory, StatisticsTaskFactory>();
+                //});
+
+
+
                 //// If a task was set up to run (i.e. valid command line params) then run it
                 //// and return the results
                 //var task = host.Services.GetService<ITaskFactory>();
+
+
 
 
 

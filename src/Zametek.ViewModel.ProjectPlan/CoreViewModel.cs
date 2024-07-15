@@ -616,7 +616,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ProjectTitle.Value;
             set
             {
-                lock (m_Lock) m_SettingService.SetTitle(value);
+                lock (m_Lock) m_SettingService.SetProjectTitle(value);
             }
         }
 
@@ -1362,8 +1362,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     var workStreams = new List<IWorkStream<int>>();
                     workStreams.AddRange(m_Mapper.Map<IEnumerable<WorkStreamModel>, IEnumerable<WorkStream<int>>>(WorkStreamSettings.WorkStreams));
-
-
 
                     GraphCompilation = m_VertexGraphCompiler.Compile(availableResources, workStreams);
                     IsProjectUpdated = true;
