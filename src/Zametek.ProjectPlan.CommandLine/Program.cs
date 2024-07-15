@@ -3,7 +3,6 @@ using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
@@ -35,14 +34,10 @@ namespace Zametek.ProjectPlan.CommandLine
                         services.AddSingleton<ISettingService, SettingService>();
                         services.AddSingleton<IDateTimeCalculator, DateTimeCalculator>();
 
-                        services.AddSingleton<IProjectFileImport, ProjectFileImport>();
-                        services.AddSingleton<IProjectFileExport, ProjectFileExport>();
                         services.AddSingleton<IProjectFileOpen, ProjectFileOpen>();
+                        services.AddSingleton<IProjectFileImport, ProjectFileImport>();
                         services.AddSingleton<IProjectFileSave, ProjectFileSave>();
-
-
-
-
+                        services.AddSingleton<IProjectFileExport, ProjectFileExport>();
 
                         var config = new MapperConfiguration(cfg =>
                         {
@@ -52,17 +47,6 @@ namespace Zametek.ProjectPlan.CommandLine
                         IMapper mapper = config.CreateMapper();
 
                         services.AddSingleton(mapper);
-
-
-
-
-
-
-
-
-                        //// Set up our console output class
-                        //services.AddSingleton<IConsoleOutput, ConsoleOutput>();
-
                     })
                     .UseSerilog()
                     .Build();
@@ -71,54 +55,103 @@ namespace Zametek.ProjectPlan.CommandLine
 
 
 
+                var parserResult = Parser.Default.ParseArguments<Options>(args);
 
-                // Based upon verb/options, create services, including the task
-                var parserResult = Parser.Default.ParseArguments<CompileOptions>(args);
+
+
+
                 parserResult
-                    .WithParsed<CompileOptions>(options =>
+                    .WithParsed(options =>
                     {
+
                         var core = host.Services.GetRequiredService<ICoreViewModel>();
+
                         var projectFileOpen = host.Services.GetRequiredService<IProjectFileOpen>();
+                        var projectFileImport = host.Services.GetRequiredService<IProjectFileImport>();
+
                         var projectFileSave = host.Services.GetRequiredService<IProjectFileSave>();
+                        var projectFileExport = host.Services.GetRequiredService<IProjectFileExport>();
+
                         var settingService = host.Services.GetRequiredService<ISettingService>();
 
-
-
-
-
-
-                        //services.AddSingleton<ExpressionEvaluator>();
-                        //services.AddSingleton(options);
-                        //services.AddSingleton<ITaskFactory, CalculateTaskFactory>();
-
                         string? inputFilename = options.InputFilename;
+                        string? importFilename = options.ImportFilename;
+
                         string? outputFilename = options.OutputFilename;
+                        string? exportFilename = options.ExportFilename;
 
-                        if (!string.IsNullOrWhiteSpace(inputFilename)
-                            && !string.IsNullOrWhiteSpace(outputFilename))
-                        {
-                            ProjectPlanModel planModel = projectFileOpen.OpenProjectPlanFileAsync(inputFilename).Result;
-                            core.ProcessProjectPlan(planModel);
+                        bool compile = options.Compile;
 
-                            settingService.SetProjectFilePath(inputFilename);
-                            core.RunCompile();
+                        IEnumerable<int> ganttSize = options.GanttSize;
 
 
-
-                            var projectPlan = core.BuildProjectPlan();
-
-                            projectFileSave.SaveProjectPlanFileAsync(projectPlan, outputFilename).Wait();
-
-                        }
 
 
 
                     });
-                //.WithParsed<StatisticsOptions>(options =>
+
+
+
+
+
+
+                // Based upon verb/options, create services, including the task
+                //var parserResult = Parser.Default.ParseArguments<CompileOptions, ExportOptions>(args);
+
+                //parserResult
+                //.WithParsed<CompileOptions>(options =>
                 //{
-                //    services.AddSingleton(options);
-                //    services.AddSingleton<ITaskFactory, StatisticsTaskFactory>();
+                //    var core = host.Services.GetRequiredService<ICoreViewModel>();
+                //    var projectFileOpen = host.Services.GetRequiredService<IProjectFileOpen>();
+                //    var projectFileSave = host.Services.GetRequiredService<IProjectFileSave>();
+                //    var settingService = host.Services.GetRequiredService<ISettingService>();
+
+                //    string? inputFilename = options.InputFilename;
+                //    string? outputFilename = options.OutputFilename;
+
+                //    ArgumentException.ThrowIfNullOrWhiteSpace(inputFilename);
+                //    ArgumentException.ThrowIfNullOrWhiteSpace(outputFilename);
+
+                //    ProjectPlanModel planModel = projectFileOpen.OpenProjectPlanFileAsync(inputFilename).Result;
+                //    core.ProcessProjectPlan(planModel);
+
+                //    settingService.SetProjectFilePath(inputFilename);
+                //    core.RunCompile();
+
+                //    ProjectPlanModel projectPlan = core.BuildProjectPlan();
+
+                //    projectFileSave.SaveProjectPlanFileAsync(projectPlan, outputFilename).Wait();
+                //})
+                //.WithParsed<ExportOptions>(options =>
+                //{
+                //    var core = host.Services.GetRequiredService<ICoreViewModel>();
+                //    var projectFileOpen = host.Services.GetRequiredService<IProjectFileOpen>();
+                //    var projectFileExport = host.Services.GetRequiredService<IProjectFileExport>();
+
+                //    string? inputFilename = options.InputFilename;
+                //    string? outputFilename = options.OutputFilename;
+
+                //    ArgumentException.ThrowIfNullOrWhiteSpace(inputFilename);
+                //    ArgumentException.ThrowIfNullOrWhiteSpace(outputFilename);
+
+                //    ProjectPlanModel planModel = projectFileOpen.OpenProjectPlanFileAsync(inputFilename).Result;
+                //    core.ProcessProjectPlan(planModel);
+
+                //    projectFileExport.ExportProjectFile(
+                //        planModel,
+                //        core.ResourceSeriesSet,
+                //        core.TrackingSeriesSet,
+                //        core.ShowDates,
+                //        outputFilename);
                 //});
+
+
+
+
+
+
+
+
 
 
 
@@ -130,7 +163,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
 
 
-                return -1;
+                return 0;
 
 
                 //return task == null

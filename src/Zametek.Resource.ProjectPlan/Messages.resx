@@ -165,6 +165,9 @@
   <data name="Message_UnableToDetermineUserSecretsPath" xml:space="preserve">
     <value>Unable to determine file path for User Secrets</value>
   </data>
+  <data name="Message_UnableToExportFile" xml:space="preserve">
+    <value>Unable to export file:</value>
+  </data>
   <data name="Message_UnableToImportFile" xml:space="preserve">
     <value>Unable to import file:</value>
   </data>

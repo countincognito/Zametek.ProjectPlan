@@ -205,6 +205,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to export file:.
+        /// </summary>
+        public static string Message_UnableToExportFile {
+            get {
+                return ResourceManager.GetString("Message_UnableToExportFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to import file:.
         /// </summary>
         public static string Message_UnableToImportFile {

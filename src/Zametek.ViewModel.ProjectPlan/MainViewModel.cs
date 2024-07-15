@@ -660,7 +660,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
                     ProjectPlanModel projectPlan = await BuildProjectPlanAsync();
-                    await m_ProjectFileExport.ExportProjectPlanFileAsync(
+                    await m_ProjectFileExport.ExportProjectFileAsync(
                         projectPlan,
                         m_CoreViewModel.ResourceSeriesSet,
                         m_CoreViewModel.TrackingSeriesSet,

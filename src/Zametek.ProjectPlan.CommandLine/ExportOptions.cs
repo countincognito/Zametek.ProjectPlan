@@ -3,8 +3,8 @@
 namespace Zametek.ProjectPlan.CommandLine
 {
 
-    [Verb("compile", isDefault: false, HelpText = "")]
-    public class CompileOptions
+    [Verb("export", isDefault: false, HelpText = "")]
+    public class ExportOptions
     {
         [Option('v', "verbose", Required = false, HelpText = "Enable verbose output.")]
         public bool Verbose { get; set; }

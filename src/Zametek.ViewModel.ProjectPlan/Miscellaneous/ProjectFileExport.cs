@@ -713,7 +713,37 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IProjectFileExport Members
 
-        public void ExportProjectPlanFile(
+        public void ExportProjectFile(
+            ProjectPlanModel projectPlan,
+            ResourceSeriesSetModel resourceSeriesSet,
+            TrackingSeriesSetModel trackingSeriesSet,
+            bool showDates,
+            string filename)
+        {
+            string fileExtension = Path.GetExtension(filename);
+
+            Action<ProjectPlanModel, ResourceSeriesSetModel, TrackingSeriesSetModel, bool, string> action =
+                (projectPlan, resourceSeriesSet, trackingSeriesSet, showDates, filename) => throw new ArgumentOutOfRangeException(
+                    nameof(filename),
+                    @$"{Resource.ProjectPlan.Messages.Message_UnableToExportFile} {filename}");
+
+            fileExtension.ValueSwitchOn()
+                .Case($".{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}", _ => action = ExportProjectXlsxFile);
+
+            action(projectPlan, resourceSeriesSet, trackingSeriesSet, showDates, filename);
+        }
+
+        public async Task ExportProjectFileAsync(
+            ProjectPlanModel projectPlan,
+            ResourceSeriesSetModel resourceSeriesSet,
+            TrackingSeriesSetModel trackingSeriesSet,
+            bool showDates,
+            string filename)
+        {
+            await Task.Run(() => ExportProjectFile(projectPlan, resourceSeriesSet, trackingSeriesSet, showDates, filename));
+        }
+
+        public void ExportProjectXlsxFile(
             ProjectPlanModel projectPlan,
             ResourceSeriesSetModel resourceSeriesSet,
             TrackingSeriesSetModel trackingSeriesSet,
@@ -839,16 +869,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             using var stream = File.OpenWrite(filename);
             workbook.Write(stream, leaveOpen: false);
-        }
-
-        public async Task ExportProjectPlanFileAsync(
-            ProjectPlanModel projectPlan,
-            ResourceSeriesSetModel resourceSeriesSet,
-            TrackingSeriesSetModel trackingSeriesSet,
-            bool showDates,
-            string filename)
-        {
-            await Task.Run(() => ExportProjectPlanFile(projectPlan, resourceSeriesSet, trackingSeriesSet, showDates, filename));
         }
 
         #endregion
