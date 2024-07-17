@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine
 {
@@ -20,21 +21,21 @@ namespace Zametek.ProjectPlan.CommandLine
 
 
 
-        [Option('c', "compile", Required = false, HelpText = "Compile incoming file.")]
+        [Option('c', "compile", Default = false, Required = false, HelpText = "Compile incoming file.")]
         public bool Compile { get; set; } = false;
 
 
 
-        //[Option("gantt", SetName = "gantt", HelpText = "Gantt chart.")]
-        //public bool Gantt { get; set; } = false;
+        [Option("gantt-output", HelpText = "Gantt output file path.")]
+        public string? GanttOutput { get; set; } = default;
 
-        [Option("gantt-format", SetName = "gantt", HelpText = "Gantt chart format.")]
+        [Option("gantt-format", HelpText = "Gantt chart format.")]
         public string? GanttFormat { get; set; } = default;
 
-        [Option("gantt-group", SetName = "gantt", HelpText = "Gantt chart group.")]
-        public string? GanttGroup { get; set; } = default;
+        [Option("gantt-group", Default = GroupByMode.None, HelpText = "Gantt chart group (None|Resource|WorkStream)")]
+        public GroupByMode GanttGroup { get; set; } = default;
 
-        [Option("gantt-size", SetName = "gantt", Max = 2, Separator = ':', HelpText = "Gantt chart parameters width and height (px).")]
+        [Option("gantt-size", Max = 2, Separator = ':', HelpText = "Gantt chart parameters width and height (px).")]
         public IEnumerable<int> GanttSize { get; set; } = [];
 
 

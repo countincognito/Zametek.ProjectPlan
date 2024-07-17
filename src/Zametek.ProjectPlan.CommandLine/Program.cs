@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using CommandLine;
+using CommandLine.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -52,17 +53,37 @@ namespace Zametek.ProjectPlan.CommandLine
                     .Build();
 
 
+                var parser = new Parser(with =>
+                {
+                    with.CaseInsensitiveEnumValues = true;
+                });
 
 
 
-                var parserResult = Parser.Default.ParseArguments<Options>(args);
-
-
-
+                var parserResult = parser.ParseArguments<Options>(args);
 
                 parserResult
                     .WithParsed(options =>
                     {
+                        string? inputFilename = options.InputFilename;
+                        string? importFilename = options.ImportFilename;
+
+                        string? outputFilename = options.OutputFilename;
+                        string? exportFilename = options.ExportFilename;
+
+                        bool compile = options.Compile;
+
+                        IEnumerable<int> ganttSize = options.GanttSize;
+
+                        if (!Validate(options))
+                        {
+                            Console.WriteLine("Validation fail");
+                            var helpText = GetHelp(parserResult);
+                            Parser.Default.Settings.HelpWriter.WriteLine(helpText);
+                            return;
+                        }
+
+
 
                         var core = host.Services.GetRequiredService<ICoreViewModel>();
 
@@ -74,17 +95,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                         var settingService = host.Services.GetRequiredService<ISettingService>();
 
-                        string? inputFilename = options.InputFilename;
-                        string? importFilename = options.ImportFilename;
-
-                        string? outputFilename = options.OutputFilename;
-                        string? exportFilename = options.ExportFilename;
-
-                        bool compile = options.Compile;
-
-                        IEnumerable<int> ganttSize = options.GanttSize;
-
-
+   
 
 
 
@@ -177,5 +188,28 @@ namespace Zametek.ProjectPlan.CommandLine
                 return -1;
             }
         }
+
+
+
+        private static bool Validate(Options options)
+        {
+            //// do validation 
+            //if (options.FileName == null)
+            //    return false;
+            return false;
+        }
+
+
+        //Generate Help text
+        private static string GetHelp<T>(ParserResult<T> result)
+        {
+            // use default configuration
+            // you can customize HelpText and pass different configuratins
+            //see wiki
+            // https://github.com/commandlineparser/commandline/wiki/How-To#q1
+            // https://github.com/commandlineparser/commandline/wiki/HelpText-Configuration
+            return HelpText.AutoBuild(result, h => h, e => e);
+        }
+
     }
 }

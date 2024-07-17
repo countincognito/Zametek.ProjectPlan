@@ -1,0 +1,200 @@
+﻿using AutoMapper;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
+using OxyPlot;
+using Zametek.Contract.ProjectPlan;
+
+namespace Zametek.ProjectPlan.CommandLine
+{
+    public class DialogService
+        : IDialogService
+    {
+        #region Fields
+
+        private object? m_Parent;
+        private readonly IMapper m_Mapper;
+
+        #endregion
+
+        public DialogService(IMapper mapper)
+        {
+            ArgumentNullException.ThrowIfNull(mapper);
+            m_Mapper = mapper;
+        }
+
+
+        #region IDialogService Members
+
+        public object Parent { set => m_Parent = value; }
+
+        public async Task ShowNotificationAsync(
+            string title,
+            string message,
+            bool markdown = false)
+        {
+            //await ShowMessageBoxAsync(new MessageBoxStandardParams
+            //{
+            //    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            //    SizeToContent = SizeToContent.WidthAndHeight,
+            //    ContentTitle = title,
+            //    ContentMessage = message,
+            //    Markdown = markdown
+            //});
+        }
+
+        public async Task ShowErrorAsync(
+            string title,
+            string message,
+            bool markdown = false)
+        {
+            //await ShowMessageBoxAsync(new MessageBoxStandardParams
+            //{
+            //    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            //    SizeToContent = SizeToContent.WidthAndHeight,
+            //    ContentTitle = title,
+            //    ContentMessage = message,
+            //    Icon = Icon.Error,
+            //    Markdown = markdown
+            //});
+        }
+
+        public async Task ShowWarningAsync(
+            string title,
+            string message,
+            bool markdown = false)
+        {
+            //await ShowMessageBoxAsync(new MessageBoxStandardParams
+            //{
+            //    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            //    SizeToContent = SizeToContent.WidthAndHeight,
+            //    ContentTitle = title,
+            //    ContentMessage = message,
+            //    Icon = Icon.Warning,
+            //    Markdown = markdown
+            //});
+        }
+
+        public async Task ShowInfoAsync(
+            string title,
+            string message,
+            bool markdown = false)
+        {
+            //await ShowMessageBoxAsync(new MessageBoxStandardParams
+            //{
+            //    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            //    SizeToContent = SizeToContent.WidthAndHeight,
+            //    ContentTitle = title,
+            //    ContentMessage = message,
+            //    Icon = Icon.Info,
+            //    Markdown = markdown
+            //});
+        }
+
+        public async Task ShowInfoAsync(
+            string title,
+            string message,
+            double height,
+            double width,
+            bool markdown = false)
+        {
+            //await ShowMessageBoxAsync(new MessageBoxStandardParams
+            //{
+            //    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            //    SizeToContent = SizeToContent.Manual,
+            //    ContentTitle = title,
+            //    ContentMessage = message,
+            //    Height = height,
+            //    Width = width,
+            //    Icon = Icon.Info,
+            //    Markdown = markdown
+            //});
+        }
+
+        public async Task<bool> ShowConfirmationAsync(
+            string title,
+            string message,
+            bool markdown = false)
+        {
+            //ButtonResult result = await ShowMessageBoxAsync(new MessageBoxStandardParams
+            //{
+            //    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            //    SizeToContent = SizeToContent.WidthAndHeight,
+            //    ContentTitle = title,
+            //    ContentMessage = message,
+            //    ButtonDefinitions = ButtonEnum.YesNo,
+            //    Icon = Icon.Info,
+            //    Markdown = markdown
+            //});
+            //return result == ButtonResult.Yes;
+        }
+
+        public async Task<string?> ShowOpenFileDialogAsync(
+            string initialDirectory,
+            IList<IFileFilter> fileFilters)
+        {
+            //var topLevel = TopLevel.GetTopLevel(m_Parent);
+
+            //if (topLevel is null)
+            //{
+            //    return null;
+            //}
+
+            //var filters = m_Mapper.Map<IList<IFileFilter>, List<FilePickerFileType>>(fileFilters);
+
+            //var options = new FilePickerOpenOptions
+            //{
+            //    AllowMultiple = false,
+            //    SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(initialDirectory),
+            //    FileTypeFilter = filters.AsReadOnlyList()
+            //};
+
+            //IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+
+            //Uri? path = files?.FirstOrDefault()?.Path;
+
+            //if (path is not null
+            //    && path.IsFile)
+            //{
+            //    return path.LocalPath;
+            //}
+
+            //return null;
+        }
+
+        public async Task<string?> ShowSaveFileDialogAsync(
+            string initialFilename,
+            string initialDirectory,
+            IList<IFileFilter> fileFilters)
+        {
+            //var topLevel = TopLevel.GetTopLevel(m_Parent);
+
+            //if (topLevel is null)
+            //{
+            //    return null;
+            //}
+
+            //var filters = m_Mapper.Map<IList<IFileFilter>, List<FilePickerFileType>>(fileFilters);
+
+            //var options = new FilePickerSaveOptions
+            //{
+            //    SuggestedFileName = initialFilename,
+            //    SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(initialDirectory),
+            //    FileTypeChoices = filters.AsReadOnlyList()
+            //};
+
+            //IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(options);
+
+            //Uri? path = file?.Path;
+
+            //if (path is not null
+            //    && path.IsFile)
+            //{
+            //    return path.LocalPath;
+            //}
+
+            //return null;
+        }
+
+        #endregion
+    }
+}
