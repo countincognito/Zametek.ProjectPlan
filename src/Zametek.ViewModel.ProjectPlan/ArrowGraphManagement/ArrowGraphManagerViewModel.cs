@@ -183,46 +183,6 @@ namespace Zametek.ViewModel.ProjectPlan
             return new SvgImage();
         }
 
-        private async Task SaveArrowGraphImageFileInternalAsync(string? filename)
-        {
-            if (string.IsNullOrWhiteSpace(filename))
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
-            }
-            else
-            {
-                string fileExtension = Path.GetExtension(filename);
-                byte[]? data = null;
-
-                fileExtension.ValueSwitchOn()
-                    .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
-                    {
-                        ArrowGraphImage.Source?.Save(filename, SKColors.White, SKEncodedImageFormat.Jpeg, scaleX: 2, scaleY: 2);
-                    })
-                    .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
-                    {
-                        ArrowGraphImage.Source?.Save(filename, SKColors.White, SKEncodedImageFormat.Png, scaleX: 2, scaleY: 2);
-                    })
-                    .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
-                    {
-                        data = m_ArrowGraphExport.BuildArrowGraphMLData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.ArrowGraphSettings);
-                    })
-                    .Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
-                    {
-                        data = m_ArrowGraphExport.BuildArrowGraphVizData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.ArrowGraphSettings);
-                    })
-                    .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
-
-                if (data is not null)
-                {
-                    using var stream = File.OpenWrite(filename);
-                    await stream.WriteAsync(data);
-                }
-            }
-        }
-
         private async Task SaveArrowGraphImageFileAsync()
         {
             try
@@ -233,7 +193,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    await SaveArrowGraphImageFileInternalAsync(filename);
+                    await SaveArrowGraphImageFileAsync(filename);
                 }
             }
             catch (Exception ex)
@@ -268,6 +228,55 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public ICommand SaveArrowGraphImageFileCommand { get; }
+
+        public async Task SaveArrowGraphImageFileAsync(string? filename)
+        {
+            if (string.IsNullOrWhiteSpace(filename))
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
+            }
+            else
+            {
+                try
+                {
+                    string fileExtension = Path.GetExtension(filename);
+                    byte[]? data = null;
+
+                    fileExtension.ValueSwitchOn()
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
+                        {
+                            ArrowGraphImage.Source?.Save(filename, SKColors.White, SKEncodedImageFormat.Jpeg, scaleX: 2, scaleY: 2);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
+                        {
+                            ArrowGraphImage.Source?.Save(filename, SKColors.White, SKEncodedImageFormat.Png, scaleX: 2, scaleY: 2);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
+                        {
+                            data = m_ArrowGraphExport.BuildArrowGraphMLData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.ArrowGraphSettings);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
+                        {
+                            data = m_ArrowGraphExport.BuildArrowGraphVizData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.ArrowGraphSettings);
+                        })
+                        .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
+
+                    if (data is not null)
+                    {
+                        using var stream = File.OpenWrite(filename);
+                        await stream.WriteAsync(data);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await m_DialogService.ShowErrorAsync(
+                        Resource.ProjectPlan.Titles.Title_Error,
+                        ex.Message);
+                }
+            }
+        }
 
         #endregion
 

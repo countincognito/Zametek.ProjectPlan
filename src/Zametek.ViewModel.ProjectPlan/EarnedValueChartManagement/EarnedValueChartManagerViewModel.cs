@@ -385,61 +385,6 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private async Task SaveEarnedValueChartImageFileInternalAsync(string? filename)
-        {
-            if (string.IsNullOrWhiteSpace(filename))
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
-            }
-            else
-            {
-                if (ImageBounds is Rect bounds)
-                {
-                    string fileExtension = Path.GetExtension(filename);
-                    //byte[]? data = null;
-
-                    fileExtension.ValueSwitchOn()
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
-                        {
-                            using var stream = File.OpenWrite(filename);
-                            OxyPlot.SkiaSharp.JpegExporter.Export(
-                                EarnedValueChartPlotModel,
-                                stream,
-                                Convert.ToInt32(bounds.Width),
-                                Convert.ToInt32(bounds.Height),
-                                100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
-                        {
-                            using var stream = File.OpenWrite(filename);
-                            OxyPlot.SkiaSharp.PngExporter.Export(
-                                EarnedValueChartPlotModel,
-                                stream,
-                                Convert.ToInt32(bounds.Width),
-                                Convert.ToInt32(bounds.Height));
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
-                        {
-                            using var stream = File.OpenWrite(filename);
-                            OxyPlot.SkiaSharp.PdfExporter.Export(
-                                EarnedValueChartPlotModel,
-                                stream,
-                                Convert.ToInt32(bounds.Width),
-                                Convert.ToInt32(bounds.Height));
-                        })
-                        .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
-
-                    //if (data is not null)
-                    //{
-                    //    using var stream = File.OpenWrite(filename);
-                    //    await stream.WriteAsync(data);
-                    //}
-                }
-            }
-        }
-
         private async Task SaveEarnedValueChartImageFileAsync()
         {
             try
@@ -448,9 +393,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 string directory = m_SettingService.ProjectDirectory;
                 string? filename = await m_DialogService.ShowSaveFileDialogAsync(projectTitle, directory, s_ExportFileFilters);
 
-                if (!string.IsNullOrWhiteSpace(filename))
+                if (!string.IsNullOrWhiteSpace(filename)
+                    && ImageBounds is Rect bounds)
                 {
-                    await SaveEarnedValueChartImageFileInternalAsync(filename);
+                    int boundedWidth = Math.Abs(Convert.ToInt32(bounds.Width));
+                    int boundedHeight = Math.Abs(Convert.ToInt32(bounds.Height));
+
+                    await SaveEarnedValueChartImageFileAsync(filename, boundedWidth, boundedHeight);
                 }
             }
             catch (Exception ex)
@@ -485,6 +434,63 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public ICommand SaveEarnedValueChartImageFileCommand { get; }
+
+        public async Task SaveEarnedValueChartImageFileAsync(
+            string? filename,
+            int width,
+            int height)
+        {
+            if (string.IsNullOrWhiteSpace(filename))
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
+            }
+            else
+            {
+                try
+                {
+                    string fileExtension = Path.GetExtension(filename);
+
+                    fileExtension.ValueSwitchOn()
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
+                        {
+                            using var stream = File.OpenWrite(filename);
+                            OxyPlot.SkiaSharp.JpegExporter.Export(
+                                EarnedValueChartPlotModel,
+                                stream,
+                                width,
+                                height,
+                                100);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
+                        {
+                            using var stream = File.OpenWrite(filename);
+                            OxyPlot.SkiaSharp.PngExporter.Export(
+                                EarnedValueChartPlotModel,
+                                stream,
+                                width,
+                                height);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
+                        {
+                            using var stream = File.OpenWrite(filename);
+                            OxyPlot.SkiaSharp.PdfExporter.Export(
+                                EarnedValueChartPlotModel,
+                                stream,
+                                width,
+                                height);
+                        })
+                        .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
+                }
+                catch (Exception ex)
+                {
+                    await m_DialogService.ShowErrorAsync(
+                        Resource.ProjectPlan.Titles.Title_Error,
+                        ex.Message);
+                }
+            }
+        }
 
         #endregion
 

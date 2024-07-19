@@ -13,5 +13,7 @@ namespace Zametek.Contract.ProjectPlan
         string ArrowGraphData { get; }
 
         ICommand SaveArrowGraphImageFileCommand { get; }
+
+        Task SaveArrowGraphImageFileAsync(string? filename);
     }
 }

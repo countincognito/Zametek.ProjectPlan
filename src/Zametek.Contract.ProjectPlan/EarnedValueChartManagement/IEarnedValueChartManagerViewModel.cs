@@ -13,5 +13,7 @@ namespace Zametek.Contract.ProjectPlan
         bool ViewProjections { get; set; }
 
         ICommand SaveEarnedValueChartImageFileCommand { get; }
+
+        Task SaveEarnedValueChartImageFileAsync(string? filename, int width, int height);
     }
 }
