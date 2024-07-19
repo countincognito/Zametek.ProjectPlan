@@ -18,5 +18,7 @@ namespace Zametek.Contract.ProjectPlan
         bool AnnotateGroups { get; set; }
 
         ICommand SaveGanttChartImageFileCommand { get; }
+
+        Task SaveGanttChartImageFileAsync(string? filename, int width, int height);
     }
 }

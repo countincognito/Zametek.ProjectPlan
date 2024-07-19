@@ -23,6 +23,12 @@ namespace Zametek.ProjectPlan.CommandLine
         {
             try
             {
+                var parser = new Parser(with =>
+                {
+                    with.CaseInsensitiveEnumValues = true;
+                    with.HelpWriter = Console.Error;
+                });
+
                 var host = Host.CreateDefaultBuilder(args)
                     .ConfigureServices((context, services) =>
                     {
@@ -31,9 +37,13 @@ namespace Zametek.ProjectPlan.CommandLine
                         //    .ReadFrom.Configuration(context.Configuration)
                         //    .CreateLogger();
 
+                        services.AddSingleton(parser.Settings.HelpWriter);
+
                         services.AddSingleton<ICoreViewModel, CoreViewModel>();
                         services.AddSingleton<ISettingService, SettingService>();
+                        services.AddSingleton<IDialogService, DialogService>();
                         services.AddSingleton<IDateTimeCalculator, DateTimeCalculator>();
+                        services.AddSingleton<IGanttChartManagerViewModel, GanttChartManagerViewModel>();
 
                         services.AddSingleton<IProjectFileOpen, ProjectFileOpen>();
                         services.AddSingleton<IProjectFileImport, ProjectFileImport>();
@@ -53,10 +63,6 @@ namespace Zametek.ProjectPlan.CommandLine
                     .Build();
 
 
-                var parser = new Parser(with =>
-                {
-                    with.CaseInsensitiveEnumValues = true;
-                });
 
 
 
@@ -75,17 +81,18 @@ namespace Zametek.ProjectPlan.CommandLine
 
                         IEnumerable<int> ganttSize = options.GanttSize;
 
-                        if (!Validate(options))
-                        {
-                            Console.WriteLine("Validation fail");
-                            var helpText = GetHelp(parserResult);
-                            Parser.Default.Settings.HelpWriter.WriteLine(helpText);
-                            return;
-                        }
+                        //if (!Validate(options))
+                        //{
+                        //    Console.WriteLine("Validation fail");
+                        //    var helpText = GetHelp(parserResult);
+                        //    parser.Settings.HelpWriter.WriteLine(helpText);
+                        //    return;
+                        //}
 
 
 
                         var core = host.Services.GetRequiredService<ICoreViewModel>();
+                        var gantt = host.Services.GetRequiredService<IGanttChartManagerViewModel>();
 
                         var projectFileOpen = host.Services.GetRequiredService<IProjectFileOpen>();
                         var projectFileImport = host.Services.GetRequiredService<IProjectFileImport>();
@@ -95,8 +102,30 @@ namespace Zametek.ProjectPlan.CommandLine
 
                         var settingService = host.Services.GetRequiredService<ISettingService>();
 
-   
 
+
+
+
+
+
+
+
+                        var plan = projectFileOpen.OpenProjectPlanFileAsync(inputFilename).Result;
+
+
+
+                        core.ProcessProjectPlan(plan);
+
+
+                        settingService.SetProjectFilePath(outputFilename);
+
+                        string ganttOutputFile = Path.Combine(
+                            settingService.ProjectDirectory,
+                            $@"{settingService.ProjectTitle}.png");
+
+
+
+                        gantt.SaveGanttChartImageFileAsync(ganttOutputFile, 500, 500).Wait();
 
 
                     });

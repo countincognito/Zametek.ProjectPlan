@@ -29,8 +29,8 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option("gantt-output", HelpText = "Gantt output file path.")]
         public string? GanttOutput { get; set; } = default;
 
-        [Option("gantt-format", HelpText = "Gantt chart format.")]
-        public string? GanttFormat { get; set; } = default;
+        [Option("gantt-format", Default = PlotExport.Jpeg, HelpText = "Gantt chart format (Jpeg|Png|Pdf)")]
+        public PlotExport GanttFormat { get; set; } = default;
 
         [Option("gantt-group", Default = GroupByMode.None, HelpText = "Gantt chart group (None|Resource|WorkStream)")]
         public GroupByMode GanttGroup { get; set; } = default;

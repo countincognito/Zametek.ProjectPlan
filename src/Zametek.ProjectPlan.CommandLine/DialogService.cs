@@ -1,8 +1,4 @@
-﻿using AutoMapper;
-using Avalonia.Controls;
-using Avalonia.Platform.Storage;
-using OxyPlot;
-using Zametek.Contract.ProjectPlan;
+﻿using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine
 {
@@ -11,35 +7,27 @@ namespace Zametek.ProjectPlan.CommandLine
     {
         #region Fields
 
-        private object? m_Parent;
-        private readonly IMapper m_Mapper;
+        private readonly TextWriter m_TextWriter;
 
         #endregion
 
-        public DialogService(IMapper mapper)
+        public DialogService(TextWriter textWriter)
         {
-            ArgumentNullException.ThrowIfNull(mapper);
-            m_Mapper = mapper;
+            ArgumentNullException.ThrowIfNull(textWriter);
+            m_TextWriter = textWriter;
         }
 
 
         #region IDialogService Members
 
-        public object Parent { set => m_Parent = value; }
+        public object Parent { set => throw new InvalidOperationException(); }
 
         public async Task ShowNotificationAsync(
             string title,
             string message,
             bool markdown = false)
         {
-            //await ShowMessageBoxAsync(new MessageBoxStandardParams
-            //{
-            //    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            //    SizeToContent = SizeToContent.WidthAndHeight,
-            //    ContentTitle = title,
-            //    ContentMessage = message,
-            //    Markdown = markdown
-            //});
+            throw new InvalidOperationException();
         }
 
         public async Task ShowErrorAsync(
@@ -47,15 +35,7 @@ namespace Zametek.ProjectPlan.CommandLine
             string message,
             bool markdown = false)
         {
-            //await ShowMessageBoxAsync(new MessageBoxStandardParams
-            //{
-            //    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            //    SizeToContent = SizeToContent.WidthAndHeight,
-            //    ContentTitle = title,
-            //    ContentMessage = message,
-            //    Icon = Icon.Error,
-            //    Markdown = markdown
-            //});
+            await m_TextWriter.WriteLineAsync($@"{title}: {message}");
         }
 
         public async Task ShowWarningAsync(
@@ -63,15 +43,7 @@ namespace Zametek.ProjectPlan.CommandLine
             string message,
             bool markdown = false)
         {
-            //await ShowMessageBoxAsync(new MessageBoxStandardParams
-            //{
-            //    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            //    SizeToContent = SizeToContent.WidthAndHeight,
-            //    ContentTitle = title,
-            //    ContentMessage = message,
-            //    Icon = Icon.Warning,
-            //    Markdown = markdown
-            //});
+            throw new InvalidOperationException();
         }
 
         public async Task ShowInfoAsync(
@@ -79,15 +51,7 @@ namespace Zametek.ProjectPlan.CommandLine
             string message,
             bool markdown = false)
         {
-            //await ShowMessageBoxAsync(new MessageBoxStandardParams
-            //{
-            //    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            //    SizeToContent = SizeToContent.WidthAndHeight,
-            //    ContentTitle = title,
-            //    ContentMessage = message,
-            //    Icon = Icon.Info,
-            //    Markdown = markdown
-            //});
+            throw new InvalidOperationException();
         }
 
         public async Task ShowInfoAsync(
@@ -97,17 +61,7 @@ namespace Zametek.ProjectPlan.CommandLine
             double width,
             bool markdown = false)
         {
-            //await ShowMessageBoxAsync(new MessageBoxStandardParams
-            //{
-            //    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            //    SizeToContent = SizeToContent.Manual,
-            //    ContentTitle = title,
-            //    ContentMessage = message,
-            //    Height = height,
-            //    Width = width,
-            //    Icon = Icon.Info,
-            //    Markdown = markdown
-            //});
+            throw new InvalidOperationException();
         }
 
         public async Task<bool> ShowConfirmationAsync(
@@ -115,50 +69,14 @@ namespace Zametek.ProjectPlan.CommandLine
             string message,
             bool markdown = false)
         {
-            //ButtonResult result = await ShowMessageBoxAsync(new MessageBoxStandardParams
-            //{
-            //    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            //    SizeToContent = SizeToContent.WidthAndHeight,
-            //    ContentTitle = title,
-            //    ContentMessage = message,
-            //    ButtonDefinitions = ButtonEnum.YesNo,
-            //    Icon = Icon.Info,
-            //    Markdown = markdown
-            //});
-            //return result == ButtonResult.Yes;
+            throw new InvalidOperationException();
         }
 
         public async Task<string?> ShowOpenFileDialogAsync(
             string initialDirectory,
             IList<IFileFilter> fileFilters)
         {
-            //var topLevel = TopLevel.GetTopLevel(m_Parent);
-
-            //if (topLevel is null)
-            //{
-            //    return null;
-            //}
-
-            //var filters = m_Mapper.Map<IList<IFileFilter>, List<FilePickerFileType>>(fileFilters);
-
-            //var options = new FilePickerOpenOptions
-            //{
-            //    AllowMultiple = false,
-            //    SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(initialDirectory),
-            //    FileTypeFilter = filters.AsReadOnlyList()
-            //};
-
-            //IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
-
-            //Uri? path = files?.FirstOrDefault()?.Path;
-
-            //if (path is not null
-            //    && path.IsFile)
-            //{
-            //    return path.LocalPath;
-            //}
-
-            //return null;
+            throw new InvalidOperationException();
         }
 
         public async Task<string?> ShowSaveFileDialogAsync(
@@ -166,33 +84,7 @@ namespace Zametek.ProjectPlan.CommandLine
             string initialDirectory,
             IList<IFileFilter> fileFilters)
         {
-            //var topLevel = TopLevel.GetTopLevel(m_Parent);
-
-            //if (topLevel is null)
-            //{
-            //    return null;
-            //}
-
-            //var filters = m_Mapper.Map<IList<IFileFilter>, List<FilePickerFileType>>(fileFilters);
-
-            //var options = new FilePickerSaveOptions
-            //{
-            //    SuggestedFileName = initialFilename,
-            //    SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(initialDirectory),
-            //    FileTypeChoices = filters.AsReadOnlyList()
-            //};
-
-            //IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(options);
-
-            //Uri? path = file?.Path;
-
-            //if (path is not null
-            //    && path.IsFile)
-            //{
-            //    return path.LocalPath;
-            //}
-
-            //return null;
+            throw new InvalidOperationException();
         }
 
         #endregion

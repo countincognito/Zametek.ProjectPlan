@@ -171,7 +171,10 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
-            var plotModel = new PlotModel();
+            var plotModel = new PlotModel
+            {
+                Background = OxyColors.White
+            };
 
             if (resourceSeriesSet.Combined.Count == 0)
             {
@@ -327,14 +330,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
                         {
-                            // Use Avalonia exporter so the background can be white.
                             using var stream = File.OpenWrite(filename);
-                            OxyPlot.Avalonia.PngExporter.Export(
+                            OxyPlot.SkiaSharp.PngExporter.Export(
                                 ResourceChartPlotModel,
                                 stream,
                                 Convert.ToInt32(bounds.Width),
-                                Convert.ToInt32(bounds.Height),
-                                OxyColors.White);
+                                Convert.ToInt32(bounds.Height));
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
                         {

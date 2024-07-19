@@ -218,7 +218,10 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(arrowGraphSettings);
             ArgumentNullException.ThrowIfNull(workStreamSettings);
             ArgumentNullException.ThrowIfNull(graphCompilation);
-            var plotModel = new PlotModel();
+            var plotModel = new PlotModel
+            {
+                Background = OxyColors.White
+            };
 
             if (!graphCompilation.DependentActivities.Any())
             {
@@ -645,77 +648,6 @@ namespace Zametek.ViewModel.ProjectPlan
             return categoryAxis;
         }
 
-        private async Task SaveGanttChartImageFileInternalAsync(string? filename)
-        {
-            if (string.IsNullOrWhiteSpace(filename))
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
-            }
-            else
-            {
-                if (ImageBounds is Rect bounds)
-                {
-                    string fileExtension = Path.GetExtension(filename);
-
-                    int width = Math.Abs(Convert.ToInt32(bounds.Width));
-                    int height = 0;
-                    int boundedHeight = Math.Abs(Convert.ToInt32(bounds.Height));
-
-                    if (GanttChartPlotModel.DefaultYAxis is CategoryAxis yAxis)
-                    {
-                        int labelCount = yAxis.ActualLabels.Count;
-                        height = Convert.ToInt32(GanttChartPlotModel.DefaultFontSize * labelCount * c_ExportLabelHeightCorrection);
-                    }
-
-                    if (height <= boundedHeight)
-                    {
-                        height = boundedHeight;
-                    }
-
-                    fileExtension.ValueSwitchOn()
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
-                        {
-                            using var stream = File.OpenWrite(filename);
-                            OxyPlot.SkiaSharp.JpegExporter.Export(
-                                GanttChartPlotModel,
-                                stream,
-                                width,
-                                height,
-                                200);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
-                        {
-                            // Use Avalonia exporter so the background can be white.
-                            using var stream = File.OpenWrite(filename);
-                            OxyPlot.Avalonia.PngExporter.Export(
-                                GanttChartPlotModel,
-                                stream,
-                                width,
-                                height,
-                                OxyColors.White);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
-                        {
-                            using var stream = File.OpenWrite(filename);
-                            OxyPlot.SkiaSharp.PdfExporter.Export(
-                                GanttChartPlotModel,
-                                stream,
-                                width,
-                                height);
-                        })
-                        .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
-
-                    //if (data is not null)
-                    //{
-                    //    using var stream = File.OpenWrite(filename);
-                    //    await stream.WriteAsync(data);
-                    //}
-                }
-            }
-        }
-
         private async Task SaveGanttChartImageFileAsync()
         {
             try
@@ -724,9 +656,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 string directory = m_SettingService.ProjectDirectory;
                 string? filename = await m_DialogService.ShowSaveFileDialogAsync(projectTitle, directory, s_ExportFileFilters);
 
-                if (!string.IsNullOrWhiteSpace(filename))
+                if (!string.IsNullOrWhiteSpace(filename)
+                    && ImageBounds is Rect bounds)
                 {
-                    await SaveGanttChartImageFileInternalAsync(filename);
+                    int boundedWidth = Math.Abs(Convert.ToInt32(bounds.Width));
+                    int boundedHeight = Math.Abs(Convert.ToInt32(bounds.Height));
+
+                    await SaveGanttChartImageFileAsync(filename, boundedWidth, boundedHeight);
                 }
             }
             catch (Exception ex)
@@ -768,6 +704,75 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public ICommand SaveGanttChartImageFileCommand { get; }
+
+        public async Task SaveGanttChartImageFileAsync(
+            string? filename,
+            int width,
+            int height)
+        {
+            if (string.IsNullOrWhiteSpace(filename))
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
+            }
+            else
+            {
+                try
+                {
+                    string fileExtension = Path.GetExtension(filename);
+                    int calculatedHeight = 0;
+
+                    if (GanttChartPlotModel.DefaultYAxis is CategoryAxis yAxis)
+                    {
+                        int labelCount = yAxis.ActualLabels.Count;
+                        calculatedHeight = Convert.ToInt32(GanttChartPlotModel.DefaultFontSize * labelCount * c_ExportLabelHeightCorrection);
+                    }
+
+                    if (calculatedHeight <= height)
+                    {
+                        calculatedHeight = height;
+                    }
+
+                    fileExtension.ValueSwitchOn()
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
+                        {
+                            using var stream = File.OpenWrite(filename);
+                            OxyPlot.SkiaSharp.JpegExporter.Export(
+                                GanttChartPlotModel,
+                                stream,
+                                width,
+                                calculatedHeight,
+                                200);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
+                        {
+                            using var stream = File.OpenWrite(filename);
+                            OxyPlot.SkiaSharp.PngExporter.Export(
+                                GanttChartPlotModel,
+                                stream,
+                                width,
+                                height);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
+                        {
+                            using var stream = File.OpenWrite(filename);
+                            OxyPlot.SkiaSharp.PdfExporter.Export(
+                                GanttChartPlotModel,
+                                stream,
+                                width,
+                                height);
+                        })
+                        .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
+                }
+                catch (Exception ex)
+                {
+                    await m_DialogService.ShowErrorAsync(
+                        Resource.ProjectPlan.Titles.Title_Error,
+                        ex.Message);
+                }
+            }
+        }
 
         #endregion
 
