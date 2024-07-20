@@ -255,6 +255,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
+            if (plotModel is IPlotModel plotModelInterface)
+            {
+                plotModelInterface.Update(true);
+            }
+
             return plotModel;
         }
 

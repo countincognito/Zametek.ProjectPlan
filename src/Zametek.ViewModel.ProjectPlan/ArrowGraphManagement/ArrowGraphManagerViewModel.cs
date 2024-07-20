@@ -1,6 +1,7 @@
 ﻿using Avalonia.Svg.Skia;
 using ReactiveUI;
 using SkiaSharp;
+using Svg.Skia;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Input;
@@ -33,6 +34,22 @@ namespace Zametek.ViewModel.ProjectPlan
                     Patterns =
                     [
                         Resource.ProjectPlan.Filters.Filter_ImagePngFilePattern
+                    ]
+                },
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_PdfFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_PdfFilePattern
+                    ]
+                },
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_ImageSvgFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ImageSvgFilePattern
                     ]
                 },
                 new FileFilter
@@ -252,6 +269,14 @@ namespace Zametek.ViewModel.ProjectPlan
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
                         {
                             ArrowGraphImage.Source?.Save(filename, SKColors.White, SKEncodedImageFormat.Png, scaleX: 2, scaleY: 2);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
+                        {
+                            ArrowGraphImage.Source?.Picture?.ToPdf(filename, SKColors.White, scaleX: 2, scaleY: 2);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ =>
+                        {
+                            ArrowGraphImage.Source?.Picture?.ToSvg(filename, SKColors.White, scaleX: 2, scaleY: 2);
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
                         {

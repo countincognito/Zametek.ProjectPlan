@@ -5,29 +5,35 @@ namespace Zametek.ProjectPlan.CommandLine
 {
     public class Options
     {
-        [Option('i', "input", Group = "file-in", HelpText = "Input file path.")]
+        [Option('i', "input", Group = "file-in", HelpText = "Input file path")]
         public string? InputFilename { get; set; } = default;
 
-        [Option('m', "import", Group = "file-in", HelpText = "Import file path.")]
+        [Option('m', "import", Group = "file-in", HelpText = "Import file path - must end in (.mpp|.xlsx)")]
         public string? ImportFilename { get; set; } = default;
 
 
 
-        [Option('o', "output", Group = "file-out", HelpText = "Output file path.")]
+        [Option('o', "output", Group = "file-out", HelpText = "Output file path")]
         public string? OutputFilename { get; set; } = default;
 
-        [Option('x', "export", Group = "file-out", HelpText = "Export file path.")]
+        [Option('x', "export", Group = "file-out", HelpText = "Export file path - must end in .xlsx")]
         public string? ExportFilename { get; set; } = default;
 
 
 
-        [Option('c', "compile", Default = false, Required = false, HelpText = "Compile incoming file.")]
-        public bool Compile { get; set; } = false;
+        [Option('b', "business-days", Default = true, Required = false, HelpText = "Use business days (true|false)")]
+        public bool? UseBusinessDays { get; set; } = true;
+
+        [Option('d', "show-dates", Default = false, Required = false, HelpText = "Show dates (true|false)")]
+        public bool? ShowDates { get; set; } = false;
+
+        [Option('c', "compile", Default = true, Required = false, HelpText = "Compile incoming file (true|false)")]
+        public bool? Compile { get; set; } = true;
 
 
 
-        [Option("gantt-output", HelpText = "Gantt output file path.")]
-        public string? GanttOutput { get; set; } = default;
+        [Option("gantt-directory", HelpText = "Gantt chart output file directory")]
+        public string? GanttDirectory { get; set; } = default;
 
         [Option("gantt-format", Default = PlotExport.Jpeg, HelpText = "Gantt chart format (Jpeg|Png|Pdf)")]
         public PlotExport GanttFormat { get; set; } = default;
@@ -35,15 +41,43 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option("gantt-group", Default = GroupByMode.None, HelpText = "Gantt chart group (None|Resource|WorkStream)")]
         public GroupByMode GanttGroup { get; set; } = default;
 
-        [Option("gantt-size", Max = 2, Separator = ':', HelpText = "Gantt chart parameters width and height (px).")]
+        [Option("gantt-annotate", Default = false, HelpText = "Annotate gantt chart group (true|false)")]
+        public bool? GanttAnnotate { get; set; } = default;
+
+        [Option("gantt-size", Min = 2, Max = 2, Separator = ':', HelpText = "Gantt chart dimensions in pixels (<width>:<height>)")]
         public IEnumerable<int> GanttSize { get; set; } = [];
 
 
 
+        [Option("graph-directory", HelpText = "Arrow graph output file directory")]
+        public string? GraphDirectory { get; set; } = default;
+
+        [Option("graph-format", Default = GraphExport.Jpeg, HelpText = "Arrow graph format (Jpeg|Png|GraphML|Dot)")]
+        public GraphExport GraphFormat { get; set; } = default;
 
 
 
+        [Option("resource-directory", HelpText = "Resource chart output file directory")]
+        public string? ResourceDirectory { get; set; } = default;
+
+        [Option("resource-format", Default = PlotExport.Jpeg, HelpText = "Resource chart format (Jpeg|Png|Pdf)")]
+        public PlotExport ResourceFormat { get; set; } = default;
+
+        [Option("resource-size", Min = 2, Max = 2, Separator = ':', HelpText = "Resource chart dimensions in pixels (<width>:<height>)")]
+        public IEnumerable<int> ResourceSize { get; set; } = [];
 
 
+
+        [Option("ev-directory", HelpText = "Earned-Value chart output file directory")]
+        public string? EVDirectory { get; set; } = default;
+
+        [Option("ev-format", Default = PlotExport.Jpeg, HelpText = "Earned-Value chart format (Jpeg|Png|Pdf)")]
+        public PlotExport EVFormat { get; set; } = default;
+
+        [Option("ev-projections", Default = false, HelpText = "Earned-Value chart group (true|false)")]
+        public bool? EVProjections { get; set; } = default;
+
+        [Option("ev-size", Min = 2, Max = 2, Separator = ':', HelpText = "Earned-Value chart dimensions in pixels (<width>:<height>)")]
+        public IEnumerable<int> EVSize { get; set; } = [];
     }
 }

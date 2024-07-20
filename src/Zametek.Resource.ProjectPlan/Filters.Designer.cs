@@ -241,6 +241,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to *.svg.
+        /// </summary>
+        public static string Filter_ImageSvgFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_ImageSvgFilePattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to SVG Image.
         /// </summary>
         public static string Filter_ImageSvgFileType {

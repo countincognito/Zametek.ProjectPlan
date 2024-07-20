@@ -336,6 +336,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     trackingSeriesSet.EffortProjection);
             }
 
+            if (plotModel is IPlotModel plotModelInterface)
+            {
+                plotModelInterface.Update(true);
+            }
+
             return plotModel;
         }
 

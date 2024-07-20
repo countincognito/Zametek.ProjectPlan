@@ -22,7 +22,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public object Parent { set => throw new InvalidOperationException(); }
 
-        public async Task ShowNotificationAsync(
+        public Task ShowNotificationAsync(
             string title,
             string message,
             bool markdown = false)
@@ -38,7 +38,7 @@ namespace Zametek.ProjectPlan.CommandLine
             await m_TextWriter.WriteLineAsync($@"{title}: {message}");
         }
 
-        public async Task ShowWarningAsync(
+        public Task ShowWarningAsync(
             string title,
             string message,
             bool markdown = false)
@@ -46,7 +46,7 @@ namespace Zametek.ProjectPlan.CommandLine
             throw new InvalidOperationException();
         }
 
-        public async Task ShowInfoAsync(
+        public Task ShowInfoAsync(
             string title,
             string message,
             bool markdown = false)
@@ -54,7 +54,7 @@ namespace Zametek.ProjectPlan.CommandLine
             throw new InvalidOperationException();
         }
 
-        public async Task ShowInfoAsync(
+        public Task ShowInfoAsync(
             string title,
             string message,
             double height,
@@ -64,7 +64,7 @@ namespace Zametek.ProjectPlan.CommandLine
             throw new InvalidOperationException();
         }
 
-        public async Task<bool> ShowConfirmationAsync(
+        public Task<bool> ShowConfirmationAsync(
             string title,
             string message,
             bool markdown = false)
@@ -72,14 +72,14 @@ namespace Zametek.ProjectPlan.CommandLine
             throw new InvalidOperationException();
         }
 
-        public async Task<string?> ShowOpenFileDialogAsync(
+        public Task<string?> ShowOpenFileDialogAsync(
             string initialDirectory,
             IList<IFileFilter> fileFilters)
         {
             throw new InvalidOperationException();
         }
 
-        public async Task<string?> ShowSaveFileDialogAsync(
+        public Task<string?> ShowSaveFileDialogAsync(
             string initialFilename,
             string initialDirectory,
             IList<IFileFilter> fileFilters)

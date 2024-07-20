@@ -177,6 +177,9 @@
   <data name="Filter_ImageSvgFileExtension" xml:space="preserve">
     <value>svg</value>
   </data>
+  <data name="Filter_ImageSvgFilePattern" xml:space="preserve">
+    <value>*.svg</value>
+  </data>
   <data name="Filter_ImageSvgFileType" xml:space="preserve">
     <value>SVG Image</value>
   </data>

@@ -580,6 +580,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
             plotModel.Axes.Add(BuildResourceChartYAxis(labels));
             plotModel.Series.Add(series);
+
+            if (plotModel is IPlotModel plotModelInterface)
+            {
+                plotModelInterface.Update(true);
+            }
+
             return plotModel;
         }
 
@@ -752,7 +758,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 GanttChartPlotModel,
                                 stream,
                                 width,
-                                height);
+                                calculatedHeight);
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
                         {
@@ -761,7 +767,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 GanttChartPlotModel,
                                 stream,
                                 width,
-                                height);
+                                calculatedHeight);
                         })
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
                 }

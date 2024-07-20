@@ -4,7 +4,9 @@
     {
         Jpeg,
         Png,
+        Pdf,
+        Svg,
         GraphML,
-        dot
+        Dot
     }
 }
