@@ -56,6 +56,8 @@ namespace Zametek.ProjectPlan.CommandLine
                         services.AddSingleton<IArrowGraphManagerViewModel, ArrowGraphManagerViewModel>();
                         services.AddSingleton<IResourceChartManagerViewModel, ResourceChartManagerViewModel>();
                         services.AddSingleton<IEarnedValueChartManagerViewModel, EarnedValueChartManagerViewModel>();
+                        services.AddSingleton<IMetricManagerViewModel, MetricManagerViewModel>();
+                        services.AddSingleton<IOutputManagerViewModel, OutputManagerViewModel>();
 
                         services.AddSingleton<IProjectFileOpen, ProjectFileOpen>();
                         services.AddSingleton<IProjectFileImport, ProjectFileImport>();
@@ -95,12 +97,21 @@ namespace Zametek.ProjectPlan.CommandLine
                         TextWriter writer = host.Services.GetRequiredService<TextWriter>();
                         string helpText = GetHelp(parserResult);
 
+                        IMetricManagerViewModel metrics = host.Services.GetRequiredService<IMetricManagerViewModel>();
+                        metrics.KillSubscriptions();
+
+                        IOutputManagerViewModel outputs = host.Services.GetRequiredService<IOutputManagerViewModel>();
+                        outputs.KillSubscriptions();
+
                         IGanttChartManagerViewModel gantt = host.Services.GetRequiredService<IGanttChartManagerViewModel>();
                         gantt.KillSubscriptions();
+
                         IArrowGraphManagerViewModel graph = host.Services.GetRequiredService<IArrowGraphManagerViewModel>();
                         graph.KillSubscriptions();
+
                         IResourceChartManagerViewModel resouces = host.Services.GetRequiredService<IResourceChartManagerViewModel>();
                         resouces.KillSubscriptions();
+
                         IEarnedValueChartManagerViewModel ev = host.Services.GetRequiredService<IEarnedValueChartManagerViewModel>();
                         ev.KillSubscriptions();
 
@@ -140,38 +151,21 @@ namespace Zametek.ProjectPlan.CommandLine
                         // Compile.
                         {
                             core.RunCompile();
+                            outputs.BuildCompilationOutput();
 
                             if (core.HasCompilationErrors)
                             {
-
+                                writer.WriteLine(outputs.CompilationOutput);
+                                return;
                             }
-                                
 
-
-
-
-
-
-
+                            metrics.BuildMetrics();
 
                             core.BuildCyclomaticComplexity();
                             core.BuildArrowGraph();
                             core.BuildResourceSeriesSet();
                             core.BuildTrackingSeriesSet();
                         }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
                         // File out.
                         {

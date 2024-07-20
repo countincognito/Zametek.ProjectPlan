@@ -15,6 +15,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly object m_Lock;
 
         private readonly ICoreViewModel m_CoreViewModel;
+        private readonly IDialogService m_DialogService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IMapper m_Mapper;
 
@@ -27,14 +28,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public MetricManagerViewModel(
             ICoreViewModel coreViewModel,
+            IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator,
             IMapper mapper)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(mapper);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
+            m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_Mapper = mapper;
 
@@ -58,14 +62,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, mm => mm.HasCompilationErrors);
 
             m_BuildMetricsSub = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.GraphCompilation)
+                .WhenAnyValue(
+                    mm => mm.m_CoreViewModel.GraphCompilation,
+                    mm => mm.m_CoreViewModel.ArrowGraphSettings,
+                    mm => mm.HasCompilationErrors)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(BuildMetrics);
+                .Subscribe(async _ => await BuildMetricsAsync());
 
             m_BuildCostsSub = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.ResourceSeriesSet)
+                .WhenAnyValue(
+                    mm => mm.m_CoreViewModel.ResourceSeriesSet,
+                    mm => mm.HasCompilationErrors)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(BuildCosts);
+                .Subscribe(async _ => await BuildCostsAsync());
 
             m_CriticalityRisk = this
                 .WhenAnyValue(mm => mm.Metrics, metrics => metrics.Criticality)
@@ -315,30 +324,20 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private void BuildMetrics(IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation)
+        private async Task BuildMetricsAsync()
         {
-            ArgumentNullException.ThrowIfNull(graphCompilation);
-            lock (m_Lock)
+            try
             {
-                Metrics = new MetricsModel();
-                IEnumerable<IDependentActivity<int, int, int>> dependentActivities =
-                    graphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int, int>)x.CloneObject());
-
-                if (dependentActivities.Any())
+                lock (m_Lock)
                 {
-                    if (HasCompilationErrors)
-                    {
-                        return;
-                    }
-
-                    IEnumerable<ActivityModel> activities =
-                        m_Mapper.Map<IEnumerable<IActivity<int, int, int>>, IList<ActivityModel>>(
-                            dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int, int, int>)x));
-
-                    IEnumerable<ActivitySeverityModel> activitySeverities = m_CoreViewModel.ArrowGraphSettings.ActivitySeverities;
-
-                    Metrics = CalculateProjectMetrics(activities, activitySeverities);
+                    BuildMetrics();
                 }
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    ex.Message);
             }
         }
 
@@ -359,23 +358,20 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private void BuildCosts(ResourceSeriesSetModel resourceSeriesSet)
+        private async Task BuildCostsAsync()
         {
-            ArgumentNullException.ThrowIfNull(resourceSeriesSet);
-            lock (m_Lock)
+            try
             {
-                Costs = new CostsModel();
-                IList<ResourceSeriesModel> combinedResourceSeriesModels = resourceSeriesSet.Combined;
-
-                if (combinedResourceSeriesModels.Any())
+                lock (m_Lock)
                 {
-                    if (HasCompilationErrors)
-                    {
-                        return;
-                    }
-
-                    Costs = CalculateProjectCosts(combinedResourceSeriesModels);
+                    BuildCosts();
                 }
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    ex.Message);
             }
         }
 
@@ -437,6 +433,63 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<double?> m_Efficiency;
         public double? Efficiency => m_Efficiency.Value;
 
+        public void BuildMetrics()
+        {
+            var metricsModel = new MetricsModel();
+
+            lock (m_Lock)
+            {
+                IEnumerable<IDependentActivity<int, int, int>> dependentActivities =
+                    m_CoreViewModel.GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int, int>)x.CloneObject());
+
+                if (dependentActivities.Any())
+                {
+                    if (!HasCompilationErrors)
+                    {
+                        IEnumerable<ActivityModel> activities =
+                            m_Mapper.Map<IEnumerable<IActivity<int, int, int>>, IList<ActivityModel>>(
+                                dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int, int, int>)x));
+
+                        IEnumerable<ActivitySeverityModel> activitySeverities = m_CoreViewModel.ArrowGraphSettings.ActivitySeverities;
+
+                        metricsModel = CalculateProjectMetrics(activities, activitySeverities);
+                    }
+                }
+            }
+
+            Metrics = metricsModel;
+        }
+
+        public void BuildCosts()
+        {
+            var costsModel = new CostsModel();
+
+            lock (m_Lock)
+            {
+                IList<ResourceSeriesModel> combinedResourceSeriesModels = m_CoreViewModel.ResourceSeriesSet.Combined;
+
+                if (combinedResourceSeriesModels.Any())
+                {
+                    if (!HasCompilationErrors)
+                    {
+                        costsModel = CalculateProjectCosts(combinedResourceSeriesModels);
+                    }
+                }
+            }
+
+            Costs = costsModel;
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_BuildMetricsSub?.Dispose();
+            m_BuildCostsSub?.Dispose();
+        }
+
         #endregion
 
         #region IDisposable Members
@@ -453,8 +506,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
-                m_BuildMetricsSub?.Dispose();
-                m_BuildCostsSub?.Dispose();
+                KillSubscriptions();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

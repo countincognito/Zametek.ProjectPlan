@@ -1,6 +1,7 @@
 ﻿namespace Zametek.Contract.ProjectPlan
 {
     public interface IMetricManagerViewModel
+        : IKillSubscriptions
     {
         bool IsBusy { get; }
 
@@ -37,5 +38,9 @@
         double? TotalCost { get; }
 
         double? Efficiency { get; }
+
+        void BuildMetrics();
+
+        void BuildCosts();
     }
 }

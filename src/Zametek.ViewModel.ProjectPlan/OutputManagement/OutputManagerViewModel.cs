@@ -70,7 +70,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     om => om.UseBusinessDays,
                     om => om.ProjectStart)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(async result => await BuildCompilationOutputAsync(result.Item1, result.Item2));
+                .Subscribe(async _ => await BuildCompilationOutputAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_Output;
             Title = Resource.ProjectPlan.Titles.Title_Output;
@@ -132,51 +132,50 @@ namespace Zametek.ViewModel.ProjectPlan
             return output.ToString();
         }
 
-        private void BuildCompilationOutput(
+        private static string BuildCompilationOutputInternal(
+            IDateTimeCalculator dateTimeCalculator,
             IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
-            ResourceSeriesSetModel resourceSeriesSet)
+            ResourceSeriesSetModel resourceSeriesSet,
+            bool showDates,
+            DateTimeOffset projectStart,
+            bool hasCompilationErrors)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(graphCompilation);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
-            lock (m_Lock)
+
+            IEnumerable<IGraphCompilationError> errors = graphCompilation.CompilationErrors;
+            IEnumerable<ResourceSeriesModel> scheduled = resourceSeriesSet.Scheduled;
+
+            var output = new StringBuilder();
+
+            if (hasCompilationErrors)
             {
-                CompilationOutput = string.Empty;
+                output.AppendLine($@">{Resource.ProjectPlan.Messages.Message_CompilationErrors}");
+                output.AppendLine();
 
-                IEnumerable<IGraphCompilationError> errors = graphCompilation.CompilationErrors;
-                IEnumerable<ResourceSeriesModel> scheduled = resourceSeriesSet.Scheduled;
-
-                var output = new StringBuilder();
-
-                if (HasCompilationErrors)
+                foreach (IGraphCompilationError error in errors)
                 {
-                    output.AppendLine($@">{Resource.ProjectPlan.Messages.Message_CompilationErrors}");
+                    output.AppendLine($@">{Resource.ProjectPlan.Messages.Message_Error}: {error.ErrorCode}");
+                    output.AppendLine($@">{error.ErrorMessage}");
                     output.AppendLine();
-
-                    foreach (IGraphCompilationError error in errors)
-                    {
-                        output.AppendLine($@">{Resource.ProjectPlan.Messages.Message_Error}: {error.ErrorCode}");
-                        output.AppendLine($@">{error.ErrorMessage}");
-                        output.AppendLine();
-                    }
                 }
-                else if (scheduled.Any())
-                {
-                    output.Append(CalculateActivitySchedules(ShowDates, ProjectStart, m_DateTimeCalculator, scheduled));
-                }
-
-                CompilationOutput = output.ToString();
             }
+            else if (scheduled.Any())
+            {
+                output.Append(CalculateActivitySchedules(showDates, projectStart, dateTimeCalculator, scheduled));
+            }
+
+            return output.ToString();
         }
 
-        private async Task BuildCompilationOutputAsync(
-            IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
-            ResourceSeriesSetModel resourceSeriesSet)
+        private async Task BuildCompilationOutputAsync()
         {
             try
             {
                 lock (m_Lock)
                 {
-                    BuildCompilationOutput(graphCompilation, resourceSeriesSet);
+                    BuildCompilationOutput();
                 }
             }
             catch (Exception ex)
@@ -210,6 +209,33 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void BuildCompilationOutput()
+        {
+            string output = string.Empty;
+
+            lock (m_Lock)
+            {
+                output = BuildCompilationOutputInternal(
+                    m_DateTimeCalculator,
+                    m_CoreViewModel.GraphCompilation,
+                    m_CoreViewModel.ResourceSeriesSet,
+                    ShowDates,
+                    ProjectStart,
+                    HasCompilationErrors);
+            }
+
+            CompilationOutput = output;
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_BuildCompilationOutputSub?.Dispose();
+        }
+
         #endregion
 
         #region IDisposable Members
@@ -226,7 +252,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
-                m_BuildCompilationOutputSub?.Dispose();
+                KillSubscriptions();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
