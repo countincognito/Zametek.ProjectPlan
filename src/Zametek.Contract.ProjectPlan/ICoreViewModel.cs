@@ -5,6 +5,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface ICoreViewModel
+        : IKillSubscriptions
     {
         string ProjectTitle { get; set; }
 
@@ -81,5 +82,13 @@ namespace Zametek.Contract.ProjectPlan
         void RunAutoCompile();
 
         void RunTransitiveReduction();
+
+        void BuildCyclomaticComplexity();
+
+        void BuildArrowGraph();
+
+        void BuildResourceSeriesSet();
+
+        void BuildTrackingSeriesSet();
     }
 }

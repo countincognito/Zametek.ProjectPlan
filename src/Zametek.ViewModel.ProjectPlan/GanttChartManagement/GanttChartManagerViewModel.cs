@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Runtime.Intrinsics.Arm;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -119,20 +120,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.AnnotateGroups,
                     (a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i))
                 .ObserveOn(Scheduler.CurrentThread)
-                .Subscribe(async result =>
-                {
-                    GanttChartPlotModel = await BuildGanttChartPlotModelAsync(
-                        m_DateTimeCalculator,
-                        result.a,
-                        result.b,
-                        result.c,
-                        result.d,
-                        result.e,
-                        result.f,
-                        result.g,
-                        result.h,
-                        result.i);
-                });
+                .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_GanttChartView;
             Title = Resource.ProjectPlan.Titles.Title_GanttChartView;
@@ -161,33 +149,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private async Task<PlotModel> BuildGanttChartPlotModelAsync(
-            IDateTimeCalculator dateTimeCalculator,
-            ResourceSeriesSetModel resourceSeriesSet,
-            ResourceSettingsModel resourceSettings,
-            ArrowGraphSettingsModel arrowGraphSettings,
-            WorkStreamSettingsModel workStreamSettings,
-            DateTime projectStartDateTime,
-            bool showDates,
-            IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
-            GroupByMode groupByMode,
-            bool annotateGroups)
+        private async Task BuildGanttChartPlotModelAsync()
         {
             try
             {
                 lock (m_Lock)
                 {
-                    return BuildGanttChartPlotModel(
-                        dateTimeCalculator,
-                        resourceSeriesSet,
-                        resourceSettings,
-                        arrowGraphSettings,
-                        workStreamSettings,
-                        projectStartDateTime,
-                        showDates,
-                        graphCompilation,
-                        groupByMode,
-                        annotateGroups);
+                    BuildGanttChartPlotModel();
                 }
             }
             catch (Exception ex)
@@ -196,11 +164,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     ex.Message);
             }
-
-            return new PlotModel();
         }
 
-        private static PlotModel BuildGanttChartPlotModel(
+        private static PlotModel BuildGanttChartPlotModelInternal(
             IDateTimeCalculator dateTimeCalculator,
             ResourceSeriesSetModel resourceSeriesSet,
             ResourceSettingsModel resourceSettingsSettings,
@@ -780,6 +746,37 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void BuildGanttChartPlotModel()
+        {
+            PlotModel? plotModel = null;
+
+            lock (m_Lock)
+            {
+                plotModel = BuildGanttChartPlotModelInternal(
+                    m_DateTimeCalculator,
+                    m_CoreViewModel.ResourceSeriesSet,
+                    m_CoreViewModel.ResourceSettings,
+                    m_CoreViewModel.ArrowGraphSettings,
+                    m_CoreViewModel.WorkStreamSettings,
+                    m_CoreViewModel.ProjectStartDateTime,
+                    m_CoreViewModel.ShowDates,
+                    m_CoreViewModel.GraphCompilation,
+                    GroupByMode,
+                    AnnotateGroups);
+            }
+
+            GanttChartPlotModel = plotModel ?? new PlotModel();
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_BuildGanttChartPlotModelSub?.Dispose();
+        }
+
         #endregion
 
         #region IDisposable Members
@@ -796,7 +793,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
-                m_BuildGanttChartPlotModelSub?.Dispose();
+                KillSubscriptions();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

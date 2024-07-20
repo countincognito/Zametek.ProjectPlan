@@ -3,6 +3,7 @@
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IEarnedValueChartManagerViewModel
+        : IKillSubscriptions
     {
         bool IsBusy { get; }
 
@@ -15,5 +16,7 @@ namespace Zametek.Contract.ProjectPlan
         ICommand SaveEarnedValueChartImageFileCommand { get; }
 
         Task SaveEarnedValueChartImageFileAsync(string? filename, int width, int height);
+
+        void BuildEarnedValueChartPlotModel();
     }
 }

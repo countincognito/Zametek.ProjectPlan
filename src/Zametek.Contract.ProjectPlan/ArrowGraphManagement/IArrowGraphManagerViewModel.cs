@@ -3,6 +3,7 @@
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IArrowGraphManagerViewModel
+        : IKillSubscriptions
     {
         bool IsBusy { get; }
 
@@ -15,5 +16,9 @@ namespace Zametek.Contract.ProjectPlan
         ICommand SaveArrowGraphImageFileCommand { get; }
 
         Task SaveArrowGraphImageFileAsync(string? filename);
+
+        void BuildArrowGraphDiagramData();
+
+        void BuildArrowGraphDiagramImage();
     }
 }

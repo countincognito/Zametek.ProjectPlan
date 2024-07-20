@@ -75,6 +75,7 @@ namespace Zametek.ProjectPlan.CommandLine
                     .Build();
 
                 ICoreViewModel core = host.Services.GetRequiredService<ICoreViewModel>();
+                core.KillSubscriptions();
 
                 IProjectFileOpen projectFileOpen = host.Services.GetRequiredService<IProjectFileOpen>();
                 IProjectFileImport projectFileImport = host.Services.GetRequiredService<IProjectFileImport>();
@@ -95,9 +96,13 @@ namespace Zametek.ProjectPlan.CommandLine
                         string helpText = GetHelp(parserResult);
 
                         IGanttChartManagerViewModel gantt = host.Services.GetRequiredService<IGanttChartManagerViewModel>();
+                        gantt.KillSubscriptions();
                         IArrowGraphManagerViewModel graph = host.Services.GetRequiredService<IArrowGraphManagerViewModel>();
+                        graph.KillSubscriptions();
                         IResourceChartManagerViewModel resouces = host.Services.GetRequiredService<IResourceChartManagerViewModel>();
+                        resouces.KillSubscriptions();
                         IEarnedValueChartManagerViewModel ev = host.Services.GetRequiredService<IEarnedValueChartManagerViewModel>();
+                        ev.KillSubscriptions();
 
                         // File in.
                         {
@@ -134,16 +139,38 @@ namespace Zametek.ProjectPlan.CommandLine
 
                         // Compile.
                         {
-                            bool compile = options.Compile ?? default;
+                            core.RunCompile();
 
-                            if (compile)
+                            if (core.HasCompilationErrors)
                             {
-                                core.RunCompile();
+
                             }
+                                
+
+
+
+
+
+
+
+
+                            core.BuildCyclomaticComplexity();
+                            core.BuildArrowGraph();
+                            core.BuildResourceSeriesSet();
+                            core.BuildTrackingSeriesSet();
                         }
 
 
-                        Task.Delay(5000).Wait();
+
+
+
+
+
+
+
+
+
+
 
 
                         // File out.
@@ -178,10 +205,6 @@ namespace Zametek.ProjectPlan.CommandLine
                         // Gantt chart export.
                         {
                             string? ganttDirectory = options.GanttDirectory;
-                            PlotExport ganttFormat = options.GanttFormat;
-                            GroupByMode ganttGroup = options.GanttGroup;
-                            bool ganttAnnotate = options.GanttAnnotate ?? default;
-                            IList<int> ganttSize = [.. options.GanttSize];
 
                             if (ganttDirectory is not null)
                             {
@@ -189,6 +212,8 @@ namespace Zametek.ProjectPlan.CommandLine
                                 {
                                     throw new InvalidOperationException($@"Directory {ganttDirectory} does not exist");
                                 }
+
+                                IList<int> ganttSize = [.. options.GanttSize];
 
                                 if (ganttSize.Count != 2)
                                 {
@@ -199,8 +224,15 @@ namespace Zametek.ProjectPlan.CommandLine
                                 int width = ganttSize[0];
                                 int height = ganttSize[1];
 
+                                GroupByMode ganttGroup = options.GanttGroup;
+                                bool ganttAnnotate = options.GanttAnnotate ?? default;
+
                                 gantt.GroupByMode = ganttGroup;
                                 gantt.AnnotateGroups = ganttAnnotate;
+
+                                gantt.BuildGanttChartPlotModel();
+
+                                PlotExport ganttFormat = options.GanttFormat;
 
                                 string ganttOutputFile = Path.Combine(
                                     ganttDirectory,
@@ -222,6 +254,9 @@ namespace Zametek.ProjectPlan.CommandLine
                                     throw new InvalidOperationException($@"Directory {graphDirectory} does not exist");
                                 }
 
+                                graph.BuildArrowGraphDiagramData();
+                                graph.BuildArrowGraphDiagramImage();
+
                                 string graphOutputFile = Path.Combine(
                                     graphDirectory,
                                     $@"{settingService.ProjectTitle}{c_GraphSuffix}.{graphFormat.GetDescription().ToLowerInvariant()}");
@@ -233,8 +268,6 @@ namespace Zametek.ProjectPlan.CommandLine
                         // Resource chart export.
                         {
                             string? resourceDirectory = options.ResourceDirectory;
-                            PlotExport resourceFormat = options.ResourceFormat;
-                            IList<int> resourceSize = [.. options.ResourceSize];
 
                             if (resourceDirectory is not null)
                             {
@@ -242,6 +275,8 @@ namespace Zametek.ProjectPlan.CommandLine
                                 {
                                     throw new InvalidOperationException($@"Directory {resourceDirectory} does not exist");
                                 }
+
+                                IList<int> resourceSize = [.. options.ResourceSize];
 
                                 if (resourceSize.Count != 2)
                                 {
@@ -251,6 +286,10 @@ namespace Zametek.ProjectPlan.CommandLine
 
                                 int width = resourceSize[0];
                                 int height = resourceSize[1];
+
+                                resouces.BuildResourceChartPlotModel();
+
+                                PlotExport resourceFormat = options.ResourceFormat;
 
                                 string resourceOutputFile = Path.Combine(
                                     resourceDirectory,
@@ -262,11 +301,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                         // EV chart export.
                         {
-
                             string? evDirectory = options.EVDirectory;
-                            PlotExport evFormat = options.EVFormat;
-                            bool evProjections = options.EVProjections ?? default;
-                            IList<int> evSize = [.. options.EVSize];
 
                             if (evDirectory is not null)
                             {
@@ -274,6 +309,8 @@ namespace Zametek.ProjectPlan.CommandLine
                                 {
                                     throw new InvalidOperationException($@"Directory {evDirectory} does not exist");
                                 }
+
+                                IList<int> evSize = [.. options.EVSize];
 
                                 if (evSize.Count != 2)
                                 {
@@ -284,7 +321,12 @@ namespace Zametek.ProjectPlan.CommandLine
                                 int width = evSize[0];
                                 int height = evSize[1];
 
+                                bool evProjections = options.EVProjections ?? default;
                                 ev.ViewProjections = evProjections;
+
+                                ev.BuildEarnedValueChartPlotModel();
+
+                                PlotExport evFormat = options.EVFormat;
 
                                 string evOutputFile = Path.Combine(
                                     evDirectory,

@@ -4,6 +4,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IGanttChartManagerViewModel
+        : IKillSubscriptions
     {
         bool IsBusy { get; }
 
@@ -20,5 +21,7 @@ namespace Zametek.Contract.ProjectPlan
         ICommand SaveGanttChartImageFileCommand { get; }
 
         Task SaveGanttChartImageFileAsync(string? filename, int width, int height);
+
+        void BuildGanttChartPlotModel();
     }
 }

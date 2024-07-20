@@ -100,14 +100,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ShowDates,
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(async result =>
-                {
-                    ResourceChartPlotModel = await BuildResourceChartPlotModelAsync(
-                        m_DateTimeCalculator,
-                        result.Item1,
-                        result.Item2,
-                        result.Item3);
-                });
+                .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ResourceChartView;
             Title = Resource.ProjectPlan.Titles.Title_ResourceChartView;
@@ -136,21 +129,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private async Task<PlotModel> BuildResourceChartPlotModelAsync(
-            IDateTimeCalculator dateTimeCalculator,
-            ResourceSeriesSetModel resourceSeriesSet,
-            bool showDates,
-            DateTime projectStartDateTime)
+        private async Task BuildResourceChartPlotModelAsync()
         {
             try
             {
                 lock (m_Lock)
                 {
-                    return BuildResourceChartPlotModel(
-                        dateTimeCalculator,
-                        resourceSeriesSet,
-                        showDates,
-                        projectStartDateTime);
+                    BuildResourceChartPlotModel();
                 }
             }
             catch (Exception ex)
@@ -159,15 +144,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     ex.Message);
             }
-
-            return new PlotModel();
         }
 
-        private static PlotModel BuildResourceChartPlotModel(
-            IDateTimeCalculator dateTimeCalculator,
-            ResourceSeriesSetModel resourceSeriesSet,
-            bool showDates,
-            DateTime projectStartDateTime)
+        private static PlotModel BuildResourceChartPlotModelInternal(
+        IDateTimeCalculator dateTimeCalculator,
+        ResourceSeriesSetModel resourceSeriesSet,
+        bool showDates,
+        DateTime projectStartDateTime)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
@@ -404,6 +387,31 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void BuildResourceChartPlotModel()
+        {
+            PlotModel? plotModel = null;
+
+            lock (m_Lock)
+            {
+                plotModel = BuildResourceChartPlotModelInternal(
+                    m_DateTimeCalculator,
+                    m_CoreViewModel.ResourceSeriesSet,
+                    m_CoreViewModel.ShowDates,
+                    m_CoreViewModel.ProjectStartDateTime);
+            }
+
+            ResourceChartPlotModel = plotModel ?? new PlotModel();
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_BuildResourceChartPlotModelSub?.Dispose();
+        }
+
         #endregion
 
         #region IDisposable Members
@@ -420,7 +428,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
-                m_BuildResourceChartPlotModelSub?.Dispose();
+                KillSubscriptions();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

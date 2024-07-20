@@ -27,9 +27,6 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option('d', "show-dates", Default = false, Required = false, HelpText = "Show dates (true|false)")]
         public bool? ShowDates { get; set; } = false;
 
-        [Option('c', "compile", Default = true, Required = false, HelpText = "Compile incoming file (true|false)")]
-        public bool? Compile { get; set; } = true;
-
 
 
         [Option("gantt-directory", HelpText = "Gantt chart output file directory")]

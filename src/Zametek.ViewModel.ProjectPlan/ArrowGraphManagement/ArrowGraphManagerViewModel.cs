@@ -5,7 +5,6 @@ using Svg.Skia;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Input;
-using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
 
@@ -121,12 +120,12 @@ namespace Zametek.ViewModel.ProjectPlan
             m_BuildArrowGraphDataSub = this
                 .WhenAnyValue(agm => agm.m_CoreViewModel.ArrowGraph, agm => agm.m_CoreViewModel.ArrowGraphSettings)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(async result => ArrowGraphData = await BuildArrowGraphDiagramDataAsync(result.Item1, result.Item2));
+                .Subscribe(async _ => await BuildArrowGraphDiagramDataAsync());
 
             m_BuildArrowGraphImageSub = this
                 .WhenAnyValue(agm => agm.ArrowGraphData)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(async data => ArrowGraphImage = await BuildArrowGraphDiagramImageAsync(data));
+                .Subscribe(async _ => await BuildArrowGraphDiagramImageAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
             Title = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
@@ -150,16 +149,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private async Task<string> BuildArrowGraphDiagramDataAsync(
-            ArrowGraphModel arrowGraphModel,
-            ArrowGraphSettingsModel arrowGraphSettingsModel)
+        private async Task BuildArrowGraphDiagramDataAsync()
         {
             try
             {
                 lock (m_Lock)
                 {
-                    byte[] data = m_ArrowGraphExport.BuildArrowGraphSvgData(arrowGraphModel, arrowGraphSettingsModel);
-                    return data.ByteArrayToString();
+                    BuildArrowGraphDiagramData();
                 }
             }
             catch (Exception ex)
@@ -168,26 +164,15 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     ex.Message);
             }
-
-            return string.Empty;
         }
 
-        private async Task<SvgImage> BuildArrowGraphDiagramImageAsync(string arrowGraphData)
+        private async Task BuildArrowGraphDiagramImageAsync()
         {
-            if (string.IsNullOrWhiteSpace(arrowGraphData))
-            {
-                return new SvgImage();
-            }
-
             try
             {
                 lock (m_Lock)
                 {
-                    var source = SvgSource.LoadFromSvg(arrowGraphData);
-                    return new SvgImage
-                    {
-                        Source = source
-                    };
+                    BuildArrowGraphDiagramImage();
                 }
             }
             catch (Exception ex)
@@ -196,8 +181,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     ex.Message);
             }
-
-            return new SvgImage();
         }
 
         private async Task SaveArrowGraphImageFileAsync()
@@ -303,6 +286,50 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void BuildArrowGraphDiagramData()
+        {
+            byte[]? data = null;
+
+            lock (m_Lock)
+            {
+                data = m_ArrowGraphExport.BuildArrowGraphSvgData(
+                    m_CoreViewModel.ArrowGraph,
+                    m_CoreViewModel.ArrowGraphSettings);
+            }
+
+            ArrowGraphData = data?.ByteArrayToString() ?? string.Empty;
+        }
+
+        public void BuildArrowGraphDiagramImage()
+        {
+            SvgImage? image = null;
+
+            lock (m_Lock)
+            {
+                string arrowGraphData = ArrowGraphData;
+                if (!string.IsNullOrWhiteSpace(arrowGraphData))
+                {
+                    SvgSource? source = SvgSource.LoadFromSvg(arrowGraphData);
+                    image = new SvgImage
+                    {
+                        Source = source
+                    };
+                }
+            }
+
+            ArrowGraphImage = image ?? new SvgImage();
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_BuildArrowGraphDataSub?.Dispose();
+            m_BuildArrowGraphImageSub?.Dispose();
+        }
+
         #endregion
 
         #region IDisposable Members
@@ -319,8 +346,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
-                m_BuildArrowGraphDataSub?.Dispose();
-                m_BuildArrowGraphImageSub?.Dispose();
+                KillSubscriptions();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

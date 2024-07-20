@@ -3,6 +3,7 @@
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IResourceChartManagerViewModel
+        : IKillSubscriptions
     {
         bool IsBusy { get; }
 
@@ -13,5 +14,7 @@ namespace Zametek.Contract.ProjectPlan
         ICommand SaveResourceChartImageFileCommand { get; }
 
         Task SaveResourceChartImageFileAsync(string? filename, int width, int height);
+
+        void BuildResourceChartPlotModel();
     }
 }

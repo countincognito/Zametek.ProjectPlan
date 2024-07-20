@@ -144,36 +144,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private void BuildArrowGraph()
-        {
-            lock (m_Lock)
-            {
-                ArrowGraph = new ArrowGraphModel();
-
-                if (!HasCompilationErrors)
-                {
-                    IEnumerable<IDependentActivity<int, int, int>> dependentActivities =
-                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int, int>)x.CloneObject());
-
-                    if (dependentActivities.Any())
-                    {
-                        var arrowGraphCompiler = new ArrowGraphCompiler<int, int, int, IDependentActivity<int, int, int>>();
-                        foreach (IDependentActivity<int, int, int> dependentActivity in dependentActivities)
-                        {
-                            dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
-                            dependentActivity.ResourceDependencies.Clear();
-                            arrowGraphCompiler.AddActivity(dependentActivity);
-                        }
-
-                        arrowGraphCompiler.Compile();
-                        Graph<int, IDependentActivity<int, int, int>, IEvent<int>>? arrowGraph =
-                            arrowGraphCompiler.ToGraph() ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotBuildArrowGraph);
-                        ArrowGraph = m_Mapper.Map<Graph<int, IDependentActivity<int, int, int>, IEvent<int>>, ArrowGraphModel>(arrowGraph);
-                    }
-                }
-            }
-        }
-
         private static ResourceSeriesSetModel CalculateResourceSeriesSet(
             IEnumerable<ResourceScheduleModel> resourceSchedules,
             IEnumerable<ResourceModel> resources,
@@ -336,29 +306,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             return resourceSeriesSet;
-        }
-
-        private void BuildResourceSeriesSet()
-        {
-            lock (m_Lock)
-            {
-                var resourceSeriesSet = new ResourceSeriesSetModel();
-
-                if (!HasCompilationErrors)
-                {
-                    IList<ResourceModel> resourceModels = ResourceSettings.Resources;
-
-                    IList<ResourceScheduleModel> resourceScheduleModels =
-                        m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity<int, int, int>>, IList<ResourceScheduleModel>>(GraphCompilation);
-
-                    resourceSeriesSet = CalculateResourceSeriesSet(
-                        resourceScheduleModels,
-                        resourceModels,
-                        ResourceSettings.DefaultUnitCost);
-                }
-
-                ResourceSeriesSet = resourceSeriesSet;
-            }
         }
 
         private static TrackingSeriesSetModel CalculateTrackingSeriesSet(IEnumerable<ActivityModel> activities)
@@ -553,22 +500,6 @@ namespace Zametek.ViewModel.ProjectPlan
             return trackingSeriesSet;
         }
 
-        private void BuildTrackingSeriesSet()
-        {
-            lock (m_Lock)
-            {
-                var trackingSeriesSet = new TrackingSeriesSetModel();
-
-                if (!HasCompilationErrors)
-                {
-                    IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(Activities);
-                    trackingSeriesSet = CalculateTrackingSeriesSet(activityModels);
-                }
-
-                TrackingSeriesSet = trackingSeriesSet;
-            }
-        }
-
         private static int CalculateCyclomaticComplexity(IEnumerable<IDependentActivity<int, int, int>> dependentActivities)
         {
             ArgumentNullException.ThrowIfNull(dependentActivities);
@@ -583,27 +514,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             vertexGraphCompiler.TransitiveReduction();
             return vertexGraphCompiler.CyclomaticComplexity;
-        }
-
-        private void BuildCyclomaticComplexity()
-        {
-            lock (m_Lock)
-            {
-                CyclomaticComplexity = null;
-
-                if (!HasCompilationErrors)
-                {
-                    IEnumerable<IDependentActivity<int, int, int>> dependentActivities =
-                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int, int>)x.CloneObject());
-
-                    if (!dependentActivities.Any())
-                    {
-                        return;
-                    }
-
-                    CyclomaticComplexity = CalculateCyclomaticComplexity(dependentActivities);
-                }
-            }
         }
 
         #endregion
@@ -1412,6 +1322,110 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void BuildCyclomaticComplexity()
+        {
+            lock (m_Lock)
+            {
+                CyclomaticComplexity = null;
+
+                if (!HasCompilationErrors)
+                {
+                    IEnumerable<IDependentActivity<int, int, int>> dependentActivities =
+                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int, int>)x.CloneObject());
+
+                    if (!dependentActivities.Any())
+                    {
+                        return;
+                    }
+
+                    CyclomaticComplexity = CalculateCyclomaticComplexity(dependentActivities);
+                }
+            }
+        }
+
+        public void BuildArrowGraph()
+        {
+            lock (m_Lock)
+            {
+                ArrowGraph = new ArrowGraphModel();
+
+                if (!HasCompilationErrors)
+                {
+                    IEnumerable<IDependentActivity<int, int, int>> dependentActivities =
+                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int, int>)x.CloneObject());
+
+                    if (dependentActivities.Any())
+                    {
+                        var arrowGraphCompiler = new ArrowGraphCompiler<int, int, int, IDependentActivity<int, int, int>>();
+                        foreach (IDependentActivity<int, int, int> dependentActivity in dependentActivities)
+                        {
+                            dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
+                            dependentActivity.ResourceDependencies.Clear();
+                            arrowGraphCompiler.AddActivity(dependentActivity);
+                        }
+
+                        arrowGraphCompiler.Compile();
+                        Graph<int, IDependentActivity<int, int, int>, IEvent<int>>? arrowGraph =
+                            arrowGraphCompiler.ToGraph() ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotBuildArrowGraph);
+                        ArrowGraph = m_Mapper.Map<Graph<int, IDependentActivity<int, int, int>, IEvent<int>>, ArrowGraphModel>(arrowGraph);
+                    }
+                }
+            }
+        }
+
+        public void BuildResourceSeriesSet()
+        {
+            lock (m_Lock)
+            {
+                var resourceSeriesSet = new ResourceSeriesSetModel();
+
+                if (!HasCompilationErrors)
+                {
+                    IList<ResourceModel> resourceModels = ResourceSettings.Resources;
+
+                    IList<ResourceScheduleModel> resourceScheduleModels =
+                        m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity<int, int, int>>, IList<ResourceScheduleModel>>(GraphCompilation);
+
+                    resourceSeriesSet = CalculateResourceSeriesSet(
+                        resourceScheduleModels,
+                        resourceModels,
+                        ResourceSettings.DefaultUnitCost);
+                }
+
+                ResourceSeriesSet = resourceSeriesSet;
+            }
+        }
+
+        public void BuildTrackingSeriesSet()
+        {
+            lock (m_Lock)
+            {
+                var trackingSeriesSet = new TrackingSeriesSetModel();
+
+                if (!HasCompilationErrors)
+                {
+                    IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(Activities);
+                    trackingSeriesSet = CalculateTrackingSeriesSet(activityModels);
+                }
+
+                TrackingSeriesSet = trackingSeriesSet;
+            }
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_CyclomaticComplexitySub?.Dispose();
+            m_AreActivitiesUncompiledSub?.Dispose();
+            m_CompileOnSettingsUpdateSub?.Dispose();
+            m_BuildArrowGraphSub?.Dispose();
+            m_BuildResourceSeriesSetSub?.Dispose();
+            m_BuildTrackingSeriesSetSub?.Dispose();
+        }
+
         #endregion
 
         #region IDisposable Members
@@ -1428,12 +1442,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
-                m_CyclomaticComplexitySub?.Dispose();
-                m_AreActivitiesUncompiledSub?.Dispose();
-                m_CompileOnSettingsUpdateSub?.Dispose();
-                m_BuildArrowGraphSub?.Dispose();
-                m_BuildResourceSeriesSetSub?.Dispose();
-                m_BuildTrackingSeriesSetSub?.Dispose();
+                KillSubscriptions();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

@@ -105,15 +105,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
                     rcm => rcm.m_CoreViewModel.ViewEarnedValueProjections)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(async result =>
-                {
-                    EarnedValueChartPlotModel = await BuildEarnedValueChartPlotModelAsync(
-                        m_DateTimeCalculator,
-                        result.Item1,
-                        result.Item2,
-                        result.Item3,
-                        result.Item4);
-                });
+                .Subscribe(async _ => await BuildEarnedValueChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_EarnedValueChartView;
             Title = Resource.ProjectPlan.Titles.Title_EarnedValueChartView;
@@ -142,23 +134,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private async Task<PlotModel> BuildEarnedValueChartPlotModelAsync(
-            IDateTimeCalculator dateTimeCalculator,
-            TrackingSeriesSetModel trackingSeriesSet,
-            bool showDates,
-            DateTime projectStartDateTime,
-            bool showProjections)
+        private async Task BuildEarnedValueChartPlotModelAsync()
         {
             try
             {
                 lock (m_Lock)
                 {
-                    return BuildEarnedValueChartPlotModel(
-                        dateTimeCalculator,
-                        trackingSeriesSet,
-                        showDates,
-                        projectStartDateTime,
-                        showProjections);
+                    BuildEarnedValueChartPlotModel();
                 }
             }
             catch (Exception ex)
@@ -167,11 +149,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     ex.Message);
             }
-
-            return new PlotModel();
         }
 
-        private static PlotModel BuildEarnedValueChartPlotModel(
+        private static PlotModel BuildEarnedValueChartPlotModelInternal(
             IDateTimeCalculator dateTimeCalculator,
             TrackingSeriesSetModel trackingSeriesSet,
             bool showDates,
@@ -497,6 +477,32 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void BuildEarnedValueChartPlotModel()
+        {
+            PlotModel? plotModel = null;
+
+            lock (m_Lock)
+            {
+                plotModel = BuildEarnedValueChartPlotModelInternal(
+                    m_DateTimeCalculator,
+                    m_CoreViewModel.TrackingSeriesSet,
+                    m_CoreViewModel.ShowDates,
+                    m_CoreViewModel.ProjectStartDateTime,
+                    m_CoreViewModel.ViewEarnedValueProjections);
+            }
+
+            EarnedValueChartPlotModel = plotModel ?? new PlotModel();
+        }
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_BuildEarnedValueChartPlotModelSub?.Dispose();
+        }
+
         #endregion
 
         #region IDisposable Members
@@ -513,7 +519,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
-                m_BuildEarnedValueChartPlotModelSub?.Dispose();
+                KillSubscriptions();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
