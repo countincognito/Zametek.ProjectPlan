@@ -7,16 +7,11 @@ namespace Zametek.ProjectPlan.CommandLine
     {
         #region Fields
 
-        private readonly TextWriter m_TextWriter;
-
         #endregion
 
-        public DialogService(TextWriter textWriter)
+        public DialogService()
         {
-            ArgumentNullException.ThrowIfNull(textWriter);
-            m_TextWriter = textWriter;
         }
-
 
         #region IDialogService Members
 
@@ -35,7 +30,7 @@ namespace Zametek.ProjectPlan.CommandLine
             string message,
             bool markdown = false)
         {
-            await m_TextWriter.WriteLineAsync($@"{title}: {message}");
+            await Console.Error.WriteLineAsync($@"{title}: {message}");
         }
 
         public Task ShowWarningAsync(

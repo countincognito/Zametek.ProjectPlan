@@ -168,6 +168,9 @@
   <data name="Label_CannotSetMinimumFreeSlackAndMaximumLatestFinishTimeAtSameTime" xml:space="preserve">
     <value>Cannot set Minimum FS and Maximum LFT at the same time</value>
   </data>
+  <data name="Label_CliAppName" xml:space="preserve">
+    <value>Project Plan CLI</value>
+  </data>
   <data name="Label_ColorFormat" xml:space="preserve">
     <value>Color</value>
   </data>

@@ -49,7 +49,7 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option("graph-directory", HelpText = "Arrow graph output file directory")]
         public string? GraphDirectory { get; set; } = default;
 
-        [Option("graph-format", Default = GraphExport.Jpeg, HelpText = "Arrow graph format (Jpeg|Png|GraphML|Dot)")]
+        [Option("graph-format", Default = GraphExport.Jpeg, HelpText = "Arrow graph format (Jpeg|Png|Pdf|Svg|GraphML|Dot)")]
         public GraphExport GraphFormat { get; set; } = default;
 
 

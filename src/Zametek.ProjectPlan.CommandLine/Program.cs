@@ -4,6 +4,7 @@ using CommandLine.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using System.Text;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
@@ -21,11 +22,6 @@ namespace Zametek.ProjectPlan.CommandLine
         private const string c_ResourceSuffix = @"-resource";
         private const string c_EVSuffix = @"-ev";
 
-        /// <summary>
-        /// Main routine
-        /// </summary>
-        /// <param name="args"></param>
-        /// <returns>Exit code</returns>
         public static async Task<int> Main(string[] args)
         {
             try
@@ -33,7 +29,10 @@ namespace Zametek.ProjectPlan.CommandLine
                 var parser = new Parser(with =>
                 {
                     with.CaseInsensitiveEnumValues = true;
-                    with.HelpWriter = Console.Error;
+                    with.HelpWriter = null;
+
+                    // This needs to be included to prevent the --version option.
+                    with.AutoVersion = false;
                 });
 
                 IHost host = Host.CreateDefaultBuilder(args)
@@ -43,8 +42,6 @@ namespace Zametek.ProjectPlan.CommandLine
                         //Log.Logger = new LoggerConfiguration()
                         //    .ReadFrom.Configuration(context.Configuration)
                         //    .CreateLogger();
-
-                        services.AddSingleton(parser.Settings.HelpWriter);
 
                         services.AddSingleton<ICoreViewModel, CoreViewModel>();
                         services.AddSingleton<ISettingService, SettingService>();
@@ -92,11 +89,12 @@ namespace Zametek.ProjectPlan.CommandLine
                 ParserResult<Options> parserResult = parser.ParseArguments<Options>(args);
 
                 parserResult
+                    .WithNotParsed(errs =>
+                    {
+                        DisplayHelp(parserResult);
+                    })
                     .WithParsed(options =>
                     {
-                        TextWriter writer = host.Services.GetRequiredService<TextWriter>();
-                        string helpText = GetHelp(parserResult);
-
                         IMetricManagerViewModel metrics = host.Services.GetRequiredService<IMetricManagerViewModel>();
                         metrics.KillSubscriptions();
 
@@ -133,7 +131,7 @@ namespace Zametek.ProjectPlan.CommandLine
                             }
                             else
                             {
-                                writer.WriteLine(helpText);
+                                DisplayHelp(parserResult);
                                 return;
                             }
                         }
@@ -155,16 +153,17 @@ namespace Zametek.ProjectPlan.CommandLine
 
                             if (core.HasCompilationErrors)
                             {
-                                writer.WriteLine(outputs.CompilationOutput);
+                                Display(outputs.CompilationOutput);
                                 return;
                             }
-
-                            metrics.BuildMetrics();
 
                             core.BuildCyclomaticComplexity();
                             core.BuildArrowGraph();
                             core.BuildResourceSeriesSet();
                             core.BuildTrackingSeriesSet();
+
+                            metrics.BuildMetrics();
+                            metrics.BuildCosts();
                         }
 
                         // File out.
@@ -191,7 +190,7 @@ namespace Zametek.ProjectPlan.CommandLine
                             }
                             else
                             {
-                                writer.WriteLine(helpText);
+                                DisplayHelp(parserResult);
                                 return;
                             }
                         }
@@ -211,7 +210,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                                 if (ganttSize.Count != 2)
                                 {
-                                    writer.WriteLine(helpText);
+                                    DisplayHelp(parserResult);
                                     return;
                                 }
 
@@ -274,7 +273,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                                 if (resourceSize.Count != 2)
                                 {
-                                    writer.WriteLine(helpText);
+                                    DisplayHelp(parserResult);
                                     return;
                                 }
 
@@ -308,7 +307,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                                 if (evSize.Count != 2)
                                 {
-                                    writer.WriteLine(helpText);
+                                    DisplayHelp(parserResult);
                                     return;
                                 }
 
@@ -329,6 +328,28 @@ namespace Zametek.ProjectPlan.CommandLine
                                 ev.SaveEarnedValueChartImageFileAsync(evOutputFile, width, height).Wait();
                             }
                         }
+
+                        // Metrics and costs.
+                        {
+                            var builder = new StringBuilder();
+
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_ActivityRisk} {metrics.ActivityRisk:F3}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_ActivityRiskWithStdDevCorrection} {metrics.ActivityRiskWithStdDevCorrection:F3}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_CriticalityRisk} {metrics.CriticalityRisk:F3}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_FibonacciRisk} {metrics.FibonacciRisk:F3}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_GeometricActivityRisk} {metrics.GeometricActivityRisk:F3}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_GeometricCriticalityRisk} {metrics.GeometricCriticalityRisk:F3}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_GeometricFibonacciRisk} {metrics.GeometricFibonacciRisk:F3}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_CyclomaticComplexity} {metrics.CyclomaticComplexity}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DurationManMonths} {metrics.DurationManMonths:F1}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_Efficiency} {metrics.Efficiency:F3}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DirectCost} {metrics.DirectCost:F2}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_IndirectCost} {metrics.IndirectCost:F2}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_OtherCost} {metrics.OtherCost:F2}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_TotalCost} {metrics.TotalCost:F2}");
+
+                            Display(builder.ToString());
+                        }
                     });
 
                 return 0;
@@ -340,15 +361,33 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        //Generate Help text
-        private static string GetHelp<T>(ParserResult<T> result)
+        private static void Display(string content)
         {
-            // use default configuration
-            // you can customize HelpText and pass different configuratins
-            //see wiki
+            Console.WriteLine(content);
+        }
+
+        private static void DisplayHelp<T>(ParserResult<T> result)
+        {
             // https://github.com/commandlineparser/commandline/wiki/How-To#q1
             // https://github.com/commandlineparser/commandline/wiki/HelpText-Configuration
-            return HelpText.AutoBuild(result, h => h, e => e);
+            HelpText helpText = HelpText.AutoBuild(result, h =>
+            {
+                // Remove the extra newline between options.
+                h.AdditionalNewLineAfterOption = false;
+
+                // Change header.
+                h.Heading = $@"{Resource.ProjectPlan.Labels.Label_CliAppName}, {Resource.ProjectPlan.Labels.Label_AppVersion}";
+
+                // Change copyright.
+                h.Copyright = $@"{Resource.ProjectPlan.Labels.Label_Copyright}, {Resource.ProjectPlan.Labels.Label_Author}";
+
+                // This needs to be included to prevent the --version option.
+                h.AutoVersion = false;
+
+                return HelpText.DefaultParsingErrorsHandler(result, h);
+            }, e => e);
+
+            Console.WriteLine(helpText);
         }
     }
 }

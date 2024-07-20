@@ -214,6 +214,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Project Plan CLI.
+        /// </summary>
+        public static string Label_CliAppName {
+            get {
+                return ResourceManager.GetString("Label_CliAppName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Color.
         /// </summary>
         public static string Label_ColorFormat {
