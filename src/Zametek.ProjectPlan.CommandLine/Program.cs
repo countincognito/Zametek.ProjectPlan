@@ -363,7 +363,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         private static void Display(string content)
         {
-            Console.WriteLine(content);
+            Console.Out.WriteLine(content);
         }
 
         private static void DisplayHelp<T>(ParserResult<T> result)
@@ -387,7 +387,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 return HelpText.DefaultParsingErrorsHandler(result, h);
             }, e => e);
 
-            Console.WriteLine(helpText);
+            Console.Out.WriteLine(helpText);
         }
     }
 }

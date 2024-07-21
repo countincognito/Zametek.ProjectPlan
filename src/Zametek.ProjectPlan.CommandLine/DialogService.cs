@@ -17,12 +17,12 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public object Parent { set => throw new InvalidOperationException(); }
 
-        public Task ShowNotificationAsync(
+        public async Task ShowNotificationAsync(
             string title,
             string message,
             bool markdown = false)
         {
-            throw new InvalidOperationException();
+            await Console.Out.WriteLineAsync($@"{title}: {message}");
         }
 
         public async Task ShowErrorAsync(
@@ -33,30 +33,30 @@ namespace Zametek.ProjectPlan.CommandLine
             await Console.Error.WriteLineAsync($@"{title}: {message}");
         }
 
-        public Task ShowWarningAsync(
+        public async Task ShowWarningAsync(
             string title,
             string message,
             bool markdown = false)
         {
-            throw new InvalidOperationException();
+            await Console.Error.WriteLineAsync($@"{title}: {message}");
         }
 
-        public Task ShowInfoAsync(
+        public async Task ShowInfoAsync(
             string title,
             string message,
             bool markdown = false)
         {
-            throw new InvalidOperationException();
+            await Console.Out.WriteLineAsync($@"{title}: {message}");
         }
 
-        public Task ShowInfoAsync(
+        public async Task ShowInfoAsync(
             string title,
             string message,
             double height,
             double width,
             bool markdown = false)
         {
-            throw new InvalidOperationException();
+            await Console.Out.WriteLineAsync($@"{title}: {message}");
         }
 
         public Task<bool> ShowConfirmationAsync(
