@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Media;
 using OxyPlot;
+using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Legends;
 using OxyPlot.Series;
@@ -10,7 +11,6 @@ using System.Globalization;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Runtime.Intrinsics.Arm;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -273,7 +273,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             // Record the resource name, and the scheduled activities (in order).
 
-                            var scheduledResourceActivitiesSet = new List<(string ResourceName, int DisplayOrder, IList<ScheduledActivityModel> ScheduledActivities)>();
+                            var scheduledResourceActivitiesSet =
+                                new List<(string ResourceName, ColorFormatModel ColorFormat, int DisplayOrder, IList<ScheduledActivityModel> ScheduledActivities)>();
 
                             foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeries)
                             {
@@ -281,12 +282,12 @@ namespace Zametek.ViewModel.ProjectPlan
                                     .ResourceSchedule.ScheduledActivities
                                     .OrderByDescending(x => x.StartTime)];
                                 scheduledResourceActivitiesSet.Add(
-                                    (resourceSeries.Title, resourceSeries.DisplayOrder, orderedScheduledActivities));
+                                    (resourceSeries.Title, resourceSeries.ColorFormat, resourceSeries.DisplayOrder, orderedScheduledActivities));
                             }
 
                             // Order the set according to the display order, followed by the start times of the first activity for each resource.
 
-                            IList<(string, int, IList<ScheduledActivityModel>)> orderedScheduledResourceActivitiesSet = scheduledResourceActivitiesSet
+                            IList<(string, ColorFormatModel, int, IList<ScheduledActivityModel>)> orderedScheduledResourceActivitiesSet = scheduledResourceActivitiesSet
                                 .OrderBy(x => x.DisplayOrder)
                                 .ThenBy(x => x.ScheduledActivities.OrderBy(y => y.StartTime)
                                     .FirstOrDefault()?.StartTime ?? 0)
@@ -294,7 +295,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                     .LastOrDefault()?.FinishTime ?? 0)
                                 .ToList();
 
-                            foreach ((string resourceName, int displayOrder, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
+                            foreach ((string resourceName, ColorFormatModel colorFormat, int displayOrder, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
                             {
                                 IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
                                 Dictionary<int, IDependentActivity<int, int, int>> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
@@ -348,17 +349,24 @@ namespace Zametek.ViewModel.ProjectPlan
 
                                 if (annotateGroups)
                                 {
+                                    var resourceColor = OxyColor.FromArgb(
+                                          colorFormat.A,
+                                          colorFormat.R,
+                                          colorFormat.G,
+                                          colorFormat.B);
+
                                     plotModel.Annotations.Add(
-                                         new OxyPlot.Annotations.RectangleAnnotation
+                                         new RectangleAnnotation
                                          {
                                              MinimumX = ChartHelper.CalculateChartTimeXValue(resourceStartTime, showDates, projectStartDateTime, dateTimeCalculator),
                                              MaximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStartDateTime, dateTimeCalculator),
                                              MinimumY = minimumY,
                                              MaximumY = maximumY,
                                              ToolTip = resourceName,
-                                             Fill = OxyColor.FromAColor(10, OxyColors.Blue),
-                                             Stroke = OxyColors.Black,
-                                             StrokeThickness = 1
+                                             Fill = OxyColor.FromAColor(ColorHelper.AnnotationA, resourceColor),
+                                             Stroke = resourceColor,
+                                             StrokeThickness = 1,
+                                             Layer = AnnotationLayer.BelowSeries
                                          });
                                 }
                             }
@@ -386,6 +394,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 {
                                     Id = default,
                                     Name = Resource.ProjectPlan.Labels.Label_DefaultWorkStream,
+                                    ColorFormat = new() { A = 255 },
                                     DisplayOrder = -1
                                 });
 
@@ -517,17 +526,26 @@ namespace Zametek.ViewModel.ProjectPlan
 
                                 if (annotateGroups)
                                 {
+                                    WorkStreamModel workStreamModel = workStreamLookup[workStreamId];
+
+                                    var workStreamColor = OxyColor.FromArgb(
+                                          workStreamModel.ColorFormat.A,
+                                          workStreamModel.ColorFormat.R,
+                                          workStreamModel.ColorFormat.G,
+                                          workStreamModel.ColorFormat.B);
+
                                     plotModel.Annotations.Add(
-                                         new OxyPlot.Annotations.RectangleAnnotation
+                                         new RectangleAnnotation
                                          {
                                              MinimumX = ChartHelper.CalculateChartTimeXValue(workStreamStartTime, showDates, projectStartDateTime, dateTimeCalculator),
                                              MaximumX = ChartHelper.CalculateChartTimeXValue(workStreamFinishTime, showDates, projectStartDateTime, dateTimeCalculator),
                                              MinimumY = minimumY,
                                              MaximumY = maximumY,
-                                             ToolTip = workStreamLookup[workStreamId].Name,
-                                             Fill = OxyColor.FromAColor(10, OxyColors.Blue),
-                                             Stroke = OxyColors.Black,
-                                             StrokeThickness = 1
+                                             ToolTip = workStreamModel.Name,
+                                             Fill = OxyColor.FromAColor(ColorHelper.AnnotationA, workStreamColor),
+                                             Stroke = workStreamColor,
+                                             StrokeThickness = 1,
+                                             Layer = AnnotationLayer.BelowSeries
                                          });
                                 }
                             }
