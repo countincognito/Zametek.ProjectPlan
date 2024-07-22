@@ -226,6 +226,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     case GroupByMode.None:
                         {
+                            // Add an extra row for padding.
+                            // IntervalBarItems are added in reverse order to how they will be displayed.
+                            // So, this item will appear at the bottom of the grouping.
+
+                            series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
+                            labels.Add(string.Empty);
+
                             // Add all the activities (in reverse display order).
 
                             IOrderedEnumerable<IDependentActivity<int, int, int>> orderedActivities = graphCompilation
@@ -261,6 +268,11 @@ namespace Zametek.ViewModel.ProjectPlan
                                     labels.Add(label);
                                 }
                             }
+
+                            // Add an extra row for padding.
+                            // This item will appear at the top of the grouping.
+                            series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
+                            labels.Add(string.Empty);
                         }
 
                         break;
