@@ -247,11 +247,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     fileExtension.ValueSwitchOn()
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
                         {
-                            ArrowGraphImage.Source?.Save(filename, SKColors.White, SKEncodedImageFormat.Jpeg, scaleX: 2, scaleY: 2);
+                            using var stream = File.OpenWrite(filename);
+                            ArrowGraphImage.Source?.Picture?.ToImage(
+                                stream, SKColors.White, SKEncodedImageFormat.Jpeg, quality: 100, scaleX: 2, scaleY: 2,
+                                skColorType: SKColorType.Argb4444, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb());
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
                         {
-                            ArrowGraphImage.Source?.Save(filename, SKColors.White, SKEncodedImageFormat.Png, scaleX: 2, scaleY: 2);
+                            using var stream = File.OpenWrite(filename);
+                            ArrowGraphImage.Source?.Picture?.ToImage(
+                                stream, SKColors.White, SKEncodedImageFormat.Png, quality: 100, scaleX: 2, scaleY: 2,
+                                skColorType: SKColorType.Argb4444, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb());
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
                         {

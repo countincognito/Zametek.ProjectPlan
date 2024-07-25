@@ -38,7 +38,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Patterns =
                     [
                         Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFilePattern,
-                        //Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFilePattern
+                        Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFilePattern
                     ]
                 },
                 new FileFilter

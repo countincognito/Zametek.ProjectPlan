@@ -206,10 +206,11 @@ namespace Zametek.ViewModel.ProjectPlan
                             if (descendantTaskId is not null
                                 && id != descendantTaskId)
                             {
-                                mpxjTask.AddPredecessor(
-                                    descendantTask,
-                                    net.sf.mpxj.RelationType.START_FINISH,
-                                    net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units));
+                                var builder = new net.sf.mpxj.Relation.Builder();
+                                builder.TargetTask(descendantTask);
+                                builder.Type(net.sf.mpxj.RelationType.START_FINISH);
+                                builder.Lag(net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units));
+                                mpxjTask.AddPredecessor(builder);
                             }
                         }
                     }
@@ -224,10 +225,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     int parentId = parentTask.ID?.intValue() ?? default;
                     if (!s_FilterTaskIds.Contains(parentId))
                     {
-                        mpxjTask.AddPredecessor(
-                            parentTask,
-                            net.sf.mpxj.RelationType.START_FINISH,
-                            net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units));
+                        var builder = new net.sf.mpxj.Relation.Builder();
+                        builder.TargetTask(parentTask);
+                        builder.Type(net.sf.mpxj.RelationType.START_FINISH);
+                        builder.Lag(net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units));
+                        mpxjTask.AddPredecessor(builder);
                     }
                 }
 
