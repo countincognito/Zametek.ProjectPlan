@@ -171,7 +171,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         var stringBuilder = new StringBuilder();
                         InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
-                        ColorFormatModel color = ColorHelper.RandomColor();
+                        ColorFormatModel color = ColorHelper.Random();
                         double unitCost = defaultUnitCost;
                         int displayOrder = 0;
 
@@ -249,7 +249,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Title = title,
                             InterActivityAllocationType = resource.InterActivityAllocationType,
                             ResourceSchedule = resourceSchedule,
-                            ColorFormat = resource.ColorFormat != null ? resource.ColorFormat.CloneObject() : ColorHelper.RandomColor(),
+                            ColorFormat = resource.ColorFormat != null ? resource.ColorFormat.CloneObject() : ColorHelper.Random(),
                             UnitCost = resource.UnitCost,
                             DisplayOrder = resource.DisplayOrder,
                         };

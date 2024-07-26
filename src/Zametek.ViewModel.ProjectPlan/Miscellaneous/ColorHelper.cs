@@ -12,7 +12,60 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly Random s_Rnd = new();
         private static readonly Regex s_HtmlHexMatch = new(@"^#(([A-Fa-f0-9]{2}){3,4})$", RegexOptions.Compiled);
 
-        public static ColorFormatModel RandomColor()
+        public static ColorFormatModel None()
+        {
+            return new ColorFormatModel
+            {
+                A = 0,
+                R = 0,
+                G = 0,
+                B = 0
+            };
+        }
+
+        public static ColorFormatModel Black()
+        {
+            return new ColorFormatModel
+            {
+                A = 255,
+                R = 0,
+                G = 0,
+                B = 0
+            };
+        }
+
+        public static ColorFormatModel Red()
+        {
+            return new ColorFormatModel
+            {
+                A = 255,
+                R = 255,
+                G = 0,
+                B = 0
+            };
+        }
+        public static ColorFormatModel Gold()
+        {
+            return new ColorFormatModel
+            {
+                A = 255,
+                R = 255,
+                G = 215,
+                B = 0
+            };
+        }
+        public static ColorFormatModel Green()
+        {
+            return new ColorFormatModel
+            {
+                A = 255,
+                R = 0,
+                G = 128,
+                B = 0
+            };
+        }
+
+        public static ColorFormatModel Random()
         {
             var b = new byte[3];
             s_Rnd.NextBytes(b);

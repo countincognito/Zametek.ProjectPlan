@@ -115,13 +115,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             SlackLimit = 1,
                             CriticalityWeight = 4.0,
                             FibonacciWeight = Math.Pow(s_GoldenRatio, 3.0),
-                            ColorFormat = new ColorFormatModel
-                            {
-                                A = 255,
-                                R = 0,
-                                G = 0,
-                                B = 0
-                            }
+                            ColorFormat = ColorHelper.Black()
                         },
                         // Red.
                         new()
@@ -129,13 +123,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             SlackLimit = 9,
                             CriticalityWeight = 3.0,
                             FibonacciWeight = Math.Pow(s_GoldenRatio, 2.0),
-                            ColorFormat = new ColorFormatModel
-                            {
-                                A = 255,
-                                R = 255,
-                                G = 0,
-                                B = 0
-                            }
+                            ColorFormat = ColorHelper.Red()
                         },
                         // Gold.
                         new()
@@ -143,13 +131,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             SlackLimit = 25,
                             CriticalityWeight = 2.0,
                             FibonacciWeight = Math.Pow(s_GoldenRatio, 1.0),
-                            ColorFormat = new ColorFormatModel
-                            {
-                                A = 255,
-                                R = 255,
-                                G = 215,
-                                B = 0
-                            }
+                            ColorFormat = ColorHelper.Gold()
                         },
                         // Green.
                         new()
@@ -157,13 +139,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             SlackLimit = int.MaxValue,
                             CriticalityWeight = 1.0,
                             FibonacciWeight = Math.Pow(s_GoldenRatio, 0.0),
-                            ColorFormat = new ColorFormatModel
-                            {
-                                A = 255,
-                                R = 0,
-                                G = 128,
-                                B = 0
-                            }
+                            ColorFormat = ColorHelper.Green()
                         }
                     ])
             };

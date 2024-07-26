@@ -174,7 +174,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsInactive = false,
                     Name = mpxjResource.Name ?? string.Empty,
                     DisplayOrder = id,
-                    ColorFormat = ColorHelper.RandomColor()
+                    ColorFormat = ColorHelper.Random()
                 };
                 resources.Add(resource);
             }
@@ -626,7 +626,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     double unitCost = 0.0;
                     int displayOrder = 0;
                     int allocationOrder = 0;
-                    ColorFormatModel colorFormat = ColorHelper.RandomColor();
+                    ColorFormatModel colorFormat = ColorHelper.None();
 
                     foreach (string columnName in columnNames)
                     {
@@ -754,7 +754,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     int slackLimit = 0;
                     double criticalityWeight = 0.0;
                     double fibonacciWeight = 0.0;
-                    ColorFormatModel colorFormat = ColorHelper.RandomColor();
+                    ColorFormatModel colorFormat = ColorHelper.None();
 
                     foreach (string columnName in columnNames)
                     {
@@ -832,7 +832,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     string name = string.Empty;
                     bool isPhase = false;
                     int displayOrder = 0;
-                    ColorFormatModel colorFormat = ColorHelper.RandomColor();
+                    ColorFormatModel colorFormat = ColorHelper.None();
 
                     foreach (string columnName in columnNames)
                     {

@@ -151,7 +151,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 IsExplicitTarget = true,
                                 IsInactive = false,
                                 UnitCost = DefaultUnitCost,
-                                ColorFormat = ColorHelper.RandomColor()
+                                ColorFormat = ColorHelper.Random()
                             }));
                 }
                 UpdateResourceSettingsToCore();

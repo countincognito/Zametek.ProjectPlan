@@ -406,7 +406,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 {
                                     Id = default,
                                     Name = Resource.ProjectPlan.Labels.Label_DefaultWorkStream,
-                                    ColorFormat = new() { A = 255 },
+                                    ColorFormat = ColorHelper.Black(),
                                     DisplayOrder = -1
                                 });
 

@@ -142,7 +142,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             id,
                             new ActivitySeverityModel
                             {
-                                ColorFormat = ColorHelper.RandomColor()
+                                ColorFormat = ColorHelper.Random()
                             }));
                 }
                 UpdateArrowGraphSettingsToCore();
@@ -260,13 +260,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             SlackLimit = int.MaxValue,
                             CriticalityWeight = 1.0,
                             FibonacciWeight = 1.0,
-                            ColorFormat = new ColorFormatModel
-                            {
-                                A = 255,
-                                R = 0,
-                                G = 128,
-                                B = 0
-                            }
+                            ColorFormat = ColorHelper.Green()
                         }));
                 }
             }

@@ -150,7 +150,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             new WorkStreamModel
                             {
                                 Id = id,
-                                ColorFormat = ColorHelper.RandomColor()
+                                ColorFormat = ColorHelper.Random()
                             }));
                 }
                 UpdateWorkStreamSettingsToCore();
