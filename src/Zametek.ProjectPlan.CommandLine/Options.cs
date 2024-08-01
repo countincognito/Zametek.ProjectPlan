@@ -38,8 +38,13 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option("gantt-group", Default = GroupByMode.None, HelpText = "Gantt chart group (None|Resource|WorkStream)")]
         public GroupByMode GanttGroup { get; set; } = default;
 
-        [Option("gantt-annotate", Default = false, HelpText = "Annotate gantt chart group (true|false)")]
-        public bool? GanttAnnotate { get; set; } = default;
+        [Option("gantt-annotate", Default = AnnotationStyle.None, HelpText = "Annotate gantt chart group (None|Plain|Color)")]
+        public AnnotationStyle GanttAnnotate { get; set; } = default;
+
+        [Option("gantt-label", Default = false, Required = false, HelpText = "Label annotations (true|false)")]
+        public bool? GanttLabel { get; set; } = false;
+
+
 
         [Option("gantt-size", Min = 2, Max = 2, Separator = ':', HelpText = "Gantt chart dimensions in pixels (<width>:<height>)")]
         public IEnumerable<int> GanttSize { get; set; } = [];

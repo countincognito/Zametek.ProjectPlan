@@ -218,10 +218,12 @@ namespace Zametek.ProjectPlan.CommandLine
                                 int height = ganttSize[1];
 
                                 GroupByMode ganttGroup = options.GanttGroup;
-                                bool ganttAnnotate = options.GanttAnnotate ?? default;
+                                AnnotationStyle ganttAnnotate = options.GanttAnnotate;
+                                bool labelGroups = options.GanttLabel ?? default;
 
                                 gantt.GroupByMode = ganttGroup;
-                                gantt.AnnotateGroups = ganttAnnotate;
+                                gantt.AnnotationStyle = ganttAnnotate;
+                                gantt.LabelGroups = labelGroups;
 
                                 gantt.BuildGanttChartPlotModel();
 
