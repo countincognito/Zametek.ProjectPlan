@@ -107,25 +107,35 @@
 
 
 
-			<Label Grid.Column="4" Grid.Row="1"
+			<Label Grid.Column="4" Grid.Row="0"
 				   VerticalContentAlignment="Center"
 				   HorizontalContentAlignment="Right"
 				   Content="{x:Static resources:Labels.Label_CyclomaticComplexity}"/>
-			<TextBlock Grid.Column="5" Grid.Row="1"
+			<TextBlock Grid.Column="5" Grid.Row="0"
 					   VerticalAlignment="Center"
 					   Margin="7,0,0,0"
 					   FontWeight="Bold"
 					   Text="{Binding Path=CyclomaticComplexity, Mode=OneWay, StringFormat=\{0:N0\}}"/>
 
-			<Label Grid.Column="4" Grid.Row="2"
+			<Label Grid.Column="4" Grid.Row="1"
 				   VerticalContentAlignment="Center"
 				   HorizontalContentAlignment="Right"
 				   Content="{x:Static resources:Labels.Label_DurationManMonths}"/>
-			<TextBlock Grid.Column="5" Grid.Row="2"
+			<TextBlock Grid.Column="5" Grid.Row="1"
 					   VerticalAlignment="Center"
 					   Margin="7,0,0,0"
 					   FontWeight="Bold"
 					   Text="{Binding Path=DurationManMonths, Mode=OneWay, StringFormat=\{0:N1\}}"/>
+
+			<Label Grid.Column="4" Grid.Row="2"
+				   VerticalContentAlignment="Center"
+				   HorizontalContentAlignment="Right"
+				   Content="{x:Static resources:Labels.Label_ProjectFinish}"/>
+			<TextBlock Grid.Column="5" Grid.Row="2"
+					   VerticalAlignment="Center"
+					   Margin="7,0,0,0"
+					   FontWeight="Bold"
+					   Text="{Binding Path=ProjectFinish, Mode=OneWay}"/>
 
 			<Label Grid.Column="4" Grid.Row="3"
 				   VerticalContentAlignment="Center"

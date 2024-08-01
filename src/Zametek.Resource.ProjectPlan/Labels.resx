@@ -366,6 +366,9 @@
   <data name="Label_ProjectCompletion" xml:space="preserve">
     <value>Project Completion</value>
   </data>
+  <data name="Label_ProjectFinish" xml:space="preserve">
+    <value>Project Finish:</value>
+  </data>
   <data name="Label_ProjectStart" xml:space="preserve">
     <value>Project Start:</value>
   </data>

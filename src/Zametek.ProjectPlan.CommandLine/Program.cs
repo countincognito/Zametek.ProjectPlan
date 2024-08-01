@@ -344,6 +344,7 @@ namespace Zametek.ProjectPlan.CommandLine
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_GeometricFibonacciRisk} {metrics.GeometricFibonacciRisk:F3}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_CyclomaticComplexity} {metrics.CyclomaticComplexity}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DurationManMonths} {metrics.DurationManMonths:F1}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_ProjectFinish} {metrics.ProjectFinish}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_Efficiency} {metrics.Efficiency:F3}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DirectCost} {metrics.DirectCost:F2}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_IndirectCost} {metrics.IndirectCost:F2}");

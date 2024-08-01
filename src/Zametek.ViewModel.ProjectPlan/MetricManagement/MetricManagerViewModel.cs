@@ -120,6 +120,31 @@ namespace Zametek.ViewModel.ProjectPlan
                         duration is null || duration == 0 || daysPerWeek == 0 ? null : duration / (daysPerWeek * 52 / 12.0))
                 .ToProperty(this, mm => mm.DurationManMonths);
 
+            m_ProjectFinish = this
+                .WhenAnyValue(
+                    mm => mm.m_CoreViewModel.ShowDates,
+                    mm => mm.m_CoreViewModel.ProjectStart,
+                    mm => mm.m_CoreViewModel.Duration,
+                    mm => mm.m_DateTimeCalculator.DaysPerWeek,
+                    mm => mm.m_DateTimeCalculator.Mode,
+                    (bool showDates, DateTimeOffset projectStart, int? duration, int daysPerWeek, DateTimeCalculatorMode mode) =>
+                    {
+                        if (duration is null || duration == 0)
+                        {
+                            return string.Empty;
+                        }
+
+                        if (showDates)
+                        {
+                            return m_DateTimeCalculator
+                                .AddDays(projectStart, duration.GetValueOrDefault())
+                                .ToString(DateTimeCalculator.DateFormat);
+                        }
+
+                        return duration.GetValueOrDefault().ToString();
+                    })
+                .ToProperty(this, mm => mm.ProjectFinish);
+
             m_DirectCost = this
                  .WhenAnyValue(mm => mm.Costs, costs => costs.Direct)
                  .ToProperty(this, mm => mm.DirectCost);
@@ -417,6 +442,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<double?> m_DurationManMonths;
         public double? DurationManMonths => m_DurationManMonths.Value;
+
+        private readonly ObservableAsPropertyHelper<string> m_ProjectFinish;
+        public string ProjectFinish => m_ProjectFinish.Value;
 
         private readonly ObservableAsPropertyHelper<double?> m_DirectCost;
         public double? DirectCost => m_DirectCost.Value;

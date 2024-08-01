@@ -809,6 +809,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Project Finish:.
+        /// </summary>
+        public static string Label_ProjectFinish {
+            get {
+                return ResourceManager.GetString("Label_ProjectFinish", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Project Start:.
         /// </summary>
         public static string Label_ProjectStart {

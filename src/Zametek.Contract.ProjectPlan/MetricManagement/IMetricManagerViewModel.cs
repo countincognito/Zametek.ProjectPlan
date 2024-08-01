@@ -29,6 +29,8 @@
 
         double? DurationManMonths { get; }
 
+        string ProjectFinish { get; }
+
         double? DirectCost { get; }
 
         double? IndirectCost { get; }
