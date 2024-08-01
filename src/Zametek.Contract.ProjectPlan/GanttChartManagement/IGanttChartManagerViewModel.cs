@@ -14,9 +14,9 @@ namespace Zametek.Contract.ProjectPlan
 
         GroupByMode GroupByMode { get; set; }
 
-        bool GroupBy { get; }
+        AnnotationStyle AnnotationStyle { get; set; }
 
-        bool AnnotateGroups { get; set; }
+        bool LabelGroups { get; set; }
 
         ICommand SaveGanttChartImageFileCommand { get; }
 

@@ -150,8 +150,8 @@
   <data name="Label_AllocatedToResources" xml:space="preserve">
     <value>Allocated to Resources</value>
   </data>
-  <data name="Label_AnnotateGroups" xml:space="preserve">
-    <value>Annotate Groups</value>
+  <data name="Label_AnnotationStyle" xml:space="preserve">
+    <value>Annotation Style</value>
   </data>
   <data name="Label_AppName" xml:space="preserve">
     <value>Project Plan</value>
@@ -314,6 +314,9 @@
   </data>
   <data name="Label_IsPhase" xml:space="preserve">
     <value>Phase</value>
+  </data>
+  <data name="Label_LabelGroups" xml:space="preserve">
+    <value>Label Groups</value>
   </data>
   <data name="Label_LatestFinishTime" xml:space="preserve">
     <value>LFT</value>

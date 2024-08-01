@@ -7,7 +7,8 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     public static class ColorHelper
     {
-        public const byte AnnotationA = 40;
+        public const byte AnnotationAMedium = 40;
+        public const byte AnnotationALight = 10;
 
         private static readonly Random s_Rnd = new();
         private static readonly Regex s_HtmlHexMatch = new(@"^#(([A-Fa-f0-9]{2}){3,4})$", RegexOptions.Compiled);
