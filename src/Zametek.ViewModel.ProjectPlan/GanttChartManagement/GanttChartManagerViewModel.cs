@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.Media;
-using NPOI.HSSF.Record.Chart;
 using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
@@ -12,6 +11,7 @@ using System.Globalization;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Text;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -379,48 +379,22 @@ namespace Zametek.ViewModel.ProjectPlan
                                 {
                                     case AnnotationStyle.None:
                                         break;
-                                    case AnnotationStyle.Plain:
+                                    case AnnotationStyle.Plain or AnnotationStyle.Color:
                                         {
-                                            var resourceColor = OxyColors.Blue;
+                                            OxyColor resourceColor = OxyColors.Blue;
+                                            byte aLevel = ColorHelper.AnnotationALight;
 
-                                            double minimumX = ChartHelper.CalculateChartTimeXValue(resourceStartTime, showDates, projectStartDateTime, dateTimeCalculator);
-                                            double maximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStartDateTime, dateTimeCalculator);
-
-                                            var annotation = new RectangleAnnotation
+                                            if (annotationStyle == AnnotationStyle.Color)
                                             {
-                                                MinimumX = minimumX,
-                                                MaximumX = maximumX,
-                                                MinimumY = minimumY,
-                                                MaximumY = maximumY,
-                                                ToolTip = resourceName,
-                                                Fill = OxyColor.FromAColor(ColorHelper.AnnotationALight, resourceColor),
-                                                Stroke = resourceColor,
-                                                StrokeThickness = 1,
-                                                Layer = AnnotationLayer.BelowSeries,
-                                            };
-
-                                            if (labelGroups)
-                                            {
-                                                annotation.Text = resourceName;
-                                                annotation.TextPosition = new DataPoint(minimumX, maximumY);
-                                                annotation.TextHorizontalAlignment = HorizontalAlignment.Left;
-                                                annotation.TextVerticalAlignment = VerticalAlignment.Bottom;
-
-                                                series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
-                                                labels.Add(string.Empty);
+                                                resourceColor = OxyColor.FromArgb(
+                                                    colorFormat.A,
+                                                    colorFormat.R,
+                                                    colorFormat.G,
+                                                    colorFormat.B);
+                                                aLevel = ColorHelper.AnnotationAMedium;
                                             }
 
-                                            plotModel.Annotations.Add(annotation);
-                                        }
-
-                                        break;
-                                    case AnnotationStyle.Color:
-                                        {
-                                            var resourceColor = OxyColor.FromArgb(
-                                                  colorFormat.A,
-                                                  colorFormat.R,
-                                                  colorFormat.G,
-                                                  colorFormat.B);
+                                            OxyColor fillColor = OxyColor.FromAColor(aLevel, resourceColor);
 
                                             double minimumX = ChartHelper.CalculateChartTimeXValue(resourceStartTime, showDates, projectStartDateTime, dateTimeCalculator);
                                             double maximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStartDateTime, dateTimeCalculator);
@@ -432,7 +406,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                                 MinimumY = minimumY,
                                                 MaximumY = maximumY,
                                                 ToolTip = resourceName,
-                                                Fill = OxyColor.FromAColor(ColorHelper.AnnotationAMedium, resourceColor),
+                                                Fill = fillColor,
                                                 Stroke = resourceColor,
                                                 StrokeThickness = 1,
                                                 Layer = AnnotationLayer.BelowSeries,
@@ -615,53 +589,23 @@ namespace Zametek.ViewModel.ProjectPlan
                                 {
                                     case AnnotationStyle.None:
                                         break;
-                                    case AnnotationStyle.Plain:
+                                    case AnnotationStyle.Plain or AnnotationStyle.Color:
                                         {
+                                            OxyColor workStreamColor = OxyColors.Blue;
+                                            byte aLevel = ColorHelper.AnnotationALight;
+
                                             WorkStreamModel workStreamModel = workStreamLookup[workStreamId];
 
-                                            var workStreamColor = OxyColors.Blue;
-
-                                            double minimumX = ChartHelper.CalculateChartTimeXValue(workStreamStartTime, showDates, projectStartDateTime, dateTimeCalculator);
-                                            double maximumX = ChartHelper.CalculateChartTimeXValue(workStreamFinishTime, showDates, projectStartDateTime, dateTimeCalculator);
-
-                                            var annotation = new RectangleAnnotation
+                                            if (annotationStyle == AnnotationStyle.Color)
                                             {
-                                                MinimumX = minimumX,
-                                                MaximumX = maximumX,
-                                                MinimumY = minimumY,
-                                                MaximumY = maximumY,
-                                                ToolTip = workStreamModel.Name,
-                                                Fill = OxyColor.FromAColor(ColorHelper.AnnotationALight, workStreamColor),
-                                                Stroke = workStreamColor,
-                                                StrokeThickness = 1,
-                                                Layer = AnnotationLayer.BelowSeries,
-                                            };
-
-                                            if (labelGroups)
-                                            {
-                                                annotation.Text = workStreamModel.Name;
-                                                annotation.TextPosition = new DataPoint(minimumX, maximumY);
-                                                annotation.TextHorizontalAlignment = HorizontalAlignment.Left;
-                                                annotation.TextVerticalAlignment = VerticalAlignment.Bottom;
-
-                                                series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
-                                                labels.Add(string.Empty);
+                                                workStreamColor = OxyColor.FromArgb(
+                                                    workStreamModel.ColorFormat.A,
+                                                    workStreamModel.ColorFormat.R,
+                                                    workStreamModel.ColorFormat.G,
+                                                    workStreamModel.ColorFormat.B);
+                                                aLevel = ColorHelper.AnnotationAMedium;
                                             }
 
-                                            plotModel.Annotations.Add(annotation);
-                                        }
-
-                                        break;
-                                    case AnnotationStyle.Color:
-                                        {
-                                            WorkStreamModel workStreamModel = workStreamLookup[workStreamId];
-
-                                            var workStreamColor = OxyColor.FromArgb(
-                                                  workStreamModel.ColorFormat.A,
-                                                  workStreamModel.ColorFormat.R,
-                                                  workStreamModel.ColorFormat.G,
-                                                  workStreamModel.ColorFormat.B);
-
                                             double minimumX = ChartHelper.CalculateChartTimeXValue(workStreamStartTime, showDates, projectStartDateTime, dateTimeCalculator);
                                             double maximumX = ChartHelper.CalculateChartTimeXValue(workStreamFinishTime, showDates, projectStartDateTime, dateTimeCalculator);
 
@@ -672,7 +616,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                                 MinimumY = minimumY,
                                                 MaximumY = maximumY,
                                                 ToolTip = workStreamModel.Name,
-                                                Fill = OxyColor.FromAColor(ColorHelper.AnnotationAMedium, workStreamColor),
+                                                Fill = OxyColor.FromAColor(aLevel, workStreamColor),
                                                 Stroke = workStreamColor,
                                                 StrokeThickness = 1,
                                                 Layer = AnnotationLayer.BelowSeries,
@@ -707,6 +651,38 @@ namespace Zametek.ViewModel.ProjectPlan
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(groupByMode));
+                }
+
+                {
+                    var projectFinish = new StringBuilder(Resource.ProjectPlan.Labels.Label_ProjectFinish);
+                    projectFinish.Append(' ');
+
+                    if (showDates)
+                    {
+                        projectFinish.Append(dateTimeCalculator
+                            .AddDays(projectStartDateTime, finishTime)
+                            .ToString(DateTimeCalculator.DateFormat));
+                    }
+                    else
+                    {
+                        projectFinish.Append(finishTime);
+                    }
+
+                    double finishTimeX = ChartHelper.CalculateChartTimeXValue(finishTime, showDates, projectStartDateTime, dateTimeCalculator);
+                    double finishTimeY = labels.Count;
+
+                    var finishTimeAnnotation = new RectangleAnnotation
+                    {
+                        Text = projectFinish.ToString(),
+                        TextPosition = new DataPoint(finishTimeX, finishTimeY),
+                        TextHorizontalAlignment = HorizontalAlignment.Right,
+                        TextVerticalAlignment = VerticalAlignment.Top,
+                        StrokeThickness = 0,
+                        Fill = OxyColors.Transparent,
+                        Layer = AnnotationLayer.BelowSeries,
+                    };
+
+                    plotModel.Annotations.Add(finishTimeAnnotation);
                 }
             }
 
@@ -772,14 +748,14 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private static CategoryAxis BuildResourceChartYAxis(IEnumerable<string> labels)
+        private static CategoryAxis BuildResourceChartYAxis(IList<string> labels)
         {
             ArgumentNullException.ThrowIfNull(labels);
             var categoryAxis = new CategoryAxis
             {
                 Position = AxisPosition.Left,
                 AbsoluteMinimum = -1,
-                AbsoluteMaximum = labels.Count(),
+                AbsoluteMaximum = labels.Count,
                 Title = Resource.ProjectPlan.Labels.Label_GanttAxisTitle,
             };
             categoryAxis.Labels.AddRange(labels);
