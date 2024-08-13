@@ -228,11 +228,8 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-								<ColorPicker Cursor="Hand">
-									<Interaction.Behaviors>
-										<local:ColorPickerLostFocusUpdateBindingBehavior Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}}" />
-									</Interaction.Behaviors>
-								</ColorPicker>
+								<ColorPicker Cursor="Hand"
+											 Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}, UpdateSourceTrigger=LostFocus}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>

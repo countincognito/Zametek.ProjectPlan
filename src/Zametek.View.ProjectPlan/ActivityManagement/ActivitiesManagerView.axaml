@@ -262,13 +262,8 @@
 								<TextBox Foreground="Black"
 										 VerticalAlignment="Center"
 										 Margin="0"
-										 Padding="3">
-									<!--Text="{Binding Path=DependenciesString, Mode=TwoWay}">-->
-									<!--TODO-->
-									<i:Interaction.Behaviors>
-										<local:LostFocusUpdateBindingBehavior Text="{Binding Path=DependenciesString, Mode=TwoWay}"/>
-									</i:Interaction.Behaviors>
-								</TextBox>
+										 Padding="3"
+										 Text="{Binding Path=DependenciesString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
