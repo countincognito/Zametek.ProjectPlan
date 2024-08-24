@@ -63,6 +63,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable? m_BuildGanttChartPlotModelSub;
 
         private const double c_ExportLabelHeightCorrection = 1.2;
+        private const double c_YAxisMinimum = -1.0;
 
         #endregion
 
@@ -715,7 +716,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         Position = AxisPosition.Bottom,
                         AbsoluteMinimum = minValue,
+                        Minimum = minValue,
                         AbsoluteMaximum = maxValue,
+                        Maximum = maxValue,
                         MajorGridlineStyle = LineStyle.Solid,
                         MinorGridlineStyle = LineStyle.Dot,
                         MaximumPadding = 0.1,
@@ -729,7 +732,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     Position = AxisPosition.Bottom,
                     AbsoluteMinimum = minValue,
+                    Minimum = minValue,
                     AbsoluteMaximum = maxValue,
+                    Maximum = maxValue,
                     MajorGridlineStyle = LineStyle.Solid,
                     MinorGridlineStyle = LineStyle.Dot,
                     MaximumPadding = 0.1,
@@ -751,11 +756,17 @@ namespace Zametek.ViewModel.ProjectPlan
         private static CategoryAxis BuildResourceChartYAxis(IList<string> labels)
         {
             ArgumentNullException.ThrowIfNull(labels);
+
+            double minValue = c_YAxisMinimum;
+            double maxValue = labels.Count;
+
             var categoryAxis = new CategoryAxis
             {
                 Position = AxisPosition.Left,
-                AbsoluteMinimum = -1,
-                AbsoluteMaximum = labels.Count,
+                AbsoluteMinimum = minValue,
+                Minimum = minValue,
+                AbsoluteMaximum = maxValue,
+                Maximum = maxValue,
                 Title = Resource.ProjectPlan.Labels.Label_GanttAxisTitle,
             };
             categoryAxis.Labels.AddRange(labels);
