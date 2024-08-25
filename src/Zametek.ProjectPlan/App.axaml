@@ -3,6 +3,7 @@
              xmlns:v="using:Zametek.View.ProjectPlan"
              xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
              xmlns:local="using:Zametek.ProjectPlan"
+			 xmlns:u-semi="https://irihi.tech/ursa/themes/semi"
              x:Class="Zametek.ProjectPlan.App"
 		     xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 x:DataType="vm:MainViewModel"
@@ -35,6 +36,24 @@
 		
 		 <!--Add the line below to get OxyPlot UI theme applied in Avalonia 11.--> 
 		<StyleInclude Source="avares://OxyPlot.Avalonia/Themes/Default.axaml"/>
+
+		
+		
+		
+		
+		<StyleInclude Source="avares://Semi.Avalonia/Themes/Index.axaml" />
+		<u-semi:SemiTheme Locale="en-US"/>
+
+		
+		
+		
+		
+		
+		<StyleInclude Source="avares://Semi.Avalonia.ColorPicker/Index.axaml" />
+		<StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml" />
+		
+		
+		
 		
 		
 		

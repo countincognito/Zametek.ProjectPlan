@@ -27,16 +27,11 @@ namespace Zametek.ViewModel.ProjectPlan
             Id = id;
             m_Name = name;
             m_IsPhase = isPhase;
-            IsSelected = isSelected;
+            m_IsSelected = isSelected;
             m_WorkStreamSelectorViewModel = workStreamSelectorViewModel;
 
-            m_DisplayName = this
-                .WhenAnyValue(x => x.Name)
-                .Select(x => string.IsNullOrWhiteSpace(x) ? Id.ToString(CultureInfo.InvariantCulture) : x)
-                .ToProperty(this, x => x.DisplayName);
-
             m_WorkStreamSelectorSub = this
-                .WhenAnyValue(x => x.IsSelected)
+                .ObservableForProperty(x => x.IsSelected)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x => m_WorkStreamSelectorViewModel.RaiseTargetWorkStreamsPropertiesChanged());
         }
@@ -54,11 +49,20 @@ namespace Zametek.ViewModel.ProjectPlan
         public string Name
         {
             get => m_Name;
-            set => this.RaiseAndSetIfChanged(ref m_Name, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref m_Name, value);
+                this.RaisePropertyChanged(nameof(DisplayName));
+            }
         }
 
-        private readonly ObservableAsPropertyHelper<string> m_DisplayName;
-        public string DisplayName => m_DisplayName.Value;
+        public string DisplayName
+        {
+            get
+            {
+                return string.IsNullOrWhiteSpace(Name) ? Id.ToString(CultureInfo.InvariantCulture) : Name;
+            }
+        }
 
         private bool m_IsPhase;
         public bool IsPhase

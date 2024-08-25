@@ -27,6 +27,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_PhaseOnly = phaseOnly;
             m_TargetWorkStreams = [];
             m_ReadOnlyTargetWorkStreams = new ReadOnlyObservableCollection<SelectableWorkStreamViewModel>(m_TargetWorkStreams);
+            m_SelectedTargetWorkStreams = [];
         }
 
         #endregion
@@ -36,6 +37,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableCollection<SelectableWorkStreamViewModel> m_TargetWorkStreams;
         private readonly ReadOnlyObservableCollection<SelectableWorkStreamViewModel> m_ReadOnlyTargetWorkStreams;
         public ReadOnlyObservableCollection<SelectableWorkStreamViewModel> TargetWorkStreams => m_ReadOnlyTargetWorkStreams;
+
+        // Use ObservableUniqueCollection to prevent selected
+        // items appearing twice in the Urse MultiComboBox.
+        private readonly ObservableUniqueCollection<SelectableWorkStreamViewModel> m_SelectedTargetWorkStreams;
+        public ObservableCollection<SelectableWorkStreamViewModel> SelectedTargetWorkStreams => m_SelectedTargetWorkStreams;
 
         public string TargetWorkStreamsString
         {
@@ -72,19 +78,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Public Methods
 
-        //public string GetAllocatedToResourcesString(HashSet<int> allocatedToResources)
-        //{
-        //    ArgumentNullException.ThrowIfNull(allocatedToResources);
-        //    lock (m_Lock)
-        //    {
-        //        return string.Join(
-        //            DependenciesStringValidationRule.Separator,
-        //            TargetResources.Where(x => allocatedToResources.Contains(x.Id))
-        //                .OrderBy(x => x.Id)
-        //                .Select(x => x.DisplayName));
-        //    }
-        //}
-
         public void SetTargetWorkStreams(
             IEnumerable<WorkStreamModel> targetWorkStreams,
             HashSet<int> selectedTargetWorkStreams)
@@ -94,15 +87,21 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 m_TargetWorkStreams.Clear();
+                m_SelectedTargetWorkStreams.Clear();
                 foreach (WorkStreamModel targetWorkStream in targetWorkStreams.Where(x => (!m_PhaseOnly) || (m_PhaseOnly && x.IsPhase)))
                 {
-                    m_TargetWorkStreams.Add(
-                        new SelectableWorkStreamViewModel(
-                            targetWorkStream.Id,
-                            targetWorkStream.Name,
-                            targetWorkStream.IsPhase,
-                            selectedTargetWorkStreams.Contains(targetWorkStream.Id),
-                            this));
+                    var vm = new SelectableWorkStreamViewModel(
+                        targetWorkStream.Id,
+                        targetWorkStream.Name,
+                        targetWorkStream.IsPhase,
+                        selectedTargetWorkStreams.Contains(targetWorkStream.Id),
+                        this);
+
+                    m_TargetWorkStreams.Add(vm);
+                    if (vm.IsSelected)
+                    {
+                        m_SelectedTargetWorkStreams.Add(vm);
+                    }
                 }
             }
             RaiseTargetWorkStreamsPropertiesChanged();
@@ -117,6 +116,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     targetWorkStream.Dispose();
                 }
                 m_TargetWorkStreams.Clear();
+            }
+        }
+
+        public void ClearSelectedTargetWorkStreams()
+        {
+            lock (m_Lock)
+            {
+                foreach (IDisposable targetWorkStream in SelectedTargetWorkStreams)
+                {
+                    targetWorkStream.Dispose();
+                }
+                m_SelectedTargetWorkStreams.Clear();
             }
         }
 
@@ -152,6 +163,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 ClearTargetWorkStreams();
+                ClearSelectedTargetWorkStreams();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

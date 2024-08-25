@@ -20,6 +20,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new object();
             m_TargetResources = [];
             m_ReadOnlyTargetResources = new ReadOnlyObservableCollection<SelectableResourceViewModel>(m_TargetResources);
+            m_SelectedTargetResources = [];
         }
 
         #endregion
@@ -29,6 +30,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableCollection<SelectableResourceViewModel> m_TargetResources;
         private readonly ReadOnlyObservableCollection<SelectableResourceViewModel> m_ReadOnlyTargetResources;
         public ReadOnlyObservableCollection<SelectableResourceViewModel> TargetResources => m_ReadOnlyTargetResources;
+
+        // Use ObservableUniqueCollection to prevent selected
+        // items appearing twice in the Urse MultiComboBox.
+        private readonly ObservableUniqueCollection<SelectableResourceViewModel> m_SelectedTargetResources;
+        public ObservableCollection<SelectableResourceViewModel> SelectedTargetResources => m_SelectedTargetResources;
 
         public string TargetResourcesString
         {
@@ -83,14 +89,20 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 m_TargetResources.Clear();
+                m_SelectedTargetResources.Clear();
                 foreach (ResourceModel targetResource in targetResources)
                 {
-                    m_TargetResources.Add(
-                        new SelectableResourceViewModel(
-                            targetResource.Id,
-                            targetResource.Name,
-                            selectedTargetResources.Contains(targetResource.Id),
-                            this));
+                    var vm = new SelectableResourceViewModel(
+                        targetResource.Id,
+                        targetResource.Name,
+                        selectedTargetResources.Contains(targetResource.Id),
+                        this);
+
+                    m_TargetResources.Add(vm);
+                    if (vm.IsSelected)
+                    {
+                        m_SelectedTargetResources.Add(vm);
+                    }
                 }
             }
             RaiseTargetResourcesPropertiesChanged();
@@ -105,6 +117,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     targetResource.Dispose();
                 }
                 m_TargetResources.Clear();
+            }
+        }
+
+        public void ClearSelectedTargetResources()
+        {
+            lock (m_Lock)
+            {
+                foreach (IDisposable targetResource in SelectedTargetResources)
+                {
+                    targetResource.Dispose();
+                }
+                m_SelectedTargetResources.Clear();
             }
         }
 
@@ -140,6 +164,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 ClearTargetResources();
+                ClearSelectedTargetResources();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

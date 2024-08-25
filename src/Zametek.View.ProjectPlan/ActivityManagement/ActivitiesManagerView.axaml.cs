@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Ursa.Controls;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -8,6 +9,7 @@ namespace Zametek.View.ProjectPlan
         public ActivitiesManagerView()
         {
             InitializeComponent();
+            var a = new MultiComboBoxItem();
         }
     }
 }

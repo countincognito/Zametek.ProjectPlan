@@ -9,6 +9,7 @@
 			 xmlns:local="using:Zametek.View.ProjectPlan"
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
 			 xmlns:sys="using:System"
+			 xmlns:u="https://irihi.tech/ursa"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 			 x:DataType="vm:ResourceSettingsManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -330,7 +331,30 @@
 							<Grid VerticalAlignment="Stretch"
 							      x:DataType="vm:ManagedResourceViewModel"
 								  IsEnabled="{Binding Path=InterActivityAllocationIsIndirect, Mode=OneWay}">
-								<Grid.Styles>
+								<u:MultiComboBox x:DataType="vm:ManagedActivityViewModel"
+												 MaxHeight="200"
+												 ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}"
+												 SelectedItems="{Binding Path=ResourceSelector.SelectedTargetResources, Mode=OneWay}"
+												 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
+												 IsDropDownOpen="True">
+									<u:MultiComboBox.Styles>
+										<Style Selector="u|MultiComboBoxItem" x:DataType="vm:SelectableResourceViewModel">
+											<Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}" />
+										</Style>
+									</u:MultiComboBox.Styles>
+
+									<u:MultiComboBox.SelectedItemTemplate>
+										<DataTemplate x:DataType="vm:SelectableResourceViewModel">
+											<Grid Background="White">
+												<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
+											</Grid>
+										</DataTemplate>
+									</u:MultiComboBox.SelectedItemTemplate>
+								</u:MultiComboBox>
+								
+								
+								
+								<!--<Grid.Styles>
 									<Style Selector="Popup > PopupRoot > Panel > VisualLayerManager > ContentPresenter#PART_ContentPresenter">
 										<Setter Property="BorderBrush" Value="Black" />
 										<Setter Property="BorderThickness" Value="1" />
@@ -365,21 +389,7 @@
 											</ItemsPanelTemplate>
 										</ItemsControl.ItemsPanel>
 									</ItemsControl>
-
-
-									<!--<ListBox ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}">
-											<ListBox.ItemTemplate>
-												<DataTemplate>
-													<DockPanel>
-													
-													
-														<CheckBox Content="{Binding Path=DisplayName, Mode=OneWay}"
-																  IsChecked="{Binding Path=IsSelected, Mode=TwoWay}"/>
-													</DockPanel>
-												</DataTemplate>
-											</ListBox.ItemTemplate>
-										</ListBox>-->
-								</Popup>
+								</Popup>-->
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
