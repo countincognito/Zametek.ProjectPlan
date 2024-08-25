@@ -17,10 +17,22 @@ namespace Zametek.View.ProjectPlan
     {
         static DataGridColumnSyncher()
         {
-            ItemsSourceProperty.Changed.ObserveOn(RxApp.MainThreadScheduler).Subscribe(x => HandleItemsSourceChanged(x.Sender, x.NewValue.GetValueOrDefault<IEnumerable?>()));
-            StartColumnIndexProperty.Changed.ObserveOn(RxApp.MainThreadScheduler).Subscribe(x => HandleStartColumnIndexChanged(x.Sender, x.NewValue.GetValueOrDefault<int?>()));
-            EndColumnIndexProperty.Changed.ObserveOn(RxApp.MainThreadScheduler).Subscribe(x => HandleEndColumnIndexChanged(x.Sender, x.NewValue.GetValueOrDefault<int?>()));
-            ColumnTypeProperty.Changed.ObserveOn(RxApp.MainThreadScheduler).Subscribe(x => HandleColumnTypeChanged(x.Sender, x.NewValue.GetValueOrDefault<Type?>()));
+            ItemsSourceProperty
+                .Changed
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(x => HandleItemsSourceChanged(x.Sender, x.NewValue.GetValueOrDefault<IEnumerable?>()));
+            StartColumnIndexProperty
+                .Changed
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(x => HandleStartColumnIndexChanged(x.Sender, x.NewValue.GetValueOrDefault<int?>()));
+            EndColumnIndexProperty
+                .Changed
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(x => HandleEndColumnIndexChanged(x.Sender, x.NewValue.GetValueOrDefault<int?>()));
+            ColumnTypeProperty
+                .Changed
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(x => HandleColumnTypeChanged(x.Sender, x.NewValue.GetValueOrDefault<Type?>()));
         }
 
 

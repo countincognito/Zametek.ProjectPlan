@@ -9,6 +9,7 @@
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:sys="using:System"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:u="https://irihi.tech/ursa"
 			 x:DataType="vm:ArrowGraphSettingsManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ArrowGraphSettingsManagerView">
@@ -177,13 +178,16 @@
 									</ia:DataTriggerBehavior>
 								</i:Interaction.Behaviors>
 
-								<TextBox Name="slackLimitTextBox"
-										 Text="{Binding Path=SlackLimit, Mode=TwoWay}"
-										 VerticalAlignment="Center"
-										 Foreground="Black"
-										 IsVisible="True"
-										 Margin="0"
-										 Padding="3">
+								<u:NumericIntUpDown Name="slackLimitTextBox"
+													Value="{Binding Path=SlackLimit, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+													VerticalAlignment="Center"
+												    ShowButtonSpinner="False"
+												    Foreground="Black"
+													Background="White"
+													IsVisible="True"
+												    Margin="0"
+												    Padding="0"
+												    Minimum="0">
 									<i:Interaction.Behaviors>
 										<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
 											<ia:ChangePropertyAction TargetObject="{Binding #slackLimitTextBox}" PropertyName="IsVisible" Value="False" />
@@ -192,7 +196,7 @@
 											<ia:ChangePropertyAction TargetObject="{Binding #slackLimitTextBox}" PropertyName="IsVisible" Value="True" />
 										</ia:DataTriggerBehavior>
 									</i:Interaction.Behaviors>
-								</TextBox>
+								</u:NumericIntUpDown>
 
 								<TextBlock Name="maxEditableTextBlock"
 										   VerticalAlignment="Center"
@@ -247,19 +251,14 @@
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch">
-								<TextBox Text="{Binding Path=CriticalityWeight, Mode=TwoWay}"
-											   VerticalAlignment="Center"
-											   Foreground="Black"
-											   Margin="0"
-											   Padding="3"/>
-
-								<!--<NumericUpDown Value="{Binding Path=CriticalityWeight, Mode=TwoWay}"
-											   VerticalAlignment="Center"
-											   ShowButtonSpinner="False"
-											   Foreground="Black"
-											   Margin="0"
-											   Padding="0"
-											   Minimum="0"/>-->
+								<u:NumericDoubleUpDown Value="{Binding Path=CriticalityWeight, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+													   VerticalAlignment="Center"
+												       ShowButtonSpinner="False"
+												       Foreground="Black"
+													   Background="White"
+												       Margin="0"
+												       Padding="0"
+												       Minimum="0"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
@@ -296,19 +295,14 @@
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch">
-								<TextBox Text="{Binding Path=FibonacciWeight, Mode=TwoWay}"
-											   VerticalAlignment="Center"
-											   Foreground="Black"
-											   Margin="0"
-											   Padding="3"/>
-
-								<!--<NumericUpDown Value="{Binding Path=FibonacciWeight, Mode=TwoWay}"
-											   VerticalAlignment="Center"
-											   ShowButtonSpinner="False"
-											   Foreground="Black"
-											   Margin="0"
-											   Padding="0"
-											   Minimum="0"/>-->
+								<u:NumericDoubleUpDown Value="{Binding Path=FibonacciWeight, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+													   VerticalAlignment="Center"
+												       ShowButtonSpinner="False"
+												       Foreground="Black"
+													   Background="White"
+												       Margin="0"
+												       Padding="0"
+												       Minimum="0"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>

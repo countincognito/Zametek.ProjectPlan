@@ -3,7 +3,9 @@
              xmlns:v="using:Zametek.View.ProjectPlan"
              xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
              xmlns:local="using:Zametek.ProjectPlan"
+             xmlns:semi="https://irihi.tech/semi"
 			 xmlns:u-semi="https://irihi.tech/ursa/themes/semi"
+			 xmlns:sys="using:System"
              x:Class="Zametek.ProjectPlan.App"
 		     xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 x:DataType="vm:MainViewModel"
@@ -21,55 +23,32 @@
     </NativeMenu.Menu>
 
     <Application.Styles>
-        <!-- Keep this near the top otherwise it screws up the Popup ListBox in the Resource Selector in Activities Manager -->
-        <!--<StyleInclude Source="avares://Egorozh.ColorPicker.Avalonia.Dialog/Themes/Default.axaml" />-->
-        <!--<StyleInclude Source="avares://Avalonia.Themes.Simple /Accents/BaseLight.xaml"/>-->
-		<!--<StyleInclude Source="avares://Egorozh.ColorPicker.Avalonia.Dialog/Themes/Default.axaml" />-->
-
-		
-
-		<SimpleTheme />
-		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
-		
-		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml"/>
-		<StyleInclude Source="avares://Dock.Avalonia/Themes/DockSimpleTheme.axaml" />
-		
 		 <!--Add the line below to get OxyPlot UI theme applied in Avalonia 11.--> 
 		<StyleInclude Source="avares://OxyPlot.Avalonia/Themes/Default.axaml"/>
 
+		<!--Move this after the Semi theme to override it-->
+		<!--<SimpleTheme />-->
 		
-		
-		
-		
+		<semi:SemiTheme Locale="en-US" />
 		<StyleInclude Source="avares://Semi.Avalonia/Themes/Index.axaml" />
 		<u-semi:SemiTheme Locale="en-US"/>
 
-		
-		
-		
-		
-		
-		<StyleInclude Source="avares://Semi.Avalonia.ColorPicker/Index.axaml" />
-		<StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml" />
-		
-		
-		
-		
-		
-		
-		
-		<!--<FluentTheme />
-		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
-		
-		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
-		<StyleInclude Source="avares://Dock.Avalonia/Themes/DockFluentTheme.axaml" />
-		
-		--><!-- Add the line below to get OxyPlot UI theme applied in Avalonia 11. --><!--
-		<StyleInclude Source="avares://OxyPlot.Avalonia/Themes/Default.axaml"/>-->
-		
-		
-	
-		
-		
+		<SimpleTheme />
+
+		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
+		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml"/>
+		<StyleInclude Source="avares://Dock.Avalonia/Themes/DockSimpleTheme.axaml" />
+				
+		<!--<StyleInclude Source="avares://Semi.Avalonia.ColorPicker/Index.axaml" />
+		<StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml" />-->
     </Application.Styles>
+	
+	<!--<Application.Resources>
+		<sys:Double x:Key="ControlContentThemeFontSize">12</sys:Double>
+
+
+		<sys:Double x:Key="FontSizeSmall">10</sys:Double>
+		<sys:Double x:Key="FontSizeNormal">12</sys:Double>
+		<sys:Double x:Key="FontSizeLarge">16</sys:Double>
+	</Application.Resources>-->
 </Application>

@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
+using Ursa.Controls;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -70,9 +71,9 @@ namespace Zametek.View.ProjectPlan
 
                 mainDockPanel.Classes.Add(@"editable");
 
-                var percentageNumericUpDown = new NumericUpDown
+                var percentageNumericIntUpDown = new NumericIntUpDown
                 {
-                    [!NumericUpDown.ValueProperty] = new Binding($@"Trackers[{m_Index}].PercentageComplete", BindingMode.TwoWay)
+                    [!NumericIntUpDown.ValueProperty] = new Binding($@"Trackers[{m_Index}].PercentageComplete", BindingMode.TwoWay)
                     {
                         FallbackValue = 0
                     },
@@ -80,7 +81,8 @@ namespace Zametek.View.ProjectPlan
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
                     HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Right,
                     ShowButtonSpinner = false,
-                    Background = Avalonia.Media.Brushes.Transparent,
+                    Foreground = Avalonia.Media.Brushes.Black,
+                    Background = Avalonia.Media.Brushes.White,
                     BorderThickness = new Avalonia.Thickness(0),
                     Margin = new Avalonia.Thickness(0,0,7,0),
                     Padding = new Avalonia.Thickness(0),
@@ -101,7 +103,7 @@ namespace Zametek.View.ProjectPlan
                 DockPanel.SetDock(isIncludedCheckBox, Avalonia.Controls.Dock.Right);
 
                 mainDockPanel.Children.Add(isIncludedCheckBox);
-                mainDockPanel.Children.Add(percentageNumericUpDown);
+                mainDockPanel.Children.Add(percentageNumericIntUpDown);
                 return mainDockPanel;
             });
 

@@ -113,14 +113,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe(x => WorkStreamSettings = x);
 
             m_DateTimeCalculatorSub = this
-                .WhenAnyValue(x => x.m_DateTimeCalculator.Mode)
+                .ObservableForProperty(x => x.m_DateTimeCalculator.Mode)
                 .ObserveOn(Scheduler.CurrentThread)
-                .Subscribe(x => UpdateEarliestStartAndLatestFinishDateTimes());
+                .Subscribe(_ => UpdateEarliestStartAndLatestFinishDateTimes());
 
             m_CompilationSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.GraphCompilation)
+                .ObservableForProperty(x => x.m_CoreViewModel.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(x => SetAsCompiled());
+                .Subscribe(_ => SetAsCompiled());
 
             m_IsCompiled = false;
         }

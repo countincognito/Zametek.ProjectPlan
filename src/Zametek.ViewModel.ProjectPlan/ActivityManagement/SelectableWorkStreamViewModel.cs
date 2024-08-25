@@ -33,7 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_WorkStreamSelectorSub = this
                 .ObservableForProperty(x => x.IsSelected)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(x => m_WorkStreamSelectorViewModel.RaiseTargetWorkStreamsPropertiesChanged());
+                .Subscribe(_ => m_WorkStreamSelectorViewModel.RaiseTargetWorkStreamsPropertiesChanged());
         }
 
         #endregion

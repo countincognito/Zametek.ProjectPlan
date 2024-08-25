@@ -88,6 +88,7 @@
 						  InputGesture="Ctrl+D">
 					<MenuItem.Icon>
 						<CheckBox BorderThickness="0"
+								  Theme="{StaticResource SimpleCheckBox}"
 								  IsHitTestVisible="False"
 								  IsChecked="{Binding Path=ShowDates, Mode=OneWay}" />
 					</MenuItem.Icon>
@@ -97,6 +98,7 @@
 						  InputGesture="Ctrl+B">
 					<MenuItem.Icon>
 						<CheckBox BorderThickness="0"
+								  Theme="{StaticResource SimpleCheckBox}"
 								  IsHitTestVisible="False"
 								  IsChecked="{Binding Path=UseBusinessDays, Mode=OneWay}" />
 					</MenuItem.Icon>
@@ -110,6 +112,7 @@
 						  Command="{Binding Path=ToggleAutoCompileCommand, Mode=OneWay}">
 					<MenuItem.Icon>
 						<CheckBox BorderThickness="0"
+								  Theme="{StaticResource SimpleCheckBox}"
 								  IsHitTestVisible="False"
 								  IsChecked="{Binding Path=AutoCompile, Mode=OneWay}" />
 					</MenuItem.Icon>

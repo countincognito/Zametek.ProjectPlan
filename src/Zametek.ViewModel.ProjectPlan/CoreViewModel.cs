@@ -78,7 +78,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, core => core.HasCompilationErrors);
 
             m_CyclomaticComplexitySub = this
-                .WhenAnyValue(core => core.GraphCompilation)
+                .ObservableForProperty(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildCyclomaticComplexity());
 
@@ -125,17 +125,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
 
             m_BuildArrowGraphSub = this
-                .WhenAnyValue(core => core.GraphCompilation)
+                .ObservableForProperty(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildArrowGraph());
 
             m_BuildResourceSeriesSetSub = this
-                .WhenAnyValue(core => core.GraphCompilation)
+                .ObservableForProperty(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildResourceSeriesSet());
 
             m_BuildTrackingSeriesSetSub = this
-                .WhenAnyValue(core => core.GraphCompilation)
+                .ObservableForProperty(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildTrackingSeriesSet());
         }
