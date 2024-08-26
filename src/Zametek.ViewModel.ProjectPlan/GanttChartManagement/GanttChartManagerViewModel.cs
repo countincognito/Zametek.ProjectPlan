@@ -128,7 +128,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.GroupByMode,
                     rcm => rcm.AnnotationStyle,
                     rcm => rcm.LabelGroups,
-                    (a, b, c, d, e, f, g, h, i, j) => (a, b, c, d, e, f, g, h, i, j)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                    rcm => rcm.ShowProjectFinish,
+                    (a, b, c, d, e, f, g, h, i, j, k) => (a, b, c, d, e, f, g, h, i, j, k)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
 
@@ -193,7 +194,8 @@ namespace Zametek.ViewModel.ProjectPlan
             IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
             GroupByMode groupByMode,
             AnnotationStyle annotationStyle,
-            bool labelGroups)
+            bool labelGroups,
+            bool showProjectFinish)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
@@ -654,6 +656,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         throw new ArgumentOutOfRangeException(nameof(groupByMode));
                 }
 
+                if (showProjectFinish)
                 {
                     var projectFinish = new StringBuilder(Resource.ProjectPlan.Labels.Label_ProjectFinish);
                     projectFinish.Append(' ');
@@ -832,6 +835,13 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_LabelGroups, value);
         }
 
+        private bool m_ShowProjectFinish;
+        public bool ShowProjectFinish
+        {
+            get => m_ShowProjectFinish;
+            set => this.RaiseAndSetIfChanged(ref m_ShowProjectFinish, value);
+        }
+
         public ICommand SaveGanttChartImageFileCommand { get; }
 
         public async Task SaveGanttChartImageFileAsync(
@@ -920,7 +930,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.GraphCompilation,
                     GroupByMode,
                     AnnotationStyle,
-                    LabelGroups);
+                    LabelGroups,
+                    ShowProjectFinish);
             }
 
             GanttChartPlotModel = plotModel ?? new PlotModel();

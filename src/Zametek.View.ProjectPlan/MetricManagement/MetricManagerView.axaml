@@ -21,7 +21,7 @@
 				<ColumnDefinition Width="Auto"/>
 				<ColumnDefinition Width="80"/>
 				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="80"/>
+				<ColumnDefinition Width="100"/>
 				<ColumnDefinition Width="Auto"/>
 				<ColumnDefinition Width="80"/>
 				<ColumnDefinition Width="*"/>

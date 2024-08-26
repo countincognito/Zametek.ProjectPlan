@@ -44,6 +44,8 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option("gantt-label", Default = false, Required = false, HelpText = "Label annotations (true|false)")]
         public bool? GanttLabel { get; set; } = false;
 
+        [Option("gantt-finish", Default = false, Required = false, HelpText = "Show project finish (true|false)")]
+        public bool? GanttFinish { get; set; } = false;
 
 
         [Option("gantt-size", Min = 2, Max = 2, Separator = ':', HelpText = "Gantt chart dimensions in pixels (<width>:<height>)")]

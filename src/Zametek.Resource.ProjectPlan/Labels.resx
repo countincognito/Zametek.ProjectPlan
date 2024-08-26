@@ -429,4 +429,7 @@
   <data name="Label_Yes" xml:space="preserve">
     <value>Yes</value>
   </data>
+  <data name="Label_ShowProjectFinish" xml:space="preserve">
+    <value>Show Project Finish</value>
+  </data>
 </root>

@@ -220,10 +220,12 @@ namespace Zametek.ProjectPlan.CommandLine
                                 GroupByMode ganttGroup = options.GanttGroup;
                                 AnnotationStyle ganttAnnotate = options.GanttAnnotate;
                                 bool labelGroups = options.GanttLabel ?? default;
+                                bool projectFinish = options.GanttFinish ?? default;
 
                                 gantt.GroupByMode = ganttGroup;
                                 gantt.AnnotationStyle = ganttAnnotate;
                                 gantt.LabelGroups = labelGroups;
+                                gantt.ShowProjectFinish = projectFinish;
 
                                 gantt.BuildGanttChartPlotModel();
 

@@ -637,7 +637,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Disable.
+        ///   Looks up a localized string similar to Disabled.
         /// </summary>
         public static string Label_IsInactive {
             get {
@@ -868,6 +868,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_SelfDependency {
             get {
                 return ResourceManager.GetString("Label_SelfDependency", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Project Finish.
+        /// </summary>
+        public static string Label_ShowProjectFinish {
+            get {
+                return ResourceManager.GetString("Label_ShowProjectFinish", resourceCulture);
             }
         }
         
