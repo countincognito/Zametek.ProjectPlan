@@ -151,7 +151,7 @@
     <value>Free Slack</value>
   </data>
   <data name="ToolTip_HasNoCost" xml:space="preserve">
-    <value>No Cost</value>
+    <value>Ignore Cost</value>
   </data>
   <data name="ToolTip_Id" xml:space="preserve">
     <value>Identifier</value>
@@ -175,7 +175,7 @@
     <value>Explicit Target</value>
   </data>
   <data name="ToolTip_IsInactive" xml:space="preserve">
-    <value>Not Active</value>
+    <value>Disabled</value>
   </data>
   <data name="ToolTip_IsPhase" xml:space="preserve">
     <value>Phase</value>

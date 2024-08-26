@@ -8,47 +8,76 @@
 			 xmlns:sys="using:System"
              x:Class="Zametek.ProjectPlan.App"
 		     xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			 xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
+			 xmlns:mbc="clr-namespace:MsBox.Avalonia.Controls;assembly=MsBox.Avalonia"
 			 x:DataType="vm:MainViewModel"
 			 Name="{x:Static resources:Titles.Title_ProjectPlan}"
 			 RequestedThemeVariant="Light">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
-    <Application.DataTemplates>
-        <local:ViewLocator />
-    </Application.DataTemplates>
+	<!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+	<Application.DataTemplates>
+		<local:ViewLocator />
+	</Application.DataTemplates>
 
-    <NativeMenu.Menu>
-        <NativeMenu>
-            <NativeMenuItem Header="{x:Static resources:Menus.Menu_About}" Command="{Binding Path=OpenAboutCommand}" />
-        </NativeMenu>
-    </NativeMenu.Menu>
+	<NativeMenu.Menu>
+		<NativeMenu>
+			<NativeMenuItem Header="{x:Static resources:Menus.Menu_About}" Command="{Binding Path=OpenAboutCommand}" />
+		</NativeMenu>
+	</NativeMenu.Menu>
 
-    <Application.Styles>
-		 <!--Add the line below to get OxyPlot UI theme applied in Avalonia 11.--> 
+	<Application.Styles>
+		<!--Add the line below to get OxyPlot UI theme applied in Avalonia 11.-->
 		<StyleInclude Source="avares://OxyPlot.Avalonia/Themes/Default.axaml"/>
 
 		<!--Move this after the Semi theme to override it-->
-		<!--<SimpleTheme />-->
-		
+		<SimpleTheme />
+		<!--<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
+		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml"/>-->
+
 		<semi:SemiTheme Locale="en-US" />
 		<StyleInclude Source="avares://Semi.Avalonia/Themes/Index.axaml" />
-		<u-semi:SemiTheme Locale="en-US"/>
+		<u-semi:SemiTheme  Locale="en-US"/>
 
-		<SimpleTheme />
-
+		<!--<SimpleTheme />
 		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
-		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml"/>
+		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml"/>-->
+
 		<StyleInclude Source="avares://Dock.Avalonia/Themes/DockSimpleTheme.axaml" />
-				
-		<!--<StyleInclude Source="avares://Semi.Avalonia.ColorPicker/Index.axaml" />
-		<StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml" />-->
-    </Application.Styles>
-	
-	<!--<Application.Resources>
-		<sys:Double x:Key="ControlContentThemeFontSize">12</sys:Double>
 
+		<StyleInclude Source="avares://Semi.Avalonia.ColorPicker/Index.axaml" />
+		<StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml" />
 
-		<sys:Double x:Key="FontSizeSmall">10</sys:Double>
-		<sys:Double x:Key="FontSizeNormal">12</sys:Double>
-		<sys:Double x:Key="FontSizeLarge">16</sys:Double>
-	</Application.Resources>-->
+		<Style Selector="TextBox">
+			<Setter Property="FontSize" Value="12"/>
+		</Style>
+
+		<Style Selector="ComboBox">
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="VerticalContentAlignment" Value="Center"/>
+			<Setter Property="HorizontalAlignment" Value="Stretch"/>
+			<Setter Property="HorizontalContentAlignment" Value="Left"/>
+		</Style>
+		
+		<Style Selector="idc|RootDockControl">
+			<Setter Property="Margin" Value="0,0,0,7"/>
+		</Style>
+
+		<!--For some reason this isn't working at expected-->
+		<Style Selector="mbc|MsBoxStandardView Button">
+			<Setter Property="FontWeight" Value="600"/>
+		</Style>
+
+	</Application.Styles>
+
+	<Application.Resources>
+		<sys:Double x:Key="DefaultFontSize">12</sys:Double>
+
+		<sys:Double x:Key="TextBlockFontSize">12</sys:Double>
+
+		<sys:Double x:Key="ListBoxItemCheckFontSize">12</sys:Double>
+
+		<sys:Double x:Key="ButtonDefaultFontSize">12</sys:Double>
+		<FontWeight x:Key="ButtonDefaultFontWeight">550</FontWeight>
+		<SolidColorBrush x:Key="ButtonDefaultBackground" Opacity="0.25" Color="Gray" />
+		<Thickness x:Key="ButtonDefaultPadding">6 6</Thickness>
+	</Application.Resources>
 </Application>

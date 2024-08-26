@@ -81,7 +81,6 @@
 			</i:Interaction.Behaviors>
 
 			<DataGrid.Columns>
-
 				<!--This needs to be added due to an issue with Avalonia not allowing editing in the first column-->
 				<DataGridTemplateColumn CanUserResize="False"
 										CanUserReorder="False"
@@ -104,7 +103,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource slackLimitSortComparer}"
-										Width="75">
+										Width="95">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -224,7 +223,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource criticalityWeightSortComparer}"
-										Width="110">
+										Width="130">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -268,7 +267,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource fibonacciWeightSortComparer}"
-										Width="110">
+										Width="135">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -313,7 +312,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource colorFormatSortComparer}"
-										Width="45">
+										Width="75">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>

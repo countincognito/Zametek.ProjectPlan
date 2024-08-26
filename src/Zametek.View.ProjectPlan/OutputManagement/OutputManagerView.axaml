@@ -19,6 +19,8 @@
 				 TextWrapping="Wrap"
 				 AcceptsReturn="True"
 				 Background="White"
+				 VerticalAlignment="Stretch"
+				 VerticalContentAlignment="Stretch"
 				 ScrollViewer.VerticalScrollBarVisibility="Auto"
 				 IsReadOnly="True">
 			<i:Interaction.Behaviors>

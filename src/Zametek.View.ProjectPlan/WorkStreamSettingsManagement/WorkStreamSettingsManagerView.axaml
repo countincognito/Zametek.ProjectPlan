@@ -82,10 +82,6 @@
 			</i:Interaction.Behaviors>
 
 			<DataGrid.Columns>
-
-
-
-
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
@@ -154,12 +150,11 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource displayOrderSortComparer}"
-										Width="85">
+										Width="115">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -199,16 +194,12 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-				
-				
-				
-				
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource colorFormatSortComparer}"
-										Width="45">
+										Width="75">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -271,10 +262,6 @@
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
-
-
-
-
 			</DataGrid.Columns>
 		</DataGrid>
 	</DockPanel>

@@ -142,11 +142,12 @@
 		</Menu>
 
 		<DockPanel DockPanel.Dock="Bottom"
-				   Margin="0,11,0,0">
+				   Margin="0">
 
 			<Label DockPanel.Dock="Left"
 				   IsTabStop="False"
 				   Content="{x:Static resources:Labels.Label_ProjectStart}"
+				   VerticalContentAlignment="Center"
 				   Height="25"
 				   Margin="0,0,7,0"/>
 			<CalendarDatePicker DockPanel.Dock="Left"

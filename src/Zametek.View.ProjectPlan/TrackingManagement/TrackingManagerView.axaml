@@ -83,8 +83,8 @@
 					  Margin="0,0,0,11"
 					  Height="25"
 					  Width="75"
-					  VerticalAlignment="Center"
-					  VerticalContentAlignment="Center"
+					  BorderBrush="Gray"
+					  BorderThickness="1"
 					  ItemsSource="{Binding Path=AvailableStartColumns, Mode=OneWay}"
 					  SelectedItem="{Binding Path=StartColumnSelector, Mode=TwoWay}">
 				<ComboBox.ItemTemplate>
@@ -107,8 +107,8 @@
 					  Margin="0,0,0,11"
 					  Height="25"
 					  Width="75"
-					  VerticalAlignment="Center"
-				      VerticalContentAlignment="Center"
+					  BorderBrush="Gray"
+					  BorderThickness="1"
 				      ItemsSource="{Binding Path=AvailableColumnsShown, Mode=OneWay}"
 				      SelectedItem="{Binding Path=ColumnsShownSelector, Mode=TwoWay}">
 				<ComboBox.ItemTemplate>

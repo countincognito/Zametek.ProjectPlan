@@ -310,7 +310,7 @@
     <value>Explicit Target</value>
   </data>
   <data name="Label_IsInactive" xml:space="preserve">
-    <value>Disable</value>
+    <value>Disabled</value>
   </data>
   <data name="Label_IsPhase" xml:space="preserve">
     <value>Phase</value>

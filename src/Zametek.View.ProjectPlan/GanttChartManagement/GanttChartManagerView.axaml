@@ -32,14 +32,12 @@
 						  SelectedItem="{Binding Path=GroupByMode, Mode=TwoWay}"
 						  Foreground="Black"
 						  Background="White"
+						  BorderBrush="Gray"
+						  BorderThickness="1"
 						  DockPanel.Dock="Top"
 						  IsTabStop="False"
 						  Margin="0,0,0,11"
-						  Height="25"
-						  VerticalAlignment="Center"
-						  VerticalContentAlignment="Center"
-						  HorizontalAlignment="Stretch"
-						  HorizontalContentAlignment="Left"/>
+						  Height="25"/>
 			</DockPanel>
 
 			<DockPanel DockPanel.Dock="Top"
@@ -56,14 +54,12 @@
 						  SelectedItem="{Binding Path=AnnotationStyle, Mode=TwoWay}"
 						  Foreground="Black"
 						  Background="White"
+						  BorderBrush="Gray"
+						  BorderThickness="1"
 						  DockPanel.Dock="Top"
 						  IsTabStop="False"
 						  Margin="0,0,0,11"
-						  Height="25"
-						  VerticalAlignment="Center"
-						  VerticalContentAlignment="Center"
-						  HorizontalAlignment="Stretch"
-						  HorizontalContentAlignment="Left"/>
+						  Height="25"/>
 			</DockPanel>
 
 			<DockPanel DockPanel.Dock="Top"

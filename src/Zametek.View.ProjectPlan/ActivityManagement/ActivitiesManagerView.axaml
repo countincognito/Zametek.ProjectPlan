@@ -141,7 +141,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource durationSortComparer}"
-										Width="65">
+										Width="85">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -226,7 +226,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource dependenciesStringSortComparer}"
-										Width="100">
+										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -268,7 +268,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource resourceDependenciesStringSortComparer}"
-										Width="150">
+										Width="170">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -297,7 +297,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource isDummySortComparer}"
-										Width="60">
+										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid HorizontalAlignment="Center">
@@ -330,7 +330,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource isCriticalSortComparer}"
-										Width="60">
+										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -363,7 +363,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource earliestStartTimeSortComparer}"
-										Width="75">
+										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -401,7 +401,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource latestStartTimeSortComparer}"
-										Width="75">
+										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -439,7 +439,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource earliestFinishTimeSortComparer}"
-										Width="75">
+										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -477,7 +477,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource latestFinishTimeSortComparer}"
-										Width="75">
+										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -607,7 +607,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource minimumFreeSlackSortComparer}"
-										Width="90">
+										Width="110">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -652,7 +652,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource minimumEarliestStartTimeSortComparer}"
-										Width="100">
+										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -715,7 +715,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource maximumLatestFinishTimeSortComparer}"
-										Width="100">
+										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -779,7 +779,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource workStreamSelectorTargetWorkStreamsStringSortComparer}"
-										Width="120">
+										Width="155">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -806,9 +806,13 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+							<Grid Name="HostGrid"
+								  VerticalAlignment="Stretch"
+								  HorizontalAlignment="Stretch">
 								<u:MultiComboBox x:DataType="vm:ManagedActivityViewModel"
 												 MaxHeight="200"
+												 Width="{Binding #HostGrid.Width, Mode=OneWay}"
+												 HorizontalAlignment="Stretch"
 												 ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}"
 												 SelectedItems="{Binding Path=WorkStreamSelector.SelectedTargetWorkStreams, Mode=OneWay}"
 												 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
@@ -873,7 +877,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource resourceSelectorTargetResourcesStringSortComparer}"
-										Width="120">
+										Width="130">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -900,9 +904,13 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+							<Grid Name="HostGrid"
+								  VerticalAlignment="Stretch"
+								  HorizontalAlignment="Stretch">
 								<u:MultiComboBox x:DataType="vm:ManagedActivityViewModel"
 												 MaxHeight="200"
+												 Width="{Binding #HostGrid.Width, Mode=OneWay}"
+												 HorizontalAlignment="Stretch"
 												 ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}"
 												 SelectedItems="{Binding Path=ResourceSelector.SelectedTargetResources, Mode=OneWay}"
 												 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
@@ -968,7 +976,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource hasNoCostSortComparer}"
-										Width="80">
+										Width="100">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -1008,7 +1016,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource targetResourceOperatorSortComparer}"
-										Width="120">
+										Width="140">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
@@ -1038,6 +1046,10 @@
 						<DataTemplate>
 							<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:LogicalOperator}}}"
 									  SelectedItem="{Binding Path=TargetResourceOperator, Mode=TwoWay}"
+									  VerticalAlignment="Center"
+									  VerticalContentAlignment="Center"
+									  HorizontalAlignment="Stretch"
+									  HorizontalContentAlignment="Left"
 									  Foreground="Black"
 									  Background="White"/>
 						</DataTemplate>
@@ -1049,7 +1061,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource allocatedToResourcesStringSortComparer}"
-										Width="120">
+										Width="165">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>
