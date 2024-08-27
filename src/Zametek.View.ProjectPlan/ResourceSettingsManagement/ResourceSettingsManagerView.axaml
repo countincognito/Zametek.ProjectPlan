@@ -307,12 +307,11 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid Name="HostGrid"
-								  VerticalAlignment="Stretch"
+							<Grid VerticalAlignment="Stretch"
 								  HorizontalAlignment="Stretch">
 								<u:MultiComboBox x:DataType="vm:ManagedResourceViewModel"
 												 MaxHeight="200"
-												 Width="{Binding #HostGrid.Width, Mode=OneWay}"
+												 Width="{x:Static sys:Double.NaN}"
 												 HorizontalAlignment="Stretch"
 												 ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}"
 												 SelectedItems="{Binding Path=WorkStreamSelector.SelectedTargetWorkStreams, Mode=OneWay}"
