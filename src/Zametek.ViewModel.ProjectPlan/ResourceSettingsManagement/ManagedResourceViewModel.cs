@@ -57,7 +57,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_WorkStreamSettingsSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.WorkStreamSettings)
-                .ObserveOn(Scheduler.CurrentThread)
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x => WorkStreamSettings = x);
         }
 

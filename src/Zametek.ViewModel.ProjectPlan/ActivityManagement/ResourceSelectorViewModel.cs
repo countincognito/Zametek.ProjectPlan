@@ -10,6 +10,21 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
+        private static readonly EqualityComparer<SelectableResourceViewModel> s_EqualityComparer =
+            EqualityComparer<SelectableResourceViewModel>.Create(
+                    (x, y) =>
+                    {
+                        if (x is null)
+                        {
+                            return false;
+                        }
+                        if (y is null)
+                        {
+                            return false;
+                        }
+                        return x.Id == y.Id;
+                    },
+                    x => x.Id);
 
         #endregion
 
@@ -18,16 +33,16 @@ namespace Zametek.ViewModel.ProjectPlan
         public ResourceSelectorViewModel()
         {
             m_Lock = new object();
-            m_TargetResources = [];
-            m_ReadOnlyTargetResources = new ReadOnlyObservableCollection<SelectableResourceViewModel>(m_TargetResources);
-            m_SelectedTargetResources = [];
+            m_TargetResources = new(s_EqualityComparer);
+            m_ReadOnlyTargetResources = new(m_TargetResources);
+            m_SelectedTargetResources = new(s_EqualityComparer);
         }
 
         #endregion
 
         #region Properties
 
-        private readonly ObservableCollection<SelectableResourceViewModel> m_TargetResources;
+        private readonly ObservableUniqueCollection<SelectableResourceViewModel> m_TargetResources;
         private readonly ReadOnlyObservableCollection<SelectableResourceViewModel> m_ReadOnlyTargetResources;
         public ReadOnlyObservableCollection<SelectableResourceViewModel> TargetResources => m_ReadOnlyTargetResources;
 
@@ -88,20 +103,66 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(selectedTargetResources);
             lock (m_Lock)
             {
-                m_TargetResources.Clear();
-                m_SelectedTargetResources.Clear();
-                foreach (ResourceModel targetResource in targetResources)
                 {
-                    var vm = new SelectableResourceViewModel(
-                        targetResource.Id,
-                        targetResource.Name,
-                        selectedTargetResources.Contains(targetResource.Id),
-                        this);
+                    // Find target view models that have been removed.
+                    List<SelectableResourceViewModel> removedViewModels = m_TargetResources
+                        .ExceptBy(targetResources.Select(x => x.Id), x => x.Id)
+                        .ToList();
 
-                    m_TargetResources.Add(vm);
-                    if (vm.IsSelected)
+                    // Delete the removed items from the target and selected collections.
+                    foreach (SelectableResourceViewModel vm in removedViewModels)
                     {
-                        m_SelectedTargetResources.Add(vm);
+                        m_TargetResources.Remove(vm);
+                        m_SelectedTargetResources.Remove(vm);
+                        vm.Dispose();
+                    }
+
+                    // Find the selected view models that have been removed.
+                    List<SelectableResourceViewModel> removedSelectedViewModels = m_SelectedTargetResources
+                        .ExceptBy(selectedTargetResources, x => x.Id)
+                        .ToList();
+
+                    // Delete the removed selected items from the selected collections.
+                    foreach (SelectableResourceViewModel vm in removedSelectedViewModels)
+                    {
+                        vm.IsSelected = false;
+                        m_SelectedTargetResources.Remove(vm);
+                    }
+                }
+                {
+                    // Find the target models that have been added.
+                    List<ResourceModel> addedModels = targetResources
+                        .ExceptBy(m_TargetResources.Select(x => x.Id), x => x.Id)
+                        .ToList();
+
+                    List<SelectableResourceViewModel> addedViewModels = [];
+
+                    // Create a collection of new view models.
+                    foreach (ResourceModel model in addedModels)
+                    {
+                        var vm = new SelectableResourceViewModel(
+                            model.Id,
+                            model.Name,
+                            selectedTargetResources.Contains(model.Id),
+                            this);
+
+                        m_TargetResources.Add(vm);
+                        if (vm.IsSelected)
+                        {
+                            m_SelectedTargetResources.Add(vm);
+                        }
+                    }
+                }
+                {
+                    // Update names.
+                    Dictionary<int, ResourceModel> targetResourceLookup = targetResources.ToDictionary(x => x.Id);
+
+                    foreach (SelectableResourceViewModel vm in m_TargetResources)
+                    {
+                        if (targetResourceLookup.TryGetValue(vm.Id, out ResourceModel? value))
+                        {
+                            vm.Name = value.Name;
+                        }
                     }
                 }
             }

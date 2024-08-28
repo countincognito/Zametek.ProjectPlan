@@ -1238,7 +1238,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 }
                             }
 
-                            if (activeUpdate || tracker.PercentageComplete < runningPercentageCompleted)
+                            if (activeUpdate && tracker.PercentageComplete < runningPercentageCompleted)
                             {
                                 tracker.PercentageComplete = runningPercentageCompleted;
                             }

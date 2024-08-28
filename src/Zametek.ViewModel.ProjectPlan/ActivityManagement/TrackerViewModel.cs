@@ -53,7 +53,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_IsIncluded = value;
                     this.RaisePropertyChanged();
-                    IsUpdated = true;
                 }
             }
         }

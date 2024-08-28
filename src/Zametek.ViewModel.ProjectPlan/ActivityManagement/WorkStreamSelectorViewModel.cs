@@ -11,6 +11,21 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly object m_Lock;
         private readonly bool m_PhaseOnly;
+        private static readonly EqualityComparer<SelectableWorkStreamViewModel> s_EqualityComparer =
+            EqualityComparer<SelectableWorkStreamViewModel>.Create(
+                    (x, y) =>
+                    {
+                        if (x is null)
+                        {
+                            return false;
+                        }
+                        if (y is null)
+                        {
+                            return false;
+                        }
+                        return x.Id == y.Id;
+                    },
+                    x => x.Id);
 
         #endregion
 
@@ -25,16 +40,16 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             m_Lock = new object();
             m_PhaseOnly = phaseOnly;
-            m_TargetWorkStreams = [];
-            m_ReadOnlyTargetWorkStreams = new ReadOnlyObservableCollection<SelectableWorkStreamViewModel>(m_TargetWorkStreams);
-            m_SelectedTargetWorkStreams = [];
+            m_TargetWorkStreams = new(s_EqualityComparer);
+            m_ReadOnlyTargetWorkStreams = new(m_TargetWorkStreams);
+            m_SelectedTargetWorkStreams = new(s_EqualityComparer);
         }
 
         #endregion
 
         #region Properties
 
-        private readonly ObservableCollection<SelectableWorkStreamViewModel> m_TargetWorkStreams;
+        private readonly ObservableUniqueCollection<SelectableWorkStreamViewModel> m_TargetWorkStreams;
         private readonly ReadOnlyObservableCollection<SelectableWorkStreamViewModel> m_ReadOnlyTargetWorkStreams;
         public ReadOnlyObservableCollection<SelectableWorkStreamViewModel> TargetWorkStreams => m_ReadOnlyTargetWorkStreams;
 
@@ -86,21 +101,70 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(selectedTargetWorkStreams);
             lock (m_Lock)
             {
-                m_TargetWorkStreams.Clear();
-                m_SelectedTargetWorkStreams.Clear();
-                foreach (WorkStreamModel targetWorkStream in targetWorkStreams.Where(x => (!m_PhaseOnly) || (m_PhaseOnly && x.IsPhase)))
-                {
-                    var vm = new SelectableWorkStreamViewModel(
-                        targetWorkStream.Id,
-                        targetWorkStream.Name,
-                        targetWorkStream.IsPhase,
-                        selectedTargetWorkStreams.Contains(targetWorkStream.Id),
-                        this);
+                IEnumerable<WorkStreamModel> correctTargetWorkStreams =
+                    targetWorkStreams.Where(x => (!m_PhaseOnly) || (m_PhaseOnly && x.IsPhase));
 
-                    m_TargetWorkStreams.Add(vm);
-                    if (vm.IsSelected)
+                {
+                    // Find target view models that have been removed.
+                    List<SelectableWorkStreamViewModel> removedViewModels = m_TargetWorkStreams
+                        .ExceptBy(correctTargetWorkStreams.Select(x => x.Id), x => x.Id)
+                        .ToList();
+
+                    // Delete the removed items from the target and selected collections.
+                    foreach (SelectableWorkStreamViewModel vm in removedViewModels)
                     {
-                        m_SelectedTargetWorkStreams.Add(vm);
+                        m_TargetWorkStreams.Remove(vm);
+                        m_SelectedTargetWorkStreams.Remove(vm);
+                        vm.Dispose();
+                    }
+
+                    // Find the selected view models that have been removed.
+                    List<SelectableWorkStreamViewModel> removedSelectedViewModels = m_SelectedTargetWorkStreams
+                        .ExceptBy(selectedTargetWorkStreams, x => x.Id)
+                        .ToList();
+
+                    // Delete the removed selected items from the selected collections.
+                    foreach (SelectableWorkStreamViewModel vm in removedSelectedViewModels)
+                    {
+                        vm.IsSelected = false;
+                        m_SelectedTargetWorkStreams.Remove(vm);
+                    }
+                }
+                {
+                    // Find the target models that have been added.
+                    List<WorkStreamModel> addedModels = correctTargetWorkStreams
+                        .ExceptBy(m_TargetWorkStreams.Select(x => x.Id), x => x.Id)
+                        .ToList();
+
+                    List<SelectableWorkStreamViewModel> addedViewModels = [];
+
+                    // Create a collection of new view models.
+                    foreach (WorkStreamModel model in addedModels)
+                    {
+                        var vm = new SelectableWorkStreamViewModel(
+                              model.Id,
+                              model.Name,
+                              model.IsPhase,
+                              selectedTargetWorkStreams.Contains(model.Id),
+                              this);
+
+                        m_TargetWorkStreams.Add(vm);
+                        if (vm.IsSelected)
+                        {
+                            m_SelectedTargetWorkStreams.Add(vm);
+                        }
+                    }
+                }
+                {
+                    // Update names.
+                    Dictionary<int, WorkStreamModel> targetWorkStreamLookup = correctTargetWorkStreams.ToDictionary(x => x.Id);
+
+                    foreach (SelectableWorkStreamViewModel vm in m_TargetWorkStreams)
+                    {
+                        if (targetWorkStreamLookup.TryGetValue(vm.Id, out WorkStreamModel? value))
+                        {
+                            vm.Name = value.Name;
+                        }
                     }
                 }
             }

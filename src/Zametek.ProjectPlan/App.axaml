@@ -61,9 +61,9 @@
 			<Setter Property="Margin" Value="0,0,0,7"/>
 		</Style>
 
-		<!--For some reason this isn't working at expected-->
+		<!--For some reason this isn't working at expected on Windows-->
 		<Style Selector="mbc|MsBoxStandardView Button">
-			<Setter Property="FontWeight" Value="600"/>
+			<Setter Property="FontWeight" Value="{DynamicResource ButtonDefaultFontWeight}" />
 		</Style>
 
 	</Application.Styles>
@@ -72,6 +72,8 @@
 		<sys:Double x:Key="DefaultFontSize">12</sys:Double>
 
 		<sys:Double x:Key="TextBlockFontSize">12</sys:Double>
+		
+		<SolidColorBrush x:Key="DataGridColumnHeaderForeground" Color="Black" />
 
 		<sys:Double x:Key="ListBoxItemCheckFontSize">12</sys:Double>
 
