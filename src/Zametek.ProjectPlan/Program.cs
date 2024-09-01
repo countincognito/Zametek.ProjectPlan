@@ -13,13 +13,9 @@ namespace Zametek.ProjectPlan
         [STAThread]
         public static void Main(string[] args)
         {
-            RegisterDependencies();
-
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args, ShutdownMode.OnMainWindowClose);
         }
-
-        private static void RegisterDependencies() => Bootstrapper.Register();
 
         // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp()

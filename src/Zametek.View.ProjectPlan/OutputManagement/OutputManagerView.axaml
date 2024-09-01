@@ -13,43 +13,45 @@
 	<UserControl.Resources>
 	</UserControl.Resources>
 
-	<DockPanel Margin="7">
-		<TextBox Name="outputText"
-				 Text="{Binding Path=CompilationOutput, Mode=OneWay}"
-				 TextWrapping="Wrap"
-				 AcceptsReturn="True"
-				 Background="White"
-				 VerticalAlignment="Stretch"
-				 VerticalContentAlignment="Stretch"
-				 ScrollViewer.VerticalScrollBarVisibility="Auto"
-				 IsReadOnly="True">
-			<i:Interaction.Behaviors>
-				<ia:DataTriggerBehavior Value="True">
-					<ia:DataTriggerBehavior.Binding>
-						<MultiBinding Converter="{x:Static BoolConverters.Or}">
-							<MultiBinding.Bindings>
-								<Binding Path="HasCompilationErrors" Mode="OneWay"/>
-								<Binding Path="HasStaleOutputs" Mode="OneWay"/>
-							</MultiBinding.Bindings>
-						</MultiBinding>
-					</ia:DataTriggerBehavior.Binding>
+	<ScrollViewer VerticalScrollBarVisibility="Auto"
+				  HorizontalScrollBarVisibility="Auto">
+		<DockPanel Margin="7">
+			<TextBox Name="outputText"
+					 Text="{Binding Path=CompilationOutput, Mode=OneWay}"
+					 TextWrapping="Wrap"
+					 AcceptsReturn="True"
+					 Background="White"
+					 VerticalAlignment="Stretch"
+					 VerticalContentAlignment="Stretch"
+					 IsReadOnly="True">
+				<i:Interaction.Behaviors>
+					<ia:DataTriggerBehavior Value="True">
+						<ia:DataTriggerBehavior.Binding>
+							<MultiBinding Converter="{x:Static BoolConverters.Or}">
+								<MultiBinding.Bindings>
+									<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+									<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+								</MultiBinding.Bindings>
+							</MultiBinding>
+						</ia:DataTriggerBehavior.Binding>
 
-					<ia:ChangePropertyAction PropertyName="Foreground" TargetObject="#outputText" Value="Red" />
-				</ia:DataTriggerBehavior>
+						<ia:ChangePropertyAction PropertyName="Foreground" TargetObject="#outputText" Value="Red" />
+					</ia:DataTriggerBehavior>
 
-				<ia:DataTriggerBehavior Value="True">
-					<ia:DataTriggerBehavior.Binding>
-						<MultiBinding Converter="{x:Static BoolConverters.And}">
-							<MultiBinding.Bindings>
-								<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
-								<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
-							</MultiBinding.Bindings>
-						</MultiBinding>
-					</ia:DataTriggerBehavior.Binding>
+					<ia:DataTriggerBehavior Value="True">
+						<ia:DataTriggerBehavior.Binding>
+							<MultiBinding Converter="{x:Static BoolConverters.And}">
+								<MultiBinding.Bindings>
+									<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+									<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+								</MultiBinding.Bindings>
+							</MultiBinding>
+						</ia:DataTriggerBehavior.Binding>
 
-					<ia:ChangePropertyAction PropertyName="Foreground" TargetObject="#outputText" Value="Black" />
-				</ia:DataTriggerBehavior>
-			</i:Interaction.Behaviors>
-		</TextBox>
-	</DockPanel>
+						<ia:ChangePropertyAction PropertyName="Foreground" TargetObject="#outputText" Value="Black" />
+					</ia:DataTriggerBehavior>
+				</i:Interaction.Behaviors>
+			</TextBox>
+		</DockPanel>
+	</ScrollViewer>
 </UserControl>

@@ -18,8 +18,15 @@ namespace Zametek.ProjectPlan
             AvaloniaXamlLoader.Load(this);
         }
 
+        private static void RegisterDependencies() => Bootstrapper.Register();
+
+        private static T GetRequiredService<T>() =>
+            Locator.Current.GetService<T>() ?? throw new NullReferenceException($"{Resource.ProjectPlan.Messages.Message_UnableToResolveType} {typeof(T).FullName}");
+
         public override void OnFrameworkInitializationCompleted()
         {
+            RegisterDependencies();
+
             IMainViewModel mainViewModel = GetRequiredService<IMainViewModel>();
 
             DataContext = mainViewModel;
@@ -102,8 +109,5 @@ namespace Zametek.ProjectPlan
             //}
             base.OnFrameworkInitializationCompleted();
         }
-
-        private static T GetRequiredService<T>() =>
-            Locator.Current.GetService<T>() ?? throw new NullReferenceException($"{Resource.ProjectPlan.Messages.Message_UnableToResolveType} {typeof(T).FullName}");
     }
 }
