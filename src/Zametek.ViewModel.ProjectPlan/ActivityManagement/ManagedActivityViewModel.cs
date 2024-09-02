@@ -179,7 +179,7 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaiseAndSetIfChanged(ref m_MinimumEarliestStartDateTime, dateTimeOffsetValue, nameof(MinimumEarliestStartDateTime));
         }
 
-        private void SetMinimumEarliestStartTimes(DateTimeOffset? input)
+        private void SetMinimumEarliestStartTimes(DateTimeOffset? input, bool skipValidation = false)
         {
             // Calculate integer and DateTimeOffset values (double pass).
             DateTimeOffset? dateTimeOffsetValue = CalculateDateTime(input);
@@ -188,8 +188,11 @@ namespace Zametek.ViewModel.ProjectPlan
             intValue = CalculateTime(intValue);
             dateTimeOffsetValue = CalculateDateTime(intValue);
 
-            // Validate integer value.
-            ValidateMinimumEarliestStartTime(intValue);
+            if (!skipValidation)
+            {
+                // Validate integer value.
+                ValidateMinimumEarliestStartTime(intValue);
+            }
 
             // Set integer and DateTimeOffset values.
             DependentActivity.MinimumEarliestStartTime = intValue;
@@ -215,7 +218,7 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaiseAndSetIfChanged(ref m_MaximumLatestFinishDateTime, dateTimeOffsetValue, nameof(MaximumLatestFinishDateTime));
         }
 
-        private void SetMaximumLatestFinishTimes(DateTimeOffset? input)
+        private void SetMaximumLatestFinishTimes(DateTimeOffset? input, bool skipValidation = false)
         {
             // Calculate integer and DateTimeOffset values (double pass).
             DateTimeOffset? dateTimeOffsetValue = CalculateDateTime(input);
@@ -224,8 +227,11 @@ namespace Zametek.ViewModel.ProjectPlan
             intValue = CalculateTime(intValue);
             dateTimeOffsetValue = CalculateDateTime(intValue);
 
-            // Validate integer value.
-            ValidateMaximumLatestFinishTime(intValue);
+            if (!skipValidation)
+            {
+                // Validate integer value.
+                ValidateMaximumLatestFinishTime(intValue);
+            }
 
             // Set integer and DateTimeOffset values.
             DependentActivity.MaximumLatestFinishTime = intValue;
@@ -356,8 +362,8 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(LatestStartDateTimeOffset));
             this.RaisePropertyChanged(nameof(EarliestFinishDateTimeOffset));
             this.RaisePropertyChanged(nameof(LatestFinishDateTimeOffset));
-            SetMinimumEarliestStartTimes(m_MinimumEarliestStartDateTime);
-            SetMaximumLatestFinishTimes(m_MaximumLatestFinishDateTime);
+            SetMinimumEarliestStartTimes(m_MinimumEarliestStartDateTime, skipValidation: true);
+            SetMaximumLatestFinishTimes(m_MaximumLatestFinishDateTime, skipValidation: true);
         }
 
         private void SetAsCompiled()

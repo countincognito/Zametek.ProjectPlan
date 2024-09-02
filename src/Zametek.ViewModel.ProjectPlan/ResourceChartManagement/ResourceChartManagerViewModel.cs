@@ -147,10 +147,10 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static PlotModel BuildResourceChartPlotModelInternal(
-        IDateTimeCalculator dateTimeCalculator,
-        ResourceSeriesSetModel resourceSeriesSet,
-        bool showDates,
-        DateTime projectStartDateTime)
+            IDateTimeCalculator dateTimeCalculator,
+            ResourceSeriesSetModel resourceSeriesSet,
+            bool showDates,
+            DateTime projectStartDateTime)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);

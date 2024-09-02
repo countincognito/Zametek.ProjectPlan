@@ -68,7 +68,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     om => om.m_CoreViewModel.ResourceSeriesSet,
                     om => om.ShowDates,
                     om => om.UseBusinessDays,
-                    om => om.ProjectStart)
+                    om => om.ProjectStart,
+                    om => om.HasCompilationErrors)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildCompilationOutputAsync());
 
