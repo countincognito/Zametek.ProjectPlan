@@ -460,7 +460,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static void WriteTrackersToWorkbook<T>(
             IEnumerable<ActivityModel> activities,
-            Func<TrackerModel, T> trackerFunc,
+            Func<ActivityTrackerModel, T> trackerFunc,
             string sheetTitle,//!!,
             XSSFWorkbook workbook,
             ICellStyle titleStyle,
@@ -797,22 +797,22 @@ namespace Zametek.ViewModel.ProjectPlan
             WriteTrackersToWorkbook(
                 projectPlan.DependentActivities.Select(x => x.Activity),
                 tracker => tracker.PercentageComplete,
-                Resource.ProjectPlan.Reporting.Reporting_WorksheetTrackerPercentageComplete,
+                Resource.ProjectPlan.Reporting.Reporting_WorksheetActivityTracker,
                 workbook,
                 titleStyle,
                 showDates,
                 projectPlan.ProjectStart,
                 m_DateTimeCalculator);
 
-            WriteTrackersToWorkbook(
-                projectPlan.DependentActivities.Select(x => x.Activity),
-                tracker => tracker.IsIncluded,
-                Resource.ProjectPlan.Reporting.Reporting_WorksheetTrackerDaysIncluded,
-                workbook,
-                titleStyle,
-                showDates,
-                projectPlan.ProjectStart,
-                m_DateTimeCalculator);
+            //WriteTrackersToWorkbook(
+            //    projectPlan.DependentActivities.Select(x => x.Activity),
+            //    tracker => tracker.IsIncluded,
+            //    Resource.ProjectPlan.Reporting.Reporting_WorksheetTrackerDaysIncluded,
+            //    workbook,
+            //    titleStyle,
+            //    showDates,
+            //    projectPlan.ProjectStart,
+            //    m_DateTimeCalculator);
 
             WriteResourceChartToWorkbook(
                 resourceSeriesSet,

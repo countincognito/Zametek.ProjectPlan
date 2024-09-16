@@ -80,7 +80,7 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<ActivityModel, v0_3_0.ActivityModel>().ReverseMap();
             CreateMap<v0_2_1.ActivityModel, v0_3_0.ActivityModel>().ReverseMap();
 
-            CreateMap<TrackerModel, v0_3_0.TrackerModel>().ReverseMap();
+            CreateMap<ActivityTrackerModel, v0_3_0.TrackerModel>().ReverseMap();
 
             CreateMap<DependentActivityModel, v0_3_0.DependentActivityModel>().ReverseMap();
             CreateMap<v0_2_1.DependentActivityModel, v0_3_0.DependentActivityModel>().ReverseMap();
@@ -124,8 +124,17 @@ namespace Zametek.Data.ProjectPlan
 
             #region v0.3.2
 
+            CreateMap<ActivityEdgeModel, v0_3_2.ActivityEdgeModel>().ReverseMap();
+            CreateMap<v0_3_0.ActivityEdgeModel, v0_3_2.ActivityEdgeModel>().ReverseMap();
+
             CreateMap<ActivityModel, v0_3_2.ActivityModel>().ReverseMap();
             CreateMap<v0_3_0.ActivityModel, v0_3_2.ActivityModel>().ReverseMap();
+
+            CreateMap<ActivityNodeModel, v0_3_2.ActivityNodeModel>().ReverseMap();
+            CreateMap<v0_3_0.ActivityNodeModel, v0_3_2.ActivityNodeModel>().ReverseMap();
+
+            CreateMap<ArrowGraphModel, v0_3_2.ArrowGraphModel>().ReverseMap();
+            CreateMap<v0_3_0.ArrowGraphModel, v0_3_2.ArrowGraphModel>().ReverseMap();
 
             CreateMap<DependentActivityModel, v0_3_2.DependentActivityModel>().ReverseMap();
             CreateMap<v0_3_0.DependentActivityModel, v0_3_2.DependentActivityModel>().ReverseMap();
@@ -135,6 +144,7 @@ namespace Zametek.Data.ProjectPlan
 
             CreateMap<ResourceModel, v0_3_2.ResourceModel>().ReverseMap();
             CreateMap<v0_3_1.ResourceModel, v0_3_2.ResourceModel>().ReverseMap();
+
             CreateMap<ResourceScheduleModel, v0_3_2.ResourceScheduleModel>().ReverseMap();
             CreateMap<v0_3_1.ResourceScheduleModel, v0_3_2.ResourceScheduleModel>().ReverseMap();
 
@@ -147,6 +157,42 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<WorkStreamSettingsModel, v0_3_2.WorkStreamSettingsModel>().ReverseMap();
 
             CreateMap<ProjectPlanModel, v0_3_2.ProjectPlanModel>().ReverseMap();
+
+            #endregion
+
+            #region v0.4.0
+
+            CreateMap<ActivityEdgeModel, v0_4_0.ActivityEdgeModel>().ReverseMap();
+            CreateMap<v0_3_2.ActivityEdgeModel, v0_4_0.ActivityEdgeModel>().ReverseMap();
+
+            CreateMap<ActivityModel, v0_4_0.ActivityModel>().ReverseMap();
+            CreateMap<v0_3_2.ActivityModel, v0_4_0.ActivityModel>().ReverseMap();
+
+            CreateMap<ActivityNodeModel, v0_4_0.ActivityNodeModel>().ReverseMap();
+            CreateMap<v0_3_2.ActivityNodeModel, v0_4_0.ActivityNodeModel>().ReverseMap();
+
+            CreateMap<ActivityTrackerModel, v0_4_0.ActivityTrackerModel>().ReverseMap();
+            CreateMap<v0_3_0.TrackerModel, v0_4_0.ActivityTrackerModel>().ReverseMap();
+
+            CreateMap<DependentActivityModel, v0_4_0.DependentActivityModel>().ReverseMap();
+            CreateMap<v0_3_2.DependentActivityModel, v0_4_0.DependentActivityModel>().ReverseMap();
+
+            CreateMap<ArrowGraphModel, v0_4_0.ArrowGraphModel>().ReverseMap();
+            CreateMap<v0_3_2.ArrowGraphModel, v0_4_0.ArrowGraphModel>().ReverseMap();
+
+            CreateMap<DependentActivityModel, v0_4_0.DependentActivityModel>().ReverseMap();
+            CreateMap<v0_3_2.DependentActivityModel, v0_4_0.DependentActivityModel>().ReverseMap();
+
+            CreateMap<GraphCompilationModel, v0_4_0.GraphCompilationModel>().ReverseMap();
+            CreateMap<v0_3_2.GraphCompilationModel, v0_4_0.GraphCompilationModel>().ReverseMap();
+
+            CreateMap<ResourceScheduleModel, v0_4_0.ResourceScheduleModel>().ReverseMap();
+            CreateMap<v0_3_2.ResourceScheduleModel, v0_4_0.ResourceScheduleModel>().ReverseMap();
+
+            CreateMap<ResourceSettingsModel, v0_4_0.ResourceSettingsModel>().ReverseMap();
+            CreateMap<v0_3_2.ResourceSettingsModel, v0_4_0.ResourceSettingsModel>().ReverseMap();
+
+            CreateMap<ProjectPlanModel, v0_4_0.ProjectPlanModel>().ReverseMap();
 
             #endregion
         }

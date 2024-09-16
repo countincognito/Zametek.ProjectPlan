@@ -88,6 +88,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Activity Tracker.
+        /// </summary>
+        public static string Reporting_WorksheetActivityTracker {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetActivityTracker", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Earned-Value.
         /// </summary>
         public static string Reporting_WorksheetEarnedValue {
@@ -169,20 +178,11 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Tracker (Days Included).
+        ///   Looks up a localized string similar to Resource Tracker.
         /// </summary>
-        public static string Reporting_WorksheetTrackerDaysIncluded {
+        public static string Reporting_WorksheetResourceTracker {
             get {
-                return ResourceManager.GetString("Reporting_WorksheetTrackerDaysIncluded", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Tracker (Percentage Complete).
-        /// </summary>
-        public static string Reporting_WorksheetTrackerPercentageComplete {
-            get {
-                return ResourceManager.GetString("Reporting_WorksheetTrackerPercentageComplete", resourceCulture);
+                return ResourceManager.GetString("Reporting_WorksheetResourceTracker", resourceCulture);
             }
         }
         

@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Windows.Input;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -19,28 +18,12 @@ namespace Zametek.Contract.ProjectPlan
 
         IDateTimeCalculator DateTimeCalculator { get; }
 
-        string StartTime { get; }
+        int TrackerIndex { get; set; }
 
-        string EndTime { get; }
-
-        int? StartColumnIndex { get; set; }
-
-        int ColumnsShown { get; set; }
-
-        int? EndColumnIndex { get; }
-
-        int TrackerCount { get; }
-
-        ReadOnlyObservableCollection<IColumnSelectorViewModel> AvailableStartColumns { get; }
-
-        IColumnSelectorViewModel? StartColumnSelector { get; set; }
-
-        //ReadOnlyObservableCollection<IColumnCountViewModel> AvailableColumnsShown { get; }
-
-        //IColumnCountViewModel? ColumnsShownSelector { get; set; }
-
-        ICommand AddTrackersCommand { get; }
-
-        ICommand RemoveTrackersCommand { get; }
+        string Day00Title { get; }
+        string Day01Title { get; }
+        string Day02Title { get; }
+        string Day03Title { get; }
+        string Day04Title { get; }
     }
 }

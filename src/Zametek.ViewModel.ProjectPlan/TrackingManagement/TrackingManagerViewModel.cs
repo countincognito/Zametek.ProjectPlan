@@ -1,9 +1,5 @@
 ﻿using ReactiveUI;
 using System.Collections.ObjectModel;
-using System.Data;
-using System.Diagnostics;
-using System.Reactive.Linq;
-using System.Windows.Input;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -14,15 +10,9 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
-        private readonly ObservableCollection<IColumnSelectorViewModel> m_AvailableStartColumns;
-        private readonly ObservableCollection<IColumnCountViewModel> m_AvailableColumnsShown;
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IDialogService m_DialogService;
-
-        private readonly IDisposable? m_RaiseTrackerCountSub;
-
-        private const int m_MaxAvailableColumnsShown = 30;
 
         #endregion
 
@@ -40,15 +30,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CoreViewModel = coreViewModel;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
-
-            m_AvailableStartColumns = [];
-            AvailableStartColumns = new ReadOnlyObservableCollection<IColumnSelectorViewModel>(m_AvailableStartColumns);
-
-            m_AvailableColumnsShown = [];
-            AvailableColumnsShown = new ReadOnlyObservableCollection<IColumnCountViewModel>(m_AvailableColumnsShown);
-
-            AddTrackersCommand = ReactiveCommand.CreateFromTask(AddTrackersAsync);
-            RemoveTrackersCommand = ReactiveCommand.CreateFromTask(RemoveTrackersAsync);
 
             m_IsBusy = this
                 .WhenAnyValue(tm => tm.m_CoreViewModel.IsBusy)
@@ -70,23 +51,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(tm => tm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, tm => tm.HasCompilationErrors);
 
-            m_RaiseTrackerCountSub = this
-                .WhenAnyValue(
-                    tm => tm.m_CoreViewModel.GraphCompilation,
-                    tm => tm.m_CoreViewModel.IsProjectUpdated,
-                    tm => tm.m_DateTimeCalculator.Mode,
-                    tm => tm.ShowDates,
-                    tm => tm.ProjectStart)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(result =>
-                {
-                    ResetColumnSelection();
-                });
-
-            m_StartColumnIndex = 0;
-            m_ColumnsShown = 0;
-            ResetColumnSelection();
-
             Id = Resource.ProjectPlan.Titles.Title_TrackingView;
             Title = Resource.ProjectPlan.Titles.Title_TrackingView;
         }
@@ -95,114 +59,22 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private async Task RunAutoCompileAsync() => await Task.Run(() => m_CoreViewModel.RunAutoCompile());
-
-        private void ResetColumnSelection()
+        private string GetDayTitle(int index)
         {
             lock (m_Lock)
             {
-                ResetStartColumnSelection();
-                ResetColumnsShownSelection();
+                int indexOffset = index + TrackerIndex;
+                return $@"Day {indexOffset}"; // TODO replace
             }
         }
 
-        private void ResetStartColumnSelection()
+        private void RefreshDays()
         {
-            lock (m_Lock)
-            {
-                int trackerCount = TrackerCount;
-
-                // Update the start column selection.
-                int? currentStartColumnSelectorIndex = StartColumnSelector?.ColumnIndex;
-
-                m_AvailableStartColumns.Clear();
-
-                string displayNamePrefix = string.Empty;
-
-                if (!ShowDates)
-                {
-                    displayNamePrefix = $@"{Resource.ProjectPlan.Labels.Label_Day} ";
-                }
-
-                IColumnSelectorViewModel? nextStartColumnSelector = null;
-
-                for (int i = 0; i < trackerCount; i++)
-                {
-                    string displayName = ShowDates
-                        ? m_DateTimeCalculator.AddDays(ProjectStart, i).ToString(ProjectPlan.DateTimeCalculator.DateFormat)
-                        : $@"{i}";
-
-                    var startColumnSelector = new ColumnSelectorViewModel($@"{displayNamePrefix}{displayName}", i);
-                    m_AvailableStartColumns.Add(startColumnSelector);
-
-                    if (currentStartColumnSelectorIndex is not null
-                        && currentStartColumnSelectorIndex.GetValueOrDefault() == i)
-                    {
-                        nextStartColumnSelector = startColumnSelector;
-                    }
-                }
-
-                StartColumnSelector = nextStartColumnSelector;
-            }
-        }
-
-        private void ResetColumnsShownSelection()
-        {
-            lock (m_Lock)
-            {
-                int trackerCount = TrackerCount;
-
-                // Update the columns shown selection.
-
-                int availableColumnsShown = trackerCount - StartColumnIndex.GetValueOrDefault();
-
-                if (availableColumnsShown > m_MaxAvailableColumnsShown)
-                {
-                    availableColumnsShown = m_MaxAvailableColumnsShown;
-                }
-
-                int? currentColumnsShownSelectorCount = ColumnsShownSelector?.ColumnCount;
-
-                m_AvailableColumnsShown.Clear();
-
-                IColumnCountViewModel? nextColumnsShownSelector = null;
-
-                for (int i = 0; i <= availableColumnsShown; i++)
-                {
-                    var columnsShownSelector = new ColumnCountViewModel($@"{i}", i);
-                    m_AvailableColumnsShown.Add(columnsShownSelector);
-
-                    if (currentColumnsShownSelectorCount is not null
-                        && currentColumnsShownSelectorCount.GetValueOrDefault() == i)
-                    {
-                        nextColumnsShownSelector = columnsShownSelector;
-                    }
-                }
-
-                // If we delete enough columns that the original value is no longer valid,
-                // then revert to the final item in the list.
-                if (currentColumnsShownSelectorCount is not null
-                    && nextColumnsShownSelector is null)
-                {
-                    nextColumnsShownSelector = m_AvailableColumnsShown.LastOrDefault();
-                }
-
-                ColumnsShownSelector = nextColumnsShownSelector;
-            }
-        }
-
-        private void RaiseTrackerNotifications()
-        {
-            lock (m_Lock)
-            {
-                this.RaisePropertyChanged(nameof(TrackerCount));
-                this.RaisePropertyChanged(nameof(StartColumnIndex));
-                this.RaisePropertyChanged(nameof(ColumnsShown));
-                this.RaisePropertyChanged(nameof(EndColumnIndex));
-                this.RaisePropertyChanged(nameof(AvailableStartColumns));
-                this.RaisePropertyChanged(nameof(StartTime));
-                this.RaisePropertyChanged(nameof(EndTime));
-            }
+            this.RaisePropertyChanged(nameof(Day00Title));
+            this.RaisePropertyChanged(nameof(Day01Title));
+            this.RaisePropertyChanged(nameof(Day02Title));
+            this.RaisePropertyChanged(nameof(Day03Title));
+            this.RaisePropertyChanged(nameof(Day04Title));
         }
 
         #endregion
@@ -229,233 +101,28 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         public IDateTimeCalculator DateTimeCalculator => m_DateTimeCalculator;
 
-        public string StartTime
+
+        // TODO
+        public int TrackerIndex
         {
-            get
-            {
-                int trackerCount = TrackerCount;
-                string output = string.Empty;
-
-                if (trackerCount != 0)
-                {
-                    if (ShowDates)
-                    {
-                        output = m_DateTimeCalculator.AddDays(ProjectStart, 0).ToString(ProjectPlan.DateTimeCalculator.DateFormat);
-                    }
-                    else
-                    {
-                        output = $@"{0}";
-                    }
-                }
-                return output;
-            }
-        }
-
-        public string EndTime
-        {
-            get
-            {
-                int trackerCount = TrackerCount;
-                string output = string.Empty;
-
-                if (trackerCount != 0)
-                {
-                    if (ShowDates)
-                    {
-                        output = m_DateTimeCalculator.AddDays(ProjectStart, trackerCount).ToString(ProjectPlan.DateTimeCalculator.DateFormat);
-                    }
-                    else
-                    {
-                        output = $@"{trackerCount}";
-                    }
-                }
-                return output;
-            }
-        }
-
-        private int? m_StartColumnIndex;
-        public int? StartColumnIndex
-        {
-            get => m_StartColumnIndex;
+            get => m_CoreViewModel.TrackerIndex;
             set
             {
-                lock (m_Lock)
-                {
-                    m_StartColumnIndex = value;
-
-                    int trackerCount = TrackerCount;
-
-                    if (trackerCount == 0 || m_StartColumnIndex is null)
-                    {
-                        m_StartColumnIndex = null;
-                        m_ColumnsShown = 0;
-                    }
-
-                    if (m_StartColumnIndex is not null)
-                    {
-                        if (m_StartColumnIndex < 0)
-                        {
-                            m_StartColumnIndex = 0;
-                        }
-
-                        if (m_StartColumnIndex >= trackerCount)
-                        {
-                            m_StartColumnIndex = trackerCount - 1;
-                            m_ColumnsShown = 1;
-                        }
-
-                        int? endColumnIndex = EndColumnIndex;
-
-                        if (endColumnIndex is not null
-                            && endColumnIndex.GetValueOrDefault() >= trackerCount)
-                        {
-                            m_ColumnsShown = trackerCount - m_StartColumnIndex.GetValueOrDefault();
-                        }
-                    }
-
-                    RaiseTrackerNotifications();
-                }
+                m_CoreViewModel.TrackerIndex = value;
+                this.RaisePropertyChanged();
+                RefreshDays();
             }
         }
 
-        private int m_ColumnsShown;
-        public int ColumnsShown
-        {
-            get => m_ColumnsShown;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_ColumnsShown = value;
+        public string Day00Title => GetDayTitle(0);
 
-                    int trackerCount = TrackerCount;
+        public string Day01Title => GetDayTitle(1);
 
-                    if (trackerCount == 0 || m_StartColumnIndex is null)
-                    {
-                        m_StartColumnIndex = null;
-                        m_ColumnsShown = 0;
-                    }
+        public string Day02Title => GetDayTitle(2);
 
-                    if (m_ColumnsShown < 0)
-                    {
-                        m_ColumnsShown = 0;
-                    }
+        public string Day03Title => GetDayTitle(3);
 
-                    int? endColumnIndex = EndColumnIndex;
-
-                    if (endColumnIndex is not null
-                        && endColumnIndex.GetValueOrDefault() >= trackerCount)
-                    {
-                        m_ColumnsShown = trackerCount - m_StartColumnIndex.GetValueOrDefault();
-                    }
-
-                    RaiseTrackerNotifications();
-                }
-            }
-        }
-
-        public int? EndColumnIndex
-        {
-            get => StartColumnIndex is null ? null : StartColumnIndex.GetValueOrDefault() + ColumnsShown - 1;
-        }
-
-        public int TrackerCount
-        {
-            get
-            {
-                Debug.Assert(Activities.Select(x => x.Trackers.Count).Distinct().Count() <= 1);
-                return Activities.Select(x => x.Trackers.Count).FirstOrDefault();
-            }
-        }
-
-        public ReadOnlyObservableCollection<IColumnSelectorViewModel> AvailableStartColumns { get; }
-
-        private IColumnSelectorViewModel? m_StartColumnSelector;
-        public IColumnSelectorViewModel? StartColumnSelector
-        {
-            get => m_StartColumnSelector;
-            set
-            {
-                lock (m_Lock)
-                {
-                    if (value is null)
-                    {
-                        StartColumnIndex = null;
-                    }
-                    else
-                    {
-                        StartColumnIndex = value.ColumnIndex;
-                    }
-                    this.RaiseAndSetIfChanged(ref m_StartColumnSelector, value);
-                    ResetColumnsShownSelection();
-                }
-            }
-        }
-
-        public ReadOnlyObservableCollection<IColumnCountViewModel> AvailableColumnsShown { get; }
-
-        private IColumnCountViewModel? m_ColumnsShownSelector;
-        public IColumnCountViewModel? ColumnsShownSelector
-        {
-            get => m_ColumnsShownSelector;
-            set
-            {
-                lock (m_Lock)
-                {
-                    if (value is null)
-                    {
-                        ColumnsShown = 0;
-                    }
-                    else
-                    {
-                        ColumnsShown = value.ColumnCount;
-                    }
-                    this.RaiseAndSetIfChanged(ref m_ColumnsShownSelector, value);
-                }
-            }
-        }
-
-        public async Task AddTrackersAsync()
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.AddTrackers();
-                    ResetColumnSelection();
-                }
-                await RunAutoCompileAsync();
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    ex.Message);
-            }
-        }
-
-        public async Task RemoveTrackersAsync()
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.RemoveTrackers();
-                    ResetColumnSelection();
-                }
-                await RunAutoCompileAsync();
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    ex.Message);
-            }
-        }
-
-        public ICommand AddTrackersCommand { get; }
-
-        public ICommand RemoveTrackersCommand { get; }
+        public string Day04Title => GetDayTitle(4);
 
         #endregion
 
@@ -473,7 +140,6 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
-                m_RaiseTrackerCountSub?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

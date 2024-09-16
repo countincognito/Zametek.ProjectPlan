@@ -373,69 +373,125 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            // Progress and Effort.
-            int runningEffort = 0;
+            // TODO
+            //// Progress.
+            //progressPointSeries.Add(new TrackingPointModel());
 
-            progressPointSeries.Add(new TrackingPointModel());
-            effortPointSeries.Add(new TrackingPointModel());
+            //for (int timeIndex = 0; timeIndex < totalTime; timeIndex++)
+            //{
+            //    // Calculate percentage progress at each time index.
+            //    double timeIndexRunningProgress = 0.0;
 
-            for (int timeIndex = 0; timeIndex < totalTime; timeIndex++)
-            {
-                // Calculate percentage progress at each time index.
-                double timeIndexRunningProgress = 0.0;
-                bool includePoints = false;
-                var includedActivities = new List<ActivityModel>();
+            //    foreach (ActivityModel activity in orderedActivities)
+            //    {
+            //        if (timeIndex < activity.Trackers.Count)
+            //        {
+            //            var tracker = activity.Trackers[timeIndex];
 
-                foreach (ActivityModel activity in orderedActivities)
-                {
-                    if (timeIndex < activity.Trackers.Count)
-                    {
-                        var tracker = activity.Trackers[timeIndex];
+            //            //Debug.Assert(tracker.Index == timeIndex);
+            //            Debug.Assert(tracker.Time == timeIndex);
 
-                        Debug.Assert(tracker.Index == timeIndex);
-                        Debug.Assert(tracker.Time == timeIndex);
+            //            timeIndexRunningProgress += activity.Duration * (tracker.PercentageComplete / 100.0);
+            //        }
+            //    }
 
-                        timeIndexRunningProgress += activity.Duration * (tracker.PercentageComplete / 100.0);
+            //    double progressPercentage = totalTime == 0 ? 0.0 : 100.0 * timeIndexRunningProgress / totalTime;
+            //    int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
 
-                        if (tracker.IsIncluded)
-                        {
-                            runningEffort++;
-                            includedActivities.Add(activity);
-                        }
+            //    foreach (ActivityModel activity in orderedActivities.OrderBy(x => x.Id))
+            //    {
+            //        progressPointSeries.Add(new TrackingPointModel
+            //        {
+            //            Time = time,
+            //            ActivityId = activity.Id,
+            //            ActivityName = activity.Name,
+            //            Value = timeIndexRunningProgress,
+            //            ValuePercentage = progressPercentage
+            //        });
+            //    }
+            //}
 
-                        includePoints = true;
-                    }
-                }
 
-                if (includePoints)
-                {
-                    double progressPercentage = totalTime == 0 ? 0.0 : 100.0 * timeIndexRunningProgress / totalTime;
-                    double effortPercentage = totalTime == 0 ? 0.0 : 100.0 * runningEffort / totalTime;
-                    int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
 
-                    foreach (ActivityModel includedActivity in includedActivities.OrderBy(x => x.Id))
-                    {
-                        progressPointSeries.Add(new TrackingPointModel
-                        {
-                            Time = time,
-                            ActivityId = includedActivity.Id,
-                            ActivityName = includedActivity.Name,
-                            Value = timeIndexRunningProgress,
-                            ValuePercentage = progressPercentage
-                        });
 
-                        effortPointSeries.Add(new TrackingPointModel
-                        {
-                            Time = time,
-                            ActivityId = includedActivity.Id,
-                            ActivityName = includedActivity.Name,
-                            Value = runningEffort,
-                            ValuePercentage = effortPercentage
-                        });
-                    }
 
-                }
-            }
+
+
+            //// TODO
+
+            //// Progress and Effort.
+            //int runningEffort = 0;
+
+            //progressPointSeries.Add(new TrackingPointModel());
+            //effortPointSeries.Add(new TrackingPointModel());
+
+            //for (int timeIndex = 0; timeIndex < totalTime; timeIndex++)
+            //{
+            //    // Calculate percentage progress at each time index.
+            //    double timeIndexRunningProgress = 0.0;
+            //    bool includePoints = false;
+            //    var includedActivities = new List<ActivityModel>();
+
+            //    foreach (ActivityModel activity in orderedActivities)
+            //    {
+            //        if (timeIndex < activity.Trackers.Count)
+            //        {
+            //            var tracker = activity.Trackers[timeIndex];
+
+            //            Debug.Assert(tracker.Index == timeIndex);
+            //            Debug.Assert(tracker.Time == timeIndex);
+
+            //            timeIndexRunningProgress += activity.Duration * (tracker.PercentageComplete / 100.0);
+
+            //            if (tracker.IsIncluded)
+            //            {
+            //                runningEffort++;
+            //                includedActivities.Add(activity);
+            //            }
+
+            //            includePoints = true;
+            //        }
+            //    }
+
+            //    if (includePoints)
+            //    {
+            //        double progressPercentage = totalTime == 0 ? 0.0 : 100.0 * timeIndexRunningProgress / totalTime;
+            //        double effortPercentage = totalTime == 0 ? 0.0 : 100.0 * runningEffort / totalTime;
+            //        int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
+
+            //        foreach (ActivityModel includedActivity in includedActivities.OrderBy(x => x.Id))
+            //        {
+            //            progressPointSeries.Add(new TrackingPointModel
+            //            {
+            //                Time = time,
+            //                ActivityId = includedActivity.Id,
+            //                ActivityName = includedActivity.Name,
+            //                Value = timeIndexRunningProgress,
+            //                ValuePercentage = progressPercentage
+            //            });
+
+            //            effortPointSeries.Add(new TrackingPointModel
+            //            {
+            //                Time = time,
+            //                ActivityId = includedActivity.Id,
+            //                ActivityName = includedActivity.Name,
+            //                Value = runningEffort,
+            //                ValuePercentage = effortPercentage
+            //            });
+            //        }
+
+            //    }
+            //}
+
+
+
+
+
+
+
+
+
+
 
             // Projections.
 
@@ -784,6 +840,13 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<int?> m_Duration;
         public int? Duration => m_Duration.Value;
 
+        private int m_TrackerIndex;
+        public int TrackerIndex
+        {
+            get => m_TrackerIndex;
+            set => this.RaiseAndSetIfChanged(ref m_TrackerIndex, value);
+        }
+
         public void ClearSettings()
         {
             try
@@ -1015,25 +1078,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    // Check that the number of trackers across each activity is consistent.
-                    // Make them match the highest number.
-                    int maxCurrentTrackers = Activities
-                        .Select(x => x.Trackers.Count).DefaultIfEmpty().Max();
-
-                    int maxNewTrackers = dependentActivityModels
-                        .Select(x => x.Activity.Trackers.Count).DefaultIfEmpty().Max();
-
-                    int maxTrackers = Math.Max(maxCurrentTrackers, maxNewTrackers);
 
                     foreach (DependentActivityModel dependentActivity in dependentActivityModels)
                     {
-                        int trackerDifference = maxTrackers - dependentActivity.Activity.Trackers.Count;
-
-                        if (trackerDifference > 0)
-                        {
-                            dependentActivity.Activity.Trackers.AddRange(Enumerable.Repeat(new TrackerModel(), trackerDifference));
-                        }
-
                         var activity = new ManagedActivityViewModel(
                             this,
                             m_Mapper.Map<DependentActivityModel, DependentActivity<int, int, int>>(dependentActivity),
@@ -1175,85 +1222,86 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void AddTrackers()
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    IsBusy = true;
-                    foreach (IManagedActivityViewModel activity in Activities)
-                    {
-                        activity.AddTracker();
-                    }
-                    IsProjectUpdated = true;
-                }
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
+        // TODO remove
+        //public void AddTrackers()
+        //{
+        //    try
+        //    {
+        //        lock (m_Lock)
+        //        {
+        //            IsBusy = true;
+        //            foreach (IManagedActivityViewModel activity in Activities)
+        //            {
+        //                activity.AddTracker();
+        //            }
+        //            IsProjectUpdated = true;
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        IsBusy = false;
+        //    }
+        //}
 
-        public void RemoveTrackers()
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    IsBusy = true;
-                    foreach (IManagedActivityViewModel activity in Activities)
-                    {
-                        activity.RemoveTracker();
-                    }
-                    IsProjectUpdated = true;
-                }
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
+        //public void RemoveTrackers()
+        //{
+        //    try
+        //    {
+        //        lock (m_Lock)
+        //        {
+        //            IsBusy = true;
+        //            foreach (IManagedActivityViewModel activity in Activities)
+        //            {
+        //                activity.RemoveTracker();
+        //            }
+        //            IsProjectUpdated = true;
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        IsBusy = false;
+        //    }
+        //}
 
-        public void ReviseTrackers()
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    IsBusy = true;
-                    foreach (IManagedActivityViewModel activity in Activities)
-                    {
-                        int runningPercentageCompleted = 0;
-                        bool activeUpdate = false;
+        //public void ReviseTrackers()
+        //{
+        //    try
+        //    {
+        //        lock (m_Lock)
+        //        {
+        //            IsBusy = true;
+        //            foreach (IManagedActivityViewModel activity in Activities)
+        //            {
+        //                int runningPercentageCompleted = 0;
+        //                bool activeUpdate = false;
 
-                        foreach (ITrackerViewModel tracker in activity.Trackers)
-                        {
-                            if (tracker.IsUpdated)
-                            {
-                                if (tracker.PercentageComplete >= runningPercentageCompleted)
-                                {
-                                    activeUpdate = true;
-                                    runningPercentageCompleted = tracker.PercentageComplete;
-                                }
-                            }
+        //                foreach (IActivityTrackerViewModel tracker in activity.Trackers)
+        //                {
+        //                    if (tracker.IsUpdated)
+        //                    {
+        //                        if (tracker.PercentageComplete >= runningPercentageCompleted)
+        //                        {
+        //                            activeUpdate = true;
+        //                            runningPercentageCompleted = tracker.PercentageComplete;
+        //                        }
+        //                    }
 
-                            if (activeUpdate && tracker.PercentageComplete < runningPercentageCompleted)
-                            {
-                                tracker.PercentageComplete = runningPercentageCompleted;
-                            }
+        //                    if (activeUpdate && tracker.PercentageComplete < runningPercentageCompleted)
+        //                    {
+        //                        tracker.PercentageComplete = runningPercentageCompleted;
+        //                    }
 
-                            tracker.IsUpdated = false;
-                            runningPercentageCompleted = tracker.PercentageComplete;
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
+        //                    tracker.IsUpdated = false;
+        //                    runningPercentageCompleted = tracker.PercentageComplete;
+        //                }
+        //            }
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        IsBusy = false;
+        //    }
+        //}
 
         public void RunCompile()
         {
@@ -1262,7 +1310,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    ReviseTrackers();
+                    //ReviseTrackers(); // TODO
 
                     var availableResources = new List<IResource<int, int>>();
                     if (!ResourceSettings.AreDisabled)
@@ -1404,6 +1452,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!HasCompilationErrors)
                 {
+                    // TODO fix this mapping
                     IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(Activities);
                     trackingSeriesSet = CalculateTrackingSeriesSet(activityModels);
                 }

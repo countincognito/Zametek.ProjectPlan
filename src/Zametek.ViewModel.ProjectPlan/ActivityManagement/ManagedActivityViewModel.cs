@@ -42,7 +42,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IDateTimeCalculator dateTimeCalculator,
             VertexGraphCompiler<int, int, int, IDependentActivity<int, int, int>> vertexGraphCompiler,
             DateTimeOffset projectStart,
-            IEnumerable<TrackerModel>? trackers,
+            IEnumerable<ActivityTrackerModel>? trackers,
             DateTimeOffset? minimumEarliestStartDateTime,
             DateTimeOffset? maximumLatestFinishDateTime)
         {
@@ -83,11 +83,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 SetMaximumLatestFinishTimes(MaximumLatestFinishTime);
             }
 
-            Trackers = [];
-            if (trackers is not null)
-            {
-                AddTrackers(trackers);
-            }
+            Trackers = new ActivityTrackersViewModel(
+                m_CoreViewModel, DependentActivity.Id, trackers ?? []);
 
             // We use Scheduler.CurrentThread here to ensure that wide sweeping changes,
             // such as settings changes, are performed in the same thread from the CoreViewModel.
@@ -370,20 +367,6 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             m_IsCompiled = true;
             this.RaisePropertyChanged(nameof(AllocatedToResourcesString));
-        }
-
-        private void AddTrackers(IEnumerable<TrackerModel> trackerModels)
-        {
-            ArgumentNullException.ThrowIfNull(trackerModels);
-            foreach (TrackerModel trackerModel in trackerModels)
-            {
-                Trackers.Add(new TrackerViewModel(
-                    trackerModel.Index,
-                    trackerModel.Time,
-                    Id,
-                    trackerModel.IsIncluded,
-                    trackerModel.PercentageComplete));
-            }
         }
 
         private void SetError(string propertyName, string error)
@@ -722,43 +705,7 @@ namespace Zametek.ViewModel.ProjectPlan
             set => SetMaximumLatestFinishTimes(value);
         }
 
-        public ObservableCollection<ITrackerViewModel> Trackers { get; }
-
-        public void AddTracker()
-        {
-            int count = Trackers.Count;
-            int percentageComplete = 0;
-            int time = 0;
-
-            if (count > 0)
-            {
-                var tracker = Trackers[count - 1];
-                percentageComplete = tracker.PercentageComplete;
-                time = tracker.Time + 1;
-            }
-
-            AddTrackers(
-            [
-                new TrackerModel
-                {
-                    Index = count,
-                    Time = time,
-                    ActivityId = Id,
-                    PercentageComplete = percentageComplete
-                }
-            ]);
-        }
-
-        public void RemoveTracker()
-        {
-            int count = Trackers.Count;
-
-            if (count > 0)
-            {
-                var tracker = Trackers[count - 1];
-                Trackers.Remove(tracker);
-            }
-        }
+        public IActivityTrackersViewModel Trackers { get; }
 
         public HashSet<int> Dependencies => DependentActivity.Dependencies;
 

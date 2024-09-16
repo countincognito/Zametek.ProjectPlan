@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Contract.ProjectPlan
@@ -33,10 +32,6 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTime? MaximumLatestFinishDateTime { get; set; }
 
-        ObservableCollection<ITrackerViewModel> Trackers { get; }
-
-        void AddTracker();
-
-        void RemoveTracker();
+        IActivityTrackersViewModel Trackers { get; }
     }
 }

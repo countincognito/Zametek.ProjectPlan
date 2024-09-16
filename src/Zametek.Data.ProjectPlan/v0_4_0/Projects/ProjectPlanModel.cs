@@ -1,9 +1,9 @@
-﻿namespace Zametek.Data.ProjectPlan.v0_3_2
+﻿namespace Zametek.Data.ProjectPlan.v0_4_0
 {
     [Serializable]
     public record ProjectPlanModel
     {
-        public string Version { get; } = Versions.v0_3_2;
+        public string Version { get; } = Versions.v0_4_0;
 
         public DateTimeOffset ProjectStart { get; init; }
 
@@ -13,7 +13,7 @@
 
         public ResourceSettingsModel ResourceSettings { get; init; } = new ResourceSettingsModel();
 
-        public WorkStreamSettingsModel WorkStreamSettings { get; init; } = new WorkStreamSettingsModel();
+        public v0_3_2.WorkStreamSettingsModel WorkStreamSettings { get; init; } = new v0_3_2.WorkStreamSettingsModel();
 
         public GraphCompilationModel GraphCompilation { get; init; } = new GraphCompilationModel();
 

@@ -9,10 +9,12 @@
 			 xmlns:oxy="using:OxyPlot.Avalonia"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 			 x:DataType="vm:TrackingManagerViewModel"
+			 xmlns:u="https://irihi.tech/ursa"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.TrackingManagerView">
 	<UserControl.Resources>
-		<local:NullableIntConverter x:Key="nullableIntConverter"/>
+		<local:ManagedActivitySortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
+		<local:ManagedActivitySortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
@@ -26,102 +28,413 @@
 				   Margin="0,0,0,3"
 				   Content="{x:Static resources:Labels.Label_AvailableFrom}"/>
 
-			<TextBlock VerticalAlignment="Center"
-					   HorizontalAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,11"
-					   Text="{Binding Path=StartTime, Mode=OneWay}"/>
 
-			<Label VerticalContentAlignment="Center"
-				   HorizontalContentAlignment="Left"
-				   Height="25"
-				   DockPanel.Dock="Top"
-				   IsTabStop="False"
-				   Margin="0,0,0,3"
-				   Content="{x:Static resources:Labels.Label_To}"/>
+			<!--TODO https://github.com/irihitech/Ursa.Avalonia/blob/main/demo/Ursa.Demo/Pages/PaginationDemo.axaml-->
 
-			<TextBlock VerticalAlignment="Center"
-					   HorizontalAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,11"
-					   Text="{Binding Path=EndTime, Mode=OneWay}"/>
 
-			<Button DockPanel.Dock="Top"
-                    IsTabStop="True"
-                    Margin="0,0,0,7"
-                    Height="25"
-					Width="75"
-                    VerticalAlignment="Center"
-                    VerticalContentAlignment="Center"
-                    Command="{Binding Path=AddTrackersCommand, Mode=OneWay}"
-                    Content="{x:Static resources:Labels.Label_AddColumn}"/>
+			<u:NumericIntUpDown Value="{Binding Path=TrackerIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+								VerticalAlignment="Center"
+								HorizontalAlignment="Stretch"
+								ShowButtonSpinner="False"
+								Height="25"
+								DockPanel.Dock="Top"
+								IsTabStop="False"
+								Margin="0,0,0,11"
+								Padding="0"
+								Minimum="0"/>
 
-			<Button DockPanel.Dock="Top"
-					IsTabStop="True"
-                    Margin="0,0,0,11"
-                    Height="25"
-					Width="75"
-                    VerticalAlignment="Center"
-                    VerticalContentAlignment="Center"
-                    Command="{Binding Path=RemoveTrackersCommand, Mode=OneWay}"
-                    Content="{x:Static resources:Labels.Label_DeleteColumn}"/>
-
-			<Label VerticalContentAlignment="Center"
-				   HorizontalContentAlignment="Left"
-				   DockPanel.Dock="Top"
-				   IsTabStop="True"
-				   Margin="0,0,0,3"
-				   Height="25"
-				   Content="{x:Static resources:Labels.Label_StartDay}"/>
-
-			<ComboBox DockPanel.Dock="Top"
-					  IsTabStop="True"
-					  Margin="0,0,0,11"
-					  Height="25"
-					  Width="75"
-					  BorderBrush="Gray"
-					  BorderThickness="1"
-					  ItemsSource="{Binding Path=AvailableStartColumns, Mode=OneWay}"
-					  SelectedItem="{Binding Path=StartColumnSelector, Mode=TwoWay}">
-				<ComboBox.ItemTemplate>
-					<DataTemplate>
-						<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
-					</DataTemplate>
-				</ComboBox.ItemTemplate>
-			</ComboBox>
-
-			<Label VerticalContentAlignment="Center"
-				   HorizontalContentAlignment="Left"
-				   DockPanel.Dock="Top"
-				   IsTabStop="True"
-				   Margin="0,0,0,3"
-				   Height="25"
-				   Content="{x:Static resources:Labels.Label_DaysShown}"/>
-
-			<ComboBox DockPanel.Dock="Top"
-					  IsTabStop="True"
-					  Margin="0,0,0,11"
-					  Height="25"
-					  Width="75"
-					  BorderBrush="Gray"
-					  BorderThickness="1"
-				      ItemsSource="{Binding Path=AvailableColumnsShown, Mode=OneWay}"
-				      SelectedItem="{Binding Path=ColumnsShownSelector, Mode=TwoWay}">
-				<ComboBox.ItemTemplate>
-					<DataTemplate>
-						<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
-					</DataTemplate>
-				</ComboBox.ItemTemplate>
-			</ComboBox>
 
 			<Grid/>
 		</DockPanel>
 
-		<DataGrid Name="trackingData"
+		<DockPanel>
+
+			<DataGrid Name="activitiesGrid"
+					  FrozenColumnCount="2"
+					  AutoGenerateColumns="False"
+					  RowHeight="30"
+					  ItemsSource="{Binding Path=Activities, Mode=OneWay}"
+					  SelectionMode="Extended"
+					  CanUserResizeColumns="True"
+					  CanUserSortColumns="True"
+					  GridLinesVisibility="All"
+					  CanUserReorderColumns="True">
+				<DataGrid.Columns>
+					<DataGridTemplateColumn CanUserResize="True"
+											CanUserReorder="False"
+											CanUserSort="True"
+											IsReadOnly="True"
+											CustomSortComparer="{StaticResource idSortComparer}"
+											Width="50">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{x:Static resources:Labels.Label_Id}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{Binding Path=Id, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+
+					<DataGridTemplateColumn CanUserResize="True"
+											CanUserReorder="False"
+											CanUserSort="True"
+											CustomSortComparer="{StaticResource nameSortComparer}"
+											Width="120">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{x:Static resources:Labels.Label_ActivityName}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ActivityName}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch"
+									  Classes="editable">
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Background="Transparent"
+											   Text="{Binding Path=Name, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+						<DataGridTemplateColumn.CellEditingTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<TextBox Text="{Binding Path=Name, Mode=TwoWay}"
+											 Foreground="Black"
+											 VerticalAlignment="Center"
+											 Margin="0"
+											 Padding="3"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellEditingTemplate>
+					</DataGridTemplateColumn>
+
+
+
+
+
+
+
+
+
+
+
+					<DataGridTemplateColumn CanUserResize="False"
+											CanUserReorder="False"
+											CanUserSort="False"
+											Width="80">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day00Title, Mode=OneWay}"
+											   ToolTip.Tip="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day00Title, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch"
+									  Classes="editable">
+									<TextBlock VerticalAlignment="Center"
+											   TextAlignment="Left"
+											   Margin="0"
+											   Padding="3"
+											   Background="Transparent"
+											   Text="{Binding Path=Trackers.Day00, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+						<DataGridTemplateColumn.CellEditingTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<u:NumericIntUpDown Value="{Binding Path=Trackers.Day00, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+														VerticalAlignment="Center"
+														ShowButtonSpinner="False"
+														Foreground="Black"
+														Background="White"
+														Margin="0"
+														Padding="0"
+														Minimum="0"
+														Maximum="100"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellEditingTemplate>
+					</DataGridTemplateColumn>
+
+
+
+
+
+
+
+
+
+
+
+
+					<DataGridTemplateColumn CanUserResize="False"
+											CanUserReorder="False"
+											CanUserSort="False"
+											Width="80">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day01Title, Mode=OneWay}"
+											   ToolTip.Tip="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day01Title, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch"
+									  Classes="editable">
+									<TextBlock VerticalAlignment="Center"
+											   TextAlignment="Left"
+											   Margin="0"
+											   Padding="3"
+											   Background="Transparent"
+											   Text="{Binding Path=Trackers.Day01, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+						<DataGridTemplateColumn.CellEditingTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<u:NumericIntUpDown Value="{Binding Path=Trackers.Day01, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+														VerticalAlignment="Center"
+														ShowButtonSpinner="False"
+														Foreground="Black"
+														Background="White"
+														Margin="0"
+														Padding="0"
+														Minimum="0"
+														Maximum="100"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellEditingTemplate>
+					</DataGridTemplateColumn>
+
+
+
+
+
+
+
+
+					<DataGridTemplateColumn CanUserResize="False"
+											CanUserReorder="False"
+											CanUserSort="False"
+											Width="80">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day02Title, Mode=OneWay}"
+											   ToolTip.Tip="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day02Title, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch"
+									  Classes="editable">
+									<TextBlock VerticalAlignment="Center"
+											   TextAlignment="Left"
+											   Margin="0"
+											   Padding="3"
+											   Background="Transparent"
+											   Text="{Binding Path=Trackers.Day02, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+						<DataGridTemplateColumn.CellEditingTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<u:NumericIntUpDown Value="{Binding Path=Trackers.Day02, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+														VerticalAlignment="Center"
+														ShowButtonSpinner="False"
+														Foreground="Black"
+														Background="White"
+														Margin="0"
+														Padding="0"
+														Minimum="0"
+														Maximum="100"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellEditingTemplate>
+					</DataGridTemplateColumn>
+
+
+
+
+
+
+
+
+
+
+
+
+					<DataGridTemplateColumn CanUserResize="False"
+											CanUserReorder="False"
+											CanUserSort="False"
+											Width="80">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day03Title, Mode=OneWay}"
+											   ToolTip.Tip="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day03Title, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch"
+									  Classes="editable">
+									<TextBlock VerticalAlignment="Center"
+											   TextAlignment="Left"
+											   Margin="0"
+											   Padding="3"
+											   Background="Transparent"
+											   Text="{Binding Path=Trackers.Day03, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+						<DataGridTemplateColumn.CellEditingTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<u:NumericIntUpDown Value="{Binding Path=Trackers.Day03, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+														VerticalAlignment="Center"
+														ShowButtonSpinner="False"
+														Foreground="Black"
+														Background="White"
+														Margin="0"
+														Padding="0"
+														Minimum="0"
+														Maximum="100"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellEditingTemplate>
+					</DataGridTemplateColumn>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+					<DataGridTemplateColumn CanUserResize="False"
+											CanUserReorder="False"
+											CanUserSort="False"
+											Width="80">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day04Title, Mode=OneWay}"
+											   ToolTip.Tip="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day04Title, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch"
+									  Classes="editable">
+									<TextBlock VerticalAlignment="Center"
+											   TextAlignment="Left"
+											   Margin="0"
+											   Padding="3"
+											   Background="Transparent"
+											   Text="{Binding Path=Trackers.Day04, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+						<DataGridTemplateColumn.CellEditingTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<u:NumericIntUpDown Value="{Binding Path=Trackers.Day04, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+														VerticalAlignment="Center"
+														ShowButtonSpinner="False"
+														Foreground="Black"
+														Background="White"
+														Margin="0"
+														Padding="0"
+														Minimum="0"
+														Maximum="100"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellEditingTemplate>
+					</DataGridTemplateColumn>
+
+
+
+
+				</DataGrid.Columns>
+
+
+
+
+			</DataGrid>
+		</DockPanel>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		<!--<DataGrid Name="trackingData"
 				  FrozenColumnCount="1"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
@@ -182,6 +495,6 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 			</DataGrid.Columns>
-		</DataGrid>
+		</DataGrid>-->
 	</DockPanel>
 </UserControl>

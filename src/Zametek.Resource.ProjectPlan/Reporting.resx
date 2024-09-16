@@ -153,13 +153,13 @@
   <data name="Reporting_WorksheetResources" xml:space="preserve">
     <value>Resources</value>
   </data>
-  <data name="Reporting_WorksheetTrackerDaysIncluded" xml:space="preserve">
-    <value>Tracker (Days Included)</value>
-  </data>
-  <data name="Reporting_WorksheetTrackerPercentageComplete" xml:space="preserve">
-    <value>Tracker (Percentage Complete)</value>
+  <data name="Reporting_WorksheetActivityTracker" xml:space="preserve">
+    <value>Activity Tracker</value>
   </data>
   <data name="Reporting_WorksheetWorkStreams" xml:space="preserve">
     <value>Work Streams</value>
+  </data>
+  <data name="Reporting_WorksheetResourceTracker" xml:space="preserve">
+    <value>Resource Tracker</value>
   </data>
 </root>

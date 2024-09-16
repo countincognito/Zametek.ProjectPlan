@@ -312,7 +312,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IList<ActivitySeverityModel> activitySeverities = ImportWorksheetActivitySeverities(workbook);
             IDictionary<int, WorkStreamModel> workStreams = ImportWorksheetWorkStreams(workbook);
 
-            dependentActivities = ImportWorksheetTrackers(workbook, dependentActivities);
+            dependentActivities = ImportWorksheetActivityTrackers(workbook, dependentActivities);
 
             return new ProjectImportModel
             {
@@ -891,89 +891,59 @@ namespace Zametek.ViewModel.ProjectPlan
             return workStreams;
         }
 
-        private static IDictionary<int, DependentActivityModel> ImportWorksheetTrackers(
+        private static IDictionary<int, DependentActivityModel> ImportWorksheetActivityTrackers(
             XSSFWorkbook? workbook,
             IDictionary<int, DependentActivityModel> dependentActivities)
         {
-            ISheet? percentageCompleteSheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetTrackerPercentageComplete);
-            ISheet? daysIncludedSheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetTrackerDaysIncluded);
-            if (percentageCompleteSheet is not null
-                && daysIncludedSheet is not null)
-            {
-                DataTable percentageCompleteTable = SheetToDataTable(percentageCompleteSheet);
-                int percentageCompleteColumnCount = percentageCompleteTable.Columns.Count;
-                int percentageCompleteRowCount = percentageCompleteTable.Rows.Count;
+            throw new NotImplementedException();
+            // TODO
+            //ISheet? percentageCompleteSheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivityTracker);
+            //if (percentageCompleteSheet is not null)
+            //{
+            //    DataTable percentageCompleteTable = SheetToDataTable(percentageCompleteSheet);
+            //    int percentageCompleteColumnCount = percentageCompleteTable.Columns.Count;
+            //    int percentageCompleteRowCount = percentageCompleteTable.Rows.Count;
 
-                DataTable daysIncludedTable = SheetToDataTable(daysIncludedSheet);
-                int daysIncludedColumnCount = daysIncludedTable.Columns.Count;
-                int daysIncludedRowCount = daysIncludedTable.Rows.Count;
+            //    for (int rowIndex = 0; rowIndex < percentageCompleteRowCount; rowIndex++)
+            //    {
+            //        DataRow percentageCompleteRow = percentageCompleteTable.Rows[rowIndex];
 
-                if (percentageCompleteColumnCount == daysIncludedColumnCount
-                    && percentageCompleteRowCount == daysIncludedRowCount)
-                {
-                    for (int rowIndex = 0; rowIndex < percentageCompleteRowCount; rowIndex++)
-                    {
-                        DataRow percentageCompleteRow = percentageCompleteTable.Rows[rowIndex];
-                        DataRow daysIncludedRow = daysIncludedTable.Rows[rowIndex];
+            //        // Check IDs.
+            //        int columnIndex = 0;
+            //        int? percentageCompleteId = null;
+            //        {
+            //            if (int.TryParse(percentageCompleteRow[columnIndex]?.ToString(), out int output))
+            //            {
+            //                percentageCompleteId = output;
+            //            }
+            //        }
 
-                        // Check IDs.
-                        int columnIndex = 0;
-                        int? percentageCompleteId = null;
-                        int? daysIncludedId = null;
+            //        if (percentageCompleteId.HasValue
+            //            && dependentActivities.TryGetValue(percentageCompleteId.GetValueOrDefault(), out DependentActivityModel? dependentActivity))
+            //        {
+            //            dependentActivity.Activity.Trackers.Clear();
 
-                        {
-                            if (int.TryParse(percentageCompleteRow[columnIndex]?.ToString(), out int output))
-                            {
-                                percentageCompleteId = output;
-                            }
-                        }
-                        {
-                            if (int.TryParse(daysIncludedRow[columnIndex]?.ToString(), out int output))
-                            {
-                                daysIncludedId = output;
-                            }
-                        }
+            //            for (columnIndex = 1; columnIndex < percentageCompleteColumnCount; columnIndex++)
+            //            {
+            //                int percentageComplete = 0;
 
-                        if (percentageCompleteId.HasValue
-                            && daysIncludedId.HasValue
-                            && percentageCompleteId == daysIncludedId
-                            && dependentActivities.TryGetValue(percentageCompleteId.GetValueOrDefault(), out DependentActivityModel? dependentActivity))
-                        {
-                            dependentActivity.Activity.Trackers.Clear();
+            //                if (int.TryParse(percentageCompleteRow[columnIndex]?.ToString(), out int output))
+            //                {
+            //                    percentageComplete = output;
+            //                }
 
-                            for (columnIndex = 1; columnIndex < percentageCompleteColumnCount; columnIndex++)
-                            {
-                                int percentageComplete = 0;
-                                bool isIncluded = false;
-
-                                {
-                                    if (int.TryParse(percentageCompleteRow[columnIndex]?.ToString(), out int output))
-                                    {
-                                        percentageComplete = output;
-                                    }
-                                }
-                                {
-                                    if (bool.TryParse(daysIncludedRow[columnIndex]?.ToString(), out bool output))
-                                    {
-                                        isIncluded = output;
-                                    }
-                                }
-
-                                int trackerIndex = columnIndex - 1;
-                                dependentActivity.Activity.Trackers.Add(new TrackerModel
-                                {
-                                    Index = trackerIndex,
-                                    Time = trackerIndex,
-                                    ActivityId = dependentActivity.Activity.Id,
-                                    PercentageComplete = percentageComplete,
-                                    IsIncluded = isIncluded
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-            return dependentActivities;
+            //                int trackerIndex = columnIndex - 1;
+            //                dependentActivity.Activity.Trackers.Add(new ActivityTrackerModel
+            //                {
+            //                    Time = trackerIndex,
+            //                    ActivityId = dependentActivity.Activity.Id,
+            //                    PercentageComplete = percentageComplete
+            //                });
+            //            }
+            //        }
+            //    }
+            //}
+            //return dependentActivities;
         }
 
         #endregion

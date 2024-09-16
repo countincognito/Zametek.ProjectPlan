@@ -53,6 +53,8 @@ namespace Zametek.Contract.ProjectPlan
 
         int? Duration { get; }
 
+        int TrackerIndex { get; set; }
+
         void ClearSettings();
 
         void ResetProject();
@@ -73,9 +75,10 @@ namespace Zametek.Contract.ProjectPlan
 
         void ClearManagedActivities();
 
-        void AddTrackers();
+        // TODO remove
+        //void AddTrackers();
 
-        void RemoveTrackers();
+        //void RemoveTrackers();
 
         void RunCompile();
 

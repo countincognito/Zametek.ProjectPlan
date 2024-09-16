@@ -17,7 +17,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ConstructUsing(src => new Event<int>(src.Id, src.EarliestFinishTime, src.LatestFinishTime))
                 .ReverseMap();
 
-            CreateMap<TrackerViewModel, TrackerModel>();
+            // TODO
+            //CreateMap<ActivityTrackerViewModel, ActivityTrackerModel>();
 
             CreateMap<ActivityModel, Activity<int, int, int>>()
                 .ConstructUsing(src => new Activity<int, int, int>(src.Id, src.Duration))
@@ -195,6 +196,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     foreach (IResourceSchedule<int, int, int> resourceSchedule in src.ResourceSchedules)
                     {
+                        // TODO
                         //ResourceScheduleBuilder<int, int, int> resourceScheduleBuilder =
                         //    resourceScheduleModel.Resource is null ? new ResourceScheduleBuilder<int, int, int>() : new ResourceScheduleBuilder<int, int, int>(ctx.Mapper.Map<ResourceModel, Resource<int, int>>(resourceScheduleModel.Resource));
 
