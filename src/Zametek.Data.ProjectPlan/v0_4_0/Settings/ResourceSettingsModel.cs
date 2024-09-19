@@ -3,7 +3,7 @@
     [Serializable]
     public record ResourceSettingsModel
     {
-        public List<v0_3_2.ResourceModel> Resources { get; init; } = [];
+        public List<ResourceModel> Resources { get; init; } = [];
 
         public double DefaultUnitCost { get; init; }
 
