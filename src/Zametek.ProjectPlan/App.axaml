@@ -34,8 +34,8 @@
 		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml"/>-->
 
 		<semi:SemiTheme Locale="en-US" />
-		<StyleInclude Source="avares://Semi.Avalonia/Themes/Index.axaml" />
-		<u-semi:SemiTheme  Locale="en-US"/>
+		<!--<StyleInclude Source="avares://Semi.Avalonia/Themes/Index.axaml" />-->
+		<u-semi:SemiTheme Locale="en-US"/>
 
 		<!--<SimpleTheme />
 		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
@@ -56,7 +56,7 @@
 			<Setter Property="HorizontalAlignment" Value="Stretch"/>
 			<Setter Property="HorizontalContentAlignment" Value="Left"/>
 		</Style>
-		
+
 		<Style Selector="idc|RootDockControl">
 			<Setter Property="Margin" Value="0,0,0,7"/>
 		</Style>
@@ -72,7 +72,7 @@
 		<sys:Double x:Key="DefaultFontSize">12</sys:Double>
 
 		<sys:Double x:Key="TextBlockFontSize">12</sys:Double>
-		
+
 		<SolidColorBrush x:Key="DataGridColumnHeaderForeground" Color="Black" />
 
 		<sys:Double x:Key="ListBoxItemCheckFontSize">12</sys:Double>
@@ -81,5 +81,8 @@
 		<FontWeight x:Key="ButtonDefaultFontWeight">550</FontWeight>
 		<SolidColorBrush x:Key="ButtonDefaultBackground" Opacity="0.25" Color="Gray" />
 		<Thickness x:Key="ButtonDefaultPadding">6 6</Thickness>
+
+		<!--This needs to be here as empty strings don't work in the English theme-->
+		<x:String x:Key="STRING_PAGINATION_PAGE">.</x:String>
 	</Application.Resources>
 </Application>

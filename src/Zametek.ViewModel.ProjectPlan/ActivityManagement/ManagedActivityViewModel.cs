@@ -759,6 +759,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_ProjectStartSub?.Dispose();
+            m_ResourceSettingsSub?.Dispose();
+            m_WorkStreamSettingsSub?.Dispose();
+            m_DateTimeCalculatorSub?.Dispose();
+            m_CompilationSub?.Dispose();
+        }
+
+        #endregion
+
         #region IDisposable Members
 
         private bool m_Disposed = false;
@@ -773,12 +786,9 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
-                m_ProjectStartSub?.Dispose();
-                m_ResourceSettingsSub?.Dispose();
-                m_WorkStreamSettingsSub?.Dispose();
-                m_DateTimeCalculatorSub?.Dispose();
-                m_CompilationSub?.Dispose();
+                KillSubscriptions();
                 ResourceSelector.Dispose();
+                WorkStreamSelector.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

@@ -15,50 +15,43 @@
 	<UserControl.Resources>
 		<local:ManagedActivitySortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
 		<local:ManagedActivitySortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
+		<DataGridLength x:Key="TrackerColumnWidth">80</DataGridLength>
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<DockPanel DockPanel.Dock="Right"
-                   Margin="11,0,0,0">
-			<Label VerticalContentAlignment="Center"
-				   HorizontalContentAlignment="Left"
-				   Height="25"
-				   DockPanel.Dock="Top"
-				   IsTabStop="False"
-				   Margin="0,0,0,3"
-				   Content="{x:Static resources:Labels.Label_AvailableFrom}"/>
-
-
-			<!--TODO https://github.com/irihitech/Ursa.Avalonia/blob/main/demo/Ursa.Demo/Pages/PaginationDemo.axaml-->
-
-
-			<u:NumericIntUpDown Value="{Binding Path=TrackerIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-								VerticalAlignment="Center"
-								HorizontalAlignment="Stretch"
-								ShowButtonSpinner="False"
-								Height="25"
-								DockPanel.Dock="Top"
-								IsTabStop="False"
-								Margin="0,0,0,11"
-								Padding="0"
-								Minimum="0"/>
-
-
-			<Grid/>
+		<DockPanel DockPanel.Dock="Bottom">
+			<u:Pagination PageSize="1" TotalCount="10000"
+						  ShowQuickJump="True"
+						  CurrentPage="{Binding Path=PageIndex, Mode=TwoWay}" />
 		</DockPanel>
 
 		<DockPanel>
-
-			<DataGrid Name="activitiesGrid"
+			<DataGrid Name="ActivitiesGrid"
 					  FrozenColumnCount="2"
 					  AutoGenerateColumns="False"
 					  RowHeight="30"
 					  ItemsSource="{Binding Path=Activities, Mode=OneWay}"
+					  HorizontalScrollBarVisibility="Disabled"
 					  SelectionMode="Extended"
 					  CanUserResizeColumns="True"
 					  CanUserSortColumns="True"
 					  GridLinesVisibility="All"
 					  CanUserReorderColumns="True">
+				<DataGrid.Styles>
+					<Style Selector="DataGridRow:not(:pointerover) Grid.editable">
+						<Setter Property="Background" Value="LightYellow"/>
+					</Style>
+					<Style Selector="DataGridRow:not(:selected) Grid.editable">
+						<Setter Property="Background" Value="LightYellow"/>
+					</Style>
+					<Style Selector="DataGridRow:pointerover Grid.editable">
+						<Setter Property="Background" Value="Khaki"/>
+					</Style>
+					<Style Selector="DataGridRow:selected Grid.editable">
+						<Setter Property="Background" Value="DarkKhaki"/>
+					</Style>
+				</DataGrid.Styles>
+				
 				<DataGrid.Columns>
 					<DataGridTemplateColumn CanUserResize="True"
 											CanUserReorder="False"
@@ -107,8 +100,7 @@
 						</DataGridTemplateColumn.HeaderTemplate>
 						<DataGridTemplateColumn.CellTemplate>
 							<DataTemplate>
-								<Grid VerticalAlignment="Stretch"
-									  Classes="editable">
+								<Grid VerticalAlignment="Stretch">
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
@@ -117,384 +109,11 @@
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.CellTemplate>
-						<DataGridTemplateColumn.CellEditingTemplate>
-							<DataTemplate>
-								<Grid VerticalAlignment="Stretch">
-									<TextBox Text="{Binding Path=Name, Mode=TwoWay}"
-											 Foreground="Black"
-											 VerticalAlignment="Center"
-											 Margin="0"
-											 Padding="3"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellEditingTemplate>
 					</DataGridTemplateColumn>
-
-
-
-
-
-
-
-
-
-
-
-					<DataGridTemplateColumn CanUserResize="False"
-											CanUserReorder="False"
-											CanUserSort="False"
-											Width="80">
-						<DataGridTemplateColumn.HeaderTemplate>
-							<DataTemplate>
-								<Grid>
-									<TextBlock VerticalAlignment="Center"
-											   Margin="0"
-											   Padding="3"
-											   Text="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day00Title, Mode=OneWay}"
-											   ToolTip.Tip="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day00Title, Mode=OneWay}"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.HeaderTemplate>
-						<DataGridTemplateColumn.CellTemplate>
-							<DataTemplate>
-								<Grid VerticalAlignment="Stretch"
-									  Classes="editable">
-									<TextBlock VerticalAlignment="Center"
-											   TextAlignment="Left"
-											   Margin="0"
-											   Padding="3"
-											   Background="Transparent"
-											   Text="{Binding Path=Trackers.Day00, Mode=OneWay}"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellTemplate>
-						<DataGridTemplateColumn.CellEditingTemplate>
-							<DataTemplate>
-								<Grid VerticalAlignment="Stretch">
-									<u:NumericIntUpDown Value="{Binding Path=Trackers.Day00, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-														VerticalAlignment="Center"
-														ShowButtonSpinner="False"
-														Foreground="Black"
-														Background="White"
-														Margin="0"
-														Padding="0"
-														Minimum="0"
-														Maximum="100"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellEditingTemplate>
-					</DataGridTemplateColumn>
-
-
-
-
-
-
-
-
-
-
-
-
-					<DataGridTemplateColumn CanUserResize="False"
-											CanUserReorder="False"
-											CanUserSort="False"
-											Width="80">
-						<DataGridTemplateColumn.HeaderTemplate>
-							<DataTemplate>
-								<Grid>
-									<TextBlock VerticalAlignment="Center"
-											   Margin="0"
-											   Padding="3"
-											   Text="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day01Title, Mode=OneWay}"
-											   ToolTip.Tip="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day01Title, Mode=OneWay}"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.HeaderTemplate>
-						<DataGridTemplateColumn.CellTemplate>
-							<DataTemplate>
-								<Grid VerticalAlignment="Stretch"
-									  Classes="editable">
-									<TextBlock VerticalAlignment="Center"
-											   TextAlignment="Left"
-											   Margin="0"
-											   Padding="3"
-											   Background="Transparent"
-											   Text="{Binding Path=Trackers.Day01, Mode=OneWay}"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellTemplate>
-						<DataGridTemplateColumn.CellEditingTemplate>
-							<DataTemplate>
-								<Grid VerticalAlignment="Stretch">
-									<u:NumericIntUpDown Value="{Binding Path=Trackers.Day01, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-														VerticalAlignment="Center"
-														ShowButtonSpinner="False"
-														Foreground="Black"
-														Background="White"
-														Margin="0"
-														Padding="0"
-														Minimum="0"
-														Maximum="100"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellEditingTemplate>
-					</DataGridTemplateColumn>
-
-
-
-
-
-
-
-
-					<DataGridTemplateColumn CanUserResize="False"
-											CanUserReorder="False"
-											CanUserSort="False"
-											Width="80">
-						<DataGridTemplateColumn.HeaderTemplate>
-							<DataTemplate>
-								<Grid>
-									<TextBlock VerticalAlignment="Center"
-											   Margin="0"
-											   Padding="3"
-											   Text="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day02Title, Mode=OneWay}"
-											   ToolTip.Tip="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day02Title, Mode=OneWay}"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.HeaderTemplate>
-						<DataGridTemplateColumn.CellTemplate>
-							<DataTemplate>
-								<Grid VerticalAlignment="Stretch"
-									  Classes="editable">
-									<TextBlock VerticalAlignment="Center"
-											   TextAlignment="Left"
-											   Margin="0"
-											   Padding="3"
-											   Background="Transparent"
-											   Text="{Binding Path=Trackers.Day02, Mode=OneWay}"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellTemplate>
-						<DataGridTemplateColumn.CellEditingTemplate>
-							<DataTemplate>
-								<Grid VerticalAlignment="Stretch">
-									<u:NumericIntUpDown Value="{Binding Path=Trackers.Day02, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-														VerticalAlignment="Center"
-														ShowButtonSpinner="False"
-														Foreground="Black"
-														Background="White"
-														Margin="0"
-														Padding="0"
-														Minimum="0"
-														Maximum="100"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellEditingTemplate>
-					</DataGridTemplateColumn>
-
-
-
-
-
-
-
-
-
-
-
-
-					<DataGridTemplateColumn CanUserResize="False"
-											CanUserReorder="False"
-											CanUserSort="False"
-											Width="80">
-						<DataGridTemplateColumn.HeaderTemplate>
-							<DataTemplate>
-								<Grid>
-									<TextBlock VerticalAlignment="Center"
-											   Margin="0"
-											   Padding="3"
-											   Text="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day03Title, Mode=OneWay}"
-											   ToolTip.Tip="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day03Title, Mode=OneWay}"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.HeaderTemplate>
-						<DataGridTemplateColumn.CellTemplate>
-							<DataTemplate>
-								<Grid VerticalAlignment="Stretch"
-									  Classes="editable">
-									<TextBlock VerticalAlignment="Center"
-											   TextAlignment="Left"
-											   Margin="0"
-											   Padding="3"
-											   Background="Transparent"
-											   Text="{Binding Path=Trackers.Day03, Mode=OneWay}"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellTemplate>
-						<DataGridTemplateColumn.CellEditingTemplate>
-							<DataTemplate>
-								<Grid VerticalAlignment="Stretch">
-									<u:NumericIntUpDown Value="{Binding Path=Trackers.Day03, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-														VerticalAlignment="Center"
-														ShowButtonSpinner="False"
-														Foreground="Black"
-														Background="White"
-														Margin="0"
-														Padding="0"
-														Minimum="0"
-														Maximum="100"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellEditingTemplate>
-					</DataGridTemplateColumn>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-					<DataGridTemplateColumn CanUserResize="False"
-											CanUserReorder="False"
-											CanUserSort="False"
-											Width="80">
-						<DataGridTemplateColumn.HeaderTemplate>
-							<DataTemplate>
-								<Grid>
-									<TextBlock VerticalAlignment="Center"
-											   Margin="0"
-											   Padding="3"
-											   Text="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day04Title, Mode=OneWay}"
-											   ToolTip.Tip="{Binding Path=#activitiesGrid.((vm:TrackingManagerViewModel)DataContext).Day04Title, Mode=OneWay}"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.HeaderTemplate>
-						<DataGridTemplateColumn.CellTemplate>
-							<DataTemplate>
-								<Grid VerticalAlignment="Stretch"
-									  Classes="editable">
-									<TextBlock VerticalAlignment="Center"
-											   TextAlignment="Left"
-											   Margin="0"
-											   Padding="3"
-											   Background="Transparent"
-											   Text="{Binding Path=Trackers.Day04, Mode=OneWay}"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellTemplate>
-						<DataGridTemplateColumn.CellEditingTemplate>
-							<DataTemplate>
-								<Grid VerticalAlignment="Stretch">
-									<u:NumericIntUpDown Value="{Binding Path=Trackers.Day04, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-														VerticalAlignment="Center"
-														ShowButtonSpinner="False"
-														Foreground="Black"
-														Background="White"
-														Margin="0"
-														Padding="0"
-														Minimum="0"
-														Maximum="100"/>
-								</Grid>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellEditingTemplate>
-					</DataGridTemplateColumn>
-
-
-
-
+					
+					<!--Add remaining columns in code behind.-->
 				</DataGrid.Columns>
-
-
-
-
 			</DataGrid>
 		</DockPanel>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		<!--<DataGrid Name="trackingData"
-				  FrozenColumnCount="1"
-				  AutoGenerateColumns="False"
-				  RowHeight="30"
-				  SelectionMode="Single"
-				  CanUserResizeColumns="False"
-				  CanUserSortColumns="False"
-				  GridLinesVisibility="All"
-				  CanUserReorderColumns="False"
-				  local:DataGridColumnSyncher.ItemsSource="{Binding Path=Activities, Mode=OneWay}"
-				  local:DataGridColumnSyncher.StartColumnIndex="{Binding Path=StartColumnIndex, Mode=OneWay}"
-				  local:DataGridColumnSyncher.EndColumnIndex="{Binding Path=EndColumnIndex, Mode=OneWay}"
-				  local:DataGridColumnSyncher.ColumnType="{x:Type local:DataGridTrackingColumn}"
-				  local:DataGridColumnSyncher.DateTimeCalculator="{Binding Path=DateTimeCalculator, Mode=OneTime}"
-				  local:DataGridColumnSyncher.ShowDates="{Binding Path=ShowDates, Mode=OneWay}"
-				  local:DataGridColumnSyncher.ProjectStart="{Binding Path=ProjectStart, Mode=OneWay}">
-			<DataGrid.Styles>
-				<Style Selector="DataGridRow:not(:pointerover) DockPanel.editable">
-					<Setter Property="Background" Value="LightYellow"/>
-				</Style>
-				<Style Selector="DataGridRow:not(:selected) DockPanel.editable">
-					<Setter Property="Background" Value="LightYellow"/>
-				</Style>
-				<Style Selector="DataGridRow:pointerover DockPanel.editable">
-					<Setter Property="Background" Value="Khaki"/>
-				</Style>
-				<Style Selector="DataGridRow:selected DockPanel.editable">
-					<Setter Property="Background" Value="DarkKhaki"/>
-				</Style>
-			</DataGrid.Styles>
-
-			<DataGrid.Columns>
-				<DataGridTemplateColumn CanUserResize="False"
-										CanUserReorder="False"
-										CanUserSort="False"
-										IsReadOnly="True"
-										Width="25">
-					<DataGridTemplateColumn.HeaderTemplate>
-						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_Id}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
-							</Grid>
-						</DataTemplate>
-					</DataGridTemplateColumn.HeaderTemplate>
-					<DataGridTemplateColumn.CellTemplate>
-						<DataTemplate>
-							<Grid VerticalAlignment="Stretch">
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Path=Id, Mode=OneWay}"
-										   ToolTip.Tip="{Binding Path=Name, Mode=OneWay}"/>
-							</Grid>
-						</DataTemplate>
-					</DataGridTemplateColumn.CellTemplate>
-				</DataGridTemplateColumn>
-			</DataGrid.Columns>
-		</DataGrid>-->
 	</DockPanel>
 </UserControl>

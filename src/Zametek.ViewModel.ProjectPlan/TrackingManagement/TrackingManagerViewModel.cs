@@ -1,5 +1,9 @@
-﻿using ReactiveUI;
+﻿using Avalonia.Controls;
+using ReactiveUI;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Reactive.Linq;
+using System.Windows.Input;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -13,6 +17,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IDialogService m_DialogService;
+
+        private readonly IDisposable? m_ColumnTitleSub;
 
         #endregion
 
@@ -51,6 +57,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(tm => tm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, tm => tm.HasCompilationErrors);
 
+            m_ColumnTitleSub = this
+                .WhenAnyValue(
+                    tm => tm.m_DateTimeCalculator.Mode,
+                    tm => tm.m_CoreViewModel.ShowDates,
+                    tm => tm.m_CoreViewModel.ProjectStart)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => RefreshDays());
+
             Id = Resource.ProjectPlan.Titles.Title_TrackingView;
             Title = Resource.ProjectPlan.Titles.Title_TrackingView;
         }
@@ -63,8 +77,17 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
+                if (index < 0)
+                {
+                    return string.Empty;
+                }
                 int indexOffset = index + TrackerIndex;
-                return $@"Day {indexOffset}"; // TODO replace
+
+                if (ShowDates)
+                {
+                    return m_DateTimeCalculator.AddDays(ProjectStart, indexOffset).ToString("d");
+                }
+                return $@"{indexOffset}";
             }
         }
 
@@ -75,6 +98,21 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(Day02Title));
             this.RaisePropertyChanged(nameof(Day03Title));
             this.RaisePropertyChanged(nameof(Day04Title));
+            this.RaisePropertyChanged(nameof(Day05Title));
+            this.RaisePropertyChanged(nameof(Day06Title));
+            this.RaisePropertyChanged(nameof(Day07Title));
+            this.RaisePropertyChanged(nameof(Day08Title));
+            this.RaisePropertyChanged(nameof(Day09Title));
+            this.RaisePropertyChanged(nameof(Day10Title));
+            this.RaisePropertyChanged(nameof(Day11Title));
+            this.RaisePropertyChanged(nameof(Day12Title));
+            this.RaisePropertyChanged(nameof(Day13Title));
+            this.RaisePropertyChanged(nameof(Day14Title));
+            this.RaisePropertyChanged(nameof(Day15Title));
+            this.RaisePropertyChanged(nameof(Day16Title));
+            this.RaisePropertyChanged(nameof(Day17Title));
+            this.RaisePropertyChanged(nameof(Day18Title));
+            this.RaisePropertyChanged(nameof(Day19Title));
         }
 
         #endregion
@@ -101,28 +139,67 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         public IDateTimeCalculator DateTimeCalculator => m_DateTimeCalculator;
 
-
-        // TODO
         public int TrackerIndex
         {
             get => m_CoreViewModel.TrackerIndex;
             set
             {
-                m_CoreViewModel.TrackerIndex = value;
+                if (m_CoreViewModel.TrackerIndex != value)
+                {
+                    m_CoreViewModel.TrackerIndex = value;
+                    this.RaisePropertyChanged();
+                    RefreshDays();
+                }
+            }
+        }
+
+        public int? PageIndex
+        {
+            get => TrackerIndex + 1;
+            set
+            {
+                int input = value.GetValueOrDefault();
+                if (input > 0)
+                {
+                    TrackerIndex = input - 1;
+                }
+                else
+                {
+                    TrackerIndex = 0;
+                }
                 this.RaisePropertyChanged();
-                RefreshDays();
             }
         }
 
         public string Day00Title => GetDayTitle(0);
-
         public string Day01Title => GetDayTitle(1);
-
         public string Day02Title => GetDayTitle(2);
-
         public string Day03Title => GetDayTitle(3);
-
         public string Day04Title => GetDayTitle(4);
+        public string Day05Title => GetDayTitle(5);
+        public string Day06Title => GetDayTitle(6);
+        public string Day07Title => GetDayTitle(7);
+        public string Day08Title => GetDayTitle(8);
+        public string Day09Title => GetDayTitle(9);
+        public string Day10Title => GetDayTitle(10);
+        public string Day11Title => GetDayTitle(11);
+        public string Day12Title => GetDayTitle(12);
+        public string Day13Title => GetDayTitle(13);
+        public string Day14Title => GetDayTitle(14);
+        public string Day15Title => GetDayTitle(15);
+        public string Day16Title => GetDayTitle(16);
+        public string Day17Title => GetDayTitle(17);
+        public string Day18Title => GetDayTitle(18);
+        public string Day19Title => GetDayTitle(19);
+
+        #endregion
+
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_ColumnTitleSub?.Dispose();
+        }
 
         #endregion
 
@@ -140,6 +217,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
+                KillSubscriptions();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

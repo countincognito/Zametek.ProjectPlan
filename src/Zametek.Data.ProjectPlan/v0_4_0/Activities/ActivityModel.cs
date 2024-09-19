@@ -11,6 +11,8 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
 
         public string? Notes { get; init; }
 
+        public List<int> TargetWorkStreams { get; init; } = [];
+
         public List<int> TargetResources { get; init; } = [];
 
         public LogicalOperator TargetResourceOperator { get; init; }

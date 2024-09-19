@@ -87,7 +87,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ForMember(src => src.Dependencies, opt => opt.Ignore())
                 .ForMember(src => src.ResourceDependencies, opt => opt.Ignore());
 
-            CreateMap<ManagedActivityViewModel, ActivityModel>();
+            CreateMap<ManagedActivityViewModel, ActivityModel>()
+                .BeforeMap((src, dest, ctx) =>
+                {
+                    dest.Trackers.Clear();
+                    dest.Trackers.AddRange(src.Trackers.Trackers);
+                })
+                .ForMember(src => src.Trackers, opt => opt.Ignore());
 
             CreateMap<ManagedActivityViewModel, DependentActivityModel>()
                 .ConstructUsing((src, ctx) =>

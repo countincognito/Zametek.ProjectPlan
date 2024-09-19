@@ -8,6 +8,11 @@ namespace Zametek.View.ProjectPlan
         public TrackingManagerView()
         {
             InitializeComponent();
+
+            for (int i = 0; i < 20; i++)
+            {
+                ActivitiesGrid.Columns.Add(new DataGridPercentageTrackingColumn(i));
+            };
         }
     }
 }
