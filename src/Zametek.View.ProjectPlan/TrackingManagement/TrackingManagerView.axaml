@@ -8,6 +8,7 @@
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:oxy="using:OxyPlot.Avalonia"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:sys="using:System"
 			 x:DataType="vm:TrackingManagerViewModel"
 			 xmlns:u="https://irihi.tech/ursa"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -15,14 +16,24 @@
 	<UserControl.Resources>
 		<local:ManagedActivitySortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
 		<local:ManagedActivitySortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
-		<DataGridLength x:Key="TrackerColumnWidth">80</DataGridLength>
+		<sys:Int32 x:Key="paginationPageSize">1</sys:Int32>
+		<sys:Int32 x:Key="paginationTotalCount">10000</sys:Int32>
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
 		<DockPanel DockPanel.Dock="Bottom">
-			<u:Pagination PageSize="1" TotalCount="10000"
-						  ShowQuickJump="True"
+			<u:Pagination PageSize="{StaticResource paginationPageSize}"
+						  TotalCount="{StaticResource paginationTotalCount}"
+						  DockPanel.Dock="Left"
 						  CurrentPage="{Binding Path=PageIndex, Mode=TwoWay}" />
+
+			<u:Pagination PageSize="{StaticResource paginationPageSize}"
+						  TotalCount="{StaticResource paginationTotalCount}"
+						  Theme="{DynamicResource TinyPagination}"
+						  DockPanel.Dock="Right"
+						  CurrentPage="{Binding Path=PageIndex, Mode=TwoWay}" />
+
+			<Grid />
 		</DockPanel>
 
 		<DockPanel>
@@ -51,7 +62,7 @@
 						<Setter Property="Background" Value="DarkKhaki"/>
 					</Style>
 				</DataGrid.Styles>
-				
+
 				<DataGrid.Columns>
 					<DataGridTemplateColumn CanUserResize="True"
 											CanUserReorder="False"
@@ -110,7 +121,7 @@
 							</DataTemplate>
 						</DataGridTemplateColumn.CellTemplate>
 					</DataGridTemplateColumn>
-					
+
 					<!--Add remaining columns in code behind.-->
 				</DataGrid.Columns>
 			</DataGrid>
