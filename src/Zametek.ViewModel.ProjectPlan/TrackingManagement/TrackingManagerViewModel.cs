@@ -1,9 +1,6 @@
-﻿using Avalonia.Controls;
-using ReactiveUI;
+﻿using ReactiveUI;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Reactive.Linq;
-using System.Windows.Input;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -16,6 +13,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly object m_Lock;
 
         private readonly ICoreViewModel m_CoreViewModel;
+        private readonly IResourceSettingsManagerViewModel m_ResourceSettingsManagerViewModel;
         private readonly IDialogService m_DialogService;
 
         private readonly IDisposable? m_ColumnTitleSub;
@@ -26,14 +24,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public TrackingManagerViewModel(
             ICoreViewModel coreViewModel,
+            IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
             IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(resourceSettingsManagerViewModel);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
+            m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
 
@@ -135,6 +136,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
         public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_CoreViewModel.Activities;
+
+        public ReadOnlyObservableCollection<IManagedResourceViewModel> Resources => m_ResourceSettingsManagerViewModel.Resources;
 
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         public IDateTimeCalculator DateTimeCalculator => m_DateTimeCalculator;

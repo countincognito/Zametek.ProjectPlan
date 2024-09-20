@@ -26,5 +26,7 @@ namespace Zametek.Contract.ProjectPlan
         int DisplayOrder { get; set; }
 
         ColorFormatModel ColorFormat { get; set; }
+
+        IResourceTrackersViewModel Trackers { get; }
     }
 }

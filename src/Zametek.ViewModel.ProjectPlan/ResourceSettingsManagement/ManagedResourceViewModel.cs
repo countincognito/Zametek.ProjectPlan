@@ -1,7 +1,6 @@
 ﻿using Avalonia.Data;
 using ReactiveUI;
 using System.ComponentModel;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -48,6 +47,9 @@ namespace Zametek.ViewModel.ProjectPlan
             WorkStreamSelector = new WorkStreamSelectorViewModel(phaseOnly: true);
             m_WorkStreamSettings = m_CoreViewModel.WorkStreamSettings;
             RefreshWorkStreamSelector();
+
+            Trackers = new ResourceTrackersViewModel(
+                m_CoreViewModel, Id, resource.Trackers ?? []);
 
             m_InterActivityAllocationIsIndirect = this
                 .WhenAnyValue(
@@ -201,6 +203,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged();
             }
         }
+
+        public IResourceTrackersViewModel Trackers { get; }
 
         public object CloneObject()
         {

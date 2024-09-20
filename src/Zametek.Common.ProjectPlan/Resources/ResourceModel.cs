@@ -24,5 +24,7 @@ namespace Zametek.Common.ProjectPlan
         public List<int> InterActivityPhases { get; init; } = [];
 
         public ColorFormatModel ColorFormat { get; init; } = new ColorFormatModel();
+
+        public List<ResourceTrackerModel> Trackers { get; init; } = [];
     }
 }

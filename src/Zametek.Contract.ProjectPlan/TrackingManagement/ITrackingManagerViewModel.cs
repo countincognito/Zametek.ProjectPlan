@@ -18,6 +18,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
 
+        ReadOnlyObservableCollection<IManagedResourceViewModel> Resources { get; }
+
         IDateTimeCalculator DateTimeCalculator { get; }
 
         int TrackerIndex { get; set; }

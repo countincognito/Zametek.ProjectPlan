@@ -5,12 +5,12 @@ using Ursa.Controls;
 
 namespace Zametek.View.ProjectPlan
 {
-    public class DataGridPercentageTrackingColumn
+    public class DataGridActivityTrackingColumn
         : DataGridTemplateColumn
     {
         private readonly int m_Index;
 
-        public DataGridPercentageTrackingColumn(int index)
+        public DataGridActivityTrackingColumn(int index)
         {
             m_Index = index;
 

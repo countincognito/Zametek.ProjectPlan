@@ -112,7 +112,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region ITrackerViewModel Members
+        #region IActivityTrackerViewModel Members
 
         public List<ActivityTrackerModel> Trackers => [.. m_ActivityTrackerLookup.Values.OrderBy(x => x.Time)];
 

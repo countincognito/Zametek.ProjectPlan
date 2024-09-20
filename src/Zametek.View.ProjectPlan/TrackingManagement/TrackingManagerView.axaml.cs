@@ -11,7 +11,8 @@ namespace Zametek.View.ProjectPlan
 
             for (int i = 0; i < 20; i++)
             {
-                ActivitiesGrid.Columns.Add(new DataGridPercentageTrackingColumn(i));
+                //ResourcesGrid.Columns.Add(new DataGridResourceTrackingColumn(i));
+                ActivitiesGrid.Columns.Add(new DataGridActivityTrackingColumn(i));
             };
         }
     }
