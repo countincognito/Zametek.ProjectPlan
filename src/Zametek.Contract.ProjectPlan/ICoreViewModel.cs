@@ -55,6 +55,8 @@ namespace Zametek.Contract.ProjectPlan
 
         int TrackerIndex { get; set; }
 
+        ReadyToRevise IsReadyToReviseTrackers { get; set; }
+
         void ClearSettings();
 
         void ResetProject();
@@ -74,11 +76,6 @@ namespace Zametek.Contract.ProjectPlan
         void AddMilestone(IEnumerable<int> dependentActivities);
 
         void ClearManagedActivities();
-
-        // TODO remove
-        //void AddTrackers();
-
-        //void RemoveTrackers();
 
         void RunCompile();
 

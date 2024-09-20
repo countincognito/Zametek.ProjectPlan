@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -108,6 +109,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_CoreViewModel.AddManagedActivity();
+                    m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
                 }
                 await RunAutoCompileAsync();
             }
@@ -133,6 +135,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     m_CoreViewModel.RemoveManagedActivities(activityIds);
+                    m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
                 }
                 await RunAutoCompileAsync();
             }
@@ -158,6 +161,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     m_CoreViewModel.AddMilestone(activityIds);
+                    m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
                 }
                 await RunAutoCompileAsync();
             }

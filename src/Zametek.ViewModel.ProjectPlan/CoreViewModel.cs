@@ -847,6 +847,17 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_TrackerIndex, value);
         }
 
+        private ReadyToRevise m_IsReadyToReviseTrackers;
+        public ReadyToRevise IsReadyToReviseTrackers
+        {
+            get => m_IsReadyToReviseTrackers;
+            set
+            {
+                m_IsReadyToReviseTrackers = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         public void ClearSettings()
         {
             try
@@ -1310,7 +1321,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    //ReviseTrackers(); // TODO
 
                     var availableResources = new List<IResource<int, int>>();
                     if (!ResourceSettings.AreDisabled)
@@ -1324,6 +1334,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     GraphCompilation = m_VertexGraphCompiler.Compile(availableResources, workStreams);
                     IsProjectUpdated = true;
                     HasStaleOutputs = false;
+                    IsReadyToReviseTrackers = ReadyToRevise.No;
                     IsReadyToCompile = ReadyToCompile.No;
                 }
             }

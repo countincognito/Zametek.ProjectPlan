@@ -2,6 +2,7 @@
 using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.ObjectModel;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -31,7 +32,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     },
                     x => x.Id);
 
-        private readonly IDisposable? m_ActivitiesCountSub;
+        private readonly IDisposable? m_ReviseResourceActivityTrackersSub;
 
         #endregion
 
@@ -66,62 +67,65 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-            m_ActivitiesCountSub = m_CoreViewModel.Activities
-                   .ToObservableChangeSet()
-                   .AutoRefresh(activity => activity.IsCompiled)
-                   //.Filter(activity => !activity.IsCompiled)
-                   .ObserveOn(RxApp.TaskpoolScheduler)
-                   .Subscribe(changeSet =>
-                   {
+            //m_ActivitiesCountSub = m_CoreViewModel.Activities
+            //       .ToObservableChangeSet()
+            //       .AutoRefresh(activity => activity.IsCompiled)
+            //       //.Filter(activity => !activity.IsCompiled)
+            //       .ObserveOn(RxApp.TaskpoolScheduler)
+            //       .Subscribe(changeSet =>
+            //       {
 
 
-                       var a = m_CoreViewModel.Activities.Select(x => new ResourceActivityTrackerModel
-                       {
-                           Time = m_Time,
-                           ResourceId = m_ResourceId,
-                           ActivityId = x.Id,
-                           ActivityName = x.Name,
-                           PercentageWorked = 0
-                       }).ToList();
+            //           var a = m_CoreViewModel.Activities.Select(x => new ResourceActivityTrackerModel
+            //           {
+            //               Time = m_Time,
+            //               ResourceId = m_ResourceId,
+            //               ActivityId = x.Id,
+            //               ActivityName = x.Name,
+            //               PercentageWorked = 0
+            //           }).ToList();
 
 
-                       SetTargetResourceActivities(
-                           a,
-                           SelectedResourceActivityIds.ToHashSet());
+            //           SetTargetResourceActivities(
+            //               a,
+            //               SelectedResourceActivityIds.ToHashSet());
 
 
-                       //if (!IsBusy && changeSet.TotalChanges > 0)
-                       //{
-                       //    lock (m_Lock)
-                       //    {
-                       //        IsReadyToCompile = ReadyToCompile.Yes;
-                       //    }
-                       //}
-                   });
+            //           //if (!IsBusy && changeSet.TotalChanges > 0)
+            //           //{
+            //           //    lock (m_Lock)
+            //           //    {
+            //           //        IsReadyToCompile = ReadyToCompile.Yes;
+            //           //    }
+            //           //}
+            //       });
 
 
 
 
-            //m_ActivitiesCountSub = this
-            //    .WhenAnyValue(x => x.m_CoreViewModel.Activities.Count)
-            //    .ObserveOn(RxApp.MainThreadScheduler)
-            //    .Subscribe(x =>
-            //    {
+            m_ReviseResourceActivityTrackersSub = this
+                .WhenAnyValue(x => x.m_CoreViewModel.IsReadyToReviseTrackers)
+                .ObserveOn(Scheduler.CurrentThread)
+                .Subscribe(isReadyToRevise =>
+                {
+                    if (isReadyToRevise == ReadyToRevise.Yes)
+                    {
+                        var a = m_CoreViewModel.Activities.Select(x => new ResourceActivityTrackerModel
+                        {
+                            Time = m_Time,
+                            ResourceId = m_ResourceId,
+                            ActivityId = x.Id,
+                            ActivityName = x.Name,
+                            PercentageWorked = 0
+                        }).ToList();
 
-            //        var a = m_CoreViewModel.Activities.Select(x => new ResourceActivityTrackerModel
-            //        {
-            //            Time = m_Time,
-            //            ResourceId = m_ResourceId,
-            //            ActivityId = x.Id,
-            //            ActivityName = x.Name,
-            //            PercentageWorked = 0
-            //        }).ToList();
 
+                        SetTargetResourceActivities(
+                            a,
+                            SelectedResourceActivityIds.ToHashSet());
+                    }
 
-            //        SetTargetResourceActivities(
-            //            a,
-            //            SelectedResourceActivityIds.ToHashSet());
-            //    });
+                });
 
 
 
@@ -315,7 +319,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
-                m_ActivitiesCountSub?.Dispose();
+                m_ReviseResourceActivityTrackersSub?.Dispose();
                 ClearTargetResourceActivities();
                 ClearSelectedTargetResourceActivities();
             }
