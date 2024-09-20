@@ -1,6 +1,4 @@
-﻿using DynamicData;
-using DynamicData.Binding;
-using ReactiveUI;
+﻿using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -10,7 +8,7 @@ using Zametek.Contract.ProjectPlan;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ResourceActivitySelectorViewModel
-        : ViewModelBase, IResourceActivitySelectorViewModel, IDisposable
+        : ViewModelBase, IResourceActivitySelectorViewModel
     {
         #region Fields
 
@@ -268,7 +266,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                foreach (IDisposable targetResourceActivity in TargetResourceActivities)
+                foreach (ISelectableResourceActivityViewModel targetResourceActivity in TargetResourceActivities)
                 {
                     targetResourceActivity.Dispose();
                 }
@@ -280,7 +278,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                foreach (IDisposable targetResourceActivity in SelectedTargetResourceActivities)
+                foreach (ISelectableResourceActivityViewModel targetResourceActivity in SelectedTargetResourceActivities)
                 {
                     targetResourceActivity.Dispose();
                 }

@@ -50,77 +50,40 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-
-
-
-
-
-
-
-
-
-        public IResourceActivitySelectorViewModel? Day
-        {
-            get
-            {
-                lock (m_Lock)
-                {
-                    int indexOffset = TrackerIndex;
-                    if (m_ResourceActivitySelectorLookup.TryGetValue(indexOffset, out IResourceActivitySelectorViewModel? selector))
-                    {
-                        return selector;
-                    }
-                    var a = new ResourceActivitySelectorViewModel(
-                        m_CoreViewModel,
-                        new ResourceTrackerModel
-                        {
-                            Time = indexOffset,
-                            ResourceId = ResourceId,
-                            ActivityTrackers = []
-                        });
-                    m_ResourceActivitySelectorLookup.Add(indexOffset, a); // TODO clean up empty selectors at compile time.
-                    return a;
-                }
-            }
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         #region Private Members
 
         private int TrackerIndex => m_CoreViewModel.TrackerIndex;
 
-        //private List<ResourceActivityTrackerModel> GetDayActivityTrackers(int index)
-        //{
-        //    lock (m_Lock)
-        //    {
-        //        int indexOffset = index + TrackerIndex;
-        //        if (m_ResourceTrackerLookup.TryGetValue(indexOffset, out ResourceTrackerModel? tracker))
-        //        {
-        //            return tracker.ActivityTrackers;
-        //        }
-        //        return [];
-        //    }
-        //}
+        private IResourceActivitySelectorViewModel GetResourceActivitySelector(int index)
+        {
+            lock (m_Lock)
+            {
+                int indexOffset = index + TrackerIndex;
+                if (m_ResourceActivitySelectorLookup.TryGetValue(indexOffset, out IResourceActivitySelectorViewModel? selector))
+                {
+                    return selector;
+                }
+
+
+
+
+                // TODO
+                var a = new ResourceActivitySelectorViewModel(
+                    m_CoreViewModel,
+                    new ResourceTrackerModel
+                    {
+                        Time = indexOffset,
+                        ResourceId = ResourceId,
+                        ActivityTrackers = []
+                    });
+                m_ResourceActivitySelectorLookup.Add(indexOffset, a); // TODO clean up empty selectors at compile time.
+                return a;
+
+
+
+
+            }
+        }
 
         //private void SetDayActivityTrackers(
         //    int index,
@@ -146,26 +109,26 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void RefreshDays()
         {
-            //this.RaisePropertyChanged(nameof(Day00));
-            //this.RaisePropertyChanged(nameof(Day01));
-            //this.RaisePropertyChanged(nameof(Day02));
-            //this.RaisePropertyChanged(nameof(Day03));
-            //this.RaisePropertyChanged(nameof(Day04));
-            //this.RaisePropertyChanged(nameof(Day05));
-            //this.RaisePropertyChanged(nameof(Day06));
-            //this.RaisePropertyChanged(nameof(Day07));
-            //this.RaisePropertyChanged(nameof(Day08));
-            //this.RaisePropertyChanged(nameof(Day09));
-            //this.RaisePropertyChanged(nameof(Day10));
-            //this.RaisePropertyChanged(nameof(Day11));
-            //this.RaisePropertyChanged(nameof(Day12));
-            //this.RaisePropertyChanged(nameof(Day13));
-            //this.RaisePropertyChanged(nameof(Day14));
-            //this.RaisePropertyChanged(nameof(Day15));
-            //this.RaisePropertyChanged(nameof(Day16));
-            //this.RaisePropertyChanged(nameof(Day17));
-            //this.RaisePropertyChanged(nameof(Day18));
-            //this.RaisePropertyChanged(nameof(Day19));
+            this.RaisePropertyChanged(nameof(Day00));
+            this.RaisePropertyChanged(nameof(Day01));
+            this.RaisePropertyChanged(nameof(Day02));
+            this.RaisePropertyChanged(nameof(Day03));
+            this.RaisePropertyChanged(nameof(Day04));
+            this.RaisePropertyChanged(nameof(Day05));
+            this.RaisePropertyChanged(nameof(Day06));
+            this.RaisePropertyChanged(nameof(Day07));
+            this.RaisePropertyChanged(nameof(Day08));
+            this.RaisePropertyChanged(nameof(Day09));
+            this.RaisePropertyChanged(nameof(Day10));
+            this.RaisePropertyChanged(nameof(Day11));
+            this.RaisePropertyChanged(nameof(Day12));
+            this.RaisePropertyChanged(nameof(Day13));
+            this.RaisePropertyChanged(nameof(Day14));
+            this.RaisePropertyChanged(nameof(Day15));
+            this.RaisePropertyChanged(nameof(Day16));
+            this.RaisePropertyChanged(nameof(Day17));
+            this.RaisePropertyChanged(nameof(Day18));
+            this.RaisePropertyChanged(nameof(Day19));
         }
 
         #endregion
@@ -176,205 +139,105 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public int ResourceId { get; }
 
-        //public List<ResourceActivityTrackerModel> Day00
-        //{
-        //    get => GetDayActivityTrackers(0);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(0, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day00
+        {
+            get => GetResourceActivitySelector(0);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day01
-        //{
-        //    get => GetDayActivityTrackers(1);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(1, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day01
+        {
+            get => GetResourceActivitySelector(1);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day02
-        //{
-        //    get => GetDayActivityTrackers(2);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(2, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day02
+        {
+            get => GetResourceActivitySelector(2);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day03
-        //{
-        //    get => GetDayActivityTrackers(3);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(3, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day03
+        {
+            get => GetResourceActivitySelector(3);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day04
-        //{
-        //    get => GetDayActivityTrackers(4);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(4, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day04
+        {
+            get => GetResourceActivitySelector(4);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day05
-        //{
-        //    get => GetDayActivityTrackers(5);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(5, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day05
+        {
+            get => GetResourceActivitySelector(5);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day06
-        //{
-        //    get => GetDayActivityTrackers(6);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(6, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day06
+        {
+            get => GetResourceActivitySelector(6);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day07
-        //{
-        //    get => GetDayActivityTrackers(7);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(7, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day07
+        {
+            get => GetResourceActivitySelector(7);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day08
-        //{
-        //    get => GetDayActivityTrackers(8);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(8, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day08
+        {
+            get => GetResourceActivitySelector(8);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day09
-        //{
-        //    get => GetDayActivityTrackers(9);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(9, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day09
+        {
+            get => GetResourceActivitySelector(9);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day10
-        //{
-        //    get => GetDayActivityTrackers(10);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(10, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day10
+        {
+            get => GetResourceActivitySelector(10);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day11
-        //{
-        //    get => GetDayActivityTrackers(11);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(11, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day11
+        {
+            get => GetResourceActivitySelector(11);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day12
-        //{
-        //    get => GetDayActivityTrackers(12);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(12, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day12
+        {
+            get => GetResourceActivitySelector(12);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day13
-        //{
-        //    get => GetDayActivityTrackers(13);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(13, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day13
+        {
+            get => GetResourceActivitySelector(13);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day14
-        //{
-        //    get => GetDayActivityTrackers(14);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(14, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day14
+        {
+            get => GetResourceActivitySelector(14);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day15
-        //{
-        //    get => GetDayActivityTrackers(15);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(15, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day15
+        {
+            get => GetResourceActivitySelector(15);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day16
-        //{
-        //    get => GetDayActivityTrackers(16);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(16, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day16
+        {
+            get => GetResourceActivitySelector(16);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day17
-        //{
-        //    get => GetDayActivityTrackers(17);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(17, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day17
+        {
+            get => GetResourceActivitySelector(17);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day18
-        //{
-        //    get => GetDayActivityTrackers(18);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(18, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day18
+        {
+            get => GetResourceActivitySelector(18);
+        }
 
-        //public List<ResourceActivityTrackerModel> Day19
-        //{
-        //    get => GetDayActivityTrackers(19);
-        //    set
-        //    {
-        //        SetDayActivityTrackers(19, value);
-        //        this.RaisePropertyChanged();
-        //    }
-        //}
+        public IResourceActivitySelectorViewModel Day19
+        {
+            get => GetResourceActivitySelector(19);
+        }
 
         #endregion
 
@@ -393,6 +256,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 m_DaysSub?.Dispose();
+                foreach (IResourceActivitySelectorViewModel selector in m_ResourceActivitySelectorLookup.Values)
+                {
+                    selector.Dispose();
+                }
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

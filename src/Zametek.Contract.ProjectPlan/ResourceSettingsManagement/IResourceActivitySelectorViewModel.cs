@@ -4,6 +4,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IResourceActivitySelectorViewModel
+        : IDisposable
     {
         ReadOnlyObservableCollection<ISelectableResourceActivityViewModel> TargetResourceActivities { get; }
 

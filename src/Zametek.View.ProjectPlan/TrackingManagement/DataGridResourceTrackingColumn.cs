@@ -1,7 +1,9 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
+using Avalonia.Styling;
 using Ursa.Controls;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -42,7 +44,7 @@ namespace Zametek.View.ProjectPlan
                         Margin = new Avalonia.Thickness(0),
                         Padding = new Avalonia.Thickness(3),
                         Background = Avalonia.Media.Brushes.Transparent,
-                        [!TextBlock.TextProperty] = new Binding($@"Trackers.Day{m_Index:D2}", BindingMode.OneWay),
+                        [!TextBlock.TextProperty] = new Binding($@"Trackers.Day{m_Index:D2}.TargetResourceActivitiesString", BindingMode.OneWay),
                     });
 
                 return mainGrid;
@@ -52,25 +54,77 @@ namespace Zametek.View.ProjectPlan
             {
                 var mainGrid = new Grid
                 {
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch
                 };
 
-                mainGrid.Children.Add(
-                    new NumericIntUpDown
+                var comboBox = new MultiComboBox
+                {
+                    MaxHeight = 200,
+                    Width = double.NaN,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                    [!ItemsControl.ItemsSourceProperty] = new Binding($@"Trackers.Day{m_Index:D2}.TargetResourceActivities", BindingMode.OneWay),
+                    [!MultiComboBox.SelectedItemsProperty] = new Binding($@"Trackers.Day{m_Index:D2}.SelectedTargetResourceActivities", BindingMode.OneWay),
+                    //[!ItemsControl.DisplayMemberBindingProperty] = new Binding($@"DisplayName", BindingMode.OneWay), // This didn't work.
+                    IsDropDownOpen = true,
+                };
+
+                comboBox.Styles.Add(
+                    new Style(x => x.OfType<MultiComboBoxItem>())
                     {
-                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                        ShowButtonSpinner = false,
-                        Foreground = Avalonia.Media.Brushes.Black,
-                        Background = Avalonia.Media.Brushes.White,
-                        Margin = new Avalonia.Thickness(0),
-                        Padding = new Avalonia.Thickness(0),
-                        Minimum = 0,
-                        Maximum = 100,
-                        [!NumericIntUpDown.ValueProperty] = new Binding($@"Trackers.Day{m_Index:D2}", BindingMode.TwoWay)
+                        Setters =
                         {
-                            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
+                            new Setter(MultiComboBoxItem.IsSelectedProperty, new Binding($@"IsSelected", BindingMode.TwoWay)),
                         },
                     });
+
+                comboBox.SelectedItemTemplate = new FuncDataTemplate<SelectableResourceActivityViewModel>((value, namescope) =>
+                {
+                    var templateGrid = new Grid
+                    {
+                        Background = Avalonia.Media.Brushes.White,
+                    };
+
+                    templateGrid.Children.Add(
+                        new TextBlock
+                        {
+                            [!TextBlock.TextProperty] = new Binding($@"DisplayName", BindingMode.OneWay),
+                        });
+                    return templateGrid;
+                });
+
+                comboBox.ItemTemplate = new FuncDataTemplate<SelectableResourceActivityViewModel>((value, namescope) =>
+                {
+                    var templateGrid = new Grid
+                    {
+                        Background = Avalonia.Media.Brushes.White,
+                    };
+
+                    templateGrid.Children.Add(
+                        new TextBlock
+                        {
+                            [!TextBlock.TextProperty] = new Binding($@"DisplayName", BindingMode.OneWay),
+                        });
+                    templateGrid.Children.Add(
+                        new NumericIntUpDown
+                        {
+                            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                            ShowButtonSpinner = false,
+                            Foreground = Avalonia.Media.Brushes.Black,
+                            Background = Avalonia.Media.Brushes.White,
+                            Margin = new Avalonia.Thickness(0),
+                            Padding = new Avalonia.Thickness(0),
+                            Minimum = 0,
+                            Maximum = 100,
+                            //[!NumericIntUpDown.ValueProperty] = new Binding($@"Trackers.Day{m_Index:D2}", BindingMode.TwoWay)
+                            //{
+                            //    UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
+                            //},
+                        });
+                    return templateGrid;
+                });
+
+                mainGrid.Children.Add(comboBox);
 
                 return mainGrid;
             });
@@ -78,7 +132,7 @@ namespace Zametek.View.ProjectPlan
             CanUserResize = false;
             CanUserReorder = false;
             CanUserSort = false;
-            Width = new DataGridLength(95);
+            Width = new DataGridLength(295);
             Header = header;
             CellTemplate = cellTemplate;
             CellEditingTemplate = cellEditingTemplate;

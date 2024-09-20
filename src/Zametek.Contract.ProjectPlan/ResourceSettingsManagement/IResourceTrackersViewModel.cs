@@ -7,29 +7,25 @@
 
         int ResourceId { get; }
 
-        IResourceActivitySelectorViewModel? Day { get; }
-
-
-
-        //List<ResourceActivityTrackerModel> Day00 { get; set; }
-        //List<ResourceActivityTrackerModel> Day01 { get; set; }
-        //List<ResourceActivityTrackerModel> Day02 { get; set; }
-        //List<ResourceActivityTrackerModel> Day03 { get; set; }
-        //List<ResourceActivityTrackerModel> Day04 { get; set; }
-        //List<ResourceActivityTrackerModel> Day05 { get; set; }
-        //List<ResourceActivityTrackerModel> Day06 { get; set; }
-        //List<ResourceActivityTrackerModel> Day07 { get; set; }
-        //List<ResourceActivityTrackerModel> Day08 { get; set; }
-        //List<ResourceActivityTrackerModel> Day09 { get; set; }
-        //List<ResourceActivityTrackerModel> Day10 { get; set; }
-        //List<ResourceActivityTrackerModel> Day11 { get; set; }
-        //List<ResourceActivityTrackerModel> Day12 { get; set; }
-        //List<ResourceActivityTrackerModel> Day13 { get; set; }
-        //List<ResourceActivityTrackerModel> Day14 { get; set; }
-        //List<ResourceActivityTrackerModel> Day15 { get; set; }
-        //List<ResourceActivityTrackerModel> Day16 { get; set; }
-        //List<ResourceActivityTrackerModel> Day17 { get; set; }
-        //List<ResourceActivityTrackerModel> Day18 { get; set; }
-        //List<ResourceActivityTrackerModel> Day19 { get; set; }
+        IResourceActivitySelectorViewModel Day00 { get; }
+        IResourceActivitySelectorViewModel Day01 { get; }
+        IResourceActivitySelectorViewModel Day02 { get; }
+        IResourceActivitySelectorViewModel Day03 { get; }
+        IResourceActivitySelectorViewModel Day04 { get; }
+        IResourceActivitySelectorViewModel Day05 { get; }
+        IResourceActivitySelectorViewModel Day06 { get; }
+        IResourceActivitySelectorViewModel Day07 { get; }
+        IResourceActivitySelectorViewModel Day08 { get; }
+        IResourceActivitySelectorViewModel Day09 { get; }
+        IResourceActivitySelectorViewModel Day10 { get; }
+        IResourceActivitySelectorViewModel Day11 { get; }
+        IResourceActivitySelectorViewModel Day12 { get; }
+        IResourceActivitySelectorViewModel Day13 { get; }
+        IResourceActivitySelectorViewModel Day14 { get; }
+        IResourceActivitySelectorViewModel Day15 { get; }
+        IResourceActivitySelectorViewModel Day16 { get; }
+        IResourceActivitySelectorViewModel Day17 { get; }
+        IResourceActivitySelectorViewModel Day18 { get; }
+        IResourceActivitySelectorViewModel Day19 { get; }
     }
 }
