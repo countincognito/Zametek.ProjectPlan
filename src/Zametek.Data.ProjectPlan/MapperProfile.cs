@@ -195,6 +195,9 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<ResourceSettingsModel, v0_4_0.ResourceSettingsModel>().ReverseMap();
             CreateMap<v0_3_2.ResourceSettingsModel, v0_4_0.ResourceSettingsModel>().ReverseMap();
 
+            CreateMap<ResourceTrackerModel, v0_4_0.ResourceTrackerModel>().ReverseMap();
+            CreateMap<ResourceActivityTrackerModel, v0_4_0.ResourceActivityTrackerModel>().ReverseMap();
+
             CreateMap<ProjectPlanModel, v0_4_0.ProjectPlanModel>().ReverseMap();
 
             #endregion

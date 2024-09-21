@@ -39,20 +39,70 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
                 HasStaleOutputs = projectPlan.HasStaleOutputs,
             };
 
+
+            Dictionary<int, ResourceModel> resourceLookup = plan.ResourceSettings.Resources.ToDictionary(x => x.Id);
+
+
+
             // Cycle through the activity trackers and clear out unnecessary values.
             foreach (DependentActivityModel activityModel in plan.DependentActivities)
             {
-                List<ActivityTrackerModel> trackers = activityModel.Activity.Trackers;
+                List<ActivityTrackerModel> activityTrackers = activityModel.Activity.Trackers;
 
                 // First remove zero values.
-                trackers.RemoveAll(x => x.PercentageComplete == 0);
+                activityTrackers.RemoveAll(x => x.PercentageComplete == 0);
 
                 // Now select the first instances of duplicated values (ignoring time values).
-                IEnumerable<ActivityTrackerModel> replacement = trackers.Distinct(s_ActivityTrackerEqualityComparer).ToList();
+                IEnumerable<ActivityTrackerModel> replacement = activityTrackers.Distinct(s_ActivityTrackerEqualityComparer).ToList();
 
                 // Now replace the old values.
-                trackers.Clear();
-                trackers.AddRange(replacement);
+                activityTrackers.Clear();
+                activityTrackers.AddRange(replacement);
+
+
+
+                // As part of the conversion, assume only one resource activity tracking entry.
+                foreach (int resourceId in activityModel.Activity.AllocatedToResources)
+                {
+                    if (resourceLookup.TryGetValue(resourceId, out var resource))
+                    {
+
+                        foreach (ActivityTrackerModel activityTracker in activityTrackers)
+                        {
+                            var resourceTracker = new ResourceTrackerModel
+                            {
+                                ResourceId = resourceId,
+                                Time = activityTracker.Time
+                            };
+                            resourceTracker.ActivityTrackers.Add(
+                                new ResourceActivityTrackerModel
+                                {
+                                    ResourceId = resourceId,
+                                    Time = activityTracker.Time,
+                                    ActivityId = activityTracker.ActivityId,
+                                    PercentageWorked = 100,
+                                });
+
+
+                            resource.Trackers.Add(resourceTracker);
+                        }
+
+
+
+
+                    }
+                }
+
+
+
+
+
+
+
+
+
+
+
             }
 
             return plan;

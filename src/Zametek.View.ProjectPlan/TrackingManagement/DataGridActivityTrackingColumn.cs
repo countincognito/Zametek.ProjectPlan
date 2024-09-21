@@ -78,7 +78,7 @@ namespace Zametek.View.ProjectPlan
             CanUserResize = false;
             CanUserReorder = false;
             CanUserSort = false;
-            Width = new DataGridLength(95);
+            Width = new DataGridLength(120);
             Header = header;
             CellTemplate = cellTemplate;
             CellEditingTemplate = cellEditingTemplate;

@@ -21,12 +21,14 @@ namespace Zametek.ViewModel.ProjectPlan
             int id,
             string name,
             bool isSelected,
+            int percentageWorked,
             IResourceActivitySelectorViewModel resourceActivitySelectorViewModel)
         {
             ArgumentNullException.ThrowIfNull(resourceActivitySelectorViewModel);
             Id = id;
             m_Name = name;
             m_IsSelected = isSelected;
+            m_PercentageWorked = percentageWorked;
             m_ResourceActivitySelectorViewModel = resourceActivitySelectorViewModel;
 
             m_ResourceActivitySelectorSub = this
@@ -68,6 +70,13 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get => m_IsSelected;
             set => this.RaiseAndSetIfChanged(ref m_IsSelected, value);
+        }
+
+        private int m_PercentageWorked;
+        public int PercentageWorked
+        {
+            get => m_PercentageWorked;
+            set => this.RaiseAndSetIfChanged(ref m_PercentageWorked, value);
         }
 
         #endregion

@@ -3,7 +3,7 @@
     public interface IResourceTrackersViewModel
         : IDisposable
     {
-        //List<ResourceTrackerModel> Trackers { get; }
+        //List<ResourceActivityTrackerModel> Trackers { get; }
 
         int ResourceId { get; }
 

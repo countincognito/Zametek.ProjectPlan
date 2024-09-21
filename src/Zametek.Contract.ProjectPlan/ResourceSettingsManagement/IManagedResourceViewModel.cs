@@ -28,5 +28,7 @@ namespace Zametek.Contract.ProjectPlan
         ColorFormatModel ColorFormat { get; set; }
 
         IResourceTrackersViewModel Trackers { get; }
+
+        bool IsEditing { get; }
     }
 }

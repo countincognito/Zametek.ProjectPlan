@@ -126,19 +126,136 @@
 						</DataGridTemplateColumn.CellTemplate>
 					</DataGridTemplateColumn>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+					<!--<DataGridTemplateColumn CanUserResize="False"
+											CanUserReorder="False"
+											CanUserSort="False"
+											Width="120">
+						<DataGridTemplateColumn.Header>
+							<Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Day00Title, Mode=OneWay}"
+										   ToolTip.Tip="{Binding Path=Day00Title, Mode=OneWay}"/>
+							</Grid>
+						</DataGridTemplateColumn.Header>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Background="Transparent"
+											   Text="{Binding Path=Trackers.Day00.TargetResourceActivitiesString, Mode=OneWay}"
+											   ToolTip.Tip="{Binding Path=Trackers.Day00.TargetResourceActivitiesString, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+						<DataGridTemplateColumn.CellEditingTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch"
+									  HorizontalAlignment="Stretch">
+									<u:MultiComboBox MaxHeight="200"
+													 Width="{x:Static sys:Double.NaN}"
+													 HorizontalAlignment="Stretch"
+													 ItemsSource="{Binding Path=Trackers.Day00.TargetResourceActivities, Mode=OneWay}"
+													 SelectedItems="{Binding Path=Trackers.Day00.SelectedTargetResourceActivities, Mode=OneWay}"
+													 IsDropDownOpen="True">
+										<u:MultiComboBox.Styles>
+											<Style Selector="u|MultiComboBoxItem" x:DataType="vm:SelectableResourceActivityViewModel">
+												<Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}" />
+											</Style>
+										</u:MultiComboBox.Styles>
+
+
+										<u:MultiComboBox.ItemTemplate>
+											<DataTemplate x:DataType="vm:SelectableResourceActivityViewModel">
+												<DockPanel VerticalAlignment="Center"
+														   HorizontalAlignment="Stretch">
+													<u:NumericIntUpDown DockPanel.Dock="Left"
+																		VerticalAlignment="Center"
+																		ShowButtonSpinner="False"
+																		Foreground="Black"
+																		Background="White"
+																		Width="40"
+																		MaxWidth="40"
+																		Margin="0"
+																		Padding="0"
+																		Minimum="0"
+																		Maximum="100"/>
+													
+													<TextBlock Text="{Binding Path=Id, Mode=OneWay}"
+															   Width="35"
+															   Padding="3,0"
+															   VerticalAlignment="Center"
+															   DockPanel.Dock="Right"/>
+
+													<Grid />
+												</DockPanel>
+											</DataTemplate>
+											<DataTemplate x:DataType="vm:SelectableResourceActivityViewModel">
+												<Grid Background="White">
+													<TextBlock Text="{Binding Path=Id, Mode=OneWay}"/>
+												</Grid>
+											</DataTemplate>
+										</u:MultiComboBox.ItemTemplate>
+
+
+
+
+										<u:MultiComboBox.SelectedItemTemplate>
+											<DataTemplate x:DataType="vm:SelectableResourceActivityViewModel">
+												<Grid Background="White">
+													<TextBlock Text="{Binding Path=Id, Mode=OneWay}"/>
+												</Grid>
+											</DataTemplate>
+										</u:MultiComboBox.SelectedItemTemplate>
+									</u:MultiComboBox>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellEditingTemplate>
+					</DataGridTemplateColumn>-->
+
+
+
+
+
+
+
+
+
+
+
+
 					<!--Add remaining columns in code behind.-->
 				</DataGrid.Columns>
 			</DataGrid>
 
-			
-			
-			
-			
-			
-			
-			
-			
-			
+
+
+
+
+
+
+
+
+
 			<GridSplitter Grid.Row="1" Background="Black" ResizeDirection="Rows"/>
 
 

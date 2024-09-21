@@ -10,5 +10,7 @@
         string DisplayName { get; }
 
         bool IsSelected { get; set; }
+
+        int PercentageWorked { get; set; }
     }
 }

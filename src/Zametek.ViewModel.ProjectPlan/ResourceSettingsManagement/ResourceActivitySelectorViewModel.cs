@@ -14,6 +14,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly object m_Lock;
         private readonly ICoreViewModel m_CoreViewModel;
+        private readonly int m_ResourceId;
+        private readonly int m_Time;
         private static readonly EqualityComparer<ISelectableResourceActivityViewModel> s_EqualityComparer =
             EqualityComparer<ISelectableResourceActivityViewModel>.Create(
                     (x, y) =>
@@ -36,13 +38,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-
-
-        private readonly int m_ResourceId;
-        private readonly int m_Time;
-
-
-
         public ResourceActivitySelectorViewModel(
             ICoreViewModel coreViewModel,
             ResourceTrackerModel resourceTrackerModel)
@@ -51,6 +46,12 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(resourceTrackerModel);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
+
+
+
+
+
+
             m_TargetResourceActivities = new(s_EqualityComparer);
             m_ReadOnlyTargetResourceActivities = new(m_TargetResourceActivities);
             m_SelectedTargetResourceActivities = new(s_EqualityComparer);
@@ -61,45 +62,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-            SetTargetResourceActivities(resourceTrackerModel.ActivityTrackers, []);
 
 
-
-            //m_ActivitiesCountSub = m_CoreViewModel.Activities
-            //       .ToObservableChangeSet()
-            //       .AutoRefresh(activity => activity.IsCompiled)
-            //       //.Filter(activity => !activity.IsCompiled)
-            //       .ObserveOn(RxApp.TaskpoolScheduler)
-            //       .Subscribe(changeSet =>
-            //       {
-
-
-            //           var a = m_CoreViewModel.Activities.Select(x => new ResourceActivityTrackerModel
-            //           {
-            //               Time = m_Time,
-            //               ResourceId = m_ResourceId,
-            //               ActivityId = x.Id,
-            //               ActivityName = x.Name,
-            //               PercentageWorked = 0
-            //           }).ToList();
-
-
-            //           SetTargetResourceActivities(
-            //               a,
-            //               SelectedResourceActivityIds.ToHashSet());
-
-
-            //           //if (!IsBusy && changeSet.TotalChanges > 0)
-            //           //{
-            //           //    lock (m_Lock)
-            //           //    {
-            //           //        IsReadyToCompile = ReadyToCompile.Yes;
-            //           //    }
-            //           //}
-            //       });
-
-
-
+            ReviseTrackers(resourceTrackerModel.ActivityTrackers);
 
             m_ReviseResourceActivityTrackersSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.IsReadyToReviseTrackers)
@@ -108,32 +73,69 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     if (isReadyToRevise == ReadyToRevise.Yes)
                     {
-                        var a = m_CoreViewModel.Activities.Select(x => new ResourceActivityTrackerModel
-                        {
-                            Time = m_Time,
-                            ResourceId = m_ResourceId,
-                            ActivityId = x.Id,
-                            ActivityName = x.Name,
-                            PercentageWorked = 0
-                        }).ToList();
-
-
-                        SetTargetResourceActivities(
-                            a,
-                            SelectedResourceActivityIds.ToHashSet());
+                        ReviseTrackers();
                     }
-
                 });
+        }
 
+        #endregion
 
+        #region Private Members
 
+        private void ReviseTrackers(IList<ResourceActivityTrackerModel> resourceActivityTrackers)
+        {
+            lock (m_Lock)
+            {
+                HashSet<int> selectedResourceActivityIds = resourceActivityTrackers.Select(x => x.ActivityId).ToHashSet();
 
+                Dictionary<int, ResourceActivityTrackerModel> resourceActivityTrackerLookup = resourceActivityTrackers.ToDictionary(x => x.ActivityId);
 
+                List<ResourceActivityTrackerModel> newResourceActivityTrackers =
+                    m_CoreViewModel.Activities.Select(x => new ResourceActivityTrackerModel
+                    {
+                        Time = m_Time,
+                        ResourceId = m_ResourceId,
+                        ActivityId = x.Id,
+                        ActivityName = x.Name,
+                        PercentageWorked = 0
+                    }).ToList();
+
+                foreach (ResourceActivityTrackerModel resourceActivityTracker in newResourceActivityTrackers)
+                {
+                    resourceActivityTrackerLookup.TryAdd(resourceActivityTracker.ActivityId, resourceActivityTracker);
+                }
+
+                SetTargetResourceActivities(
+                    resourceActivityTrackerLookup.Values,
+                    selectedResourceActivityIds);
+            }
+        }
+
+        private void ReviseTrackers()
+        {
+            lock (m_Lock)
+            {
+                List<ResourceActivityTrackerModel> newResourceActivityTrackers =
+                    m_CoreViewModel.Activities.Select(x => new ResourceActivityTrackerModel
+                    {
+                        Time = m_Time,
+                        ResourceId = m_ResourceId,
+                        ActivityId = x.Id,
+                        ActivityName = x.Name,
+                        PercentageWorked = 0
+                    }).ToList();
+
+                SetTargetResourceActivities(
+                    newResourceActivityTrackers,
+                    SelectedResourceActivityIds.ToHashSet());
+            }
         }
 
         #endregion
 
         #region Properties
+
+        public static IResourceActivitySelectorViewModel Empty { get; } = new EmptyResourceActivitySelectorViewModel();
 
         private readonly ObservableUniqueCollection<ISelectableResourceActivityViewModel> m_TargetResourceActivities;
         private readonly ReadOnlyObservableCollection<ISelectableResourceActivityViewModel> m_ReadOnlyTargetResourceActivities;
@@ -173,7 +175,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        //#region Public Methods
+        #region Public IResourceActivitySelectorViewModel
 
         //public string GetAllocatedToActivitiesString(HashSet<int> allocatedToActivities)
         //{
@@ -237,6 +239,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             model.ActivityId,
                             model.ActivityName,
                             selectedTargetResourceActivities.Contains(model.ActivityId),
+                            model.PercentageWorked,
                             this);
 
                         m_TargetResourceActivities.Add(vm);
@@ -292,7 +295,7 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(TargetResourceActivitiesString));
         }
 
-        //#endregion
+        #endregion
 
         #region Overrides
 
@@ -337,5 +340,47 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         #endregion
+    }
+
+    public class EmptyResourceActivitySelectorViewModel
+        : IResourceActivitySelectorViewModel
+    {
+        internal EmptyResourceActivitySelectorViewModel()
+        {
+            TargetResourceActivities = new ReadOnlyObservableCollection<ISelectableResourceActivityViewModel>([]);
+            SelectedTargetResourceActivities = [];
+            TargetResourceActivitiesString = string.Empty;
+            SelectedResourceActivityIds = [];
+        }
+
+        public ReadOnlyObservableCollection<ISelectableResourceActivityViewModel> TargetResourceActivities { get; init; }
+
+        public ObservableCollection<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities { get; init; }
+
+        public string TargetResourceActivitiesString { get; init; }
+
+        public IList<int> SelectedResourceActivityIds { get; init; }
+
+        public void ClearSelectedTargetResourceActivities()
+        {
+        }
+
+        public void ClearTargetResourceActivities()
+        {
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public void RaiseTargetResourceActivitiesPropertiesChanged()
+        {
+        }
+
+        public void SetTargetResourceActivities(
+            IEnumerable<ResourceActivityTrackerModel> targetResourceActivities,
+            HashSet<int> selectedTargetResourceActivities)
+        {
+        }
     }
 }

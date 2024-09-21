@@ -45,6 +45,7 @@ namespace Zametek.View.ProjectPlan
                         Padding = new Avalonia.Thickness(3),
                         Background = Avalonia.Media.Brushes.Transparent,
                         [!TextBlock.TextProperty] = new Binding($@"Trackers.Day{m_Index:D2}.TargetResourceActivitiesString", BindingMode.OneWay),
+                        [!ToolTip.TipProperty] = new Binding($@"Trackers.Day{m_Index:D2}.TargetResourceActivitiesString", BindingMode.OneWay),
                     });
 
                 return mainGrid;
@@ -88,40 +89,55 @@ namespace Zametek.View.ProjectPlan
                     templateGrid.Children.Add(
                         new TextBlock
                         {
-                            [!TextBlock.TextProperty] = new Binding($@"DisplayName", BindingMode.OneWay),
+                            [!TextBlock.TextProperty] = new Binding($@"Id", BindingMode.OneWay),
                         });
                     return templateGrid;
                 });
 
                 comboBox.ItemTemplate = new FuncDataTemplate<SelectableResourceActivityViewModel>((value, namescope) =>
                 {
-                    var templateGrid = new Grid
+                    var templatePanel = new DockPanel
                     {
                         Background = Avalonia.Media.Brushes.White,
+                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
                     };
 
-                    templateGrid.Children.Add(
-                        new TextBlock
-                        {
-                            [!TextBlock.TextProperty] = new Binding($@"DisplayName", BindingMode.OneWay),
-                        });
-                    templateGrid.Children.Add(
+                    templatePanel.Children.Add(
                         new NumericIntUpDown
                         {
+                            [DockPanel.DockProperty] = Avalonia.Controls.Dock.Left,
                             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
                             ShowButtonSpinner = false,
                             Foreground = Avalonia.Media.Brushes.Black,
-                            Background = Avalonia.Media.Brushes.White,
+                            Background = Avalonia.Media.Brushes.Khaki,
+                            Width = 40,
+                            MaxWidth = 40,
                             Margin = new Avalonia.Thickness(0),
                             Padding = new Avalonia.Thickness(0),
                             Minimum = 0,
                             Maximum = 100,
-                            //[!NumericIntUpDown.ValueProperty] = new Binding($@"Trackers.Day{m_Index:D2}", BindingMode.TwoWay)
-                            //{
-                            //    UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
-                            //},
+                            [!NumericIntUpDown.ValueProperty] = new Binding($@"PercentageWorked", BindingMode.TwoWay)
+                            {
+                                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                            },
                         });
-                    return templateGrid;
+
+                    templatePanel.Children.Add(
+                        new TextBlock
+                        {
+                            [DockPanel.DockProperty] = Avalonia.Controls.Dock.Right,
+                            [!TextBlock.TextProperty] = new Binding($@"Id", BindingMode.OneWay),
+                            Width = 35,
+                            Padding = new Avalonia.Thickness(3, 0),
+                            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+                        });
+
+                    templatePanel.Children.Add(new Grid());
+
+                    return templatePanel;
                 });
 
                 mainGrid.Children.Add(comboBox);
@@ -132,7 +148,7 @@ namespace Zametek.View.ProjectPlan
             CanUserResize = false;
             CanUserReorder = false;
             CanUserSort = false;
-            Width = new DataGridLength(295);
+            Width = new DataGridLength(120);
             Header = header;
             CellTemplate = cellTemplate;
             CellEditingTemplate = cellEditingTemplate;

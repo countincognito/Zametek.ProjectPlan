@@ -49,7 +49,7 @@ namespace Zametek.ViewModel.ProjectPlan
             RefreshWorkStreamSelector();
 
             Trackers = new ResourceTrackersViewModel(
-                m_CoreViewModel, Id, resource.Trackers ?? []);
+                m_CoreViewModel, this, Id, resource.Trackers ?? []);
 
             m_InterActivityAllocationIsIndirect = this
                 .WhenAnyValue(
@@ -205,6 +205,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public IResourceTrackersViewModel Trackers { get; }
+
+        public bool IsEditing => m_isDirty;
 
         public object CloneObject()
         {

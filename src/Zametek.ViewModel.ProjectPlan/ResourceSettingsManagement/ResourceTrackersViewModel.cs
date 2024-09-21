@@ -12,11 +12,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly object m_Lock;
         private readonly ICoreViewModel m_CoreViewModel;
+        private readonly IManagedResourceViewModel m_ManagedResourceViewModel;
         private readonly Dictionary<int, IResourceActivitySelectorViewModel> m_ResourceActivitySelectorLookup;
 
         private readonly IDisposable? m_DaysSub;
-
-        private static readonly IResourceActivitySelectorViewModel s_Empty = null;
 
         #endregion
 
@@ -24,12 +23,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ResourceTrackersViewModel(
             ICoreViewModel coreViewModel,
+            IManagedResourceViewModel managedResourceViewModel,
             int resourceId,
             IEnumerable<ResourceTrackerModel> trackers)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(managedResourceViewModel);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
+            m_ManagedResourceViewModel = managedResourceViewModel;
             ResourceId = resourceId;
             m_ResourceActivitySelectorLookup = [];
 
@@ -44,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_DaysSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.TrackerIndex)
-                .ObserveOn(RxApp.TaskpoolScheduler) // TODO check this is good
+                .ObserveOn(RxApp.TaskpoolScheduler) // TODO check this will work.
                 .Subscribe(_ => RefreshDays());
         }
 
@@ -58,54 +60,38 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
+
                 int indexOffset = index + TrackerIndex;
-                if (m_ResourceActivitySelectorLookup.TryGetValue(indexOffset, out IResourceActivitySelectorViewModel? selector))
+
+                if (!m_ResourceActivitySelectorLookup.TryGetValue(indexOffset, out IResourceActivitySelectorViewModel? selector))
                 {
-                    return selector;
+                    // If the selector does not exist, but we are currently editing
+                    // the managed resource, then create a new selector and add it
+                    // to the lookup dictionary.
+                    if (m_ManagedResourceViewModel.IsEditing)
+                    {
+                        selector = new ResourceActivitySelectorViewModel(
+                            m_CoreViewModel,
+                            new ResourceTrackerModel
+                            {
+                                Time = indexOffset,
+                                ResourceId = ResourceId,
+                            });
+                        m_ResourceActivitySelectorLookup.Add(indexOffset, selector);
+                    }
+                    // Otherwise, just return the empty one. Since we only need to
+                    // create a new selector during editing.
+                    else
+                    {
+                        selector = ResourceActivitySelectorViewModel.Empty;
+                    }
                 }
 
-
-
-
                 // TODO
-                var a = new ResourceActivitySelectorViewModel(
-                    m_CoreViewModel,
-                    new ResourceTrackerModel
-                    {
-                        Time = indexOffset,
-                        ResourceId = ResourceId,
-                        ActivityTrackers = []
-                    });
-                m_ResourceActivitySelectorLookup.Add(indexOffset, a); // TODO clean up empty selectors at compile time.
-                return a;
-
-
-
-
+                // TODO clean up empty selectors at compile time.
+                return selector;
             }
         }
-
-        //private void SetDayActivityTrackers(
-        //    int index,
-        //    List<ResourceActivityTrackerModel> value)
-        //{
-        //    lock (m_Lock)
-        //    {
-        //        int indexOffset = index + TrackerIndex;
-        //        m_ResourceTrackerLookup.Remove(indexOffset);
-        //        if (value is not null
-        //            && value.Count > 0)
-        //        {
-        //            ResourceTrackerModel tracker = new()
-        //            {
-        //                Time = indexOffset,
-        //                ResourceId = ResourceId,
-        //                ActivityTrackers = value,
-        //            };
-        //            m_ResourceTrackerLookup.TryAdd(indexOffset, tracker);
-        //        }
-        //    }
-        //}
 
         private void RefreshDays()
         {
@@ -135,7 +121,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IResourceTrackerViewModel Members
 
-        //public List<ResourceTrackerModel> Trackers => [.. m_ResourceTrackerLookup.Values.OrderBy(x => x.Time)];
+        //public List<ResourceTrackerModel> Trackers => [.. m_ResourceActivitySelectorLookup.Values.OrderBy(x => x.Time)];
 
         public int ResourceId { get; }
 
