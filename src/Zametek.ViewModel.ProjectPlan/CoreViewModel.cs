@@ -1,11 +1,8 @@
 ﻿using AutoMapper;
 using DynamicData;
 using DynamicData.Binding;
-using IKVM.Internal;
-using NPOI.HSSF.Record.Aggregates;
 using ReactiveUI;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
@@ -311,9 +308,13 @@ namespace Zametek.ViewModel.ProjectPlan
             return resourceSeriesSet;
         }
 
-        private static TrackingSeriesSetModel CalculateTrackingSeriesSet(IEnumerable<ActivityModel> activities)
+        private static TrackingSeriesSetModel CalculateTrackingSeriesSet(
+            IEnumerable<ActivityModel> activities,
+            IEnumerable<ResourceModel> resources)
         {
             ArgumentNullException.ThrowIfNull(activities);
+            ArgumentNullException.ThrowIfNull(resources);
+
             IList<ActivityModel> orderedActivities = [.. activities
                 .Select(x => x.CloneObject())
                 .OrderBy(x => x.EarliestFinishTime.GetValueOrDefault())
@@ -354,7 +355,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             planPointSeries.Add(new TrackingPointModel());
 
-
             double totalWorkingTime = Convert.ToDouble(orderedActivities.Sum(s => s.Duration));
 
             // Plan.
@@ -388,177 +388,185 @@ namespace Zametek.ViewModel.ProjectPlan
             // Only bother calculating the progress and effort is there is a planned end time.
             if (plannedEndTime > 0)
             {
-                // Progress.
-                progressPointSeries.Add(new TrackingPointModel());
+                {
+                    // Progress.
+                    progressPointSeries.Add(new TrackingPointModel());
 
-                // Preprocess the activity trackers so they can be looked up
-                // quickly according to the time.
+                    // Preprocess the activity trackers so they can be looked up
+                    // quickly according to the time.
 
-                Dictionary<int, (ActivityModel activity, Dictionary<int, ActivityTrackerModel> activityTrackerLookup)> activityBehaviourLookup =
-                    orderedActivities.ToDictionary(
-                        activity => activity.Id,
-                        activity =>
-                        {
-                            int activityId = activity.Id;
-                            Dictionary<int, ActivityTrackerModel> activityTrackerLookup = [];
-
-                            foreach (ActivityTrackerModel tracker in activity.Trackers)
+                    Dictionary<int, (ActivityModel activity, Dictionary<int, ActivityTrackerModel> activityTrackerLookup)> activityBehaviourLookup =
+                        orderedActivities.ToDictionary(
+                            activity => activity.Id,
+                            activity =>
                             {
-                                if (tracker.ActivityId == activityId)
+                                int activityId = activity.Id;
+                                Dictionary<int, ActivityTrackerModel> activityTrackerLookup = [];
+
+                                foreach (ActivityTrackerModel tracker in activity.Trackers)
                                 {
-                                    activityTrackerLookup.TryAdd(tracker.Time, tracker);
+                                    if (tracker.ActivityId == activityId)
+                                    {
+                                        activityTrackerLookup.TryAdd(tracker.Time, tracker);
+                                    }
+                                }
+
+                                return (activity, activityTrackerLookup);
+                            });
+
+                    // This is for tracking the working progresses for each activity.
+                    Dictionary<int, int> runningWorkingProgresses = orderedActivities.ToDictionary(activity => activity.Id, activity => 0);
+
+                    // Cycle through each time index.
+                    for (int timeIndex = 0; timeIndex < plannedEndTime; timeIndex++)
+                    {
+                        // Here we need to update the running percentage completion for each activity.
+                        foreach ((ActivityModel activity, Dictionary<int, ActivityTrackerModel> activityTrackerLookup) in activityBehaviourLookup.Values)
+                        {
+                            int runningWorkingProgress = 0;
+
+                            if (runningWorkingProgresses.TryGetValue(activity.Id, out int workingCompletion))
+                            {
+                                runningWorkingProgress = workingCompletion;
+                            }
+
+                            if (activityTrackerLookup.TryGetValue(timeIndex, out ActivityTrackerModel? tracker))
+                            {
+                                if (tracker.PercentageComplete > runningWorkingProgress)
+                                {
+                                    runningWorkingProgress = tracker.PercentageComplete;
                                 }
                             }
 
-                            return (activity, activityTrackerLookup);
-                        });
-
-                // This is for tracking the working completions for each activity.
-                Dictionary<int, int> runningWorkingCompletions = orderedActivities.ToDictionary(activity => activity.Id, activity => 0);
-
-                // Crank through each time index.
-                for (int timeIndex = 0; timeIndex < plannedEndTime; timeIndex++)
-                {
-                    // Here we need to update the running percentage completion for each activity.
-                    foreach ((ActivityModel activity, Dictionary<int, ActivityTrackerModel> activityTrackerLookup) in activityBehaviourLookup.Values)
-                    {
-                        int runningWorkingCompletion = 0;
-
-                        if (runningWorkingCompletions.TryGetValue(activity.Id, out int workingCompletion))
-                        {
-                            runningWorkingCompletion = workingCompletion;
+                            runningWorkingProgresses[activity.Id] = runningWorkingProgress;
                         }
 
-                        if (activityTrackerLookup.TryGetValue(timeIndex, out ActivityTrackerModel? tracker))
+                        // Now we can calculate percentage progress for each activity that has
+                        // a percentage completed entry.
+                        double currentWorkingProgress = 0.0;
+
+                        foreach (ActivityModel activity in orderedActivities)
                         {
-                            if (tracker.PercentageComplete > runningWorkingCompletion)
+                            int percentageCompleted = runningWorkingProgresses[activity.Id];
+                            currentWorkingProgress += activity.Duration * (percentageCompleted / 100.0);
+                        }
+
+                        double progressPercentage = plannedEndTime == 0 ? 0.0 : 100.0 * currentWorkingProgress / totalWorkingTime;
+                        int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
+
+                        foreach ((ActivityModel activity, Dictionary<int, ActivityTrackerModel> activityTrackerLookup) in activityBehaviourLookup.Values)
+                        {
+                            // Now add progress points for activities only if they have
+                            // a recorded percentage completed entry for this time index.
+                            if (activityTrackerLookup.TryGetValue(timeIndex, out ActivityTrackerModel? tracker))
                             {
-                                runningWorkingCompletion = tracker.PercentageComplete;
+                                progressPointSeries.Add(new TrackingPointModel
+                                {
+                                    Time = time,
+                                    ActivityId = activity.Id,
+                                    ActivityName = activity.Name,
+                                    Value = currentWorkingProgress,
+                                    ValuePercentage = progressPercentage
+                                });
                             }
-                        }
-
-                        runningWorkingCompletions[activity.Id] = runningWorkingCompletion;
-                    }
-
-                    // Now we can calculate percentage progress for each activity that has
-                    // a percentage completed entry.
-                    double runningWorkingProgress = 0.0;
-
-                    foreach (ActivityModel activity in orderedActivities)
-                    {
-                        int percentageCompleted = runningWorkingCompletions[activity.Id];
-                        runningWorkingProgress += activity.Duration * (percentageCompleted / 100.0);
-                    }
-
-                    double progressPercentage = plannedEndTime == 0 ? 0.0 : 100.0 * runningWorkingProgress / totalWorkingTime;
-                    int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
-
-                    foreach ((ActivityModel activity, Dictionary<int, ActivityTrackerModel> activityTrackerLookup) in activityBehaviourLookup.Values)
-                    {
-                        // Now add progress points for activities only if they have
-                        // a recorded percentage completed entry for this time index.
-                        if (activityTrackerLookup.TryGetValue(timeIndex, out ActivityTrackerModel? tracker))
-                        {
-                            progressPointSeries.Add(new TrackingPointModel
-                            {
-                                Time = time,
-                                ActivityId = activity.Id,
-                                ActivityName = activity.Name,
-                                Value = runningWorkingProgress,
-                                ValuePercentage = progressPercentage
-                            });
                         }
                     }
                 }
 
+                {
+                    // Effort
+                    effortPointSeries.Add(new TrackingPointModel());
 
+                    // Preprocess the resource trackers so they can be looked up
+                    // quickly according to the time.
 
+                    Dictionary<int, (ResourceModel resource, Dictionary<int, ResourceTrackerModel> resourceTrackerLookup)> resourceBehaviourLookup =
+                        resources.ToDictionary(
+                            resource => resource.Id,
+                            resource =>
+                            {
+                                int resourceId = resource.Id;
+                                Dictionary<int, ResourceTrackerModel> resourceTrackerLookup = [];
 
-                // Effort
+                                foreach (ResourceTrackerModel tracker in resource.Trackers)
+                                {
+                                    if (tracker.ResourceId == resourceId)
+                                    {
+                                        resourceTrackerLookup.TryAdd(tracker.Time, tracker);
+                                    }
+                                }
+
+                                return (resource, resourceTrackerLookup);
+                            });
+
+                    // This is for tracking the working effort for each activity.
+                    Dictionary<int, int> runningWorkingEfforts = orderedActivities.ToDictionary(activity => activity.Id, activity => 0);
+
+                    // Cycle through each time index.
+                    for (int timeIndex = 0; timeIndex < plannedEndTime; timeIndex++)
+                    {
+                        // Here we need to update the running percentage effort for each resource.
+                        foreach ((ResourceModel resource, Dictionary<int, ResourceTrackerModel> resourceTrackerLookup) in resourceBehaviourLookup.Values)
+                        {
+                            foreach (ActivityModel activity in orderedActivities)
+                            {
+                                int runningWorkingEffort = 0;
+                                int activityId = activity.Id;
+
+                                if (runningWorkingEfforts.TryGetValue(activityId, out int workingEffort))
+                                {
+                                    runningWorkingEffort = workingEffort;
+                                }
+
+                                if (resourceTrackerLookup.TryGetValue(timeIndex, out ResourceTrackerModel? tracker))
+                                {
+                                    foreach (ResourceActivityTrackerModel activityTracker in tracker.ActivityTrackers.Where(x => x.ActivityId == activityId))
+                                    {
+                                        runningWorkingEffort += activityTracker.PercentageWorked;
+                                    }
+                                }
+
+                                runningWorkingEfforts[activity.Id] = runningWorkingEffort;
+                            }
+                        }
+
+                        // Now we can calculate percentage effort for each activity that has
+                        // a effort percentage completed entry.
+                        double currentWorkingEffort = 0.0;
+
+                        foreach (ActivityModel activity in orderedActivities)
+                        {
+                            int percentageWorked = runningWorkingEfforts[activity.Id];
+                            currentWorkingEffort += percentageWorked / 100.0;
+                        }
+
+                        double effortPercentage = plannedEndTime == 0 ? 0.0 : 100.0 * currentWorkingEffort / totalWorkingTime;
+                        int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
+
+                        foreach ((ResourceModel resource, Dictionary<int, ResourceTrackerModel> resourceTrackerLookup) in resourceBehaviourLookup.Values)
+                        {
+                            // Now add effort points for activities only if they have
+                            // a recorded effort completed entry for this time index.
+                            if (resourceTrackerLookup.TryGetValue(timeIndex, out ResourceTrackerModel? tracker))
+                            {
+                                int resourceId = tracker.ResourceId;
+
+                                foreach (ResourceActivityTrackerModel activityTracker in tracker.ActivityTrackers.Where(x => x.ResourceId == resourceId))
+                                {
+                                    effortPointSeries.Add(new TrackingPointModel
+                                    {
+                                        Time = time,
+                                        ActivityId = activityTracker.ActivityId,
+                                        ActivityName = activityTracker.ActivityName,
+                                        Value = currentWorkingEffort,
+                                        ValuePercentage = effortPercentage
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
             }
-
-
-
-
-
-
-
-
-            //// TODO
-
-            //// Progress and Effort.
-            //int runningEffort = 0;
-
-            //progressPointSeries.Add(new TrackingPointModel());
-            //effortPointSeries.Add(new TrackingPointModel());
-
-            //for (int timeIndex = 0; timeIndex < totalTime; timeIndex++)
-            //{
-            //    // Calculate percentage progress at each time index.
-            //    double timeIndexRunningProgress = 0.0;
-            //    bool includePoints = false;
-            //    var includedActivities = new List<ActivityModel>();
-
-            //    foreach (ActivityModel activity in orderedActivities)
-            //    {
-            //        if (timeIndex < activity.Trackers.Count)
-            //        {
-            //            var tracker = activity.Trackers[timeIndex];
-
-            //            Debug.Assert(tracker.Index == timeIndex);
-            //            Debug.Assert(tracker.Time == timeIndex);
-
-            //            timeIndexRunningProgress += activity.Duration * (tracker.PercentageComplete / 100.0);
-
-            //            if (tracker.IsIncluded)
-            //            {
-            //                runningEffort++;
-            //                includedActivities.Add(activity);
-            //            }
-
-            //            includePoints = true;
-            //        }
-            //    }
-
-            //    if (includePoints)
-            //    {
-            //        double progressPercentage = totalTime == 0 ? 0.0 : 100.0 * timeIndexRunningProgress / totalTime;
-            //        double effortPercentage = totalTime == 0 ? 0.0 : 100.0 * runningEffort / totalTime;
-            //        int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
-
-            //        foreach (ActivityModel includedActivity in includedActivities.OrderBy(x => x.Id))
-            //        {
-            //            progressPointSeries.Add(new TrackingPointModel
-            //            {
-            //                Time = time,
-            //                ActivityId = includedActivity.Id,
-            //                ActivityName = includedActivity.Name,
-            //                Value = timeIndexRunningProgress,
-            //                ValuePercentage = progressPercentage
-            //            });
-
-            //            effortPointSeries.Add(new TrackingPointModel
-            //            {
-            //                Time = time,
-            //                ActivityId = includedActivity.Id,
-            //                ActivityName = includedActivity.Name,
-            //                Value = runningEffort,
-            //                ValuePercentage = effortPercentage
-            //            });
-            //        }
-
-            //    }
-            //}
-
-
-
-
-
-
-
-
-
-
 
             // Projections.
 
@@ -1455,7 +1463,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     // TODO fix this mapping
                     IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(Activities);
-                    trackingSeriesSet = CalculateTrackingSeriesSet(activityModels);
+                    trackingSeriesSet = CalculateTrackingSeriesSet(activityModels, ResourceSettings.Resources);
                 }
 
                 TrackingSeriesSet = trackingSeriesSet;
