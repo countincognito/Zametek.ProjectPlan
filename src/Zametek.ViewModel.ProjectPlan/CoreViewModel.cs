@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using DynamicData;
 using DynamicData.Binding;
+using IKVM.Internal;
+using NPOI.HSSF.Record.Aggregates;
 using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -352,7 +354,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             planPointSeries.Add(new TrackingPointModel());
 
-            double totalTime = Convert.ToDouble(orderedActivities.Sum(s => s.Duration));
+
+            double totalWorkingTime = Convert.ToDouble(orderedActivities.Sum(s => s.Duration));
 
             // Plan.
             if (orderedActivities.All(x => x.EarliestFinishTime.HasValue))
@@ -362,7 +365,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int time = activity.EarliestFinishTime.GetValueOrDefault();
                     runningTotalTime += activity.Duration;
-                    double percentage = totalTime == 0 ? 0.0 : 100.0 * runningTotalTime / totalTime;
+                    double percentage = totalWorkingTime == 0 ? 0.0 : 100.0 * runningTotalTime / totalWorkingTime;
                     planPointSeries.Add(new TrackingPointModel
                     {
                         Time = time,
@@ -374,43 +377,106 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            // TODO
-            //// Progress.
-            //progressPointSeries.Add(new TrackingPointModel());
+            // Find the planned end time.
+            int plannedEndTime = 0;
 
-            //for (int timeIndex = 0; timeIndex < totalTime; timeIndex++)
-            //{
-            //    // Calculate percentage progress at each time index.
-            //    double timeIndexRunningProgress = 0.0;
+            if (planPointSeries.Count > 0)
+            {
+                plannedEndTime = planPointSeries.Last().Time;
+            }
 
-            //    foreach (ActivityModel activity in orderedActivities)
-            //    {
-            //        if (timeIndex < activity.Trackers.Count)
-            //        {
-            //            var tracker = activity.Trackers[timeIndex];
+            // Only bother calculating the progress and effort is there is a planned end time.
+            if (plannedEndTime > 0)
+            {
+                // Progress.
+                progressPointSeries.Add(new TrackingPointModel());
 
-            //            //Debug.Assert(tracker.Index == timeIndex);
-            //            Debug.Assert(tracker.Time == timeIndex);
+                // Preprocess the activity trackers so they can be looked up
+                // quickly according to the time.
 
-            //            timeIndexRunningProgress += activity.Duration * (tracker.PercentageComplete / 100.0);
-            //        }
-            //    }
+                Dictionary<int, (ActivityModel activity, Dictionary<int, ActivityTrackerModel> activityTrackerLookup)> activityBehaviourLookup =
+                    orderedActivities.ToDictionary(
+                        activity => activity.Id,
+                        activity =>
+                        {
+                            int activityId = activity.Id;
+                            Dictionary<int, ActivityTrackerModel> activityTrackerLookup = [];
 
-            //    double progressPercentage = totalTime == 0 ? 0.0 : 100.0 * timeIndexRunningProgress / totalTime;
-            //    int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
+                            foreach (ActivityTrackerModel tracker in activity.Trackers)
+                            {
+                                if (tracker.ActivityId == activityId)
+                                {
+                                    activityTrackerLookup.TryAdd(tracker.Time, tracker);
+                                }
+                            }
 
-            //    foreach (ActivityModel activity in orderedActivities.OrderBy(x => x.Id))
-            //    {
-            //        progressPointSeries.Add(new TrackingPointModel
-            //        {
-            //            Time = time,
-            //            ActivityId = activity.Id,
-            //            ActivityName = activity.Name,
-            //            Value = timeIndexRunningProgress,
-            //            ValuePercentage = progressPercentage
-            //        });
-            //    }
-            //}
+                            return (activity, activityTrackerLookup);
+                        });
+
+                // This is for tracking the working completions for each activity.
+                Dictionary<int, int> runningWorkingCompletions = orderedActivities.ToDictionary(activity => activity.Id, activity => 0);
+
+                // Crank through each time index.
+                for (int timeIndex = 0; timeIndex < plannedEndTime; timeIndex++)
+                {
+                    // Here we need to update the running percentage completion for each activity.
+                    foreach ((ActivityModel activity, Dictionary<int, ActivityTrackerModel> activityTrackerLookup) in activityBehaviourLookup.Values)
+                    {
+                        int runningWorkingCompletion = 0;
+
+                        if (runningWorkingCompletions.TryGetValue(activity.Id, out int workingCompletion))
+                        {
+                            runningWorkingCompletion = workingCompletion;
+                        }
+
+                        if (activityTrackerLookup.TryGetValue(timeIndex, out ActivityTrackerModel? tracker))
+                        {
+                            if (tracker.PercentageComplete > runningWorkingCompletion)
+                            {
+                                runningWorkingCompletion = tracker.PercentageComplete;
+                            }
+                        }
+
+                        runningWorkingCompletions[activity.Id] = runningWorkingCompletion;
+                    }
+
+                    // Now we can calculate percentage progress for each activity that has
+                    // a percentage completed entry.
+                    double runningWorkingProgress = 0.0;
+
+                    foreach (ActivityModel activity in orderedActivities)
+                    {
+                        int percentageCompleted = runningWorkingCompletions[activity.Id];
+                        runningWorkingProgress += activity.Duration * (percentageCompleted / 100.0);
+                    }
+
+                    double progressPercentage = plannedEndTime == 0 ? 0.0 : 100.0 * runningWorkingProgress / totalWorkingTime;
+                    int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
+
+                    foreach ((ActivityModel activity, Dictionary<int, ActivityTrackerModel> activityTrackerLookup) in activityBehaviourLookup.Values)
+                    {
+                        // Now add progress points for activities only if they have
+                        // a recorded percentage completed entry for this time index.
+                        if (activityTrackerLookup.TryGetValue(timeIndex, out ActivityTrackerModel? tracker))
+                        {
+                            progressPointSeries.Add(new TrackingPointModel
+                            {
+                                Time = time,
+                                ActivityId = activity.Id,
+                                ActivityName = activity.Name,
+                                Value = runningWorkingProgress,
+                                ValuePercentage = progressPercentage
+                            });
+                        }
+                    }
+                }
+
+
+
+
+                // Effort
+            }
+
 
 
 
@@ -1237,87 +1303,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = false;
             }
         }
-
-        // TODO remove
-        //public void AddTrackers()
-        //{
-        //    try
-        //    {
-        //        lock (m_Lock)
-        //        {
-        //            IsBusy = true;
-        //            foreach (IManagedActivityViewModel activity in Activities)
-        //            {
-        //                activity.AddTracker();
-        //            }
-        //            IsProjectUpdated = true;
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        IsBusy = false;
-        //    }
-        //}
-
-        //public void RemoveTrackers()
-        //{
-        //    try
-        //    {
-        //        lock (m_Lock)
-        //        {
-        //            IsBusy = true;
-        //            foreach (IManagedActivityViewModel activity in Activities)
-        //            {
-        //                activity.RemoveTracker();
-        //            }
-        //            IsProjectUpdated = true;
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        IsBusy = false;
-        //    }
-        //}
-
-        //public void ReviseTrackers()
-        //{
-        //    try
-        //    {
-        //        lock (m_Lock)
-        //        {
-        //            IsBusy = true;
-        //            foreach (IManagedActivityViewModel activity in Activities)
-        //            {
-        //                int runningPercentageCompleted = 0;
-        //                bool activeUpdate = false;
-
-        //                foreach (IActivityTrackerViewModel tracker in activity.Trackers)
-        //                {
-        //                    if (tracker.IsUpdated)
-        //                    {
-        //                        if (tracker.PercentageComplete >= runningPercentageCompleted)
-        //                        {
-        //                            activeUpdate = true;
-        //                            runningPercentageCompleted = tracker.PercentageComplete;
-        //                        }
-        //                    }
-
-        //                    if (activeUpdate && tracker.PercentageComplete < runningPercentageCompleted)
-        //                    {
-        //                        tracker.PercentageComplete = runningPercentageCompleted;
-        //                    }
-
-        //                    tracker.IsUpdated = false;
-        //                    runningPercentageCompleted = tracker.PercentageComplete;
-        //                }
-        //            }
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        IsBusy = false;
-        //    }
-        //}
 
         public void RunCompile()
         {
