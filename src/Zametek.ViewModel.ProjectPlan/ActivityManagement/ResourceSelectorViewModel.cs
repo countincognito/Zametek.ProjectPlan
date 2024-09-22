@@ -1,17 +1,18 @@
 ﻿using ReactiveUI;
 using System.Collections.ObjectModel;
 using Zametek.Common.ProjectPlan;
+using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ResourceSelectorViewModel
-        : ViewModelBase, IDisposable
+        : ViewModelBase, IResourceSelectorViewModel
     {
         #region Fields
 
         private readonly object m_Lock;
-        private static readonly EqualityComparer<SelectableResourceViewModel> s_EqualityComparer =
-            EqualityComparer<SelectableResourceViewModel>.Create(
+        private static readonly EqualityComparer<ISelectableResourceViewModel> s_EqualityComparer =
+            EqualityComparer<ISelectableResourceViewModel>.Create(
                     (x, y) =>
                     {
                         if (x is null)
@@ -25,6 +26,26 @@ namespace Zametek.ViewModel.ProjectPlan
                         return x.Id == y.Id;
                     },
                     x => x.Id);
+
+        private static readonly Comparer<ISelectableResourceViewModel> s_SortComparer =
+            Comparer<ISelectableResourceViewModel>.Create(
+                    (x, y) =>
+                    {
+                        if (x is null)
+                        {
+                            if (y is null)
+                            {
+                                return 0;
+                            }
+                            return -1;
+                        }
+                        if (y is null)
+                        {
+                            return 1;
+                        }
+
+                        return x.Id.CompareTo(y.Id);
+                    });
 
         #endregion
 
@@ -42,14 +63,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Properties
 
-        private readonly ObservableUniqueCollection<SelectableResourceViewModel> m_TargetResources;
-        private readonly ReadOnlyObservableCollection<SelectableResourceViewModel> m_ReadOnlyTargetResources;
-        public ReadOnlyObservableCollection<SelectableResourceViewModel> TargetResources => m_ReadOnlyTargetResources;
+        private readonly ObservableUniqueCollection<ISelectableResourceViewModel> m_TargetResources;
+        private readonly ReadOnlyObservableCollection<ISelectableResourceViewModel> m_ReadOnlyTargetResources;
+        public ReadOnlyObservableCollection<ISelectableResourceViewModel> TargetResources => m_ReadOnlyTargetResources;
 
         // Use ObservableUniqueCollection to prevent selected
         // items appearing twice in the Urse MultiComboBox.
-        private readonly ObservableUniqueCollection<SelectableResourceViewModel> m_SelectedTargetResources;
-        public ObservableCollection<SelectableResourceViewModel> SelectedTargetResources => m_SelectedTargetResources;
+        private readonly ObservableUniqueCollection<ISelectableResourceViewModel> m_SelectedTargetResources;
+        public ObservableCollection<ISelectableResourceViewModel> SelectedTargetResources => m_SelectedTargetResources;
 
         public string TargetResourcesString
         {
@@ -105,12 +126,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 {
                     // Find target view models that have been removed.
-                    List<SelectableResourceViewModel> removedViewModels = m_TargetResources
+                    List<ISelectableResourceViewModel> removedViewModels = m_TargetResources
                         .ExceptBy(targetResources.Select(x => x.Id), x => x.Id)
                         .ToList();
 
                     // Delete the removed items from the target and selected collections.
-                    foreach (SelectableResourceViewModel vm in removedViewModels)
+                    foreach (ISelectableResourceViewModel vm in removedViewModels)
                     {
                         m_TargetResources.Remove(vm);
                         m_SelectedTargetResources.Remove(vm);
@@ -118,12 +139,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     // Find the selected view models that have been removed.
-                    List<SelectableResourceViewModel> removedSelectedViewModels = m_SelectedTargetResources
+                    List<ISelectableResourceViewModel> removedSelectedViewModels = m_SelectedTargetResources
                         .ExceptBy(selectedTargetResources, x => x.Id)
                         .ToList();
 
                     // Delete the removed selected items from the selected collections.
-                    foreach (SelectableResourceViewModel vm in removedSelectedViewModels)
+                    foreach (ISelectableResourceViewModel vm in removedSelectedViewModels)
                     {
                         vm.IsSelected = false;
                         m_SelectedTargetResources.Remove(vm);
@@ -135,7 +156,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         .ExceptBy(m_TargetResources.Select(x => x.Id), x => x.Id)
                         .ToList();
 
-                    List<SelectableResourceViewModel> addedViewModels = [];
+                    List<ISelectableResourceViewModel> addedViewModels = [];
 
                     // Create a collection of new view models.
                     foreach (ResourceModel model in addedModels)
@@ -157,7 +178,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Update names.
                     Dictionary<int, ResourceModel> targetResourceLookup = targetResources.ToDictionary(x => x.Id);
 
-                    foreach (SelectableResourceViewModel vm in m_TargetResources)
+                    foreach (ISelectableResourceViewModel vm in m_TargetResources)
                     {
                         if (targetResourceLookup.TryGetValue(vm.Id, out ResourceModel? value))
                         {
@@ -165,6 +186,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     }
                 }
+
+                m_TargetResources.Sort(s_SortComparer);
             }
             RaiseTargetResourcesPropertiesChanged();
         }

@@ -149,7 +149,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public IDependentActivity<int, int, int> DependentActivity { get; }
 
-        public ResourceSelectorViewModel ResourceSelector { get; }
+        public IResourceSelectorViewModel ResourceSelector { get; }
 
         public IWorkStreamSelectorViewModel WorkStreamSelector { get; }
 

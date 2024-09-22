@@ -1,15 +1,16 @@
 ﻿using ReactiveUI;
 using System.Globalization;
 using System.Reactive.Linq;
+using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class SelectableResourceViewModel
-        : ViewModelBase, IDisposable
+        : ViewModelBase, ISelectableResourceViewModel
     {
         #region Fields
 
-        private readonly ResourceSelectorViewModel m_ResourceSelectorViewModel;
+        private readonly IResourceSelectorViewModel m_ResourceSelectorViewModel;
         private readonly IDisposable? m_ResourceSelectorSub;
 
         #endregion
@@ -20,7 +21,7 @@ namespace Zametek.ViewModel.ProjectPlan
             int id,
             string name,//!!,
             bool isSelected,
-            ResourceSelectorViewModel resourceSelectorViewModel)
+            IResourceSelectorViewModel resourceSelectorViewModel)
         {
             ArgumentNullException.ThrowIfNull(resourceSelectorViewModel);
             Id = id;
