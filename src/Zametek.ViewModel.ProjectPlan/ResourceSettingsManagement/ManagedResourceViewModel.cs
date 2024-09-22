@@ -81,8 +81,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public WorkStreamSelectorViewModel WorkStreamSelector { get; }
-
         #endregion
 
         private void UpdateActivityTargetWorkStreams()
@@ -203,6 +201,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged();
             }
         }
+
+        public IWorkStreamSelectorViewModel WorkStreamSelector { get; }
 
         public IResourceTrackersViewModel Trackers { get; }
 

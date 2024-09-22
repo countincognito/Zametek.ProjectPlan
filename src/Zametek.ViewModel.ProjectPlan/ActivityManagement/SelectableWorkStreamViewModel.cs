@@ -1,15 +1,16 @@
 ﻿using ReactiveUI;
 using System.Globalization;
 using System.Reactive.Linq;
+using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class SelectableWorkStreamViewModel
-        : ViewModelBase, IDisposable
+        : ViewModelBase, ISelectableWorkStreamViewModel
     {
         #region Fields
 
-        private readonly WorkStreamSelectorViewModel m_WorkStreamSelectorViewModel;
+        private readonly IWorkStreamSelectorViewModel m_WorkStreamSelectorViewModel;
         private readonly IDisposable? m_WorkStreamSelectorSub;
 
         #endregion
@@ -21,7 +22,7 @@ namespace Zametek.ViewModel.ProjectPlan
             string name,//!!,
             bool isPhase,
             bool isSelected,
-            WorkStreamSelectorViewModel workStreamSelectorViewModel)
+            IWorkStreamSelectorViewModel workStreamSelectorViewModel)
         {
             ArgumentNullException.ThrowIfNull(workStreamSelectorViewModel);
             Id = id;

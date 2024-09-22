@@ -1,18 +1,19 @@
 ﻿using ReactiveUI;
 using System.Collections.ObjectModel;
 using Zametek.Common.ProjectPlan;
+using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class WorkStreamSelectorViewModel
-        : ViewModelBase, IDisposable
+        : ViewModelBase, IWorkStreamSelectorViewModel
     {
         #region Fields
 
         private readonly object m_Lock;
         private readonly bool m_PhaseOnly;
-        private static readonly EqualityComparer<SelectableWorkStreamViewModel> s_EqualityComparer =
-            EqualityComparer<SelectableWorkStreamViewModel>.Create(
+        private static readonly EqualityComparer<ISelectableWorkStreamViewModel> s_EqualityComparer =
+            EqualityComparer<ISelectableWorkStreamViewModel>.Create(
                     (x, y) =>
                     {
                         if (x is null)
@@ -26,6 +27,26 @@ namespace Zametek.ViewModel.ProjectPlan
                         return x.Id == y.Id;
                     },
                     x => x.Id);
+
+        private static readonly Comparer<ISelectableWorkStreamViewModel> s_SortComparer =
+            Comparer<ISelectableWorkStreamViewModel>.Create(
+                    (x, y) =>
+                    {
+                        if (x is null)
+                        {
+                            if (y is null)
+                            {
+                                return 0;
+                            }
+                            return -1;
+                        }
+                        if (y is null)
+                        {
+                            return 1;
+                        }
+
+                        return x.Id.CompareTo(y.Id);
+                    });
 
         #endregion
 
@@ -49,14 +70,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Properties
 
-        private readonly ObservableUniqueCollection<SelectableWorkStreamViewModel> m_TargetWorkStreams;
-        private readonly ReadOnlyObservableCollection<SelectableWorkStreamViewModel> m_ReadOnlyTargetWorkStreams;
-        public ReadOnlyObservableCollection<SelectableWorkStreamViewModel> TargetWorkStreams => m_ReadOnlyTargetWorkStreams;
+        private readonly ObservableUniqueCollection<ISelectableWorkStreamViewModel> m_TargetWorkStreams;
+        private readonly ReadOnlyObservableCollection<ISelectableWorkStreamViewModel> m_ReadOnlyTargetWorkStreams;
+        public ReadOnlyObservableCollection<ISelectableWorkStreamViewModel> TargetWorkStreams => m_ReadOnlyTargetWorkStreams;
 
         // Use ObservableUniqueCollection to prevent selected
         // items appearing twice in the Urse MultiComboBox.
-        private readonly ObservableUniqueCollection<SelectableWorkStreamViewModel> m_SelectedTargetWorkStreams;
-        public ObservableCollection<SelectableWorkStreamViewModel> SelectedTargetWorkStreams => m_SelectedTargetWorkStreams;
+        private readonly ObservableUniqueCollection<ISelectableWorkStreamViewModel> m_SelectedTargetWorkStreams;
+        public ObservableCollection<ISelectableWorkStreamViewModel> SelectedTargetWorkStreams => m_SelectedTargetWorkStreams;
 
         public string TargetWorkStreamsString
         {
@@ -106,12 +127,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 {
                     // Find target view models that have been removed.
-                    List<SelectableWorkStreamViewModel> removedViewModels = m_TargetWorkStreams
+                    List<ISelectableWorkStreamViewModel> removedViewModels = m_TargetWorkStreams
                         .ExceptBy(correctTargetWorkStreams.Select(x => x.Id), x => x.Id)
                         .ToList();
 
                     // Delete the removed items from the target and selected collections.
-                    foreach (SelectableWorkStreamViewModel vm in removedViewModels)
+                    foreach (ISelectableWorkStreamViewModel vm in removedViewModels)
                     {
                         m_TargetWorkStreams.Remove(vm);
                         m_SelectedTargetWorkStreams.Remove(vm);
@@ -119,12 +140,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     // Find the selected view models that have been removed.
-                    List<SelectableWorkStreamViewModel> removedSelectedViewModels = m_SelectedTargetWorkStreams
+                    List<ISelectableWorkStreamViewModel> removedSelectedViewModels = m_SelectedTargetWorkStreams
                         .ExceptBy(selectedTargetWorkStreams, x => x.Id)
                         .ToList();
 
                     // Delete the removed selected items from the selected collections.
-                    foreach (SelectableWorkStreamViewModel vm in removedSelectedViewModels)
+                    foreach (ISelectableWorkStreamViewModel vm in removedSelectedViewModels)
                     {
                         vm.IsSelected = false;
                         m_SelectedTargetWorkStreams.Remove(vm);
@@ -136,7 +157,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         .ExceptBy(m_TargetWorkStreams.Select(x => x.Id), x => x.Id)
                         .ToList();
 
-                    List<SelectableWorkStreamViewModel> addedViewModels = [];
+                    List<ISelectableWorkStreamViewModel> addedViewModels = [];
 
                     // Create a collection of new view models.
                     foreach (WorkStreamModel model in addedModels)
@@ -159,7 +180,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Update names.
                     Dictionary<int, WorkStreamModel> targetWorkStreamLookup = correctTargetWorkStreams.ToDictionary(x => x.Id);
 
-                    foreach (SelectableWorkStreamViewModel vm in m_TargetWorkStreams)
+                    foreach (ISelectableWorkStreamViewModel vm in m_TargetWorkStreams)
                     {
                         if (targetWorkStreamLookup.TryGetValue(vm.Id, out WorkStreamModel? value))
                         {
@@ -167,6 +188,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     }
                 }
+
+                m_TargetWorkStreams.Sort(s_SortComparer);
             }
             RaiseTargetWorkStreamsPropertiesChanged();
         }

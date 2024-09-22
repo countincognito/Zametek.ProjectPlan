@@ -151,7 +151,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ResourceSelectorViewModel ResourceSelector { get; }
 
-        public WorkStreamSelectorViewModel WorkStreamSelector { get; }
+        public IWorkStreamSelectorViewModel WorkStreamSelector { get; }
 
         #endregion
 
