@@ -1032,7 +1032,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     var plan = new ProjectPlanModel
                     {
-                        Version = Data.ProjectPlan.Versions.v0_3_2,
+                        Version = Data.ProjectPlan.Versions.v0_4_0,
                         ProjectStart = ProjectStart,
                         DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(Activities),
                         ResourceSettings = ResourceSettings.CloneObject(),

@@ -70,7 +70,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Name.
+        ///   Looks up a localized string similar to Activity Name.
         /// </summary>
         public static string Label_ActivityName {
             get {

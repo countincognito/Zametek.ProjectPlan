@@ -1,9 +1,11 @@
-﻿namespace Zametek.Contract.ProjectPlan
+﻿using Zametek.Common.ProjectPlan;
+
+namespace Zametek.Contract.ProjectPlan
 {
     public interface IResourceTrackersViewModel
         : IDisposable
     {
-        //List<ResourceActivityTrackerModel> Trackers { get; }
+        List<ResourceTrackerModel> Trackers { get; }
 
         int ResourceId { get; }
 

@@ -121,7 +121,37 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IResourceTrackerViewModel Members
 
-        //public List<ResourceTrackerModel> Trackers => [.. m_ResourceActivitySelectorLookup.Values.OrderBy(x => x.Time)];
+        public List<ResourceTrackerModel> Trackers
+        {
+            get
+            {
+                return m_ResourceActivitySelectorLookup.Values
+                    .Where(selector => selector.SelectedResourceActivityIds.Count > 0)
+                    .OrderBy(selector => selector.Time)
+                    .Select(selector =>
+                    {
+                        List<ResourceActivityTrackerModel> resourceActivityTrackers = selector.SelectedTargetResourceActivities
+                            .Select(activity =>
+                            {
+                                return new ResourceActivityTrackerModel
+                                {
+                                    Time = selector.Time,
+                                    ResourceId = selector.ResourceId,
+                                    ActivityId = activity.Id,
+                                    ActivityName = activity.Name,
+                                    PercentageWorked = activity.PercentageWorked,
+                                };
+                            }).ToList();
+
+                        return new ResourceTrackerModel
+                        {
+                            Time = selector.Time,
+                            ResourceId = selector.ResourceId,
+                            ActivityTrackers = resourceActivityTrackers,
+                        };
+                    }).ToList();
+            }
+        }
 
         public int ResourceId { get; }
 

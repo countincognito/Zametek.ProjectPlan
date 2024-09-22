@@ -210,7 +210,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         InterActivityPhases = [.. x.InterActivityPhases],
                         UnitCost = x.UnitCost,
                         DisplayOrder = x.DisplayOrder,
-                        ColorFormat = x.ColorFormat
+                        ColorFormat = x.ColorFormat,
+                        Trackers = x.Trackers.Trackers,
                     }).ToList(),
 
                     DefaultUnitCost = DefaultUnitCost,

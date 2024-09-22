@@ -1,11 +1,9 @@
 ﻿using ReactiveUI;
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using System.Linq;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -104,12 +102,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 List<ResourceActivityTrackerModel> newResourceActivityTrackers =
                     m_CoreViewModel.Activities
-                    .Select(x => new ResourceActivityTrackerModel
+                    .Select(activity => new ResourceActivityTrackerModel
                     {
                         Time = m_Time,
                         ResourceId = m_ResourceId,
-                        ActivityId = x.Id,
-                        ActivityName = x.Name,
+                        ActivityId = activity.Id,
+                        ActivityName = activity.Name,
                         PercentageWorked = 0
                     }).ToList();
 
@@ -130,12 +128,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 List<ResourceActivityTrackerModel> newResourceActivityTrackers =
                     m_CoreViewModel.Activities
-                    .Select(x => new ResourceActivityTrackerModel
+                    .Select(activity => new ResourceActivityTrackerModel
                     {
                         Time = m_Time,
                         ResourceId = m_ResourceId,
-                        ActivityId = x.Id,
-                        ActivityName = x.Name,
+                        ActivityId = activity.Id,
+                        ActivityName = activity.Name,
                         PercentageWorked = 0
                     }).ToList();
 
@@ -148,6 +146,10 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Properties
+
+        public int ResourceId => m_ResourceId;
+
+        public int Time => m_Time;
 
         public static IResourceActivitySelectorViewModel Empty { get; } = new EmptyResourceActivitySelectorViewModel();
 
@@ -361,6 +363,10 @@ namespace Zametek.ViewModel.ProjectPlan
     public class EmptyResourceActivitySelectorViewModel
         : IResourceActivitySelectorViewModel
     {
+        public int ResourceId => default;
+
+        public int Time => default;
+
         internal EmptyResourceActivitySelectorViewModel()
         {
             TargetResourceActivities = new ReadOnlyObservableCollection<ISelectableResourceActivityViewModel>([]);

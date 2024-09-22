@@ -121,7 +121,7 @@
     <value>Activity</value>
   </data>
   <data name="Label_ActivityName" xml:space="preserve">
-    <value>Name</value>
+    <value>Activity Name</value>
   </data>
   <data name="Label_ActivityRisk" xml:space="preserve">
     <value>Activity Risk:</value>

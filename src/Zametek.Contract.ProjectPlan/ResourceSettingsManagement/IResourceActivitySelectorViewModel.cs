@@ -6,6 +6,10 @@ namespace Zametek.Contract.ProjectPlan
     public interface IResourceActivitySelectorViewModel
         : IDisposable
     {
+        int ResourceId { get; }
+
+        int Time { get; }
+
         ReadOnlyObservableCollection<ISelectableResourceActivityViewModel> TargetResourceActivities { get; }
 
         ObservableCollection<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities { get; }
