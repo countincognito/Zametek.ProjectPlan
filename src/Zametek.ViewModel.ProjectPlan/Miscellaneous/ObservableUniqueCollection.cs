@@ -16,6 +16,17 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HashSet = new HashSet<T>(equalityComparer);
         }
 
+        public void Sort(IComparer<T> comparer)
+        {
+            List<T> sorted = [.. this];
+            sorted.Sort(comparer);
+
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                Move(IndexOf(sorted[i]), i);
+            }
+        }
+
         protected override void InsertItem(int index, T item)
         {
             if (m_HashSet.Add(item))

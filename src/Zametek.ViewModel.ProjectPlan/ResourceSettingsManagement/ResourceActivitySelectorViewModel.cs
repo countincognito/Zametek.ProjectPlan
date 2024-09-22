@@ -1,9 +1,11 @@
 ﻿using ReactiveUI;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using System.Linq;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -32,6 +34,26 @@ namespace Zametek.ViewModel.ProjectPlan
                     },
                     x => x.Id);
 
+        private static readonly Comparer<ISelectableResourceActivityViewModel> s_SortComparer =
+            Comparer<ISelectableResourceActivityViewModel>.Create(
+                    (x, y) =>
+                    {
+                        if (x is null)
+                        {
+                            if (y is null)
+                            {
+                                return 0;
+                            }
+                            return -1;
+                        }
+                        if (y is null)
+                        {
+                            return 1;
+                        }
+
+                        return x.Id.CompareTo(y.Id);
+                    });
+
         private readonly IDisposable? m_ReviseResourceActivityTrackersSub;
 
         #endregion
@@ -46,12 +68,6 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(resourceTrackerModel);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
-
-
-
-
-
-
             m_TargetResourceActivities = new(s_EqualityComparer);
             m_ReadOnlyTargetResourceActivities = new(m_TargetResourceActivities);
             m_SelectedTargetResourceActivities = new(s_EqualityComparer);
@@ -59,11 +75,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Time = resourceTrackerModel.Time;
             m_ResourceId = resourceTrackerModel.ResourceId;
 
-
-
-
-
-
+            // Initial set up.
             ReviseTrackers(resourceTrackerModel.ActivityTrackers);
 
             m_ReviseResourceActivityTrackersSub = this
@@ -91,7 +103,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 Dictionary<int, ResourceActivityTrackerModel> resourceActivityTrackerLookup = resourceActivityTrackers.ToDictionary(x => x.ActivityId);
 
                 List<ResourceActivityTrackerModel> newResourceActivityTrackers =
-                    m_CoreViewModel.Activities.Select(x => new ResourceActivityTrackerModel
+                    m_CoreViewModel.Activities
+                    .Select(x => new ResourceActivityTrackerModel
                     {
                         Time = m_Time,
                         ResourceId = m_ResourceId,
@@ -116,7 +129,8 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 List<ResourceActivityTrackerModel> newResourceActivityTrackers =
-                    m_CoreViewModel.Activities.Select(x => new ResourceActivityTrackerModel
+                    m_CoreViewModel.Activities
+                    .Select(x => new ResourceActivityTrackerModel
                     {
                         Time = m_Time,
                         ResourceId = m_ResourceId,
@@ -261,6 +275,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     }
                 }
+
+                m_TargetResourceActivities.Sort(s_SortComparer);
             }
             RaiseTargetResourceActivitiesPropertiesChanged();
         }

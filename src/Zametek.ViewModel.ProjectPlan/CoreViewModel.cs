@@ -100,6 +100,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         lock (m_Lock)
                         {
+                            IsReadyToReviseTrackers = ReadyToRevise.Yes;
                             IsReadyToCompile = ReadyToCompile.Yes;
                         }
                     }
@@ -1002,6 +1003,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Activities.
                     AddManagedActivities(new HashSet<DependentActivityModel>(projectPlanModel.DependentActivities));
+
+                    // Now that Resources and Activities are in place,
+                    // revise all tracker values.
+                    IsReadyToReviseTrackers = ReadyToRevise.Yes;
 
                     // Arrow Graph.
                     ArrowGraph = projectPlanModel.ArrowGraph;

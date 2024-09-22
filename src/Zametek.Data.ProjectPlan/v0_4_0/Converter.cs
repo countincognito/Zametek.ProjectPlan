@@ -20,6 +20,22 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
                     },
                     x => x.ActivityId.GetHashCode() + x.PercentageComplete.GetHashCode());
 
+        private static readonly EqualityComparer<ResourceActivityTrackerModel> s_ResourceActivityTrackerEqualityComparer =
+            EqualityComparer<ResourceActivityTrackerModel>.Create(
+                    (x, y) =>
+                    {
+                        if (x is null)
+                        {
+                            return false;
+                        }
+                        if (y is null)
+                        {
+                            return false;
+                        }
+                        return x.Time == y.Time && x.ResourceId == y.ResourceId && x.ActivityId == y.ActivityId;
+                    },
+                    x => x.Time.GetHashCode() + x.ResourceId.GetHashCode() + x.ActivityId.GetHashCode());
+
         public static ProjectPlanModel Upgrade(
             IMapper mapper,
             v0_3_2.ProjectPlanModel projectPlan)
@@ -39,70 +55,101 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
                 HasStaleOutputs = projectPlan.HasStaleOutputs,
             };
 
-
+            // Convert the old tracker models into the new tracker models.
             Dictionary<int, ResourceModel> resourceLookup = plan.ResourceSettings.Resources.ToDictionary(x => x.Id);
 
+            // Capture all the activity trackers across all resources first.
+            List<ResourceActivityTrackerModel> resourceActivityTrackers = [];
 
+            // First cycle through the old activity trackers to allocate resource usage.
+            foreach (v0_3_2.DependentActivityModel oldActivityModel in projectPlan.DependentActivities)
+            {
+                List<v0_3_0.TrackerModel> oldActivityTrackers = oldActivityModel.Activity.Trackers;
 
-            // Cycle through the activity trackers and clear out unnecessary values.
+                // As part of the conversion, check when a resource has worked on more than one activity
+                // on a particular day.
+                foreach (int resourceId in oldActivityModel.Activity.AllocatedToResources)
+                {
+                    if (resourceLookup.TryGetValue(resourceId, out var resource))
+                    {
+                        foreach (v0_3_0.TrackerModel oldActivityTracker in oldActivityTrackers.Where(x => x.IsIncluded))
+                        {
+                            resourceActivityTrackers.Add(
+                                new ResourceActivityTrackerModel
+                                {
+                                    ResourceId = resourceId,
+                                    Time = oldActivityTracker.Time,
+                                    ActivityId = oldActivityTracker.ActivityId,
+                                    PercentageWorked = 100,
+                                });
+
+                            // Since we have no other way of telling, just assume 100% of time worked on an activity.
+                            // Even if there are several in one day.
+                        }
+                    }
+                }
+            }
+
+            // Clear the resource activity trackers that have the same keys.
+            resourceActivityTrackers = resourceActivityTrackers
+                .OrderBy(x => x.Time)
+                .ThenBy(x => x.ResourceId)
+                .ThenBy(x => x.ActivityId)
+                .Distinct(s_ResourceActivityTrackerEqualityComparer)
+                .ToList();
+
+            // Cycle through each resource and collate the new activity trackers
+            // according to time and resource ID.
+            foreach (ResourceModel resource in resourceLookup.Values)
+            {
+                int resourceId = resource.Id;
+
+                resource.Trackers.Clear();
+
+                List<int> times = resourceActivityTrackers
+                    .Where(x => x.ResourceId == resourceId)
+                    .Select(x => x.Time)
+                    .Distinct()
+                    .ToList();
+
+                // For each time period in a resource's tracker list,
+                // gather the trackers for each activity that the resource
+                // has worked on.
+                foreach (int time in times)
+                {
+                    var resourceTracker = new ResourceTrackerModel
+                    {
+                        ResourceId = resourceId,
+                        Time = time,
+                    };
+
+                    List<ResourceActivityTrackerModel> trackers = resourceActivityTrackers
+                        .Where(x => x.Time == time && x.ResourceId == resourceId)
+                        .ToList();
+
+                    resourceTracker.ActivityTrackers.AddRange(trackers);
+
+                    resource.Trackers.Add(resourceTracker);
+                }
+            }
+
+            // Now cycle through the new activity trackers and clear out unnecessary values.
             foreach (DependentActivityModel activityModel in plan.DependentActivities)
             {
                 List<ActivityTrackerModel> activityTrackers = activityModel.Activity.Trackers;
 
-                // First remove zero values.
+                // Remove zero values.
                 activityTrackers.RemoveAll(x => x.PercentageComplete == 0);
 
                 // Now select the first instances of duplicated values (ignoring time values).
-                IEnumerable<ActivityTrackerModel> replacement = activityTrackers.Distinct(s_ActivityTrackerEqualityComparer).ToList();
+                IEnumerable<ActivityTrackerModel> replacement = activityTrackers
+                    .OrderBy(x => x.Time)
+                    .Distinct(s_ActivityTrackerEqualityComparer)
+                    .ToList();
 
                 // Now replace the old values.
                 activityTrackers.Clear();
                 activityTrackers.AddRange(replacement);
-
-
-
-                // As part of the conversion, assume only one resource activity tracking entry.
-                foreach (int resourceId in activityModel.Activity.AllocatedToResources)
-                {
-                    if (resourceLookup.TryGetValue(resourceId, out var resource))
-                    {
-
-                        foreach (ActivityTrackerModel activityTracker in activityTrackers)
-                        {
-                            var resourceTracker = new ResourceTrackerModel
-                            {
-                                ResourceId = resourceId,
-                                Time = activityTracker.Time
-                            };
-                            resourceTracker.ActivityTrackers.Add(
-                                new ResourceActivityTrackerModel
-                                {
-                                    ResourceId = resourceId,
-                                    Time = activityTracker.Time,
-                                    ActivityId = activityTracker.ActivityId,
-                                    PercentageWorked = 100,
-                                });
-
-
-                            resource.Trackers.Add(resourceTracker);
-                        }
-
-
-
-
-                    }
-                }
-
-
-
-
-
-
-
-
-
-
-
             }
 
             return plan;
