@@ -42,7 +42,10 @@ namespace Zametek.View.ProjectPlan
                         Margin = new Avalonia.Thickness(0),
                         Padding = new Avalonia.Thickness(3),
                         Background = Avalonia.Media.Brushes.Transparent,
-                        [!TextBlock.TextProperty] = new Binding($@"Trackers.Day{m_Index:D2}", BindingMode.OneWay),
+                        [!TextBlock.TextProperty] = new Binding($@"Trackers.Day{m_Index:D2}", BindingMode.OneWay)
+                        {
+                            StringFormat = @"{0:#0'%'}",
+                        },
                     });
 
                 return mainGrid;
@@ -68,7 +71,7 @@ namespace Zametek.View.ProjectPlan
                         Maximum = 100,
                         [!NumericIntUpDown.ValueProperty] = new Binding($@"Trackers.Day{m_Index:D2}", BindingMode.TwoWay)
                         {
-                            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
+                            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus,
                         },
                     });
 

@@ -111,7 +111,6 @@ namespace Zametek.View.ProjectPlan
                             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
                             ShowButtonSpinner = false,
                             Foreground = Avalonia.Media.Brushes.Black,
-                            Background = Avalonia.Media.Brushes.Khaki,
                             Width = 40,
                             MaxWidth = 40,
                             Margin = new Avalonia.Thickness(0),
@@ -120,7 +119,7 @@ namespace Zametek.View.ProjectPlan
                             Maximum = 100,
                             [!NumericIntUpDown.ValueProperty] = new Binding($@"PercentageWorked", BindingMode.TwoWay)
                             {
-                                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                                UpdateSourceTrigger = UpdateSourceTrigger.LostFocus,
                             },
                         });
 
@@ -133,6 +132,7 @@ namespace Zametek.View.ProjectPlan
                             Padding = new Avalonia.Thickness(3, 0),
                             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+                            [!ToolTip.TipProperty] = new Binding($@"Name", BindingMode.OneWay),
                         });
 
                     templatePanel.Children.Add(new Grid());

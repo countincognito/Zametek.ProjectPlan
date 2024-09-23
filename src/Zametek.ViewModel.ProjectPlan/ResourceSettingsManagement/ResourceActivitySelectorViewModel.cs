@@ -162,12 +162,16 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableUniqueCollection<ISelectableResourceActivityViewModel> m_SelectedTargetResourceActivities;
         public ObservableCollection<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities => m_SelectedTargetResourceActivities;
 
-        public string TargetResourceActivitiesString
+        public string? TargetResourceActivitiesString
         {
             get
             {
                 lock (m_Lock)
                 {
+                    if (TargetResourceActivities.Count == 0)
+                    {
+                        return null;
+                    }
                     return string.Join(
                         DependenciesStringValidationRule.Separator,
                         TargetResourceActivities.Where(x => x.IsSelected).Select(x => x.DisplayName));
@@ -319,7 +323,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public override string ToString()
         {
-            return TargetResourceActivitiesString;
+            return TargetResourceActivitiesString ?? string.Empty;
         }
 
         #endregion
@@ -371,7 +375,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             TargetResourceActivities = new ReadOnlyObservableCollection<ISelectableResourceActivityViewModel>([]);
             SelectedTargetResourceActivities = [];
-            TargetResourceActivitiesString = string.Empty;
+            TargetResourceActivitiesString = null;
             SelectedResourceActivityIds = [];
         }
 
@@ -379,7 +383,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ObservableCollection<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities { get; init; }
 
-        public string TargetResourceActivitiesString { get; init; }
+        public string? TargetResourceActivitiesString { get; init; }
 
         public IList<int> SelectedResourceActivityIds { get; init; }
 

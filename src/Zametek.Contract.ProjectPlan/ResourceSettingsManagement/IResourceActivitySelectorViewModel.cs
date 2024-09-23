@@ -14,7 +14,7 @@ namespace Zametek.Contract.ProjectPlan
 
         ObservableCollection<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities { get; }
 
-        string TargetResourceActivitiesString { get; }
+        string? TargetResourceActivitiesString { get; }
 
         IList<int> SelectedResourceActivityIds { get; }
 
