@@ -483,8 +483,11 @@ namespace Zametek.ViewModel.ProjectPlan
             ISheet sheet = workbook.CreateSheet(sheetTitle);
 
             int rowIndex = 0;
-            Debug.Assert(activities.Select(x => x.Trackers.Count).Distinct().Count() <= 1);
-            int trackerCount = activities.Select(x => x.Trackers.Count).FirstOrDefault();
+
+            int plannedEndTime = activities
+                .Select(x => x.EarliestFinishTime.GetValueOrDefault())
+                .DefaultIfEmpty()
+                .Max();
 
             {
                 int titleColumnIndex = 0;
@@ -499,7 +502,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 AddToCell(nameof(ActivityModel.Id), iDCell, dateTimeTitleCellStyle);
                 titleColumnIndex++;
 
-                for (int i = 0; i < trackerCount; i++)
+                for (int i = 0; i < plannedEndTime; i++)
                 {
                     ICell cell = titleRow.CreateCell(titleColumnIndex);
                     cell.CellStyle = titleStyle;
@@ -514,18 +517,34 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     IRow row = sheet.CreateRow(rowIndex);
                     int columnIndex = 0;
+                    int activityId = activity.Id;
 
                     // Activity Id.
                     ICell iDCell = row.CreateCell(columnIndex);
                     iDCell.CellStyle = titleStyle;
-                    AddToCell(activity.Id, iDCell, dateTimeCellStyle);
+                    AddToCell(activityId, iDCell, dateTimeCellStyle);
                     columnIndex++;
 
-                    // Tracker values.
-                    for (int i = 0; i < trackerCount; i++)
+                    // Create a lookup dictionary for each time entry.
+                    Dictionary<int, ActivityTrackerModel> activityTrackerLookup = [];
+
+                    foreach (ActivityTrackerModel tracker in activity.Trackers)
                     {
-                        ICell cell = row.CreateCell(columnIndex);
-                        AddToCell(trackerFunc(activity.Trackers[i]), cell, dateTimeCellStyle);
+                        if (tracker.ActivityId == activityId)
+                        {
+                            activityTrackerLookup.TryAdd(tracker.Time, tracker);
+                        }
+                    }
+
+                    // Tracker values.
+                    for (int i = 0; i < plannedEndTime; i++)
+                    {
+                        if (activityTrackerLookup.TryGetValue(i, out ActivityTrackerModel? activityTracker))
+                        {
+                            ICell cell = row.CreateCell(columnIndex);
+                            AddToCell(trackerFunc(activityTracker), cell, dateTimeCellStyle);
+                        }
+
                         columnIndex++;
                     }
 
@@ -538,7 +557,121 @@ namespace Zametek.ViewModel.ProjectPlan
                 sheet.AutoSizeColumn(titleColumnIndex);
                 titleColumnIndex++;
 
-                for (int i = 0; i < trackerCount; i++)
+                for (int i = 0; i < plannedEndTime; i++)
+                {
+                    sheet.AutoSizeColumn(titleColumnIndex);
+                    titleColumnIndex++;
+                }
+            }
+        }
+
+        private static void WriteTrackersToWorkbook(
+            IEnumerable<ActivityModel> activities,
+            ResourceModel resource,
+            string sheetTitle,//!!,
+            XSSFWorkbook workbook,
+            ICellStyle titleStyle,
+            bool showDates,
+            DateTimeOffset projectStart,
+            IDateTimeCalculator dateTimeCalculator)
+        {
+            ArgumentNullException.ThrowIfNull(activities);
+            ArgumentNullException.ThrowIfNull(workbook);
+            ArgumentNullException.ThrowIfNull(titleStyle);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
+            dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+
+            ICellStyle dateTimeTitleCellStyle = workbook.CreateCellStyle();
+            dateTimeTitleCellStyle.CloneStyleFrom(titleStyle);
+            dateTimeTitleCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+
+            ISheet sheet = workbook.CreateSheet(sheetTitle);
+
+            int rowIndex = 0;
+
+            int plannedEndTime = activities
+                .Select(x => x.EarliestFinishTime.GetValueOrDefault())
+                .DefaultIfEmpty()
+                .Max();
+
+            {
+                int titleColumnIndex = 0;
+                TypeSwitch<object?> appendCaseCheck(TypeSwitch<object?> x, ICell y, ICellStyle z) =>
+                    AddDateFromProjectStartCase(x, y, z, showDates, projectStart, dateTimeCalculator);
+
+                IRow titleRow = sheet.CreateRow(rowIndex);
+
+                // Title row (Activity ID column).
+                ICell iDCell = titleRow.CreateCell(titleColumnIndex);
+                iDCell.CellStyle = titleStyle;
+                AddToCell(nameof(ActivityModel.Id), iDCell, dateTimeTitleCellStyle);
+                titleColumnIndex++;
+
+                for (int i = 0; i < plannedEndTime; i++)
+                {
+                    ICell cell = titleRow.CreateCell(titleColumnIndex);
+                    cell.CellStyle = titleStyle;
+                    AddToCell(i, cell, dateTimeTitleCellStyle, appendCaseCheck);
+                    titleColumnIndex++;
+                }
+                rowIndex++;
+            }
+            {
+                List<int> activityIds = [.. activities.Select(x => x.Id).Order()];
+
+                int resourceId = resource.Id;
+
+                // Create a lookup dictionary for each time entry.
+                Dictionary<int, Dictionary<int, ResourceActivityTrackerModel>> resourceTrackerLookup = [];
+
+                foreach (ResourceTrackerModel tracker in resource.Trackers)
+                {
+                    if (tracker.ResourceId == resourceId)
+                    {
+                        resourceTrackerLookup.TryAdd(
+                            tracker.Time,
+                            tracker.ActivityTrackers.ToDictionary(x => x.ActivityId));
+                    }
+                }
+
+                // Now cycle through the activities
+                foreach (int activityId in activityIds)
+                {
+                    IRow row = sheet.CreateRow(rowIndex);
+                    int columnIndex = 0;
+
+                    // Activity Id.
+                    ICell iDCell = row.CreateCell(columnIndex);
+                    iDCell.CellStyle = titleStyle;
+                    AddToCell(activityId, iDCell, dateTimeCellStyle);
+                    columnIndex++;
+
+                    // Tracker values.
+                    for (int i = 0; i < plannedEndTime; i++)
+                    {
+                        if (resourceTrackerLookup.TryGetValue(i, out Dictionary<int, ResourceActivityTrackerModel>? trackerLookup))
+                        {
+                            if (trackerLookup.TryGetValue(activityId, out ResourceActivityTrackerModel? activityTracker))
+                            {
+                                ICell cell = row.CreateCell(columnIndex);
+                                AddToCell(activityTracker.PercentageWorked, cell, dateTimeCellStyle);
+                            }
+                        }
+
+                        columnIndex++;
+                    }
+
+                    rowIndex++;
+                }
+            }
+            {
+                // Resize columns.
+                int titleColumnIndex = 0;
+                sheet.AutoSizeColumn(titleColumnIndex);
+                titleColumnIndex++;
+
+                for (int i = 0; i < plannedEndTime; i++)
                 {
                     sheet.AutoSizeColumn(titleColumnIndex);
                     titleColumnIndex++;
@@ -804,15 +937,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectPlan.ProjectStart,
                 m_DateTimeCalculator);
 
-            //WriteTrackersToWorkbook(
-            //    projectPlan.DependentActivities.Select(x => x.Activity),
-            //    tracker => tracker.IsIncluded,
-            //    Resource.ProjectPlan.Reporting.Reporting_WorksheetTrackerDaysIncluded,
-            //    workbook,
-            //    titleStyle,
-            //    showDates,
-            //    projectPlan.ProjectStart,
-            //    m_DateTimeCalculator);
+            foreach (ResourceModel resource in projectPlan.ResourceSettings.Resources.OrderBy(x => x.Id))
+            {
+                string title = $@"{Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceTracker} ({resource.Id})";
+                WriteTrackersToWorkbook(
+                    projectPlan.DependentActivities.Select(x => x.Activity),
+                    resource,
+                    title,
+                    workbook,
+                    titleStyle,
+                    showDates,
+                    projectPlan.ProjectStart,
+                    m_DateTimeCalculator);
+            }
 
             WriteResourceChartToWorkbook(
                 resourceSeriesSet,
