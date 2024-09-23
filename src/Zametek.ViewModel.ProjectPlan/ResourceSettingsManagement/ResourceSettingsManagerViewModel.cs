@@ -3,6 +3,7 @@ using Avalonia.Data;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -24,6 +25,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly IDisposable? m_ProcessResourceSettingsSub;
         private readonly IDisposable? m_UpdateResourceSettingsSub;
+        private readonly IDisposable? m_ReviseSettingsSub;
 
         #endregion
 
@@ -82,6 +84,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe(areUpdated =>
                 {
                     if (areUpdated)
+                    {
+                        UpdateResourceSettingsToCore();
+                    }
+                });
+
+            m_ReviseSettingsSub = this
+                .WhenAnyValue(x => x.m_CoreViewModel.IsReadyToReviseSettings)
+                .ObserveOn(Scheduler.CurrentThread)
+                .Subscribe(isReadyToRevise =>
+                {
+                    if (isReadyToRevise == ReadyToRevise.Yes)
                     {
                         UpdateResourceSettingsToCore();
                     }
@@ -345,6 +358,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 // TODO: dispose managed state (managed objects).
                 m_ProcessResourceSettingsSub?.Dispose();
                 m_UpdateResourceSettingsSub?.Dispose();
+                m_ReviseSettingsSub?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

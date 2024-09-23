@@ -933,6 +933,17 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private ReadyToRevise m_IsReadyToReviseSettings;
+        public ReadyToRevise IsReadyToReviseSettings
+        {
+            get => m_IsReadyToReviseSettings;
+            set
+            {
+                m_IsReadyToReviseSettings = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         public void ClearSettings()
         {
             try
@@ -1081,6 +1092,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Now that Resources and Activities are in place,
                     // revise all tracker values.
                     IsReadyToReviseTrackers = ReadyToRevise.Yes;
+
+                    // Now update Settings to the core model.
+                    IsReadyToReviseSettings = ReadyToRevise.Yes;
 
                     // Arrow Graph.
                     ArrowGraph = projectPlanModel.ArrowGraph;
@@ -1333,6 +1347,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsProjectUpdated = true;
                     HasStaleOutputs = false;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
+                    IsReadyToReviseSettings = ReadyToRevise.No;
                     IsReadyToCompile = ReadyToCompile.No;
                 }
             }

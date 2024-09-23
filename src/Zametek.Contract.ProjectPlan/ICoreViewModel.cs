@@ -57,6 +57,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadyToRevise IsReadyToReviseTrackers { get; set; }
 
+        ReadyToRevise IsReadyToReviseSettings { get; set; }
+
         void ClearSettings();
 
         void ResetProject();
