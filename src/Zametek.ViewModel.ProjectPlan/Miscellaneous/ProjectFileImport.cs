@@ -314,6 +314,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             dependentActivities = ImportWorksheetActivityTrackers(workbook, dependentActivities);
 
+            foreach (ResourceModel resource in resources.Values)
+            {
+                ImportWorksheetResourceTrackers(workbook, resource, dependentActivities);
+            }
+
             return new ProjectImportModel
             {
                 ProjectStart = projectStart,
@@ -711,7 +716,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         int idVal = id.GetValueOrDefault();
                         resources.TryAdd(idVal, new ResourceModel
                         {
-
                             Id = idVal,
                             Name = name,
                             IsExplicitTarget = isExplicitTarget,
@@ -895,55 +899,146 @@ namespace Zametek.ViewModel.ProjectPlan
             XSSFWorkbook? workbook,
             IDictionary<int, DependentActivityModel> dependentActivities)
         {
-            throw new NotImplementedException();
-            // TODO
-            //ISheet? percentageCompleteSheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivityTracker);
-            //if (percentageCompleteSheet is not null)
-            //{
-            //    DataTable percentageCompleteTable = SheetToDataTable(percentageCompleteSheet);
-            //    int percentageCompleteColumnCount = percentageCompleteTable.Columns.Count;
-            //    int percentageCompleteRowCount = percentageCompleteTable.Rows.Count;
+            ISheet? percentageCompleteSheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivityTracker);
+            if (percentageCompleteSheet is not null)
+            {
+                DataTable percentageCompleteTable = SheetToDataTable(percentageCompleteSheet);
+                int percentageCompleteColumnCount = percentageCompleteTable.Columns.Count;
+                int percentageCompleteRowCount = percentageCompleteTable.Rows.Count;
 
-            //    for (int rowIndex = 0; rowIndex < percentageCompleteRowCount; rowIndex++)
-            //    {
-            //        DataRow percentageCompleteRow = percentageCompleteTable.Rows[rowIndex];
+                for (int rowIndex = 0; rowIndex < percentageCompleteRowCount; rowIndex++)
+                {
+                    DataRow percentageCompleteRow = percentageCompleteTable.Rows[rowIndex];
 
-            //        // Check IDs.
-            //        int columnIndex = 0;
-            //        int? percentageCompleteId = null;
-            //        {
-            //            if (int.TryParse(percentageCompleteRow[columnIndex]?.ToString(), out int output))
-            //            {
-            //                percentageCompleteId = output;
-            //            }
-            //        }
+                    // Check IDs.
+                    int columnIndex = 0;
+                    int? percentageCompleteId = null;
+                    {
+                        if (int.TryParse(percentageCompleteRow[columnIndex]?.ToString(), out int output))
+                        {
+                            percentageCompleteId = output;
+                        }
+                    }
 
-            //        if (percentageCompleteId.HasValue
-            //            && dependentActivities.TryGetValue(percentageCompleteId.GetValueOrDefault(), out DependentActivityModel? dependentActivity))
-            //        {
-            //            dependentActivity.Activity.Trackers.Clear();
+                    if (percentageCompleteId.HasValue
+                        && dependentActivities.TryGetValue(percentageCompleteId.GetValueOrDefault(), out DependentActivityModel? dependentActivity))
+                    {
+                        dependentActivity.Activity.Trackers.Clear();
 
-            //            for (columnIndex = 1; columnIndex < percentageCompleteColumnCount; columnIndex++)
-            //            {
-            //                int percentageComplete = 0;
+                        for (columnIndex = 1; columnIndex < percentageCompleteColumnCount; columnIndex++)
+                        {
+                            int percentageComplete = 0;
 
-            //                if (int.TryParse(percentageCompleteRow[columnIndex]?.ToString(), out int output))
-            //                {
-            //                    percentageComplete = output;
-            //                }
+                            if (int.TryParse(percentageCompleteRow[columnIndex]?.ToString(), out int output))
+                            {
+                                percentageComplete = output;
+                            }
 
-            //                int trackerIndex = columnIndex - 1;
-            //                dependentActivity.Activity.Trackers.Add(new ActivityTrackerModel
-            //                {
-            //                    Time = trackerIndex,
-            //                    ActivityId = dependentActivity.Activity.Id,
-            //                    PercentageComplete = percentageComplete
-            //                });
-            //            }
-            //        }
-            //    }
-            //}
-            //return dependentActivities;
+                            if (percentageComplete > 0)
+                            {
+                                int trackerIndex = columnIndex - 1;
+                                dependentActivity.Activity.Trackers.Add(new ActivityTrackerModel
+                                {
+                                    Time = trackerIndex,
+                                    ActivityId = dependentActivity.Activity.Id,
+                                    PercentageComplete = percentageComplete
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            return dependentActivities;
+        }
+
+        private static ResourceModel ImportWorksheetResourceTrackers(
+            XSSFWorkbook? workbook,
+            ResourceModel resource,
+            IDictionary<int, DependentActivityModel> dependentActivities)
+        {
+            int resourceId = resource.Id;
+            ISheet? percentageWorkedSheet = workbook?.GetSheet($@"{Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceTracker} ({resourceId})");
+            if (percentageWorkedSheet is not null)
+            {
+                resource.Trackers.Clear();
+
+                DataTable percentageWorkedTable = SheetToDataTable(percentageWorkedSheet);
+                int percentageWorkedColumnCount = percentageWorkedTable.Columns.Count;
+                int percentageWorkedRowCount = percentageWorkedTable.Rows.Count;
+
+                // Create a lookup dictionary for each time entry.
+                Dictionary<int, Dictionary<int, ResourceActivityTrackerModel>> resourceTrackerLookup = [];
+
+                for (int rowIndex = 0; rowIndex < percentageWorkedRowCount; rowIndex++)
+                {
+                    DataRow percentageWorkedRow = percentageWorkedTable.Rows[rowIndex];
+
+                    // Check IDs.
+                    int columnIndex = 0;
+                    int? percentageWorkedId = null;
+                    {
+                        if (int.TryParse(percentageWorkedRow[columnIndex]?.ToString(), out int output))
+                        {
+                            percentageWorkedId = output;
+                        }
+                    }
+
+                    if (percentageWorkedId.HasValue
+                        && dependentActivities.TryGetValue(percentageWorkedId.GetValueOrDefault(), out DependentActivityModel? dependentActivity))
+                    {
+                        int activityId = dependentActivity.Activity.Id;
+                        string activityName = dependentActivity.Activity.Name;
+
+                        for (columnIndex = 1; columnIndex < percentageWorkedColumnCount; columnIndex++)
+                        {
+                            int percentageWorked = 0;
+
+                            if (int.TryParse(percentageWorkedRow[columnIndex]?.ToString(), out int output))
+                            {
+                                percentageWorked = output;
+                            }
+
+                            if (percentageWorked > 0)
+                            {
+                                int time = columnIndex - 1;
+
+                                if (!resourceTrackerLookup.TryGetValue(time, out Dictionary<int, ResourceActivityTrackerModel>? trackerLookup))
+                                {
+                                    trackerLookup = new Dictionary<int, ResourceActivityTrackerModel>();
+                                    resourceTrackerLookup.Add(time, trackerLookup);
+                                }
+
+                                if (!trackerLookup.TryGetValue(activityId, out ResourceActivityTrackerModel? tracker))
+                                {
+                                    tracker = new ResourceActivityTrackerModel
+                                    {
+                                        Time = time,
+                                        ResourceId = resourceId,
+                                        ActivityId = activityId,
+                                        ActivityName = activityName,
+                                        PercentageWorked = percentageWorked,
+                                    };
+                                    trackerLookup.Add(activityId, tracker);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                foreach (KeyValuePair<int, Dictionary<int, ResourceActivityTrackerModel>> kvp in resourceTrackerLookup)
+                {
+                    var tracker = new ResourceTrackerModel
+                    {
+                        Time = kvp.Key,
+                        ResourceId = resourceId,
+                    };
+                    tracker.ActivityTrackers.AddRange(kvp.Value.Values);
+
+                    resource.Trackers.Add(tracker);
+                }
+            }
+
+            return resource;
         }
 
         #endregion
