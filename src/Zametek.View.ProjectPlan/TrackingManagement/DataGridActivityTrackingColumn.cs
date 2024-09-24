@@ -2,6 +2,7 @@
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Ursa.Controls;
+using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -42,7 +43,7 @@ namespace Zametek.View.ProjectPlan
                         Margin = new Avalonia.Thickness(0),
                         Padding = new Avalonia.Thickness(3),
                         Background = Avalonia.Media.Brushes.Transparent,
-                        [!TextBlock.TextProperty] = new Binding($@"Trackers.Day{m_Index:D2}", BindingMode.OneWay)
+                        [!TextBlock.TextProperty] = new Binding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.Day{m_Index:D2}", BindingMode.OneWay)
                         {
                             StringFormat = @"{0:#0'%'}",
                         },
@@ -69,7 +70,7 @@ namespace Zametek.View.ProjectPlan
                         Padding = new Avalonia.Thickness(0),
                         Minimum = 0,
                         Maximum = 100,
-                        [!NumericIntUpDown.ValueProperty] = new Binding($@"Trackers.Day{m_Index:D2}", BindingMode.TwoWay)
+                        [!NumericIntUpDown.ValueProperty] = new Binding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.Day{m_Index:D2}", BindingMode.TwoWay)
                         {
                             UpdateSourceTrigger = UpdateSourceTrigger.LostFocus,
                         },

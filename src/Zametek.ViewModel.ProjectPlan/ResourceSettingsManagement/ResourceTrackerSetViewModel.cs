@@ -5,8 +5,8 @@ using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class ResourceTrackersViewModel
-        : ViewModelBase, IResourceTrackersViewModel
+    public class ResourceTrackerSetViewModel
+        : ViewModelBase, IResourceTrackerSetViewModel
     {
         #region Fields
 
@@ -21,7 +21,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public ResourceTrackersViewModel(
+        public ResourceTrackerSetViewModel(
             ICoreViewModel coreViewModel,
             IManagedResourceViewModel managedResourceViewModel,
             int resourceId,

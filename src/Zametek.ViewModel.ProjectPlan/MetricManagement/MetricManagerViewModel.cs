@@ -467,8 +467,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             lock (m_Lock)
             {
-                IEnumerable<IDependentActivity<int, int, int>> dependentActivities =
-                    m_CoreViewModel.GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int, int>)x.CloneObject());
+                IEnumerable<IDependentActivity> dependentActivities =
+                    m_CoreViewModel.GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject());
 
                 if (dependentActivities.Any())
                 {

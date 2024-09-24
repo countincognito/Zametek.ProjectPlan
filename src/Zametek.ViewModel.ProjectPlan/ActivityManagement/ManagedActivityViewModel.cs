@@ -20,7 +20,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private DateTimeOffset? m_MinimumEarliestStartDateTime;
         private DateTimeOffset? m_MaximumLatestFinishDateTime;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
-        private readonly VertexGraphCompiler<int, int, int, IDependentActivity<int, int, int>> m_VertexGraphCompiler;
+        private readonly VertexGraphCompiler<int, int, int, IDependentActivity> m_VertexGraphCompiler;
 
         private readonly IDisposable? m_ProjectStartSub;
         private readonly IDisposable? m_ResourceSettingsSub;
@@ -37,9 +37,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ManagedActivityViewModel(
             ICoreViewModel coreViewModel,
-            IDependentActivity<int, int, int> dependentActivity,
+            IDependentActivity dependentActivity,
             IDateTimeCalculator dateTimeCalculator,
-            VertexGraphCompiler<int, int, int, IDependentActivity<int, int, int>> vertexGraphCompiler,
+            VertexGraphCompiler<int, int, int, IDependentActivity> vertexGraphCompiler,
             DateTimeOffset projectStart,
             IEnumerable<ActivityTrackerModel>? trackers,
             DateTimeOffset? minimumEarliestStartDateTime,
@@ -82,7 +82,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 SetMaximumLatestFinishTimes(MaximumLatestFinishTime);
             }
 
-            Trackers = new ActivityTrackersViewModel(
+            TrackerSet = new ActivityTrackerSetViewModel(
                 m_CoreViewModel, DependentActivity.Id, trackers ?? []);
 
             // We use Scheduler.CurrentThread here to ensure that wide sweeping changes,
@@ -147,7 +147,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public IDependentActivity<int, int, int> DependentActivity { get; }
+        public IDependentActivity DependentActivity { get; }
 
         public IResourceSelectorViewModel ResourceSelector { get; }
 
@@ -704,7 +704,9 @@ namespace Zametek.ViewModel.ProjectPlan
             set => SetMaximumLatestFinishTimes(value);
         }
 
-        public IActivityTrackersViewModel Trackers { get; }
+        public IActivityTrackerSetViewModel TrackerSet { get; }
+
+        public List<ActivityTrackerModel> Trackers => TrackerSet.Trackers;
 
         public HashSet<int> Dependencies => DependentActivity.Dependencies;
 
@@ -722,7 +724,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public object CloneObject()
         {
-            return DependentActivity.CloneObject();
+            var activity = (IDependentActivity)DependentActivity.CloneObject();
+            activity.Trackers.Clear();
+            activity.Trackers.AddRange(Trackers);
+            return activity;
         }
 
         #endregion

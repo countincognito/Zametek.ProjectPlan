@@ -224,7 +224,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         UnitCost = x.UnitCost,
                         DisplayOrder = x.DisplayOrder,
                         ColorFormat = x.ColorFormat,
-                        Trackers = x.Trackers.Trackers,
+                        Trackers = x.TrackerSet.Trackers,
                     }).ToList(),
 
                     DefaultUnitCost = DefaultUnitCost,

@@ -48,7 +48,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_WorkStreamSettings = m_CoreViewModel.WorkStreamSettings;
             RefreshWorkStreamSelector();
 
-            Trackers = new ResourceTrackersViewModel(
+            TrackerSet = new ResourceTrackerSetViewModel(
                 m_CoreViewModel, this, Id, resource.Trackers ?? []);
 
             m_InterActivityAllocationIsIndirect = this
@@ -204,7 +204,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public IWorkStreamSelectorViewModel WorkStreamSelector { get; }
 
-        public IResourceTrackersViewModel Trackers { get; }
+        public IResourceTrackerSetViewModel TrackerSet { get; }
 
         public bool IsEditing => m_isDirty;
 

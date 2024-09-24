@@ -3,6 +3,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Styling;
 using Ursa.Controls;
+using Zametek.Contract.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
@@ -44,8 +45,8 @@ namespace Zametek.View.ProjectPlan
                         Margin = new Avalonia.Thickness(0),
                         Padding = new Avalonia.Thickness(3),
                         Background = Avalonia.Media.Brushes.Transparent,
-                        [!TextBlock.TextProperty] = new Binding($@"Trackers.Day{m_Index:D2}.TargetResourceActivitiesString", BindingMode.OneWay),
-                        [!ToolTip.TipProperty] = new Binding($@"Trackers.Day{m_Index:D2}.TargetResourceActivitiesString", BindingMode.OneWay),
+                        [!TextBlock.TextProperty] = new Binding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.TargetResourceActivitiesString)}", BindingMode.OneWay),
+                        [!ToolTip.TipProperty] = new Binding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.TargetResourceActivitiesString)}", BindingMode.OneWay),
                     });
 
                 return mainGrid;
@@ -64,8 +65,8 @@ namespace Zametek.View.ProjectPlan
                     MaxHeight = 200,
                     Width = double.NaN,
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
-                    [!ItemsControl.ItemsSourceProperty] = new Binding($@"Trackers.Day{m_Index:D2}.TargetResourceActivities", BindingMode.OneWay),
-                    [!MultiComboBox.SelectedItemsProperty] = new Binding($@"Trackers.Day{m_Index:D2}.SelectedTargetResourceActivities", BindingMode.OneWay),
+                    [!ItemsControl.ItemsSourceProperty] = new Binding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.TargetResourceActivities)}", BindingMode.OneWay),
+                    [!MultiComboBox.SelectedItemsProperty] = new Binding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.SelectedTargetResourceActivities)}", BindingMode.OneWay),
                     //[!ItemsControl.DisplayMemberBindingProperty] = new Binding($@"DisplayName", BindingMode.OneWay), // This didn't work.
                     IsDropDownOpen = true,
                 };
@@ -75,7 +76,7 @@ namespace Zametek.View.ProjectPlan
                     {
                         Setters =
                         {
-                            new Setter(MultiComboBoxItem.IsSelectedProperty, new Binding($@"IsSelected", BindingMode.TwoWay)),
+                            new Setter(MultiComboBoxItem.IsSelectedProperty, new Binding(nameof(ISelectableResourceActivityViewModel.IsSelected), BindingMode.TwoWay)),
                         },
                     });
 
@@ -89,7 +90,7 @@ namespace Zametek.View.ProjectPlan
                     templateGrid.Children.Add(
                         new TextBlock
                         {
-                            [!TextBlock.TextProperty] = new Binding($@"Id", BindingMode.OneWay),
+                            [!TextBlock.TextProperty] = new Binding(nameof(ISelectableResourceActivityViewModel.Id), BindingMode.OneWay),
                         });
                     return templateGrid;
                 });
@@ -117,7 +118,7 @@ namespace Zametek.View.ProjectPlan
                             Padding = new Avalonia.Thickness(0),
                             Minimum = 0,
                             Maximum = 100,
-                            [!NumericIntUpDown.ValueProperty] = new Binding($@"PercentageWorked", BindingMode.TwoWay)
+                            [!NumericIntUpDown.ValueProperty] = new Binding(nameof(ISelectableResourceActivityViewModel.PercentageWorked), BindingMode.TwoWay)
                             {
                                 UpdateSourceTrigger = UpdateSourceTrigger.LostFocus,
                             },
@@ -127,12 +128,12 @@ namespace Zametek.View.ProjectPlan
                         new TextBlock
                         {
                             [DockPanel.DockProperty] = Avalonia.Controls.Dock.Right,
-                            [!TextBlock.TextProperty] = new Binding($@"Id", BindingMode.OneWay),
+                            [!TextBlock.TextProperty] = new Binding(nameof(ISelectableResourceActivityViewModel.Id), BindingMode.OneWay),
                             Width = 35,
                             Padding = new Avalonia.Thickness(3, 0),
                             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
-                            [!ToolTip.TipProperty] = new Binding($@"Name", BindingMode.OneWay),
+                            [!ToolTip.TipProperty] = new Binding(nameof(ISelectableResourceActivityViewModel.Name), BindingMode.OneWay),
                         });
 
                     templatePanel.Children.Add(new Grid());

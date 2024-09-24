@@ -1,10 +1,9 @@
 ﻿using System.ComponentModel;
-using Zametek.Maths.Graphs;
 
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IManagedActivityViewModel
-        : IDependentActivity<int, int, int>, IDisposable, INotifyPropertyChanged, IKillSubscriptions
+        : IDependentActivity, IDisposable, INotifyPropertyChanged, IKillSubscriptions
     {
         bool IsCompiled { get; }
 
@@ -32,6 +31,6 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTime? MaximumLatestFinishDateTime { get; set; }
 
-        IActivityTrackersViewModel Trackers { get; }
+        IActivityTrackerSetViewModel TrackerSet { get; }
     }
 }

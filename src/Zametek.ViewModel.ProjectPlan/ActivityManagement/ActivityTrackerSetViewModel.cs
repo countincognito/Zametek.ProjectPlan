@@ -5,8 +5,8 @@ using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class ActivityTrackersViewModel
-        : ViewModelBase, IActivityTrackersViewModel
+    public class ActivityTrackerSetViewModel
+        : ViewModelBase, IActivityTrackerSetViewModel
     {
         #region Fields
 
@@ -20,7 +20,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public ActivityTrackersViewModel(
+        public ActivityTrackerSetViewModel(
             ICoreViewModel coreViewModel,
             int activityId,
             IEnumerable<ActivityTrackerModel> trackers)

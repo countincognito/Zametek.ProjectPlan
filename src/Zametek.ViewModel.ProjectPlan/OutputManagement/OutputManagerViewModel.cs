@@ -135,7 +135,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static string BuildCompilationOutputInternal(
             IDateTimeCalculator dateTimeCalculator,
-            IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> graphCompilation,
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
             ResourceSeriesSetModel resourceSeriesSet,
             bool showDates,
             DateTimeOffset projectStart,

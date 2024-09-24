@@ -20,7 +20,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly object m_Lock;
 
-        private readonly VertexGraphCompiler<int, int, int, IDependentActivity<int, int, int>> m_VertexGraphCompiler;
+        private readonly VertexGraphCompiler<int, int, int, IDependentActivity> m_VertexGraphCompiler;
 
         private readonly ISettingService m_SettingService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
@@ -46,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(mapper);
             m_Lock = new object();
-            m_VertexGraphCompiler = new VertexGraphCompiler<int, int, int, IDependentActivity<int, int, int>>();
+            m_VertexGraphCompiler = new VertexGraphCompiler<int, int, int, IDependentActivity>();
             m_SettingService = settingService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_Mapper = mapper;
@@ -61,7 +61,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
-            m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity<int, int, int>>([], [], []);
+            m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
             m_ArrowGraph = new ArrowGraphModel();
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
             m_TrackingSeriesSet = new TrackingSeriesSetModel();
@@ -631,12 +631,12 @@ namespace Zametek.ViewModel.ProjectPlan
             return trackingSeriesSet;
         }
 
-        private static int CalculateCyclomaticComplexity(IEnumerable<IDependentActivity<int, int, int>> dependentActivities)
+        private static int CalculateCyclomaticComplexity(IEnumerable<IDependentActivity> dependentActivities)
         {
             ArgumentNullException.ThrowIfNull(dependentActivities);
-            var vertexGraphCompiler = new VertexGraphCompiler<int, int, int, IDependentActivity<int, int, int>>();
+            var vertexGraphCompiler = new VertexGraphCompiler<int, int, int, IDependentActivity>();
 
-            foreach (var dependentActivity in dependentActivities.Cast<DependentActivity<int, int, int>>())
+            foreach (var dependentActivity in dependentActivities.Cast<DependentActivity>())
             {
                 dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
                 dependentActivity.ResourceDependencies.Clear();
@@ -859,8 +859,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
-        private IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> m_GraphCompilation;
-        public IGraphCompilation<int, int, int, IDependentActivity<int, int, int>> GraphCompilation
+        private IGraphCompilation<int, int, int, IDependentActivity> m_GraphCompilation;
+        public IGraphCompilation<int, int, int, IDependentActivity> GraphCompilation
         {
             get => m_GraphCompilation;
             private set
@@ -973,7 +973,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ClearSettings();
 
-                    GraphCompilation = new GraphCompilation<int, int, int, DependentActivity<int, int, int>>([], [], []);
+                    GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
 
                     ArrowGraph = new ArrowGraphModel();
 
@@ -1084,7 +1084,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ArrowGraphSettings = projectPlanModel.ArrowGraphSettings;
 
                     // Compilation.
-                    GraphCompilation = m_Mapper.Map<GraphCompilation<int, int, int, DependentActivity<int, int, int>>>(projectPlanModel.GraphCompilation);
+                    GraphCompilation = m_Mapper.Map<GraphCompilation<int, int, int, DependentActivity>>(projectPlanModel.GraphCompilation);
 
                     // Activities.
                     AddManagedActivities(new HashSet<DependentActivityModel>(projectPlanModel.DependentActivities));
@@ -1116,7 +1116,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    var graphCompilation = m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity<int, int, int>>, GraphCompilationModel>(GraphCompilation);
+                    var graphCompilation = m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity>, GraphCompilationModel>(GraphCompilation);
 
                     var plan = new ProjectPlanModel
                     {
@@ -1187,7 +1187,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         var activity = new ManagedActivityViewModel(
                             this,
-                            m_Mapper.Map<DependentActivityModel, DependentActivity<int, int, int>>(dependentActivity),
+                            m_Mapper.Map<DependentActivityModel, DependentActivity>(dependentActivity),
                             m_DateTimeCalculator,
                             m_VertexGraphCompiler,
                             ProjectStart,
@@ -1402,8 +1402,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!HasCompilationErrors)
                 {
-                    IEnumerable<IDependentActivity<int, int, int>> dependentActivities =
-                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int, int>)x.CloneObject());
+                    IEnumerable<IDependentActivity> dependentActivities =
+                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject());
 
                     if (!dependentActivities.Any())
                     {
@@ -1423,13 +1423,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!HasCompilationErrors)
                 {
-                    IEnumerable<IDependentActivity<int, int, int>> dependentActivities =
-                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity<int, int, int>)x.CloneObject());
+                    IEnumerable<IDependentActivity> dependentActivities =
+                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject());
 
                     if (dependentActivities.Any())
                     {
-                        var arrowGraphCompiler = new ArrowGraphCompiler<int, int, int, IDependentActivity<int, int, int>>();
-                        foreach (IDependentActivity<int, int, int> dependentActivity in dependentActivities)
+                        var arrowGraphCompiler = new ArrowGraphCompiler();
+                        foreach (IDependentActivity dependentActivity in dependentActivities)
                         {
                             dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
                             dependentActivity.ResourceDependencies.Clear();
@@ -1437,9 +1437,9 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
 
                         arrowGraphCompiler.Compile();
-                        Graph<int, IDependentActivity<int, int, int>, IEvent<int>>? arrowGraph =
+                        Graph<int, IDependentActivity, IEvent<int>>? arrowGraph =
                             arrowGraphCompiler.ToGraph() ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotBuildArrowGraph);
-                        ArrowGraph = m_Mapper.Map<Graph<int, IDependentActivity<int, int, int>, IEvent<int>>, ArrowGraphModel>(arrowGraph);
+                        ArrowGraph = m_Mapper.Map<Graph<int, IDependentActivity, IEvent<int>>, ArrowGraphModel>(arrowGraph);
                     }
                 }
             }
@@ -1456,7 +1456,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IList<ResourceModel> resourceModels = ResourceSettings.Resources;
 
                     IList<ResourceScheduleModel> resourceScheduleModels =
-                        m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity<int, int, int>>, IList<ResourceScheduleModel>>(GraphCompilation);
+                        m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity>, IList<ResourceScheduleModel>>(GraphCompilation);
 
                     resourceSeriesSet = CalculateResourceSeriesSet(
                         resourceScheduleModels,

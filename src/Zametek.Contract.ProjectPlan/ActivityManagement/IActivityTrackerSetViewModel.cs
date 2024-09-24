@@ -2,7 +2,7 @@
 
 namespace Zametek.Contract.ProjectPlan
 {
-    public interface IActivityTrackersViewModel
+    public interface IActivityTrackerSetViewModel
         : IDisposable
     {
         List<ActivityTrackerModel> Trackers { get; }
