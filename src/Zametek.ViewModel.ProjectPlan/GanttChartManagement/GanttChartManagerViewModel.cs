@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Media;
+using com.sun.tools.javadoc;
 using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
@@ -64,6 +65,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private const double c_ExportLabelHeightCorrection = 1.2;
         private const double c_YAxisMinimum = -1.0;
+        private const double c_TrackerAnnotationMinCorrection = -1.25;
+        private const double c_TrackerAnnotationMaxCorrection = -0.75;
 
         #endregion
 
@@ -129,7 +132,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.AnnotationStyle,
                     rcm => rcm.LabelGroups,
                     rcm => rcm.ShowProjectFinish,
-                    (a, b, c, d, e, f, g, h, i, j, k) => (a, b, c, d, e, f, g, h, i, j, k)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                    rcm => rcm.ShowTrackerCompletion,
+                    (a, b, c, d, e, f, g, h, i, j, k, l) => (a, b, c, d, e, f, g, h, i, j, k, l)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
 
@@ -195,7 +199,8 @@ namespace Zametek.ViewModel.ProjectPlan
             GroupByMode groupByMode,
             AnnotationStyle annotationStyle,
             bool labelGroups,
-            bool showProjectFinish)
+            bool showProjectFinish,
+            bool showTrackerCompletion)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
@@ -220,7 +225,7 @@ namespace Zametek.ViewModel.ProjectPlan
             var legend = new Legend
             {
                 LegendBorder = OxyColors.Black,
-                LegendBackground = OxyColor.FromAColor(200, OxyColors.White),
+                LegendBackground = OxyColor.FromAColor(ColorHelper.AnnotationALegend, OxyColors.White),
                 LegendPosition = LegendPosition.RightMiddle,
                 LegendPlacement = LegendPlacement.Outside,
             };
@@ -275,16 +280,33 @@ namespace Zametek.ViewModel.ProjectPlan
                                           slackColor.G,
                                           slackColor.B);
 
+                                    double start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+                                    double end = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+
                                     var item = new IntervalBarItem
                                     {
                                         Title = label,
-                                        Start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
-                                        End = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
+                                        Start = start,
+                                        End = end,
                                         Color = backgroundColor,
                                     };
 
                                     series.Items.Add(item);
                                     labels.Add(label);
+
+                                    if (showTrackerCompletion)
+                                    {
+                                        int labelCount = labels.Count;
+
+                                        // Get the tracker with the highest Time value.
+                                        ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
+                                        RectangleAnnotation? trackerAnnotation = TrackerAnnotation(start, end, labelCount, lastTracker);
+
+                                        if (trackerAnnotation is not null)
+                                        {
+                                            plotModel.Annotations.Add(trackerAnnotation);
+                                        }
+                                    }
                                 }
                             }
 
@@ -362,16 +384,33 @@ namespace Zametek.ViewModel.ProjectPlan
                                                   slackColor.G,
                                                   slackColor.B);
 
+                                            double start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+                                            double end = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+
                                             var item = new IntervalBarItem
                                             {
                                                 Title = label,
-                                                Start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
-                                                End = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
+                                                Start = start,
+                                                End = end,
                                                 Color = backgroundColor,
                                             };
 
                                             series.Items.Add(item);
                                             labels.Add(label);
+
+                                            if (showTrackerCompletion)
+                                            {
+                                                int labelCount = labels.Count;
+
+                                                // Get the tracker with the highest Time value.
+                                                ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
+                                                RectangleAnnotation? trackerAnnotation = TrackerAnnotation(start, end, labelCount, lastTracker);
+
+                                                if (trackerAnnotation is not null)
+                                                {
+                                                    plotModel.Annotations.Add(trackerAnnotation);
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -572,16 +611,33 @@ namespace Zametek.ViewModel.ProjectPlan
                                                   slackColor.G,
                                                   slackColor.B);
 
+                                            double start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+                                            double end = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+
                                             var item = new IntervalBarItem
                                             {
                                                 Title = label,
-                                                Start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
-                                                End = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator),
+                                                Start = start,
+                                                End = end,
                                                 Color = backgroundColor,
                                             };
 
                                             series.Items.Add(item);
                                             labels.Add(label);
+
+                                            if (showTrackerCompletion)
+                                            {
+                                                int labelCount = labels.Count;
+
+                                                // Get the tracker with the highest Time value.
+                                                ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
+                                                RectangleAnnotation? trackerAnnotation = TrackerAnnotation(start, end, labelCount, lastTracker);
+
+                                                if (trackerAnnotation is not null)
+                                                {
+                                                    plotModel.Annotations.Add(trackerAnnotation);
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -699,6 +755,36 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             return plotModel;
+        }
+
+        private static RectangleAnnotation? TrackerAnnotation(
+            double start,
+            double end,
+            int labelCount,
+            ActivityTrackerModel? tracker)
+        {
+            if (tracker is null)
+            {
+                return null;
+            }
+            OxyColor strokeColor = OxyColors.Black;
+            OxyColor fillColor = OxyColor.FromAColor(ColorHelper.AnnotationATrackerOverlay, OxyColors.White);
+
+            double maxX = start + ((end - start) * tracker.PercentageComplete / 100);
+            double minY = labelCount + c_TrackerAnnotationMinCorrection;
+            double maxY = labelCount + c_TrackerAnnotationMaxCorrection;
+
+            return new RectangleAnnotation
+            {
+                MinimumX = start,
+                MaximumX = maxX,
+                MinimumY = minY,
+                MaximumY = maxY,
+                Fill = fillColor,
+                Stroke = strokeColor,
+                StrokeThickness = 1,
+                Layer = AnnotationLayer.AboveSeries,
+            };
         }
 
         private static Axis BuildResourceChartXAxis(
@@ -842,6 +928,13 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_ShowProjectFinish, value);
         }
 
+        private bool m_ShowTrackerCompletion;
+        public bool ShowTrackerCompletion
+        {
+            get => m_ShowTrackerCompletion;
+            set => this.RaiseAndSetIfChanged(ref m_ShowTrackerCompletion, value);
+        }
+
         public ICommand SaveGanttChartImageFileCommand { get; }
 
         public async Task SaveGanttChartImageFileAsync(
@@ -931,7 +1024,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     GroupByMode,
                     AnnotationStyle,
                     LabelGroups,
-                    ShowProjectFinish);
+                    ShowProjectFinish,
+                    ShowTrackerCompletion);
             }
 
             GanttChartPlotModel = plotModel ?? new PlotModel();

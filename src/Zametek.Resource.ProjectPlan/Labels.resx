@@ -432,4 +432,7 @@
   <data name="Label_ShowProjectFinish" xml:space="preserve">
     <value>Show Project Finish</value>
   </data>
+  <data name="Label_ShowTracking" xml:space="preserve">
+    <value>Show Tracking</value>
+  </data>
 </root>

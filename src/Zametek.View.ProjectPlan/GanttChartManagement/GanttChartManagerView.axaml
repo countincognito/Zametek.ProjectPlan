@@ -104,7 +104,28 @@
 					          OnContent="{x:Static resources:Labels.Label_Yes}"
 							  IsChecked="{Binding Path=ShowProjectFinish, Mode=TwoWay}"/>
 			</DockPanel>
-			
+
+			<DockPanel DockPanel.Dock="Top">
+				<Label VerticalContentAlignment="Center"
+					   HorizontalContentAlignment="Left"
+					   Height="25"
+					   DockPanel.Dock="Top"
+					   IsTabStop="False"
+					   Margin="0,0,0,3"
+					   Content="{x:Static resources:Labels.Label_ShowTracking}"/>
+
+				<ToggleSwitch DockPanel.Dock="Top"
+							  IsTabStop="False"
+							  Margin="0,0,0,11"
+							  VerticalAlignment="Center"
+							  VerticalContentAlignment="Center"
+							  HorizontalAlignment="Center"
+						      HorizontalContentAlignment="Center"
+					          OffContent="{x:Static resources:Labels.Label_No}"
+					          OnContent="{x:Static resources:Labels.Label_Yes}"
+							  IsChecked="{Binding Path=ShowTrackerCompletion, Mode=TwoWay}"/>
+			</DockPanel>
+
 			<Grid/>
 		</DockPanel>
 

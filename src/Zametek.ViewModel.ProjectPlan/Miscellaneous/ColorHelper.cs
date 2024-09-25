@@ -9,6 +9,8 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         public const byte AnnotationAMedium = 40;
         public const byte AnnotationALight = 10;
+        public const byte AnnotationATrackerOverlay = 232;
+        public const byte AnnotationALegend = 200;
 
         private static readonly Random s_Rnd = new();
         private static readonly Regex s_HtmlHexMatch = new(@"^#(([A-Fa-f0-9]{2}){3,4})$", RegexOptions.Compiled);

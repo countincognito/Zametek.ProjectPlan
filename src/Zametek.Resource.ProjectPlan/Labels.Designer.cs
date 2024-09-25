@@ -881,6 +881,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Tracking.
+        /// </summary>
+        public static string Label_ShowTracking {
+            get {
+                return ResourceManager.GetString("Label_ShowTracking", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Slack Limit.
         /// </summary>
         public static string Label_SlackLimit {
