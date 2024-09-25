@@ -20,7 +20,7 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowProjectFinish { get; set; }
 
-        bool ShowTrackerCompletion { get; set; }
+        bool ShowTracking { get; set; }
 
         ICommand SaveGanttChartImageFileCommand { get; }
 

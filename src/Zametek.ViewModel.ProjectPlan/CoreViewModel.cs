@@ -1087,7 +1087,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     GraphCompilation = m_Mapper.Map<GraphCompilation<int, int, int, DependentActivity>>(projectPlanModel.GraphCompilation);
 
                     // Activities.
-                    AddManagedActivities(new HashSet<DependentActivityModel>(projectPlanModel.DependentActivities));
+                    AddManagedActivities(projectPlanModel.DependentActivities);
 
                     // Now that Resources and Activities are in place,
                     // revise all tracker values.

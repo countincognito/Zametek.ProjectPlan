@@ -66,7 +66,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (MinimumEarliestStartDateTime.HasValue)
             {
-                SetMinimumEarliestStartTimes(MinimumEarliestStartDateTime);
+                SetMinimumEarliestStartTimes(MinimumEarliestStartDateTime, skipValidation: true);
             }
             else if (MinimumEarliestStartTime.HasValue)
             {
@@ -75,7 +75,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (MaximumLatestFinishDateTime.HasValue)
             {
-                SetMaximumLatestFinishTimes(MaximumLatestFinishDateTime);
+                SetMaximumLatestFinishTimes(MaximumLatestFinishDateTime, skipValidation: true);
             }
             else if (MaximumLatestFinishTime.HasValue)
             {

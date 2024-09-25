@@ -132,7 +132,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.AnnotationStyle,
                     rcm => rcm.LabelGroups,
                     rcm => rcm.ShowProjectFinish,
-                    rcm => rcm.ShowTrackerCompletion,
+                    rcm => rcm.ShowTracking,
                     (a, b, c, d, e, f, g, h, i, j, k, l) => (a, b, c, d, e, f, g, h, i, j, k, l)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
@@ -200,7 +200,7 @@ namespace Zametek.ViewModel.ProjectPlan
             AnnotationStyle annotationStyle,
             bool labelGroups,
             bool showProjectFinish,
-            bool showTrackerCompletion)
+            bool showTracking)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
@@ -294,7 +294,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                     series.Items.Add(item);
                                     labels.Add(label);
 
-                                    if (showTrackerCompletion)
+                                    if (showTracking)
                                     {
                                         int labelCount = labels.Count;
 
@@ -398,7 +398,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             series.Items.Add(item);
                                             labels.Add(label);
 
-                                            if (showTrackerCompletion)
+                                            if (showTracking)
                                             {
                                                 int labelCount = labels.Count;
 
@@ -625,7 +625,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             series.Items.Add(item);
                                             labels.Add(label);
 
-                                            if (showTrackerCompletion)
+                                            if (showTracking)
                                             {
                                                 int labelCount = labels.Count;
 
@@ -928,11 +928,11 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_ShowProjectFinish, value);
         }
 
-        private bool m_ShowTrackerCompletion;
-        public bool ShowTrackerCompletion
+        private bool m_ShowTracking;
+        public bool ShowTracking
         {
-            get => m_ShowTrackerCompletion;
-            set => this.RaiseAndSetIfChanged(ref m_ShowTrackerCompletion, value);
+            get => m_ShowTracking;
+            set => this.RaiseAndSetIfChanged(ref m_ShowTracking, value);
         }
 
         public ICommand SaveGanttChartImageFileCommand { get; }
@@ -1025,7 +1025,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     AnnotationStyle,
                     LabelGroups,
                     ShowProjectFinish,
-                    ShowTrackerCompletion);
+                    ShowTracking);
             }
 
             GanttChartPlotModel = plotModel ?? new PlotModel();

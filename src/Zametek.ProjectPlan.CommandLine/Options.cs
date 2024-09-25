@@ -41,11 +41,15 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option("gantt-annotate", Default = AnnotationStyle.None, HelpText = "Annotate gantt chart group (None|Plain|Color)")]
         public AnnotationStyle GanttAnnotate { get; set; } = default;
 
-        [Option("gantt-label", Default = false, Required = false, HelpText = "Label annotations (true|false)")]
+        [Option("gantt-label", Default = false, Required = false, HelpText = "Label gantt chart annotations (true|false)")]
         public bool? GanttLabel { get; set; } = false;
 
-        [Option("gantt-finish", Default = false, Required = false, HelpText = "Show project finish (true|false)")]
+        [Option("gantt-finish", Default = false, Required = false, HelpText = "Show project finish in gantt chart (true|false)")]
         public bool? GanttFinish { get; set; } = false;
+
+        [Option("gantt-tracking", Default = false, Required = false, HelpText = "Show tracking in gantt chart (true|false)")]
+        public bool? GanttTracking { get; set; } = false;
+
 
 
         [Option("gantt-size", Min = 2, Max = 2, Separator = ':', HelpText = "Gantt chart dimensions in pixels (<width>:<height>)")]

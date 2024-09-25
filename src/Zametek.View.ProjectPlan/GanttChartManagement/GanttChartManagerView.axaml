@@ -123,7 +123,7 @@
 						      HorizontalContentAlignment="Center"
 					          OffContent="{x:Static resources:Labels.Label_No}"
 					          OnContent="{x:Static resources:Labels.Label_Yes}"
-							  IsChecked="{Binding Path=ShowTrackerCompletion, Mode=TwoWay}"/>
+							  IsChecked="{Binding Path=ShowTracking, Mode=TwoWay}"/>
 			</DockPanel>
 
 			<Grid/>
