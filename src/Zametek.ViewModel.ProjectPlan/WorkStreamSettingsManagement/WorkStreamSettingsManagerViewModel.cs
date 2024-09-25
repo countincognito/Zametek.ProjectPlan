@@ -81,7 +81,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_UpdateWorkStreamSettingsSub = this
                 .WhenAnyValue(rm => rm.AreSettingsUpdated)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(areUpdated =>
                 {
                     if (areUpdated)
