@@ -458,7 +458,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static void WriteTrackersToWorkbook<T>(
+        private static void WriteActivityTrackersToWorkbook<T>(
             IEnumerable<ActivityModel> activities,
             Func<ActivityTrackerModel, T> trackerFunc,
             string sheetTitle,//!!,
@@ -575,10 +575,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static void WriteTrackersToWorkbook(
+        private static void WriteResourceTrackersToWorkbook(
             IEnumerable<ActivityModel> activities,
-            ResourceModel resource,
-            string sheetTitle,//!!,
+            IEnumerable<ResourceModel> resources,
             XSSFWorkbook workbook,
             ICellStyle titleStyle,
             bool showDates,
@@ -586,6 +585,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(activities);
+            ArgumentNullException.ThrowIfNull(resources);
             ArgumentNullException.ThrowIfNull(workbook);
             ArgumentNullException.ThrowIfNull(titleStyle);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
@@ -596,104 +596,109 @@ namespace Zametek.ViewModel.ProjectPlan
             dateTimeTitleCellStyle.CloneStyleFrom(titleStyle);
             dateTimeTitleCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
 
-            ISheet sheet = workbook.CreateSheet(sheetTitle);
-
-            int rowIndex = 0;
-
-            int endTime = activities
+            int plannedEndTime = activities
                 .Select(x => x.EarliestFinishTime.GetValueOrDefault())
                 .DefaultIfEmpty()
                 .Max();
 
-            int effortTime = resource.Trackers
-                .DefaultIfEmpty()
-                .Max(x => x?.Time ?? 0);
+            List<int> activityIds = [.. activities.Select(x => x.Id).Order()];
 
-            if (effortTime > endTime)
+            foreach (ResourceModel resource in resources.OrderBy(x => x.Id))
             {
-                endTime = effortTime;
-            }
+                string sheetTitle = $@"{Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceTracker} ({resource.Id})";
+                ISheet sheet = workbook.CreateSheet(sheetTitle);
+                int rowIndex = 0;
 
-            {
-                int titleColumnIndex = 0;
-                TypeSwitch<object?> appendCaseCheck(TypeSwitch<object?> x, ICell y, ICellStyle z) =>
-                    AddDateFromProjectStartCase(x, y, z, showDates, projectStart, dateTimeCalculator);
+                int endTime = plannedEndTime;
 
-                IRow titleRow = sheet.CreateRow(rowIndex);
+                int effortTime = resource.Trackers
+                    .DefaultIfEmpty()
+                    .Max(x => x?.Time ?? 0);
 
-                // Title row (Activity ID column).
-                ICell iDCell = titleRow.CreateCell(titleColumnIndex);
-                iDCell.CellStyle = titleStyle;
-                AddToCell(nameof(ActivityModel.Id), iDCell, dateTimeTitleCellStyle);
-                titleColumnIndex++;
-
-                for (int i = 0; i <= endTime; i++)
+                if (effortTime > endTime)
                 {
-                    ICell cell = titleRow.CreateCell(titleColumnIndex);
-                    cell.CellStyle = titleStyle;
-                    AddToCell(i, cell, dateTimeTitleCellStyle, appendCaseCheck);
-                    titleColumnIndex++;
-                }
-                rowIndex++;
-            }
-            {
-                List<int> activityIds = [.. activities.Select(x => x.Id).Order()];
-
-                int resourceId = resource.Id;
-
-                // Create a lookup dictionary for each time entry.
-                Dictionary<int, Dictionary<int, ResourceActivityTrackerModel>> resourceTrackerLookup = [];
-
-                foreach (ResourceTrackerModel tracker in resource.Trackers)
-                {
-                    if (tracker.ResourceId == resourceId)
-                    {
-                        resourceTrackerLookup.TryAdd(
-                            tracker.Time,
-                            tracker.ActivityTrackers.ToDictionary(x => x.ActivityId));
-                    }
+                    endTime = effortTime;
                 }
 
-                // Now cycle through the activities
-                foreach (int activityId in activityIds)
                 {
-                    IRow row = sheet.CreateRow(rowIndex);
-                    int columnIndex = 0;
+                    int titleColumnIndex = 0;
+                    TypeSwitch<object?> appendCaseCheck(TypeSwitch<object?> x, ICell y, ICellStyle z) =>
+                        AddDateFromProjectStartCase(x, y, z, showDates, projectStart, dateTimeCalculator);
 
-                    // Activity Id.
-                    ICell iDCell = row.CreateCell(columnIndex);
+                    IRow titleRow = sheet.CreateRow(rowIndex);
+
+                    // Title row (Activity ID column).
+                    ICell iDCell = titleRow.CreateCell(titleColumnIndex);
                     iDCell.CellStyle = titleStyle;
-                    AddToCell(activityId, iDCell, dateTimeCellStyle);
-                    columnIndex++;
+                    AddToCell(nameof(ActivityModel.Id), iDCell, dateTimeTitleCellStyle);
+                    titleColumnIndex++;
 
-                    // Tracker values.
                     for (int i = 0; i <= endTime; i++)
                     {
-                        if (resourceTrackerLookup.TryGetValue(i, out Dictionary<int, ResourceActivityTrackerModel>? trackerLookup))
-                        {
-                            if (trackerLookup.TryGetValue(activityId, out ResourceActivityTrackerModel? activityTracker))
-                            {
-                                ICell cell = row.CreateCell(columnIndex);
-                                AddToCell(activityTracker.PercentageWorked, cell, dateTimeCellStyle);
-                            }
-                        }
-
-                        columnIndex++;
+                        ICell cell = titleRow.CreateCell(titleColumnIndex);
+                        cell.CellStyle = titleStyle;
+                        AddToCell(i, cell, dateTimeTitleCellStyle, appendCaseCheck);
+                        titleColumnIndex++;
                     }
-
                     rowIndex++;
                 }
-            }
-            {
-                // Resize columns.
-                int titleColumnIndex = 0;
-                sheet.AutoSizeColumn(titleColumnIndex);
-                titleColumnIndex++;
-
-                for (int i = 0; i <= endTime; i++)
                 {
+                    int resourceId = resource.Id;
+
+                    // Create a lookup dictionary for each time entry.
+                    Dictionary<int, Dictionary<int, ResourceActivityTrackerModel>> resourceTrackerLookup = [];
+
+                    foreach (ResourceTrackerModel tracker in resource.Trackers)
+                    {
+                        if (tracker.ResourceId == resourceId)
+                        {
+                            resourceTrackerLookup.TryAdd(
+                                tracker.Time,
+                                tracker.ActivityTrackers.ToDictionary(x => x.ActivityId));
+                        }
+                    }
+
+                    // Now cycle through the activities
+                    foreach (int activityId in activityIds)
+                    {
+                        IRow row = sheet.CreateRow(rowIndex);
+                        int columnIndex = 0;
+
+                        // Activity Id.
+                        ICell iDCell = row.CreateCell(columnIndex);
+                        iDCell.CellStyle = titleStyle;
+                        AddToCell(activityId, iDCell, dateTimeCellStyle);
+                        columnIndex++;
+
+                        // Tracker values.
+                        for (int i = 0; i <= endTime; i++)
+                        {
+                            if (resourceTrackerLookup.TryGetValue(i, out Dictionary<int, ResourceActivityTrackerModel>? trackerLookup))
+                            {
+                                if (trackerLookup.TryGetValue(activityId, out ResourceActivityTrackerModel? activityTracker))
+                                {
+                                    ICell cell = row.CreateCell(columnIndex);
+                                    AddToCell(activityTracker.PercentageWorked, cell, dateTimeCellStyle);
+                                }
+                            }
+
+                            columnIndex++;
+                        }
+
+                        rowIndex++;
+                    }
+                }
+                {
+                    // Resize columns.
+                    int titleColumnIndex = 0;
                     sheet.AutoSizeColumn(titleColumnIndex);
                     titleColumnIndex++;
+
+                    for (int i = 0; i <= endTime; i++)
+                    {
+                        sheet.AutoSizeColumn(titleColumnIndex);
+                        titleColumnIndex++;
+                    }
                 }
             }
         }
@@ -946,7 +951,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 workbook,
                 titleStyle);
 
-            WriteTrackersToWorkbook(
+            WriteActivityTrackersToWorkbook(
                 projectPlan.DependentActivities.Select(x => x.Activity),
                 tracker => tracker.PercentageComplete,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetActivityTracker,
@@ -956,19 +961,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectPlan.ProjectStart,
                 m_DateTimeCalculator);
 
-            foreach (ResourceModel resource in projectPlan.ResourceSettings.Resources.OrderBy(x => x.Id))
-            {
-                string title = $@"{Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceTracker} ({resource.Id})";
-                WriteTrackersToWorkbook(
-                    projectPlan.DependentActivities.Select(x => x.Activity),
-                    resource,
-                    title,
-                    workbook,
-                    titleStyle,
-                    showDates,
-                    projectPlan.ProjectStart,
-                    m_DateTimeCalculator);
-            }
+            WriteResourceTrackersToWorkbook(
+                projectPlan.DependentActivities.Select(x => x.Activity),
+                projectPlan.ResourceSettings.Resources,
+                workbook,
+                titleStyle,
+                showDates,
+                projectPlan.ProjectStart,
+                m_DateTimeCalculator);
 
             WriteResourceChartToWorkbook(
                 resourceSeriesSet,

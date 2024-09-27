@@ -897,7 +897,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static IDictionary<int, DependentActivityModel> ImportWorksheetActivityTrackers(
             XSSFWorkbook? workbook,
-            IDictionary<int, DependentActivityModel> dependentActivities)
+            IDictionary<int, DependentActivityModel> dependentActivityLookup)
         {
             ISheet? percentageCompleteSheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetActivityTracker);
             if (percentageCompleteSheet is not null)
@@ -921,7 +921,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     if (percentageCompleteId.HasValue
-                        && dependentActivities.TryGetValue(percentageCompleteId.GetValueOrDefault(), out DependentActivityModel? dependentActivity))
+                        && dependentActivityLookup.TryGetValue(percentageCompleteId.GetValueOrDefault(), out DependentActivityModel? dependentActivity))
                     {
                         dependentActivity.Activity.Trackers.Clear();
 
@@ -948,13 +948,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
             }
-            return dependentActivities;
+            return dependentActivityLookup;
         }
 
         private static ResourceModel ImportWorksheetResourceTrackers(
             XSSFWorkbook? workbook,
             ResourceModel resource,
-            IDictionary<int, DependentActivityModel> dependentActivities)
+            IDictionary<int, DependentActivityModel> dependentActivityLookup)
         {
             int resourceId = resource.Id;
             ISheet? percentageWorkedSheet = workbook?.GetSheet($@"{Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceTracker} ({resourceId})");
@@ -984,7 +984,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     if (percentageWorkedId.HasValue
-                        && dependentActivities.TryGetValue(percentageWorkedId.GetValueOrDefault(), out DependentActivityModel? dependentActivity))
+                        && dependentActivityLookup.TryGetValue(percentageWorkedId.GetValueOrDefault(), out DependentActivityModel? dependentActivity))
                     {
                         int activityId = dependentActivity.Activity.Id;
                         string activityName = dependentActivity.Activity.Name;
