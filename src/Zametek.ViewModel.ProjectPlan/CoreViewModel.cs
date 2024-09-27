@@ -378,15 +378,35 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // Find the planned end time.
-            int plannedEndTime = 0;
+            int endTime = 0;
 
             if (planPointSeries.Count > 0)
             {
-                plannedEndTime = planPointSeries.Last().Time;
+                endTime = planPointSeries.Last().Time;
             }
 
-            // Only bother calculating the progress and effort is there is a planned end time.
-            if (plannedEndTime > 0)
+            int progressTime = activities
+                .SelectMany(x => x.Trackers)
+                .DefaultIfEmpty()
+                .Max(x => x?.Time ?? 0);
+
+            if (progressTime > endTime)
+            {
+                endTime = progressTime;
+            }
+
+            int effortTime = resources
+                .SelectMany(x => x.Trackers)
+                .DefaultIfEmpty()
+                .Max(x => x?.Time ?? 0);
+
+            if (effortTime > endTime)
+            {
+                endTime = effortTime;
+            }
+
+            // Only bother calculating the progress and effort is there is an end time.
+            if (endTime > 0)
             {
                 {
                     // Progress.
@@ -418,7 +438,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Dictionary<int, int> runningWorkingProgresses = orderedActivities.ToDictionary(activity => activity.Id, activity => 0);
 
                     // Cycle through each time index.
-                    for (int timeIndex = 0; timeIndex < plannedEndTime; timeIndex++)
+                    for (int timeIndex = 0; timeIndex <= endTime; timeIndex++)
                     {
                         // Here we need to update the running percentage completion for each activity.
                         foreach ((ActivityModel activity, Dictionary<int, ActivityTrackerModel> activityTrackerLookup) in activityBehaviourLookup.Values)
@@ -451,7 +471,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             currentWorkingProgress += activity.Duration * (percentageCompleted / 100.0);
                         }
 
-                        double progressPercentage = plannedEndTime == 0 ? 0.0 : 100.0 * currentWorkingProgress / totalWorkingTime;
+                        double progressPercentage = endTime == 0 ? 0.0 : 100.0 * currentWorkingProgress / totalWorkingTime;
                         int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
 
                         foreach ((ActivityModel activity, Dictionary<int, ActivityTrackerModel> activityTrackerLookup) in activityBehaviourLookup.Values)
@@ -503,7 +523,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Dictionary<int, int> runningWorkingEfforts = orderedActivities.ToDictionary(activity => activity.Id, activity => 0);
 
                     // Cycle through each time index.
-                    for (int timeIndex = 0; timeIndex < plannedEndTime; timeIndex++)
+                    for (int timeIndex = 0; timeIndex <= endTime; timeIndex++)
                     {
                         // Here we need to update the running percentage effort for each resource.
                         foreach ((ResourceModel resource, Dictionary<int, ResourceTrackerModel> resourceTrackerLookup) in resourceBehaviourLookup.Values)
@@ -540,7 +560,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             currentWorkingEffort += percentageWorked / 100.0;
                         }
 
-                        double effortPercentage = plannedEndTime == 0 ? 0.0 : 100.0 * currentWorkingEffort / totalWorkingTime;
+                        double effortPercentage = endTime == 0 ? 0.0 : 100.0 * currentWorkingEffort / totalWorkingTime;
                         int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
 
                         foreach ((ResourceModel resource, Dictionary<int, ResourceTrackerModel> resourceTrackerLookup) in resourceBehaviourLookup.Values)

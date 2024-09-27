@@ -484,10 +484,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
             int rowIndex = 0;
 
-            int plannedEndTime = activities
+            int endTime = activities
                 .Select(x => x.EarliestFinishTime.GetValueOrDefault())
                 .DefaultIfEmpty()
                 .Max();
+
+            int progressTime = activities
+                .SelectMany(x => x.Trackers)
+                .DefaultIfEmpty()
+                .Max(x => x?.Time ?? 0);
+
+            if (progressTime > endTime)
+            {
+                endTime = progressTime;
+            }
 
             {
                 int titleColumnIndex = 0;
@@ -502,7 +512,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 AddToCell(nameof(ActivityModel.Id), iDCell, dateTimeTitleCellStyle);
                 titleColumnIndex++;
 
-                for (int i = 0; i < plannedEndTime; i++)
+                for (int i = 0; i <= endTime; i++)
                 {
                     ICell cell = titleRow.CreateCell(titleColumnIndex);
                     cell.CellStyle = titleStyle;
@@ -537,7 +547,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     // Tracker values.
-                    for (int i = 0; i < plannedEndTime; i++)
+                    for (int i = 0; i <= endTime; i++)
                     {
                         if (activityTrackerLookup.TryGetValue(i, out ActivityTrackerModel? activityTracker))
                         {
@@ -557,7 +567,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 sheet.AutoSizeColumn(titleColumnIndex);
                 titleColumnIndex++;
 
-                for (int i = 0; i < plannedEndTime; i++)
+                for (int i = 0; i <= endTime; i++)
                 {
                     sheet.AutoSizeColumn(titleColumnIndex);
                     titleColumnIndex++;
@@ -590,10 +600,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
             int rowIndex = 0;
 
-            int plannedEndTime = activities
+            int endTime = activities
                 .Select(x => x.EarliestFinishTime.GetValueOrDefault())
                 .DefaultIfEmpty()
                 .Max();
+
+            int effortTime = resource.Trackers
+                .DefaultIfEmpty()
+                .Max(x => x?.Time ?? 0);
+
+            if (effortTime > endTime)
+            {
+                endTime = effortTime;
+            }
 
             {
                 int titleColumnIndex = 0;
@@ -608,7 +627,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 AddToCell(nameof(ActivityModel.Id), iDCell, dateTimeTitleCellStyle);
                 titleColumnIndex++;
 
-                for (int i = 0; i < plannedEndTime; i++)
+                for (int i = 0; i <= endTime; i++)
                 {
                     ICell cell = titleRow.CreateCell(titleColumnIndex);
                     cell.CellStyle = titleStyle;
@@ -648,7 +667,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     columnIndex++;
 
                     // Tracker values.
-                    for (int i = 0; i < plannedEndTime; i++)
+                    for (int i = 0; i <= endTime; i++)
                     {
                         if (resourceTrackerLookup.TryGetValue(i, out Dictionary<int, ResourceActivityTrackerModel>? trackerLookup))
                         {
@@ -671,7 +690,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 sheet.AutoSizeColumn(titleColumnIndex);
                 titleColumnIndex++;
 
-                for (int i = 0; i < plannedEndTime; i++)
+                for (int i = 0; i <= endTime; i++)
                 {
                     sheet.AutoSizeColumn(titleColumnIndex);
                     titleColumnIndex++;
