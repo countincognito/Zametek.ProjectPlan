@@ -133,15 +133,15 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
                 }
             }
 
-            // Now cycle through the new activity trackers and clear out unnecessary values.
-            foreach (DependentActivityModel activityModel in plan.DependentActivities)
+            // Cycle through the new activity trackers and clear out unnecessary values.
+            foreach (DependentActivityModel dependentActivityModel in plan.DependentActivities)
             {
-                List<ActivityTrackerModel> activityTrackers = activityModel.Activity.Trackers;
+                List<ActivityTrackerModel> activityTrackers = dependentActivityModel.Activity.Trackers;
 
                 // Remove zero values.
                 activityTrackers.RemoveAll(x => x.PercentageComplete == 0);
 
-                // Now select the first instances of duplicated values (ignoring time values).
+                // Select the first instances of duplicated values (ignoring time values).
                 IEnumerable<ActivityTrackerModel> replacement = activityTrackers
                     .OrderBy(x => x.Time)
                     .Distinct(s_ActivityTrackerEqualityComparer)
@@ -150,6 +150,37 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
                 // Now replace the old values.
                 activityTrackers.Clear();
                 activityTrackers.AddRange(replacement);
+            }
+
+            Dictionary<int, ActivityModel> activtyLookup =
+                plan.DependentActivities
+                .Select(x => x.Activity)
+                .ToDictionary(x => x.Id);
+
+            // Cycle through the new activity trackers in the graph compilation and
+            // replace the old values.
+            foreach (DependentActivityModel dependentActivityModel in plan.GraphCompilation.DependentActivities)
+            {
+                dependentActivityModel.Activity.Trackers.Clear();
+
+                if (activtyLookup.TryGetValue(dependentActivityModel.Activity.Id, out ActivityModel? activity))
+                {
+                    dependentActivityModel.Activity.Trackers.AddRange(activity.Trackers);
+                }
+            }
+
+            // Cycle through the new activity trackers in the arrow graph and
+            // replace the old values.
+            foreach (ActivityEdgeModel edgeModel in plan.ArrowGraph.Edges)
+            {
+                edgeModel.Content.Trackers.Clear();
+                edgeModel.Content.TargetWorkStreams.Clear();
+
+                if (activtyLookup.TryGetValue(edgeModel.Content.Id, out ActivityModel? activity))
+                {
+                    edgeModel.Content.Trackers.AddRange(activity.Trackers);
+                    edgeModel.Content.TargetWorkStreams.AddRange(activity.TargetWorkStreams);
+                }
             }
 
             return plan;

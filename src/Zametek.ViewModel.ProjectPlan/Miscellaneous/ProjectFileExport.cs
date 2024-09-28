@@ -483,11 +483,17 @@ namespace Zametek.ViewModel.ProjectPlan
             ISheet sheet = workbook.CreateSheet(sheetTitle);
 
             int rowIndex = 0;
-
-            int endTime = activities
+            int endTime = 0;
+            
+            int plannedEndTime = activities
                 .Select(x => x.EarliestFinishTime.GetValueOrDefault())
                 .DefaultIfEmpty()
-                .Max();
+                .Max() - 1; // Remove a day because we iterate to this time inclusively.
+
+            if (plannedEndTime > endTime)
+            {
+                endTime = plannedEndTime;
+            }
 
             int progressTime = activities
                 .SelectMany(x => x.Trackers)
@@ -599,7 +605,7 @@ namespace Zametek.ViewModel.ProjectPlan
             int plannedEndTime = activities
                 .Select(x => x.EarliestFinishTime.GetValueOrDefault())
                 .DefaultIfEmpty()
-                .Max();
+                .Max() - 1; // Remove a day because we iterate to this time inclusively.
 
             List<int> activityIds = [.. activities.Select(x => x.Id).Order()];
 
@@ -608,8 +614,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 string sheetTitle = $@"{Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceTracker} ({resource.Id})";
                 ISheet sheet = workbook.CreateSheet(sheetTitle);
                 int rowIndex = 0;
+                int endTime = 0;
 
-                int endTime = plannedEndTime;
+                if (plannedEndTime > endTime)
+                {
+                    endTime = plannedEndTime;
+                }
 
                 int effortTime = resource.Trackers
                     .DefaultIfEmpty()

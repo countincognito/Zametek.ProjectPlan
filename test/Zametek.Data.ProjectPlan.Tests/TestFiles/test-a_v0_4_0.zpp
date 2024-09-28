@@ -1,0 +1,7511 @@
+{
+  "Version": "v0.4.0",
+  "ProjectStart": "2025-01-06T00:00:00+00:00",
+  "DependentActivities": [
+    {
+      "Activity": {
+        "Id": 2,
+        "Name": "Requirements & Architecture",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          1,
+          2
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          1,
+          2
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 20,
+        "FreeSlack": 0,
+        "EarliestStartTime": 0,
+        "LatestFinishTime": 30,
+        "Trackers": [
+          {
+            "Time": 0,
+            "ActivityId": 2,
+            "PercentageComplete": 5
+          },
+          {
+            "Time": 1,
+            "ActivityId": 2,
+            "PercentageComplete": 10
+          },
+          {
+            "Time": 2,
+            "ActivityId": 2,
+            "PercentageComplete": 15
+          },
+          {
+            "Time": 3,
+            "ActivityId": 2,
+            "PercentageComplete": 20
+          },
+          {
+            "Time": 4,
+            "ActivityId": 2,
+            "PercentageComplete": 25
+          },
+          {
+            "Time": 5,
+            "ActivityId": 2,
+            "PercentageComplete": 30
+          },
+          {
+            "Time": 6,
+            "ActivityId": 2,
+            "PercentageComplete": 35
+          },
+          {
+            "Time": 7,
+            "ActivityId": 2,
+            "PercentageComplete": 45
+          },
+          {
+            "Time": 8,
+            "ActivityId": 2,
+            "PercentageComplete": 50
+          },
+          {
+            "Time": 9,
+            "ActivityId": 2,
+            "PercentageComplete": 55
+          },
+          {
+            "Time": 10,
+            "ActivityId": 2,
+            "PercentageComplete": 65
+          },
+          {
+            "Time": 11,
+            "ActivityId": 2,
+            "PercentageComplete": 70
+          },
+          {
+            "Time": 12,
+            "ActivityId": 2,
+            "PercentageComplete": 75
+          },
+          {
+            "Time": 13,
+            "ActivityId": 2,
+            "PercentageComplete": 80
+          },
+          {
+            "Time": 14,
+            "ActivityId": 2,
+            "PercentageComplete": 85
+          },
+          {
+            "Time": 15,
+            "ActivityId": 2,
+            "PercentageComplete": 90
+          },
+          {
+            "Time": 16,
+            "ActivityId": 2,
+            "PercentageComplete": 100
+          }
+        ]
+      },
+      "Dependencies": [],
+      "ResourceDependencies": []
+    },
+    {
+      "Activity": {
+        "Id": 3,
+        "Name": "Project Planning",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          1,
+          2,
+          3
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          1,
+          2,
+          3
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 0,
+        "EarliestStartTime": 20,
+        "LatestFinishTime": 40,
+        "Trackers": [
+          {
+            "Time": 17,
+            "ActivityId": 3,
+            "PercentageComplete": 5
+          },
+          {
+            "Time": 18,
+            "ActivityId": 3,
+            "PercentageComplete": 15
+          },
+          {
+            "Time": 19,
+            "ActivityId": 3,
+            "PercentageComplete": 20
+          },
+          {
+            "Time": 20,
+            "ActivityId": 3,
+            "PercentageComplete": 30
+          },
+          {
+            "Time": 21,
+            "ActivityId": 3,
+            "PercentageComplete": 55
+          },
+          {
+            "Time": 22,
+            "ActivityId": 3,
+            "PercentageComplete": 75
+          },
+          {
+            "Time": 23,
+            "ActivityId": 3,
+            "PercentageComplete": 100
+          }
+        ]
+      },
+      "Dependencies": [
+        2
+      ],
+      "ResourceDependencies": [
+        2
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 4,
+        "Name": "Management Education",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          1,
+          2,
+          3
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          1,
+          2,
+          3
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 5,
+        "FreeSlack": 0,
+        "EarliestStartTime": 30,
+        "LatestFinishTime": 45,
+        "Trackers": [
+          {
+            "Time": 24,
+            "ActivityId": 4,
+            "PercentageComplete": 5
+          },
+          {
+            "Time": 25,
+            "ActivityId": 4,
+            "PercentageComplete": 15
+          },
+          {
+            "Time": 26,
+            "ActivityId": 4,
+            "PercentageComplete": 25
+          },
+          {
+            "Time": 27,
+            "ActivityId": 4,
+            "PercentageComplete": 30
+          },
+          {
+            "Time": 28,
+            "ActivityId": 4,
+            "PercentageComplete": 35
+          },
+          {
+            "Time": 29,
+            "ActivityId": 4,
+            "PercentageComplete": 40
+          },
+          {
+            "Time": 30,
+            "ActivityId": 4,
+            "PercentageComplete": 45
+          },
+          {
+            "Time": 31,
+            "ActivityId": 4,
+            "PercentageComplete": 50
+          },
+          {
+            "Time": 33,
+            "ActivityId": 4,
+            "PercentageComplete": 55
+          },
+          {
+            "Time": 34,
+            "ActivityId": 4,
+            "PercentageComplete": 60
+          },
+          {
+            "Time": 35,
+            "ActivityId": 4,
+            "PercentageComplete": 65
+          },
+          {
+            "Time": 36,
+            "ActivityId": 4,
+            "PercentageComplete": 70
+          },
+          {
+            "Time": 37,
+            "ActivityId": 4,
+            "PercentageComplete": 75
+          },
+          {
+            "Time": 38,
+            "ActivityId": 4,
+            "PercentageComplete": 80
+          },
+          {
+            "Time": 39,
+            "ActivityId": 4,
+            "PercentageComplete": 85
+          },
+          {
+            "Time": 40,
+            "ActivityId": 4,
+            "PercentageComplete": 90
+          },
+          {
+            "Time": 41,
+            "ActivityId": 4,
+            "PercentageComplete": 95
+          },
+          {
+            "Time": 42,
+            "ActivityId": 4,
+            "PercentageComplete": 100
+          }
+        ]
+      },
+      "Dependencies": [
+        3
+      ],
+      "ResourceDependencies": [
+        3
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 5,
+        "Name": "SDP Review",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          1,
+          2,
+          3
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 0,
+        "FreeSlack": 0,
+        "EarliestStartTime": 35,
+        "LatestFinishTime": 45,
+        "Trackers": []
+      },
+      "Dependencies": [
+        2,
+        4
+      ],
+      "ResourceDependencies": []
+    },
+    {
+      "Activity": {
+        "Id": 6,
+        "Name": "UX Design",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          4
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          4
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 0,
+        "EarliestStartTime": 70,
+        "LatestFinishTime": 80,
+        "MinimumEarliestStartTime": 65,
+        "MinimumEarliestStartDateTime": "2025-04-07T00:00:00+01:00",
+        "MaximumLatestFinishTime": 80,
+        "MaximumLatestFinishDateTime": "2025-04-28T00:00:00+01:00",
+        "Trackers": []
+      },
+      "Dependencies": [
+        16
+      ],
+      "ResourceDependencies": []
+    },
+    {
+      "Activity": {
+        "Id": 7,
+        "Name": "Dev Training",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          2,
+          11
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          2,
+          11
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 5,
+        "FreeSlack": 10,
+        "EarliestStartTime": 35,
+        "LatestFinishTime": 50,
+        "MinimumFreeSlack": 10,
+        "Trackers": []
+      },
+      "Dependencies": [
+        5
+      ],
+      "ResourceDependencies": [
+        4
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 8,
+        "Name": "Test Plan",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [
+          13
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          13
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 25,
+        "FreeSlack": 0,
+        "EarliestStartTime": 50,
+        "LatestFinishTime": 140,
+        "Trackers": []
+      },
+      "Dependencies": [
+        7
+      ],
+      "ResourceDependencies": []
+    },
+    {
+      "Activity": {
+        "Id": 9,
+        "Name": "Test Harness",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [
+          13
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          13
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 25,
+        "FreeSlack": 65,
+        "EarliestStartTime": 75,
+        "LatestFinishTime": 165,
+        "Trackers": []
+      },
+      "Dependencies": [
+        8
+      ],
+      "ResourceDependencies": [
+        8
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 10,
+        "Name": "CM and setup",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [
+          14
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          14
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 25,
+        "EarliestStartTime": 35,
+        "LatestFinishTime": 70,
+        "Trackers": []
+      },
+      "Dependencies": [
+        5
+      ],
+      "ResourceDependencies": []
+    },
+    {
+      "Activity": {
+        "Id": 11,
+        "Name": "UI Design",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          4
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          4
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 20,
+        "FreeSlack": 0,
+        "EarliestStartTime": 80,
+        "LatestFinishTime": 140,
+        "Trackers": []
+      },
+      "Dependencies": [
+        6
+      ],
+      "ResourceDependencies": [
+        6
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 12,
+        "Name": "Manual",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          1
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          1
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 20,
+        "FreeSlack": 45,
+        "EarliestStartTime": 100,
+        "LatestFinishTime": 165,
+        "Trackers": []
+      },
+      "Dependencies": [
+        11
+      ],
+      "ResourceDependencies": [
+        4
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 13,
+        "Name": "Logging",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          6
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 10,
+        "EarliestStartTime": 50,
+        "LatestFinishTime": 70,
+        "Trackers": []
+      },
+      "Dependencies": [
+        7
+      ],
+      "ResourceDependencies": []
+    },
+    {
+      "Activity": {
+        "Id": 14,
+        "Name": "Message Bus",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [
+          2
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          2
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 15,
+        "FreeSlack": 0,
+        "EarliestStartTime": 50,
+        "LatestFinishTime": 65,
+        "Trackers": []
+      },
+      "Dependencies": [
+        7
+      ],
+      "ResourceDependencies": [
+        7
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 15,
+        "Name": "Security",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          5
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 20,
+        "FreeSlack": 0,
+        "EarliestStartTime": 50,
+        "LatestFinishTime": 70,
+        "Trackers": []
+      },
+      "Dependencies": [
+        7
+      ],
+      "ResourceDependencies": []
+    },
+    {
+      "Activity": {
+        "Id": 16,
+        "Name": "Infrastructure Done",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 0,
+        "FreeSlack": 0,
+        "EarliestStartTime": 70,
+        "LatestFinishTime": 70,
+        "Trackers": []
+      },
+      "Dependencies": [
+        10,
+        13,
+        14,
+        15
+      ],
+      "ResourceDependencies": []
+    },
+    {
+      "Activity": {
+        "Id": 17,
+        "Name": "Metrics DB ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [
+          16
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          16
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 5,
+        "FreeSlack": 0,
+        "EarliestStartTime": 90,
+        "LatestFinishTime": 120,
+        "Trackers": []
+      },
+      "Dependencies": [
+        16
+      ],
+      "ResourceDependencies": [
+        20
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 18,
+        "Name": "Members DB ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [
+          16
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          16
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 5,
+        "FreeSlack": 0,
+        "EarliestStartTime": 75,
+        "LatestFinishTime": 95,
+        "Trackers": []
+      },
+      "Dependencies": [
+        16,
+        22
+      ],
+      "ResourceDependencies": [
+        22
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 19,
+        "Name": "Portfolios DB ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [
+          16
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          16
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 5,
+        "FreeSlack": 0,
+        "EarliestStartTime": 80,
+        "LatestFinishTime": 100,
+        "Trackers": []
+      },
+      "Dependencies": [
+        16,
+        18
+      ],
+      "ResourceDependencies": [
+        18
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 20,
+        "Name": "Profiles DB ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [
+          16
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          16
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 5,
+        "FreeSlack": 0,
+        "EarliestStartTime": 85,
+        "LatestFinishTime": 105,
+        "Trackers": []
+      },
+      "Dependencies": [
+        16,
+        19
+      ],
+      "ResourceDependencies": [
+        19
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 21,
+        "Name": "Workflows Repository",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [
+          2
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          2
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 15,
+        "FreeSlack": 0,
+        "EarliestStartTime": 65,
+        "LatestFinishTime": 80,
+        "Trackers": []
+      },
+      "Dependencies": [
+        14
+      ],
+      "ResourceDependencies": [
+        14
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 22,
+        "Name": "Regulations DB",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [
+          16
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          16
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 5,
+        "FreeSlack": 0,
+        "EarliestStartTime": 70,
+        "LatestFinishTime": 75,
+        "Trackers": []
+      },
+      "Dependencies": [
+        16
+      ],
+      "ResourceDependencies": []
+    },
+    {
+      "Activity": {
+        "Id": 23,
+        "Name": "Data Migration",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [
+          16
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          16
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 70,
+        "EarliestStartTime": 95,
+        "LatestFinishTime": 175,
+        "Trackers": []
+      },
+      "Dependencies": [
+        17,
+        18,
+        19,
+        20,
+        22
+      ],
+      "ResourceDependencies": [
+        17
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 24,
+        "Name": "Metrics Access ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          7
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 20,
+        "EarliestStartTime": 100,
+        "LatestFinishTime": 130,
+        "Trackers": []
+      },
+      "Dependencies": [
+        17
+      ],
+      "ResourceDependencies": [
+        27
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 25,
+        "Name": "Members Access ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          7
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 0,
+        "EarliestStartTime": 80,
+        "LatestFinishTime": 105,
+        "Trackers": []
+      },
+      "Dependencies": [
+        18
+      ],
+      "ResourceDependencies": []
+    },
+    {
+      "Activity": {
+        "Id": 26,
+        "Name": "Portfolios Access ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          8
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 0,
+        "EarliestStartTime": 85,
+        "LatestFinishTime": 115,
+        "Trackers": []
+      },
+      "Dependencies": [
+        19
+      ],
+      "ResourceDependencies": []
+    },
+    {
+      "Activity": {
+        "Id": 27,
+        "Name": "Profiles Access ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          7
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 0,
+        "EarliestStartTime": 90,
+        "LatestFinishTime": 115,
+        "Trackers": []
+      },
+      "Dependencies": [
+        20
+      ],
+      "ResourceDependencies": [
+        25
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 28,
+        "Name": "Workflows Access ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          6
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 20,
+        "FreeSlack": 0,
+        "EarliestStartTime": 80,
+        "LatestFinishTime": 100,
+        "Trackers": []
+      },
+      "Dependencies": [
+        21
+      ],
+      "ResourceDependencies": [
+        13
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 29,
+        "Name": "Regulations Access",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          5
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 0,
+        "EarliestStartTime": 75,
+        "LatestFinishTime": 85,
+        "Trackers": []
+      },
+      "Dependencies": [
+        22
+      ],
+      "ResourceDependencies": [
+        15
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 30,
+        "Name": "Regulations Engine ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          5
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 30,
+        "FreeSlack": 0,
+        "EarliestStartTime": 85,
+        "LatestFinishTime": 115,
+        "Trackers": []
+      },
+      "Dependencies": [
+        29
+      ],
+      "ResourceDependencies": [
+        29
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 31,
+        "Name": "Search Engine ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          8
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 15,
+        "FreeSlack": 20,
+        "EarliestStartTime": 95,
+        "LatestFinishTime": 130,
+        "Trackers": []
+      },
+      "Dependencies": [
+        25,
+        26
+      ],
+      "ResourceDependencies": [
+        26
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 32,
+        "Name": "Analysis Engine",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          5
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 15,
+        "FreeSlack": 0,
+        "EarliestStartTime": 115,
+        "LatestFinishTime": 130,
+        "Trackers": []
+      },
+      "Dependencies": [
+        26,
+        27,
+        30
+      ],
+      "ResourceDependencies": [
+        30
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 33,
+        "Name": "Abstract Manager",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          6
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 30,
+        "FreeSlack": 0,
+        "EarliestStartTime": 100,
+        "LatestFinishTime": 130,
+        "Trackers": []
+      },
+      "Dependencies": [
+        16,
+        28
+      ],
+      "ResourceDependencies": [
+        28
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 34,
+        "Name": "Membership Manager ",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          5
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 0,
+        "EarliestStartTime": 130,
+        "LatestFinishTime": 140,
+        "Trackers": []
+      },
+      "Dependencies": [
+        24,
+        25,
+        30,
+        33
+      ],
+      "ResourceDependencies": [
+        32
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 35,
+        "Name": "Market Manager",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          6
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 0,
+        "EarliestStartTime": 130,
+        "LatestFinishTime": 140,
+        "Trackers": []
+      },
+      "Dependencies": [
+        26,
+        31,
+        32,
+        33
+      ],
+      "ResourceDependencies": [
+        33
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 36,
+        "Name": "Performance Manager",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          7
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 0,
+        "EarliestStartTime": 130,
+        "LatestFinishTime": 140,
+        "Trackers": []
+      },
+      "Dependencies": [
+        33
+      ],
+      "ResourceDependencies": [
+        24
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 37,
+        "Name": "Managers Complete",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 0,
+        "FreeSlack": 0,
+        "EarliestStartTime": 140,
+        "LatestFinishTime": 140,
+        "Trackers": []
+      },
+      "Dependencies": [
+        34,
+        35,
+        36
+      ],
+      "ResourceDependencies": []
+    },
+    {
+      "Activity": {
+        "Id": 38,
+        "Name": "Investor Portal",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          6
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 15,
+        "FreeSlack": 10,
+        "EarliestStartTime": 140,
+        "LatestFinishTime": 165,
+        "Trackers": []
+      },
+      "Dependencies": [
+        11,
+        37
+      ],
+      "ResourceDependencies": [
+        35
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 39,
+        "Name": "Investee Portal",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          7
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 15,
+        "FreeSlack": 10,
+        "EarliestStartTime": 140,
+        "LatestFinishTime": 165,
+        "Trackers": []
+      },
+      "Dependencies": [
+        11,
+        37
+      ],
+      "ResourceDependencies": [
+        36
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 40,
+        "Name": "Mobile App",
+        "Notes": "",
+        "TargetWorkStreams": [
+          1,
+          2
+        ],
+        "TargetResources": [],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          5
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 25,
+        "FreeSlack": 0,
+        "EarliestStartTime": 140,
+        "LatestFinishTime": 165,
+        "Trackers": []
+      },
+      "Dependencies": [
+        11,
+        37
+      ],
+      "ResourceDependencies": [
+        34
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 41,
+        "Name": "Manual Polishing",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          1
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          1
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 0,
+        "EarliestStartTime": 165,
+        "LatestFinishTime": 175,
+        "Trackers": []
+      },
+      "Dependencies": [
+        38,
+        39,
+        40
+      ],
+      "ResourceDependencies": [
+        12
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 42,
+        "Name": "System Testing",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          11,
+          12
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          11,
+          12
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 0,
+        "EarliestStartTime": 165,
+        "LatestFinishTime": 175,
+        "Trackers": []
+      },
+      "Dependencies": [
+        9,
+        38,
+        39,
+        40
+      ],
+      "ResourceDependencies": [
+        7
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 43,
+        "Name": "System Rollout",
+        "Notes": "",
+        "TargetWorkStreams": [],
+        "TargetResources": [
+          1,
+          2,
+          3
+        ],
+        "TargetResourceOperator": 0,
+        "AllocatedToResources": [
+          1,
+          2,
+          3
+        ],
+        "CanBeRemoved": false,
+        "HasNoCost": false,
+        "Duration": 10,
+        "FreeSlack": 0,
+        "EarliestStartTime": 175,
+        "LatestFinishTime": 185,
+        "Trackers": []
+      },
+      "Dependencies": [
+        12,
+        23,
+        41,
+        42
+      ],
+      "ResourceDependencies": [
+        4,
+        21,
+        41
+      ]
+    }
+  ],
+  "ArrowGraphSettings": {
+    "ActivitySeverities": [
+      {
+        "SlackLimit": 1,
+        "CriticalityWeight": 4.0,
+        "FibonacciWeight": 4.23606797749979,
+        "ColorFormat": {
+          "A": 255,
+          "R": 0,
+          "G": 0,
+          "B": 0
+        }
+      },
+      {
+        "SlackLimit": 9,
+        "CriticalityWeight": 3.0,
+        "FibonacciWeight": 2.618033988749895,
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        }
+      },
+      {
+        "SlackLimit": 25,
+        "CriticalityWeight": 2.0,
+        "FibonacciWeight": 1.618033988749895,
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 215,
+          "B": 0
+        }
+      },
+      {
+        "SlackLimit": 2147483647,
+        "CriticalityWeight": 1.0,
+        "FibonacciWeight": 1.0,
+        "ColorFormat": {
+          "A": 255,
+          "R": 0,
+          "G": 128,
+          "B": 0
+        }
+      }
+    ],
+    "EdgeTypeFormats": [
+      {
+        "EdgeType": 0,
+        "EdgeDashStyle": 0,
+        "EdgeWeightStyle": 0
+      },
+      {
+        "EdgeType": 1,
+        "EdgeDashStyle": 0,
+        "EdgeWeightStyle": 1
+      },
+      {
+        "EdgeType": 2,
+        "EdgeDashStyle": 1,
+        "EdgeWeightStyle": 0
+      },
+      {
+        "EdgeType": 3,
+        "EdgeDashStyle": 1,
+        "EdgeWeightStyle": 1
+      }
+    ]
+  },
+  "ResourceSettings": {
+    "Resources": [
+      {
+        "Id": 1,
+        "Name": "PO",
+        "IsExplicitTarget": true,
+        "InterActivityAllocationType": 2,
+        "InterActivityPhases": [],
+        "UnitCost": 2.0,
+        "DisplayOrder": 2,
+        "ColorFormat": {
+          "A": 255,
+          "R": 220,
+          "G": 20,
+          "B": 60
+        },
+        "Trackers": [
+          {
+            "Time": 0,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 0,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 1,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 1,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 2,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 2,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 3,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 3,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 4,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 4,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 5,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 5,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 6,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 6,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 7,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 7,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 8,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 8,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 9,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 9,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 10,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 10,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 11,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 11,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 12,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 12,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 13,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 13,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 14,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 14,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 15,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 15,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 16,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 16,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 17,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 17,
+                "ResourceId": 1,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 18,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 18,
+                "ResourceId": 1,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 19,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 19,
+                "ResourceId": 1,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 20,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 20,
+                "ResourceId": 1,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 21,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 21,
+                "ResourceId": 1,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 22,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 22,
+                "ResourceId": 1,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 23,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 23,
+                "ResourceId": 1,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 24,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 24,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 25,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 25,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 26,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 26,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 27,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 27,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 28,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 28,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 29,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 29,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 30,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 30,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 31,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 31,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 32,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 32,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 33,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 33,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 34,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 34,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 35,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 35,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 36,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 36,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 37,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 37,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 38,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 38,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 39,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 39,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 40,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 40,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 41,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 41,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 42,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 42,
+                "ResourceId": 1,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "Id": 2,
+        "Name": "ARC",
+        "IsExplicitTarget": true,
+        "InterActivityAllocationType": 2,
+        "InterActivityPhases": [],
+        "UnitCost": 2.0,
+        "DisplayOrder": 0,
+        "ColorFormat": {
+          "A": 255,
+          "R": 154,
+          "G": 205,
+          "B": 50
+        },
+        "Trackers": [
+          {
+            "Time": 0,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 0,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 1,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 1,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 2,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 2,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 3,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 3,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 4,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 4,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 5,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 5,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 6,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 6,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 7,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 7,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 8,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 8,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 9,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 9,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 10,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 10,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 11,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 11,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 12,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 12,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 13,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 13,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 14,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 14,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 15,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 15,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 16,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 16,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 17,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 17,
+                "ResourceId": 2,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 18,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 18,
+                "ResourceId": 2,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 19,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 19,
+                "ResourceId": 2,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 20,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 20,
+                "ResourceId": 2,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 21,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 21,
+                "ResourceId": 2,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 22,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 22,
+                "ResourceId": 2,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 23,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 23,
+                "ResourceId": 2,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 24,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 24,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 25,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 25,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 26,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 26,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 27,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 27,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 28,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 28,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 29,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 29,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 30,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 30,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 31,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 31,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 32,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 32,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 33,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 33,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 34,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 34,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 35,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 35,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 36,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 36,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 37,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 37,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 38,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 38,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 39,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 39,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 40,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 40,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 41,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 41,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 42,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 42,
+                "ResourceId": 2,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "Id": 3,
+        "Name": "PM",
+        "IsExplicitTarget": true,
+        "InterActivityAllocationType": 2,
+        "InterActivityPhases": [],
+        "UnitCost": 2.0,
+        "DisplayOrder": 1,
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 165,
+          "B": 0
+        },
+        "Trackers": [
+          {
+            "Time": 17,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 17,
+                "ResourceId": 3,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 18,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 18,
+                "ResourceId": 3,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 19,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 19,
+                "ResourceId": 3,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 20,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 20,
+                "ResourceId": 3,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 21,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 21,
+                "ResourceId": 3,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 22,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 22,
+                "ResourceId": 3,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 23,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 23,
+                "ResourceId": 3,
+                "ActivityId": 3,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 24,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 24,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 25,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 25,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 26,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 26,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 27,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 27,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 28,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 28,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 29,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 29,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 30,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 30,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 31,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 31,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 32,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 32,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 33,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 33,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 34,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 34,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 35,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 35,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 36,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 36,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 37,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 37,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 38,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 38,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 39,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 39,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 40,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 40,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 41,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 41,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 42,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 42,
+                "ResourceId": 3,
+                "ActivityId": 4,
+                "PercentageWorked": 100
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "Id": 4,
+        "Name": "UX",
+        "IsExplicitTarget": true,
+        "InterActivityAllocationType": 0,
+        "InterActivityPhases": [],
+        "UnitCost": 1.0,
+        "DisplayOrder": 20,
+        "ColorFormat": {
+          "A": 255,
+          "R": 138,
+          "G": 43,
+          "B": 226
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 5,
+        "Name": "DEV1",
+        "IsExplicitTarget": false,
+        "InterActivityAllocationType": 1,
+        "InterActivityPhases": [],
+        "UnitCost": 1.0,
+        "DisplayOrder": 6,
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 6,
+        "Name": "DEV2",
+        "IsExplicitTarget": false,
+        "InterActivityAllocationType": 1,
+        "InterActivityPhases": [],
+        "UnitCost": 1.0,
+        "DisplayOrder": 7,
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 7,
+        "Name": "DEV3",
+        "IsExplicitTarget": false,
+        "InterActivityAllocationType": 1,
+        "InterActivityPhases": [],
+        "UnitCost": 1.0,
+        "DisplayOrder": 8,
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 8,
+        "Name": "DEV4",
+        "IsExplicitTarget": false,
+        "InterActivityAllocationType": 1,
+        "InterActivityPhases": [],
+        "UnitCost": 1.0,
+        "DisplayOrder": 9,
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 9,
+        "Name": "DEV5",
+        "IsExplicitTarget": true,
+        "InterActivityAllocationType": 1,
+        "InterActivityPhases": [],
+        "UnitCost": 1.0,
+        "DisplayOrder": 10,
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 10,
+        "Name": "DEV6",
+        "IsExplicitTarget": true,
+        "InterActivityAllocationType": 1,
+        "InterActivityPhases": [],
+        "UnitCost": 1.0,
+        "DisplayOrder": 11,
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 11,
+        "Name": "QA1",
+        "IsExplicitTarget": true,
+        "InterActivityAllocationType": 1,
+        "InterActivityPhases": [],
+        "UnitCost": 1.0,
+        "DisplayOrder": 4,
+        "ColorFormat": {
+          "A": 255,
+          "R": 0,
+          "G": 206,
+          "B": 209
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 12,
+        "Name": "QA2",
+        "IsExplicitTarget": true,
+        "InterActivityAllocationType": 0,
+        "InterActivityPhases": [],
+        "UnitCost": 1.0,
+        "DisplayOrder": 5,
+        "ColorFormat": {
+          "A": 255,
+          "R": 0,
+          "G": 206,
+          "B": 209
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 13,
+        "Name": "TE",
+        "IsExplicitTarget": true,
+        "InterActivityAllocationType": 0,
+        "InterActivityPhases": [],
+        "UnitCost": 1.0,
+        "DisplayOrder": 19,
+        "ColorFormat": {
+          "A": 255,
+          "R": 144,
+          "G": 238,
+          "B": 144
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 14,
+        "Name": "CM",
+        "IsExplicitTarget": true,
+        "InterActivityAllocationType": 2,
+        "InterActivityPhases": [
+          1
+        ],
+        "UnitCost": 1.0,
+        "DisplayOrder": 3,
+        "ColorFormat": {
+          "A": 255,
+          "R": 0,
+          "G": 139,
+          "B": 139
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 16,
+        "Name": "DBA",
+        "IsExplicitTarget": true,
+        "InterActivityAllocationType": 1,
+        "InterActivityPhases": [],
+        "UnitCost": 1.0,
+        "DisplayOrder": 25,
+        "ColorFormat": {
+          "A": 255,
+          "R": 0,
+          "G": 0,
+          "B": 255
+        },
+        "Trackers": []
+      },
+      {
+        "Id": 18,
+        "Name": "DEV7",
+        "IsExplicitTarget": true,
+        "InterActivityAllocationType": 1,
+        "InterActivityPhases": [],
+        "UnitCost": 1.0,
+        "DisplayOrder": 18,
+        "ColorFormat": {
+          "A": 255,
+          "R": 255,
+          "G": 0,
+          "B": 0
+        },
+        "Trackers": []
+      }
+    ],
+    "DefaultUnitCost": 2.0,
+    "AreDisabled": false
+  },
+  "WorkStreamSettings": {
+    "WorkStreams": [
+      {
+        "Id": 1,
+        "Name": "CM Stream",
+        "IsPhase": true,
+        "DisplayOrder": 0,
+        "ColorFormat": {
+          "A": 255,
+          "R": 223,
+          "G": 132,
+          "B": 189
+        }
+      },
+      {
+        "Id": 2,
+        "Name": "Dev Stream",
+        "IsPhase": false,
+        "DisplayOrder": 1,
+        "ColorFormat": {
+          "A": 255,
+          "R": 0,
+          "G": 205,
+          "B": 194
+        }
+      }
+    ]
+  },
+  "GraphCompilation": {
+    "DependentActivities": [
+      {
+        "Activity": {
+          "Id": 2,
+          "Name": "Requirements & Architecture",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1,
+            2
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            1,
+            2
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 20,
+          "FreeSlack": 0,
+          "EarliestStartTime": 0,
+          "LatestFinishTime": 30,
+          "Trackers": [
+            {
+              "Time": 0,
+              "ActivityId": 2,
+              "PercentageComplete": 5
+            },
+            {
+              "Time": 1,
+              "ActivityId": 2,
+              "PercentageComplete": 10
+            },
+            {
+              "Time": 2,
+              "ActivityId": 2,
+              "PercentageComplete": 15
+            },
+            {
+              "Time": 3,
+              "ActivityId": 2,
+              "PercentageComplete": 20
+            },
+            {
+              "Time": 4,
+              "ActivityId": 2,
+              "PercentageComplete": 25
+            },
+            {
+              "Time": 5,
+              "ActivityId": 2,
+              "PercentageComplete": 30
+            },
+            {
+              "Time": 6,
+              "ActivityId": 2,
+              "PercentageComplete": 35
+            },
+            {
+              "Time": 7,
+              "ActivityId": 2,
+              "PercentageComplete": 45
+            },
+            {
+              "Time": 8,
+              "ActivityId": 2,
+              "PercentageComplete": 50
+            },
+            {
+              "Time": 9,
+              "ActivityId": 2,
+              "PercentageComplete": 55
+            },
+            {
+              "Time": 10,
+              "ActivityId": 2,
+              "PercentageComplete": 65
+            },
+            {
+              "Time": 11,
+              "ActivityId": 2,
+              "PercentageComplete": 70
+            },
+            {
+              "Time": 12,
+              "ActivityId": 2,
+              "PercentageComplete": 75
+            },
+            {
+              "Time": 13,
+              "ActivityId": 2,
+              "PercentageComplete": 80
+            },
+            {
+              "Time": 14,
+              "ActivityId": 2,
+              "PercentageComplete": 85
+            },
+            {
+              "Time": 15,
+              "ActivityId": 2,
+              "PercentageComplete": 90
+            },
+            {
+              "Time": 16,
+              "ActivityId": 2,
+              "PercentageComplete": 100
+            }
+          ]
+        },
+        "Dependencies": [],
+        "ResourceDependencies": []
+      },
+      {
+        "Activity": {
+          "Id": 3,
+          "Name": "Project Planning",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1,
+            2,
+            3
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            1,
+            2,
+            3
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 20,
+          "LatestFinishTime": 40,
+          "Trackers": [
+            {
+              "Time": 17,
+              "ActivityId": 3,
+              "PercentageComplete": 5
+            },
+            {
+              "Time": 18,
+              "ActivityId": 3,
+              "PercentageComplete": 15
+            },
+            {
+              "Time": 19,
+              "ActivityId": 3,
+              "PercentageComplete": 20
+            },
+            {
+              "Time": 20,
+              "ActivityId": 3,
+              "PercentageComplete": 30
+            },
+            {
+              "Time": 21,
+              "ActivityId": 3,
+              "PercentageComplete": 55
+            },
+            {
+              "Time": 22,
+              "ActivityId": 3,
+              "PercentageComplete": 75
+            },
+            {
+              "Time": 23,
+              "ActivityId": 3,
+              "PercentageComplete": 100
+            }
+          ]
+        },
+        "Dependencies": [
+          2
+        ],
+        "ResourceDependencies": [
+          2
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 4,
+          "Name": "Management Education",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1,
+            2,
+            3
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            1,
+            2,
+            3
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 0,
+          "EarliestStartTime": 30,
+          "LatestFinishTime": 45,
+          "Trackers": [
+            {
+              "Time": 24,
+              "ActivityId": 4,
+              "PercentageComplete": 5
+            },
+            {
+              "Time": 25,
+              "ActivityId": 4,
+              "PercentageComplete": 15
+            },
+            {
+              "Time": 26,
+              "ActivityId": 4,
+              "PercentageComplete": 25
+            },
+            {
+              "Time": 27,
+              "ActivityId": 4,
+              "PercentageComplete": 30
+            },
+            {
+              "Time": 28,
+              "ActivityId": 4,
+              "PercentageComplete": 35
+            },
+            {
+              "Time": 29,
+              "ActivityId": 4,
+              "PercentageComplete": 40
+            },
+            {
+              "Time": 30,
+              "ActivityId": 4,
+              "PercentageComplete": 45
+            },
+            {
+              "Time": 31,
+              "ActivityId": 4,
+              "PercentageComplete": 50
+            },
+            {
+              "Time": 33,
+              "ActivityId": 4,
+              "PercentageComplete": 55
+            },
+            {
+              "Time": 34,
+              "ActivityId": 4,
+              "PercentageComplete": 60
+            },
+            {
+              "Time": 35,
+              "ActivityId": 4,
+              "PercentageComplete": 65
+            },
+            {
+              "Time": 36,
+              "ActivityId": 4,
+              "PercentageComplete": 70
+            },
+            {
+              "Time": 37,
+              "ActivityId": 4,
+              "PercentageComplete": 75
+            },
+            {
+              "Time": 38,
+              "ActivityId": 4,
+              "PercentageComplete": 80
+            },
+            {
+              "Time": 39,
+              "ActivityId": 4,
+              "PercentageComplete": 85
+            },
+            {
+              "Time": 40,
+              "ActivityId": 4,
+              "PercentageComplete": 90
+            },
+            {
+              "Time": 41,
+              "ActivityId": 4,
+              "PercentageComplete": 95
+            },
+            {
+              "Time": 42,
+              "ActivityId": 4,
+              "PercentageComplete": 100
+            }
+          ]
+        },
+        "Dependencies": [
+          3
+        ],
+        "ResourceDependencies": [
+          3
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 5,
+          "Name": "SDP Review",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1,
+            2,
+            3
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 35,
+          "LatestFinishTime": 45,
+          "Trackers": []
+        },
+        "Dependencies": [
+          2,
+          4
+        ],
+        "ResourceDependencies": []
+      },
+      {
+        "Activity": {
+          "Id": 6,
+          "Name": "UX Design",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            4
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            4
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 70,
+          "LatestFinishTime": 80,
+          "MinimumEarliestStartTime": 65,
+          "MaximumLatestFinishTime": 80,
+          "Trackers": []
+        },
+        "Dependencies": [
+          16
+        ],
+        "ResourceDependencies": []
+      },
+      {
+        "Activity": {
+          "Id": 7,
+          "Name": "Dev Training",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            2,
+            11
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            2,
+            11
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 10,
+          "EarliestStartTime": 35,
+          "LatestFinishTime": 50,
+          "MinimumFreeSlack": 10,
+          "Trackers": []
+        },
+        "Dependencies": [
+          5
+        ],
+        "ResourceDependencies": [
+          4
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 8,
+          "Name": "Test Plan",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1
+          ],
+          "TargetResources": [
+            13
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            13
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 25,
+          "FreeSlack": 0,
+          "EarliestStartTime": 50,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        },
+        "Dependencies": [
+          7
+        ],
+        "ResourceDependencies": []
+      },
+      {
+        "Activity": {
+          "Id": 9,
+          "Name": "Test Harness",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1
+          ],
+          "TargetResources": [
+            13
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            13
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 25,
+          "FreeSlack": 65,
+          "EarliestStartTime": 75,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        },
+        "Dependencies": [
+          8
+        ],
+        "ResourceDependencies": [
+          8
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 10,
+          "Name": "CM and setup",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1
+          ],
+          "TargetResources": [
+            14
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            14
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 25,
+          "EarliestStartTime": 35,
+          "LatestFinishTime": 70,
+          "Trackers": []
+        },
+        "Dependencies": [
+          5
+        ],
+        "ResourceDependencies": []
+      },
+      {
+        "Activity": {
+          "Id": 11,
+          "Name": "UI Design",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            4
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            4
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 20,
+          "FreeSlack": 0,
+          "EarliestStartTime": 80,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        },
+        "Dependencies": [
+          6
+        ],
+        "ResourceDependencies": [
+          6
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 12,
+          "Name": "Manual",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            1
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 20,
+          "FreeSlack": 45,
+          "EarliestStartTime": 100,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        },
+        "Dependencies": [
+          11
+        ],
+        "ResourceDependencies": [
+          4
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 13,
+          "Name": "Logging",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            6
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 10,
+          "EarliestStartTime": 50,
+          "LatestFinishTime": 70,
+          "Trackers": []
+        },
+        "Dependencies": [
+          7
+        ],
+        "ResourceDependencies": []
+      },
+      {
+        "Activity": {
+          "Id": 14,
+          "Name": "Message Bus",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            2
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            2
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 15,
+          "FreeSlack": 0,
+          "EarliestStartTime": 50,
+          "LatestFinishTime": 65,
+          "Trackers": []
+        },
+        "Dependencies": [
+          7
+        ],
+        "ResourceDependencies": [
+          7
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 15,
+          "Name": "Security",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            5
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 20,
+          "FreeSlack": 0,
+          "EarliestStartTime": 50,
+          "LatestFinishTime": 70,
+          "Trackers": []
+        },
+        "Dependencies": [
+          7
+        ],
+        "ResourceDependencies": []
+      },
+      {
+        "Activity": {
+          "Id": 16,
+          "Name": "Infrastructure Done",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 70,
+          "LatestFinishTime": 70,
+          "Trackers": []
+        },
+        "Dependencies": [
+          10,
+          13,
+          14,
+          15
+        ],
+        "ResourceDependencies": []
+      },
+      {
+        "Activity": {
+          "Id": 17,
+          "Name": "Metrics DB ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            16
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            16
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 0,
+          "EarliestStartTime": 90,
+          "LatestFinishTime": 120,
+          "Trackers": []
+        },
+        "Dependencies": [
+          16
+        ],
+        "ResourceDependencies": [
+          20
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 18,
+          "Name": "Members DB ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            16
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            16
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 0,
+          "EarliestStartTime": 75,
+          "LatestFinishTime": 95,
+          "Trackers": []
+        },
+        "Dependencies": [
+          16,
+          22
+        ],
+        "ResourceDependencies": [
+          22
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 19,
+          "Name": "Portfolios DB ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            16
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            16
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 0,
+          "EarliestStartTime": 80,
+          "LatestFinishTime": 100,
+          "Trackers": []
+        },
+        "Dependencies": [
+          16,
+          18
+        ],
+        "ResourceDependencies": [
+          18
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 20,
+          "Name": "Profiles DB ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            16
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            16
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 0,
+          "EarliestStartTime": 85,
+          "LatestFinishTime": 105,
+          "Trackers": []
+        },
+        "Dependencies": [
+          16,
+          19
+        ],
+        "ResourceDependencies": [
+          19
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 21,
+          "Name": "Workflows Repository",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            2
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            2
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 15,
+          "FreeSlack": 0,
+          "EarliestStartTime": 65,
+          "LatestFinishTime": 80,
+          "Trackers": []
+        },
+        "Dependencies": [
+          14
+        ],
+        "ResourceDependencies": [
+          14
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 22,
+          "Name": "Regulations DB",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            16
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            16
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 0,
+          "EarliestStartTime": 70,
+          "LatestFinishTime": 75,
+          "Trackers": []
+        },
+        "Dependencies": [
+          16
+        ],
+        "ResourceDependencies": []
+      },
+      {
+        "Activity": {
+          "Id": 23,
+          "Name": "Data Migration",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            16
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            16
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 70,
+          "EarliestStartTime": 95,
+          "LatestFinishTime": 175,
+          "Trackers": []
+        },
+        "Dependencies": [
+          17,
+          18,
+          19,
+          20,
+          22
+        ],
+        "ResourceDependencies": [
+          17
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 24,
+          "Name": "Metrics Access ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            7
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 20,
+          "EarliestStartTime": 100,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        },
+        "Dependencies": [
+          17
+        ],
+        "ResourceDependencies": [
+          27
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 25,
+          "Name": "Members Access ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            7
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 80,
+          "LatestFinishTime": 105,
+          "Trackers": []
+        },
+        "Dependencies": [
+          18
+        ],
+        "ResourceDependencies": []
+      },
+      {
+        "Activity": {
+          "Id": 26,
+          "Name": "Portfolios Access ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            8
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 85,
+          "LatestFinishTime": 115,
+          "Trackers": []
+        },
+        "Dependencies": [
+          19
+        ],
+        "ResourceDependencies": []
+      },
+      {
+        "Activity": {
+          "Id": 27,
+          "Name": "Profiles Access ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            7
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 90,
+          "LatestFinishTime": 115,
+          "Trackers": []
+        },
+        "Dependencies": [
+          20
+        ],
+        "ResourceDependencies": [
+          25
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 28,
+          "Name": "Workflows Access ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            6
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 20,
+          "FreeSlack": 0,
+          "EarliestStartTime": 80,
+          "LatestFinishTime": 100,
+          "Trackers": []
+        },
+        "Dependencies": [
+          21
+        ],
+        "ResourceDependencies": [
+          13
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 29,
+          "Name": "Regulations Access",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            5
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 75,
+          "LatestFinishTime": 85,
+          "Trackers": []
+        },
+        "Dependencies": [
+          22
+        ],
+        "ResourceDependencies": [
+          15
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 30,
+          "Name": "Regulations Engine ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            5
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 30,
+          "FreeSlack": 0,
+          "EarliestStartTime": 85,
+          "LatestFinishTime": 115,
+          "Trackers": []
+        },
+        "Dependencies": [
+          29
+        ],
+        "ResourceDependencies": [
+          29
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 31,
+          "Name": "Search Engine ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            8
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 15,
+          "FreeSlack": 20,
+          "EarliestStartTime": 95,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        },
+        "Dependencies": [
+          25,
+          26
+        ],
+        "ResourceDependencies": [
+          26
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 32,
+          "Name": "Analysis Engine",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            5
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 15,
+          "FreeSlack": 0,
+          "EarliestStartTime": 115,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        },
+        "Dependencies": [
+          26,
+          27,
+          30
+        ],
+        "ResourceDependencies": [
+          30
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 33,
+          "Name": "Abstract Manager",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            6
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 30,
+          "FreeSlack": 0,
+          "EarliestStartTime": 100,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        },
+        "Dependencies": [
+          16,
+          28
+        ],
+        "ResourceDependencies": [
+          28
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 34,
+          "Name": "Membership Manager ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            5
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 130,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        },
+        "Dependencies": [
+          24,
+          25,
+          30,
+          33
+        ],
+        "ResourceDependencies": [
+          32
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 35,
+          "Name": "Market Manager",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            6
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 130,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        },
+        "Dependencies": [
+          26,
+          31,
+          32,
+          33
+        ],
+        "ResourceDependencies": [
+          33
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 36,
+          "Name": "Performance Manager",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            7
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 130,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        },
+        "Dependencies": [
+          33
+        ],
+        "ResourceDependencies": [
+          24
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 37,
+          "Name": "Managers Complete",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 140,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        },
+        "Dependencies": [
+          34,
+          35,
+          36
+        ],
+        "ResourceDependencies": []
+      },
+      {
+        "Activity": {
+          "Id": 38,
+          "Name": "Investor Portal",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            6
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 15,
+          "FreeSlack": 10,
+          "EarliestStartTime": 140,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        },
+        "Dependencies": [
+          11,
+          37
+        ],
+        "ResourceDependencies": [
+          35
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 39,
+          "Name": "Investee Portal",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            7
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 15,
+          "FreeSlack": 10,
+          "EarliestStartTime": 140,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        },
+        "Dependencies": [
+          11,
+          37
+        ],
+        "ResourceDependencies": [
+          36
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 40,
+          "Name": "Mobile App",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            5
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 25,
+          "FreeSlack": 0,
+          "EarliestStartTime": 140,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        },
+        "Dependencies": [
+          11,
+          37
+        ],
+        "ResourceDependencies": [
+          34
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 41,
+          "Name": "Manual Polishing",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            1
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 165,
+          "LatestFinishTime": 175,
+          "Trackers": []
+        },
+        "Dependencies": [
+          38,
+          39,
+          40
+        ],
+        "ResourceDependencies": [
+          12
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 42,
+          "Name": "System Testing",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            11,
+            12
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            11,
+            12
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 165,
+          "LatestFinishTime": 175,
+          "Trackers": []
+        },
+        "Dependencies": [
+          9,
+          38,
+          39,
+          40
+        ],
+        "ResourceDependencies": [
+          7
+        ]
+      },
+      {
+        "Activity": {
+          "Id": 43,
+          "Name": "System Rollout",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1,
+            2,
+            3
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            1,
+            2,
+            3
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 175,
+          "LatestFinishTime": 185,
+          "Trackers": []
+        },
+        "Dependencies": [
+          12,
+          23,
+          41,
+          42
+        ],
+        "ResourceDependencies": [
+          41,
+          21,
+          4
+        ]
+      }
+    ],
+    "ResourceSchedules": [
+      {
+        "Resource": {
+          "Id": 1,
+          "Name": "PO",
+          "IsExplicitTarget": true,
+          "InterActivityAllocationType": 2,
+          "InterActivityPhases": [],
+          "UnitCost": 2.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 2,
+            "Name": "Requirements & Architecture",
+            "HasNoCost": false,
+            "Duration": 20,
+            "StartTime": 0,
+            "FinishTime": 20
+          },
+          {
+            "Id": 3,
+            "Name": "Project Planning",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 20,
+            "FinishTime": 30
+          },
+          {
+            "Id": 4,
+            "Name": "Management Education",
+            "HasNoCost": false,
+            "Duration": 5,
+            "StartTime": 30,
+            "FinishTime": 35
+          },
+          {
+            "Id": 12,
+            "Name": "Manual",
+            "HasNoCost": false,
+            "Duration": 20,
+            "StartTime": 100,
+            "FinishTime": 120
+          },
+          {
+            "Id": 41,
+            "Name": "Manual Polishing",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 165,
+            "FinishTime": 175
+          },
+          {
+            "Id": 43,
+            "Name": "System Rollout",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 175,
+            "FinishTime": 185
+          }
+        ],
+        "FinishTime": 185
+      },
+      {
+        "Resource": {
+          "Id": 2,
+          "Name": "ARC",
+          "IsExplicitTarget": true,
+          "InterActivityAllocationType": 2,
+          "InterActivityPhases": [],
+          "UnitCost": 2.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 2,
+            "Name": "Requirements & Architecture",
+            "HasNoCost": false,
+            "Duration": 20,
+            "StartTime": 0,
+            "FinishTime": 20
+          },
+          {
+            "Id": 3,
+            "Name": "Project Planning",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 20,
+            "FinishTime": 30
+          },
+          {
+            "Id": 4,
+            "Name": "Management Education",
+            "HasNoCost": false,
+            "Duration": 5,
+            "StartTime": 30,
+            "FinishTime": 35
+          },
+          {
+            "Id": 7,
+            "Name": "Dev Training",
+            "HasNoCost": false,
+            "Duration": 5,
+            "StartTime": 35,
+            "FinishTime": 40
+          },
+          {
+            "Id": 14,
+            "Name": "Message Bus",
+            "HasNoCost": false,
+            "Duration": 15,
+            "StartTime": 50,
+            "FinishTime": 65
+          },
+          {
+            "Id": 21,
+            "Name": "Workflows Repository",
+            "HasNoCost": false,
+            "Duration": 15,
+            "StartTime": 65,
+            "FinishTime": 80
+          },
+          {
+            "Id": 43,
+            "Name": "System Rollout",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 175,
+            "FinishTime": 185
+          }
+        ],
+        "FinishTime": 185
+      },
+      {
+        "Resource": {
+          "Id": 3,
+          "Name": "PM",
+          "IsExplicitTarget": true,
+          "InterActivityAllocationType": 2,
+          "InterActivityPhases": [],
+          "UnitCost": 2.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 3,
+            "Name": "Project Planning",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 20,
+            "FinishTime": 30
+          },
+          {
+            "Id": 4,
+            "Name": "Management Education",
+            "HasNoCost": false,
+            "Duration": 5,
+            "StartTime": 30,
+            "FinishTime": 35
+          },
+          {
+            "Id": 43,
+            "Name": "System Rollout",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 175,
+            "FinishTime": 185
+          }
+        ],
+        "FinishTime": 185
+      },
+      {
+        "Resource": {
+          "Id": 4,
+          "Name": "UX",
+          "IsExplicitTarget": true,
+          "InterActivityAllocationType": 0,
+          "InterActivityPhases": [],
+          "UnitCost": 1.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 6,
+            "Name": "UX Design",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 70,
+            "FinishTime": 80
+          },
+          {
+            "Id": 11,
+            "Name": "UI Design",
+            "HasNoCost": false,
+            "Duration": 20,
+            "StartTime": 80,
+            "FinishTime": 100
+          }
+        ],
+        "FinishTime": 185
+      },
+      {
+        "Resource": {
+          "Id": 5,
+          "Name": "DEV1",
+          "IsExplicitTarget": false,
+          "InterActivityAllocationType": 1,
+          "InterActivityPhases": [],
+          "UnitCost": 1.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 15,
+            "Name": "Security",
+            "HasNoCost": false,
+            "Duration": 20,
+            "StartTime": 50,
+            "FinishTime": 70
+          },
+          {
+            "Id": 29,
+            "Name": "Regulations Access",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 75,
+            "FinishTime": 85
+          },
+          {
+            "Id": 30,
+            "Name": "Regulations Engine ",
+            "HasNoCost": false,
+            "Duration": 30,
+            "StartTime": 85,
+            "FinishTime": 115
+          },
+          {
+            "Id": 32,
+            "Name": "Analysis Engine",
+            "HasNoCost": false,
+            "Duration": 15,
+            "StartTime": 115,
+            "FinishTime": 130
+          },
+          {
+            "Id": 34,
+            "Name": "Membership Manager ",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 130,
+            "FinishTime": 140
+          },
+          {
+            "Id": 40,
+            "Name": "Mobile App",
+            "HasNoCost": false,
+            "Duration": 25,
+            "StartTime": 140,
+            "FinishTime": 165
+          }
+        ],
+        "FinishTime": 185
+      },
+      {
+        "Resource": {
+          "Id": 6,
+          "Name": "DEV2",
+          "IsExplicitTarget": false,
+          "InterActivityAllocationType": 1,
+          "InterActivityPhases": [],
+          "UnitCost": 1.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 13,
+            "Name": "Logging",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 50,
+            "FinishTime": 60
+          },
+          {
+            "Id": 28,
+            "Name": "Workflows Access ",
+            "HasNoCost": false,
+            "Duration": 20,
+            "StartTime": 80,
+            "FinishTime": 100
+          },
+          {
+            "Id": 33,
+            "Name": "Abstract Manager",
+            "HasNoCost": false,
+            "Duration": 30,
+            "StartTime": 100,
+            "FinishTime": 130
+          },
+          {
+            "Id": 35,
+            "Name": "Market Manager",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 130,
+            "FinishTime": 140
+          },
+          {
+            "Id": 38,
+            "Name": "Investor Portal",
+            "HasNoCost": false,
+            "Duration": 15,
+            "StartTime": 140,
+            "FinishTime": 155
+          }
+        ],
+        "FinishTime": 185
+      },
+      {
+        "Resource": {
+          "Id": 7,
+          "Name": "DEV3",
+          "IsExplicitTarget": false,
+          "InterActivityAllocationType": 1,
+          "InterActivityPhases": [],
+          "UnitCost": 1.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 25,
+            "Name": "Members Access ",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 80,
+            "FinishTime": 90
+          },
+          {
+            "Id": 27,
+            "Name": "Profiles Access ",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 90,
+            "FinishTime": 100
+          },
+          {
+            "Id": 24,
+            "Name": "Metrics Access ",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 100,
+            "FinishTime": 110
+          },
+          {
+            "Id": 36,
+            "Name": "Performance Manager",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 130,
+            "FinishTime": 140
+          },
+          {
+            "Id": 39,
+            "Name": "Investee Portal",
+            "HasNoCost": false,
+            "Duration": 15,
+            "StartTime": 140,
+            "FinishTime": 155
+          }
+        ],
+        "FinishTime": 185
+      },
+      {
+        "Resource": {
+          "Id": 8,
+          "Name": "DEV4",
+          "IsExplicitTarget": false,
+          "InterActivityAllocationType": 1,
+          "InterActivityPhases": [],
+          "UnitCost": 1.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 26,
+            "Name": "Portfolios Access ",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 85,
+            "FinishTime": 95
+          },
+          {
+            "Id": 31,
+            "Name": "Search Engine ",
+            "HasNoCost": false,
+            "Duration": 15,
+            "StartTime": 95,
+            "FinishTime": 110
+          }
+        ],
+        "FinishTime": 185
+      },
+      {
+        "Resource": {
+          "Id": 11,
+          "Name": "QA1",
+          "IsExplicitTarget": true,
+          "InterActivityAllocationType": 1,
+          "InterActivityPhases": [],
+          "UnitCost": 1.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 7,
+            "Name": "Dev Training",
+            "HasNoCost": false,
+            "Duration": 5,
+            "StartTime": 35,
+            "FinishTime": 40
+          },
+          {
+            "Id": 42,
+            "Name": "System Testing",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 165,
+            "FinishTime": 175
+          }
+        ],
+        "FinishTime": 185
+      },
+      {
+        "Resource": {
+          "Id": 12,
+          "Name": "QA2",
+          "IsExplicitTarget": true,
+          "InterActivityAllocationType": 0,
+          "InterActivityPhases": [],
+          "UnitCost": 1.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 42,
+            "Name": "System Testing",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 165,
+            "FinishTime": 175
+          }
+        ],
+        "FinishTime": 185
+      },
+      {
+        "Resource": {
+          "Id": 13,
+          "Name": "TE",
+          "IsExplicitTarget": true,
+          "InterActivityAllocationType": 0,
+          "InterActivityPhases": [],
+          "UnitCost": 1.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 8,
+            "Name": "Test Plan",
+            "HasNoCost": false,
+            "Duration": 25,
+            "StartTime": 50,
+            "FinishTime": 75
+          },
+          {
+            "Id": 9,
+            "Name": "Test Harness",
+            "HasNoCost": false,
+            "Duration": 25,
+            "StartTime": 75,
+            "FinishTime": 100
+          }
+        ],
+        "FinishTime": 185
+      },
+      {
+        "Resource": {
+          "Id": 14,
+          "Name": "CM",
+          "IsExplicitTarget": true,
+          "InterActivityAllocationType": 2,
+          "InterActivityPhases": [
+            1
+          ],
+          "UnitCost": 1.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 10,
+            "Name": "CM and setup",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 35,
+            "FinishTime": 45
+          }
+        ],
+        "FinishTime": 185
+      },
+      {
+        "Resource": {
+          "Id": 16,
+          "Name": "DBA",
+          "IsExplicitTarget": true,
+          "InterActivityAllocationType": 1,
+          "InterActivityPhases": [],
+          "UnitCost": 1.0,
+          "DisplayOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          },
+          "Trackers": []
+        },
+        "ScheduledActivities": [
+          {
+            "Id": 22,
+            "Name": "Regulations DB",
+            "HasNoCost": false,
+            "Duration": 5,
+            "StartTime": 70,
+            "FinishTime": 75
+          },
+          {
+            "Id": 18,
+            "Name": "Members DB ",
+            "HasNoCost": false,
+            "Duration": 5,
+            "StartTime": 75,
+            "FinishTime": 80
+          },
+          {
+            "Id": 19,
+            "Name": "Portfolios DB ",
+            "HasNoCost": false,
+            "Duration": 5,
+            "StartTime": 80,
+            "FinishTime": 85
+          },
+          {
+            "Id": 20,
+            "Name": "Profiles DB ",
+            "HasNoCost": false,
+            "Duration": 5,
+            "StartTime": 85,
+            "FinishTime": 90
+          },
+          {
+            "Id": 17,
+            "Name": "Metrics DB ",
+            "HasNoCost": false,
+            "Duration": 5,
+            "StartTime": 90,
+            "FinishTime": 95
+          },
+          {
+            "Id": 23,
+            "Name": "Data Migration",
+            "HasNoCost": false,
+            "Duration": 10,
+            "StartTime": 95,
+            "FinishTime": 105
+          }
+        ],
+        "FinishTime": 185
+      }
+    ],
+    "CompilationErrors": [],
+    "CyclomaticComplexity": 0,
+    "Duration": 0
+  },
+  "ArrowGraph": {
+    "Edges": [
+      {
+        "Content": {
+          "Id": 2,
+          "Name": "Requirements & Architecture",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1,
+            2
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            1,
+            2
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 20,
+          "FreeSlack": 0,
+          "EarliestStartTime": 0,
+          "LatestFinishTime": 30,
+          "Trackers": [
+            {
+              "Time": 0,
+              "ActivityId": 2,
+              "PercentageComplete": 5
+            },
+            {
+              "Time": 1,
+              "ActivityId": 2,
+              "PercentageComplete": 10
+            },
+            {
+              "Time": 2,
+              "ActivityId": 2,
+              "PercentageComplete": 15
+            },
+            {
+              "Time": 3,
+              "ActivityId": 2,
+              "PercentageComplete": 20
+            },
+            {
+              "Time": 4,
+              "ActivityId": 2,
+              "PercentageComplete": 25
+            },
+            {
+              "Time": 5,
+              "ActivityId": 2,
+              "PercentageComplete": 30
+            },
+            {
+              "Time": 6,
+              "ActivityId": 2,
+              "PercentageComplete": 35
+            },
+            {
+              "Time": 7,
+              "ActivityId": 2,
+              "PercentageComplete": 45
+            },
+            {
+              "Time": 8,
+              "ActivityId": 2,
+              "PercentageComplete": 50
+            },
+            {
+              "Time": 9,
+              "ActivityId": 2,
+              "PercentageComplete": 55
+            },
+            {
+              "Time": 10,
+              "ActivityId": 2,
+              "PercentageComplete": 65
+            },
+            {
+              "Time": 11,
+              "ActivityId": 2,
+              "PercentageComplete": 70
+            },
+            {
+              "Time": 12,
+              "ActivityId": 2,
+              "PercentageComplete": 75
+            },
+            {
+              "Time": 13,
+              "ActivityId": 2,
+              "PercentageComplete": 80
+            },
+            {
+              "Time": 14,
+              "ActivityId": 2,
+              "PercentageComplete": 85
+            },
+            {
+              "Time": 15,
+              "ActivityId": 2,
+              "PercentageComplete": 90
+            },
+            {
+              "Time": 16,
+              "ActivityId": 2,
+              "PercentageComplete": 100
+            }
+          ]
+        }
+      },
+      {
+        "Content": {
+          "Id": 3,
+          "Name": "Project Planning",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1,
+            2,
+            3
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            1,
+            2,
+            3
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 20,
+          "LatestFinishTime": 40,
+          "Trackers": [
+            {
+              "Time": 17,
+              "ActivityId": 3,
+              "PercentageComplete": 5
+            },
+            {
+              "Time": 18,
+              "ActivityId": 3,
+              "PercentageComplete": 15
+            },
+            {
+              "Time": 19,
+              "ActivityId": 3,
+              "PercentageComplete": 20
+            },
+            {
+              "Time": 20,
+              "ActivityId": 3,
+              "PercentageComplete": 30
+            },
+            {
+              "Time": 21,
+              "ActivityId": 3,
+              "PercentageComplete": 55
+            },
+            {
+              "Time": 22,
+              "ActivityId": 3,
+              "PercentageComplete": 75
+            },
+            {
+              "Time": 23,
+              "ActivityId": 3,
+              "PercentageComplete": 100
+            }
+          ]
+        }
+      },
+      {
+        "Content": {
+          "Id": 4,
+          "Name": "Management Education",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1,
+            2,
+            3
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            1,
+            2,
+            3
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 0,
+          "EarliestStartTime": 30,
+          "LatestFinishTime": 45,
+          "Trackers": [
+            {
+              "Time": 24,
+              "ActivityId": 4,
+              "PercentageComplete": 5
+            },
+            {
+              "Time": 25,
+              "ActivityId": 4,
+              "PercentageComplete": 15
+            },
+            {
+              "Time": 26,
+              "ActivityId": 4,
+              "PercentageComplete": 25
+            },
+            {
+              "Time": 27,
+              "ActivityId": 4,
+              "PercentageComplete": 30
+            },
+            {
+              "Time": 28,
+              "ActivityId": 4,
+              "PercentageComplete": 35
+            },
+            {
+              "Time": 29,
+              "ActivityId": 4,
+              "PercentageComplete": 40
+            },
+            {
+              "Time": 30,
+              "ActivityId": 4,
+              "PercentageComplete": 45
+            },
+            {
+              "Time": 31,
+              "ActivityId": 4,
+              "PercentageComplete": 50
+            },
+            {
+              "Time": 33,
+              "ActivityId": 4,
+              "PercentageComplete": 55
+            },
+            {
+              "Time": 34,
+              "ActivityId": 4,
+              "PercentageComplete": 60
+            },
+            {
+              "Time": 35,
+              "ActivityId": 4,
+              "PercentageComplete": 65
+            },
+            {
+              "Time": 36,
+              "ActivityId": 4,
+              "PercentageComplete": 70
+            },
+            {
+              "Time": 37,
+              "ActivityId": 4,
+              "PercentageComplete": 75
+            },
+            {
+              "Time": 38,
+              "ActivityId": 4,
+              "PercentageComplete": 80
+            },
+            {
+              "Time": 39,
+              "ActivityId": 4,
+              "PercentageComplete": 85
+            },
+            {
+              "Time": 40,
+              "ActivityId": 4,
+              "PercentageComplete": 90
+            },
+            {
+              "Time": 41,
+              "ActivityId": 4,
+              "PercentageComplete": 95
+            },
+            {
+              "Time": 42,
+              "ActivityId": 4,
+              "PercentageComplete": 100
+            }
+          ]
+        }
+      },
+      {
+        "Content": {
+          "Id": 5,
+          "Name": "SDP Review",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1,
+            2,
+            3
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 35,
+          "LatestFinishTime": 45,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 6,
+          "Name": "UX Design",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            4
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            4
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 70,
+          "LatestFinishTime": 80,
+          "MinimumEarliestStartTime": 65,
+          "MaximumLatestFinishTime": 80,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 7,
+          "Name": "Dev Training",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            2,
+            11
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            2,
+            11
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 10,
+          "EarliestStartTime": 35,
+          "LatestFinishTime": 50,
+          "MinimumFreeSlack": 10,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 8,
+          "Name": "Test Plan",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1
+          ],
+          "TargetResources": [
+            13
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            13
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 25,
+          "FreeSlack": 0,
+          "EarliestStartTime": 50,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 9,
+          "Name": "Test Harness",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1
+          ],
+          "TargetResources": [
+            13
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            13
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 25,
+          "FreeSlack": 65,
+          "EarliestStartTime": 75,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 10,
+          "Name": "CM and setup",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1
+          ],
+          "TargetResources": [
+            14
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            14
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 25,
+          "EarliestStartTime": 35,
+          "LatestFinishTime": 70,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 11,
+          "Name": "UI Design",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            4
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            4
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 20,
+          "FreeSlack": 0,
+          "EarliestStartTime": 80,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 12,
+          "Name": "Manual",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            1
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 20,
+          "FreeSlack": 45,
+          "EarliestStartTime": 100,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 13,
+          "Name": "Logging",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            6
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 50,
+          "LatestFinishTime": 70,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 14,
+          "Name": "Message Bus",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            2
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            2
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 15,
+          "FreeSlack": 0,
+          "EarliestStartTime": 50,
+          "LatestFinishTime": 65,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 15,
+          "Name": "Security",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            5
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 20,
+          "FreeSlack": 0,
+          "EarliestStartTime": 50,
+          "LatestFinishTime": 70,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 16,
+          "Name": "Infrastructure Done",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 70,
+          "LatestFinishTime": 70,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -31,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 10,
+          "EarliestStartTime": 60,
+          "LatestFinishTime": 70,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -32,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 5,
+          "EarliestStartTime": 65,
+          "LatestFinishTime": 70,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 17,
+          "Name": "Metrics DB ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            16
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            16
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 0,
+          "EarliestStartTime": 90,
+          "LatestFinishTime": 120,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 18,
+          "Name": "Members DB ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            16
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            16
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 0,
+          "EarliestStartTime": 75,
+          "LatestFinishTime": 95,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 19,
+          "Name": "Portfolios DB ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            16
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            16
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 0,
+          "EarliestStartTime": 80,
+          "LatestFinishTime": 100,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 20,
+          "Name": "Profiles DB ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            16
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            16
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 0,
+          "EarliestStartTime": 85,
+          "LatestFinishTime": 105,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 21,
+          "Name": "Workflows Repository",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            2
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            2
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 15,
+          "FreeSlack": 0,
+          "EarliestStartTime": 65,
+          "LatestFinishTime": 80,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 22,
+          "Name": "Regulations DB",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            16
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            16
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 5,
+          "FreeSlack": 0,
+          "EarliestStartTime": 70,
+          "LatestFinishTime": 75,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 23,
+          "Name": "Data Migration",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [
+            16
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            16
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 70,
+          "EarliestStartTime": 95,
+          "LatestFinishTime": 175,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 24,
+          "Name": "Metrics Access ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            7
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 20,
+          "EarliestStartTime": 100,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -55,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 5,
+          "EarliestStartTime": 95,
+          "LatestFinishTime": 120,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 25,
+          "Name": "Members Access ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            7
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 80,
+          "LatestFinishTime": 105,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 26,
+          "Name": "Portfolios Access ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            8
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 85,
+          "LatestFinishTime": 115,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 27,
+          "Name": "Profiles Access ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            7
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 90,
+          "LatestFinishTime": 115,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -61,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 90,
+          "LatestFinishTime": 105,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -62,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 90,
+          "LatestFinishTime": 105,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -63,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 100,
+          "LatestFinishTime": 120,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 28,
+          "Name": "Workflows Access ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            6
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 20,
+          "FreeSlack": 0,
+          "EarliestStartTime": 80,
+          "LatestFinishTime": 100,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -64,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 20,
+          "EarliestStartTime": 60,
+          "LatestFinishTime": 80,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 29,
+          "Name": "Regulations Access",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            5
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 75,
+          "LatestFinishTime": 85,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 30,
+          "Name": "Regulations Engine ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            5
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 30,
+          "FreeSlack": 0,
+          "EarliestStartTime": 85,
+          "LatestFinishTime": 115,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 31,
+          "Name": "Search Engine ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            8
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 15,
+          "FreeSlack": 20,
+          "EarliestStartTime": 95,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -72,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 5,
+          "EarliestStartTime": 90,
+          "LatestFinishTime": 115,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -73,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 95,
+          "LatestFinishTime": 115,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 32,
+          "Name": "Analysis Engine",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            5
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 15,
+          "FreeSlack": 0,
+          "EarliestStartTime": 115,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -75,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 20,
+          "EarliestStartTime": 95,
+          "LatestFinishTime": 115,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -76,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 15,
+          "EarliestStartTime": 100,
+          "LatestFinishTime": 115,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 33,
+          "Name": "Abstract Manager",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            6
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 30,
+          "FreeSlack": 0,
+          "EarliestStartTime": 100,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -79,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 30,
+          "EarliestStartTime": 70,
+          "LatestFinishTime": 100,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 34,
+          "Name": "Membership Manager ",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            5
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 130,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -82,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 130,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -85,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 130,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 35,
+          "Name": "Market Manager",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            6
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 130,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -90,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 130,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -91,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 130,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 36,
+          "Name": "Performance Manager",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            7
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 130,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -94,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 130,
+          "LatestFinishTime": 130,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 37,
+          "Name": "Managers Complete",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 140,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 38,
+          "Name": "Investor Portal",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            6
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 15,
+          "FreeSlack": 10,
+          "EarliestStartTime": 140,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 39,
+          "Name": "Investee Portal",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            7
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 15,
+          "FreeSlack": 10,
+          "EarliestStartTime": 140,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 40,
+          "Name": "Mobile App",
+          "Notes": "",
+          "TargetWorkStreams": [
+            1,
+            2
+          ],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            5
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 25,
+          "FreeSlack": 0,
+          "EarliestStartTime": 140,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -108,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 40,
+          "EarliestStartTime": 100,
+          "LatestFinishTime": 140,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 41,
+          "Name": "Manual Polishing",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            1
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 165,
+          "LatestFinishTime": 175,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -113,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 165,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 42,
+          "Name": "System Testing",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            11,
+            12
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            11,
+            12
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 165,
+          "LatestFinishTime": 175,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -119,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 165,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -120,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 165,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": -121,
+          "TargetWorkStreams": [],
+          "TargetResources": [],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [],
+          "CanBeRemoved": true,
+          "HasNoCost": false,
+          "Duration": 0,
+          "FreeSlack": 0,
+          "EarliestStartTime": 165,
+          "LatestFinishTime": 165,
+          "Trackers": []
+        }
+      },
+      {
+        "Content": {
+          "Id": 43,
+          "Name": "System Rollout",
+          "Notes": "",
+          "TargetWorkStreams": [],
+          "TargetResources": [
+            1,
+            2,
+            3
+          ],
+          "TargetResourceOperator": 0,
+          "AllocatedToResources": [
+            1,
+            2,
+            3
+          ],
+          "CanBeRemoved": false,
+          "HasNoCost": false,
+          "Duration": 10,
+          "FreeSlack": 0,
+          "EarliestStartTime": 175,
+          "LatestFinishTime": 185,
+          "Trackers": []
+        }
+      }
+    ],
+    "Nodes": [
+      {
+        "NodeType": 1,
+        "Content": {
+          "Id": -1,
+          "EarliestFinishTime": 0,
+          "LatestFinishTime": 10
+        },
+        "IncomingEdges": [],
+        "OutgoingEdges": [
+          2
+        ]
+      },
+      {
+        "NodeType": 2,
+        "Content": {
+          "Id": -2,
+          "EarliestFinishTime": 185,
+          "LatestFinishTime": 185
+        },
+        "IncomingEdges": [
+          43
+        ],
+        "OutgoingEdges": []
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -3,
+          "EarliestFinishTime": 20,
+          "LatestFinishTime": 30
+        },
+        "IncomingEdges": [
+          2
+        ],
+        "OutgoingEdges": [
+          3
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -5,
+          "EarliestFinishTime": 30,
+          "LatestFinishTime": 40
+        },
+        "IncomingEdges": [
+          3
+        ],
+        "OutgoingEdges": [
+          4
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -7,
+          "EarliestFinishTime": 35,
+          "LatestFinishTime": 45
+        },
+        "IncomingEdges": [
+          4
+        ],
+        "OutgoingEdges": [
+          5
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -9,
+          "EarliestFinishTime": 35,
+          "LatestFinishTime": 45
+        },
+        "IncomingEdges": [
+          5
+        ],
+        "OutgoingEdges": [
+          7,
+          10
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -11,
+          "EarliestFinishTime": 80,
+          "LatestFinishTime": 120
+        },
+        "IncomingEdges": [
+          6
+        ],
+        "OutgoingEdges": [
+          11
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -13,
+          "EarliestFinishTime": 50,
+          "LatestFinishTime": 50
+        },
+        "IncomingEdges": [
+          7
+        ],
+        "OutgoingEdges": [
+          8,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -15,
+          "EarliestFinishTime": 75,
+          "LatestFinishTime": 140
+        },
+        "IncomingEdges": [
+          8
+        ],
+        "OutgoingEdges": [
+          9
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -17,
+          "EarliestFinishTime": 165,
+          "LatestFinishTime": 165
+        },
+        "IncomingEdges": [
+          9,
+          -119
+        ],
+        "OutgoingEdges": [
+          42
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -19,
+          "EarliestFinishTime": 70,
+          "LatestFinishTime": 70
+        },
+        "IncomingEdges": [
+          10,
+          15,
+          -31,
+          -32
+        ],
+        "OutgoingEdges": [
+          16
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -21,
+          "EarliestFinishTime": 100,
+          "LatestFinishTime": 140
+        },
+        "IncomingEdges": [
+          11
+        ],
+        "OutgoingEdges": [
+          12,
+          -108
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -23,
+          "EarliestFinishTime": 165,
+          "LatestFinishTime": 165
+        },
+        "IncomingEdges": [
+          12,
+          -113
+        ],
+        "OutgoingEdges": [
+          41
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -25,
+          "EarliestFinishTime": 60,
+          "LatestFinishTime": 70
+        },
+        "IncomingEdges": [
+          13
+        ],
+        "OutgoingEdges": [
+          -31,
+          -64
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -27,
+          "EarliestFinishTime": 65,
+          "LatestFinishTime": 65
+        },
+        "IncomingEdges": [
+          14
+        ],
+        "OutgoingEdges": [
+          -32,
+          21
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -31,
+          "EarliestFinishTime": 70,
+          "LatestFinishTime": 70
+        },
+        "IncomingEdges": [
+          16
+        ],
+        "OutgoingEdges": [
+          6,
+          22,
+          -79
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -33,
+          "EarliestFinishTime": 95,
+          "LatestFinishTime": 120
+        },
+        "IncomingEdges": [
+          17
+        ],
+        "OutgoingEdges": [
+          23,
+          -55
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -35,
+          "EarliestFinishTime": 80,
+          "LatestFinishTime": 95
+        },
+        "IncomingEdges": [
+          18
+        ],
+        "OutgoingEdges": [
+          19,
+          25
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -37,
+          "EarliestFinishTime": 85,
+          "LatestFinishTime": 100
+        },
+        "IncomingEdges": [
+          19
+        ],
+        "OutgoingEdges": [
+          20,
+          26
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -39,
+          "EarliestFinishTime": 90,
+          "LatestFinishTime": 105
+        },
+        "IncomingEdges": [
+          20
+        ],
+        "OutgoingEdges": [
+          17,
+          -61
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -41,
+          "EarliestFinishTime": 80,
+          "LatestFinishTime": 80
+        },
+        "IncomingEdges": [
+          21,
+          -64
+        ],
+        "OutgoingEdges": [
+          28
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -43,
+          "EarliestFinishTime": 75,
+          "LatestFinishTime": 75
+        },
+        "IncomingEdges": [
+          22
+        ],
+        "OutgoingEdges": [
+          18,
+          29
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -45,
+          "EarliestFinishTime": 175,
+          "LatestFinishTime": 175
+        },
+        "IncomingEdges": [
+          23,
+          42,
+          41
+        ],
+        "OutgoingEdges": [
+          43
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -46,
+          "EarliestFinishTime": 100,
+          "LatestFinishTime": 120
+        },
+        "IncomingEdges": [
+          -55,
+          -63
+        ],
+        "OutgoingEdges": [
+          24
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -47,
+          "EarliestFinishTime": 130,
+          "LatestFinishTime": 130
+        },
+        "IncomingEdges": [
+          24,
+          -94
+        ],
+        "OutgoingEdges": [
+          -82,
+          36
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -49,
+          "EarliestFinishTime": 90,
+          "LatestFinishTime": 105
+        },
+        "IncomingEdges": [
+          25
+        ],
+        "OutgoingEdges": [
+          -62,
+          -72
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -51,
+          "EarliestFinishTime": 95,
+          "LatestFinishTime": 115
+        },
+        "IncomingEdges": [
+          26
+        ],
+        "OutgoingEdges": [
+          -73,
+          -75
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -52,
+          "EarliestFinishTime": 90,
+          "LatestFinishTime": 105
+        },
+        "IncomingEdges": [
+          -61,
+          -62
+        ],
+        "OutgoingEdges": [
+          27
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -53,
+          "EarliestFinishTime": 100,
+          "LatestFinishTime": 115
+        },
+        "IncomingEdges": [
+          27
+        ],
+        "OutgoingEdges": [
+          -63,
+          -76
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -55,
+          "EarliestFinishTime": 100,
+          "LatestFinishTime": 100
+        },
+        "IncomingEdges": [
+          28,
+          -79
+        ],
+        "OutgoingEdges": [
+          33
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -57,
+          "EarliestFinishTime": 85,
+          "LatestFinishTime": 85
+        },
+        "IncomingEdges": [
+          29
+        ],
+        "OutgoingEdges": [
+          30
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -59,
+          "EarliestFinishTime": 115,
+          "LatestFinishTime": 115
+        },
+        "IncomingEdges": [
+          30,
+          -76,
+          -75
+        ],
+        "OutgoingEdges": [
+          32
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -60,
+          "EarliestFinishTime": 95,
+          "LatestFinishTime": 115
+        },
+        "IncomingEdges": [
+          -72,
+          -73
+        ],
+        "OutgoingEdges": [
+          31
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -61,
+          "EarliestFinishTime": 130,
+          "LatestFinishTime": 130
+        },
+        "IncomingEdges": [
+          31,
+          -91,
+          -90
+        ],
+        "OutgoingEdges": [
+          35
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -63,
+          "EarliestFinishTime": 130,
+          "LatestFinishTime": 130
+        },
+        "IncomingEdges": [
+          32
+        ],
+        "OutgoingEdges": [
+          -85,
+          -90
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -65,
+          "EarliestFinishTime": 130,
+          "LatestFinishTime": 130
+        },
+        "IncomingEdges": [
+          33
+        ],
+        "OutgoingEdges": [
+          -91,
+          -94
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -66,
+          "EarliestFinishTime": 130,
+          "LatestFinishTime": 130
+        },
+        "IncomingEdges": [
+          -82,
+          -85
+        ],
+        "OutgoingEdges": [
+          34
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -67,
+          "EarliestFinishTime": 140,
+          "LatestFinishTime": 140
+        },
+        "IncomingEdges": [
+          34,
+          36,
+          35
+        ],
+        "OutgoingEdges": [
+          37
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -73,
+          "EarliestFinishTime": 140,
+          "LatestFinishTime": 140
+        },
+        "IncomingEdges": [
+          37,
+          -108
+        ],
+        "OutgoingEdges": [
+          38,
+          39,
+          40
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -75,
+          "EarliestFinishTime": 165,
+          "LatestFinishTime": 165
+        },
+        "IncomingEdges": [
+          38,
+          -120
+        ],
+        "OutgoingEdges": [
+          -113,
+          -119
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -77,
+          "EarliestFinishTime": 165,
+          "LatestFinishTime": 165
+        },
+        "IncomingEdges": [
+          39,
+          -121
+        ],
+        "OutgoingEdges": [
+          -120
+        ]
+      },
+      {
+        "NodeType": 0,
+        "Content": {
+          "Id": -79,
+          "EarliestFinishTime": 165,
+          "LatestFinishTime": 165
+        },
+        "IncomingEdges": [
+          40
+        ],
+        "OutgoingEdges": [
+          -121
+        ]
+      }
+    ],
+    "IsStale": false
+  },
+  "HasStaleOutputs": false
+}

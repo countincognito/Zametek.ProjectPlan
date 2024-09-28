@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using MathNet.Numerics;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -34,6 +35,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach (int allocatedToResource in src.AllocatedToResources)
                     {
                         dest.AllocatedToResources.Add(allocatedToResource);
+                    }
+                    dest.TargetWorkStreams.Clear();
+                    foreach (int targetWorkStream in src.TargetWorkStreams)
+                    {
+                        dest.TargetWorkStreams.Add(targetWorkStream);
                     }
                 })
             .ReverseMap();
@@ -287,6 +293,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
 
             CreateMap<IGraphCompilation<int, int, int, IDependentActivity>, GraphCompilationModel>();
+
+            CreateMap<ActivityModel, DependentActivity>()
+                .ReverseMap();
 
             CreateMap<ActivityEdgeModel, Edge<int, IDependentActivity>>()
                 .ConstructUsing((src, ctx) => new Edge<int, IDependentActivity>(ctx.Mapper.Map<ActivityModel, DependentActivity>(src.Content)))
