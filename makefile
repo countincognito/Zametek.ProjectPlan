@@ -27,9 +27,3 @@ publish-linux: build ## -p:PublishTrimmed=true -p:PublishReadyToRun=true
 
 publish-linux-cli: build ## -p:PublishTrimmed=true -p:PublishReadyToRun=true
 	dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os linux --arch x64 --output publish/linux-x64-cli src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj
-
-# publish-win-x64: build ##
-	# dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=false --self-contained=false -c Release --os win --arch x64 --output publish/win-x64 src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj
-
-# publish-linux-x64: build ##
-	# dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=false --self-contained=false -c Release --os linux --arch x64 --output publish/linux-x64 src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj
