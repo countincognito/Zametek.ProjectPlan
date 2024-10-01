@@ -1,5 +1,6 @@
 ﻿using ReactiveUI;
 using System.Reactive.Linq;
+using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -38,6 +39,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_ActivityTrackerLookup.TryAdd(tracker.Time, tracker);
                 }
             }
+
+            SetTrackerIndexCommand = ReactiveCommand.Create<int?>(SetTrackerIndex);
 
             m_DaysSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.TrackerIndex)
@@ -86,8 +89,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private void SetTrackerIndex(int? trackerIndex)
+        {
+            lock (m_Lock)
+            {
+                if (trackerIndex is not null)
+                {
+                    m_CoreViewModel.TrackerIndex = trackerIndex.GetValueOrDefault();
+                }
+            }
+        }
+
         private void RefreshDays()
         {
+            RefreshIndex();
             this.RaisePropertyChanged(nameof(Day00));
             this.RaisePropertyChanged(nameof(Day01));
             this.RaisePropertyChanged(nameof(Day02));
@@ -118,6 +133,70 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public int ActivityId { get; }
 
+        public int? LastTrackerIndex
+        {
+            get
+            {
+                lock (m_Lock)
+                {
+                    if (m_ActivityTrackerLookup.Count == 0)
+                    {
+                        return null;
+                    }
+                    return m_ActivityTrackerLookup.MaxBy(kvp => kvp.Key).Value.Time;
+                }
+            }
+        }
+
+        public int? LastTrackerValue
+        {
+            get
+            {
+                lock (m_Lock)
+                {
+                    if (m_ActivityTrackerLookup.Count == 0)
+                    {
+                        return null;
+                    }
+                    return m_ActivityTrackerLookup.MaxBy(kvp => kvp.Key).Value.PercentageComplete;
+                }
+            }
+        }
+
+        public ICommand SetTrackerIndexCommand { get; }
+
+        public string SearchSymbol
+        {
+            get
+            {
+                lock (m_Lock)
+                {
+                    int? lastTrackerIndex = LastTrackerIndex;
+                    int trackerIndex = TrackerIndex;
+                    if (lastTrackerIndex is null)
+                    {
+                        return @"-";
+                    }
+                    if (lastTrackerIndex > trackerIndex)
+                    {
+                        return @">>";
+                    }
+                    if (lastTrackerIndex < trackerIndex)
+                    {
+                        return @"<<";
+                    }
+                    return @"==";
+                }
+            }
+        }
+
+        public void RefreshIndex()
+        {
+            this.RaisePropertyChanged(nameof(LastTrackerIndex));
+            this.RaisePropertyChanged(nameof(LastTrackerValue));
+            this.RaisePropertyChanged(nameof(SearchSymbol));
+        }
+
         public int? Day00
         {
             get => GetDayPercentageCompleted(0);
@@ -125,6 +204,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(0, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -135,6 +215,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(1, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -145,6 +226,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(2, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -155,6 +237,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(3, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -165,6 +248,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(4, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -175,6 +259,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(5, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -185,6 +270,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(6, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -195,6 +281,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(7, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -205,6 +292,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(8, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -215,6 +303,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(9, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -225,6 +314,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(10, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -235,6 +325,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(11, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -245,6 +336,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(12, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -255,6 +347,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(13, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -265,6 +358,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(14, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -275,6 +369,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(15, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -285,6 +380,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(16, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -295,6 +391,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(17, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -305,6 +402,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(18, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 
@@ -315,6 +413,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SetDayPercentageCompleted(19, value);
                 this.RaisePropertyChanged();
+                RefreshIndex();
             }
         }
 

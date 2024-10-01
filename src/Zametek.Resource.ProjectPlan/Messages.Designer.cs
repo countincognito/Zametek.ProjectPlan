@@ -178,6 +178,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The number of Trackers across all Activities is not identical.
+        /// </summary>
+        public static string Message_NumberOfTrackersAcrossAllActivitiesNotIdentical {
+            get {
+                return ResourceManager.GetString("Message_NumberOfTrackersAcrossAllActivitiesNotIdentical", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Slack Limit must be equal or greater than 0.
         /// </summary>
         public static string Message_SlackLimitMustBeEqualOrGreaterThanZero {

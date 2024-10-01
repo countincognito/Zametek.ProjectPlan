@@ -484,6 +484,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Find.
+        /// </summary>
+        public static string Label_Find {
+            get {
+                return ResourceManager.GetString("Label_Find", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to FS.
         /// </summary>
         public static string Label_FreeSlack {
@@ -764,6 +773,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Completed.
+        /// </summary>
+        public static string Label_PercentageCompleted {
+            get {
+                return ResourceManager.GetString("Label_PercentageCompleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Plan.
         /// </summary>
         public static string Label_Plan {
@@ -778,6 +796,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_PlanProjection {
             get {
                 return ResourceManager.GetString("Label_PlanProjection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please wait....
+        /// </summary>
+        public static string Label_PleaseWait {
+            get {
+                return ResourceManager.GetString("Label_PleaseWait", resourceCulture);
             }
         }
         

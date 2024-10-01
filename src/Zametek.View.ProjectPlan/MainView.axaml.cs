@@ -44,6 +44,7 @@ namespace Zametek.View.ProjectPlan
         private void UpdateCursor(bool show)
         {
             Cursor = show ? new Cursor(StandardCursorType.Wait) : Cursor.Default;
+            LoadingPanel.IsLoading = show;
         }
     }
 }

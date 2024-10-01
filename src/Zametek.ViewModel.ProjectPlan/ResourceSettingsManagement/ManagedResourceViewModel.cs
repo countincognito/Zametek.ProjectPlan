@@ -233,6 +233,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_isDirty = false;
                 UpdateActivityTargetWorkStreams();
+                TrackerSet.RefreshIndex();
                 m_ResourceSettingsManagerViewModel.AreSettingsUpdated = true;
             }
         }

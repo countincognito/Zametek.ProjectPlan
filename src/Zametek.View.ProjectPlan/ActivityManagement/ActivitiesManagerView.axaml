@@ -37,6 +37,7 @@
 		<local:ManagedActivitySortComparer x:Key="hasNoCostSortComparer" SortMemberPath="HasNoCost"/>
 		<local:ManagedActivitySortComparer x:Key="targetResourceOperatorSortComparer" SortMemberPath="TargetResourceOperator"/>
 		<local:ManagedActivitySortComparer x:Key="allocatedToResourcesStringSortComparer" SortMemberPath="AllocatedToResourcesString"/>
+		<local:ManagedActivitySortComparer x:Key="lastTrackerValueSortComparer" SortMemberPath="TrackerSet.LastTrackerValue"/>
 		<local:ManagedActivitySortComparer x:Key="notesSortComparer" SortMemberPath="Notes"/>
 	</UserControl.Resources>
 
@@ -325,27 +326,6 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<!--<DataGridCheckBoxColumn CanUserResize="True"
-										CanUserReorder="True"
-										CanUserSort="True"
-										IsReadOnly="True"
-										Binding="{Binding Path=IsDummy, Mode=OneWay}"
-										CustomSortComparer="{StaticResource isDummySortComparer}"
-										Width="80">
-					<DataGridCheckBoxColumn.HeaderTemplate>
-						<DataTemplate>
-							<Grid HorizontalAlignment="Center">
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_IsDummy}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsDummy}"/>
-							</Grid>
-						</DataTemplate>
-					</DataGridCheckBoxColumn.HeaderTemplate>
-				</DataGridCheckBoxColumn>-->
-
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
@@ -378,27 +358,6 @@
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
-
-				<!--<DataGridCheckBoxColumn CanUserResize="True"
-									CanUserReorder="True"
-									CanUserSort="True"
-									IsReadOnly="True"
-									Binding="{Binding Path=IsCritical, Mode=OneWay}"
-									CustomSortComparer="{StaticResource isCriticalSortComparer}"
-									Width="80">
-					<DataGridCheckBoxColumn.HeaderTemplate>
-						<DataTemplate>
-							<Grid HorizontalAlignment="Center">
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_IsCritical}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsCritical}"/>
-							</Grid>
-						</DataTemplate>
-					</DataGridCheckBoxColumn.HeaderTemplate>
-				</DataGridCheckBoxColumn>-->
 
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
@@ -872,43 +831,6 @@
 										</DataTemplate>
 									</u:MultiComboBox.SelectedItemTemplate>
 								</u:MultiComboBox>
-
-								<!--<Grid.Styles>
-									<Style Selector="Popup > PopupRoot > Panel > VisualLayerManager > ContentPresenter#PART_ContentPresenter">
-										<Setter Property="BorderBrush" Value="Black" />
-										<Setter Property="BorderThickness" Value="1" />
-									</Style>
-								</Grid.Styles>
-								<ToggleButton Name="WorkStreamSelectorTogglePopupButton"
-											  HorizontalContentAlignment="Left"
-											  x:DataType="vm:ManagedActivityViewModel"
-											  Content="{Binding Path=WorkStreamSelector.TargetWorkStreamsString, Mode=OneWay}"
-											  Background="Transparent"
-											  Margin="0"
-											  Padding="3"
-											  IsEnabled="True"/>
-								<Popup Name="WorkStreamSelectorToggledPopup"
-									   IsLightDismissEnabled="False"
-									   IsOpen="{Binding Path=IsChecked, ElementName=WorkStreamSelectorTogglePopupButton, Mode=TwoWay}">
-									<ItemsControl x:DataType="vm:ManagedActivityViewModel"
-												  ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}">
-										<ItemsControl.ItemTemplate>
-											<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
-												<Grid Background="White">
-													<CheckBox Padding="4"
-															  Margin="4,0"
-															  Content="{Binding Path=DisplayName, Mode=OneWay}"
-															  IsChecked="{Binding Path=IsSelected, Mode=TwoWay}"/>
-												</Grid>
-											</DataTemplate>
-										</ItemsControl.ItemTemplate>
-										<ItemsControl.ItemsPanel>
-											<ItemsPanelTemplate>
-												<StackPanel Orientation="Vertical"/>
-											</ItemsPanelTemplate>
-										</ItemsControl.ItemsPanel>
-									</ItemsControl>
-								</Popup>-->
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
@@ -969,43 +891,6 @@
 										</DataTemplate>
 									</u:MultiComboBox.SelectedItemTemplate>
 								</u:MultiComboBox>
-
-								<!--<Grid.Styles>
-									<Style Selector="Popup > PopupRoot > Panel > VisualLayerManager > ContentPresenter#PART_ContentPresenter">
-										<Setter Property="BorderBrush" Value="Black" />
-										<Setter Property="BorderThickness" Value="1" />
-									</Style>
-								</Grid.Styles>
-								<ToggleButton Name="ResourceSelectorTogglePopupButton"
-											  HorizontalContentAlignment="Left"
-											  x:DataType="vm:ManagedActivityViewModel"
-											  Content="{Binding Path=ResourceSelector.TargetResourcesString, Mode=OneWay}"
-											  Background="Transparent"
-											  Margin="0"
-											  Padding="3"
-											  IsEnabled="True"/>
-								<Popup Name="ResourceSelectorToggledPopup"
-									   IsLightDismissEnabled="False"
-									   IsOpen="{Binding Path=IsChecked, ElementName=ResourceSelectorTogglePopupButton, Mode=TwoWay}">
-									<ItemsControl x:DataType="vm:ManagedActivityViewModel"
-												  ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}">
-										<ItemsControl.ItemTemplate>
-											<DataTemplate x:DataType="vm:SelectableResourceViewModel">
-												<Grid Background="White">
-													<CheckBox Padding="4"
-															  Margin="4,0"
-															  Content="{Binding Path=DisplayName, Mode=OneWay}"
-															  IsChecked="{Binding Path=IsSelected, Mode=TwoWay}"/>
-												</Grid>
-											</DataTemplate>
-										</ItemsControl.ItemTemplate>
-										<ItemsControl.ItemsPanel>
-											<ItemsPanelTemplate>
-												<StackPanel Orientation="Vertical"/>
-											</ItemsPanelTemplate>
-										</ItemsControl.ItemsPanel>
-									</ItemsControl>
-								</Popup>-->
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
@@ -1039,14 +924,6 @@
 											  OffContent="{x:Static resources:Labels.Label_No}"
 											  OnContent="{x:Static resources:Labels.Label_Yes}"
 											  IsChecked="{Binding Path=HasNoCost, Mode=TwoWay}"/>
-
-
-								<!--<CheckBox VerticalAlignment="Center"
-											  HorizontalAlignment="Center"
-											  Margin="0"
-											  Padding="3"
-											  Background="White"
-											  IsChecked="{Binding Path=HasNoCost, Mode=TwoWay}"/>-->
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -1120,6 +997,37 @@
 										   Margin="0"
 										   Padding="3"
 										   Text="{Binding Path=AllocatedToResourcesString, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										IsReadOnly="True"
+										CustomSortComparer="{StaticResource lastTrackerValueSortComparer}"
+										Width="80">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<Grid>
+								<TextBlock VerticalAlignment="Center"
+										   TextAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_PercentageCompleted}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_PercentageCompleted}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   TextAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=TrackerSet.LastTrackerValue, Mode=OneWay, StringFormat={}{0:#0\'%\'}}}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>

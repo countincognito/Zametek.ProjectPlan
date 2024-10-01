@@ -61,6 +61,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ColumnTitleSub = this
                 .WhenAnyValue(
                     tm => tm.m_DateTimeCalculator.Mode,
+                    tm => tm.m_CoreViewModel.TrackerIndex,
                     tm => tm.m_CoreViewModel.ShowDates,
                     tm => tm.m_CoreViewModel.ProjectStart)
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -94,6 +95,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void RefreshDays()
         {
+            this.RaisePropertyChanged(nameof(TrackerIndex));
+            this.RaisePropertyChanged(nameof(PageIndex));
             this.RaisePropertyChanged(nameof(Day00Title));
             this.RaisePropertyChanged(nameof(Day01Title));
             this.RaisePropertyChanged(nameof(Day02Title));
@@ -151,7 +154,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_CoreViewModel.TrackerIndex = value;
                     this.RaisePropertyChanged();
-                    RefreshDays();
+                    this.RaisePropertyChanged(nameof(PageIndex));
                 }
             }
         }

@@ -150,6 +150,9 @@
   <data name="ToolTip_FreeSlack" xml:space="preserve">
     <value>Free Slack</value>
   </data>
+  <data name="ToolTip_Find" xml:space="preserve">
+    <value>Find</value>
+  </data>
   <data name="ToolTip_HasNoCost" xml:space="preserve">
     <value>Ignore Cost</value>
   </data>
@@ -224,5 +227,8 @@
   </data>
   <data name="ToolTip_WorkStreamName" xml:space="preserve">
     <value>Work Stream Name</value>
+  </data>
+  <data name="ToolTip_PercentageCompleted" xml:space="preserve">
+    <value>Percentage Completed</value>
   </data>
 </root>

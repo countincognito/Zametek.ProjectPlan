@@ -125,6 +125,39 @@
 						</DataGridTemplateColumn.CellTemplate>
 					</DataGridTemplateColumn>
 
+					<DataGridTemplateColumn CanUserResize="True"
+											CanUserReorder="False"
+											CanUserSort="False"
+											Width="60">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{x:Static resources:Labels.Label_Find}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Find}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<Button Margin="0"
+											Padding="0"
+											VerticalAlignment="Stretch"
+											VerticalContentAlignment="Center"
+											HorizontalAlignment="Stretch"
+											HorizontalContentAlignment="Center"
+											FontWeight="ExtraBold"
+											Command="{Binding Path=TrackerSet.SetTrackerIndexCommand, Mode=OneWay}"
+											CommandParameter="{Binding Path=TrackerSet.LastTrackerIndex, Mode=OneWay}"
+											Content="{Binding Path=TrackerSet.SearchSymbol, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+
 					<!--Add remaining columns in code behind.-->
 				</DataGrid.Columns>
 			</DataGrid>
@@ -212,6 +245,39 @@
 											   Padding="3"
 											   Background="Transparent"
 											   Text="{Binding Path=Name, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+
+					<DataGridTemplateColumn CanUserResize="True"
+											CanUserReorder="False"
+											CanUserSort="False"
+											Width="60">
+						<DataGridTemplateColumn.HeaderTemplate>
+							<DataTemplate>
+								<Grid>
+									<TextBlock VerticalAlignment="Center"
+											   Margin="0"
+											   Padding="3"
+											   Text="{x:Static resources:Labels.Label_Find}"
+											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Find}"/>
+								</Grid>
+							</DataTemplate>
+						</DataGridTemplateColumn.HeaderTemplate>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Grid VerticalAlignment="Stretch">
+									<Button Margin="0"
+											Padding="0"
+											VerticalAlignment="Stretch"
+											VerticalContentAlignment="Center"
+											HorizontalAlignment="Stretch"
+											HorizontalContentAlignment="Center"
+											FontWeight="ExtraBold"
+											Command="{Binding Path=TrackerSet.SetTrackerIndexCommand, Mode=OneWay}"
+											CommandParameter="{Binding Path=TrackerSet.LastTrackerIndex, Mode=OneWay}"
+											Content="{Binding Path=TrackerSet.SearchSymbol, Mode=OneWay}"/>
 								</Grid>
 							</DataTemplate>
 						</DataGridTemplateColumn.CellTemplate>

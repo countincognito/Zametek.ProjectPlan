@@ -1,5 +1,6 @@
 ﻿using ReactiveUI;
 using System.Reactive.Linq;
+using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -44,6 +45,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
+            SetTrackerIndexCommand = ReactiveCommand.Create<int?>(SetTrackerIndex);
+
             m_DaysSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.TrackerIndex)
                 .ObserveOn(RxApp.TaskpoolScheduler) // TODO check this will work.
@@ -60,7 +63,6 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-
                 int indexOffset = index + TrackerIndex;
 
                 if (!m_ResourceActivitySelectorLookup.TryGetValue(indexOffset, out IResourceActivitySelectorViewModel? selector))
@@ -87,14 +89,24 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
-                // TODO
-                // TODO clean up empty selectors at compile time.
                 return selector;
+            }
+        }
+
+        private void SetTrackerIndex(int? trackerIndex)
+        {
+            lock (m_Lock)
+            {
+                if (trackerIndex is not null)
+                {
+                    m_CoreViewModel.TrackerIndex = trackerIndex.GetValueOrDefault();
+                }
             }
         }
 
         private void RefreshDays()
         {
+            RefreshIndex();
             this.RaisePropertyChanged(nameof(Day00));
             this.RaisePropertyChanged(nameof(Day01));
             this.RaisePropertyChanged(nameof(Day02));
@@ -154,6 +166,68 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public int ResourceId { get; }
+
+        public int? LastTrackerIndex
+        {
+            get
+            {
+                lock (m_Lock)
+                {
+                    if (m_ResourceActivitySelectorLookup.Count == 0)
+                    {
+                        return null;
+                    }
+                    return m_ResourceActivitySelectorLookup.MaxBy(kvp => kvp.Key).Value.Time;
+                }
+            }
+        }
+
+        public ICommand SetTrackerIndexCommand { get; }
+
+        public string SearchSymbol
+        {
+            get
+            {
+                lock (m_Lock)
+                {
+                    int? lastTrackerIndex = LastTrackerIndex;
+                    int trackerIndex = TrackerIndex;
+                    if (lastTrackerIndex is null)
+                    {
+                        return @"-";
+                    }
+                    if (lastTrackerIndex > trackerIndex)
+                    {
+                        return @">>";
+                    }
+                    if (lastTrackerIndex < trackerIndex)
+                    {
+                        return @"<<";
+                    }
+                    return @"==";
+                }
+            }
+        }
+
+        public void RefreshIndex()
+        {
+            lock (m_Lock)
+            {
+                // Clean up any selectors with zero selections.
+                List<KeyValuePair<int, IResourceActivitySelectorViewModel>> toRemove = m_ResourceActivitySelectorLookup
+                    .Where(kvp => kvp.Value.SelectedResourceActivityIds.Count == 0)
+                    .ToList();
+
+                foreach (KeyValuePair<int, IResourceActivitySelectorViewModel> kvp in toRemove)
+                {
+                    m_ResourceActivitySelectorLookup.Remove(kvp.Key);
+                    kvp.Value.Dispose();
+                }
+
+                this.RaisePropertyChanged(nameof(LastTrackerIndex));
+                this.RaisePropertyChanged(nameof(SearchSymbol));
+            }
+        }
 
         public IResourceActivitySelectorViewModel Day00
         {

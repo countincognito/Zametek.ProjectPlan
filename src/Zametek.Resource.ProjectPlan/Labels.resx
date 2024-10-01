@@ -429,10 +429,19 @@
   <data name="Label_Yes" xml:space="preserve">
     <value>Yes</value>
   </data>
+  <data name="Label_Find" xml:space="preserve">
+    <value>Find</value>
+  </data>
   <data name="Label_ShowProjectFinish" xml:space="preserve">
     <value>Show Project Finish</value>
   </data>
   <data name="Label_ShowTracking" xml:space="preserve">
     <value>Show Tracking</value>
+  </data>
+  <data name="Label_PleaseWait" xml:space="preserve">
+    <value>Please wait...</value>
+  </data>
+  <data name="Label_PercentageCompleted" xml:space="preserve">
+    <value>Completed</value>
   </data>
 </root>

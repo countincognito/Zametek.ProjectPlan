@@ -1,4 +1,5 @@
-﻿using Zametek.Common.ProjectPlan;
+﻿using System.Windows.Input;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -8,6 +9,16 @@ namespace Zametek.Contract.ProjectPlan
         List<ActivityTrackerModel> Trackers { get; }
 
         int ActivityId { get; }
+
+        int? LastTrackerIndex { get; }
+
+        int? LastTrackerValue { get; }
+
+        ICommand SetTrackerIndexCommand { get; }
+
+        string SearchSymbol { get; }
+
+        void RefreshIndex();
 
         int? Day00 { get; set; }
         int? Day01 { get; set; }

@@ -751,6 +751,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_isDirty = false;
                 UpdateActivityTargetResources();
                 UpdateActivityTargetWorkStreams();
+                TrackerSet.RefreshIndex();
                 m_CoreViewModel.IsProjectUpdated = true;
                 IsCompiled = false;
             }

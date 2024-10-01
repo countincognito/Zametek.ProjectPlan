@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj" />
+    <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
   </ItemGroup>
 
 </Project>

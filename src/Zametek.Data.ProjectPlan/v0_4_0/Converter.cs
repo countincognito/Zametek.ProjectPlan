@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Zametek.Resource.ProjectPlan;
 
 namespace Zametek.Data.ProjectPlan.v0_4_0
 {
@@ -55,13 +56,43 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
                 HasStaleOutputs = projectPlan.HasStaleOutputs,
             };
 
+            // Check all old tracker models and ensure the time values are consistent.
+            List<int> trackerSizes = plan
+                .DependentActivities
+                .Select(x => x.Activity.Trackers.Count)
+                .Distinct()
+                .ToList();
+
+            if (trackerSizes.Count > 1)
+            {
+                throw new InvalidOperationException(Messages.Message_NumberOfTrackersAcrossAllActivitiesNotIdentical);
+            }
+
+            if (trackerSizes.Count == 1)
+            {
+                int trackerSize = trackerSizes[0];
+
+                foreach (DependentActivityModel dependentActivity in plan.DependentActivities)
+                {
+                    ActivityModel activity = dependentActivity.Activity;
+
+                    for (int i = 0; i < trackerSize; i++)
+                    {
+                        activity.Trackers[i] = activity.Trackers[i] with
+                        {
+                            Time = i,
+                        };
+                    }
+                }
+            }
+
             // Convert the old tracker models into the new tracker models.
             Dictionary<int, ResourceModel> resourceLookup = plan.ResourceSettings.Resources.ToDictionary(x => x.Id);
 
-            // Capture all the activity trackers across all resources first.
+            // Capture all the activity trackers across all resources.
             List<ResourceActivityTrackerModel> resourceActivityTrackers = [];
 
-            // First cycle through the old activity trackers to allocate resource usage.
+            // Cycle through the old activity trackers to allocate resource usage.
             foreach (v0_3_2.DependentActivityModel oldActivityModel in projectPlan.DependentActivities)
             {
                 List<v0_3_0.TrackerModel> oldActivityTrackers = oldActivityModel.Activity.Trackers;

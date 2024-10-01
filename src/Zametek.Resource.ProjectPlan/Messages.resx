@@ -192,4 +192,7 @@
   <data name="Message_UnsavedChanges" xml:space="preserve">
     <value>Project has unsaved changes. Do you wish to continue?</value>
   </data>
+  <data name="Message_NumberOfTrackersAcrossAllActivitiesNotIdentical" xml:space="preserve">
+    <value>The number of Trackers across all Activities is not identical</value>
+  </data>
 </root>

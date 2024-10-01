@@ -151,6 +151,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Find.
+        /// </summary>
+        public static string ToolTip_Find {
+            get {
+                return ResourceManager.GetString("ToolTip_Find", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Free Slack.
         /// </summary>
         public static string ToolTip_FreeSlack {
@@ -160,7 +169,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No Cost.
+        ///   Looks up a localized string similar to Ignore Cost.
         /// </summary>
         public static string ToolTip_HasNoCost {
             get {
@@ -232,7 +241,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Not Active.
+        ///   Looks up a localized string similar to Disabled.
         /// </summary>
         public static string ToolTip_IsInactive {
             get {
@@ -300,6 +309,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string ToolTip_Notes {
             get {
                 return ResourceManager.GetString("ToolTip_Notes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Percentage Completed.
+        /// </summary>
+        public static string ToolTip_PercentageCompleted {
+            get {
+                return ResourceManager.GetString("ToolTip_PercentageCompleted", resourceCulture);
             }
         }
         
