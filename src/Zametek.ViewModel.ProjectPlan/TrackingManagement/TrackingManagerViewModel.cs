@@ -112,11 +112,11 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(Day12Title));
             this.RaisePropertyChanged(nameof(Day13Title));
             this.RaisePropertyChanged(nameof(Day14Title));
-            this.RaisePropertyChanged(nameof(Day15Title));
-            this.RaisePropertyChanged(nameof(Day16Title));
-            this.RaisePropertyChanged(nameof(Day17Title));
-            this.RaisePropertyChanged(nameof(Day18Title));
-            this.RaisePropertyChanged(nameof(Day19Title));
+            //this.RaisePropertyChanged(nameof(Day15Title));
+            //this.RaisePropertyChanged(nameof(Day16Title));
+            //this.RaisePropertyChanged(nameof(Day17Title));
+            //this.RaisePropertyChanged(nameof(Day18Title));
+            //this.RaisePropertyChanged(nameof(Day19Title));
         }
 
         #endregion
@@ -192,11 +192,11 @@ namespace Zametek.ViewModel.ProjectPlan
         public string Day12Title => GetDayTitle(12);
         public string Day13Title => GetDayTitle(13);
         public string Day14Title => GetDayTitle(14);
-        public string Day15Title => GetDayTitle(15);
-        public string Day16Title => GetDayTitle(16);
-        public string Day17Title => GetDayTitle(17);
-        public string Day18Title => GetDayTitle(18);
-        public string Day19Title => GetDayTitle(19);
+        //public string Day15Title => GetDayTitle(15);
+        //public string Day16Title => GetDayTitle(16);
+        //public string Day17Title => GetDayTitle(17);
+        //public string Day18Title => GetDayTitle(18);
+        //public string Day19Title => GetDayTitle(19);
 
         #endregion
 

@@ -41,10 +41,10 @@ namespace Zametek.Contract.ProjectPlan
         string Day12Title { get; }
         string Day13Title { get; }
         string Day14Title { get; }
-        string Day15Title { get; }
-        string Day16Title { get; }
-        string Day17Title { get; }
-        string Day18Title { get; }
-        string Day19Title { get; }
+        //string Day15Title { get; }
+        //string Day16Title { get; }
+        //string Day17Title { get; }
+        //string Day18Title { get; }
+        //string Day19Title { get; }
     }
 }

@@ -995,7 +995,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource lastTrackerValueSortComparer}"
-										Width="80">
+										Width="95">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<Grid>

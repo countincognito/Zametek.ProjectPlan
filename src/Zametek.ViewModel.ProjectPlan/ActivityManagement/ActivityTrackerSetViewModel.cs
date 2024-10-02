@@ -118,11 +118,11 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(Day12));
             this.RaisePropertyChanged(nameof(Day13));
             this.RaisePropertyChanged(nameof(Day14));
-            this.RaisePropertyChanged(nameof(Day15));
-            this.RaisePropertyChanged(nameof(Day16));
-            this.RaisePropertyChanged(nameof(Day17));
-            this.RaisePropertyChanged(nameof(Day18));
-            this.RaisePropertyChanged(nameof(Day19));
+            //this.RaisePropertyChanged(nameof(Day15));
+            //this.RaisePropertyChanged(nameof(Day16));
+            //this.RaisePropertyChanged(nameof(Day17));
+            //this.RaisePropertyChanged(nameof(Day18));
+            //this.RaisePropertyChanged(nameof(Day19));
         }
 
         #endregion
@@ -362,60 +362,60 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public int? Day15
-        {
-            get => GetDayPercentageCompleted(15);
-            set
-            {
-                SetDayPercentageCompleted(15, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
+        //public int? Day15
+        //{
+        //    get => GetDayPercentageCompleted(15);
+        //    set
+        //    {
+        //        SetDayPercentageCompleted(15, value);
+        //        this.RaisePropertyChanged();
+        //        RefreshIndex();
+        //    }
+        //}
 
-        public int? Day16
-        {
-            get => GetDayPercentageCompleted(16);
-            set
-            {
-                SetDayPercentageCompleted(16, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
+        //public int? Day16
+        //{
+        //    get => GetDayPercentageCompleted(16);
+        //    set
+        //    {
+        //        SetDayPercentageCompleted(16, value);
+        //        this.RaisePropertyChanged();
+        //        RefreshIndex();
+        //    }
+        //}
 
-        public int? Day17
-        {
-            get => GetDayPercentageCompleted(17);
-            set
-            {
-                SetDayPercentageCompleted(17, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
+        //public int? Day17
+        //{
+        //    get => GetDayPercentageCompleted(17);
+        //    set
+        //    {
+        //        SetDayPercentageCompleted(17, value);
+        //        this.RaisePropertyChanged();
+        //        RefreshIndex();
+        //    }
+        //}
 
-        public int? Day18
-        {
-            get => GetDayPercentageCompleted(18);
-            set
-            {
-                SetDayPercentageCompleted(18, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
+        //public int? Day18
+        //{
+        //    get => GetDayPercentageCompleted(18);
+        //    set
+        //    {
+        //        SetDayPercentageCompleted(18, value);
+        //        this.RaisePropertyChanged();
+        //        RefreshIndex();
+        //    }
+        //}
 
-        public int? Day19
-        {
-            get => GetDayPercentageCompleted(19);
-            set
-            {
-                SetDayPercentageCompleted(19, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
+        //public int? Day19
+        //{
+        //    get => GetDayPercentageCompleted(19);
+        //    set
+        //    {
+        //        SetDayPercentageCompleted(19, value);
+        //        this.RaisePropertyChanged();
+        //        RefreshIndex();
+        //    }
+        //}
 
         #endregion
 

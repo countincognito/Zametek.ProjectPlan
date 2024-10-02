@@ -35,10 +35,10 @@ namespace Zametek.Contract.ProjectPlan
         int? Day12 { get; set; }
         int? Day13 { get; set; }
         int? Day14 { get; set; }
-        int? Day15 { get; set; }
-        int? Day16 { get; set; }
-        int? Day17 { get; set; }
-        int? Day18 { get; set; }
-        int? Day19 { get; set; }
+        //int? Day15 { get; set; }
+        //int? Day16 { get; set; }
+        //int? Day17 { get; set; }
+        //int? Day18 { get; set; }
+        //int? Day19 { get; set; }
     }
 }
