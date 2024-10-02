@@ -162,7 +162,7 @@ namespace Zametek.View.ProjectPlan
             {
                 AllowMultiple = false,
                 SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(initialDirectory),
-                FileTypeFilter = filters.AsReadOnlyList()
+                FileTypeFilter = filters
             };
 
             IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
@@ -196,7 +196,7 @@ namespace Zametek.View.ProjectPlan
             {
                 SuggestedFileName = initialFilename,
                 SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(initialDirectory),
-                FileTypeChoices = filters.AsReadOnlyList()
+                FileTypeChoices = filters
             };
 
             IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(options);
