@@ -794,6 +794,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 KillSubscriptions();
                 ResourceSelector.Dispose();
                 WorkStreamSelector.Dispose();
+                TrackerSet.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
