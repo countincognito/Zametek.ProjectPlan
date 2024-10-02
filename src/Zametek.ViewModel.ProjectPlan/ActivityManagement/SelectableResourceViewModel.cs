@@ -1,6 +1,5 @@
 ﻿using ReactiveUI;
 using System.Globalization;
-using System.Reactive.Linq;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -8,31 +7,14 @@ namespace Zametek.ViewModel.ProjectPlan
     public class SelectableResourceViewModel
         : ViewModelBase, ISelectableResourceViewModel
     {
-        #region Fields
-
-        private readonly IResourceSelectorViewModel m_ResourceSelectorViewModel;
-        private readonly IDisposable? m_ResourceSelectorSub;
-
-        #endregion
-
         #region Ctors
 
         public SelectableResourceViewModel(
             int id,
-            string name,//!!,
-            bool isSelected,
-            IResourceSelectorViewModel resourceSelectorViewModel)
+            string name)
         {
-            ArgumentNullException.ThrowIfNull(resourceSelectorViewModel);
             Id = id;
             m_Name = name;
-            m_IsSelected = isSelected;
-            m_ResourceSelectorViewModel = resourceSelectorViewModel;
-
-            m_ResourceSelectorSub = this
-                .ObservableForProperty(x => x.IsSelected)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(_ => m_ResourceSelectorViewModel.RaiseTargetResourcesPropertiesChanged());
         }
 
         #endregion
@@ -61,46 +43,6 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 return string.IsNullOrWhiteSpace(Name) ? Id.ToString(CultureInfo.InvariantCulture) : Name;
             }
-        }
-
-        private bool m_IsSelected;
-        public bool IsSelected
-        {
-            get => m_IsSelected;
-            set => this.RaiseAndSetIfChanged(ref m_IsSelected, value);
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        private bool m_Disposed = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (m_Disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                // TODO: dispose managed state (managed objects).
-                m_ResourceSelectorSub?.Dispose();
-            }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
-
-            m_Disposed = true;
-        }
-
-        public void Dispose()
-        {
-            // Dispose of unmanaged resources.
-            Dispose(true);
-            // Suppress finalization.
-            GC.SuppressFinalize(this);
         }
 
         #endregion

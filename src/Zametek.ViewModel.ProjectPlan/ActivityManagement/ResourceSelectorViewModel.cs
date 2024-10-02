@@ -1,5 +1,6 @@
 ﻿using ReactiveUI;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -57,6 +58,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TargetResources = new(s_EqualityComparer);
             m_ReadOnlyTargetResources = new(m_TargetResources);
             m_SelectedTargetResources = new(s_EqualityComparer);
+
+            m_SelectedTargetResources.CollectionChanged += SelectedTargetResources_CollectionChanged;
         }
 
         #endregion
@@ -80,7 +83,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     return string.Join(
                         DependenciesStringValidationRule.Separator,
-                        TargetResources.Where(x => x.IsSelected).Select(x => x.DisplayName));
+                        SelectedTargetResources.Select(x => x.DisplayName));
                 }
             }
         }
@@ -91,8 +94,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    return TargetResources
-                        .Where(x => x.IsSelected)
+                    return SelectedTargetResources
                         .Select(x => x.Id)
                         .ToList();
                 }
@@ -101,7 +103,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region Public Methods
+        #region Private Members
+
+        private void SelectedTargetResources_CollectionChanged(
+            object? sender,
+            NotifyCollectionChangedEventArgs e)
+        {
+            RaiseTargetResourcesPropertiesChanged();
+        }
+
+        #endregion
+
+        #region Public Members
 
         public string GetAllocatedToResourcesString(HashSet<int> allocatedToResources)
         {
@@ -135,7 +148,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         m_TargetResources.Remove(vm);
                         m_SelectedTargetResources.Remove(vm);
-                        vm.Dispose();
                     }
 
                     // Find the selected view models that have been removed.
@@ -146,7 +158,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Delete the removed selected items from the selected collections.
                     foreach (ISelectableResourceViewModel vm in removedSelectedViewModels)
                     {
-                        vm.IsSelected = false;
                         m_SelectedTargetResources.Remove(vm);
                     }
                 }
@@ -161,14 +172,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Create a collection of new view models.
                     foreach (ResourceModel model in addedModels)
                     {
-                        var vm = new SelectableResourceViewModel(
-                            model.Id,
-                            model.Name,
-                            selectedTargetResources.Contains(model.Id),
-                            this);
+                        var vm = new SelectableResourceViewModel(model.Id, model.Name);
 
                         m_TargetResources.Add(vm);
-                        if (vm.IsSelected)
+                        if (selectedTargetResources.Contains(model.Id))
                         {
                             m_SelectedTargetResources.Add(vm);
                         }
@@ -192,30 +199,6 @@ namespace Zametek.ViewModel.ProjectPlan
             RaiseTargetResourcesPropertiesChanged();
         }
 
-        public void ClearTargetResources()
-        {
-            lock (m_Lock)
-            {
-                foreach (IDisposable targetResource in TargetResources)
-                {
-                    targetResource.Dispose();
-                }
-                m_TargetResources.Clear();
-            }
-        }
-
-        public void ClearSelectedTargetResources()
-        {
-            lock (m_Lock)
-            {
-                foreach (IDisposable targetResource in SelectedTargetResources)
-                {
-                    targetResource.Dispose();
-                }
-                m_SelectedTargetResources.Clear();
-            }
-        }
-
         public void RaiseTargetResourcesPropertiesChanged()
         {
             this.RaisePropertyChanged(nameof(TargetResources));
@@ -229,40 +212,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public override string ToString()
         {
             return TargetResourcesString;
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        private bool m_Disposed = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (m_Disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                // TODO: dispose managed state (managed objects).
-                ClearTargetResources();
-                ClearSelectedTargetResources();
-            }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
-
-            m_Disposed = true;
-        }
-
-        public void Dispose()
-        {
-            // Dispose of unmanaged resources.
-            Dispose(true);
-            // Suppress finalization.
-            GC.SuppressFinalize(this);
         }
 
         #endregion

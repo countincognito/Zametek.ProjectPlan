@@ -1,7 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
-using Avalonia.Styling;
 using Ursa.Controls;
 using Zametek.Contract.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
@@ -70,15 +69,6 @@ namespace Zametek.View.ProjectPlan
                     //[!ItemsControl.DisplayMemberBindingProperty] = new Binding($@"DisplayName", BindingMode.OneWay), // This didn't work.
                     IsDropDownOpen = true,
                 };
-
-                comboBox.Styles.Add(
-                    new Style(x => x.OfType<MultiComboBoxItem>())
-                    {
-                        Setters =
-                        {
-                            new Setter(MultiComboBoxItem.IsSelectedProperty, new Binding(nameof(ISelectableResourceActivityViewModel.IsSelected), BindingMode.TwoWay)),
-                        },
-                    });
 
                 comboBox.SelectedItemTemplate = new FuncDataTemplate<SelectableResourceActivityViewModel>((value, namescope) =>
                 {

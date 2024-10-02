@@ -20,10 +20,6 @@ namespace Zametek.Contract.ProjectPlan
 
         void SetTargetResourceActivities(IEnumerable<ResourceActivityTrackerModel> targetResourceActivities, HashSet<int> selectedTargetResourceActivities);
 
-        void ClearTargetResourceActivities();
-
-        void ClearSelectedTargetResourceActivities();
-
         void RaiseTargetResourceActivitiesPropertiesChanged();
     }
 }

@@ -1332,7 +1332,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    foreach (IDisposable activity in Activities)
+                    foreach (IManagedActivityViewModel activity in Activities)
                     {
                         activity.Dispose();
                     }

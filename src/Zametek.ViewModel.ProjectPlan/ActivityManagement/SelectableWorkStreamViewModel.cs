@@ -1,6 +1,5 @@
 ﻿using ReactiveUI;
 using System.Globalization;
-using System.Reactive.Linq;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -8,33 +7,16 @@ namespace Zametek.ViewModel.ProjectPlan
     public class SelectableWorkStreamViewModel
         : ViewModelBase, ISelectableWorkStreamViewModel
     {
-        #region Fields
-
-        private readonly IWorkStreamSelectorViewModel m_WorkStreamSelectorViewModel;
-        private readonly IDisposable? m_WorkStreamSelectorSub;
-
-        #endregion
-
         #region Ctors
 
         public SelectableWorkStreamViewModel(
             int id,
-            string name,//!!,
-            bool isPhase,
-            bool isSelected,
-            IWorkStreamSelectorViewModel workStreamSelectorViewModel)
+            string name,
+            bool isPhase)
         {
-            ArgumentNullException.ThrowIfNull(workStreamSelectorViewModel);
             Id = id;
             m_Name = name;
             m_IsPhase = isPhase;
-            m_IsSelected = isSelected;
-            m_WorkStreamSelectorViewModel = workStreamSelectorViewModel;
-
-            m_WorkStreamSelectorSub = this
-                .ObservableForProperty(x => x.IsSelected)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(_ => m_WorkStreamSelectorViewModel.RaiseTargetWorkStreamsPropertiesChanged());
         }
 
         #endregion
@@ -70,46 +52,6 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get => m_IsPhase;
             set => this.RaiseAndSetIfChanged(ref m_IsPhase, value);
-        }
-
-        private bool m_IsSelected;
-        public bool IsSelected
-        {
-            get => m_IsSelected;
-            set => this.RaiseAndSetIfChanged(ref m_IsSelected, value);
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        private bool m_Disposed = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (m_Disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                // TODO: dispose managed state (managed objects).
-                m_WorkStreamSelectorSub?.Dispose();
-            }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
-
-            m_Disposed = true;
-        }
-
-        public void Dispose()
-        {
-            // Dispose of unmanaged resources.
-            Dispose(true);
-            // Suppress finalization.
-            GC.SuppressFinalize(this);
         }
 
         #endregion

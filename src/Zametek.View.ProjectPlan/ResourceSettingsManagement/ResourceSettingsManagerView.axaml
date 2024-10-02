@@ -184,12 +184,6 @@
 											  OffContent="{x:Static resources:Labels.Label_No}"
 											  OnContent="{x:Static resources:Labels.Label_Yes}"
 											  IsChecked="{Binding Path=IsExplicitTarget, Mode=TwoWay}"/>
-								<!--<CheckBox VerticalAlignment="Center"
-											  HorizontalAlignment="Center"
-											  Margin="0"
-											  Padding="3"
-											  Background="White"
-											  IsChecked="{Binding Path=IsExplicitTarget, Mode=TwoWay}"/>-->
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -223,12 +217,6 @@
 											  OffContent="{x:Static resources:Labels.Label_No}"
 											  OnContent="{x:Static resources:Labels.Label_Yes}"
 											  IsChecked="{Binding Path=IsInactive, Mode=TwoWay}"/>
-								<!--<CheckBox VerticalAlignment="Center"
-											  HorizontalAlignment="Center"
-											  Margin="0"
-											  Padding="3"
-											  Background="White"
-											  IsChecked="{Binding Path=IsInactive, Mode=TwoWay}"/>-->
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -317,12 +305,6 @@
 												 SelectedItems="{Binding Path=WorkStreamSelector.SelectedTargetWorkStreams, Mode=OneWay}"
 												 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
 												 IsDropDownOpen="True">
-									<u:MultiComboBox.Styles>
-										<Style Selector="u|MultiComboBoxItem" x:DataType="vm:SelectableWorkStreamViewModel">
-											<Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}" />
-										</Style>
-									</u:MultiComboBox.Styles>
-
 									<u:MultiComboBox.SelectedItemTemplate>
 										<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
 											<Grid Background="White">
@@ -331,45 +313,6 @@
 										</DataTemplate>
 									</u:MultiComboBox.SelectedItemTemplate>
 								</u:MultiComboBox>
-								
-								
-								
-								<!--<Grid.Styles>
-									<Style Selector="Popup > PopupRoot > Panel > VisualLayerManager > ContentPresenter#PART_ContentPresenter">
-										<Setter Property="BorderBrush" Value="Black" />
-										<Setter Property="BorderThickness" Value="1" />
-									</Style>
-								</Grid.Styles>
-								<ToggleButton Name="WorkStreamSelectorTogglePopupButton"
-											  HorizontalContentAlignment="Left"
-											  x:DataType="vm:ManagedResourceViewModel"
-											  Content="{Binding Path=WorkStreamSelector.TargetWorkStreamsString, Mode=OneWay}"
-											  Background="Transparent"
-											  Margin="0"
-											  Padding="3"
-											  IsEnabled="True"/>
-								<Popup Name="WorkStreamSelectorToggledPopup"
-									   IsLightDismissEnabled="False"
-									   IsOpen="{Binding Path=IsChecked, ElementName=WorkStreamSelectorTogglePopupButton, Mode=TwoWay}">
-									<ItemsControl x:DataType="vm:ManagedResourceViewModel"
-												  ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}">
-										<ItemsControl.ItemTemplate>
-											<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
-												<Grid Background="White">
-													<CheckBox Padding="4"
-															  Margin="4,0"
-															  Content="{Binding Path=DisplayName, Mode=OneWay}"
-															  IsChecked="{Binding Path=IsSelected, Mode=TwoWay}"/>
-												</Grid>
-											</DataTemplate>
-										</ItemsControl.ItemTemplate>
-										<ItemsControl.ItemsPanel>
-											<ItemsPanelTemplate>
-												<StackPanel Orientation="Vertical"/>
-											</ItemsPanelTemplate>
-										</ItemsControl.ItemsPanel>
-									</ItemsControl>
-								</Popup>-->
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>

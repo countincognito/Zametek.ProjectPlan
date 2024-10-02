@@ -4,7 +4,6 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IWorkStreamSelectorViewModel
-        : IDisposable
     {
         ReadOnlyObservableCollection<ISelectableWorkStreamViewModel> TargetWorkStreams { get; }
 
@@ -15,10 +14,6 @@ namespace Zametek.Contract.ProjectPlan
         IList<int> SelectedWorkStreamIds { get; }
 
         void SetTargetWorkStreams(IEnumerable<WorkStreamModel> targetWorkStreams, HashSet<int> selectedTargetWorkStreams);
-
-        void ClearTargetWorkStreams();
-
-        void ClearSelectedTargetWorkStreams();
 
         void RaiseTargetWorkStreamsPropertiesChanged();
     }

@@ -792,8 +792,6 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
-                ResourceSelector.Dispose();
-                WorkStreamSelector.Dispose();
                 TrackerSet.Dispose();
             }
 

@@ -4,7 +4,6 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IResourceSelectorViewModel
-        : IDisposable
     {
         ReadOnlyObservableCollection<ISelectableResourceViewModel> TargetResources { get; }
 
@@ -17,10 +16,6 @@ namespace Zametek.Contract.ProjectPlan
         string GetAllocatedToResourcesString(HashSet<int> allocatedToResources);
 
         void SetTargetResources(IEnumerable<ResourceModel> targetResources, HashSet<int> selectedTargetResources);
-
-        void ClearTargetResources();
-
-        void ClearSelectedTargetResources();
 
         void RaiseTargetResourcesPropertiesChanged();
     }

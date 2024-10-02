@@ -817,12 +817,6 @@
 												 SelectedItems="{Binding Path=WorkStreamSelector.SelectedTargetWorkStreams, Mode=OneWay}"
 												 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
 												 IsDropDownOpen="True">
-									<u:MultiComboBox.Styles>
-										<Style Selector="u|MultiComboBoxItem" x:DataType="vm:SelectableWorkStreamViewModel">
-											<Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}" />
-										</Style>
-									</u:MultiComboBox.Styles>
-
 									<u:MultiComboBox.SelectedItemTemplate>
 										<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
 											<Grid Background="White">
@@ -877,12 +871,6 @@
 												 SelectedItems="{Binding Path=ResourceSelector.SelectedTargetResources, Mode=OneWay}"
 												 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
 												 IsDropDownOpen="True">
-									<u:MultiComboBox.Styles>
-										<Style Selector="u|MultiComboBoxItem" x:DataType="vm:SelectableResourceViewModel">
-											<Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}" />
-										</Style>
-									</u:MultiComboBox.Styles>
-
 									<u:MultiComboBox.SelectedItemTemplate>
 										<DataTemplate x:DataType="vm:SelectableResourceViewModel">
 											<Grid Background="White">

@@ -1,5 +1,6 @@
 ﻿using ReactiveUI;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -64,6 +65,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TargetWorkStreams = new(s_EqualityComparer);
             m_ReadOnlyTargetWorkStreams = new(m_TargetWorkStreams);
             m_SelectedTargetWorkStreams = new(s_EqualityComparer);
+
+            m_SelectedTargetWorkStreams.CollectionChanged += SelectedTargetWorkStreams_CollectionChanged;
         }
 
         #endregion
@@ -87,9 +90,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     return string.Join(
                         DependenciesStringValidationRule.Separator,
-                        TargetWorkStreams
-                            .Where(x => (!m_PhaseOnly && x.IsSelected)
-                                    || (m_PhaseOnly && x.IsSelected && x.IsPhase))
+                        SelectedTargetWorkStreams
+                            .Where(x => (!m_PhaseOnly)
+                                    || (m_PhaseOnly && x.IsPhase))
                             .Select(x => x.DisplayName));
                 }
             }
@@ -101,13 +104,24 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    return TargetWorkStreams
-                        .Where(x => (!m_PhaseOnly && x.IsSelected)
-                                || (m_PhaseOnly && x.IsSelected && x.IsPhase))
+                    return SelectedTargetWorkStreams
+                        .Where(x => (!m_PhaseOnly)
+                                || (m_PhaseOnly && x.IsPhase))
                         .Select(x => x.Id)
                         .ToList();
                 }
             }
+        }
+
+        #endregion
+
+        #region Private Members
+
+        private void SelectedTargetWorkStreams_CollectionChanged(
+            object? sender,
+            NotifyCollectionChangedEventArgs e)
+        {
+            RaiseTargetWorkStreamsPropertiesChanged();
         }
 
         #endregion
@@ -136,7 +150,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         m_TargetWorkStreams.Remove(vm);
                         m_SelectedTargetWorkStreams.Remove(vm);
-                        vm.Dispose();
                     }
 
                     // Find the selected view models that have been removed.
@@ -147,7 +160,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Delete the removed selected items from the selected collections.
                     foreach (ISelectableWorkStreamViewModel vm in removedSelectedViewModels)
                     {
-                        vm.IsSelected = false;
                         m_SelectedTargetWorkStreams.Remove(vm);
                     }
                 }
@@ -165,12 +177,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         var vm = new SelectableWorkStreamViewModel(
                               model.Id,
                               model.Name,
-                              model.IsPhase,
-                              selectedTargetWorkStreams.Contains(model.Id),
-                              this);
+                              model.IsPhase);
 
                         m_TargetWorkStreams.Add(vm);
-                        if (vm.IsSelected)
+                        if (selectedTargetWorkStreams.Contains(model.Id))
                         {
                             m_SelectedTargetWorkStreams.Add(vm);
                         }
@@ -194,30 +204,6 @@ namespace Zametek.ViewModel.ProjectPlan
             RaiseTargetWorkStreamsPropertiesChanged();
         }
 
-        public void ClearTargetWorkStreams()
-        {
-            lock (m_Lock)
-            {
-                foreach (IDisposable targetWorkStream in TargetWorkStreams)
-                {
-                    targetWorkStream.Dispose();
-                }
-                m_TargetWorkStreams.Clear();
-            }
-        }
-
-        public void ClearSelectedTargetWorkStreams()
-        {
-            lock (m_Lock)
-            {
-                foreach (IDisposable targetWorkStream in SelectedTargetWorkStreams)
-                {
-                    targetWorkStream.Dispose();
-                }
-                m_SelectedTargetWorkStreams.Clear();
-            }
-        }
-
         public void RaiseTargetWorkStreamsPropertiesChanged()
         {
             this.RaisePropertyChanged(nameof(TargetWorkStreams));
@@ -231,40 +217,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public override string ToString()
         {
             return TargetWorkStreamsString;
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        private bool m_Disposed = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (m_Disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                // TODO: dispose managed state (managed objects).
-                ClearTargetWorkStreams();
-                ClearSelectedTargetWorkStreams();
-            }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
-
-            m_Disposed = true;
-        }
-
-        public void Dispose()
-        {
-            // Dispose of unmanaged resources.
-            Dispose(true);
-            // Suppress finalization.
-            GC.SuppressFinalize(this);
         }
 
         #endregion
