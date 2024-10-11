@@ -3,7 +3,7 @@
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IEarnedValueChartManagerViewModel
-        : IKillSubscriptions
+        : IKillSubscriptions, IDisposable
     {
         bool IsBusy { get; }
 

@@ -3,7 +3,7 @@
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IArrowGraphManagerViewModel
-        : IKillSubscriptions
+        : IKillSubscriptions, IDisposable
     {
         bool IsBusy { get; }
 

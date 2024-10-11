@@ -4,7 +4,6 @@ using Avalonia.Platform.Storage;
 using MsBox.Avalonia.Base;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
-using OxyPlot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +32,7 @@ namespace Zametek.View.ProjectPlan
 
         private async Task<ButtonResult> ShowMessageBoxAsync(MessageBoxStandardParams standardParams)
         {
-            standardParams.WindowIcon = m_Parent!.Icon;
+            standardParams.WindowIcon = m_Parent!.Icon ?? throw new ArgumentNullException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable);
             IMsBox<ButtonResult>? msg = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(standardParams);
             return await msg.ShowWindowDialogAsync(m_Parent);
         }

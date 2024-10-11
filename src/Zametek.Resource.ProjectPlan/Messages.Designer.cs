@@ -178,6 +178,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No Window icon available.
+        /// </summary>
+        public static string Message_NoWindowIconAvailable {
+            get {
+                return ResourceManager.GetString("Message_NoWindowIconAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The number of Trackers across all Activities is not identical.
         /// </summary>
         public static string Message_NumberOfTrackersAcrossAllActivitiesNotIdentical {

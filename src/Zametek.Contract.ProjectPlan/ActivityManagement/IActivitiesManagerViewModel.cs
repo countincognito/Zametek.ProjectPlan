@@ -4,6 +4,7 @@ using System.Windows.Input;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IActivitiesManagerViewModel
+        : IDisposable
     {
         bool IsBusy { get; }
 

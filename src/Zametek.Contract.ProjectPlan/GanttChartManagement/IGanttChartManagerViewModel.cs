@@ -4,7 +4,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IGanttChartManagerViewModel
-        : IKillSubscriptions
+        : IKillSubscriptions, IDisposable
     {
         bool IsBusy { get; }
 

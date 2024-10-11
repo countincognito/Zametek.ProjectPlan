@@ -748,5 +748,48 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         #endregion
+
+
+        #region IDisposable Members
+
+        private bool m_Disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (m_Disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                // TODO: dispose managed state (managed objects).
+                m_ProjectTitle?.Dispose();
+                m_IsBusy?.Dispose();
+                m_IsProjectUpdated?.Dispose();
+                m_ProjectStart?.Dispose();
+                m_ProjectStartDateTime?.Dispose();
+                m_HasStaleOutputs?.Dispose();
+                m_HasCompilationErrors?.Dispose();
+                m_ShowDates?.Dispose();
+                m_UseBusinessDays?.Dispose();
+                m_AutoCompile?.Dispose();
+            }
+
+            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+            // TODO: set large fields to null.
+
+            m_Disposed = true;
+        }
+
+        public void Dispose()
+        {
+            // Dispose of unmanaged resources.
+            Dispose(true);
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
     }
 }

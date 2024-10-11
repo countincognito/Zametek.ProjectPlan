@@ -1,7 +1,7 @@
 ﻿namespace Zametek.Contract.ProjectPlan
 {
     public interface IMetricManagerViewModel
-        : IKillSubscriptions
+        : IKillSubscriptions, IDisposable
     {
         bool IsBusy { get; }
 

@@ -10,7 +10,7 @@ using Zametek.Contract.ProjectPlan;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class WorkStreamSettingsManagerViewModel
-        : ToolViewModelBase, IWorkStreamSettingsManagerViewModel, IDisposable
+        : ToolViewModelBase, IWorkStreamSettingsManagerViewModel
     {
         #region Fields
 
@@ -224,7 +224,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(workStreamSettings);
             lock (m_Lock)
             {
-                m_WorkStreams.Clear();
+                ClearManagedWorkStreams();
+
                 foreach (WorkStreamModel workStream in workStreamSettings.WorkStreams)
                 {
                     m_WorkStreams.Add(new ManagedWorkStreamViewModel(
@@ -233,6 +234,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
             AreSettingsUpdated = false;
+        }
+
+        private void ClearManagedWorkStreams()
+        {
+            lock (m_Lock)
+            {
+                foreach (IManagedWorkStreamViewModel workStream in m_WorkStreams)
+                {
+                    workStream.Dispose();
+                }
+                m_WorkStreams.Clear();
+            }
         }
 
         #endregion
@@ -295,8 +308,12 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
+                m_IsBusy?.Dispose();
+                m_HasStaleOutputs?.Dispose();
+                m_HasCompilationErrors?.Dispose();
                 m_ProcessWorkStreamSettingsSub?.Dispose();
                 m_UpdateWorkStreamSettingsSub?.Dispose();
+                ClearManagedWorkStreams();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

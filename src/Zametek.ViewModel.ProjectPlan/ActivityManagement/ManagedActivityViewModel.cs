@@ -793,6 +793,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 TrackerSet.Dispose();
+                m_ShowDates?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

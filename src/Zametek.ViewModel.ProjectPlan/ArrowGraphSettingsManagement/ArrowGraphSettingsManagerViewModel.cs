@@ -10,7 +10,7 @@ using Zametek.Contract.ProjectPlan;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ArrowGraphSettingsManagerViewModel
-        : ToolViewModelBase, IArrowGraphSettingsManagerViewModel, IDisposable
+        : ToolViewModelBase, IArrowGraphSettingsManagerViewModel
     {
         #region Fields
 
@@ -232,7 +232,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     });
                 }
 
-                m_ActivitySeverities.Clear();
+                ClearManagedActivitySeverities();
+
                 foreach (ActivitySeverityModel activitySeverity in arrowGraphSettings.ActivitySeverities)
                 {
                     m_ActivitySeverities.Add(new ManagedActivitySeverityViewModel(
@@ -244,6 +245,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 CheckForMaxSlackLimit();
             }
             AreSettingsUpdated = false;
+        }
+
+        private void ClearManagedActivitySeverities()
+        {
+            lock (m_Lock)
+            {
+                foreach (IManagedActivitySeverityViewModel activitySeverity in m_ActivitySeverities)
+                {
+                    activitySeverity.Dispose();
+                }
+                m_ActivitySeverities.Clear();
+            }
         }
 
         private void CheckForMaxSlackLimit()
@@ -326,8 +339,12 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
+                m_IsBusy?.Dispose();
+                m_HasStaleOutputs?.Dispose();
+                m_HasCompilationErrors?.Dispose();
                 m_ProcessArrowGraphSettingsSub?.Dispose();
                 m_UpdateArrowGraphSettingsSub?.Dispose();
+                ClearManagedActivitySeverities();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

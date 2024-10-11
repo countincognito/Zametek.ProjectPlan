@@ -251,7 +251,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_DisableResources = resourceSettings.AreDisabled;
                 this.RaisePropertyChanged(nameof(DisableResources));
 
-                m_Resources.Clear();
+                ClearManagedResources();
+
                 foreach (ResourceModel resouce in resourceSettings.Resources)
                 {
                     m_Resources.Add(new ManagedResourceViewModel(
@@ -261,6 +262,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
             AreSettingsUpdated = false;
+        }
+
+        private void ClearManagedResources()
+        {
+            lock (m_Lock)
+            {
+                foreach (IManagedResourceViewModel resource in m_Resources)
+                {
+                    resource.Dispose();
+                }
+                m_Resources.Clear();
+            }
         }
 
         #endregion
@@ -356,9 +369,13 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
+                m_IsBusy?.Dispose();
+                m_HasStaleOutputs?.Dispose();
+                m_HasCompilationErrors?.Dispose();
                 m_ProcessResourceSettingsSub?.Dispose();
                 m_UpdateResourceSettingsSub?.Dispose();
                 m_ReviseSettingsSub?.Dispose();
+                ClearManagedResources();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

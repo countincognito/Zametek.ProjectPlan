@@ -22,7 +22,7 @@ using Zametek.Utility;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class GanttChartManagerViewModel
-        : ToolViewModelBase, IGanttChartManagerViewModel, IDisposable
+        : ToolViewModelBase, IGanttChartManagerViewModel
     {
         #region Fields
 
@@ -1057,6 +1057,11 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
+                m_IsBusy?.Dispose();
+                m_HasStaleOutputs?.Dispose();
+                m_HasCompilationErrors?.Dispose();
+                m_IsGrouped?.Dispose();
+                m_IsAnnotated?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

@@ -11,15 +11,15 @@
     <PackageReference Include="Avalonia.Svg.Skia" Version="11.1.0.1" />
     <PackageReference Include="Dock.Model.ReactiveUI" Version="11.1.0.3" />
     <PackageReference Include="FluentDateTime" Version="3.0.0" />
-    <PackageReference Include="net.sf.mpxj-for-csharp" Version="13.4.0" />
+    <PackageReference Include="net.sf.mpxj-for-csharp" Version="13.4.2" />
     <PackageReference Include="NPOI" Version="2.7.1" />
 	<PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-Avalonia11" />
 	<PackageReference Include="OxyPlot.SkiaSharp" Version="2.2.0" />
-	<PackageReference Include="Avalonia.ReactiveUI" Version="11.1.3" />
+	<PackageReference Include="Avalonia.ReactiveUI" Version="11.1.4" />
 	<PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
     <PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
-    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="2.1.1" />
+    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="2.1.2" />
   </ItemGroup>
 
   <ItemGroup>

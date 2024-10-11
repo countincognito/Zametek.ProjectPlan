@@ -14,7 +14,7 @@ using Zametek.Utility;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class CoreViewModel
-        : ViewModelBase, ICoreViewModel, IDisposable
+        : ViewModelBase, ICoreViewModel
     {
         #region Fields
 
@@ -1332,11 +1332,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
+
                     foreach (IManagedActivityViewModel activity in Activities)
                     {
                         activity.Dispose();
                     }
                     m_Activities.Clear();
+
                     m_VertexGraphCompiler.Reset();
                 }
             }
@@ -1536,6 +1538,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
+                m_ProjectTitle?.Dispose();
+                m_HasCompilationErrors?.Dispose();
+                m_Duration?.Dispose();
+                ClearManagedActivities();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

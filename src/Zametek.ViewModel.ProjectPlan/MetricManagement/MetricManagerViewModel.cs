@@ -8,7 +8,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class MetricManagerViewModel
-        : ToolViewModelBase, IMetricManagerViewModel, IDisposable
+        : ToolViewModelBase, IMetricManagerViewModel
     {
         #region Fields
 
@@ -535,6 +535,26 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
+                m_IsBusy?.Dispose();
+                m_HasStaleOutputs?.Dispose();
+                m_ShowDates?.Dispose();
+                m_HasCompilationErrors?.Dispose();
+                m_CriticalityRisk?.Dispose();
+                m_FibonacciRisk?.Dispose();
+                m_ActivityRisk?.Dispose();
+                m_ActivityRiskWithStdDevCorrection?.Dispose();
+                m_GeometricCriticalityRisk?.Dispose();
+                m_GeometricFibonacciRisk?.Dispose();
+                m_GeometricActivityRisk?.Dispose();
+                m_CyclomaticComplexity?.Dispose();
+                m_Duration?.Dispose();
+                m_DurationManMonths?.Dispose();
+                m_ProjectFinish?.Dispose();
+                m_DirectCost?.Dispose();
+                m_IndirectCost?.Dispose();
+                m_OtherCost?.Dispose();
+                m_TotalCost?.Dispose();
+                m_Efficiency?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

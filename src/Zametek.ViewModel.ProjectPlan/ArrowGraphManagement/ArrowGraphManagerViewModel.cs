@@ -11,7 +11,7 @@ using Zametek.Utility;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ArrowGraphManagerViewModel
-        : ToolViewModelBase, IArrowGraphManagerViewModel, IDisposable
+        : ToolViewModelBase, IArrowGraphManagerViewModel
     {
         #region Fields
 
@@ -353,6 +353,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
+                m_IsBusy?.Dispose();
+                m_HasStaleOutputs?.Dispose();
+                m_HasCompilationErrors?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

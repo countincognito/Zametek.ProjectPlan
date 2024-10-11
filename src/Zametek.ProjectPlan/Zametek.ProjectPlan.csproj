@@ -5,20 +5,17 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
 	<UserSecretsId>ProjectPlan-515098bc-c9a8-47a9-a73d-a3d6104d2953</UserSecretsId>
-	<ApplicationIcon>zpp.ico</ApplicationIcon>
-	<ApplicationManifest>app.manifest</ApplicationManifest>
 	<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+	<ApplicationManifest>app.manifest</ApplicationManifest>
+	<ApplicationIcon>zpp.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="zpp.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Avalonia.Themes.Simple" Version="11.1.3" />
+    <PackageReference Include="Avalonia.Themes.Simple" Version="11.1.4" />
     <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.4.0" />
-	<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.0" />
+	<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.1" />
     <PackageReference Include="Splat.DependencyInjection.SourceGenerator" Version="1.2.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -28,5 +25,11 @@
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.View.ProjectPlan\Zametek.View.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Remove="zpp.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="zpp.ico" />
   </ItemGroup>
 </Project>

@@ -5,7 +5,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IManagedResourceViewModel
-        : IDisposable, INotifyPropertyChanged
+        : IDisposable, INotifyPropertyChanged, IKillSubscriptions
     {
         int Id { get; }
 

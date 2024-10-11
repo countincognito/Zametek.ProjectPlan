@@ -2,7 +2,6 @@
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -214,6 +213,42 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand RemoveManagedActivitiesCommand { get; }
 
         public ICommand AddMilestoneCommand { get; }
+
+        #endregion
+
+        #region IDisposable Members
+
+        private bool m_Disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (m_Disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                // Dispose managed state (managed objects).
+                m_IsBusy?.Dispose();
+                m_HasStaleOutputs?.Dispose();
+                m_ShowDates?.Dispose();
+                m_HasCompilationErrors?.Dispose();
+            }
+
+            // Free unmanaged resources (unmanaged objects) and override a finalizer below.
+            // Set large fields to null.
+
+            m_Disposed = true;
+        }
+
+        public void Dispose()
+        {
+            // Dispose of unmanaged resources.
+            Dispose(true);
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
+        }
 
         #endregion
     }

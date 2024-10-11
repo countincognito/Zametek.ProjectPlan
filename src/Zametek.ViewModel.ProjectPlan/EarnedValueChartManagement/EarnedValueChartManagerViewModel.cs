@@ -15,7 +15,7 @@ using Zametek.Utility;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class EarnedValueChartManagerViewModel
-        : ToolViewModelBase, IEarnedValueChartManagerViewModel, IDisposable
+        : ToolViewModelBase, IEarnedValueChartManagerViewModel
     {
         #region Fields
 
@@ -520,6 +520,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
+                m_IsBusy?.Dispose();
+                m_HasStaleOutputs?.Dispose();
+                m_HasCompilationErrors?.Dispose();
+                m_ViewProjections?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
