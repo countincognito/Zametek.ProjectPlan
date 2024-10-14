@@ -33,10 +33,5 @@ namespace Zametek.Contract.ProjectPlan
         IResourceActivitySelectorViewModel Day12 { get; }
         IResourceActivitySelectorViewModel Day13 { get; }
         IResourceActivitySelectorViewModel Day14 { get; }
-        //IResourceActivitySelectorViewModel Day15 { get; }
-        //IResourceActivitySelectorViewModel Day16 { get; }
-        //IResourceActivitySelectorViewModel Day17 { get; }
-        //IResourceActivitySelectorViewModel Day18 { get; }
-        //IResourceActivitySelectorViewModel Day19 { get; }
     }
 }

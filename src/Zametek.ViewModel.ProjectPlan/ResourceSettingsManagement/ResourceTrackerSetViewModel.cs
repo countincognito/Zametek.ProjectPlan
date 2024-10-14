@@ -48,7 +48,9 @@ namespace Zametek.ViewModel.ProjectPlan
             SetTrackerIndexCommand = ReactiveCommand.Create<int?>(SetTrackerIndex);
 
             m_DaysSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.TrackerIndex)
+                .WhenAnyValue(
+                    x => x.m_CoreViewModel.TrackerIndex,
+                    x => x.m_CoreViewModel.IsReadyToReviseTrackers)
                 .ObserveOn(RxApp.TaskpoolScheduler) // TODO check this will work.
                 .Subscribe(_ => RefreshDays());
         }
@@ -122,11 +124,6 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(Day12));
             this.RaisePropertyChanged(nameof(Day13));
             this.RaisePropertyChanged(nameof(Day14));
-            //this.RaisePropertyChanged(nameof(Day15));
-            //this.RaisePropertyChanged(nameof(Day16));
-            //this.RaisePropertyChanged(nameof(Day17));
-            //this.RaisePropertyChanged(nameof(Day18));
-            //this.RaisePropertyChanged(nameof(Day19));
         }
 
         #endregion
@@ -303,31 +300,6 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get => GetResourceActivitySelector(14);
         }
-
-        //public IResourceActivitySelectorViewModel Day15
-        //{
-        //    get => GetResourceActivitySelector(15);
-        //}
-
-        //public IResourceActivitySelectorViewModel Day16
-        //{
-        //    get => GetResourceActivitySelector(16);
-        //}
-
-        //public IResourceActivitySelectorViewModel Day17
-        //{
-        //    get => GetResourceActivitySelector(17);
-        //}
-
-        //public IResourceActivitySelectorViewModel Day18
-        //{
-        //    get => GetResourceActivitySelector(18);
-        //}
-
-        //public IResourceActivitySelectorViewModel Day19
-        //{
-        //    get => GetResourceActivitySelector(19);
-        //}
 
         #endregion
 
