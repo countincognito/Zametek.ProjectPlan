@@ -15,6 +15,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly Dictionary<int, ActivityTrackerModel> m_ActivityTrackerLookup;
 
+        private ActivityTrackerModel? m_LastTracker;
+
         private readonly IDisposable? m_DaysSub;
 
         #endregion
@@ -39,6 +41,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_ActivityTrackerLookup.TryAdd(tracker.Time, tracker);
                 }
             }
+
+            SetLastTracker();
 
             SetTrackerIndexCommand = ReactiveCommand.Create<int?>(SetTrackerIndex);
 
@@ -91,6 +95,21 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private void SetLastTracker()
+        {
+            lock (m_Lock)
+            {
+                if (m_ActivityTrackerLookup.Count == 0)
+                {
+                    m_LastTracker = null;
+                }
+                else
+                {
+                    m_LastTracker = m_ActivityTrackerLookup.MaxBy(kvp => kvp.Key).Value;
+                }
+            }
+        }
+
         private void SetTrackerIndex(int? trackerIndex)
         {
             lock (m_Lock)
@@ -136,11 +155,11 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    if (m_ActivityTrackerLookup.Count == 0)
+                    if (m_LastTracker is null)
                     {
                         return null;
                     }
-                    return m_ActivityTrackerLookup.MaxBy(kvp => kvp.Key).Value.Time;
+                    return m_LastTracker.Time;
                 }
             }
         }
@@ -151,11 +170,11 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    if (m_ActivityTrackerLookup.Count == 0)
+                    if (m_LastTracker is null)
                     {
                         return null;
                     }
-                    return m_ActivityTrackerLookup.MaxBy(kvp => kvp.Key).Value.PercentageComplete;
+                    return m_LastTracker.PercentageComplete;
                 }
             }
         }
@@ -172,23 +191,24 @@ namespace Zametek.ViewModel.ProjectPlan
                     int trackerIndex = TrackerIndex;
                     if (lastTrackerIndex is null)
                     {
-                        return @"-";
+                        return Resource.ProjectPlan.Symbols.Symbol_Nowhere;
                     }
                     if (lastTrackerIndex > trackerIndex)
                     {
-                        return @">>";
+                        return Resource.ProjectPlan.Symbols.Symbol_Forwards;
                     }
                     if (lastTrackerIndex < trackerIndex)
                     {
-                        return @"<<";
+                        return Resource.ProjectPlan.Symbols.Symbol_Backwards;
                     }
-                    return @"==";
+                    return Resource.ProjectPlan.Symbols.Symbol_InPlace;
                 }
             }
         }
 
         public void RefreshIndex()
         {
+            SetLastTracker();
             this.RaisePropertyChanged(nameof(LastTrackerIndex));
             this.RaisePropertyChanged(nameof(LastTrackerValue));
             this.RaisePropertyChanged(nameof(SearchSymbol));
