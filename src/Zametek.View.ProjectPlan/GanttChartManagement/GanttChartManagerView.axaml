@@ -30,8 +30,6 @@
 
 				<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:GroupByMode}}}"
 						  SelectedItem="{Binding Path=GroupByMode, Mode=TwoWay}"
-						  Foreground="Black"
-						  Background="White"
 						  BorderBrush="Gray"
 						  BorderThickness="1"
 						  DockPanel.Dock="Top"
@@ -52,8 +50,6 @@
 
 				<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:AnnotationStyle}}}"
 						  SelectedItem="{Binding Path=AnnotationStyle, Mode=TwoWay}"
-						  Foreground="Black"
-						  Background="White"
 						  BorderBrush="Gray"
 						  BorderThickness="1"
 						  DockPanel.Dock="Top"

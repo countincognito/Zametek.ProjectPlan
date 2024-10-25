@@ -36,7 +36,8 @@
 						  PointerReleased="ScrollViewer_PointerReleased"
 						  PointerMoved="ScrollViewer_PointerMoved"
 						  HorizontalScrollBarVisibility="Auto"
-						  VerticalScrollBarVisibility="Auto">
+						  VerticalScrollBarVisibility="Auto"
+						  Background="White">
 				<ScrollViewer.ContextMenu>
 					<ContextMenu>
 						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"

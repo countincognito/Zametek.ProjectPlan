@@ -64,8 +64,6 @@
 								   Value="{Binding Path=DefaultUnitCost, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 								   VerticalAlignment="Center"
 								   ShowButtonSpinner="False"
-							       Foreground="Black"
-								   Background="White"
 							       Margin="0,0,0,11"
 								   Padding="0"
 								   Minimum="0"/>
@@ -104,16 +102,16 @@
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>
 				<Style Selector="DataGridRow:not(:pointerover) Grid.editable">
-					<Setter Property="Background" Value="LightYellow"/>
+					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 				</Style>
 				<Style Selector="DataGridRow:not(:selected) Grid.editable">
-					<Setter Property="Background" Value="LightYellow"/>
+					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 				</Style>
 				<Style Selector="DataGridRow:pointerover Grid.editable">
-					<Setter Property="Background" Value="Khaki"/>
+					<Setter Property="Background" Value="{DynamicResource EditableHoverCellGridBackgroundBrush}"/>
 				</Style>
 				<Style Selector="DataGridRow:selected Grid.editable">
-					<Setter Property="Background" Value="DarkKhaki"/>
+					<Setter Property="Background" Value="{DynamicResource EditableSelectedCellGridBackgroundBrush}"/>
 				</Style>
 			</DataGrid.Styles>
 
@@ -247,7 +245,6 @@
 										   TextAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Background="Transparent"
 										   Text="{Binding Path=InterActivityAllocationType, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
@@ -255,9 +252,7 @@
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
 							<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:InterActivityAllocationType}}}"
-									  SelectedItem="{Binding Path=InterActivityAllocationType, Mode=TwoWay}"
-									  Foreground="Black"
-									  Background="White"/>
+									  SelectedItem="{Binding Path=InterActivityAllocationType, Mode=TwoWay}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
@@ -287,7 +282,6 @@
 								<TextBlock VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Background="Transparent"
 										   x:DataType="vm:ManagedResourceViewModel"
 										   Text="{Binding Path=WorkStreamSelector.TargetWorkStreamsString, Mode=OneWay}"/>
 							</Grid>
@@ -307,7 +301,7 @@
 												 IsDropDownOpen="True">
 									<u:MultiComboBox.SelectedItemTemplate>
 										<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
-											<Grid Background="White">
+											<Grid>
 												<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
 											</Grid>
 										</DataTemplate>
@@ -341,7 +335,6 @@
 								<TextBlock VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Background="Transparent"
 										   Text="{Binding Path=UnitCost, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
@@ -352,8 +345,6 @@
 								<u:NumericDoubleUpDown Value="{Binding Path=UnitCost, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 													   VerticalAlignment="Center"
 													   ShowButtonSpinner="False"
-													   Foreground="Black"
-								                       Background="White"
 													   Margin="0"
 													   Padding="0"
 													   Minimum="0"/>
@@ -385,7 +376,6 @@
 								<TextBlock VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Background="Transparent"
 										   Text="{Binding Path=DisplayOrder, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
@@ -396,8 +386,6 @@
 								<u:NumericIntUpDown Value="{Binding Path=DisplayOrder, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 													VerticalAlignment="Center"
 													ShowButtonSpinner="False"
-													Foreground="Black"
-								                    Background="White"
 													Margin="0"
 													Padding="0"
 													Minimum="0"/>
@@ -457,7 +445,6 @@
 								<TextBlock VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Background="Transparent"
 										   Text="{Binding Path=Name, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
@@ -466,7 +453,6 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch">
 								<TextBox Text="{Binding Path=Name, Mode=TwoWay}"
-										 Foreground="Black"
 										 VerticalAlignment="Center"
 										 Margin="0"
 										 Padding="3"/>

@@ -2,8 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
@@ -16,42 +14,36 @@
 	<ScrollViewer VerticalScrollBarVisibility="Auto"
 				  HorizontalScrollBarVisibility="Auto">
 		<DockPanel Margin="7">
-			<TextBox Name="outputText"
-					 Text="{Binding Path=CompilationOutput, Mode=OneWay}"
-					 TextWrapping="Wrap"
-					 AcceptsReturn="True"
-					 Background="White"
-					 VerticalAlignment="Stretch"
-					 VerticalContentAlignment="Stretch"
-					 IsReadOnly="True">
-				<i:Interaction.Behaviors>
-					<ia:DataTriggerBehavior Value="True">
-						<ia:DataTriggerBehavior.Binding>
-							<MultiBinding Converter="{x:Static BoolConverters.Or}">
-								<MultiBinding.Bindings>
-									<Binding Path="HasCompilationErrors" Mode="OneWay"/>
-									<Binding Path="HasStaleOutputs" Mode="OneWay"/>
-								</MultiBinding.Bindings>
-							</MultiBinding>
-						</ia:DataTriggerBehavior.Binding>
+			<DockPanel.Styles>
+				<Style Selector="SelectableTextBlock.ok">
+					<Setter Property="Foreground" Value="{DynamicResource TextBlockDefaultForeground}"/>
+				</Style>
+				<Style Selector="SelectableTextBlock.error">
+					<Setter Property="Foreground" Value="Red"/>
+				</Style>
+			</DockPanel.Styles>
 
-						<ia:ChangePropertyAction PropertyName="Foreground" TargetObject="#outputText" Value="Red" />
-					</ia:DataTriggerBehavior>
+			<SelectableTextBlock Text="{Binding Path=CompilationOutput, Mode=OneWay}"
+								 TextWrapping="Wrap"
+								 VerticalAlignment="Stretch">
+				<Classes.ok>
+					<MultiBinding Converter="{x:Static BoolConverters.And}">
+						<MultiBinding.Bindings>
+							<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+							<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+						</MultiBinding.Bindings>
+					</MultiBinding>
+				</Classes.ok>
 
-					<ia:DataTriggerBehavior Value="True">
-						<ia:DataTriggerBehavior.Binding>
-							<MultiBinding Converter="{x:Static BoolConverters.And}">
-								<MultiBinding.Bindings>
-									<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
-									<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
-								</MultiBinding.Bindings>
-							</MultiBinding>
-						</ia:DataTriggerBehavior.Binding>
-
-						<ia:ChangePropertyAction PropertyName="Foreground" TargetObject="#outputText" Value="Black" />
-					</ia:DataTriggerBehavior>
-				</i:Interaction.Behaviors>
-			</TextBox>
+				<Classes.error>
+					<MultiBinding Converter="{x:Static BoolConverters.Or}">
+						<MultiBinding.Bindings>
+							<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+							<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+						</MultiBinding.Bindings>
+					</MultiBinding>
+				</Classes.error>
+			</SelectableTextBlock>
 		</DockPanel>
 	</ScrollViewer>
 </UserControl>

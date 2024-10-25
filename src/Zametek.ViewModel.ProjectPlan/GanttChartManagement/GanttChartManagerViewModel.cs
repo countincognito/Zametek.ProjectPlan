@@ -208,10 +208,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(arrowGraphSettings);
             ArgumentNullException.ThrowIfNull(workStreamSettings);
             ArgumentNullException.ThrowIfNull(graphCompilation);
-            var plotModel = new PlotModel
-            {
-                Background = OxyColors.White
-            };
+            var plotModel = new PlotModel();
 
             if (!graphCompilation.DependentActivities.Any())
             {

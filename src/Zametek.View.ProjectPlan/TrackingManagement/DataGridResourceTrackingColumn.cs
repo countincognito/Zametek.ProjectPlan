@@ -43,7 +43,6 @@ namespace Zametek.View.ProjectPlan
                         TextAlignment = Avalonia.Media.TextAlignment.Left,
                         Margin = new Avalonia.Thickness(0),
                         Padding = new Avalonia.Thickness(3),
-                        Background = Avalonia.Media.Brushes.Transparent,
                         [!TextBlock.TextProperty] = new Binding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.TargetResourceActivitiesString)}", BindingMode.OneWay),
                         [!ToolTip.TipProperty] = new Binding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.TargetResourceActivitiesString)}", BindingMode.OneWay),
                     });
@@ -74,7 +73,6 @@ namespace Zametek.View.ProjectPlan
                 {
                     var templateGrid = new Grid
                     {
-                        Background = Avalonia.Media.Brushes.White,
                     };
 
                     templateGrid.Children.Add(
@@ -89,7 +87,6 @@ namespace Zametek.View.ProjectPlan
                 {
                     var templatePanel = new DockPanel
                     {
-                        Background = Avalonia.Media.Brushes.White,
                         VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                         HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
                     };
@@ -101,7 +98,6 @@ namespace Zametek.View.ProjectPlan
                             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
                             ShowButtonSpinner = false,
-                            Foreground = Avalonia.Media.Brushes.Black,
                             Width = 40,
                             MaxWidth = 40,
                             Margin = new Avalonia.Thickness(0),

@@ -154,10 +154,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
-            var plotModel = new PlotModel
-            {
-                Background = OxyColors.White
-            };
+            var plotModel = new PlotModel();
 
             if (resourceSeriesSet.Combined.Count == 0)
             {

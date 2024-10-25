@@ -4,8 +4,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Zametek.View.ProjectPlan.MainView"
-		xmlns:i="using:Avalonia.Xaml.Interactivity"
-		xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
 		xmlns:resources="using:Zametek.Resource.ProjectPlan"
 		xmlns:controls="using:Avalonia.Controls"
 		xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
@@ -31,141 +29,145 @@
 					Gesture="Ctrl+B" />
 	</Window.KeyBindings>
 
+	<Window.Styles>
+		<Style Selector="Border.ok">
+			<Setter Property="BorderBrush" Value="Transparent"/>
+		</Style>
+		<Style Selector="Border.error">
+			<Setter Property="BorderBrush" Value="Red"/>
+		</Style>
+	</Window.Styles>
+
 	<u:LoadingContainer IsLoading="{Binding Path=IsBusy, Mode=OneWay}"
 						LoadingMessage="{x:Static resources:Labels.Label_PleaseWait}"
 						Name="LoadingPanel">
+		<Border BorderThickness="3">
+			<Classes.ok>
+				<MultiBinding Converter="{x:Static BoolConverters.And}">
+					<MultiBinding.Bindings>
+						<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+						<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+					</MultiBinding.Bindings>
+				</MultiBinding>
+			</Classes.ok>
 
-		<DockPanel Margin="7"
-				   IsEnabled="{Binding Path=!IsBusy, Mode=OneWay}">
-			<Menu DockPanel.Dock="Top" Name="mainmenu"
-				  Padding="3">
-				<i:Interaction.Behaviors>
-					<ia:DataTriggerBehavior Value="True">
-						<ia:DataTriggerBehavior.Binding>
-							<MultiBinding Converter="{x:Static BoolConverters.Or}">
-								<MultiBinding.Bindings>
-									<Binding Path="HasCompilationErrors" Mode="OneWay"/>
-									<Binding Path="HasStaleOutputs" Mode="OneWay"/>
-								</MultiBinding.Bindings>
-							</MultiBinding>
-						</ia:DataTriggerBehavior.Binding>
-						<ia:ChangePropertyAction PropertyName="Background" TargetObject="#mainmenu" Value="Red" />
-						<!--<ia:ChangePropertyAction PropertyName="Foreground" TargetObject="#mainmenu" Value="White" />-->
-					</ia:DataTriggerBehavior>
+			<Classes.error>
+				<MultiBinding Converter="{x:Static BoolConverters.Or}">
+					<MultiBinding.Bindings>
+						<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+						<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+					</MultiBinding.Bindings>
+				</MultiBinding>
+			</Classes.error>
 
-					<ia:DataTriggerBehavior Value="True">
-						<ia:DataTriggerBehavior.Binding>
-							<MultiBinding Converter="{x:Static BoolConverters.And}">
-								<MultiBinding.Bindings>
-									<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
-									<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
-								</MultiBinding.Bindings>
-							</MultiBinding>
-						</ia:DataTriggerBehavior.Binding>
-						<ia:ChangePropertyAction PropertyName="Background" TargetObject="#mainmenu" Value="White" />
-						<!--<ia:ChangePropertyAction PropertyName="Foreground" TargetObject="#mainmenu" Value="Black" />-->
-					</ia:DataTriggerBehavior>
-				</i:Interaction.Behaviors>
-
-				<MenuItem Header="{x:Static resources:Menus.Menu_File}">
-					<MenuItem Header="{x:Static resources:Menus.Menu_Open}"
-							  Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
-							  InputGesture="Ctrl+O"/>
-					<Separator />
-					<MenuItem Header="{x:Static resources:Menus.Menu_Save}"
-							  Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"
-							  InputGesture="Ctrl+S"/>
-					<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-							  Command="{Binding Path=SaveAsProjectPlanFileCommand, Mode=OneWay}"/>
-					<Separator />
-					<MenuItem Header="{x:Static resources:Menus.Menu_Import}"
-							  Command="{Binding Path=ImportProjectFileCommand, Mode=OneWay}"/>
-					<MenuItem Header="{x:Static resources:Menus.Menu_Export}"
-							  Command="{Binding Path=ExportProjectFileCommand, Mode=OneWay}"/>
-					<Separator />
-					<MenuItem Header="{x:Static resources:Menus.Menu_Close}"
-							  Command="{Binding Path=CloseProjectPlanCommand, Mode=OneWay}"/>
-				</MenuItem>
-
-				<MenuItem Header="{x:Static resources:Menus.Menu_Settings}">
-					<MenuItem Header="{x:Static resources:Menus.Menu_ShowDates}"
-							  Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}"
-							  InputGesture="Ctrl+D">
-						<MenuItem.Icon>
-							<CheckBox BorderThickness="0"
-									  Theme="{StaticResource SimpleCheckBox}"
-									  IsHitTestVisible="False"
-									  IsChecked="{Binding Path=ShowDates, Mode=OneWay}" />
-						</MenuItem.Icon>
+			<DockPanel Margin="7"
+					   IsEnabled="{Binding Path=!IsBusy, Mode=OneWay}">
+				<Menu DockPanel.Dock="Top"
+					  HorizontalAlignment="Left"
+					  Padding="0">
+					<MenuItem Header="{x:Static resources:Menus.Menu_File}">
+						<MenuItem Header="{x:Static resources:Menus.Menu_Open}"
+								  Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
+								  InputGesture="Ctrl+O"/>
+						<Separator />
+						<MenuItem Header="{x:Static resources:Menus.Menu_Save}"
+								  Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"
+								  InputGesture="Ctrl+S"/>
+						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+								  Command="{Binding Path=SaveAsProjectPlanFileCommand, Mode=OneWay}"/>
+						<Separator />
+						<MenuItem Header="{x:Static resources:Menus.Menu_Import}"
+								  Command="{Binding Path=ImportProjectFileCommand, Mode=OneWay}"/>
+						<MenuItem Header="{x:Static resources:Menus.Menu_Export}"
+								  Command="{Binding Path=ExportProjectFileCommand, Mode=OneWay}"/>
+						<Separator />
+						<MenuItem Header="{x:Static resources:Menus.Menu_Close}"
+								  Command="{Binding Path=CloseProjectPlanCommand, Mode=OneWay}"/>
 					</MenuItem>
-					<MenuItem Header="{x:Static resources:Menus.Menu_UseBusinessDays}"
-							  Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}"
-							  InputGesture="Ctrl+B">
-						<MenuItem.Icon>
-							<CheckBox BorderThickness="0"
-									  Theme="{StaticResource SimpleCheckBox}"
-									  IsHitTestVisible="False"
-									  IsChecked="{Binding Path=UseBusinessDays, Mode=OneWay}" />
-						</MenuItem.Icon>
+
+					<MenuItem Header="{x:Static resources:Menus.Menu_Settings}">
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowDates}"
+								  Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}"
+								  InputGesture="Ctrl+D">
+							<MenuItem.Icon>
+								<CheckBox BorderThickness="0"
+										  Theme="{StaticResource SimpleCheckBox}"
+										  IsHitTestVisible="False"
+										  IsChecked="{Binding Path=ShowDates, Mode=OneWay}" />
+							</MenuItem.Icon>
+						</MenuItem>
+						<MenuItem Header="{x:Static resources:Menus.Menu_UseBusinessDays}"
+								  Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}"
+								  InputGesture="Ctrl+B">
+							<MenuItem.Icon>
+								<CheckBox BorderThickness="0"
+										  Theme="{StaticResource SimpleCheckBox}"
+										  IsHitTestVisible="False"
+										  IsChecked="{Binding Path=UseBusinessDays, Mode=OneWay}" />
+							</MenuItem.Icon>
+						</MenuItem>
 					</MenuItem>
-				</MenuItem>
 
-				<MenuItem Header="{x:Static resources:Menus.Menu_Compile}">
-					<MenuItem Header="{x:Static resources:Menus.Menu_Compile}"
-							  Command="{Binding Path=CompileCommand, Mode=OneWay}"/>
-					<MenuItem Header="{x:Static resources:Menus.Menu_AutoCompile}"
-							  Command="{Binding Path=ToggleAutoCompileCommand, Mode=OneWay}">
-						<MenuItem.Icon>
-							<CheckBox BorderThickness="0"
-									  Theme="{StaticResource SimpleCheckBox}"
-									  IsHitTestVisible="False"
-									  IsChecked="{Binding Path=AutoCompile, Mode=OneWay}" />
-						</MenuItem.Icon>
+					<MenuItem Header="{x:Static resources:Menus.Menu_Compile}">
+						<MenuItem Header="{x:Static resources:Menus.Menu_Compile}"
+								  Command="{Binding Path=CompileCommand, Mode=OneWay}"/>
+						<MenuItem Header="{x:Static resources:Menus.Menu_AutoCompile}"
+								  Command="{Binding Path=ToggleAutoCompileCommand, Mode=OneWay}">
+							<MenuItem.Icon>
+								<CheckBox BorderThickness="0"
+										  Theme="{StaticResource SimpleCheckBox}"
+										  IsHitTestVisible="False"
+										  IsChecked="{Binding Path=AutoCompile, Mode=OneWay}" />
+							</MenuItem.Icon>
+						</MenuItem>
+						<MenuItem Header="{x:Static resources:Menus.Menu_TransitiveReduction}"
+								  Command="{Binding Path=TransitiveReductionCommand, Mode=OneWay}"/>
 					</MenuItem>
-					<MenuItem Header="{x:Static resources:Menus.Menu_TransitiveReduction}"
-							  Command="{Binding Path=TransitiveReductionCommand, Mode=OneWay}"/>
-				</MenuItem>
-				<MenuItem Header="{x:Static resources:Menus.Menu_Help}">
-					<MenuItem Header="{x:Static resources:Menus.Menu_Documentation}"
-							  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-							  CommandParameter="{x:Static resources:Links.Link_Documentation}"/>
-					<Separator />
-					<MenuItem Header="{x:Static resources:Menus.Menu_ReportIssue}"
-							  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-							  CommandParameter="{x:Static resources:Links.Link_ReportIssue}"/>
-					<Separator />
-					<MenuItem Header="{x:Static resources:Menus.Menu_Donate}"
-							  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-							  CommandParameter="{x:Static resources:Links.Link_Donate}"/>
-					<MenuItem Header="{x:Static resources:Menus.Menu_ViewLicense}"
-							  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-							  CommandParameter="{x:Static resources:Links.Link_ViewLicense}"/>
-					<Separator />
-					<MenuItem Header="{x:Static resources:Menus.Menu_About}"
-							  Command="{Binding Path=OpenAboutCommand, Mode=OneWay}"/>
-				</MenuItem>
-			</Menu>
+					<MenuItem Header="{x:Static resources:Menus.Menu_Help}">
+						<MenuItem Header="{x:Static resources:Menus.Menu_Documentation}"
+								  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+								  CommandParameter="{x:Static resources:Links.Link_Documentation}"/>
+						<Separator />
+						<MenuItem Header="{x:Static resources:Menus.Menu_ReportIssue}"
+								  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+								  CommandParameter="{x:Static resources:Links.Link_ReportIssue}"/>
+						<Separator />
+						<MenuItem Header="{x:Static resources:Menus.Menu_Donate}"
+								  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+								  CommandParameter="{x:Static resources:Links.Link_Donate}"/>
+						<MenuItem Header="{x:Static resources:Menus.Menu_ViewLicense}"
+								  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
+								  CommandParameter="{x:Static resources:Links.Link_ViewLicense}"/>
+						<Separator />
+						<MenuItem Header="{x:Static resources:Menus.Menu_About}"
+								  Command="{Binding Path=OpenAboutCommand, Mode=OneWay}"/>
+					</MenuItem>
+				</Menu>
 
-			<DockPanel DockPanel.Dock="Bottom"
-					   Margin="0">
+				<DockPanel DockPanel.Dock="Bottom"
+						   Margin="0">
 
-				<Label DockPanel.Dock="Left"
-					   IsTabStop="False"
-					   Content="{x:Static resources:Labels.Label_ProjectStart}"
-					   VerticalContentAlignment="Center"
-					   Height="25"
-					   Margin="0,0,7,0"/>
-				<CalendarDatePicker DockPanel.Dock="Left"
-									SelectedDate="{Binding Path=ProjectStartDateTime, Mode=TwoWay}"
-									Margin="0,0,11,0"
-									Padding="3"
-									IsTodayHighlighted="True"
-									VerticalAlignment="Center"/>
-				<Grid />
+					<Label DockPanel.Dock="Left"
+						   IsTabStop="False"
+						   Content="{x:Static resources:Labels.Label_ProjectStart}"
+						   VerticalContentAlignment="Center"
+						   Height="25"
+						   Margin="0,0,7,0"/>
+					<CalendarDatePicker DockPanel.Dock="Left"
+										SelectedDate="{Binding Path=ProjectStartDateTime, Mode=TwoWay}"
+										Margin="0,0,11,0"
+										Padding="3"
+										IsTodayHighlighted="True"
+										VerticalAlignment="Center"/>
+
+					<u:ThemeToggleButton DockPanel.Dock="Left"/>
+
+					<Grid />
+				</DockPanel>
+
+				<idc:DockControl Layout="{Binding Path=Layout, Mode=OneWay}"
+								 DockProperties.IsDragEnabled="False" />
 			</DockPanel>
-
-			<idc:DockControl Layout="{Binding Path=Layout, Mode=OneWay}"
-							 DockProperties.IsDragEnabled="False" />
-		</DockPanel>
+		</Border>
 	</u:LoadingContainer>
 </Window>

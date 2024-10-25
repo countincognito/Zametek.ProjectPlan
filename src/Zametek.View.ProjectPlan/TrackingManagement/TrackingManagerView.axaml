@@ -53,16 +53,16 @@
 					  CanUserReorderColumns="True">
 				<DataGrid.Styles>
 					<Style Selector="DataGridRow:not(:pointerover) Grid.editable">
-						<Setter Property="Background" Value="LightYellow"/>
+						<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 					</Style>
 					<Style Selector="DataGridRow:not(:selected) Grid.editable">
-						<Setter Property="Background" Value="LightYellow"/>
+						<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 					</Style>
 					<Style Selector="DataGridRow:pointerover Grid.editable">
-						<Setter Property="Background" Value="Khaki"/>
+						<Setter Property="Background" Value="{DynamicResource EditableHoverCellGridBackgroundBrush}"/>
 					</Style>
 					<Style Selector="DataGridRow:selected Grid.editable">
-						<Setter Property="Background" Value="DarkKhaki"/>
+						<Setter Property="Background" Value="{DynamicResource EditableSelectedCellGridBackgroundBrush}"/>
 					</Style>
 				</DataGrid.Styles>
 
@@ -118,7 +118,6 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Background="Transparent"
 											   Text="{Binding Path=Name, Mode=OneWay}"/>
 								</Grid>
 							</DataTemplate>
@@ -178,16 +177,16 @@
 					  CanUserReorderColumns="True">
 				<DataGrid.Styles>
 					<Style Selector="DataGridRow:not(:pointerover) Grid.editable">
-						<Setter Property="Background" Value="LightYellow"/>
+						<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 					</Style>
 					<Style Selector="DataGridRow:not(:selected) Grid.editable">
-						<Setter Property="Background" Value="LightYellow"/>
+						<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 					</Style>
 					<Style Selector="DataGridRow:pointerover Grid.editable">
-						<Setter Property="Background" Value="Khaki"/>
+						<Setter Property="Background" Value="{DynamicResource EditableHoverCellGridBackgroundBrush}"/>
 					</Style>
 					<Style Selector="DataGridRow:selected Grid.editable">
-						<Setter Property="Background" Value="DarkKhaki"/>
+						<Setter Property="Background" Value="{DynamicResource EditableSelectedCellGridBackgroundBrush}"/>
 					</Style>
 				</DataGrid.Styles>
 
@@ -243,7 +242,6 @@
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
-											   Background="Transparent"
 											   Text="{Binding Path=Name, Mode=OneWay}"/>
 								</Grid>
 							</DataTemplate>

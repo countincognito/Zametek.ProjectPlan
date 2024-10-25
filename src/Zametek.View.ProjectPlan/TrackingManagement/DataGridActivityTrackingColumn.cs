@@ -42,7 +42,6 @@ namespace Zametek.View.ProjectPlan
                         TextAlignment = Avalonia.Media.TextAlignment.Left,
                         Margin = new Avalonia.Thickness(0),
                         Padding = new Avalonia.Thickness(3),
-                        Background = Avalonia.Media.Brushes.Transparent,
                         [!TextBlock.TextProperty] = new Binding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.Day{m_Index:D2}", BindingMode.OneWay)
                         {
                             StringFormat = @"{0:#0'%'}",
@@ -64,8 +63,6 @@ namespace Zametek.View.ProjectPlan
                     {
                         VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                         ShowButtonSpinner = false,
-                        Foreground = Avalonia.Media.Brushes.Black,
-                        Background = Avalonia.Media.Brushes.White,
                         Margin = new Avalonia.Thickness(0),
                         Padding = new Avalonia.Thickness(0),
                         Minimum = 0,

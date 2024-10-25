@@ -58,16 +58,16 @@
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>
 				<Style Selector="DataGridRow:not(:pointerover) Grid.editable">
-					<Setter Property="Background" Value="LightYellow"/>
+					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 				</Style>
 				<Style Selector="DataGridRow:not(:selected) Grid.editable">
-					<Setter Property="Background" Value="LightYellow"/>
+					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 				</Style>
 				<Style Selector="DataGridRow:pointerover Grid.editable">
-					<Setter Property="Background" Value="Khaki"/>
+					<Setter Property="Background" Value="{DynamicResource EditableHoverCellGridBackgroundBrush}"/>
 				</Style>
 				<Style Selector="DataGridRow:selected Grid.editable">
-					<Setter Property="Background" Value="DarkKhaki"/>
+					<Setter Property="Background" Value="{DynamicResource EditableSelectedCellGridBackgroundBrush}"/>
 				</Style>
 			</DataGrid.Styles>
 
@@ -132,7 +132,6 @@
 										   VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Background="Transparent"
 										   IsVisible="True"
 										   Text="{Binding Path=SlackLimit, Mode=OneWay}">
 									<i:Interaction.Behaviors>
@@ -149,8 +148,6 @@
 										   VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Background="White"
-										   Foreground="Black"
 										   IsVisible="False"
 										   Text="{x:Static resources:Labels.Label_Max}">
 									<i:Interaction.Behaviors>
@@ -181,8 +178,6 @@
 													Value="{Binding Path=SlackLimit, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 													VerticalAlignment="Center"
 												    ShowButtonSpinner="False"
-												    Foreground="Black"
-													Background="White"
 													IsVisible="True"
 												    Margin="0"
 												    Padding="0"
@@ -201,8 +196,6 @@
 										   VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Background="White"
-										   Foreground="Black"
 										   IsVisible="False"
 										   Text="{x:Static resources:Labels.Label_Max}">
 									<i:Interaction.Behaviors>
@@ -242,7 +235,6 @@
 								<TextBlock VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Background="Transparent"
 										   Text="{Binding Path=CriticalityWeight, Mode=OneWay, StringFormat=\{0:N3\}}"/>
 							</Grid>
 						</DataTemplate>
@@ -253,8 +245,6 @@
 								<u:NumericDoubleUpDown Value="{Binding Path=CriticalityWeight, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 													   VerticalAlignment="Center"
 												       ShowButtonSpinner="False"
-												       Foreground="Black"
-													   Background="White"
 												       Margin="0"
 												       Padding="0"
 												       Minimum="0"/>
@@ -286,7 +276,6 @@
 								<TextBlock VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Background="Transparent"
 										   Text="{Binding Path=FibonacciWeight, Mode=OneWay, StringFormat=\{0:N3\}}"/>
 							</Grid>
 						</DataTemplate>
@@ -297,8 +286,6 @@
 								<u:NumericDoubleUpDown Value="{Binding Path=FibonacciWeight, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 													   VerticalAlignment="Center"
 												       ShowButtonSpinner="False"
-												       Foreground="Black"
-													   Background="White"
 												       Margin="0"
 												       Padding="0"
 												       Minimum="0"/>
