@@ -13,20 +13,18 @@ namespace Zametek.View.ProjectPlan
         : Window
     {
         private IDisposable? m_UpdateCursorSub;
-        private readonly string m_InitialTheme;
 
-        public MainView(string initialTheme)
+        public MainView()
         {
             InitializeComponent();
             Loaded += MainView_Loaded;
             Unloaded += MainView_Unloaded;
-
-            var vm = DataContext as IMainViewModel;
-
-            // This has to be set here because of how the ThemeToggleButton loads.
-            // Even when TwoWay binding is in place, it still forces an initial value of 'Light'.
-            m_InitialTheme = initialTheme;
+            InitialTheme = string.Empty;
         }
+
+        // This has to be set here because of how the ThemeToggleButton loads.
+        // Even when TwoWay binding is in place, it still forces an initial value of 'Light'.
+        public string InitialTheme { get; set; }
 
         private void MainView_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
@@ -46,7 +44,7 @@ namespace Zametek.View.ProjectPlan
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(UpdateCursor);
 
-                vm.SelectedTheme = m_InitialTheme;
+                vm.SelectedTheme = InitialTheme;
             }
         }
 

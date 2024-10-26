@@ -34,9 +34,10 @@ namespace Zametek.ProjectPlan
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
             {
-                MainView mainView = new(settingService.SelectedTheme)
+                MainView mainView = new()
                 {
-                    DataContext = mainViewModel
+                    DataContext = mainViewModel,
+                    InitialTheme = settingService.SelectedTheme
                 };
 
                 IDialogService dialogService = GetRequiredService<IDialogService>();

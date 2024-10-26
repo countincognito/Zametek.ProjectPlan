@@ -94,7 +94,7 @@
 				</ResourceDictionary>
 				<ResourceDictionary x:Key="Dark">
 					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">Peru</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">Sienna</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">Chocolate</SolidColorBrush>
 					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">SaddleBrown</SolidColorBrush>
 					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">CornflowerBlue</SolidColorBrush>
 				</ResourceDictionary>
