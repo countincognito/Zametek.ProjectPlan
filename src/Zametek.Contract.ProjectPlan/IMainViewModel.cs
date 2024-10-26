@@ -37,6 +37,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool AutoCompile { get; set; }
 
+        string SelectedTheme { get; set; }
+
         ICommand OpenProjectPlanFileCommand { get; }
 
         ICommand SaveProjectPlanFileCommand { get; }

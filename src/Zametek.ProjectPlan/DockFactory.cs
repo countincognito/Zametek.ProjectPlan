@@ -54,6 +54,57 @@ namespace Zametek.ProjectPlan
 
         public override IRootDock CreateLayout()
         {
+            {
+                m_ActivitiesManagerViewModel.CanClose = false;
+                m_ActivitiesManagerViewModel.CanFloat = true;
+                m_ActivitiesManagerViewModel.CanPin = true;
+            }
+            {
+                m_TrackingManagerViewModel.CanClose = false;
+                m_TrackingManagerViewModel.CanFloat = true;
+                m_TrackingManagerViewModel.CanPin = true;
+            }
+            {
+                m_MetricManagerViewModel.CanClose = false;
+                m_MetricManagerViewModel.CanFloat = true;
+                m_MetricManagerViewModel.CanPin = true;
+            }
+            {
+                m_OutputManagerViewModel.CanClose = false;
+                m_OutputManagerViewModel.CanFloat = true;
+                m_OutputManagerViewModel.CanPin = true;
+            }
+            {
+                m_ArrowGraphManagerViewModel.CanClose = false;
+                m_ArrowGraphManagerViewModel.CanFloat = true;
+                m_ArrowGraphManagerViewModel.CanPin = true;
+            }
+            {
+                m_GanttChartManagerViewModel.CanClose = false;
+                m_GanttChartManagerViewModel.CanFloat = true;
+                m_GanttChartManagerViewModel.CanPin = true;
+            }
+            {
+                m_EarnedValueChartManagerViewModel.CanClose = false;
+                m_EarnedValueChartManagerViewModel.CanFloat = true;
+                m_EarnedValueChartManagerViewModel.CanPin = true;
+            }
+            {
+                m_ArrowGraphSettingsManagerViewModel.CanClose = false;
+                m_ArrowGraphSettingsManagerViewModel.CanFloat = true;
+                m_ArrowGraphSettingsManagerViewModel.CanPin = true;
+            }
+            {
+                m_ResourceSettingsManagerViewModel.CanClose = false;
+                m_ResourceSettingsManagerViewModel.CanFloat = true;
+                m_ResourceSettingsManagerViewModel.CanPin = true;
+            }
+            {
+                m_WorkStreamSettingsManagerViewModel.CanClose = false;
+                m_WorkStreamSettingsManagerViewModel.CanFloat = true;
+                m_WorkStreamSettingsManagerViewModel.CanPin = true;
+            }
+
             var mainLayout = new ProportionalDock
             {
                 Proportion = 1.0,
@@ -80,7 +131,7 @@ namespace Zametek.ProjectPlan
                             m_ArrowGraphManagerViewModel,
                             m_ResourceChartManagerViewModel,
                             m_EarnedValueChartManagerViewModel),
-                        Alignment = Alignment.Left,
+                        Alignment = Alignment.Top,
                         GripMode = GripMode.Visible
                     },
                     new ProportionalDockSplitter()
@@ -110,7 +161,7 @@ namespace Zametek.ProjectPlan
                                 VisibleDockables = CreateList(
                                     m_MetricManagerViewModel,
                                     m_OutputManagerViewModel),
-                                Alignment = Alignment.Left,
+                                Alignment = Alignment.Bottom,
                                 GripMode = GripMode.Visible
                             },
                             new ProportionalDockSplitter()
@@ -130,7 +181,7 @@ namespace Zametek.ProjectPlan
                                     m_ResourceSettingsManagerViewModel,
                                     m_ArrowGraphSettingsManagerViewModel,
                                     m_WorkStreamSettingsManagerViewModel),
-                                Alignment = Alignment.Right,
+                                Alignment = Alignment.Bottom,
                                 GripMode = GripMode.Visible
                             }
                         )

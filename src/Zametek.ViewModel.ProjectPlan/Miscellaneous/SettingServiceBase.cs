@@ -13,7 +13,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
-        protected Data.ProjectPlan.v0_3_0.FileSettingsModel m_FileSettingsModel;
+        protected Data.ProjectPlan.v0_3_0.AppSettingsModel m_AppSettingsModel;
 
         private static readonly double s_GoldenRatio = (1.0 + Math.Sqrt(5.0)) / 2.0;
 
@@ -25,7 +25,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             m_Lock = new object();
             m_ProjectTitle = string.Empty;
-            m_FileSettingsModel = new Data.ProjectPlan.v0_3_0.FileSettingsModel();
+            m_AppSettingsModel = new Data.ProjectPlan.v0_3_0.AppSettingsModel();
             SettingsFilename = settingsFilename;
 
             if (File.Exists(SettingsFilename))
@@ -34,12 +34,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 string content = reader.ReadToEnd();
                 JObject json = JObject.Parse(content);
                 string version =
-                    json?.GetValue(nameof(Data.ProjectPlan.v0_3_0.FileSettingsModel.Version), StringComparison.OrdinalIgnoreCase)?.ToString()
+                    json?.GetValue(nameof(Data.ProjectPlan.v0_3_0.AppSettingsModel.Version), StringComparison.OrdinalIgnoreCase)?.ToString()
                     ?? string.Empty;
                 string jsonString = json?.ToString() ?? string.Empty;
-                m_FileSettingsModel =
-                    JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_0.FileSettingsModel>(jsonString)
-                    ?? new Data.ProjectPlan.v0_3_0.FileSettingsModel();
+                m_AppSettingsModel =
+                    JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_0.AppSettingsModel>(jsonString)
+                    ?? new Data.ProjectPlan.v0_3_0.AppSettingsModel();
             }
         }
 
@@ -58,6 +58,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock) this.RaiseAndSetIfChanged(ref m_ProjectTitle, value);
             }
         }
+
+        public abstract bool ShowDates { get; set; }
+
+        public abstract bool UseBusinessDays { get; set; }
+
+        public abstract string SelectedTheme { get; set; }
 
         public abstract string ProjectDirectory { get; protected set; }
 

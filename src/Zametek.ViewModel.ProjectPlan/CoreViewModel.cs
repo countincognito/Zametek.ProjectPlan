@@ -61,6 +61,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
+            m_ShowDates = m_SettingService.ShowDates;
+            m_UseBusinessDays = m_SettingService.UseBusinessDays;
             m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
             m_ArrowGraph = new ArrowGraphModel();
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
@@ -776,7 +778,11 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowDates;
             set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_ShowDates, value);
+                lock (m_Lock)
+                {
+                    m_SettingService.ShowDates = value;
+                    this.RaiseAndSetIfChanged(ref m_ShowDates, value);
+                }
             }
         }
 
@@ -789,6 +795,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_UseBusinessDays = value;
+                    m_SettingService.UseBusinessDays = m_UseBusinessDays;
                     if (m_UseBusinessDays)
                     {
                         m_DateTimeCalculator.Mode = DateTimeCalculatorMode.BusinessDays;

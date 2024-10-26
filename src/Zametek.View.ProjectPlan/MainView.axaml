@@ -160,7 +160,8 @@
 										IsTodayHighlighted="True"
 										VerticalAlignment="Center"/>
 
-					<u:ThemeToggleButton DockPanel.Dock="Left"/>
+					<u:ThemeToggleButton DockPanel.Dock="Left"
+										 SelectedTheme="{Binding Path=SelectedTheme, Mode=TwoWay}"/>
 
 					<Grid />
 				</DockPanel>

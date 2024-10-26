@@ -101,18 +101,30 @@
 				  GridLinesVisibility="All"
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>
+				<Style Selector="DataGridRow Grid.editable">
+					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
+				</Style>
 				<Style Selector="DataGridRow:not(:pointerover) Grid.editable">
 					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 				</Style>
 				<Style Selector="DataGridRow:not(:selected) Grid.editable">
 					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 				</Style>
-				<Style Selector="DataGridRow:pointerover Grid.editable">
-					<Setter Property="Background" Value="{DynamicResource EditableHoverCellGridBackgroundBrush}"/>
-				</Style>
 				<Style Selector="DataGridRow:selected Grid.editable">
 					<Setter Property="Background" Value="{DynamicResource EditableSelectedCellGridBackgroundBrush}"/>
 				</Style>
+				<Style Selector="DataGridRow:pointerover Grid.editable">
+					<Setter Property="Background" Value="{DynamicResource EditableHoverCellGridBackgroundBrush}"/>
+				</Style>
+				<!--<Style Selector="DataGridCell:selected:pointerover Grid.editable">
+					<Setter Property="Background" Value="Orange"/>
+				</Style>-->
+				<Style Selector="DataGridCell:selected:current:focus Grid.editable">
+					<Setter Property="Background" Value="{DynamicResource EditableSelectedCurrentFocusCellGridBackgroundBrush}"/>
+				</Style>
+				<!--<Style Selector="DataGridCell:selected:pointerover:current:focus Grid.editable">
+					<Setter Property="Background" Value="Green"/>
+				</Style>-->
 			</DataGrid.Styles>
 
 			<i:Interaction.Behaviors>

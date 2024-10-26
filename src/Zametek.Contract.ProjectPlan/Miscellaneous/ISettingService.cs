@@ -10,6 +10,12 @@ namespace Zametek.Contract.ProjectPlan
 
         string ProjectDirectory { get; }
 
+        bool ShowDates { get; set; }
+
+        bool UseBusinessDays { get; set; }
+
+        string SelectedTheme { get; set; }
+
         void SetProjectFilePath(string filename);
 
         void SetProjectTitle(string filename);

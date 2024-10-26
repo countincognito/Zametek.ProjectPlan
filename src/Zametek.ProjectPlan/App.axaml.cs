@@ -28,12 +28,13 @@ namespace Zametek.ProjectPlan
             RegisterDependencies();
 
             IMainViewModel mainViewModel = GetRequiredService<IMainViewModel>();
+            ISettingService settingService = GetRequiredService<ISettingService>();
 
             DataContext = mainViewModel;
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
             {
-                MainView mainView = new()
+                MainView mainView = new(settingService.SelectedTheme)
                 {
                     DataContext = mainViewModel
                 };

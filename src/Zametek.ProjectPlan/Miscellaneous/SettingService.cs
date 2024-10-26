@@ -42,7 +42,7 @@ namespace Zametek.ProjectPlan
                     Formatting = Formatting.Indented,
                     NullValueHandling = NullValueHandling.Ignore,
                 });
-            jsonSerializer.Serialize(writer, m_FileSettingsModel, m_FileSettingsModel.GetType());
+            jsonSerializer.Serialize(writer, m_AppSettingsModel, m_AppSettingsModel.GetType());
         }
 
         #region ISettingService Members
@@ -51,7 +51,7 @@ namespace Zametek.ProjectPlan
         {
             get
             {
-                string directory = m_FileSettingsModel.ProjectPlanDirectory;
+                string directory = m_AppSettingsModel.ProjectPlanDirectory;
                 return string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory)
                     ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
                     : directory;
@@ -60,7 +60,55 @@ namespace Zametek.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_FileSettingsModel = m_FileSettingsModel with { ProjectPlanDirectory = value };
+                    m_AppSettingsModel = m_AppSettingsModel with { ProjectPlanDirectory = value };
+                    SaveSettings();
+                }
+            }
+        }
+
+        public override bool ShowDates
+        {
+            get
+            {
+                return m_AppSettingsModel.ShowDates;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { ShowDates = value };
+                    SaveSettings();
+                }
+            }
+        }
+
+        public override bool UseBusinessDays
+        {
+            get
+            {
+                return m_AppSettingsModel.UseBusinessDays;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { UseBusinessDays = value };
+                    SaveSettings();
+                }
+            }
+        }
+
+        public override string SelectedTheme
+        {
+            get
+            {
+                return m_AppSettingsModel.SelectedTheme;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { SelectedTheme = value };
                     SaveSettings();
                 }
             }

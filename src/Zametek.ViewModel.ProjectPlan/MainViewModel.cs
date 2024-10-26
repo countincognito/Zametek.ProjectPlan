@@ -188,10 +188,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.AutoCompile)
                 .ToProperty(this, main => main.AutoCompile);
 
-            m_CoreViewModel.UseBusinessDays = true;
             m_CoreViewModel.IsProjectUpdated = false;
             m_CoreViewModel.AutoCompile = true;
             m_CoreViewModel.ViewEarnedValueProjections = false;
+            m_SelectedTheme = m_SettingService.SelectedTheme;
 
 #if DEBUG
             DebugFactoryEvents(m_DockFactory);
@@ -454,6 +454,21 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 lock (m_Lock) m_CoreViewModel.AutoCompile = value;
+            }
+        }
+
+        private string m_SelectedTheme;
+
+        public string SelectedTheme
+        {
+            get => m_SelectedTheme;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_SettingService.SelectedTheme = value;
+                    this.RaiseAndSetIfChanged(ref m_SelectedTheme, value);
+                }
             }
         }
 

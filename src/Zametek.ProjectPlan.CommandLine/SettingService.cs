@@ -9,6 +9,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         private readonly object m_Lock;
         private string m_ProjectDirectory;
+        private bool m_ShowDates;
+        private bool m_UseBusinessDays;
+        private string m_SelectedTheme;
 
         #endregion
 
@@ -19,6 +22,7 @@ namespace Zametek.ProjectPlan.CommandLine
         {
             m_Lock = new object();
             m_ProjectDirectory = string.Empty;
+            m_SelectedTheme = string.Empty;
         }
 
         #endregion
@@ -39,6 +43,51 @@ namespace Zametek.ProjectPlan.CommandLine
                 lock (m_Lock)
                 {
                     m_ProjectDirectory = value;
+                }
+            }
+        }
+
+        public override bool ShowDates
+        {
+            get
+            {
+                return m_ShowDates;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ShowDates = value;
+                }
+            }
+        }
+
+        public override bool UseBusinessDays
+        {
+            get
+            {
+                return m_UseBusinessDays;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_UseBusinessDays = value;
+                }
+            }
+        }
+
+        public override string SelectedTheme
+        {
+            get
+            {
+                return m_SelectedTheme;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_SelectedTheme = value;
                 }
             }
         }

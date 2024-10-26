@@ -11,6 +11,8 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
 
         public bool IsExplicitTarget { get; init; }
 
+        public bool IsInactive { get; init; }
+
         public InterActivityAllocationType InterActivityAllocationType { get; init; }
 
         public List<int> InterActivityPhases { get; init; } = [];

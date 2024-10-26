@@ -69,9 +69,6 @@
 	</Application.Styles>
 
 	<Application.Resources>
-
-
-
 		<ResourceDictionary>
 			<sys:Double x:Key="DefaultFontSize">12</sys:Double>
 
@@ -93,11 +90,13 @@
 					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">LightYellow</SolidColorBrush>
 					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">Khaki</SolidColorBrush>
 					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">DarkKhaki</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">AliceBlue</SolidColorBrush>
 				</ResourceDictionary>
 				<ResourceDictionary x:Key="Dark">
 					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">Peru</SolidColorBrush>
 					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">Sienna</SolidColorBrush>
 					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">SaddleBrown</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">CornflowerBlue</SolidColorBrush>
 				</ResourceDictionary>
 			</ResourceDictionary.ThemeDictionaries>
 		</ResourceDictionary>
