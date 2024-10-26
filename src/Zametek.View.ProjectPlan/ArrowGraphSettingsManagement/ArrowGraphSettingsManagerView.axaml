@@ -136,7 +136,7 @@
 
 								<i:Interaction.Behaviors>
 									<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
-										<ia:ChangePropertyAction TargetObject="{Binding #slackLimitGrid}" PropertyName="Background" Value="White" />
+										<ia:ChangePropertyAction TargetObject="{Binding #slackLimitGrid}" PropertyName="Background" Value="Transparent" />
 									</ia:DataTriggerBehavior>
 								</i:Interaction.Behaviors>
 
@@ -182,7 +182,7 @@
 
 								<i:Interaction.Behaviors>
 									<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
-										<ia:ChangePropertyAction TargetObject="{Binding #slackLimitEditableGrid}" PropertyName="Background" Value="White" />
+										<ia:ChangePropertyAction TargetObject="{Binding #slackLimitEditableGrid}" PropertyName="Background" Value="Transparent" />
 									</ia:DataTriggerBehavior>
 								</i:Interaction.Behaviors>
 
