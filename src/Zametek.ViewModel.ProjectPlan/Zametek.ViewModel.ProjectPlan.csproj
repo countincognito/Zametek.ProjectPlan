@@ -9,9 +9,9 @@
   <ItemGroup>
 	<PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
     <PackageReference Include="Avalonia.Svg.Skia" Version="11.1.0.1" />
-    <PackageReference Include="Dock.Model.ReactiveUI" Version="11.1.0.3" />
+    <PackageReference Include="Dock.Model.ReactiveUI" Version="11.1.0.4" />
     <PackageReference Include="FluentDateTime" Version="3.0.0" />
-    <PackageReference Include="net.sf.mpxj-for-csharp" Version="13.4.2" />
+    <PackageReference Include="net.sf.mpxj-for-csharp" Version="13.5.0" />
     <PackageReference Include="NPOI" Version="2.7.1" />
 	<PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-Avalonia11" />
 	<PackageReference Include="OxyPlot.SkiaSharp" Version="2.2.0" />
