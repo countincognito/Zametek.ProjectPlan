@@ -28,7 +28,9 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new object();
             m_AddDaysFunc = AddAllDays;
             m_CountDaysFunc = CountAllDays;
-            Mode = DateTimeCalculatorMode.AllDays;
+            m_DisplayFinishDateFunc = DisplayDefaultFinishDate;
+            CalculatorMode = DateTimeCalculatorMode.AllDays;
+            DisplayMode = DateTimeDisplayMode.Default;
         }
 
         #endregion
@@ -91,21 +93,45 @@ namespace Zametek.ViewModel.ProjectPlan
             return count;
         }
 
+        private static DateTimeOffset DisplayDefaultFinishDate(
+            DateTimeOffset start,
+            DateTimeOffset finish,
+            int duration)
+        {
+            return finish;
+        }
+
+        private DateTimeOffset DisplayMicrosoftProjectFinishDate(
+            DateTimeOffset start,
+            DateTimeOffset finish,
+            int duration)
+        {
+            if (duration > 0)
+            {
+                return AddDays(finish, -1);
+            }
+            else if (CountDays(start, finish) > 0)
+            {
+                return AddDays(finish, -1);
+            }
+            return finish;
+        }
+
         #endregion
 
         #region IDateTimeCalculator Members
 
-        private DateTimeCalculatorMode m_Mode;
-        public DateTimeCalculatorMode Mode
+        private DateTimeCalculatorMode m_CalculatorMode;
+        public DateTimeCalculatorMode CalculatorMode
         {
-            get => m_Mode;
+            get => m_CalculatorMode;
             set
             {
                 lock (m_Lock)
                 {
-                    DateTimeCalculatorMode mode = value;
+                    DateTimeCalculatorMode calculatorMode = value;
 
-                    switch (mode)
+                    switch (calculatorMode)
                     {
                         case DateTimeCalculatorMode.AllDays:
                             DaysPerWeek = 7;
@@ -119,11 +145,40 @@ namespace Zametek.ViewModel.ProjectPlan
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(
-                                nameof(Mode),
-                                @$"{Resource.ProjectPlan.Messages.Message_UnknownDateTimeCalculatorMode} {m_Mode}");
+                                nameof(CalculatorMode),
+                                @$"{Resource.ProjectPlan.Messages.Message_UnknownDateTimeCalculatorMode} {calculatorMode}");
                     }
 
-                    this.RaiseAndSetIfChanged(ref m_Mode, mode);
+                    this.RaiseAndSetIfChanged(ref m_CalculatorMode, calculatorMode);
+                }
+            }
+        }
+
+        private DateTimeDisplayMode m_DisplayMode;
+        public DateTimeDisplayMode DisplayMode
+        {
+            get => m_DisplayMode;
+            set
+            {
+                lock (m_Lock)
+                {
+                    DateTimeDisplayMode displayMode = value;
+
+                    switch (displayMode)
+                    {
+                        case DateTimeDisplayMode.Default:
+                            m_DisplayFinishDateFunc = DisplayDefaultFinishDate;
+                            break;
+                        case DateTimeDisplayMode.MicrosoftProject:
+                            m_DisplayFinishDateFunc = DisplayMicrosoftProjectFinishDate;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(
+                                nameof(DisplayMode),
+                                @$"{Resource.ProjectPlan.Messages.Message_UnknownDateTimeDisplayMode} {displayMode}");
+                    }
+
+                    this.RaiseAndSetIfChanged(ref m_DisplayMode, displayMode);
                 }
             }
         }
@@ -155,6 +210,18 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 return m_CountDaysFunc(current, toCompareWith);
+            }
+        }
+
+        private Func<DateTimeOffset, DateTimeOffset, int, DateTimeOffset> m_DisplayFinishDateFunc;
+        public DateTimeOffset DisplayFinishDate(
+            DateTimeOffset start,
+            DateTimeOffset finish,
+            int duration)
+        {
+            lock (m_Lock)
+            {
+                return m_DisplayFinishDateFunc(start, finish, duration);
             }
         }
 

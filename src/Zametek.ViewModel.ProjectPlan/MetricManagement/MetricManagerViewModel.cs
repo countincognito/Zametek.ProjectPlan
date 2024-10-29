@@ -126,8 +126,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     mm => mm.m_CoreViewModel.ProjectStart,
                     mm => mm.m_CoreViewModel.Duration,
                     mm => mm.m_DateTimeCalculator.DaysPerWeek,
-                    mm => mm.m_DateTimeCalculator.Mode,
-                    (bool showDates, DateTimeOffset projectStart, int? duration, int daysPerWeek, DateTimeCalculatorMode mode) =>
+                    mm => mm.m_DateTimeCalculator.CalculatorMode,
+                    mm => mm.m_DateTimeCalculator.DisplayMode,
+                    (bool showDates, DateTimeOffset projectStart, int? duration, int daysPerWeek, DateTimeCalculatorMode calculatorMode, DateTimeDisplayMode displayMode) =>
                     {
                         if (duration is null || duration == 0)
                         {
@@ -136,9 +137,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         if (showDates)
                         {
-                            return m_DateTimeCalculator
-                                .AddDays(projectStart, duration.GetValueOrDefault())
-                                .ToString(DateTimeCalculator.DateFormat);
+                            int durationValue = duration.GetValueOrDefault();
+                            return m_DateTimeCalculator.DisplayFinishDate(
+                                m_DateTimeCalculator.AddDays(
+                                    projectStart,
+                                    durationValue),
+                                m_DateTimeCalculator.AddDays(
+                                    projectStart,
+                                    durationValue + 1),
+                                1)
+                            .ToString(DateTimeCalculator.DateFormat);
                         }
 
                         return duration.GetValueOrDefault().ToString();

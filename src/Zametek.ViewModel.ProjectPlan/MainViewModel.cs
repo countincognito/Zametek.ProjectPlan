@@ -136,6 +136,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             ToggleShowDatesCommand = ReactiveCommand.Create(ToggleShowDates);
+            ToggleShowMicrosoftProjectDatesCommand = ReactiveCommand.Create(ToggleShowMicrosoftProjectDates);
             ToggleUseBusinessDaysCommand = ReactiveCommand.Create(ToggleUseBusinessDays);
 
             CompileCommand = ReactiveCommand.CreateFromTask(RunCompileAsync);
@@ -179,6 +180,10 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ShowDates = this
                 .WhenAnyValue(main => main.m_CoreViewModel.ShowDates)
                 .ToProperty(this, main => main.ShowDates);
+
+            m_ShowMicrosoftProjectDates = this
+                .WhenAnyValue(main => main.m_CoreViewModel.ShowMicrosoftProjectDates)
+                .ToProperty(this, main => main.ShowMicrosoftProjectDates);
 
             m_UseBusinessDays = this
                 .WhenAnyValue(main => main.m_CoreViewModel.UseBusinessDays)
@@ -317,6 +322,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleShowDates() => ShowDates = !ShowDates;
 
+        private void ToggleShowMicrosoftProjectDates() => ShowMicrosoftProjectDates = !ShowMicrosoftProjectDates;
+
         private void ToggleUseBusinessDays() => UseBusinessDays = !UseBusinessDays;
 
         private void ToggleAutoCompile() => AutoCompile = !AutoCompile;
@@ -437,6 +444,15 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_ShowMicrosoftProjectDates;
+        public bool ShowMicrosoftProjectDates
+        {
+            get => m_ShowMicrosoftProjectDates.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.ShowMicrosoftProjectDates = value;
+            }
+        }
         private readonly ObservableAsPropertyHelper<bool> m_UseBusinessDays;
         public bool UseBusinessDays
         {
@@ -485,6 +501,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand CloseProjectPlanCommand { get; }
 
         public ICommand ToggleShowDatesCommand { get; }
+
+        public ICommand ToggleShowMicrosoftProjectDatesCommand { get; }
 
         public ICommand ToggleUseBusinessDaysCommand { get; }
 
@@ -787,6 +805,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
                 m_ShowDates?.Dispose();
+                m_ShowMicrosoftProjectDates?.Dispose();
                 m_UseBusinessDays?.Dispose();
                 m_AutoCompile?.Dispose();
             }

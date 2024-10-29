@@ -33,6 +33,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowDates { get; set; }
 
+        bool ShowMicrosoftProjectDates { get; set; }
+
         bool UseBusinessDays { get; set; }
 
         bool AutoCompile { get; set; }
@@ -52,6 +54,8 @@ namespace Zametek.Contract.ProjectPlan
         ICommand CloseProjectPlanCommand { get; }
 
         ICommand ToggleShowDatesCommand { get; }
+
+        ICommand ToggleShowMicrosoftProjectDatesCommand { get; }
 
         ICommand ToggleUseBusinessDaysCommand { get; }
 

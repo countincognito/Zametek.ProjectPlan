@@ -168,6 +168,9 @@
   <data name="Menu_ShowDates" xml:space="preserve">
     <value>Show _Dates</value>
   </data>
+  <data name="Menu_ShowMicrosoftProjectDates" xml:space="preserve">
+    <value>Show MS Project Dates</value>
+  </data>
   <data name="Menu_TransitiveReduction" xml:space="preserve">
     <value>Transitive Reduction</value>
   </data>

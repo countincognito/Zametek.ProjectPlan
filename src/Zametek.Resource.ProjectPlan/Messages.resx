@@ -198,4 +198,7 @@
   <data name="Message_NoWindowIconAvailable" xml:space="preserve">
     <value>No Window icon available</value>
   </data>
+  <data name="Message_UnknownDateTimeDisplayMode" xml:space="preserve">
+    <value>Unknown DateTimeDisplayMode value:</value>
+  </data>
 </root>

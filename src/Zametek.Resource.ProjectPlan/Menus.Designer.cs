@@ -214,6 +214,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show MS Project Dates.
+        /// </summary>
+        public static string Menu_ShowMicrosoftProjectDates {
+            get {
+                return ResourceManager.GetString("Menu_ShowMicrosoftProjectDates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transitive Reduction.
         /// </summary>
         public static string Menu_TransitiveReduction {

@@ -25,7 +25,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable? m_ProjectStartSub;
         private readonly IDisposable? m_ResourceSettingsSub;
         private readonly IDisposable? m_WorkStreamSettingsSub;
-        private readonly IDisposable? m_DateTimeCalculatorSub;
+        private readonly IDisposable? m_DateTimeCalculatorCalculatorModeSub;
+        private readonly IDisposable? m_DateTimeCalculatorDisplayModeSub;
         private readonly IDisposable? m_CompilationSub;
 
         private static readonly string[] s_NoErrors = [];
@@ -108,10 +109,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x => WorkStreamSettings = x);
 
-            m_DateTimeCalculatorSub = this
-                .ObservableForProperty(x => x.m_DateTimeCalculator.Mode)
+            m_DateTimeCalculatorCalculatorModeSub = this
+                .ObservableForProperty(x => x.m_DateTimeCalculator.CalculatorMode)
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(_ => UpdateEarliestStartAndLatestFinishDateTimes());
+
+            m_DateTimeCalculatorDisplayModeSub = this
+                .ObservableForProperty(x => x.m_DateTimeCalculator.DisplayMode)
+                .ObserveOn(Scheduler.CurrentThread)
+                .Subscribe(_ => RefreshStartAndFinishValues());
 
             m_CompilationSub = this
                 .ObservableForProperty(x => x.m_CoreViewModel.GraphCompilation)
@@ -173,6 +179,7 @@ namespace Zametek.ViewModel.ProjectPlan
             DependentActivity.MinimumEarliestStartTime = intValue;
             this.RaisePropertyChanged(nameof(MinimumEarliestStartTime));
             this.RaiseAndSetIfChanged(ref m_MinimumEarliestStartDateTime, dateTimeOffsetValue, nameof(MinimumEarliestStartDateTime));
+            RefreshStartAndFinishValues();
         }
 
         private void SetMinimumEarliestStartTimes(DateTimeOffset? input, bool skipValidation = false)
@@ -194,6 +201,7 @@ namespace Zametek.ViewModel.ProjectPlan
             DependentActivity.MinimumEarliestStartTime = intValue;
             this.RaisePropertyChanged(nameof(MinimumEarliestStartTime));
             this.RaiseAndSetIfChanged(ref m_MinimumEarliestStartDateTime, dateTimeOffsetValue, nameof(MinimumEarliestStartDateTime));
+            RefreshStartAndFinishValues();
         }
 
         private void SetMaximumLatestFinishTimes(int? input)
@@ -212,6 +220,7 @@ namespace Zametek.ViewModel.ProjectPlan
             DependentActivity.MaximumLatestFinishTime = intValue;
             this.RaisePropertyChanged(nameof(MaximumLatestFinishTime));
             this.RaiseAndSetIfChanged(ref m_MaximumLatestFinishDateTime, dateTimeOffsetValue, nameof(MaximumLatestFinishDateTime));
+            RefreshStartAndFinishValues();
         }
 
         private void SetMaximumLatestFinishTimes(DateTimeOffset? input, bool skipValidation = false)
@@ -233,6 +242,7 @@ namespace Zametek.ViewModel.ProjectPlan
             DependentActivity.MaximumLatestFinishTime = intValue;
             this.RaisePropertyChanged(nameof(MaximumLatestFinishTime));
             this.RaiseAndSetIfChanged(ref m_MaximumLatestFinishDateTime, dateTimeOffsetValue, nameof(MaximumLatestFinishDateTime));
+            RefreshStartAndFinishValues();
         }
 
         private int? CalculateTime(DateTimeOffset? input)
@@ -354,13 +364,28 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void UpdateEarliestStartAndLatestFinishDateTimes()
         {
+            RefreshStartAndFinishValues();
+            SetMinimumEarliestStartTimes(m_MinimumEarliestStartDateTime, skipValidation: true);
+            SetMaximumLatestFinishTimes(m_MaximumLatestFinishDateTime, skipValidation: true);
+        }
+
+
+
+
+        private void RefreshStartAndFinishValues()
+        {
+            this.RaisePropertyChanged(nameof(EarliestStartTime));
+            this.RaisePropertyChanged(nameof(LatestStartTime));
+            this.RaisePropertyChanged(nameof(EarliestFinishTime));
+            this.RaisePropertyChanged(nameof(LatestFinishTime));
             this.RaisePropertyChanged(nameof(EarliestStartDateTimeOffset));
             this.RaisePropertyChanged(nameof(LatestStartDateTimeOffset));
             this.RaisePropertyChanged(nameof(EarliestFinishDateTimeOffset));
             this.RaisePropertyChanged(nameof(LatestFinishDateTimeOffset));
-            SetMinimumEarliestStartTimes(m_MinimumEarliestStartDateTime, skipValidation: true);
-            SetMaximumLatestFinishTimes(m_MaximumLatestFinishDateTime, skipValidation: true);
         }
+
+
+
 
         private void SetAsCompiled()
         {
@@ -418,10 +443,11 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
-                this.RaisePropertyChanged(nameof(EarliestStartDateTimeOffset));
-                this.RaisePropertyChanged(nameof(LatestStartDateTimeOffset));
-                this.RaisePropertyChanged(nameof(EarliestFinishDateTimeOffset));
-                this.RaisePropertyChanged(nameof(LatestFinishDateTimeOffset));
+                RefreshStartAndFinishValues();
+                //this.RaisePropertyChanged(nameof(EarliestStartDateTimeOffset));
+                //this.RaisePropertyChanged(nameof(LatestStartDateTimeOffset));
+                //this.RaisePropertyChanged(nameof(EarliestFinishDateTimeOffset));
+                //this.RaisePropertyChanged(nameof(LatestFinishDateTimeOffset));
                 SetMinimumEarliestStartTimes(m_MinimumEarliestStartDateTime);
                 SetMaximumLatestFinishTimes(m_MaximumLatestFinishDateTime);
             }
@@ -621,7 +647,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (EarliestFinishTime.HasValue)
                 {
-                    return m_DateTimeCalculator.AddDays(ProjectStart, EarliestFinishTime.GetValueOrDefault());
+                    return m_DateTimeCalculator.DisplayFinishDate(
+                        EarliestStartDateTimeOffset.GetValueOrDefault(),
+                        m_DateTimeCalculator.AddDays(
+                            ProjectStart,
+                            EarliestFinishTime.GetValueOrDefault()),
+                        Duration);
                 }
                 return null;
             }
@@ -651,7 +682,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (LatestFinishTime.HasValue)
                 {
-                    return m_DateTimeCalculator.AddDays(ProjectStart, LatestFinishTime.GetValueOrDefault());
+                    return m_DateTimeCalculator.DisplayFinishDate(
+                        LatestStartDateTimeOffset.GetValueOrDefault(),
+                        m_DateTimeCalculator.AddDays(
+                            ProjectStart,
+                            LatestFinishTime.GetValueOrDefault()),
+                        Duration);
                 }
                 return null;
             }
@@ -771,7 +807,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectStartSub?.Dispose();
             m_ResourceSettingsSub?.Dispose();
             m_WorkStreamSettingsSub?.Dispose();
-            m_DateTimeCalculatorSub?.Dispose();
+            m_DateTimeCalculatorCalculatorModeSub?.Dispose();
+            m_DateTimeCalculatorDisplayModeSub?.Dispose();
             m_CompilationSub?.Dispose();
         }
 

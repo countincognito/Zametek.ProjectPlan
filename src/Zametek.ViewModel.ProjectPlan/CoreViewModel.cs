@@ -786,6 +786,29 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_ShowMicrosoftProjectDates;
+        public bool ShowMicrosoftProjectDates
+        {
+            get => m_ShowMicrosoftProjectDates;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ShowMicrosoftProjectDates = value;
+                    //m_SettingService.ShowMicrosoftProjectDates = m_ShowMicrosoftProjectDates;
+                    if (m_ShowMicrosoftProjectDates)
+                    {
+                        m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.MicrosoftProject;
+                    }
+                    else
+                    {
+                        m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
+                    }
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         private bool m_UseBusinessDays;
         public bool UseBusinessDays
         {
@@ -798,11 +821,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_SettingService.UseBusinessDays = m_UseBusinessDays;
                     if (m_UseBusinessDays)
                     {
-                        m_DateTimeCalculator.Mode = DateTimeCalculatorMode.BusinessDays;
+                        m_DateTimeCalculator.CalculatorMode = DateTimeCalculatorMode.BusinessDays;
                     }
                     else
                     {
-                        m_DateTimeCalculator.Mode = DateTimeCalculatorMode.AllDays;
+                        m_DateTimeCalculator.CalculatorMode = DateTimeCalculatorMode.AllDays;
                     }
                     IsProjectUpdated = true;
                     this.RaisePropertyChanged();

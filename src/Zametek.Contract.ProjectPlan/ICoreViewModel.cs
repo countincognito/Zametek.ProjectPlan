@@ -25,6 +25,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowDates { get; set; }
 
+        bool ShowMicrosoftProjectDates { get; set; }
+
         bool UseBusinessDays { get; set; }
 
         bool ViewEarnedValueProjections { get; set; }

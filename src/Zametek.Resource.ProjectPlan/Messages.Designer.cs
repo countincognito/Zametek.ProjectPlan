@@ -286,6 +286,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown DateTimeDisplayMode value:.
+        /// </summary>
+        public static string Message_UnknownDateTimeDisplayMode {
+            get {
+                return ResourceManager.GetString("Message_UnknownDateTimeDisplayMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown EdgeDashStyle value.
         /// </summary>
         public static string Message_UnknownEdgeDashStyleValue {
