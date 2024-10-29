@@ -80,6 +80,11 @@ namespace Zametek.ProjectPlan
                 m_ArrowGraphManagerViewModel.CanPin = true;
             }
             {
+                m_ResourceChartManagerViewModel.CanClose = false;
+                m_ResourceChartManagerViewModel.CanFloat = true;
+                m_ResourceChartManagerViewModel.CanPin = true;
+            }
+            {
                 m_GanttChartManagerViewModel.CanClose = false;
                 m_GanttChartManagerViewModel.CanFloat = true;
                 m_GanttChartManagerViewModel.CanPin = true;
