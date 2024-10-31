@@ -28,7 +28,14 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new object();
             m_AddDaysFunc = AddAllDays;
             m_CountDaysFunc = CountAllDays;
+
+            m_DisplayEarliestStartDateFunc = DisplayDefaultEarliestStartDate;
+            m_DisplayLatestStartDateFunc = DisplayDefaultLatestStartDate;
             m_DisplayFinishDateFunc = DisplayDefaultFinishDate;
+
+            m_MaximumLatestFinishDateInFunc = DefaultMaximumLatestFinishDateIn;
+            m_MaximumLatestFinishDateOutFunc = DefaultMaximumLatestFinishDateOut;
+
             CalculatorMode = DateTimeCalculatorMode.AllDays;
             DisplayMode = DateTimeDisplayMode.Default;
         }
@@ -93,6 +100,54 @@ namespace Zametek.ViewModel.ProjectPlan
             return count;
         }
 
+        private static DateTimeOffset DisplayDefaultEarliestStartDate(
+            DateTimeOffset projectStart,
+            DateTimeOffset earliestStart,
+            int duration)
+        {
+            return earliestStart;
+        }
+
+        private DateTimeOffset DisplayClassicEarliestStartDate(
+            DateTimeOffset projectStart,
+            DateTimeOffset earliestStart,
+            int duration)
+        {
+            lock (m_Lock)
+            {
+                if (duration == 0
+                    && CountDays(projectStart, earliestStart) > 0)
+                {
+                    return AddDays(earliestStart, -1);
+                }
+                return earliestStart;
+            }
+        }
+
+        private static DateTimeOffset DisplayDefaultLatestStartDate(
+            DateTimeOffset earliestStart,
+            DateTimeOffset latestStart,
+            int duration)
+        {
+            return latestStart;
+        }
+
+        private DateTimeOffset DisplayClassicLatestStartDate(
+            DateTimeOffset earliestStart,
+            DateTimeOffset latestStart,
+            int duration)
+        {
+            lock (m_Lock)
+            {
+                if (duration == 0
+                    && CountDays(earliestStart, latestStart) > 0)
+                {
+                    return AddDays(latestStart, -1);
+                }
+                return latestStart;
+            }
+        }
+
         private static DateTimeOffset DisplayDefaultFinishDate(
             DateTimeOffset start,
             DateTimeOffset finish,
@@ -101,20 +156,68 @@ namespace Zametek.ViewModel.ProjectPlan
             return finish;
         }
 
-        private DateTimeOffset DisplayMicrosoftProjectFinishDate(
+        private DateTimeOffset DisplayClassicFinishDate(
             DateTimeOffset start,
             DateTimeOffset finish,
             int duration)
         {
-            if (duration > 0)
+            lock (m_Lock)
             {
-                return AddDays(finish, -1);
+                if (duration > 0
+                    || CountDays(start, finish) > 0)
+                {
+                    return AddDays(finish, -1);
+                }
+                return finish;
             }
-            else if (CountDays(start, finish) > 0)
+        }
+
+        private static DateTimeOffset DefaultMaximumLatestFinishDateIn(
+            DateTimeOffset start,
+            DateTimeOffset maxLatestFinish,
+            int duration)
+        {
+            return maxLatestFinish;
+        }
+
+        private DateTimeOffset ClassicMaximumLatestFinishDateIn(
+            DateTimeOffset start,
+            DateTimeOffset maxLatestFinish,
+            int duration)
+        {
+            lock (m_Lock)
             {
-                return AddDays(finish, -1);
+                if (duration > 0
+                    || CountDays(start, maxLatestFinish) > 0)
+                {
+                    return AddDays(maxLatestFinish, 1);
+                }
+                return maxLatestFinish;
             }
-            return finish;
+        }
+
+        private static DateTimeOffset DefaultMaximumLatestFinishDateOut(
+            DateTimeOffset start,
+            DateTimeOffset maxLatestFinish,
+            int duration)
+        {
+            return maxLatestFinish;
+        }
+
+        private DateTimeOffset ClassicMaximumLatestFinishDateOut(
+            DateTimeOffset start,
+            DateTimeOffset maxLatestFinish,
+            int duration)
+        {
+            lock (m_Lock)
+            {
+                if (duration > 0
+                    || CountDays(start, maxLatestFinish) > 0)
+                {
+                    return AddDays(maxLatestFinish, -1);
+                }
+                return maxLatestFinish;
+            }
         }
 
         #endregion
@@ -167,10 +270,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     switch (displayMode)
                     {
                         case DateTimeDisplayMode.Default:
+                            m_DisplayEarliestStartDateFunc = DisplayDefaultEarliestStartDate;
+                            m_DisplayLatestStartDateFunc = DisplayDefaultLatestStartDate;
                             m_DisplayFinishDateFunc = DisplayDefaultFinishDate;
+                            m_MaximumLatestFinishDateInFunc = DefaultMaximumLatestFinishDateIn;
+                            m_MaximumLatestFinishDateOutFunc = DefaultMaximumLatestFinishDateOut;
                             break;
-                        case DateTimeDisplayMode.MicrosoftProject:
-                            m_DisplayFinishDateFunc = DisplayMicrosoftProjectFinishDate;
+                        case DateTimeDisplayMode.Classic:
+                            m_DisplayEarliestStartDateFunc = DisplayClassicEarliestStartDate;
+                            m_DisplayLatestStartDateFunc = DisplayClassicLatestStartDate;
+                            m_DisplayFinishDateFunc = DisplayClassicFinishDate;
+                            m_MaximumLatestFinishDateInFunc = ClassicMaximumLatestFinishDateIn;
+                            m_MaximumLatestFinishDateOutFunc = ClassicMaximumLatestFinishDateOut;
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(
@@ -213,6 +324,30 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private Func<DateTimeOffset, DateTimeOffset, int, DateTimeOffset> m_DisplayEarliestStartDateFunc;
+        public DateTimeOffset DisplayEarliestStartDate(
+            DateTimeOffset projectStart,
+            DateTimeOffset earliestStart,
+            int duration)
+        {
+            lock (m_Lock)
+            {
+                return m_DisplayEarliestStartDateFunc(projectStart, earliestStart, duration);
+            }
+        }
+
+        private Func<DateTimeOffset, DateTimeOffset, int, DateTimeOffset> m_DisplayLatestStartDateFunc;
+        public DateTimeOffset DisplayLatestStartDate(
+            DateTimeOffset earliestStart,
+            DateTimeOffset latestStart,
+            int duration)
+        {
+            lock (m_Lock)
+            {
+                return m_DisplayLatestStartDateFunc(earliestStart, latestStart, duration);
+            }
+        }
+
         private Func<DateTimeOffset, DateTimeOffset, int, DateTimeOffset> m_DisplayFinishDateFunc;
         public DateTimeOffset DisplayFinishDate(
             DateTimeOffset start,
@@ -222,6 +357,30 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 return m_DisplayFinishDateFunc(start, finish, duration);
+            }
+        }
+
+        private Func<DateTimeOffset, DateTimeOffset, int, DateTimeOffset> m_MaximumLatestFinishDateInFunc;
+        public DateTimeOffset MaximumLatestFinishDateIn(
+            DateTimeOffset start,
+            DateTimeOffset maxLatestFinish,
+            int duration)
+        {
+            lock (m_Lock)
+            {
+                return m_MaximumLatestFinishDateInFunc(start, maxLatestFinish, duration);
+            }
+        }
+
+        private Func<DateTimeOffset, DateTimeOffset, int, DateTimeOffset> m_MaximumLatestFinishDateOutFunc;
+        public DateTimeOffset MaximumLatestFinishDateOut(
+            DateTimeOffset start,
+            DateTimeOffset maxLatestFinish,
+            int duration)
+        {
+            lock (m_Lock)
+            {
+                return m_MaximumLatestFinishDateOutFunc(start, maxLatestFinish, duration);
             }
         }
 

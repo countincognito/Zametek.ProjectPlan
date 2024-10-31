@@ -61,6 +61,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public abstract bool ShowDates { get; set; }
 
+        public abstract bool ShowClassicDates { get; set; }
+
         public abstract bool UseBusinessDays { get; set; }
 
         public abstract string SelectedTheme { get; set; }

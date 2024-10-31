@@ -10,6 +10,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private readonly object m_Lock;
         private string m_ProjectDirectory;
         private bool m_ShowDates;
+        private bool m_ShowClassicDates;
         private bool m_UseBusinessDays;
         private string m_SelectedTheme;
 
@@ -58,6 +59,21 @@ namespace Zametek.ProjectPlan.CommandLine
                 lock (m_Lock)
                 {
                     m_ShowDates = value;
+                }
+            }
+        }
+
+        public override bool ShowClassicDates
+        {
+            get
+            {
+                return m_ShowClassicDates;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ShowClassicDates = value;
                 }
             }
         }

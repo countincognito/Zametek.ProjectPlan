@@ -144,7 +144,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                     durationValue),
                                 m_DateTimeCalculator.AddDays(
                                     projectStart,
-                                    durationValue + 1),
+                                    durationValue),
                                 1)
                             .ToString(DateTimeCalculator.DateFormat);
                         }

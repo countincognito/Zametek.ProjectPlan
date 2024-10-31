@@ -9,6 +9,8 @@
 
         public bool ShowDates { get; init; } = false;
 
+        public bool ShowClassicDates { get; init; } = false;
+
         public bool UseBusinessDays { get; init; } = true;
 
         public string SelectedTheme { get; init; } = string.Empty;

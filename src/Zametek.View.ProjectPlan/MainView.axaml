@@ -96,15 +96,15 @@
 										  IsChecked="{Binding Path=ShowDates, Mode=OneWay}" />
 							</MenuItem.Icon>
 						</MenuItem>
-						<MenuItem Header="{x:Static resources:Menus.Menu_ShowMicrosoftProjectDates}"
-								  Command="{Binding Path=ToggleShowMicrosoftProjectDatesCommand, Mode=OneWay}"
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowClassicDates}"
+								  Command="{Binding Path=ToggleShowClassicDatesCommand, Mode=OneWay}"
 								  IsEnabled="{Binding Path=ShowDates, Mode=OneWay}">
 							<!--InputGesture="Ctrl+D">-->
 							<MenuItem.Icon>
 								<CheckBox BorderThickness="0"
 										  Theme="{StaticResource SimpleCheckBox}"
 										  IsHitTestVisible="False"
-										  IsChecked="{Binding Path=ShowMicrosoftProjectDates, Mode=OneWay}" />
+										  IsChecked="{Binding Path=ShowClassicDates, Mode=OneWay}" />
 							</MenuItem.Icon>
 						</MenuItem>
 						<MenuItem Header="{x:Static resources:Menus.Menu_UseBusinessDays}"

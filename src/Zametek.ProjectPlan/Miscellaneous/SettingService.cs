@@ -82,6 +82,22 @@ namespace Zametek.ProjectPlan
             }
         }
 
+        public override bool ShowClassicDates
+        {
+            get
+            {
+                return m_AppSettingsModel.ShowClassicDates;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { ShowClassicDates = value };
+                    SaveSettings();
+                }
+            }
+        }
+
         public override bool UseBusinessDays
         {
             get

@@ -4,6 +4,6 @@
     public enum DateTimeDisplayMode
     {
         Default,
-        MicrosoftProject
+        Classic
     }
 }

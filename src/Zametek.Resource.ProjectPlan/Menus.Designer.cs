@@ -205,20 +205,20 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Classic Dates.
+        /// </summary>
+        public static string Menu_ShowClassicDates {
+            get {
+                return ResourceManager.GetString("Menu_ShowClassicDates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show _Dates.
         /// </summary>
         public static string Menu_ShowDates {
             get {
                 return ResourceManager.GetString("Menu_ShowDates", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Show MS Project Dates.
-        /// </summary>
-        public static string Menu_ShowMicrosoftProjectDates {
-            get {
-                return ResourceManager.GetString("Menu_ShowMicrosoftProjectDates", resourceCulture);
             }
         }
         
