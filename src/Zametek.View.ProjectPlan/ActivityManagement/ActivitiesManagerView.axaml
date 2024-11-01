@@ -129,13 +129,11 @@
 										Width="50">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_Id}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_Id}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -179,14 +177,13 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch">
-								<u:NumericIntUpDown Value="{Binding Path=Duration, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-													VerticalAlignment="Center"
-												    ShowButtonSpinner="False"
-												 	Margin="0"
-												    Padding="0"
-												    Minimum="0"/>
-							</Grid>
+							<u:NumericIntUpDown Value="{Binding Path=Duration, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												VerticalAlignment="Center"
+												ShowButtonSpinner="False"
+												Focusable="True"
+												Margin="0"
+												Padding="0"
+												Minimum="0"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
@@ -220,12 +217,11 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch">
-								<TextBox Text="{Binding Path=Name, Mode=TwoWay}"
-										 VerticalAlignment="Center"
-										 Margin="0"
-										 Padding="3"/>
-							</Grid>
+							<TextBox Text="{Binding Path=Name, Mode=TwoWay}"
+									 VerticalAlignment="Center"
+									 Focusable="True"
+									 Margin="0"
+									 Padding="3"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
@@ -259,12 +255,11 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch">
-								<TextBox VerticalAlignment="Center"
-										 Margin="0"
-										 Padding="3"
-										 Text="{Binding Path=DependenciesString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
-							</Grid>
+							<TextBox VerticalAlignment="Center"
+									 Margin="0"
+									 Padding="3"
+									 Focusable="True"
+									 Text="{Binding Path=DependenciesString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
@@ -637,14 +632,13 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch">
-								<u:NumericIntUpDown Value="{Binding Path=MinimumFreeSlack, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-													VerticalAlignment="Center"
-												    ShowButtonSpinner="False"
-												    Margin="0"
-												    Padding="0"
-												    Minimum="0"/>
-							</Grid>
+							<u:NumericIntUpDown Value="{Binding Path=MinimumFreeSlack, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												VerticalAlignment="Center"
+												ShowButtonSpinner="False"
+												Focusable="True"
+												Margin="0"
+												Padding="0"
+												Minimum="0"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
@@ -691,15 +685,17 @@
 								<u:NumericIntUpDown IsVisible="{Binding Path=!ShowDates, Mode=OneWay}"
 													Value="{Binding Path=MinimumEarliestStartTime, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 													VerticalAlignment="Center"
-												    ShowButtonSpinner="False"
-												    Margin="0"
-												    Padding="0"
-												    Minimum="0"/>
+													ShowButtonSpinner="False"
+													Focusable="True"
+													Margin="0"
+													Padding="0"
+													Minimum="0"/>
 
 								<CalendarDatePicker IsVisible="{Binding Path=ShowDates, Mode=OneWay}"
 													SelectedDate="{Binding Path=MinimumEarliestStartDateTime, Mode=TwoWay}"
 													Margin="0"
 													Padding="3"
+													Focusable="True"
 													IsTodayHighlighted="True"
 													VerticalAlignment="Center"/>
 							</Grid>
@@ -750,15 +746,17 @@
 								<u:NumericIntUpDown IsVisible="{Binding Path=!ShowDates, Mode=OneWay}"
 													Value="{Binding Path=MaximumLatestFinishTime, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 													VerticalAlignment="Center"
-												    ShowButtonSpinner="False"
-												    Margin="0"
-												    Padding="0"
-												    Minimum="0"/>
+													ShowButtonSpinner="False"
+													Focusable="True"
+													Margin="0"
+													Padding="0"
+													Minimum="0"/>
 
 								<CalendarDatePicker IsVisible="{Binding Path=ShowDates, Mode=OneWay}"
 													SelectedDate="{Binding Path=MaximumLatestFinishDateTime, Mode=TwoWay}"
 													Margin="0"
 													Padding="3"
+													Focusable="True"
 													IsTodayHighlighted="True"
 													VerticalAlignment="Center"/>
 							</Grid>
@@ -796,25 +794,24 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch"
-								  HorizontalAlignment="Stretch">
-								<u:MultiComboBox x:DataType="vm:ManagedActivityViewModel"
-												 MaxHeight="200"
-												 Width="{x:Static sys:Double.NaN}"
-												 HorizontalAlignment="Stretch"
-												 ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}"
-												 SelectedItems="{Binding Path=WorkStreamSelector.SelectedTargetWorkStreams, Mode=OneWay}"
-												 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
-												 IsDropDownOpen="True">
-									<u:MultiComboBox.SelectedItemTemplate>
-										<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
-											<Grid>
-												<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
-											</Grid>
-										</DataTemplate>
-									</u:MultiComboBox.SelectedItemTemplate>
-								</u:MultiComboBox>
-							</Grid>
+							<u:MultiComboBox x:DataType="vm:ManagedActivityViewModel"
+											 MaxHeight="200"
+											 Width="{x:Static sys:Double.NaN}"
+											 Focusable="True"
+											 HorizontalAlignment="Stretch"
+											 VerticalAlignment="Stretch"
+											 ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}"
+											 SelectedItems="{Binding Path=WorkStreamSelector.SelectedTargetWorkStreams, Mode=OneWay}"
+											 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
+											 IsDropDownOpen="True">
+								<u:MultiComboBox.SelectedItemTemplate>
+									<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
+										<Grid>
+											<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
+										</Grid>
+									</DataTemplate>
+								</u:MultiComboBox.SelectedItemTemplate>
+							</u:MultiComboBox>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
@@ -849,25 +846,24 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch"
-								  HorizontalAlignment="Stretch">
-								<u:MultiComboBox x:DataType="vm:ManagedActivityViewModel"
-												 MaxHeight="200"
-												 Width="{x:Static sys:Double.NaN}"
-												 HorizontalAlignment="Stretch"
-												 ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}"
-												 SelectedItems="{Binding Path=ResourceSelector.SelectedTargetResources, Mode=OneWay}"
-												 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
-												 IsDropDownOpen="True">
-									<u:MultiComboBox.SelectedItemTemplate>
-										<DataTemplate x:DataType="vm:SelectableResourceViewModel">
-											<Grid>
-												<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
-											</Grid>
-										</DataTemplate>
-									</u:MultiComboBox.SelectedItemTemplate>
-								</u:MultiComboBox>
-							</Grid>
+							<u:MultiComboBox x:DataType="vm:ManagedActivityViewModel"
+											 MaxHeight="200"
+											 Width="{x:Static sys:Double.NaN}"
+											 HorizontalAlignment="Stretch"
+											 VerticalAlignment="Stretch"
+											 Focusable="True"
+											 ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}"
+											 SelectedItems="{Binding Path=ResourceSelector.SelectedTargetResources, Mode=OneWay}"
+											 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
+											 IsDropDownOpen="True">
+								<u:MultiComboBox.SelectedItemTemplate>
+									<DataTemplate x:DataType="vm:SelectableResourceViewModel">
+										<Grid>
+											<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
+										</Grid>
+									</DataTemplate>
+								</u:MultiComboBox.SelectedItemTemplate>
+							</u:MultiComboBox>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
@@ -938,6 +934,7 @@
 						<DataTemplate>
 							<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:LogicalOperator}}}"
 									  SelectedItem="{Binding Path=TargetResourceOperator, Mode=TwoWay}"
+									  Focusable="True"
 									  VerticalAlignment="Center"
 									  VerticalContentAlignment="Center"
 									  HorizontalAlignment="Stretch"
@@ -1035,12 +1032,11 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch">
-								<TextBox Text="{Binding Path=Notes, Mode=TwoWay}"
-										 VerticalAlignment="Center"
-										 Margin="0"
-										 Padding="3"/>
-							</Grid>
+							<TextBox Text="{Binding Path=Notes, Mode=TwoWay}"
+									 VerticalAlignment="Center"
+									 Focusable="True"
+									 Margin="0"
+									 Padding="3"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>

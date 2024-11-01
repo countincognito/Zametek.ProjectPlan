@@ -253,14 +253,13 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch">
-								<u:NumericDoubleUpDown Value="{Binding Path=CriticalityWeight, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-													   VerticalAlignment="Center"
-												       ShowButtonSpinner="False"
-												       Margin="0"
-												       Padding="0"
-												       Minimum="0"/>
-							</Grid>
+							<u:NumericDoubleUpDown Value="{Binding Path=CriticalityWeight, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												   VerticalAlignment="Center"
+												   ShowButtonSpinner="False"
+												   Focusable="True"
+												   Margin="0"
+												   Padding="0"
+												   Minimum="0"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
@@ -294,14 +293,13 @@
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch">
-								<u:NumericDoubleUpDown Value="{Binding Path=FibonacciWeight, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-													   VerticalAlignment="Center"
-												       ShowButtonSpinner="False"
-												       Margin="0"
-												       Padding="0"
-												       Minimum="0"/>
-							</Grid>
+							<u:NumericDoubleUpDown Value="{Binding Path=FibonacciWeight, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												   VerticalAlignment="Center"
+												   ShowButtonSpinner="False"
+												   Focusable="True"
+												   Margin="0"
+												   Padding="0"
+												   Minimum="0"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
