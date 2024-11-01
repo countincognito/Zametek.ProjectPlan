@@ -102,8 +102,16 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         lock (m_Lock)
                         {
-                            IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                            IsReadyToCompile = ReadyToCompile.Yes;
+                            if (AutoCompile)
+                            {
+                                IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                                IsReadyToCompile = ReadyToCompile.Yes;
+                            }
+                            else
+                            {
+                                IsReadyToReviseTrackers = ReadyToRevise.No;
+                                IsReadyToCompile = ReadyToCompile.No;
+                            }
                         }
                     }
                 });
@@ -1397,6 +1405,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     workStreams.AddRange(m_Mapper.Map<IEnumerable<WorkStreamModel>, IEnumerable<WorkStream<int>>>(WorkStreamSettings.WorkStreams));
 
                     GraphCompilation = m_VertexGraphCompiler.Compile(availableResources, workStreams);
+
                     IsProjectUpdated = true;
                     HasStaleOutputs = false;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
