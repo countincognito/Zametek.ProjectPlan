@@ -62,7 +62,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
             ShowDates = m_SettingService.ShowDates;
-            ShowClassicDates = m_SettingService.ShowClassicDates;
+            ClassicDateFormat = m_SettingService.ClassicDateFormat;
             UseBusinessDays = m_SettingService.UseBusinessDays;
             m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
             m_ArrowGraph = new ArrowGraphModel();
@@ -366,7 +366,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             planPointSeries.Add(new TrackingPointModel());
 
-            double totalWorkingTime = Convert.ToDouble(orderedActivities.Sum(s => s.Duration));
+            double totalWorkingTime = Convert.ToDouble(orderedActivities.Sum(s => s.AllocatedToResources.Count * s.Duration));
 
             // Plan.
             if (orderedActivities.All(x => x.EarliestFinishTime.HasValue))
@@ -375,8 +375,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 foreach (ActivityModel activity in orderedActivities)
                 {
                     int time = activity.EarliestFinishTime.GetValueOrDefault();
-                    runningTotalTime += activity.Duration;
+
+                    // Remember to count the time spent for each resource used.
+                    runningTotalTime += activity.AllocatedToResources.Count * activity.Duration;
+
                     double percentage = totalWorkingTime == 0 ? 0.0 : 100.0 * runningTotalTime / totalWorkingTime;
+
                     planPointSeries.Add(new TrackingPointModel
                     {
                         Time = time,
@@ -479,7 +483,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         foreach (ActivityModel activity in orderedActivities)
                         {
                             int percentageCompleted = runningWorkingProgresses[activity.Id];
-                            currentWorkingProgress += activity.Duration * (percentageCompleted / 100.0);
+                            currentWorkingProgress += activity.AllocatedToResources.Count * activity.Duration * (percentageCompleted / 100.0);
                         }
 
                         double progressPercentage = endTime == 0 ? 0.0 : 100.0 * currentWorkingProgress / totalWorkingTime;
@@ -795,17 +799,17 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private bool m_ShowClassicDates;
-        public bool ShowClassicDates
+        private bool m_ClassicDateFormat;
+        public bool ClassicDateFormat
         {
-            get => m_ShowClassicDates;
+            get => m_ClassicDateFormat;
             set
             {
                 lock (m_Lock)
                 {
-                    m_ShowClassicDates = value;
-                    m_SettingService.ShowClassicDates = m_ShowClassicDates;
-                    if (m_ShowClassicDates)
+                    m_ClassicDateFormat = value;
+                    m_SettingService.ClassicDateFormat = m_ClassicDateFormat;
+                    if (m_ClassicDateFormat)
                     {
                         m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Classic;
                     }
@@ -1057,6 +1061,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     ResetProject();
 
+                    // Default display mode is required for all file opening and closing.
+                    DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
+                    m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
+
                     // Project Start Date.
                     ProjectStart = projectImportModel.ProjectStart;
 
@@ -1111,6 +1119,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     // which resources are being referred to when marking them as selected.
                     AddManagedActivities(projectImportModel.DependentActivities);
 
+                    // Put display mode back to the way it was.
+                    m_DateTimeCalculator.DisplayMode = oldDisplayMode;
+
                     IsProjectUpdated = false;
                     HasStaleOutputs = true;
                 }
@@ -1130,6 +1141,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     ResetProject();
 
+                    // Default display mode is required for all file opening and closing.
+                    DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
+                    m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
+
                     // Project Start Date.
                     ProjectStart = projectPlanModel.ProjectStart;
 
@@ -1147,6 +1162,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Activities.
                     AddManagedActivities(projectPlanModel.DependentActivities);
+
+                    // Put display mode back to the way it was.
+                    m_DateTimeCalculator.DisplayMode = oldDisplayMode;
 
                     // Now that Resources and Activities are in place,
                     // revise all tracker values.
@@ -1177,6 +1195,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     var graphCompilation = m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity>, GraphCompilationModel>(GraphCompilation);
 
+                    // Default display mode is required for all file opening and closing.
+                    DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
+                    m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
+
                     var plan = new ProjectPlanModel
                     {
                         Version = Data.ProjectPlan.Versions.v0_4_0,
@@ -1196,6 +1218,9 @@ namespace Zametek.ViewModel.ProjectPlan
                         activityModel.Dependencies.Sort();
                         activityModel.ResourceDependencies.Sort();
                     }
+
+                    // Put display mode back to the way it was.
+                    m_DateTimeCalculator.DisplayMode = oldDisplayMode;
 
                     return plan;
                 }

@@ -20,7 +20,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IMapper m_Mapper;
 
         private readonly IDisposable? m_BuildMetricsSub;
-        private readonly IDisposable? m_BuildCostsSub;
+        private readonly IDisposable? m_BuildCostsAndEffortsSub;
 
         #endregion
 
@@ -44,6 +44,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_Metrics = new MetricsModel();
             m_Costs = new CostsModel();
+            m_Efforts = new EffortsModel();
 
             m_IsBusy = this
                 .WhenAnyValue(mm => mm.m_CoreViewModel.IsBusy)
@@ -69,12 +70,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildMetricsAsync());
 
-            m_BuildCostsSub = this
+            m_BuildCostsAndEffortsSub = this
                 .WhenAnyValue(
                     mm => mm.m_CoreViewModel.ResourceSeriesSet,
                     mm => mm.HasCompilationErrors)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildCostsAsync());
+                .Subscribe(async _ => await BuildCostsAndEffortsAsync());
 
             m_CriticalityRisk = this
                 .WhenAnyValue(mm => mm.Metrics, metrics => metrics.Criticality)
@@ -169,10 +170,54 @@ namespace Zametek.ViewModel.ProjectPlan
                  .WhenAnyValue(mm => mm.Costs, costs => costs.Direct + costs.Indirect + costs.Other)
                  .ToProperty(this, mm => mm.TotalCost);
 
+            m_DirectEffort = this
+                 .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Direct)
+                 .ToProperty(this, mm => mm.DirectEffort);
+
+            m_IndirectEffort = this
+                 .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Indirect)
+                 .ToProperty(this, mm => mm.IndirectEffort);
+
+            m_OtherEffort = this
+                 .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Other)
+                 .ToProperty(this, mm => mm.OtherEffort);
+
+            m_TotalEffort = this
+                 .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Direct + efforts.Indirect + efforts.Other)
+                 .ToProperty(this, mm => mm.TotalEffort);
+
+            m_ActivityEffort = this
+                 .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Activity)
+                 .ToProperty(this, mm => mm.ActivityEffort);
+
             m_Efficiency = this
-                 .WhenAnyValue(mm => mm.DirectCost, mm => mm.TotalCost,
-                    (double? direct, double? total) => direct is null || direct == 0 || total == 0 ? null : direct / total)
+                 .WhenAnyValue(mm => mm.ActivityEffort, mm => mm.TotalEffort,
+                    (double? activityEffort, double? totalEffort) => activityEffort is null || activityEffort == 0 || totalEffort == 0 ? null : activityEffort / totalEffort)
                  .ToProperty(this, mm => mm.Efficiency);
+
+            //m_Efficiency = this
+            //     .WhenAnyValue(
+            //        mm => mm.Efforts,
+            //        efforts =>
+            //        {
+            //            if (efforts.Direct is null
+            //                || efforts.Indirect is null
+            //                || efforts.Other is null
+            //                || efforts.Activity is null)
+            //            {
+            //                return null;
+            //            }
+            //            double? total = efforts.Direct + efforts.Indirect + efforts.Other;
+
+            //            if (total is null
+            //                || total == 0)
+            //            {
+            //                return null;
+            //            }
+
+            //            return efforts.Activity / total;
+            //        })
+            //     .ToProperty(this, mm => mm.Efficiency);
 
             Id = Resource.ProjectPlan.Titles.Title_Metrics;
             Title = Resource.ProjectPlan.Titles.Title_Metrics;
@@ -202,6 +247,16 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 lock (m_Lock) this.RaiseAndSetIfChanged(ref m_Costs, value);
+            }
+        }
+
+        private EffortsModel m_Efforts;
+        public EffortsModel Efforts
+        {
+            get => m_Efforts;
+            set
+            {
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_Efforts, value);
             }
         }
 
@@ -377,27 +432,62 @@ namespace Zametek.ViewModel.ProjectPlan
         private static CostsModel CalculateProjectCosts(IList<ResourceSeriesModel> resourceSeriesModels)
         {
             ArgumentNullException.ThrowIfNull(resourceSeriesModels);
+
             return new CostsModel
             {
                 Direct = resourceSeriesModels
-                    .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
-                    .Sum(x => x.ResourceSchedule.ActivityAllocation.Sum(y => y ? x.UnitCost : 0.0)),
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitCost : 0.0;
+                        return x.ResourceSchedule.ActivityAllocation.Sum(accumulator);
+                    }),
                 Indirect = resourceSeriesModels
-                    .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
-                    .Sum(x => x.ResourceSchedule.ActivityAllocation.Sum(y => y ? x.UnitCost : 0.0)),
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitCost : 0.0;
+                        return x.ResourceSchedule.ActivityAllocation.Sum(accumulator);
+                    }),
                 Other = resourceSeriesModels
-                    .Where(x => x.InterActivityAllocationType == InterActivityAllocationType.None)
-                    .Sum(x => x.ResourceSchedule.ActivityAllocation.Sum(y => y ? x.UnitCost : 0.0))
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitCost : 0.0;
+                        return x.ResourceSchedule.ActivityAllocation.Sum(accumulator);
+                    })
             };
         }
 
-        private async Task BuildCostsAsync()
+        private static EffortsModel CalculateProjectEfforts(IList<ResourceSeriesModel> resourceSeriesModels)
+        {
+            ArgumentNullException.ThrowIfNull(resourceSeriesModels);
+            static double allocationAccumulator(bool x) => x ? 1.0 : 0.0;
+            static int durationAccumulator(ScheduledActivityModel x) => x.Duration;
+
+            return new EffortsModel
+            {
+                Direct = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
+                    .Sum(static x => x.ResourceSchedule.ActivityAllocation.Sum(allocationAccumulator)),
+                Indirect = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
+                    .Sum(static x => x.ResourceSchedule.ActivityAllocation.Sum(allocationAccumulator)),
+                Other = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
+                    .Sum(static x => x.ResourceSchedule.ActivityAllocation.Sum(allocationAccumulator)),
+                Activity = resourceSeriesModels
+                    .Sum(static x => x.ResourceSchedule.ScheduledActivities.Sum(durationAccumulator))
+            };
+        }
+
+        private async Task BuildCostsAndEffortsAsync()
         {
             try
             {
                 lock (m_Lock)
                 {
-                    BuildCosts();
+                    BuildCostsAndEfforts();
                 }
             }
             catch (Exception ex)
@@ -466,6 +556,21 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<double?> m_TotalCost;
         public double? TotalCost => m_TotalCost.Value;
 
+        private readonly ObservableAsPropertyHelper<double?> m_DirectEffort;
+        public double? DirectEffort => m_DirectEffort.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_IndirectEffort;
+        public double? IndirectEffort => m_IndirectEffort.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_OtherEffort;
+        public double? OtherEffort => m_OtherEffort.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_TotalEffort;
+        public double? TotalEffort => m_TotalEffort.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_ActivityEffort;
+        public double? ActivityEffort => m_ActivityEffort.Value;
+
         private readonly ObservableAsPropertyHelper<double?> m_Efficiency;
         public double? Efficiency => m_Efficiency.Value;
 
@@ -496,9 +601,10 @@ namespace Zametek.ViewModel.ProjectPlan
             Metrics = metricsModel;
         }
 
-        public void BuildCosts()
+        public void BuildCostsAndEfforts()
         {
             var costsModel = new CostsModel();
+            var effortsModel = new EffortsModel();
 
             lock (m_Lock)
             {
@@ -509,11 +615,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (!HasCompilationErrors)
                     {
                         costsModel = CalculateProjectCosts(combinedResourceSeriesModels);
+                        effortsModel = CalculateProjectEfforts(combinedResourceSeriesModels);
                     }
                 }
             }
 
             Costs = costsModel;
+            Efforts = effortsModel;
         }
 
         #endregion
@@ -523,7 +631,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public void KillSubscriptions()
         {
             m_BuildMetricsSub?.Dispose();
-            m_BuildCostsSub?.Dispose();
+            m_BuildCostsAndEffortsSub?.Dispose();
         }
 
         #endregion
@@ -562,6 +670,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IndirectCost?.Dispose();
                 m_OtherCost?.Dispose();
                 m_TotalCost?.Dispose();
+                m_DirectEffort?.Dispose();
+                m_IndirectEffort?.Dispose();
+                m_OtherEffort?.Dispose();
+                m_TotalEffort?.Dispose();
+                m_ActivityEffort?.Dispose();
                 m_Efficiency?.Dispose();
             }
 

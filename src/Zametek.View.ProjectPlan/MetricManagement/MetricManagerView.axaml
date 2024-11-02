@@ -85,12 +85,12 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Null}"/>
+								     Text="{x:Static resources:Labels.Label_CyclomaticComplexity}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
-						             Text="{x:Null}"/>
+						             Text="{Binding Path=CyclomaticComplexity, Mode=OneWay, StringFormat=\{0:N0\}}"/>
 
 				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
 					                 VerticalAlignment="Center"
@@ -138,12 +138,12 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_CyclomaticComplexity}"/>
+								     Text="{x:Static resources:Labels.Label_ActivityEffort}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
-						             Text="{Binding Path=CyclomaticComplexity, Mode=OneWay, StringFormat=\{0:N0\}}"/>
+						             Text="{Binding Path=ActivityEffort, Mode=OneWay, StringFormat=\{0:N0\}}"/>
 
 				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
 					                 VerticalAlignment="Center"
@@ -227,6 +227,59 @@
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
 						             Text="{Binding Path=TotalCost, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+			</Grid>
+
+			<Grid Margin="7">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="130"/>
+					<ColumnDefinition Width="100"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
+					                 VerticalAlignment="Center"
+					                 HorizontalAlignment="Right"
+								     Text="{x:Static resources:Labels.Label_DirectEffort}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=DirectEffort, Mode=OneWay, StringFormat=\{0:N0\}}"/>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
+					                 VerticalAlignment="Center"
+								     HorizontalAlignment="Right"
+							    	 Text="{x:Static resources:Labels.Label_IndirectEffort}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="1"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=IndirectEffort, Mode=OneWay, StringFormat=\{0:N0\}}"/>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
+					                 VerticalAlignment="Center"
+								     HorizontalAlignment="Right"
+								     Text="{x:Static resources:Labels.Label_OtherEffort}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="2"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=OtherEffort, Mode=OneWay, StringFormat=\{0:N0\}}"/>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
+					                 VerticalAlignment="Center"
+					                 HorizontalAlignment="Right"
+								     Text="{x:Static resources:Labels.Label_TotalEffort}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="3"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=TotalEffort, Mode=OneWay, StringFormat=\{0:N0\}}"/>
 			</Grid>
 		</WrapPanel>
 	</ScrollViewer>

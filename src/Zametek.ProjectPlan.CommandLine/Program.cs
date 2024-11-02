@@ -163,7 +163,7 @@ namespace Zametek.ProjectPlan.CommandLine
                             core.BuildTrackingSeriesSet();
 
                             metrics.BuildMetrics();
-                            metrics.BuildCosts();
+                            metrics.BuildCostsAndEfforts();
                         }
 
                         // File out.

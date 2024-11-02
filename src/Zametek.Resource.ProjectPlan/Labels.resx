@@ -444,4 +444,19 @@
   <data name="Label_PercentageCompleted" xml:space="preserve">
     <value>Completed</value>
   </data>
+  <data name="Label_ActivityEffort" xml:space="preserve">
+    <value>Activity Effort:</value>
+  </data>
+  <data name="Label_DirectEffort" xml:space="preserve">
+    <value>Direct Effort:</value>
+  </data>
+  <data name="Label_IndirectEffort" xml:space="preserve">
+    <value>Indirect Effort:</value>
+  </data>
+  <data name="Label_OtherEffort" xml:space="preserve">
+    <value>Other Effort:</value>
+  </data>
+  <data name="Label_TotalEffort" xml:space="preserve">
+    <value>Total Effort:</value>
+  </data>
 </root>

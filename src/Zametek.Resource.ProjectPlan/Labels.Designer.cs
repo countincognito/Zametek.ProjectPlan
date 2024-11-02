@@ -70,6 +70,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Activity Effort:.
+        /// </summary>
+        public static string Label_ActivityEffort {
+            get {
+                return ResourceManager.GetString("Label_ActivityEffort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Activity Name.
         /// </summary>
         public static string Label_ActivityName {
@@ -376,6 +385,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Direct Effort:.
+        /// </summary>
+        public static string Label_DirectEffort {
+            get {
+                return ResourceManager.GetString("Label_DirectEffort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Disable Resources.
         /// </summary>
         public static string Label_DisableResources {
@@ -583,6 +601,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Indirect Effort:.
+        /// </summary>
+        public static string Label_IndirectEffort {
+            get {
+                return ResourceManager.GetString("Label_IndirectEffort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Inter-activity Allocation.
         /// </summary>
         public static string Label_InterActivityAllocationType {
@@ -760,6 +787,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_OtherCost {
             get {
                 return ResourceManager.GetString("Label_OtherCost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Other Effort:.
+        /// </summary>
+        public static string Label_OtherEffort {
+            get {
+                return ResourceManager.GetString("Label_OtherEffort", resourceCulture);
             }
         }
         
@@ -994,6 +1030,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_TotalCost {
             get {
                 return ResourceManager.GetString("Label_TotalCost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Effort:.
+        /// </summary>
+        public static string Label_TotalEffort {
+            get {
+                return ResourceManager.GetString("Label_TotalEffort", resourceCulture);
             }
         }
         

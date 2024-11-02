@@ -123,6 +123,9 @@
   <data name="Menu_AutoCompile" xml:space="preserve">
     <value>Auto Compile</value>
   </data>
+  <data name="Menu_ClassicDateFormat" xml:space="preserve">
+    <value>Classic Date Format</value>
+  </data>
   <data name="Menu_Close" xml:space="preserve">
     <value>_Close</value>
   </data>
@@ -164,9 +167,6 @@
   </data>
   <data name="Menu_Settings" xml:space="preserve">
     <value>_Settings</value>
-  </data>
-  <data name="Menu_ShowClassicDates" xml:space="preserve">
-    <value>Show Classic Dates</value>
   </data>
   <data name="Menu_ShowDates" xml:space="preserve">
     <value>Show _Dates</value>

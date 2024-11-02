@@ -39,10 +39,20 @@
 
         double? TotalCost { get; }
 
+        double? DirectEffort { get; }
+
+        double? IndirectEffort { get; }
+
+        double? OtherEffort { get; }
+
+        double? TotalEffort { get; }
+
+        double? ActivityEffort { get; }
+
         double? Efficiency { get; }
 
         void BuildMetrics();
 
-        void BuildCosts();
+        void BuildCostsAndEfforts();
     }
 }
