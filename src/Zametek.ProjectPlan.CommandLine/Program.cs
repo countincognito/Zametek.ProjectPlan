@@ -141,6 +141,11 @@ namespace Zametek.ProjectPlan.CommandLine
                             core.UseBusinessDays = options.UseBusinessDays ?? default;
                         }
 
+                        // Classic date format.
+                        {
+                            core.ClassicDateFormat = options.ClassicDateFormat ?? default;
+                        }
+
                         // Show dates.
                         {
                             core.ShowDates = options.ShowDates ?? default;
@@ -343,17 +348,26 @@ namespace Zametek.ProjectPlan.CommandLine
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_ActivityRiskWithStdDevCorrection} {metrics.ActivityRiskWithStdDevCorrection:F3}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_CriticalityRisk} {metrics.CriticalityRisk:F3}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_FibonacciRisk} {metrics.FibonacciRisk:F3}");
+
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_GeometricActivityRisk} {metrics.GeometricActivityRisk:F3}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_GeometricCriticalityRisk} {metrics.GeometricCriticalityRisk:F3}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_GeometricFibonacciRisk} {metrics.GeometricFibonacciRisk:F3}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_CyclomaticComplexity} {metrics.CyclomaticComplexity}");
+
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_ActivityEffort} {metrics.ActivityEffort:F0}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DurationManMonths} {metrics.DurationManMonths:F1}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_ProjectFinish} {metrics.ProjectFinish}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_Efficiency} {metrics.Efficiency:F3}");
+
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DirectCost} {metrics.DirectCost:F2}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_IndirectCost} {metrics.IndirectCost:F2}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_OtherCost} {metrics.OtherCost:F2}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_TotalCost} {metrics.TotalCost:F2}");
+
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DirectEffort} {metrics.DirectEffort:F0}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_IndirectEffort} {metrics.IndirectEffort:F0}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_OtherEffort} {metrics.OtherEffort:F0}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_TotalEffort} {metrics.TotalEffort:F0}");
 
                             Display(builder.ToString());
                         }

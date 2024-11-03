@@ -24,6 +24,9 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option('b', "business-days", Default = true, Required = false, HelpText = "Use business days (true|false)")]
         public bool? UseBusinessDays { get; set; } = true;
 
+        [Option('f', "classic-dates", Default = false, Required = false, HelpText = "Classic date format (true|false)")]
+        public bool? ClassicDateFormat { get; set; } = false;
+
         [Option('d', "show-dates", Default = false, Required = false, HelpText = "Show dates (true|false)")]
         public bool? ShowDates { get; set; } = false;
 
