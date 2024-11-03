@@ -10,7 +10,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private readonly object m_Lock;
         private string m_ProjectDirectory;
         private bool m_ShowDates;
-        private bool m_ClassicDateFormat;
+        private bool m_UseClassicDates;
         private bool m_UseBusinessDays;
         private string m_SelectedTheme;
 
@@ -63,17 +63,17 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        public override bool ClassicDateFormat
+        public override bool UseClassicDates
         {
             get
             {
-                return m_ClassicDateFormat;
+                return m_UseClassicDates;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_ClassicDateFormat = value;
+                    m_UseClassicDates = value;
                 }
             }
         }

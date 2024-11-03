@@ -136,7 +136,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             ToggleShowDatesCommand = ReactiveCommand.Create(ToggleShowDates);
-            ToggleClassicDateFormatCommand = ReactiveCommand.Create(ToggleClassicDateFormat);
+            ToggleUseClassicDatesCommand = ReactiveCommand.Create(ToggleUseClassicDates);
             ToggleUseBusinessDaysCommand = ReactiveCommand.Create(ToggleUseBusinessDays);
 
             CompileCommand = ReactiveCommand.CreateFromTask(RunCompileAsync);
@@ -181,9 +181,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.ShowDates)
                 .ToProperty(this, main => main.ShowDates);
 
-            m_ClassicDateFormat = this
-                .WhenAnyValue(main => main.m_CoreViewModel.ClassicDateFormat)
-                .ToProperty(this, main => main.ClassicDateFormat);
+            m_UseClassicDates = this
+                .WhenAnyValue(main => main.m_CoreViewModel.UseClassicDates)
+                .ToProperty(this, main => main.UseClassicDates);
 
             m_UseBusinessDays = this
                 .WhenAnyValue(main => main.m_CoreViewModel.UseBusinessDays)
@@ -322,7 +322,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleShowDates() => ShowDates = !ShowDates;
 
-        private void ToggleClassicDateFormat() => ClassicDateFormat = !ClassicDateFormat;
+        private void ToggleUseClassicDates() => UseClassicDates = !UseClassicDates;
 
         private void ToggleUseBusinessDays() => UseBusinessDays = !UseBusinessDays;
 
@@ -444,13 +444,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<bool> m_ClassicDateFormat;
-        public bool ClassicDateFormat
+        private readonly ObservableAsPropertyHelper<bool> m_UseClassicDates;
+        public bool UseClassicDates
         {
-            get => m_ClassicDateFormat.Value;
+            get => m_UseClassicDates.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ClassicDateFormat = value;
+                lock (m_Lock) m_CoreViewModel.UseClassicDates = value;
             }
         }
         private readonly ObservableAsPropertyHelper<bool> m_UseBusinessDays;
@@ -502,7 +502,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ToggleShowDatesCommand { get; }
 
-        public ICommand ToggleClassicDateFormatCommand { get; }
+        public ICommand ToggleUseClassicDatesCommand { get; }
 
         public ICommand ToggleUseBusinessDaysCommand { get; }
 
@@ -805,7 +805,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
                 m_ShowDates?.Dispose();
-                m_ClassicDateFormat?.Dispose();
+                m_UseClassicDates?.Dispose();
                 m_UseBusinessDays?.Dispose();
                 m_AutoCompile?.Dispose();
             }

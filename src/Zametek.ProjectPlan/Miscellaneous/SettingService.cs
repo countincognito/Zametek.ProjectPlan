@@ -82,17 +82,17 @@ namespace Zametek.ProjectPlan
             }
         }
 
-        public override bool ClassicDateFormat
+        public override bool UseClassicDates
         {
             get
             {
-                return m_AppSettingsModel.ClassicDateFormat;
+                return m_AppSettingsModel.UseClassicDates;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_AppSettingsModel = m_AppSettingsModel with { ClassicDateFormat = value };
+                    m_AppSettingsModel = m_AppSettingsModel with { UseClassicDates = value };
                     SaveSettings();
                 }
             }

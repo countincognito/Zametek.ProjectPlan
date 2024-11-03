@@ -123,9 +123,6 @@
   <data name="Menu_AutoCompile" xml:space="preserve">
     <value>Auto Compile</value>
   </data>
-  <data name="Menu_ClassicDateFormat" xml:space="preserve">
-    <value>Classic Date Format</value>
-  </data>
   <data name="Menu_Close" xml:space="preserve">
     <value>_Close</value>
   </data>
@@ -176,6 +173,9 @@
   </data>
   <data name="Menu_UseBusinessDays" xml:space="preserve">
     <value>Use _Business Days</value>
+  </data>
+  <data name="Menu_UseClassicDates" xml:space="preserve">
+    <value>Use Classic Dates</value>
   </data>
   <data name="Menu_ViewLicense" xml:space="preserve">
     <value>View License</value>

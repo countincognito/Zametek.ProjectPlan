@@ -25,7 +25,7 @@
 					Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}"
 					Gesture="Ctrl+D" />
 		<KeyBinding x:DataType="vm:MainViewModel"
-					Command="{Binding Path=ToggleClassicDateFormatCommand, Mode=OneWay}"
+					Command="{Binding Path=ToggleUseClassicDatesCommand, Mode=OneWay}"
 					Gesture="Ctrl+F" />
 		<KeyBinding x:DataType="vm:MainViewModel"
 					Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}"
@@ -99,15 +99,15 @@
 										  IsChecked="{Binding Path=ShowDates, Mode=OneWay}" />
 							</MenuItem.Icon>
 						</MenuItem>
-						<MenuItem Header="{x:Static resources:Menus.Menu_ClassicDateFormat}"
-								  Command="{Binding Path=ToggleClassicDateFormatCommand, Mode=OneWay}"
+						<MenuItem Header="{x:Static resources:Menus.Menu_UseClassicDates}"
+								  Command="{Binding Path=ToggleUseClassicDatesCommand, Mode=OneWay}"
 								  IsEnabled="{Binding Path=ShowDates, Mode=OneWay}"
 								  InputGesture="Ctrl+F">
 							<MenuItem.Icon>
 								<CheckBox BorderThickness="0"
 										  Theme="{StaticResource SimpleCheckBox}"
 										  IsHitTestVisible="False"
-										  IsChecked="{Binding Path=ClassicDateFormat, Mode=OneWay}" />
+										  IsChecked="{Binding Path=UseClassicDates, Mode=OneWay}" />
 							</MenuItem.Icon>
 						</MenuItem>
 						<MenuItem Header="{x:Static resources:Menus.Menu_UseBusinessDays}"

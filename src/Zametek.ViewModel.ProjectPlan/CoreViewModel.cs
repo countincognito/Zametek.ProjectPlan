@@ -62,7 +62,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
             ShowDates = m_SettingService.ShowDates;
-            ClassicDateFormat = m_SettingService.ClassicDateFormat;
+            UseClassicDates = m_SettingService.UseClassicDates;
             UseBusinessDays = m_SettingService.UseBusinessDays;
             m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
             m_ArrowGraph = new ArrowGraphModel();
@@ -799,17 +799,17 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private bool m_ClassicDateFormat;
-        public bool ClassicDateFormat
+        private bool m_UseClassicDates;
+        public bool UseClassicDates
         {
-            get => m_ClassicDateFormat;
+            get => m_UseClassicDates;
             set
             {
                 lock (m_Lock)
                 {
-                    m_ClassicDateFormat = value;
-                    m_SettingService.ClassicDateFormat = m_ClassicDateFormat;
-                    if (m_ClassicDateFormat)
+                    m_UseClassicDates = value;
+                    m_SettingService.UseClassicDates = m_UseClassicDates;
+                    if (m_UseClassicDates)
                     {
                         m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Classic;
                     }

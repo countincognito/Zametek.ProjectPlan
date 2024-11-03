@@ -61,7 +61,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public abstract bool ShowDates { get; set; }
 
-        public abstract bool ClassicDateFormat { get; set; }
+        public abstract bool UseClassicDates { get; set; }
 
         public abstract bool UseBusinessDays { get; set; }
 

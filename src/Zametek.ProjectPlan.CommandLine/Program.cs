@@ -143,7 +143,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                         // Classic date format.
                         {
-                            core.ClassicDateFormat = options.ClassicDateFormat ?? default;
+                            core.UseClassicDates = options.ClassicDateFormat ?? default;
                         }
 
                         // Show dates.

@@ -33,7 +33,7 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowDates { get; set; }
 
-        bool ClassicDateFormat { get; set; }
+        bool UseClassicDates { get; set; }
 
         bool UseBusinessDays { get; set; }
 
@@ -55,7 +55,7 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ToggleShowDatesCommand { get; }
 
-        ICommand ToggleClassicDateFormatCommand { get; }
+        ICommand ToggleUseClassicDatesCommand { get; }
 
         ICommand ToggleUseBusinessDaysCommand { get; }
 

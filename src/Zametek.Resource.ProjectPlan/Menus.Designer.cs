@@ -79,15 +79,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Classic Date Format.
-        /// </summary>
-        public static string Menu_ClassicDateFormat {
-            get {
-                return ResourceManager.GetString("Menu_ClassicDateFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to _Close.
         /// </summary>
         public static string Menu_Close {
@@ -237,6 +228,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Menu_UseBusinessDays {
             get {
                 return ResourceManager.GetString("Menu_UseBusinessDays", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use Classic Dates.
+        /// </summary>
+        public static string Menu_UseClassicDates {
+            get {
+                return ResourceManager.GetString("Menu_UseClassicDates", resourceCulture);
             }
         }
         

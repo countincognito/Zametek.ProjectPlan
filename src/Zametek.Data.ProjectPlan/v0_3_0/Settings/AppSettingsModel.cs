@@ -9,7 +9,7 @@
 
         public bool ShowDates { get; init; } = false;
 
-        public bool ClassicDateFormat { get; init; } = false;
+        public bool UseClassicDates { get; init; } = false;
 
         public bool UseBusinessDays { get; init; } = true;
 
