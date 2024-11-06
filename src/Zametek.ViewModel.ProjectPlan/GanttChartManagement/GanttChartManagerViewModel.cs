@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.Media;
-using com.sun.tools.javadoc;
 using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
@@ -124,9 +123,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
                     rcm => rcm.m_CoreViewModel.ResourceSettings,
                     rcm => rcm.m_CoreViewModel.ArrowGraphSettings,
-                    rcm => rcm.m_CoreViewModel.WorkStreamSettings,
+                    //rcm => rcm.m_CoreViewModel.WorkStreamSettings,
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
                     rcm => rcm.m_CoreViewModel.ShowDates,
+                    rcm => rcm.m_CoreViewModel.UseClassicDates,
                     rcm => rcm.m_CoreViewModel.GraphCompilation,
                     rcm => rcm.GroupByMode,
                     rcm => rcm.AnnotationStyle,
@@ -716,9 +716,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (showDates)
                     {
-                        projectFinish.Append(dateTimeCalculator
-                            .AddDays(projectStartDateTime, finishTime)
-                            .ToString(DateTimeCalculator.DateFormat));
+                        projectFinish.Append(
+                            dateTimeCalculator.DisplayFinishDate(
+                                dateTimeCalculator.AddDays(
+                                    projectStartDateTime,
+                                    finishTime),
+                                dateTimeCalculator.AddDays(
+                                    projectStartDateTime,
+                                    finishTime),
+                                1).ToString(DateTimeCalculator.DateFormat));
                     }
                     else
                     {

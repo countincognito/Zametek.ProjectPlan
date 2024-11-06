@@ -195,30 +195,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     (double? activityEffort, double? totalEffort) => activityEffort is null || activityEffort == 0 || totalEffort == 0 ? null : activityEffort / totalEffort)
                  .ToProperty(this, mm => mm.Efficiency);
 
-            //m_Efficiency = this
-            //     .WhenAnyValue(
-            //        mm => mm.Efforts,
-            //        efforts =>
-            //        {
-            //            if (efforts.Direct is null
-            //                || efforts.Indirect is null
-            //                || efforts.Other is null
-            //                || efforts.Activity is null)
-            //            {
-            //                return null;
-            //            }
-            //            double? total = efforts.Direct + efforts.Indirect + efforts.Other;
-
-            //            if (total is null
-            //                || total == 0)
-            //            {
-            //                return null;
-            //            }
-
-            //            return efforts.Activity / total;
-            //        })
-            //     .ToProperty(this, mm => mm.Efficiency);
-
             Id = Resource.ProjectPlan.Titles.Title_Metrics;
             Title = Resource.ProjectPlan.Titles.Title_Metrics;
         }
