@@ -46,6 +46,8 @@
 		<StyleInclude Source="avares://Semi.Avalonia.ColorPicker/Index.axaml" />
 		<StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml" />
 
+		<StyleInclude Source="avares://MsBox.Avalonia.Markdown/Controls/MarkdownView.axaml" />
+
 		<Style Selector="TextBox">
 			<Setter Property="FontSize" Value="12"/>
 		</Style>
