@@ -101,7 +101,16 @@ namespace Zametek.ViewModel.ProjectPlan
         private void RefreshWorkStreamSelector()
         {
             var selectedTargetWorkStreams = new HashSet<int>(m_TargetWorkStreams);
-            IEnumerable<WorkStreamModel> targetWorkStreams = WorkStreamSettings.WorkStreams.Select(x => x.CloneObject());
+
+            IEnumerable<TargetWorkStreamModel> targetWorkStreams = WorkStreamSettings
+                .WorkStreams.Select(
+                    x => new TargetWorkStreamModel
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        IsPhase = x.IsPhase,
+                    });
+
             WorkStreamSelector.SetTargetWorkStreams(targetWorkStreams, selectedTargetWorkStreams);
         }
 

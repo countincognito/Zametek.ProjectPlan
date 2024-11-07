@@ -129,14 +129,14 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Public Methods
 
         public void SetTargetWorkStreams(
-            IEnumerable<WorkStreamModel> targetWorkStreams,
+            IEnumerable<TargetWorkStreamModel> targetWorkStreams,
             HashSet<int> selectedTargetWorkStreams)
         {
             ArgumentNullException.ThrowIfNull(targetWorkStreams);
             ArgumentNullException.ThrowIfNull(selectedTargetWorkStreams);
             lock (m_Lock)
             {
-                IEnumerable<WorkStreamModel> correctTargetWorkStreams =
+                IEnumerable<TargetWorkStreamModel> correctTargetWorkStreams =
                     targetWorkStreams.Where(x => (!m_PhaseOnly) || (m_PhaseOnly && x.IsPhase));
 
                 {
@@ -165,14 +165,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 {
                     // Find the target models that have been added.
-                    List<WorkStreamModel> addedModels = correctTargetWorkStreams
+                    List<TargetWorkStreamModel> addedModels = correctTargetWorkStreams
                         .ExceptBy(m_TargetWorkStreams.Select(x => x.Id), x => x.Id)
                         .ToList();
 
                     List<ISelectableWorkStreamViewModel> addedViewModels = [];
 
                     // Create a collection of new view models.
-                    foreach (WorkStreamModel model in addedModels)
+                    foreach (TargetWorkStreamModel model in addedModels)
                     {
                         var vm = new SelectableWorkStreamViewModel(
                               model.Id,
@@ -188,11 +188,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 {
                     // Update names.
-                    Dictionary<int, WorkStreamModel> targetWorkStreamLookup = correctTargetWorkStreams.ToDictionary(x => x.Id);
+                    Dictionary<int, TargetWorkStreamModel> targetWorkStreamLookup = correctTargetWorkStreams.ToDictionary(x => x.Id);
 
                     foreach (ISelectableWorkStreamViewModel vm in m_TargetWorkStreams)
                     {
-                        if (targetWorkStreamLookup.TryGetValue(vm.Id, out WorkStreamModel? value))
+                        if (targetWorkStreamLookup.TryGetValue(vm.Id, out TargetWorkStreamModel? value))
                         {
                             vm.Name = value.Name;
                         }

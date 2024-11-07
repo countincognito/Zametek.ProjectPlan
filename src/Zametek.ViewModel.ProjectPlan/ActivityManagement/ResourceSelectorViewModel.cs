@@ -130,7 +130,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public void SetTargetResources(
-            IEnumerable<ResourceModel> targetResources,
+            IEnumerable<TargetResourceModel> targetResources,
             HashSet<int> selectedTargetResources)
         {
             ArgumentNullException.ThrowIfNull(targetResources);
@@ -163,14 +163,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 {
                     // Find the target models that have been added.
-                    List<ResourceModel> addedModels = targetResources
+                    List<TargetResourceModel> addedModels = targetResources
                         .ExceptBy(m_TargetResources.Select(x => x.Id), x => x.Id)
                         .ToList();
 
                     List<ISelectableResourceViewModel> addedViewModels = [];
 
                     // Create a collection of new view models.
-                    foreach (ResourceModel model in addedModels)
+                    foreach (TargetResourceModel model in addedModels)
                     {
                         var vm = new SelectableResourceViewModel(model.Id, model.Name);
 
@@ -183,11 +183,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 {
                     // Update names.
-                    Dictionary<int, ResourceModel> targetResourceLookup = targetResources.ToDictionary(x => x.Id);
+                    Dictionary<int, TargetResourceModel> targetResourceLookup = targetResources.ToDictionary(x => x.Id);
 
                     foreach (ISelectableResourceViewModel vm in m_TargetResources)
                     {
-                        if (targetResourceLookup.TryGetValue(vm.Id, out ResourceModel? value))
+                        if (targetResourceLookup.TryGetValue(vm.Id, out TargetResourceModel? value))
                         {
                             vm.Name = value.Name;
                         }

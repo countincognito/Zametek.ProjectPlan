@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using MathNet.Numerics;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;

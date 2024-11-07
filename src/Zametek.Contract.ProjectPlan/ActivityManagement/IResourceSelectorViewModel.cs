@@ -15,7 +15,7 @@ namespace Zametek.Contract.ProjectPlan
 
         string GetAllocatedToResourcesString(HashSet<int> allocatedToResources);
 
-        void SetTargetResources(IEnumerable<ResourceModel> targetResources, HashSet<int> selectedTargetResources);
+        void SetTargetResources(IEnumerable<TargetResourceModel> targetResources, HashSet<int> selectedTargetResources);
 
         void RaiseTargetResourcesPropertiesChanged();
     }

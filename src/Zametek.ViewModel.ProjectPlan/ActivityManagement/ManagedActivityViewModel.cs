@@ -336,7 +336,15 @@ namespace Zametek.ViewModel.ProjectPlan
         private void RefreshResourceSelector()
         {
             var selectedTargetResources = new HashSet<int>(DependentActivity.TargetResources);
-            IEnumerable<ResourceModel> targetResources = ResourceSettings.Resources.Select(x => x.CloneObject());
+
+            IEnumerable<TargetResourceModel> targetResources = ResourceSettings
+                .Resources.Select(
+                    x => new TargetResourceModel
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                    });
+
             ResourceSelector.SetTargetResources(targetResources, selectedTargetResources);
         }
 
@@ -358,7 +366,16 @@ namespace Zametek.ViewModel.ProjectPlan
         private void RefreshWorkStreamSelector()
         {
             var selectedTargetWorkStreams = new HashSet<int>(DependentActivity.TargetWorkStreams);
-            IEnumerable<WorkStreamModel> targetWorkStreams = WorkStreamSettings.WorkStreams.Select(x => x.CloneObject());
+
+            IEnumerable<TargetWorkStreamModel> targetWorkStreams = WorkStreamSettings
+                .WorkStreams.Select(
+                    x => new TargetWorkStreamModel
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        IsPhase = x.IsPhase,
+                    });
+
             WorkStreamSelector.SetTargetWorkStreams(targetWorkStreams, selectedTargetWorkStreams);
         }
 
