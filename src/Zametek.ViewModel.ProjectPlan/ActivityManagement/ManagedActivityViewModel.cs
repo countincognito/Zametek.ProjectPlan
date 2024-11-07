@@ -101,12 +101,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ResourceSettingsSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.ResourceSettings)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                //.ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x => ResourceSettings = x);
 
             m_WorkStreamSettingsSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.WorkStreamSettings)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                //.ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x => WorkStreamSettings = x);
 
             m_DateTimeCalculatorCalculatorModeSub = this

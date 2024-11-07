@@ -18,6 +18,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private WorkStreamSettingsModel m_Current;
 
         private readonly ICoreViewModel m_CoreViewModel;
+        private readonly IResourceSettingsManagerViewModel m_ResourceSettingsManagerViewModel;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
 
@@ -30,15 +31,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public WorkStreamSettingsManagerViewModel(
             ICoreViewModel coreViewModel,
+            IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
             ISettingService settingService,
             IDialogService dialogService)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(resourceSettingsManagerViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             m_Lock = new object();
             m_Current = new WorkStreamSettingsModel();
             m_CoreViewModel = coreViewModel;
+            m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
             SelectedWorkStreams = new ConcurrentDictionary<int, IManagedWorkStreamViewModel>();
@@ -209,6 +213,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_Current = workStreamSettings;
                     m_CoreViewModel.WorkStreamSettings = workStreamSettings;
+                    m_ResourceSettingsManagerViewModel.AreSettingsUpdated = true;
                 }
             }
             AreSettingsUpdated = false;
