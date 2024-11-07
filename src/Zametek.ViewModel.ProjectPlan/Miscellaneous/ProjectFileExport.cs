@@ -275,15 +275,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 rowIndex++;
             }
-            {
-                int titleColumnIndex = 0;
+            //{
+            //    int titleColumnIndex = 0;
 
-                foreach (string columnTitle in s_GeneralColumnTitles)
-                {
-                    sheet.AutoSizeColumn(titleColumnIndex);
-                    titleColumnIndex++;
-                }
-            }
+            //    foreach (string columnTitle in s_GeneralColumnTitles)
+            //    {
+            //        sheet.AutoSizeColumn(titleColumnIndex);
+            //        titleColumnIndex++;
+            //    }
+            //}
         }
 
         private static void WriteActivitiesToWorkbook(
@@ -373,20 +373,20 @@ namespace Zametek.ViewModel.ProjectPlan
                     rowIndex++;
                 }
             }
-            {
-                int titleColumnIndex = 0;
+            //{
+            //    int titleColumnIndex = 0;
 
-                foreach (string columnTitle in s_ActivityColumnTitles)
-                {
-                    sheet.AutoSizeColumn(titleColumnIndex);
-                    titleColumnIndex++;
-                }
-                foreach (string columnTitle in s_DependentActivityColumnTitles)
-                {
-                    sheet.AutoSizeColumn(titleColumnIndex);
-                    titleColumnIndex++;
-                }
-            }
+            //    foreach (string columnTitle in s_ActivityColumnTitles)
+            //    {
+            //        sheet.AutoSizeColumn(titleColumnIndex);
+            //        titleColumnIndex++;
+            //    }
+            //    foreach (string columnTitle in s_DependentActivityColumnTitles)
+            //    {
+            //        sheet.AutoSizeColumn(titleColumnIndex);
+            //        titleColumnIndex++;
+            //    }
+            //}
         }
 
         private static void WriteItemsToWorkbook<T>(
@@ -447,15 +447,15 @@ namespace Zametek.ViewModel.ProjectPlan
                     rowIndex++;
                 }
             }
-            {
-                int titleColumnIndex = 0;
+            //{
+            //    int titleColumnIndex = 0;
 
-                foreach (string columnTitle in columnTitles)
-                {
-                    sheet.AutoSizeColumn(titleColumnIndex);
-                    titleColumnIndex++;
-                }
-            }
+            //    foreach (string columnTitle in columnTitles)
+            //    {
+            //        sheet.AutoSizeColumn(titleColumnIndex);
+            //        titleColumnIndex++;
+            //    }
+            //}
         }
 
         private static void WriteActivityTrackersToWorkbook<T>(
@@ -484,7 +484,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             int rowIndex = 0;
             int endTime = 0;
-            
+
             int plannedEndTime = activities
                 .Select(x => x.EarliestFinishTime.GetValueOrDefault())
                 .DefaultIfEmpty()
@@ -567,18 +567,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     rowIndex++;
                 }
             }
-            {
-                // Resize columns.
-                int titleColumnIndex = 0;
-                sheet.AutoSizeColumn(titleColumnIndex);
-                titleColumnIndex++;
+            //{
+            ////    Resize columns.
+            //    int titleColumnIndex = 0;
+            //    sheet.AutoSizeColumn(titleColumnIndex);
+            //    titleColumnIndex++;
 
-                for (int i = 0; i <= endTime; i++)
-                {
-                    sheet.AutoSizeColumn(titleColumnIndex);
-                    titleColumnIndex++;
-                }
-            }
+            //    for (int i = 0; i <= endTime; i++)
+            //    {
+            //        sheet.AutoSizeColumn(titleColumnIndex);
+            //        titleColumnIndex++;
+            //    }
+            //}
         }
 
         private static void WriteResourceTrackersToWorkbook(
@@ -698,18 +698,18 @@ namespace Zametek.ViewModel.ProjectPlan
                         rowIndex++;
                     }
                 }
-                {
-                    // Resize columns.
-                    int titleColumnIndex = 0;
-                    sheet.AutoSizeColumn(titleColumnIndex);
-                    titleColumnIndex++;
+                //{
+                ////    Resize columns.
+                //    int titleColumnIndex = 0;
+                //    sheet.AutoSizeColumn(titleColumnIndex);
+                //    titleColumnIndex++;
 
-                    for (int i = 0; i <= endTime; i++)
-                    {
-                        sheet.AutoSizeColumn(titleColumnIndex);
-                        titleColumnIndex++;
-                    }
-                }
+                //    for (int i = 0; i <= endTime; i++)
+                //    {
+                //        sheet.AutoSizeColumn(titleColumnIndex);
+                //        titleColumnIndex++;
+                //    }
+                //}
             }
         }
 
@@ -786,18 +786,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     rowIndex++;
                 }
             }
-            {
-                // Resize columns.
-                int titleColumnIndex = 0;
-                sheet.AutoSizeColumn(titleColumnIndex);
-                titleColumnIndex++;
+            //{
+            //    // Resize columns.
+            //    int titleColumnIndex = 0;
+            //    sheet.AutoSizeColumn(titleColumnIndex);
+            //    titleColumnIndex++;
 
-                foreach (ResourceSeriesModel resourceSeries in combinedResourceSeries)
-                {
-                    sheet.AutoSizeColumn(titleColumnIndex);
-                    titleColumnIndex++;
-                }
-            }
+            //    foreach (ResourceSeriesModel resourceSeries in combinedResourceSeries)
+            //    {
+            //        sheet.AutoSizeColumn(titleColumnIndex);
+            //        titleColumnIndex++;
+            //    }
+            //}
         }
 
         private static void WriteEarnedValueChartToWorkbook(
@@ -864,16 +864,16 @@ namespace Zametek.ViewModel.ProjectPlan
                     rowIndex++;
                 }
             }
-            {
-                // Resize columns.
-                int titleColumnIndex = 0;
+            //{
+            //    // Resize columns.
+            //    int titleColumnIndex = 0;
 
-                foreach (string columnTitle in s_TrackingPointColumnTitles)
-                {
-                    sheet.AutoSizeColumn(titleColumnIndex);
-                    titleColumnIndex++;
-                }
-            }
+            //    foreach (string columnTitle in s_TrackingPointColumnTitles)
+            //    {
+            //        sheet.AutoSizeColumn(titleColumnIndex);
+            //        titleColumnIndex++;
+            //    }
+            //}
         }
 
         #endregion
