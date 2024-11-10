@@ -10,6 +10,7 @@
 		     xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
 			 xmlns:mbc="clr-namespace:MsBox.Avalonia.Controls;assembly=MsBox.Avalonia"
+			 xmlns:oxy="using:OxyPlot.Avalonia"
 			 x:DataType="vm:MainViewModel"
 			 Name="{x:Static resources:Titles.Title_ProjectPlan}"
 			 RequestedThemeVariant="Light">
@@ -68,6 +69,16 @@
 			<Setter Property="FontWeight" Value="{DynamicResource ButtonDefaultFontWeight}" />
 		</Style>
 
+		<!--Oxyplot-->
+		<Style Selector="oxy|TrackerControl">
+			<Setter Property="Background" Value="{DynamicResource OxyplotTrackerBackgroundBrush}" />
+			<Setter Property="BorderBrush" Value="{DynamicResource OxyplotTrackerBorderBrush}" />
+			<Setter Property="LineStroke" Value="{DynamicResource OxyplotTrackerLineStroke}" />
+		</Style>
+
+		<Style Selector="oxy|PlotView">
+			<Setter Property="Background" Value="{DynamicResource OxyplotPlotViewBackgroundBrush}" />
+		</Style>
 	</Application.Styles>
 
 	<Application.Resources>
@@ -89,16 +100,28 @@
 
 			<ResourceDictionary.ThemeDictionaries>
 				<ResourceDictionary x:Key="Light">
-					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">LightYellow</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">Khaki</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">DarkKhaki</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">AliceBlue</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">#FFFFFFE0</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">#FFF0E68C</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">#FFBDB76B</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">#FFF0F8FF</SolidColorBrush>
+
+					<SolidColorBrush x:Key="OxyplotTrackerBackgroundBrush">#E0FFFFA0</SolidColorBrush>
+					<SolidColorBrush x:Key="OxyplotTrackerBorderBrush">Black</SolidColorBrush>
+					<SolidColorBrush x:Key="OxyplotTrackerLineStroke">#80000000</SolidColorBrush>
+
+					<SolidColorBrush x:Key="OxyplotPlotViewBackgroundBrush">White</SolidColorBrush>
 				</ResourceDictionary>
 				<ResourceDictionary x:Key="Dark">
-					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">Chocolate</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">Brown</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">SaddleBrown</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">CornflowerBlue</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">#FF00001f</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">#FF0f1973</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">#FF424894</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">#FF0f0700</SolidColorBrush>
+
+					<SolidColorBrush x:Key="OxyplotTrackerBackgroundBrush">#E000005f</SolidColorBrush>
+					<SolidColorBrush x:Key="OxyplotTrackerBorderBrush">White</SolidColorBrush>
+					<SolidColorBrush x:Key="OxyplotTrackerLineStroke">#80FFFFFF</SolidColorBrush>
+
+					<SolidColorBrush x:Key="OxyplotPlotViewBackgroundBrush">White</SolidColorBrush>
 				</ResourceDictionary>
 			</ResourceDictionary.ThemeDictionaries>
 		</ResourceDictionary>
