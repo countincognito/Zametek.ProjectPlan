@@ -199,7 +199,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         // For every dependency that is also a parent task, add all its children as dependencies.
 
-                        foreach (net.sf.mpxj.Task descendantTask in GetDescendantTasks(pred.TargetTask))
+                        foreach (net.sf.mpxj.Task descendantTask in GetDescendantTasks(pred.PredecessorTask))
                         {
                             int? descendantTaskId = descendantTask.ID?.intValue();
 
@@ -207,7 +207,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 && id != descendantTaskId)
                             {
                                 var builder = new net.sf.mpxj.Relation.Builder();
-                                builder.TargetTask(descendantTask);
+                                builder.PredecessorTask(descendantTask);
                                 builder.Type(net.sf.mpxj.RelationType.START_FINISH);
                                 builder.Lag(net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units));
                                 mpxjTask.AddPredecessor(builder);
@@ -226,7 +226,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (!s_FilterTaskIds.Contains(parentId))
                     {
                         var builder = new net.sf.mpxj.Relation.Builder();
-                        builder.TargetTask(parentTask);
+                        builder.PredecessorTask(parentTask);
                         builder.Type(net.sf.mpxj.RelationType.START_FINISH);
                         builder.Lag(net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units));
                         mpxjTask.AddPredecessor(builder);
@@ -388,7 +388,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 foreach (net.sf.mpxj.Relation pred in preds.ToIEnumerable<net.sf.mpxj.Relation>())
                 {
-                    int? dependentTaskId = pred.TargetTask?.ID?.intValue();
+                    int? dependentTaskId = pred.PredecessorTask?.ID?.intValue();
 
                     if (dependentTaskId is not null)
                     {
@@ -1004,13 +1004,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
                                 if (!resourceTrackerLookup.TryGetValue(time, out Dictionary<int, ResourceActivityTrackerModel>? trackerLookup))
                                 {
-                                    trackerLookup = new Dictionary<int, ResourceActivityTrackerModel>();
+                                    trackerLookup = [];
                                     resourceTrackerLookup.Add(time, trackerLookup);
                                 }
 
-                                if (!trackerLookup.TryGetValue(activityId, out ResourceActivityTrackerModel? tracker))
+                                if (!trackerLookup.TryGetValue(activityId, out _))
                                 {
-                                    tracker = new ResourceActivityTrackerModel
+                                    var tracker = new ResourceActivityTrackerModel
                                     {
                                         Time = time,
                                         ResourceId = resourceId,
