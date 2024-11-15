@@ -1043,6 +1043,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsProjectUpdated = false;
                     HasStaleOutputs = false;
 
+                    IsReadyToCompile = ReadyToCompile.No;
+                    IsReadyToReviseTrackers = ReadyToRevise.No;
+                    IsReadyToReviseSettings = ReadyToRevise.No;
+
                     m_SettingService.Reset();
                 }
             }

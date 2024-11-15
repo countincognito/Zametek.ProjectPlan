@@ -139,7 +139,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ToggleUseClassicDatesCommand = ReactiveCommand.Create(ToggleUseClassicDates);
             ToggleUseBusinessDaysCommand = ReactiveCommand.Create(ToggleUseBusinessDays);
 
-            CompileCommand = ReactiveCommand.CreateFromTask(RunCompileAsync);
+            CompileCommand = ReactiveCommand.CreateFromTask(ForceCompileAsync);
             ToggleAutoCompileCommand = ReactiveCommand.Create(ToggleAutoCompile);
             TransitiveReductionCommand = ReactiveCommand.Create(RunTransitiveReductionAsync);
 
@@ -333,6 +333,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private void ProcessProjectPlan(ProjectPlanModel planModel) => m_CoreViewModel.ProcessProjectPlan(planModel);
 
         private async Task<ProjectPlanModel> BuildProjectPlanAsync() => await Task.Run(m_CoreViewModel.BuildProjectPlan);
+
+        private async Task ForceCompileAsync() => await Task.Run(async () =>
+        {
+            m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+            await RunCompileAsync(); // Need to force a compilation here.
+        });
 
         private async Task RunCompileAsync() => await Task.Run(m_CoreViewModel.RunCompile);
 
@@ -781,7 +787,6 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         #endregion
-
 
         #region IDisposable Members
 

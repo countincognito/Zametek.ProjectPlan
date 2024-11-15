@@ -213,7 +213,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_Current = workStreamSettings;
                     m_CoreViewModel.WorkStreamSettings = workStreamSettings;
-                    m_ResourceSettingsManagerViewModel.AreSettingsUpdated = true;
+                    m_ResourceSettingsManagerViewModel.AreSettingsUpdated = true; // This cascades the call to update settings to core for resource settings.
                 }
             }
             AreSettingsUpdated = false;

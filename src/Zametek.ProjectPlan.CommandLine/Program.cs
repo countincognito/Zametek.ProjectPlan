@@ -153,6 +153,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
                         // Compile.
                         {
+                            // We do not need to set IsReadyToReviseTrackers since this is a one step
+                            // process (i.e. we are not changing any tracker UI elements).
+
                             core.RunCompile();
                             outputs.BuildCompilationOutput();
 

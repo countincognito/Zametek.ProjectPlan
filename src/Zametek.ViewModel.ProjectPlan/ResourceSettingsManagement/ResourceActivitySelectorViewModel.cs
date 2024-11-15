@@ -79,6 +79,8 @@ namespace Zametek.ViewModel.ProjectPlan
             // Initial set up.
             ReviseTrackers(resourceTrackerModel.ActivityTrackers);
 
+            // This needs to be on the current thread because all the tracker updates
+            // need to be completed before a compilation can start.
             m_ReviseResourceActivityTrackersSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.IsReadyToReviseTrackers)
                 .ObserveOn(Scheduler.CurrentThread)
@@ -149,7 +151,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 SetTargetResourceActivities(
                     newResourceActivityTrackers,
-                    SelectedResourceActivityIds.ToHashSet());
+                    [.. SelectedResourceActivityIds]);
             }
         }
 
@@ -366,10 +368,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public IList<int> SelectedResourceActivityIds { get; init; }
 
-        public void Dispose()
-        {
-        }
-
         public void RaiseTargetResourceActivitiesPropertiesChanged()
         {
         }
@@ -379,5 +377,37 @@ namespace Zametek.ViewModel.ProjectPlan
             HashSet<int> selectedTargetResourceActivities)
         {
         }
+
+        #region IDisposable Members
+
+        private bool m_Disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (m_Disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                // TODO: dispose managed state (managed objects).
+            }
+
+            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+            // TODO: set large fields to null.
+
+            m_Disposed = true;
+        }
+
+        public void Dispose()
+        {
+            // Dispose of unmanaged resources.
+            Dispose(true);
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
     }
 }
