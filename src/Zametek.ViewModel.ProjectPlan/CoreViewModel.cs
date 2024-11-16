@@ -863,7 +863,15 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_AutoCompile;
             set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_AutoCompile, value);
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_AutoCompile, value);
+
+                    if (m_AutoCompile)
+                    {
+                        IsReadyToCompile = ReadyToCompile.No;
+                    }
+                }
             }
         }
 
