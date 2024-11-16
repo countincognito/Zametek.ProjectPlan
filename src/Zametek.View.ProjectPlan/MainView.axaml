@@ -11,7 +11,6 @@
 		xmlns:local="using:Zametek.View.ProjectPlan"
 		x:DataType="vm:MainViewModel"
         Icon="resm:Zametek.Resource.ProjectPlan.Icons.zpp.ico?assembly=Zametek.Resource.ProjectPlan"
-		Name="mainview"
 		xmlns:u="https://irihi.tech/ursa"
         Title="{Binding Path=ProjectTitle, Mode=OneWay}">
 	<Window.KeyBindings>
@@ -120,6 +119,44 @@
 										  IsChecked="{Binding Path=UseBusinessDays, Mode=OneWay}" />
 							</MenuItem.Icon>
 						</MenuItem>
+						<Separator />
+						<MenuItem Header="{x:Static resources:Menus.Menu_Themes}">
+							<MenuItem Header="{x:Static resources:Themes.Theme_Default}"
+									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Default}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+								      CommandParameter="{x:Static resources:Themes.Theme_Default}"
+									  ToggleType="Radio" />
+							<MenuItem Header="{x:Static resources:Themes.Theme_Light}"
+									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Light}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+								      CommandParameter="{x:Static resources:Themes.Theme_Light}"
+									  ToggleType="Radio" />
+							<MenuItem Header="{x:Static resources:Themes.Theme_Dark}"
+									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Dark}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+								      CommandParameter="{x:Static resources:Themes.Theme_Dark}"
+									  ToggleType="Radio" />
+							<MenuItem Header="{x:Static resources:Themes.Theme_Aquatic}"
+									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Aquatic}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+								      CommandParameter="{x:Static resources:Themes.Theme_Aquatic}"
+									  ToggleType="Radio" />
+							<MenuItem Header="{x:Static resources:Themes.Theme_Desert}"
+									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Desert}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+								      CommandParameter="{x:Static resources:Themes.Theme_Desert}"
+									  ToggleType="Radio" />
+							<MenuItem Header="{x:Static resources:Themes.Theme_Dust}"
+									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Dust}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+								      CommandParameter="{x:Static resources:Themes.Theme_Dust}"
+									  ToggleType="Radio" />
+							<MenuItem Header="{x:Static resources:Themes.Theme_NightSky}"
+									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_NightSky}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+								      CommandParameter="{x:Static resources:Themes.Theme_NightSky}"
+									  ToggleType="Radio" />
+						</MenuItem>
 					</MenuItem>
 
 					<MenuItem Header="{x:Static resources:Menus.Menu_Compile}">
@@ -173,9 +210,6 @@
 										Padding="3"
 										IsTodayHighlighted="True"
 										VerticalAlignment="Center"/>
-
-					<u:ThemeToggleButton DockPanel.Dock="Left"
-										 SelectedTheme="{Binding Path=SelectedTheme, Mode=TwoWay}"/>
 
 					<Grid />
 				</DockPanel>

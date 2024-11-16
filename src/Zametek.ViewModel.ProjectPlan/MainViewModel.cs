@@ -138,12 +138,13 @@ namespace Zametek.ViewModel.ProjectPlan
             ToggleShowDatesCommand = ReactiveCommand.Create(ToggleShowDates);
             ToggleUseClassicDatesCommand = ReactiveCommand.Create(ToggleUseClassicDates);
             ToggleUseBusinessDaysCommand = ReactiveCommand.Create(ToggleUseBusinessDays);
+            ChangeThemeCommand = ReactiveCommand.CreateFromTask<string>(ChangeThemeAsync);
 
             CompileCommand = ReactiveCommand.CreateFromTask(ForceCompileAsync);
             ToggleAutoCompileCommand = ReactiveCommand.Create(ToggleAutoCompile);
             TransitiveReductionCommand = ReactiveCommand.Create(RunTransitiveReductionAsync);
 
-            OpenHyperLinkCommand = ReactiveCommand.Create<string, Task>(OpenHyperLinkAsync);
+            OpenHyperLinkCommand = ReactiveCommand.CreateFromTask<string>(OpenHyperLinkAsync);
             OpenAboutCommand = ReactiveCommand.Create(OpenAboutAsync);
 
             m_ProjectTitle = this
@@ -376,6 +377,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private async Task ChangeThemeAsync(string theme)
+        {
+            try
+            {
+                SelectedTheme = theme ?? Resource.ProjectPlan.Themes.Theme_Default;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    ex.Message);
+            }
+        }
+
         #endregion
 
         #region IMainViewModel Members
@@ -511,6 +526,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand ToggleUseClassicDatesCommand { get; }
 
         public ICommand ToggleUseBusinessDaysCommand { get; }
+
+        public ICommand ChangeThemeCommand { get; }
 
         public ICommand CompileCommand { get; }
 

@@ -66,10 +66,13 @@
 					IsTabStop="True"
                     Margin="0,0,0,0"
                     Height="50" Width="75"
-                    VerticalAlignment="Center"
                     VerticalContentAlignment="Center"
+					HorizontalContentAlignment="Center"
                     Command="{Binding Path=AddMilestoneCommand, Mode=OneWay}">
 				<TextBlock TextAlignment="Center"
+						   Margin="0"
+						   Padding="0"
+						   Width="75"
 						   TextWrapping="Wrap"
 						   Text="{x:Static resources:Labels.Label_AddMilestone}"/>
 			</Button>

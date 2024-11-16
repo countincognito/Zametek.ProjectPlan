@@ -59,6 +59,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ToggleUseBusinessDaysCommand { get; }
 
+        ICommand ChangeThemeCommand { get; }
+
         ICommand CompileCommand { get; }
 
         ICommand ToggleAutoCompileCommand { get; }

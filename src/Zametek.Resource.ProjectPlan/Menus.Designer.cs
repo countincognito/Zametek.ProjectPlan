@@ -214,6 +214,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Themes.
+        /// </summary>
+        public static string Menu_Themes {
+            get {
+                return ResourceManager.GetString("Menu_Themes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transitive Reduction.
         /// </summary>
         public static string Menu_TransitiveReduction {

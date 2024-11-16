@@ -52,6 +52,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Symbols.resx</DependentUpon>
     </Compile>
+    <Compile Update="Themes.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Themes.resx</DependentUpon>
+    </Compile>
     <Compile Update="Tooltips.Designer.cs">
       <DependentUpon>ToolTips.resx</DependentUpon>
       <DesignTime>True</DesignTime>
@@ -98,6 +103,10 @@
     <EmbeddedResource Update="Symbols.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Symbols.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Themes.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Themes.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="ToolTips.resx">
       <LastGenOutput>Tooltips.Designer.cs</LastGenOutput>
