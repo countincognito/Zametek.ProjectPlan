@@ -118,13 +118,11 @@
 										Width="95">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_SlackLimit}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_SlackLimit}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_SlackLimit}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_SlackLimit}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 
@@ -231,13 +229,11 @@
 										Width="130">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_CriticalityWeight}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_CriticalityWeight}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_CriticalityWeight}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_CriticalityWeight}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -271,13 +267,11 @@
 										Width="135">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_FibonacciWeight}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_FibonacciWeight}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_FibonacciWeight}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_FibonacciWeight}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -312,13 +306,11 @@
 										Width="75">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_ColorFormat}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ColorFormat}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_ColorFormat}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ColorFormat}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>

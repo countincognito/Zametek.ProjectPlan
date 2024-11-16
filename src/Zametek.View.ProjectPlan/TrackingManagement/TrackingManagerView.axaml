@@ -87,13 +87,11 @@
 											Width="50">
 						<DataGridTemplateColumn.HeaderTemplate>
 							<DataTemplate>
-								<Grid>
-									<TextBlock VerticalAlignment="Center"
-											   Margin="0"
-											   Padding="3"
-											   Text="{x:Static resources:Labels.Label_Id}"
-											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
-								</Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_Id}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
 						<DataGridTemplateColumn.CellTemplate>
@@ -115,13 +113,11 @@
 											Width="125">
 						<DataGridTemplateColumn.HeaderTemplate>
 							<DataTemplate>
-								<Grid>
-									<TextBlock VerticalAlignment="Center"
-											   Margin="0"
-											   Padding="3"
-											   Text="{x:Static resources:Labels.Label_ResourceName}"
-											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ResourceName}"/>
-								</Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_ResourceName}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ResourceName}"/>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
 						<DataGridTemplateColumn.CellTemplate>
@@ -142,13 +138,11 @@
 											Width="60">
 						<DataGridTemplateColumn.HeaderTemplate>
 							<DataTemplate>
-								<Grid>
-									<TextBlock VerticalAlignment="Center"
-											   Margin="0"
-											   Padding="3"
-											   Text="{x:Static resources:Labels.Label_Find}"
-											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Find}"/>
-								</Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_Find}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Find}"/>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
 						<DataGridTemplateColumn.CellTemplate>
@@ -223,13 +217,11 @@
 											Width="50">
 						<DataGridTemplateColumn.HeaderTemplate>
 							<DataTemplate>
-								<Grid>
-									<TextBlock VerticalAlignment="Center"
-											   Margin="0"
-											   Padding="3"
-											   Text="{x:Static resources:Labels.Label_Id}"
-											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
-								</Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_Id}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
 						<DataGridTemplateColumn.CellTemplate>
@@ -251,13 +243,11 @@
 											Width="125">
 						<DataGridTemplateColumn.HeaderTemplate>
 							<DataTemplate>
-								<Grid>
-									<TextBlock VerticalAlignment="Center"
-											   Margin="0"
-											   Padding="3"
-											   Text="{x:Static resources:Labels.Label_ActivityName}"
-											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ActivityName}"/>
-								</Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_ActivityName}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ActivityName}"/>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
 						<DataGridTemplateColumn.CellTemplate>
@@ -278,13 +268,11 @@
 											Width="60">
 						<DataGridTemplateColumn.HeaderTemplate>
 							<DataTemplate>
-								<Grid>
-									<TextBlock VerticalAlignment="Center"
-											   Margin="0"
-											   Padding="3"
-											   Text="{x:Static resources:Labels.Label_Find}"
-											   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Find}"/>
-								</Grid>
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{x:Static resources:Labels.Label_Find}"
+										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Find}"/>
 							</DataTemplate>
 						</DataGridTemplateColumn.HeaderTemplate>
 						<DataGridTemplateColumn.CellTemplate>

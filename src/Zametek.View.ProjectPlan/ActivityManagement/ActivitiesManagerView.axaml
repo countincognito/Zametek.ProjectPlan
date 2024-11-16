@@ -158,13 +158,11 @@
 										Width="85">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_Duration}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Duration}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_Duration}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Duration}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -198,13 +196,11 @@
 										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_ActivityName}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ActivityName}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_ActivityName}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ActivityName}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -236,13 +232,11 @@
 										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_Dependencies}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Dependencies}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_Dependencies}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Dependencies}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -275,13 +269,11 @@
 										Width="170">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_ResourceDependencies}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ResourceDependencies}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_ResourceDependencies}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ResourceDependencies}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -304,14 +296,11 @@
 										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid HorizontalAlignment="Center">
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_IsDummy}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsDummy}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_IsDummy}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsDummy}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -336,14 +325,11 @@
 										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_IsCritical}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsCritical}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_IsCritical}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsCritical}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -368,14 +354,11 @@
 										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_EarliestStartTime}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_EarliestStartTime}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_EarliestStartTime}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_EarliestStartTime}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -406,14 +389,11 @@
 										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_LatestStartTime}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_LatestStartTime}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_LatestStartTime}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_LatestStartTime}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -444,14 +424,11 @@
 										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_EarliestFinishTime}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_EarliestFinishTime}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_EarliestFinishTime}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_EarliestFinishTime}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -482,14 +459,11 @@
 										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_LatestFinishTime}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_LatestFinishTime}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_LatestFinishTime}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_LatestFinishTime}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -520,14 +494,11 @@
 										Width="50">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_TotalSlack}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_TotalSlack}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_TotalSlack}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_TotalSlack}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -551,14 +522,11 @@
 										Width="50">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_FreeSlack}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_FreeSlack}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_FreeSlack}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_FreeSlack}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -582,14 +550,11 @@
 										Width="50">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_InterferingSlack}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_InterferingSlack}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_InterferingSlack}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_InterferingSlack}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -612,13 +577,11 @@
 										Width="110">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_MinimumFreeSlack}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_MinimumFreeSlack}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_MinimumFreeSlack}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_MinimumFreeSlack}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -653,14 +616,11 @@
 										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_MinimumEarliestStartTime}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_MinimumEarliestStartTime}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_MinimumEarliestStartTime}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_MinimumEarliestStartTime}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -713,14 +673,11 @@
 										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_MaximumLatestFinishTime}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_MaximumLatestFinishTime}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_MaximumLatestFinishTime}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_MaximumLatestFinishTime}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -774,13 +731,11 @@
 										Width="155">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_TargetWorkStreams}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_TargetWorkStreams}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_TargetWorkStreams}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_TargetWorkStreams}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -826,13 +781,11 @@
 										Width="130">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_TargetResources}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_TargetResources}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_TargetResources}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_TargetResources}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -879,13 +832,11 @@
 										Width="100">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_HasNoCost}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_HasNoCost}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_HasNoCost}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_HasNoCost}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -911,14 +862,11 @@
 										Width="140">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_TargetResourceOperator}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_TargetResourceOperator}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_TargetResourceOperator}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_TargetResourceOperator}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -954,13 +902,11 @@
 										Width="165">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_AllocatedToResources}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_AllocatedToResources}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_AllocatedToResources}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_AllocatedToResources}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -983,14 +929,11 @@
 										Width="95">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_PercentageCompleted}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_PercentageCompleted}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_PercentageCompleted}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_PercentageCompleted}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -1013,13 +956,11 @@
 										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_Notes}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Notes}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_Notes}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Notes}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>

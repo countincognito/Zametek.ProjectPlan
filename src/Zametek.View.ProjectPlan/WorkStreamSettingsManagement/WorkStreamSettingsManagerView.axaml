@@ -102,13 +102,11 @@
 										Width="50">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_Id}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_Id}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -131,13 +129,11 @@
 										Width="85">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_IsPhase}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsPhase}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_IsPhase}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsPhase}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -163,13 +159,11 @@
 										Width="115">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_DisplayOrder}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_DisplayOrder}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_DisplayOrder}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_DisplayOrder}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -204,13 +198,11 @@
 										Width="75">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_ColorFormat}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ColorFormat}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_ColorFormat}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ColorFormat}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -231,13 +223,11 @@
 										Width="250">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
-							<Grid>
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{x:Static resources:Labels.Label_WorkStreamName}"
-										   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_WorkStreamName}"/>
-							</Grid>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_WorkStreamName}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_WorkStreamName}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
