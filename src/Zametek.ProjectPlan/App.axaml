@@ -19,12 +19,6 @@
 		<local:ViewLocator />
 	</Application.DataTemplates>
 
-	<NativeMenu.Menu>
-		<NativeMenu>
-			<NativeMenuItem Header="{x:Static resources:Menus.Menu_About}" Command="{Binding Path=OpenAboutCommand}" />
-		</NativeMenu>
-	</NativeMenu.Menu>
-
 	<Application.Styles>
 		<!--Add the line below to get OxyPlot UI theme applied in Avalonia 11.-->
 		<StyleInclude Source="avares://OxyPlot.Avalonia/Themes/Default.axaml"/>

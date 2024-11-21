@@ -178,7 +178,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project Plan.
+        ///   Looks up a localized string similar to ProjectPlan.NET.
         /// </summary>
         public static string Label_AppName {
             get {
@@ -187,7 +187,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Version 0.9.0-beta.1.
+        ///   Looks up a localized string similar to 0.9.0-beta.1.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -223,7 +223,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project Plan CLI.
+        ///   Looks up a localized string similar to ProjectPlan.NET CLI.
         /// </summary>
         public static string Label_CliAppName {
             get {
@@ -1057,6 +1057,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_UnitCost {
             get {
                 return ResourceManager.GetString("Label_UnitCost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Version.
+        /// </summary>
+        public static string Label_Version {
+            get {
+                return ResourceManager.GetString("Label_Version", resourceCulture);
             }
         }
         

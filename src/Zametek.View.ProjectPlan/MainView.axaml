@@ -190,8 +190,14 @@
 								  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
 								  CommandParameter="{x:Static resources:Links.Link_ViewLicense}"/>
 						<Separator />
-						<MenuItem Header="{x:Static resources:Menus.Menu_About}"
-								  Command="{Binding Path=OpenAboutCommand, Mode=OneWay}"/>
+						<MenuItem Command="{Binding Path=OpenAboutCommand, Mode=OneWay}">
+							<MenuItem.Header>
+								<TextBlock>
+									<Run Text="{x:Static resources:Menus.Menu_About}"></Run>
+									<Run Text="{x:Static resources:Labels.Label_AppName}"></Run>
+								</TextBlock>
+							</MenuItem.Header>
+						</MenuItem>
 					</MenuItem>
 				</Menu>
 

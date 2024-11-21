@@ -133,7 +133,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project Plan.
+        ///   Looks up a localized string similar to ProjectPlan.NET.
         /// </summary>
         public static string Title_ProjectPlan {
             get {

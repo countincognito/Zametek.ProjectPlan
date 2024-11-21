@@ -400,7 +400,7 @@ namespace Zametek.ProjectPlan.CommandLine
                 h.AdditionalNewLineAfterOption = false;
 
                 // Change header.
-                h.Heading = $@"{Resource.ProjectPlan.Labels.Label_CliAppName}, {Resource.ProjectPlan.Labels.Label_AppVersion}";
+                h.Heading = $@"{Resource.ProjectPlan.Labels.Label_CliAppName}, {Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}";
 
                 // Change copyright.
                 h.Copyright = $@"{Resource.ProjectPlan.Labels.Label_Copyright}, {Resource.ProjectPlan.Labels.Label_Author}";

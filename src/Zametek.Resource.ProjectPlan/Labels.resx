@@ -154,10 +154,10 @@
     <value>Annotation Style</value>
   </data>
   <data name="Label_AppName" xml:space="preserve">
-    <value>Project Plan</value>
+    <value>ProjectPlan.NET</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>Version 0.9.0-beta.1</value>
+    <value>0.9.0-beta.1</value>
   </data>
   <data name="Label_Author" xml:space="preserve">
     <value>Riccardo M Bennett-Lovsey</value>
@@ -169,7 +169,7 @@
     <value>Cannot set Minimum FS and Maximum LFT at the same time</value>
   </data>
   <data name="Label_CliAppName" xml:space="preserve">
-    <value>Project Plan CLI</value>
+    <value>ProjectPlan.NET CLI</value>
   </data>
   <data name="Label_ColorFormat" xml:space="preserve">
     <value>Color</value>
@@ -458,5 +458,8 @@
   </data>
   <data name="Label_TotalEffort" xml:space="preserve">
     <value>Total Effort:</value>
+  </data>
+  <data name="Label_Version" xml:space="preserve">
+    <value>Version</value>
   </data>
 </root>

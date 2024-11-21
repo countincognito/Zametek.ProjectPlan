@@ -151,7 +151,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     main => main.m_CoreViewModel.ProjectTitle,
                     main => main.m_CoreViewModel.IsProjectUpdated,
-                    (title, isProjectUpdate) => $@"{(isProjectUpdate ? "*" : "")}{(string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title)} - {Resource.ProjectPlan.Titles.Title_ProjectPlan}")
+                    (title, isProjectUpdate) => $@"{(isProjectUpdate ? "*" : "")}{(string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title)} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}")
                 .ToProperty(this, main => main.ProjectTitle);
 
             m_IsBusy = this
@@ -785,7 +785,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 var about = new StringBuilder();
                 about.AppendLine($"## {Resource.ProjectPlan.Labels.Label_AppName}");
                 about.AppendLine();
-                about.AppendLine(Resource.ProjectPlan.Labels.Label_AppVersion);
+                about.AppendLine($"{Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}");
                 about.AppendLine();
                 about.AppendLine($"{Resource.ProjectPlan.Labels.Label_Copyright}, {Resource.ProjectPlan.Labels.Label_Author}");
                 about.AppendLine();

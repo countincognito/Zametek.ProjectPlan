@@ -8,6 +8,7 @@
 	<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
 	<ApplicationManifest>app.manifest</ApplicationManifest>
 	<ApplicationIcon>zpp.ico</ApplicationIcon>
+	<AssemblyName>projectplandotnet</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />
