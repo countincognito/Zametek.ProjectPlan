@@ -7,11 +7,13 @@
 	<UserSecretsId>ProjectPlan-515098bc-c9a8-47a9-a73d-a3d6104d2953</UserSecretsId>
 	<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
 	<ApplicationManifest>app.manifest</ApplicationManifest>
-	<ApplicationIcon>zpp.ico</ApplicationIcon>
+	<ApplicationIcon>Assets\zpp.ico</ApplicationIcon>
 	<AssemblyName>projectplandotnet</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />
+    <AvaloniaResource Include="Assets\**" />
+    <Content Include="Assets\zpp.ico" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Themes.Simple" Version="11.2.0" />
@@ -26,11 +28,5 @@
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.View.ProjectPlan\Zametek.View.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <AvaloniaResource Remove="zpp.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="zpp.ico" />
   </ItemGroup>
 </Project>

@@ -8,10 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />
-    <None Remove="Assets\avalonia-logo.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <AvaloniaResource Include="Assets\avalonia-logo.ico" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.2.0" />
@@ -36,10 +32,5 @@
     <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="WorkStreamSettingsManagement\WorkStreamSettingsManagerView.axaml.cs">
-      <DependentUpon>WorkStreamSettingsManagerView.axaml</DependentUpon>
-    </Compile>
   </ItemGroup>
 </Project>
