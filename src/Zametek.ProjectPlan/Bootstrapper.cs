@@ -11,14 +11,17 @@ namespace Zametek.ProjectPlan
 {
     public static class Bootstrapper
     {
-        public static void Register()
+        public static void RegisterSettings()
         {
             string secretsId = Assembly.GetExecutingAssembly().GetCustomAttribute<UserSecretsIdAttribute>()!.UserSecretsId;
             string settingsFilename = PathHelper.GetSecretsPathFromSecretsId(secretsId);
 
             var settingService = new SettingService(settingsFilename);
             SplatRegistrations.RegisterConstant<ISettingService>(settingService);
+        }
 
+        public static void RegisterIOC()
+        {
             SplatRegistrations.SetupIOC();
 
             // ViewModels.

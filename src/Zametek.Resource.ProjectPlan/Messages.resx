@@ -201,4 +201,7 @@
   <data name="Message_UnknownDateTimeDisplayMode" xml:space="preserve">
     <value>Unknown DateTimeDisplayMode value:</value>
   </data>
+  <data name="Message_SplashScreenLoading" xml:space="preserve">
+    <value>Application is loading...</value>
+  </data>
 </root>

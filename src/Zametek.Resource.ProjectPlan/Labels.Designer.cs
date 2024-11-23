@@ -214,6 +214,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string Label_CancelSplashScreen {
+            get {
+                return ResourceManager.GetString("Label_CancelSplashScreen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot set Minimum FS and Maximum LFT at the same time.
         /// </summary>
         public static string Label_CannotSetMinimumFreeSlackAndMaximumLatestFinishTimeAtSameTime {

@@ -459,4 +459,7 @@
   <data name="Label_TotalEffort" xml:space="preserve">
     <value>Total Effort:</value>
   </data>
+  <data name="Label_CancelSplashScreen" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
 </root>

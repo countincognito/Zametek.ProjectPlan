@@ -1,0 +1,25 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:resources="using:Zametek.Resource.ProjectPlan"
+        mc:Ignorable="d"
+		Width="200" Height="140"
+		SystemDecorations="None"
+		WindowStartupLocation="CenterScreen"
+		Background="Transparent"
+		TransparencyLevelHint="Transparent"
+		TransparencyBackgroundFallback="Transparent"
+		xmlns:local="using:Zametek.ProjectPlan"
+        x:Class="Zametek.ProjectPlan.SplashView"
+		x:DataType="local:SplashViewModel"
+        Title="Splash">
+	<Border Background="Beige" CornerRadius="10" Padding="10">
+		<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="5">
+			<Image Source="/Assets/zpp.ico" Width="64" Height="64" />
+			<TextBlock Text="{Binding Path=StartUpMessage, Mode=OneWay}" />
+			<Button Content="{x:Static resources:Labels.Label_CancelSplashScreen}"
+					Command="{Binding Path=CancelCommand, Mode=OneWay}"/>
+		</StackPanel>
+	</Border>
+</Window>

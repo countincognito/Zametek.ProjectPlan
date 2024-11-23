@@ -205,6 +205,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Application is loading....
+        /// </summary>
+        public static string Message_SplashScreenLoading {
+            get {
+                return ResourceManager.GetString("Message_SplashScreenLoading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tracker Count must be equal or greater than 0.
         /// </summary>
         public static string Message_TrackerCountMustBeEqualOrGreaterThanZero {

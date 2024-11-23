@@ -5,6 +5,7 @@ using Splat;
 using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Zametek.Contract.ProjectPlan;
 using Zametek.View.ProjectPlan;
 
@@ -18,87 +19,113 @@ namespace Zametek.ProjectPlan
             AvaloniaXamlLoader.Load(this);
         }
 
-        private static void RegisterDependencies() => Bootstrapper.Register();
+        private static void RegisterSettings() => Bootstrapper.RegisterSettings();
+
+        private static void RegisterIOC() => Bootstrapper.RegisterIOC();
 
         private static T GetRequiredService<T>() =>
             Locator.Current.GetService<T>() ?? throw new NullReferenceException($"{Resource.ProjectPlan.Messages.Message_UnableToResolveType} {typeof(T).FullName}");
 
         public override void OnFrameworkInitializationCompleted()
         {
-            RegisterDependencies();
-
-            IMainViewModel mainViewModel = GetRequiredService<IMainViewModel>();
-            ISettingService settingService = GetRequiredService<ISettingService>();
-
-            DataContext = mainViewModel;
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
             {
-                MainView mainView = new()
+                var splashView = new SplashView();
+                var splashViewModel = new SplashViewModel();
+
+                splashView.DataContext = splashViewModel;
+
+                desktopLifetime.MainWindow = splashView;
+
+                splashView.Show();
+
+                try
                 {
-                    DataContext = mainViewModel,
-                    InitialTheme = settingService.SelectedTheme
-                };
+                    RegisterSettings();
+                    RegisterIOC();
+                    ISettingService settingService = GetRequiredService<ISettingService>();
+                    string selectedTheme = settingService.SelectedTheme;
 
-                IDialogService dialogService = GetRequiredService<IDialogService>();
-                dialogService.Parent = mainView;
+                    IMainViewModel mainViewModel = GetRequiredService<IMainViewModel>();
 
-                // Cancelling the window closing does not work when using an async handler,
-                // and trying to force Wait on the return dialog freezes the UI thread.
-                // This solution is the hack below, where CancelClose automatically cancels
-                // the closing event first, then CheckClose checks to see if the project
-                // has updates.
-                // If there are no updates, CheckClose removes all handlers and forces a new close.
-                // If there are updates, then the dialog requests permission to proceed.
-                // If yes, then it continues as before. If no, then CheckClose removes itself
-                // and then adds back all the handlers in the correct order (i.e. the same
-                // initial state) and then immediately returns.
-                void CancelClose(object? sender, CancelEventArgs args)
-                {
-                    args.Cancel = true;
-                }
+                    DataContext = mainViewModel;
 
-                async void CheckClose(object? sender, CancelEventArgs args)
-                {
-                    mainView.Closing -= CancelClose;
-
-                    if (mainViewModel.IsProjectUpdated)
+                    MainView mainView = new()
                     {
-                        bool wishToClose = await dialogService.ShowConfirmationAsync(
-                            Resource.ProjectPlan.Titles.Title_UnsavedChanges,
-                            Resource.ProjectPlan.Messages.Message_UnsavedChanges);
+                        DataContext = mainViewModel,
+                        InitialTheme = selectedTheme
+                    };
 
-                        if (!wishToClose)
-                        {
-                            // Clearing the rest of the handlers and then adding
-                            // them back in the correct order.
-                            mainView.Closing -= CheckClose;
-                            mainView.Closing += CancelClose;
-                            mainView.Closing += CheckClose;
-                            return;
-                        }
+                    IDialogService dialogService = GetRequiredService<IDialogService>();
+                    dialogService.Parent = mainView;
+
+                    // Cancelling the window closing does not work when using an async handler,
+                    // and trying to force Wait on the return dialog freezes the UI thread.
+                    // This solution is the hack below, where CancelClose automatically cancels
+                    // the closing event first, then CheckClose checks to see if the project
+                    // has updates.
+                    // If there are no updates, CheckClose removes all handlers and forces a new close.
+                    // If there are updates, then the dialog requests permission to proceed.
+                    // If yes, then it continues as before. If no, then CheckClose removes itself
+                    // and then adds back all the handlers in the correct order (i.e. the same
+                    // initial state) and then immediately returns.
+                    void CancelClose(object? sender, CancelEventArgs args)
+                    {
+                        args.Cancel = true;
                     }
 
-                    mainView.Closing -= CheckClose;
-                    mainViewModel.CloseLayout();
-                    mainView.Close();
+                    async void CheckClose(object? sender, CancelEventArgs args)
+                    {
+                        mainView.Closing -= CancelClose;
+
+                        if (mainViewModel.IsProjectUpdated)
+                        {
+                            bool wishToClose = await dialogService.ShowConfirmationAsync(
+                                Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                                Resource.ProjectPlan.Messages.Message_UnsavedChanges);
+
+                            if (!wishToClose)
+                            {
+                                // Clearing the rest of the handlers and then adding
+                                // them back in the correct order.
+                                mainView.Closing -= CheckClose;
+                                mainView.Closing += CancelClose;
+                                mainView.Closing += CheckClose;
+                                return;
+                            }
+                        }
+
+                        mainView.Closing -= CheckClose;
+                        mainViewModel.CloseLayout();
+                        mainView.Close();
+                    }
+
+                    mainView.Closing += CancelClose;
+                    mainView.Closing += CheckClose;
+
+                    desktopLifetime.MainWindow = mainView;
+
+                    desktopLifetime.Exit += (a, b) =>
+                    {
+                        mainViewModel.CloseLayout();
+                    };
+
+                    desktopLifetime.Startup += async (sender, args) =>
+                    {
+                        string? input = args?.Args?.FirstOrDefault();
+                        await mainViewModel.OpenProjectPlanFileAsync(input);
+                    };
+
+                    mainView.Show();
+
+                    splashView.Close();
                 }
-
-                mainView.Closing += CancelClose;
-                mainView.Closing += CheckClose;
-
-                desktopLifetime.MainWindow = mainView;
-
-                desktopLifetime.Exit += (a, b) =>
+                catch (TaskCanceledException)
                 {
-                    mainViewModel.CloseLayout();
-                };
-
-                desktopLifetime.Startup += async (sender, args) =>
-                {
-                    string? input = args?.Args?.FirstOrDefault();
-                    await mainViewModel.OpenProjectPlanFileAsync(input);
-                };
+                    splashView.Close();
+                    return;
+                }
             }
             //else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewLifetime)
             //{
