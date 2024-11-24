@@ -98,6 +98,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.ViewEarnedValueProjections)
                 .ToProperty(this, main => main.ViewProjections);
 
+            m_SelectedTheme = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.SelectedTheme)
+                .ToProperty(this, rcm => rcm.SelectedTheme);
+
             m_BuildEarnedValueChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.TrackingSeriesSet,
@@ -244,17 +248,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            byte mainLineOpacity = 255;
-            double mainStrokeThickness = 2.0;
-
-            byte projectionLineOpacity = 100;
-            double projectionStrokeThickness = 1.0;
+            const double mainStrokeThickness = 2.0;
+            const double projectionStrokeThickness = 1.0;
 
             PopulateLineSeries(
                 new LineSeries
                 {
                     Title = Resource.ProjectPlan.Labels.Label_Plan,
-                    Color = OxyColor.FromAColor(mainLineOpacity, OxyColors.Blue),
+                    Color = OxyColor.FromAColor(ColorHelper.AnnotationAFull, OxyColors.Blue),
                     StrokeThickness = mainStrokeThickness
                 },
                 trackingSeriesSet.Plan);
@@ -265,7 +266,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     new LineSeries
                     {
                         Title = Resource.ProjectPlan.Labels.Label_PlanProjection,
-                        Color = OxyColor.FromAColor(projectionLineOpacity, OxyColors.Blue),
+                        Color = OxyColor.FromAColor(ColorHelper.AnnotationAMedium, OxyColors.Blue),
                         StrokeThickness = projectionStrokeThickness
                     },
                     trackingSeriesSet.PlanProjection);
@@ -275,7 +276,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 new LineSeries
                 {
                     Title = Resource.ProjectPlan.Labels.Label_Progress,
-                    Color = OxyColor.FromAColor(mainLineOpacity, OxyColors.Green),
+                    Color = OxyColor.FromAColor(ColorHelper.AnnotationAFull, OxyColors.Green),
                     StrokeThickness = mainStrokeThickness
                 },
                 trackingSeriesSet.Progress);
@@ -286,7 +287,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     new LineSeries
                     {
                         Title = Resource.ProjectPlan.Labels.Label_ProgressProjection,
-                        Color = OxyColor.FromAColor(projectionLineOpacity, OxyColors.Green),
+                        Color = OxyColor.FromAColor(ColorHelper.AnnotationAMedium, OxyColors.Green),
                         StrokeThickness = projectionStrokeThickness
                     },
                     trackingSeriesSet.ProgressProjection);
@@ -296,7 +297,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 new LineSeries
                 {
                     Title = Resource.ProjectPlan.Labels.Label_Effort,
-                    Color = OxyColor.FromAColor(mainLineOpacity, OxyColors.Red),
+                    Color = OxyColor.FromAColor(ColorHelper.AnnotationAFull, OxyColors.Red),
                     StrokeThickness = mainStrokeThickness
                 },
                 trackingSeriesSet.Effort);
@@ -307,7 +308,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     new LineSeries
                     {
                         Title = Resource.ProjectPlan.Labels.Label_EffortProjection,
-                        Color = OxyColor.FromAColor(projectionLineOpacity, OxyColors.Red),
+                        Color = OxyColor.FromAColor(ColorHelper.AnnotationAMedium, OxyColors.Red),
                         StrokeThickness = projectionStrokeThickness
                     },
                     trackingSeriesSet.EffortProjection);
@@ -413,6 +414,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock) m_CoreViewModel.ViewEarnedValueProjections = value;
             }
+        }
+
+        private readonly ObservableAsPropertyHelper<string> m_SelectedTheme;
+        public string SelectedTheme
+        {
+            get => m_SelectedTheme.Value;
         }
 
         public ICommand SaveEarnedValueChartImageFileCommand { get; }
@@ -521,6 +528,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
                 m_ViewProjections?.Dispose();
+                m_SelectedTheme?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

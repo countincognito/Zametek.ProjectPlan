@@ -426,7 +426,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                     case AnnotationStyle.Plain or AnnotationStyle.Color:
                                         {
                                             OxyColor resourceColor = OxyColors.Blue;
-                                            byte aLevel = ColorHelper.AnnotationALight;
+                                            byte aLevel = ColorHelper.AnnotationATransparent;
 
                                             if (annotationStyle == AnnotationStyle.Color)
                                             {
@@ -435,7 +435,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                                     colorFormat.R,
                                                     colorFormat.G,
                                                     colorFormat.B);
-                                                aLevel = ColorHelper.AnnotationAMedium;
+                                                aLevel = ColorHelper.AnnotationALight;
                                             }
 
                                             OxyColor fillColor = OxyColor.FromAColor(aLevel, resourceColor);
@@ -653,7 +653,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                     case AnnotationStyle.Plain or AnnotationStyle.Color:
                                         {
                                             OxyColor workStreamColor = OxyColors.Blue;
-                                            byte aLevel = ColorHelper.AnnotationALight;
+                                            byte aLevel = ColorHelper.AnnotationATransparent;
 
                                             WorkStreamModel workStreamModel = workStreamLookup[workStreamId];
 
@@ -664,7 +664,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                                     workStreamModel.ColorFormat.R,
                                                     workStreamModel.ColorFormat.G,
                                                     workStreamModel.ColorFormat.B);
-                                                aLevel = ColorHelper.AnnotationAMedium;
+                                                aLevel = ColorHelper.AnnotationALight;
                                             }
 
                                             double minimumX = ChartHelper.CalculateChartTimeXValue(workStreamStartTime, showDates, projectStartDateTime, dateTimeCalculator);

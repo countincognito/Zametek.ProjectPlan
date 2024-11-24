@@ -11,6 +11,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
+        string SelectedTheme { get; }
+
         ICommand SaveResourceChartImageFileCommand { get; }
 
         Task SaveResourceChartImageFileAsync(string? filename, int width, int height);

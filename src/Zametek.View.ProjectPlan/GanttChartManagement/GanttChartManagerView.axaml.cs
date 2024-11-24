@@ -1,11 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
-using com.sun.tools.javac.comp;
 using OxyPlot;
-using OxyPlot.Annotations;
-using OxyPlot.Axes;
-using OxyPlot.Series;
 using ReactiveUI;
 using System;
 using System.Reactive.Linq;
@@ -42,7 +38,7 @@ namespace Zametek.View.ProjectPlan
                 m_UpdateGanttChartSub = m_ViewModel.WhenAnyValue(
                     vm => vm.GanttChartPlotModel,
                     vm => vm.SelectedTheme)
-                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .ObserveOn(RxApp.TaskpoolScheduler)
                     .Subscribe(UpdateGanttChart);
             }
         }
@@ -58,74 +54,11 @@ namespace Zametek.View.ProjectPlan
         {
             ThemeVariant inheritedThemeVariant = ThemeHelper.GetInheritedThemeVariant(input.theme);
 
-
-
-            
-
-
             inheritedThemeVariant.ValueSwitchOn()
-                .Case(ThemeVariant.Light,
-                _ =>
-                {
-                    input.plot.Background = OxyColors.Transparent;
+                .Case(ThemeVariant.Light, _ => PlotHelper.SetLightTheme(input.plot))
+                .Case(ThemeVariant.Dark, _ => PlotHelper.SetDarkTheme(input.plot));
 
-
-                })
-                .Case(ThemeVariant.Dark,
-                _ =>
-                {
-                    input.plot.Background = OxyColors.Black;
-                    input.plot.PlotAreaBackground = OxyColors.Black;
-                    input.plot.PlotAreaBorderColor = OxyColors.White;
-                    input.plot.TitleColor = OxyColors.White;
-                    input.plot.SubtitleColor = OxyColors.White;
-
-
-                    foreach (Annotation? annotation in input.plot.Annotations)
-                    {
-                        if (annotation is RectangleAnnotation rectangle)
-                        {
-                            rectangle.TextColor = OxyColors.White;
-                            rectangle.Stroke = OxyColors.White;
-                        }
-
-                    }
-
-
-                    foreach (Axis? axis in input.plot.Axes)
-                    {
-                        axis.TicklineColor = OxyColors.White;
-                        axis.TextColor = OxyColors.White;
-                        axis.AxislineColor = OxyColors.White;
-                        axis.MajorGridlineColor = OxyColors.White;
-                        axis.MinorGridlineColor = OxyColors.White;
-                        axis.TitleColor = OxyColors.White;
-                    }
-
-
-                    foreach (Series? series in input.plot.Series)
-                    {
-                        if (series is IntervalBarSeries intervalBarSeries)
-                        {
-                            //foreach (IntervalBarItem? intervalBarItem in intervalBarSeries.Items)
-                            //{
-                            //    intervalBarItem.
-                            //}
-
-
-
-                            intervalBarSeries.StrokeColor = OxyColors.White;
-                            //rectangle.Stroke = OxyColors.White;
-                        }
-                    }
-
-
-
-
-
-
-                });
-
+            oxyplot.InvalidatePlot();
         }
     }
 }

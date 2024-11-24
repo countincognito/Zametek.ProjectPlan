@@ -7,8 +7,12 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     public static class ColorHelper
     {
-        public const byte AnnotationAMedium = 40;
-        public const byte AnnotationALight = 10;
+        public const byte AnnotationAFull = 255;
+        public const byte AnnotationAHeavy = 200;
+        public const byte AnnotationAMedium = 100;
+        public const byte AnnotationALight = 40;
+        public const byte AnnotationATransparent = 10;
+
         public const byte AnnotationATrackerOverlay = 232;
         public const byte AnnotationALegend = 200;
 
