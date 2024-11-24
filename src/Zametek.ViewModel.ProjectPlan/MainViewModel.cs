@@ -356,7 +356,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ProjectPlanModel planModel = await m_ProjectFileOpen.OpenProjectPlanFileAsync(filename);
                 ProcessProjectPlan(planModel);
                 m_SettingService.SetProjectFilePath(filename);
-                await RunAutoCompileAsync();
+                //await RunAutoCompileAsync();
             }
         }
 
@@ -636,8 +636,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 string directory = m_SettingService.ProjectDirectory;
-                string? filename = Path.Combine(directory, projectTitle);
-                filename = Path.ChangeExtension(filename, Resource.ProjectPlan.Filters.Filter_ProjectPlanFileExtension);
+                string filename = Path.Combine(directory, projectTitle);
+
+
+
+
+
+                filename = $@"{filename}.{Resource.ProjectPlan.Filters.Filter_ProjectPlanFileExtension}";
                 await SaveProjectPlanFileInternalAsync(filename);
             }
             catch (Exception ex)

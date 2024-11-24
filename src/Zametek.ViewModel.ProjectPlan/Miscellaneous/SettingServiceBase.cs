@@ -77,7 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void SetProjectTitle(string filename)//!!)
         {
-            ProjectTitle = Path.GetFileNameWithoutExtension(filename);
+            ProjectTitle = Path.GetFileNameWithoutExtension(filename).Trim();
         }
 
         public void SetProjectDirectory(string filename)//!!)

@@ -7,6 +7,8 @@
 
         public List<v0_2_1.ScheduledActivityModel> ScheduledActivities { get; init; } = [];
 
+        public List<bool> ActivityAllocation { get; init; } = [];
+
         public int FinishTime { get; init; }
     }
 }

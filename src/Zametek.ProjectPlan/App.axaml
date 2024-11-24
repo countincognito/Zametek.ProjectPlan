@@ -11,7 +11,6 @@
 			 xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
 			 xmlns:mbc="clr-namespace:MsBox.Avalonia.Controls;assembly=MsBox.Avalonia"
 			 xmlns:oxy="using:OxyPlot.Avalonia"
-			 x:DataType="vm:MainViewModel"
 			 Name="{x:Static resources:Titles.Title_ProjectPlan}"
 			 RequestedThemeVariant="Light">
 	<!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
