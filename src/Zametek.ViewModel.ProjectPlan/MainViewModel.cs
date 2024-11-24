@@ -194,10 +194,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.AutoCompile)
                 .ToProperty(this, main => main.AutoCompile);
 
+            m_SelectedTheme = this
+                .WhenAnyValue(main => main.m_CoreViewModel.SelectedTheme)
+                .ToProperty(this, main => main.SelectedTheme);
+
             m_CoreViewModel.IsProjectUpdated = false;
             m_CoreViewModel.AutoCompile = true;
             m_CoreViewModel.ViewEarnedValueProjections = false;
-            m_SelectedTheme = m_SettingService.SelectedTheme;
 
 #if DEBUG
             DebugFactoryEvents(m_DockFactory);
@@ -494,18 +497,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private string m_SelectedTheme;
-
+        private readonly ObservableAsPropertyHelper<string> m_SelectedTheme;
         public string SelectedTheme
         {
-            get => m_SelectedTheme;
+            get => m_SelectedTheme.Value;
             set
             {
-                lock (m_Lock)
-                {
-                    m_SettingService.SelectedTheme = value;
-                    this.RaiseAndSetIfChanged(ref m_SelectedTheme, value);
-                }
+                lock (m_Lock) m_CoreViewModel.SelectedTheme = value;
             }
         }
 
@@ -637,11 +635,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 string directory = m_SettingService.ProjectDirectory;
                 string filename = Path.Combine(directory, projectTitle);
-
-
-
-
-
                 filename = $@"{filename}.{Resource.ProjectPlan.Filters.Filter_ProjectPlanFileExtension}";
                 await SaveProjectPlanFileInternalAsync(filename);
             }
@@ -835,6 +828,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_UseClassicDates?.Dispose();
                 m_UseBusinessDays?.Dispose();
                 m_AutoCompile?.Dispose();
+                m_SelectedTheme?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

@@ -33,6 +33,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool AutoCompile { get; set; }
 
+        string SelectedTheme { get; set; }
+
         ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
 
         ArrowGraphSettingsModel ArrowGraphSettings { get; set; }

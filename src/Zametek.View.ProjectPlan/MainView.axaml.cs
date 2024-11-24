@@ -5,12 +5,10 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
 using ReactiveUI;
-using Semi.Avalonia;
 using System;
 using System.Reactive.Linq;
 using Ursa.Controls;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Utility;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -27,6 +25,8 @@ namespace Zametek.View.ProjectPlan
         public MainView()
         {
             InitializeComponent();
+
+            //DataContextChanged += MainView_DataContextChanged;
             Loaded += MainView_Loaded;
             Unloaded += MainView_Unloaded;
             InitialTheme = string.Empty;
@@ -39,7 +39,7 @@ namespace Zametek.View.ProjectPlan
         // https://github.com/irihitech/Ursa.Avalonia/blob/main/demo/Ursa.Demo/Pages/ToastDemo.axaml.cs
         private void MainView_Loaded(
             object? sender,
-            RoutedEventArgs e)
+            EventArgs e)
         {
             m_ViewModel = DataContext as IMainViewModel;
             if (m_ViewModel is not null)
@@ -96,7 +96,7 @@ namespace Zametek.View.ProjectPlan
             var app = Application.Current;
             if (app is not null)
             {
-                app.RequestedThemeVariant = GetThemeVariant(theme);
+                app.RequestedThemeVariant = ThemeHelper.GetThemeVariant(theme);
             }
         }
 
@@ -105,31 +105,15 @@ namespace Zametek.View.ProjectPlan
         {
             if (hasCompilationErrors)
             {
-                string? themeVariant = GetThemeVariant(m_ViewModel?.SelectedTheme)?.Key?.ToString();
+                ThemeVariant inheritedThemeVariant = ThemeHelper.GetInheritedThemeVariant(m_ViewModel?.SelectedTheme);
 
                 m_ToastManager?.Show(
-                         new Toast(Resource.ProjectPlan.Messages.Message_CompilationErrors),
-                         showIcon: true,
-                         showClose: true,
-                         type: NotificationType.Error,
-                         classes: [themeVariant ?? Resource.ProjectPlan.Themes.Theme_Default]);
+                    new Toast(Resource.ProjectPlan.Messages.Message_CompilationErrors),
+                    showIcon: true,
+                    showClose: true,
+                    type: NotificationType.Error,
+                    classes: [inheritedThemeVariant.ToString() ?? Resource.ProjectPlan.Themes.Theme_Default]);
             }
-        }
-
-        private static ThemeVariant GetThemeVariant(string? theme)
-        {
-            ThemeVariant themeVariant = ThemeVariant.Default;
-
-            theme.ValueSwitchOn()
-                .Case(Resource.ProjectPlan.Themes.Theme_Default, _ => { themeVariant = ThemeVariant.Default; })
-                .Case(Resource.ProjectPlan.Themes.Theme_Light, _ => { themeVariant = ThemeVariant.Light; })
-                .Case(Resource.ProjectPlan.Themes.Theme_Dark, _ => { themeVariant = ThemeVariant.Dark; })
-                .Case(Resource.ProjectPlan.Themes.Theme_Aquatic, _ => { themeVariant = SemiTheme.Aquatic; })
-                .Case(Resource.ProjectPlan.Themes.Theme_Desert, _ => { themeVariant = SemiTheme.Desert; })
-                .Case(Resource.ProjectPlan.Themes.Theme_Dust, _ => { themeVariant = SemiTheme.Dust; })
-                .Case(Resource.ProjectPlan.Themes.Theme_NightSky, _ => { themeVariant = SemiTheme.NightSky; });
-
-            return themeVariant;
         }
     }
 }

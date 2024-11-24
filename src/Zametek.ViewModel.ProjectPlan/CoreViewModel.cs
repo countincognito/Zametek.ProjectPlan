@@ -69,6 +69,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
             m_TrackingSeriesSet = new TrackingSeriesSetModel();
 
+            m_SelectedTheme = m_SettingService.SelectedTheme;
+
             m_ProjectTitle = this
                 .WhenAnyValue(core => core.m_SettingService.ProjectTitle)
                 .ToProperty(this, core => core.ProjectTitle);
@@ -871,6 +873,21 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         IsReadyToCompile = ReadyToCompile.No;
                     }
+                }
+            }
+        }
+
+        private string m_SelectedTheme;
+
+        public string SelectedTheme
+        {
+            get => m_SelectedTheme;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_SettingService.SelectedTheme = value;
+                    this.RaiseAndSetIfChanged(ref m_SelectedTheme, value);
                 }
             }
         }

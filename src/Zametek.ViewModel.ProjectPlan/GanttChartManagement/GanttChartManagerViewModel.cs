@@ -118,6 +118,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     (isGrouped, annotationStyle) => isGrouped && annotationStyle != AnnotationStyle.None)
                 .ToProperty(this, rcm => rcm.IsAnnotated);
 
+            m_SelectedTheme = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.SelectedTheme)
+                .ToProperty(this, rcm => rcm.SelectedTheme);
+
             m_BuildGanttChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
@@ -223,6 +227,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 LegendBorder = OxyColors.Black,
                 LegendBackground = OxyColor.FromAColor(ColorHelper.AnnotationALegend, OxyColors.White),
+                //LegendTextColor = OxyColors.Black,
                 LegendPosition = LegendPosition.RightMiddle,
                 LegendPlacement = LegendPlacement.Outside,
             };
@@ -938,6 +943,12 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_ShowTracking, value);
         }
 
+        private readonly ObservableAsPropertyHelper<string> m_SelectedTheme;
+        public string SelectedTheme
+        {
+            get => m_SelectedTheme.Value;
+        }
+
         public ICommand SaveGanttChartImageFileCommand { get; }
 
         public async Task SaveGanttChartImageFileAsync(
@@ -1065,6 +1076,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_IsGrouped?.Dispose();
                 m_IsAnnotated?.Dispose();
+                m_SelectedTheme?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
