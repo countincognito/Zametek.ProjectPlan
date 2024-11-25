@@ -37,7 +37,7 @@ namespace Zametek.ViewModel.ProjectPlan
             OxyColor background)
         {
             plot.Background = OxyColor.FromAColor(ColorHelper.AnnotationAHeavy, background);
-            plot.PlotAreaBackground = OxyColor.FromAColor(ColorHelper.AnnotationAHeavy, background);
+            plot.PlotAreaBackground = OxyColors.Transparent;
             plot.PlotAreaBorderColor = foreground;
             plot.TitleColor = foreground;
             plot.SubtitleColor = foreground;
