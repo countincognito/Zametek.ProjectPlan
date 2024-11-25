@@ -25,17 +25,19 @@ namespace Zametek.ViewModel.ProjectPlan
             return plot;
         }
 
-        public static PlotModel SetLightTheme(this PlotModel plot) => plot.SetTheme(OxyColors.Black, OxyColors.White);
+        public static PlotModel SetLightTheme(this PlotModel plot) =>
+            plot.SetTheme(OxyColors.Black, OxyColors.White);
 
-        public static PlotModel SetDarkTheme(this PlotModel plot) => plot.SetTheme(OxyColors.White, OxyColors.Black);
+        public static PlotModel SetDarkTheme(this PlotModel plot) =>
+            plot.SetTheme(OxyColors.White, OxyColors.Black);
 
         public static PlotModel SetTheme(
             this PlotModel plot,
             OxyColor foreground,
             OxyColor background)
         {
-            plot.Background = background;
-            plot.PlotAreaBackground = background;
+            plot.Background = OxyColor.FromAColor(ColorHelper.AnnotationAHeavy, background);
+            plot.PlotAreaBackground = OxyColor.FromAColor(ColorHelper.AnnotationAHeavy, background);
             plot.PlotAreaBorderColor = foreground;
             plot.TitleColor = foreground;
             plot.SubtitleColor = foreground;
