@@ -8,7 +8,9 @@ using ReactiveUI;
 using System;
 using System.Reactive.Linq;
 using Ursa.Controls;
+using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Utility;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -25,8 +27,6 @@ namespace Zametek.View.ProjectPlan
         public MainView()
         {
             InitializeComponent();
-
-            //DataContextChanged += MainView_DataContextChanged;
             Loaded += MainView_Loaded;
             Unloaded += MainView_Unloaded;
             InitialTheme = string.Empty;
@@ -97,6 +97,17 @@ namespace Zametek.View.ProjectPlan
             if (app is not null)
             {
                 app.RequestedThemeVariant = ThemeHelper.GetThemeVariant(theme);
+            }
+            if (m_ViewModel is not null)
+            {
+                ThemeVariant inheritedThemeVariant = ThemeHelper.GetInheritedThemeVariant(theme);
+                BaseTheme baseTheme = BaseTheme.Light;
+
+                inheritedThemeVariant.ValueSwitchOn()
+                    .Case(ThemeVariant.Light, _ => baseTheme = BaseTheme.Light)
+                    .Case(ThemeVariant.Dark, _ => baseTheme = BaseTheme.Dark);
+
+                m_ViewModel.BaseTheme = baseTheme;
             }
         }
 

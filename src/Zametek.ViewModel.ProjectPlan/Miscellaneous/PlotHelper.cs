@@ -3,18 +3,34 @@ using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Legends;
 using OxyPlot.Series;
+using Zametek.Common.ProjectPlan;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public static class PlotHelper
     {
-        public static void SetLightTheme(PlotModel plot) => SetTheme(plot, OxyColors.Black, OxyColors.White);
+        public static PlotModel SetBaseTheme(
+            this PlotModel plot,
+            BaseTheme baseTheme)
+        {
+            if (baseTheme == BaseTheme.Light)
+            {
+                return plot.SetLightTheme();
+            }
+            if (baseTheme == BaseTheme.Dark)
+            {
+                return plot.SetDarkTheme();
+            }
+            return plot;
+        }
 
-        public static void SetDarkTheme(PlotModel plot) => SetTheme(plot, OxyColors.White, OxyColors.Black);
+        public static PlotModel SetLightTheme(this PlotModel plot) => plot.SetTheme(OxyColors.Black, OxyColors.White);
 
-        public static void SetTheme(
-            PlotModel plot,
+        public static PlotModel SetDarkTheme(this PlotModel plot) => plot.SetTheme(OxyColors.White, OxyColors.Black);
+
+        public static PlotModel SetTheme(
+            this PlotModel plot,
             OxyColor foreground,
             OxyColor background)
         {
@@ -68,6 +84,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     .Case<AreaSeries>(x => { })
                     .Case<LineSeries>(x => { });
             }
+
+            return plot;
         }
     }
 }

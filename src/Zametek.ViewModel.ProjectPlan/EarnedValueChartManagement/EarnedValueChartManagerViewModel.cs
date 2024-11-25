@@ -98,16 +98,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.ViewEarnedValueProjections)
                 .ToProperty(this, main => main.ViewProjections);
 
-            m_SelectedTheme = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.SelectedTheme)
-                .ToProperty(this, rcm => rcm.SelectedTheme);
-
             m_BuildEarnedValueChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.TrackingSeriesSet,
                     rcm => rcm.m_CoreViewModel.ShowDates,
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
-                    rcm => rcm.m_CoreViewModel.ViewEarnedValueProjections)
+                    rcm => rcm.m_CoreViewModel.ViewEarnedValueProjections,
+                    rcm => rcm.m_CoreViewModel.BaseTheme)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildEarnedValueChartPlotModelAsync());
 
@@ -160,7 +157,8 @@ namespace Zametek.ViewModel.ProjectPlan
             TrackingSeriesSetModel trackingSeriesSet,
             bool showDates,
             DateTime projectStartDateTime,
-            bool showProjections)
+            bool showProjections,
+            BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(trackingSeriesSet);
@@ -168,7 +166,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (trackingSeriesSet.Plan.Count == 0)
             {
-                return plotModel;
+                return plotModel.SetBaseTheme(baseTheme);
             }
 
             const double defaultMaxPercentage = 100.0;
@@ -319,7 +317,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 plotModelInterface.Update(true);
             }
 
-            return plotModel;
+            return plotModel.SetBaseTheme(baseTheme);
         }
 
         private static Axis BuildEarnedValueChartXAxis(
@@ -416,12 +414,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<string> m_SelectedTheme;
-        public string SelectedTheme
-        {
-            get => m_SelectedTheme.Value;
-        }
-
         public ICommand SaveEarnedValueChartImageFileCommand { get; }
 
         public async Task SaveEarnedValueChartImageFileAsync(
@@ -492,7 +484,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.TrackingSeriesSet,
                     m_CoreViewModel.ShowDates,
                     m_CoreViewModel.ProjectStartDateTime,
-                    m_CoreViewModel.ViewEarnedValueProjections);
+                    m_CoreViewModel.ViewEarnedValueProjections,
+                    m_CoreViewModel.BaseTheme);
             }
 
             EarnedValueChartPlotModel = plotModel ?? new PlotModel();
@@ -528,7 +521,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
                 m_ViewProjections?.Dispose();
-                m_SelectedTheme?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

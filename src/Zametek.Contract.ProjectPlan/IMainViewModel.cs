@@ -1,4 +1,5 @@
 ﻿using System.Windows.Input;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -40,6 +41,8 @@ namespace Zametek.Contract.ProjectPlan
         bool AutoCompile { get; set; }
 
         string SelectedTheme { get; set; }
+
+        BaseTheme BaseTheme { get; set; }
 
         ICommand OpenProjectPlanFileCommand { get; }
 

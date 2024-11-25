@@ -94,15 +94,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, rcm => rcm.HasCompilationErrors);
 
-            m_SelectedTheme = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.SelectedTheme)
-                .ToProperty(this, rcm => rcm.SelectedTheme);
-
             m_BuildResourceChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
                     rcm => rcm.m_CoreViewModel.ShowDates,
-                    rcm => rcm.m_CoreViewModel.ProjectStartDateTime)
+                    rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
+                    rcm => rcm.m_CoreViewModel.BaseTheme)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
 
@@ -154,7 +151,8 @@ namespace Zametek.ViewModel.ProjectPlan
             IDateTimeCalculator dateTimeCalculator,
             ResourceSeriesSetModel resourceSeriesSet,
             bool showDates,
-            DateTime projectStartDateTime)
+            DateTime projectStartDateTime,
+            BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
@@ -162,7 +160,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (resourceSeriesSet.Combined.Count == 0)
             {
-                return plotModel;
+                return plotModel.SetBaseTheme(baseTheme);
             }
 
             IEnumerable<ResourceSeriesModel> combinedResourceSeries = resourceSeriesSet.Combined.OrderBy(x => x.DisplayOrder);
@@ -244,7 +242,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 plotModelInterface.Update(true);
             }
 
-            return plotModel;
+            return plotModel.SetBaseTheme(baseTheme);
         }
 
         private static Axis BuildResourceChartXAxis(
@@ -329,12 +327,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
-        private readonly ObservableAsPropertyHelper<string> m_SelectedTheme;
-        public string SelectedTheme
-        {
-            get => m_SelectedTheme.Value;
-        }
-
         public ICommand SaveResourceChartImageFileCommand { get; }
 
         public async Task SaveResourceChartImageFileAsync(
@@ -404,7 +396,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_DateTimeCalculator,
                     m_CoreViewModel.ResourceSeriesSet,
                     m_CoreViewModel.ShowDates,
-                    m_CoreViewModel.ProjectStartDateTime);
+                    m_CoreViewModel.ProjectStartDateTime,
+                    m_CoreViewModel.BaseTheme);
             }
 
             ResourceChartPlotModel = plotModel ?? new PlotModel();
@@ -439,7 +432,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
-                m_SelectedTheme?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

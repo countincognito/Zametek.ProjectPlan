@@ -198,6 +198,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.SelectedTheme)
                 .ToProperty(this, main => main.SelectedTheme);
 
+            m_BaseTheme = this
+                .WhenAnyValue(main => main.m_CoreViewModel.BaseTheme)
+                .ToProperty(this, main => main.BaseTheme);
+
             m_CoreViewModel.IsProjectUpdated = false;
             m_CoreViewModel.AutoCompile = true;
             m_CoreViewModel.ViewEarnedValueProjections = false;
@@ -504,6 +508,16 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 lock (m_Lock) m_CoreViewModel.SelectedTheme = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<BaseTheme> m_BaseTheme;
+        public BaseTheme BaseTheme
+        {
+            get => m_BaseTheme.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.BaseTheme = value;
             }
         }
 
@@ -829,6 +843,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_UseBusinessDays?.Dispose();
                 m_AutoCompile?.Dispose();
                 m_SelectedTheme?.Dispose();
+                m_BaseTheme?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

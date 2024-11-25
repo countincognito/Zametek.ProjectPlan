@@ -118,10 +118,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     (isGrouped, annotationStyle) => isGrouped && annotationStyle != AnnotationStyle.None)
                 .ToProperty(this, rcm => rcm.IsAnnotated);
 
-            m_SelectedTheme = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.SelectedTheme)
-                .ToProperty(this, rcm => rcm.SelectedTheme);
-
             m_BuildGanttChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
@@ -131,7 +127,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
                     rcm => rcm.m_CoreViewModel.ShowDates,
                     rcm => rcm.m_CoreViewModel.UseClassicDates,
-                    rcm => rcm.m_CoreViewModel.GraphCompilation,
+                    //rcm => rcm.m_CoreViewModel.GraphCompilation,
+                    rcm => rcm.m_CoreViewModel.BaseTheme,
                     rcm => rcm.GroupByMode,
                     rcm => rcm.AnnotationStyle,
                     rcm => rcm.LabelGroups,
@@ -204,7 +201,8 @@ namespace Zametek.ViewModel.ProjectPlan
             AnnotationStyle annotationStyle,
             bool labelGroups,
             bool showProjectFinish,
-            bool showTracking)
+            bool showTracking,
+            BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
@@ -216,7 +214,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (!graphCompilation.DependentActivities.Any())
             {
-                return plotModel;
+                return plotModel.SetBaseTheme(baseTheme);
             }
 
             int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
@@ -563,7 +561,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             if (!activitiesByWorkStream.Keys.ToHashSet().IsSubsetOf(workStreamLookup.Keys))
                             {
-                                return plotModel;
+                                return plotModel.SetBaseTheme(baseTheme);
                             }
 
                             // Order the set according to display order, followed by the start times of the first activity for each work stream.
@@ -762,7 +760,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 plotModelInterface.Update(true);
             }
 
-            return plotModel;
+            return plotModel.SetBaseTheme(baseTheme);
         }
 
         private static RectangleAnnotation? TrackerAnnotation(
@@ -943,12 +941,6 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_ShowTracking, value);
         }
 
-        private readonly ObservableAsPropertyHelper<string> m_SelectedTheme;
-        public string SelectedTheme
-        {
-            get => m_SelectedTheme.Value;
-        }
-
         public ICommand SaveGanttChartImageFileCommand { get; }
 
         public async Task SaveGanttChartImageFileAsync(
@@ -1039,7 +1031,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     AnnotationStyle,
                     LabelGroups,
                     ShowProjectFinish,
-                    ShowTracking);
+                    ShowTracking,
+                    m_CoreViewModel.BaseTheme);
             }
 
             GanttChartPlotModel = plotModel ?? new PlotModel();
@@ -1076,7 +1069,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_IsGrouped?.Dispose();
                 m_IsAnnotated?.Dispose();
-                m_SelectedTheme?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

@@ -1,4 +1,5 @@
 ﻿using System.Windows.Input;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -10,8 +11,6 @@ namespace Zametek.Contract.ProjectPlan
         bool HasStaleOutputs { get; }
 
         bool HasCompilationErrors { get; }
-
-        string SelectedTheme { get; }
 
         ICommand SaveResourceChartImageFileCommand { get; }
 

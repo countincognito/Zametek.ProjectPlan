@@ -1,4 +1,5 @@
 ﻿using System.Windows.Input;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -12,8 +13,6 @@ namespace Zametek.Contract.ProjectPlan
         bool HasCompilationErrors { get; }
 
         bool ViewProjections { get; set; }
-
-        string SelectedTheme { get; }
 
         ICommand SaveEarnedValueChartImageFileCommand { get; }
 

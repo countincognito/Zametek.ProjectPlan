@@ -892,6 +892,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private BaseTheme m_BaseTheme;
+        public BaseTheme BaseTheme
+        {
+            get => m_BaseTheme;
+            set
+            {
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_BaseTheme, value);
+            }
+        }
+
         private readonly ObservableCollection<IManagedActivityViewModel> m_Activities;
         private readonly ReadOnlyObservableCollection<IManagedActivityViewModel> m_ReadOnlyActivities;
         public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_ReadOnlyActivities;
