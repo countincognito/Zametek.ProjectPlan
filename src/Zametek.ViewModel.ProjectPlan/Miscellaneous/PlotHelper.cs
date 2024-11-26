@@ -46,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan
             foreach (LegendBase? legend in plot.Legends)
             {
                 legend.LegendBorder = foreground;
-                legend.LegendBackground = OxyColor.FromAColor(ColorHelper.AnnotationALegend, background);
+                legend.LegendBackground = OxyColors.Transparent;
                 legend.TextColor = foreground;
                 legend.LegendTextColor = foreground;
                 legend.LegendTitleColor = foreground;

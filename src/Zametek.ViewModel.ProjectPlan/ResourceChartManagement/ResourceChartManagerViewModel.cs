@@ -172,7 +172,7 @@ namespace Zametek.ViewModel.ProjectPlan
             var legend = new Legend()
             {
                 LegendBorder = OxyColors.Black,
-                LegendBackground = OxyColor.FromAColor(ColorHelper.AnnotationALegend, OxyColors.White),
+                LegendBackground = OxyColors.Transparent,
                 LegendPosition = LegendPosition.RightMiddle,
                 LegendPlacement = LegendPlacement.Outside,
                 //LegendOrientation = this.LegendOrientation,

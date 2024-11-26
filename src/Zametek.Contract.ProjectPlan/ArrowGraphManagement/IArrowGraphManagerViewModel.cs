@@ -1,4 +1,5 @@
 ﻿using System.Windows.Input;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -12,6 +13,8 @@ namespace Zametek.Contract.ProjectPlan
         bool HasCompilationErrors { get; }
 
         string ArrowGraphData { get; }
+
+        BaseTheme BaseTheme { get; }
 
         ICommand SaveArrowGraphImageFileCommand { get; }
 

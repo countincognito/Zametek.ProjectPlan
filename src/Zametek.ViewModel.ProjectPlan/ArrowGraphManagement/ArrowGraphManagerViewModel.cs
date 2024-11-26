@@ -5,6 +5,7 @@ using Svg.Skia;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
 
@@ -117,8 +118,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(mm => mm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, mm => mm.HasCompilationErrors);
 
+            m_BaseTheme = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.BaseTheme)
+                .ToProperty(this, mm => mm.BaseTheme);
+
             m_BuildArrowGraphDataSub = this
-                .WhenAnyValue(agm => agm.m_CoreViewModel.ArrowGraph, agm => agm.m_CoreViewModel.ArrowGraphSettings)
+                .WhenAnyValue(
+                    agm => agm.m_CoreViewModel.ArrowGraph,
+                    agm => agm.m_CoreViewModel.ArrowGraphSettings,
+                    agm => agm.m_CoreViewModel.BaseTheme)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildArrowGraphDiagramDataAsync());
 
@@ -227,6 +235,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<BaseTheme> m_BaseTheme;
+        public BaseTheme BaseTheme => m_BaseTheme.Value;
+
         public ICommand SaveArrowGraphImageFileCommand { get; }
 
         public async Task SaveArrowGraphImageFileAsync(string? filename)
@@ -300,7 +311,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 data = m_ArrowGraphExport.BuildArrowGraphSvgData(
                     m_CoreViewModel.ArrowGraph,
-                    m_CoreViewModel.ArrowGraphSettings);
+                    m_CoreViewModel.ArrowGraphSettings,
+                    m_CoreViewModel.BaseTheme);
             }
 
             ArrowGraphData = data?.ByteArrayToString() ?? string.Empty;
@@ -356,6 +368,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
+                m_BaseTheme?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

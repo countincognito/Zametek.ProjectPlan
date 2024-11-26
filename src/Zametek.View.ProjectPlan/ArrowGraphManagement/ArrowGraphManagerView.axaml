@@ -12,6 +12,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ArrowGraphManagerView">
 	<UserControl.Resources>
+		<local:ThemeToBackgroundConverter x:Key="themeToBackgroundConverter"/>
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
@@ -37,7 +38,7 @@
 						  PointerMoved="ScrollViewer_PointerMoved"
 						  HorizontalScrollBarVisibility="Auto"
 						  VerticalScrollBarVisibility="Auto"
-						  Background="White">
+						  Background="{Binding Path=BaseTheme, Mode=OneWay, Converter={StaticResource themeToBackgroundConverter}}">
 				<ScrollViewer.ContextMenu>
 					<ContextMenu>
 						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"

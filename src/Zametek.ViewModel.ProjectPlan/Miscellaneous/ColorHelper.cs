@@ -14,7 +14,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public const byte AnnotationATransparent = 10;
 
         public const byte AnnotationATrackerOverlay = 232;
-        public const byte AnnotationALegend = 200;
 
         private static readonly Random s_Rnd = new();
         private static readonly Regex s_HtmlHexMatch = new(@"^#(([A-Fa-f0-9]{2}){3,4})$", RegexOptions.Compiled);
@@ -34,7 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             return new ColorFormatModel
             {
-                A = 255,
+                A = AnnotationAFull,
                 R = 0,
                 G = 0,
                 B = 0
@@ -45,7 +44,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             return new ColorFormatModel
             {
-                A = 255,
+                A = AnnotationAFull,
                 R = 255,
                 G = 0,
                 B = 0
@@ -55,7 +54,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             return new ColorFormatModel
             {
-                A = 255,
+                A = AnnotationAFull,
                 R = 255,
                 G = 215,
                 B = 0
@@ -65,7 +64,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             return new ColorFormatModel
             {
-                A = 255,
+                A = AnnotationAFull,
                 R = 0,
                 G = 128,
                 B = 0
@@ -78,7 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan
             s_Rnd.NextBytes(b);
             return new ColorFormatModel
             {
-                A = 255,
+                A = AnnotationAFull,
                 R = b[0],
                 G = b[1],
                 B = b[2]

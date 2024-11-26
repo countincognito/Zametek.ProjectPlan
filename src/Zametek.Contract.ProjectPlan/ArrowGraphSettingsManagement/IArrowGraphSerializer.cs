@@ -4,7 +4,7 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IArrowGraphSerializer
     {
-        byte[] BuildArrowGraphSvgData(ArrowGraphModel arrowGraph, ArrowGraphSettingsModel arrowGraphSettings);
+        byte[] BuildArrowGraphSvgData(ArrowGraphModel arrowGraph, ArrowGraphSettingsModel arrowGraphSettings, BaseTheme baseTheme);
 
         byte[] BuildArrowGraphMLData(ArrowGraphModel arrowGraph, ArrowGraphSettingsModel arrowGraphSettings);
 

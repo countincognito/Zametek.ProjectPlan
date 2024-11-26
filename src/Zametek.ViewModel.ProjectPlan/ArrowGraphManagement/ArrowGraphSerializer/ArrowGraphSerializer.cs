@@ -1,5 +1,6 @@
 ﻿using Avalonia.Media;
 using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -20,14 +21,23 @@ namespace Zametek.ViewModel.ProjectPlan
                 {EdgeDashStyle.Dashed, Microsoft.Msagl.Drawing.Style.Dashed}
              };
 
-        private static readonly double s_SvgNodeWidth = 40;
-        private static readonly double s_SvgNodeHeight = 34;
-        private static readonly double s_SvgNodeLabelWidth = 34;
-        private static readonly double s_SvgRadiusInXDirection = 3;
-        private static readonly double s_SvgRadiusInYDirection = 2;
+        private static readonly double s_SvgNodeWidth = 40.0;
+        private static readonly double s_SvgNodeHeight = 34.0;
+        private static readonly double s_SvgNodeLabelWidth = 34.0;
+        private static readonly double s_SvgRadiusInXDirection = 3.0;
+        private static readonly double s_SvgRadiusInYDirection = 2.0;
 
-        private static readonly double s_SvgEdgeLabelFontSize = 12;
-        private static readonly double s_SvgEdgeLabelHeight = 12;
+        private static readonly double s_SvgEdgeLabelFontSize = 12.0;
+        private static readonly double s_SvgEdgeLabelHeight = 12.0;
+
+        private static readonly string s_SvgLightThemeBackground = "white";
+
+        // This matches s_DarkThemeBackground in ThemeToBackgroundConverter
+        // Also mathces the Oxyplot plot areas.
+        private static readonly string s_SvgDarkThemeBackground = "#373737";
+
+        private static readonly double s_DiagramNodeModelHeight = 26.0;
+        private static readonly double s_DiagramNodeModelWidth = 62.0;
 
         // These need to be worked out through trial and error
         // whenever s_SvgNodeLabelWidth is changed.
@@ -67,8 +77,8 @@ namespace Zametek.ViewModel.ProjectPlan
             return new DiagramNodeModel
             {
                 Id = eventModel.Id,
-                Height = 26.0,
-                Width = 62.0,
+                Height = s_DiagramNodeModelHeight,
+                Width = s_DiagramNodeModelWidth,
                 FillColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeFillColor),
                 BorderColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeBorderColor),
                 Text = BuildNodeLabel(eventModel)
@@ -273,7 +283,7 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        public static Microsoft.Msagl.Drawing.Color? HtmlHexCodeToMsaglColor(string? input)
+        private static Microsoft.Msagl.Drawing.Color? HtmlHexCodeToMsaglColor(string? input)
         {
             if (string.IsNullOrWhiteSpace(input))
             {
@@ -291,11 +301,84 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
+        private static Microsoft.Msagl.Drawing.Color EdgeFontColor(BaseTheme baseTheme)
+        {
+            if (baseTheme == BaseTheme.Light)
+            {
+                return Microsoft.Msagl.Drawing.Color.Black;
+            }
+            if (baseTheme == BaseTheme.Dark)
+            {
+                return Microsoft.Msagl.Drawing.Color.White;
+            }
+            return Microsoft.Msagl.Drawing.Color.Black;
+        }
+
+        private static byte[] GraphToByteArray(
+            Microsoft.Msagl.Drawing.Graph graph,
+            BaseTheme baseTheme)
+        {
+            using var ms = new MemoryStream();
+            using var writer = new StreamWriter(ms);
+
+            var svgWriter = new CustomSvgGraphWriter(writer.BaseStream, graph);
+            svgWriter.Write();
+            ms.Position = 0;
+            using var sr = new StreamReader(ms);
+
+            using var xmlReader = XmlReader.Create(sr);
+
+            XmlDocument doc = new();
+            doc.Load(xmlReader);
+
+            // Set the background to transparent so it 
+            string? height = doc.DocumentElement?.GetAttribute("height");
+            string? width = doc.DocumentElement?.GetAttribute("width");
+
+            var rect = doc.CreateElement(@"rect");
+            rect.SetAttribute(@"height", height);
+            rect.SetAttribute(@"width", width);
+
+            if (baseTheme == BaseTheme.Light)
+            {
+                rect.SetAttribute(@"fill", s_SvgLightThemeBackground);
+            }
+            if (baseTheme == BaseTheme.Dark)
+            {
+                rect.SetAttribute(@"fill", s_SvgDarkThemeBackground); // This will match the Oxyplot plot areas.
+            }
+
+            // Only show the background if there is a graph to display.
+            if (graph.NodeCount > 0)
+            {
+                rect.SetAttribute(@"fill-opacity", "1.0");
+            }
+            else
+            {
+                rect.SetAttribute(@"fill-opacity", "0.0");
+            }
+
+            // Add the background to the top of the XML tree.
+            doc.DocumentElement?.PrependChild(rect);
+
+            using var stringWriter = new StringWriter();
+            using var xmlTextWriter = XmlWriter.Create(stringWriter);
+
+            doc.WriteTo(xmlTextWriter);
+            xmlTextWriter.Flush();
+
+            return stringWriter
+                .GetStringBuilder()
+                .ToString()
+                .StringToByteArray();
+        }
+
         #endregion
 
         public byte[] BuildArrowGraphSvgData(
             ArrowGraphModel arrowGraph,
-            ArrowGraphSettingsModel arrowGraphSettings)
+            ArrowGraphSettingsModel arrowGraphSettings,
+            BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(arrowGraph);
             ArgumentNullException.ThrowIfNull(arrowGraphSettings);
@@ -324,6 +407,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 edge.Attr.Color = HtmlHexCodeToMsaglColor(diagramEdge.ForegroundColorHexCode) ?? Microsoft.Msagl.Drawing.Color.Black;
                 edge.LabelText = diagramEdge.Label;
                 edge.Label.IsVisible = diagramEdge.ShowLabel;
+                edge.Label.FontColor = EdgeFontColor(baseTheme);
 
                 drawingGraph.AddPrecalculatedEdge(edge);
             }
@@ -386,14 +470,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             Microsoft.Msagl.Miscellaneous.LayoutHelpers.CalculateLayout(drawingGraph.GeometryGraph, drawingGraph.LayoutAlgorithmSettings, null);
 
-            using var ms = new MemoryStream();
-            using var writer = new StreamWriter(ms);
-            var svgWriter = new CustomSvgGraphWriter(writer.BaseStream, drawingGraph);
-            svgWriter.Write();
-            ms.Position = 0;
-            using var sr = new StreamReader(ms);
-            string content = sr.ReadToEnd();
-            return content.StringToByteArray();
+            return GraphToByteArray(drawingGraph, baseTheme);
         }
 
         public byte[] BuildArrowGraphMLData(
