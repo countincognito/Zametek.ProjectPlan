@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:resources="using:Zametek.Resource.ProjectPlan"
         mc:Ignorable="d"
-		Width="200" Height="140"
+		Width="200" Height="120"
 		SystemDecorations="None"
 		WindowStartupLocation="CenterScreen"
 		Background="Transparent"
@@ -19,9 +19,9 @@
 		<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="5">
 			<Image Source="/Assets/zpp.ico" Width="64" Height="64" />
 			<TextBlock HorizontalAlignment="Center" Text="{Binding Path=StartUpMessage, Mode=OneWay}" />
-			<Button HorizontalAlignment="Center" Background="Transparent"
+			<!--<Button HorizontalAlignment="Center" Background="Transparent"
 					Content="{x:Static resources:Labels.Label_CancelSplashScreen}"
-					Command="{Binding Path=CancelCommand, Mode=OneWay}" />
+					Command="{Binding Path=CancelCommand, Mode=OneWay}" />-->
 		</StackPanel>
 	</Border>
 </Window>

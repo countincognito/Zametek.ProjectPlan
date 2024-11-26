@@ -41,14 +41,16 @@ namespace Zametek.ProjectPlan
 
                 try
                 {
-                    await Task.Delay(2000, cancellationToken: splashViewModel.CancellationToken);
-                    RegisterSettings();
-                    RegisterIOC();
+                    await Task.Run(() =>
+                    {
+                        RegisterSettings();
+                        RegisterIOC();
+                    }, cancellationToken: splashViewModel.CancellationToken);
+
                     ISettingService settingService = GetRequiredService<ISettingService>();
                     string selectedTheme = settingService.SelectedTheme;
 
                     IMainViewModel mainViewModel = GetRequiredService<IMainViewModel>();
-
                     DataContext = mainViewModel;
 
                     MainView mainView = new()
