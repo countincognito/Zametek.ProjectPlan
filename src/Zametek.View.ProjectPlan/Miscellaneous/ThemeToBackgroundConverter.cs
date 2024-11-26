@@ -10,8 +10,8 @@ namespace Zametek.View.ProjectPlan
     public class ThemeToBackgroundConverter
         : IValueConverter
     {
-        // This matches s_SvgDarkThemeBackground in ArrowGraphSerializer
-        private static readonly IBrush s_DarkThemeBackground = new SolidColorBrush(Color.FromArgb(255, 55, 55, 55));
+        private static readonly IBrush s_LightThemeBackground = new SolidColorBrush(ViewModel.ProjectPlan.ColorHelper.LightThemeBackground);
+        private static readonly IBrush s_DarkThemeBackground = new SolidColorBrush(ViewModel.ProjectPlan.ColorHelper.DarkThemeBackground);
 
         #region IValueConverter Members
 
@@ -21,7 +21,7 @@ namespace Zametek.View.ProjectPlan
             {
                 if (baseTheme == BaseTheme.Light)
                 {
-                    return Brushes.White;
+                    return s_LightThemeBackground;
                 }
                 if (baseTheme == BaseTheme.Dark)
                 {

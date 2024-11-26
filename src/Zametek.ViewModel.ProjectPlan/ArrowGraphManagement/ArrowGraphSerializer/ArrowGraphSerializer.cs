@@ -30,11 +30,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly double s_SvgEdgeLabelFontSize = 12.0;
         private static readonly double s_SvgEdgeLabelHeight = 12.0;
 
-        private static readonly string s_SvgLightThemeBackground = "white";
-
-        // This matches s_DarkThemeBackground in ThemeToBackgroundConverter
-        // Also mathces the Oxyplot plot areas.
-        private static readonly string s_SvgDarkThemeBackground = "#373737";
 
         private static readonly double s_DiagramNodeModelHeight = 26.0;
         private static readonly double s_DiagramNodeModelWidth = 62.0;
@@ -341,11 +336,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (baseTheme == BaseTheme.Light)
             {
-                rect.SetAttribute(@"fill", s_SvgLightThemeBackground);
+                rect.SetAttribute(@"fill", ColorHelper.SvgLightThemeBackground);
             }
             if (baseTheme == BaseTheme.Dark)
             {
-                rect.SetAttribute(@"fill", s_SvgDarkThemeBackground); // This will match the Oxyplot plot areas.
+                rect.SetAttribute(@"fill", ColorHelper.SvgDarkThemeBackground);
             }
 
             // Only show the background if there is a graph to display.

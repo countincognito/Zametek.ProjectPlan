@@ -1,4 +1,5 @@
 ﻿using Avalonia.Media;
+using OxyPlot;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Zametek.Common.ProjectPlan;
@@ -14,6 +15,16 @@ namespace Zametek.ViewModel.ProjectPlan
         public const byte AnnotationATransparent = 10;
 
         public const byte AnnotationATrackerOverlay = 232;
+
+        // These all match.
+        public static readonly string SvgLightThemeBackground = "white";
+        public static readonly OxyColor OxyLightThemeBackground = OxyColors.White;
+        public static readonly Color LightThemeBackground = Colors.White;
+
+        // These all match.
+        public static readonly string SvgDarkThemeBackground = "#373737";
+        public static readonly OxyColor OxyDarkThemeBackground = OxyColor.FromArgb(AnnotationAFull, 55, 55, 55);
+        public static readonly Color DarkThemeBackground = Color.FromArgb(AnnotationAFull, 55, 55, 55);
 
         private static readonly Random s_Rnd = new();
         private static readonly Regex s_HtmlHexMatch = new(@"^#(([A-Fa-f0-9]{2}){3,4})$", RegexOptions.Compiled);

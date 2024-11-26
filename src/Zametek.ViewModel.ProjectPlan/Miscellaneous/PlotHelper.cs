@@ -26,18 +26,18 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public static PlotModel SetLightTheme(this PlotModel plot) =>
-            plot.SetTheme(OxyColors.Black, OxyColors.White);
+            plot.SetTheme(OxyColors.Black, ColorHelper.OxyLightThemeBackground);
 
         public static PlotModel SetDarkTheme(this PlotModel plot) =>
-            plot.SetTheme(OxyColors.White, OxyColors.Black);
+            plot.SetTheme(OxyColors.White, ColorHelper.OxyDarkThemeBackground);
 
         public static PlotModel SetTheme(
             this PlotModel plot,
             OxyColor foreground,
             OxyColor background)
         {
-            plot.Background = OxyColor.FromAColor(ColorHelper.AnnotationAHeavy, background);
-            plot.PlotAreaBackground = OxyColors.Transparent;
+            plot.Background = background;
+            plot.PlotAreaBackground = background;
             plot.PlotAreaBorderColor = foreground;
             plot.TitleColor = foreground;
             plot.SubtitleColor = foreground;
@@ -46,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan
             foreach (LegendBase? legend in plot.Legends)
             {
                 legend.LegendBorder = foreground;
-                legend.LegendBackground = OxyColors.Transparent;
+                legend.LegendBackground = background;
                 legend.TextColor = foreground;
                 legend.LegendTextColor = foreground;
                 legend.LegendTitleColor = foreground;
