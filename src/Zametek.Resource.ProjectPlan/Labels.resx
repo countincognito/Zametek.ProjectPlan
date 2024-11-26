@@ -154,7 +154,7 @@
     <value>Annotation Style</value>
   </data>
   <data name="Label_AppName" xml:space="preserve">
-    <value>ProjectPlan.NET</value>
+    <value>projectplan.net</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
     <value>0.9.0-beta.1</value>
@@ -169,7 +169,7 @@
     <value>Cannot set Minimum FS and Maximum LFT at the same time</value>
   </data>
   <data name="Label_CliAppName" xml:space="preserve">
-    <value>ProjectPlan.NET CLI</value>
+    <value>projectplan.net cli</value>
   </data>
   <data name="Label_ColorFormat" xml:space="preserve">
     <value>Color</value>

@@ -28,14 +28,15 @@
 				<Slider Name="zoomer"
 						Orientation="Horizontal"
 						Value="1"
-						PointerWheelChanged="Slider_PointerWheelChanged"
-						Minimum="0.5" Maximum="5"
+						PointerWheelChanged="Zoom_PointerWheelChanged"
+						Minimum="0.1" Maximum="5"
 						Margin="11"/>
 			</DockPanel>
 
 			<ScrollViewer PointerPressed="ScrollViewer_PointerPressed"
 						  PointerReleased="ScrollViewer_PointerReleased"
 						  PointerMoved="ScrollViewer_PointerMoved"
+						  PointerWheelChanged="Zoom_PointerWheelChanged"
 						  HorizontalScrollBarVisibility="Auto"
 						  VerticalScrollBarVisibility="Auto"
 						  Background="{Binding Path=BaseTheme, Mode=OneWay, Converter={StaticResource themeToBackgroundConverter}}">
@@ -45,20 +46,26 @@
 								  Command="{Binding Path=SaveArrowGraphImageFileCommand, Mode=OneWay}"/>
 					</ContextMenu>
 				</ScrollViewer.ContextMenu>
-				<LayoutTransformControl Classes="screen pdf" >
+
+				<LayoutTransformControl Classes="screen pdf">
 					<LayoutTransformControl.LayoutTransform>
 						<ScaleTransform ScaleX="{Binding Value, ElementName=zoomer, Mode=TwoWay}"
 										ScaleY="{Binding Value, ElementName=zoomer, Mode=TwoWay}"/>
 					</LayoutTransformControl.LayoutTransform>
 
 					<!--Use the Grid to ensure the image is centered during zoom-->
-					<Grid>
+					<Grid HorizontalAlignment="Center"
+						  VerticalAlignment="Center">
 						<Image Stretch="None"
+							   PointerWheelChanged="Zoom_PointerWheelChanged"
 							   Source="{Binding Path=ArrowGraphImage, Mode=OneWay}"
 							   RenderTransformOrigin="0.5,0.5">
 						</Image>
 					</Grid>
 				</LayoutTransformControl>
+
+
+
 			</ScrollViewer>
 		</DockPanel>
 	</DockPanel>

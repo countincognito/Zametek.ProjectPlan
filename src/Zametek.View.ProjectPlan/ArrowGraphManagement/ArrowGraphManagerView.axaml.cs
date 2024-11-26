@@ -11,6 +11,7 @@ namespace Zametek.View.ProjectPlan
         : UserControl
     {
         private Point? m_LastDragPoint;
+        private const double c_SliderDelta = 0.1;
 
         public ArrowGraphManagerView()
         {
@@ -64,22 +65,18 @@ namespace Zametek.View.ProjectPlan
             }
         }
 
-        private void Slider_PointerWheelChanged(object? sender, PointerWheelEventArgs e)
+        private void Zoom_PointerWheelChanged(object? sender, PointerWheelEventArgs e)
         {
             ArgumentNullException.ThrowIfNull(e);
-            var slider = sender as Slider;
-            if (slider is not null)
+            if (e.Delta.Y > 0)
             {
-                if (e.Delta.Y > 0)
-                {
-                    slider.Value += 0.5;
-                }
-                if (e.Delta.Y < 0)
-                {
-                    slider.Value -= 0.5;
-                }
-                e.Handled = true;
+                zoomer.Value += c_SliderDelta;
             }
+            if (e.Delta.Y < 0)
+            {
+                zoomer.Value -= c_SliderDelta;
+            }
+            e.Handled = true;
         }
     }
 }

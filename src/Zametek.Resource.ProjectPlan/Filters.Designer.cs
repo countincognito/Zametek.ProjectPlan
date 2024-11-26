@@ -349,7 +349,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ProjectPlan.NET.
+        ///   Looks up a localized string similar to projectplan.net.
         /// </summary>
         public static string Filter_ProjectPlanFileType {
             get {

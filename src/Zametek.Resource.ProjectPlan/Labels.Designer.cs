@@ -178,7 +178,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ProjectPlan.NET.
+        ///   Looks up a localized string similar to projectplan.net.
         /// </summary>
         public static string Label_AppName {
             get {
@@ -232,7 +232,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ProjectPlan.NET CLI.
+        ///   Looks up a localized string similar to projectplan.net cli.
         /// </summary>
         public static string Label_CliAppName {
             get {

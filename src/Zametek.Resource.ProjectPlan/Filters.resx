@@ -214,7 +214,7 @@
     <value>*.zpp</value>
   </data>
   <data name="Filter_ProjectPlanFileType" xml:space="preserve">
-    <value>ProjectPlan.NET</value>
+    <value>projectplan.net</value>
   </data>
   <data name="Filter_ProjectXlsxFileExtension" xml:space="preserve">
     <value>xlsx</value>

@@ -62,6 +62,11 @@
 			<Setter Property="FontWeight" Value="{DynamicResource ButtonDefaultFontWeight}" />
 		</Style>
 
+		<!--This is for the header in the About window-->
+		<Style Selector="mbc|MsBoxStandardView TextBox.header">
+			<Setter Property="FontSize" Value="20" />
+		</Style>
+
 		<!--Oxyplot-->
 		<Style Selector="oxy|TrackerControl">
 			<Setter Property="Background" Value="{DynamicResource OxyplotTrackerBackgroundBrush}" />

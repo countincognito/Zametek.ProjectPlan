@@ -795,8 +795,6 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 var about = new StringBuilder();
-                about.AppendLine($"## {Resource.ProjectPlan.Labels.Label_AppName}");
-                about.AppendLine();
                 about.AppendLine($"{Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}");
                 about.AppendLine();
                 about.AppendLine($"{Resource.ProjectPlan.Labels.Label_Copyright}, {Resource.ProjectPlan.Labels.Label_Author}");

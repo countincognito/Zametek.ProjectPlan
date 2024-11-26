@@ -53,6 +53,7 @@ namespace Zametek.View.ProjectPlan
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.WidthAndHeight,
                 ContentTitle = title,
+                ContentHeader = title,
                 ContentMessage = message,
                 Markdown = markdown
             });
@@ -68,6 +69,7 @@ namespace Zametek.View.ProjectPlan
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.WidthAndHeight,
                 ContentTitle = title,
+                ContentHeader = title,
                 ContentMessage = message,
                 Icon = Icon.Error,
                 Markdown = markdown
@@ -84,6 +86,7 @@ namespace Zametek.View.ProjectPlan
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.WidthAndHeight,
                 ContentTitle = title,
+                ContentHeader = title,
                 ContentMessage = message,
                 Icon = Icon.Warning,
                 Markdown = markdown
@@ -100,6 +103,7 @@ namespace Zametek.View.ProjectPlan
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.WidthAndHeight,
                 ContentTitle = title,
+                ContentHeader = title,
                 ContentMessage = message,
                 Icon = Icon.Info,
                 Markdown = markdown
@@ -118,6 +122,7 @@ namespace Zametek.View.ProjectPlan
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.Manual,
                 ContentTitle = title,
+                ContentHeader = title,
                 ContentMessage = message,
                 Height = height,
                 Width = width,
@@ -136,6 +141,7 @@ namespace Zametek.View.ProjectPlan
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.WidthAndHeight,
                 ContentTitle = title,
+                ContentHeader = title,
                 ContentMessage = message,
                 ButtonDefinitions = ButtonEnum.YesNo,
                 Icon = Icon.Info,
