@@ -88,18 +88,24 @@ namespace Zametek.View.ProjectPlan
 
             double newZoom = zoomer.Value;
 
+
+
             // Reposition the scrollviewer to center the image zoom
             // where the mouse pointer is.
 
             double factor = newZoom / oldZoom;
 
-            double xCorrection = (m_CurrentPoint.X * (newZoom - oldZoom)) / oldZoom;
+            //double xCorrection = (m_CurrentPoint.X * (newZoom - oldZoom)) / oldZoom;
 
-            double yCorrection = (m_CurrentPoint.Y * (newZoom - oldZoom)) / oldZoom;
+            //double yCorrection = (m_CurrentPoint.Y * (newZoom - oldZoom)) / oldZoom;
 
             var newOffset = new Vector(
-                (oldOffset.X * factor) + xCorrection,
-                (oldOffset.Y * factor) + yCorrection);
+                (oldOffset.X + m_CurrentPoint.X) * factor - m_CurrentPoint.X,
+                (oldOffset.Y + m_CurrentPoint.Y) * factor - m_CurrentPoint.Y);
+
+
+            //(oldOffset.X * factor) + xCorrection,
+            //(oldOffset.Y * factor) + yCorrection);
 
             viewer.Offset = newOffset;
             e.Handled = true;
