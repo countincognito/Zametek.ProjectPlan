@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using System;
 
@@ -74,9 +75,7 @@ namespace Zametek.View.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(e);
 
-            double oldZoom = zoomer.Value;
-            Vector oldOffset = viewer.Offset;
-
+            // Centering of the zoom will be handled by the slider ValueChanged event.
             if (e.Delta.Y > 0)
             {
                 zoomer.Value += c_SliderDelta;
@@ -86,29 +85,29 @@ namespace Zametek.View.ProjectPlan
                 zoomer.Value -= c_SliderDelta;
             }
 
-            double newZoom = zoomer.Value;
+            e.Handled = true;
+        }
 
+        private void Slider_ValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
+        {
+            ArgumentNullException.ThrowIfNull(e);
+            double oldZoom = e.OldValue;
+            Vector oldOffset = viewer.Offset;
+            double newZoom = e.NewValue;
 
+            // This centers the zoom according to the last position of the mouse pointer.
+            Vector newOffset = CalculateOffsetVector(oldOffset, oldZoom, newZoom);
+            viewer.Offset = newOffset;
+        }
 
-            // Reposition the scrollviewer to center the image zoom
-            // where the mouse pointer is.
-
+        private Vector CalculateOffsetVector(Vector oldOffset, double oldZoom, double newZoom)
+        {
+            // Reposition the scrollviewer to center the image zoom on the mouse pointer.
             double factor = newZoom / oldZoom;
 
-            //double xCorrection = (m_CurrentPoint.X * (newZoom - oldZoom)) / oldZoom;
-
-            //double yCorrection = (m_CurrentPoint.Y * (newZoom - oldZoom)) / oldZoom;
-
-            var newOffset = new Vector(
+            return new Vector(
                 (oldOffset.X + m_CurrentPoint.X) * factor - m_CurrentPoint.X,
                 (oldOffset.Y + m_CurrentPoint.Y) * factor - m_CurrentPoint.Y);
-
-
-            //(oldOffset.X * factor) + xCorrection,
-            //(oldOffset.Y * factor) + yCorrection);
-
-            viewer.Offset = newOffset;
-            e.Handled = true;
         }
     }
 }

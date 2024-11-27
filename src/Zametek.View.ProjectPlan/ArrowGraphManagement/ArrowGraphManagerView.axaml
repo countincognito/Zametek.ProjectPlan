@@ -29,6 +29,7 @@
 						Orientation="Horizontal"
 						Value="1"
 						PointerWheelChanged="Zoom_PointerWheelChanged"
+						ValueChanged="Slider_ValueChanged"
 						Minimum="0.1" Maximum="5"
 						Margin="11"/>
 			</DockPanel>
