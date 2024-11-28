@@ -373,6 +373,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     Resource.ProjectPlan.Messages.Message_EmptyFilename);
             }
             else
@@ -394,6 +395,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     ex.Message);
             }
         }
@@ -588,6 +590,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
                         Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                        string.Empty,
                         Resource.ProjectPlan.Messages.Message_UnsavedChanges);
 
                     if (!confirmation)
@@ -603,6 +606,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     ex.Message);
                 ResetProject();
             }
@@ -616,6 +620,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
                         Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                        string.Empty,
                         Resource.ProjectPlan.Messages.Message_UnsavedChanges);
 
                     if (!confirmation)
@@ -630,6 +635,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     ex.Message);
                 ResetProject();
             }
@@ -656,6 +662,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     ex.Message);
             }
         }
@@ -678,6 +685,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     ex.Message);
             }
         }
@@ -690,6 +698,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
                         Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                        string.Empty,
                         Resource.ProjectPlan.Messages.Message_UnsavedChanges);
 
                     if (!confirmation)
@@ -712,6 +721,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     ex.Message);
                 ResetProject();
             }
@@ -741,6 +751,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     ex.Message);
             }
         }
@@ -753,6 +764,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
                         Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                        string.Empty,
                         Resource.ProjectPlan.Messages.Message_UnsavedChanges);
 
                     if (!confirmation)
@@ -766,6 +778,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     ex.Message);
                 ResetProject();
             }
@@ -786,6 +799,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     ex.Message);
             }
         }
@@ -798,17 +812,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 about.AppendLine($"{Resource.ProjectPlan.Labels.Label_Version} {Resource.ProjectPlan.Labels.Label_AppVersion}");
                 about.AppendLine();
                 about.AppendLine($"{Resource.ProjectPlan.Labels.Label_Copyright}, {Resource.ProjectPlan.Labels.Label_Author}");
-                about.AppendLine();
 
                 await m_DialogService.ShowInfoAsync(
                     Resource.ProjectPlan.Titles.Title_ProjectPlan,
-                    about.ToString(), height: 180, width: 400,
-                    markdown: true);
+                    Resource.ProjectPlan.Titles.Title_ProjectPlan,
+                    about.ToString());
             }
             catch (Exception ex)
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     ex.Message);
             }
         }

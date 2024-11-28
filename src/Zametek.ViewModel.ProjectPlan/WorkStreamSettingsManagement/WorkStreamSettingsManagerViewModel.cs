@@ -159,6 +159,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     ex.Message);
             }
         }
@@ -189,6 +190,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
                     ex.Message);
             }
         }

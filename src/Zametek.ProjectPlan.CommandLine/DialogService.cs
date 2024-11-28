@@ -19,6 +19,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public async Task ShowNotificationAsync(
             string title,
+            string header,
             string message,
             bool markdown = false)
         {
@@ -27,6 +28,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public async Task ShowErrorAsync(
             string title,
+            string header,
             string message,
             bool markdown = false)
         {
@@ -35,6 +37,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public async Task ShowWarningAsync(
             string title,
+            string header,
             string message,
             bool markdown = false)
         {
@@ -43,6 +46,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public async Task ShowInfoAsync(
             string title,
+            string header,
             string message,
             bool markdown = false)
         {
@@ -51,6 +55,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public async Task ShowInfoAsync(
             string title,
+            string header,
             string message,
             double height,
             double width,
@@ -61,6 +66,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public Task<bool> ShowConfirmationAsync(
             string title,
+            string header,
             string message,
             bool markdown = false)
         {

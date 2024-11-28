@@ -45,6 +45,7 @@ namespace Zametek.View.ProjectPlan
 
         public async Task ShowNotificationAsync(
             string title,
+            string header,
             string message,
             bool markdown = false)
         {
@@ -53,7 +54,7 @@ namespace Zametek.View.ProjectPlan
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.WidthAndHeight,
                 ContentTitle = title,
-                ContentHeader = title,
+                ContentHeader = header,
                 ContentMessage = message,
                 Markdown = markdown
             });
@@ -61,6 +62,7 @@ namespace Zametek.View.ProjectPlan
 
         public async Task ShowErrorAsync(
             string title,
+            string header,
             string message,
             bool markdown = false)
         {
@@ -69,7 +71,7 @@ namespace Zametek.View.ProjectPlan
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.WidthAndHeight,
                 ContentTitle = title,
-                ContentHeader = title,
+                ContentHeader = header,
                 ContentMessage = message,
                 Icon = Icon.Error,
                 Markdown = markdown
@@ -78,6 +80,7 @@ namespace Zametek.View.ProjectPlan
 
         public async Task ShowWarningAsync(
             string title,
+            string header,
             string message,
             bool markdown = false)
         {
@@ -86,7 +89,7 @@ namespace Zametek.View.ProjectPlan
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.WidthAndHeight,
                 ContentTitle = title,
-                ContentHeader = title,
+                ContentHeader = header,
                 ContentMessage = message,
                 Icon = Icon.Warning,
                 Markdown = markdown
@@ -95,6 +98,7 @@ namespace Zametek.View.ProjectPlan
 
         public async Task ShowInfoAsync(
             string title,
+            string header,
             string message,
             bool markdown = false)
         {
@@ -103,7 +107,7 @@ namespace Zametek.View.ProjectPlan
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.WidthAndHeight,
                 ContentTitle = title,
-                ContentHeader = title,
+                ContentHeader = header,
                 ContentMessage = message,
                 Icon = Icon.Info,
                 Markdown = markdown
@@ -112,6 +116,7 @@ namespace Zametek.View.ProjectPlan
 
         public async Task ShowInfoAsync(
             string title,
+            string header,
             string message,
             double height,
             double width,
@@ -122,7 +127,7 @@ namespace Zametek.View.ProjectPlan
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.Manual,
                 ContentTitle = title,
-                ContentHeader = title,
+                ContentHeader = header,
                 ContentMessage = message,
                 Height = height,
                 Width = width,
@@ -133,6 +138,7 @@ namespace Zametek.View.ProjectPlan
 
         public async Task<bool> ShowConfirmationAsync(
             string title,
+            string header,
             string message,
             bool markdown = false)
         {
@@ -141,7 +147,7 @@ namespace Zametek.View.ProjectPlan
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.WidthAndHeight,
                 ContentTitle = title,
-                ContentHeader = title,
+                ContentHeader = header,
                 ContentMessage = message,
                 ButtonDefinitions = ButtonEnum.YesNo,
                 Icon = Icon.Info,

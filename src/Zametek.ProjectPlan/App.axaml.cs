@@ -85,6 +85,7 @@ namespace Zametek.ProjectPlan
                         {
                             bool wishToClose = await dialogService.ShowConfirmationAsync(
                                 Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                                string.Empty,
                                 Resource.ProjectPlan.Messages.Message_UnsavedChanges);
 
                             if (!wishToClose)
