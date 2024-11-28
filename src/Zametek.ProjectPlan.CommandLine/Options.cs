@@ -30,6 +30,9 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option('d', "show-dates", Default = false, Required = false, HelpText = "Show dates (true|false)")]
         public bool? ShowDates { get; set; } = false;
 
+        [Option('t', "base-theme", Default = BaseTheme.Light, Required = false, HelpText = "Output theme (Light|Dark)")]
+        public BaseTheme BaseTheme { get; set; } = BaseTheme.Light;
+
 
 
         [Option("gantt-directory", HelpText = "Gantt chart output file directory")]

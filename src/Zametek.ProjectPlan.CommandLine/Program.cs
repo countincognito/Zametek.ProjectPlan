@@ -151,6 +151,13 @@ namespace Zametek.ProjectPlan.CommandLine
                             core.ShowDates = options.ShowDates ?? default;
                         }
 
+                        // Base theme
+                        {
+                            core.BaseTheme = options.BaseTheme;
+                        }
+
+
+
                         // Compile.
                         {
                             // We do not need to set IsReadyToReviseTrackers since this is a one step
