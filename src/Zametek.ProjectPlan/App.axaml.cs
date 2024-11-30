@@ -39,6 +39,13 @@ namespace Zametek.ProjectPlan
 
                 splashView.Show();
 
+                string? input = null;
+
+                desktopLifetime.Startup += (sender, args) =>
+                {
+                    input = args?.Args?.FirstOrDefault();
+                };
+
                 try
                 {
                     await Task.Run(() =>
@@ -51,7 +58,13 @@ namespace Zametek.ProjectPlan
                     string selectedTheme = settingService.SelectedTheme;
 
                     IMainViewModel mainViewModel = GetRequiredService<IMainViewModel>();
+
                     DataContext = mainViewModel;
+
+                    desktopLifetime.Exit += (a, b) =>
+                    {
+                        mainViewModel.CloseLayout();
+                    };
 
                     MainView mainView = new()
                     {
@@ -109,18 +122,12 @@ namespace Zametek.ProjectPlan
 
                     desktopLifetime.MainWindow = mainView;
 
-                    desktopLifetime.Exit += (a, b) =>
-                    {
-                        mainViewModel.CloseLayout();
-                    };
-
-                    desktopLifetime.Startup += async (sender, args) =>
-                    {
-                        string? input = args?.Args?.FirstOrDefault();
-                        await mainViewModel.OpenProjectPlanFileAsync(input);
-                    };
-
                     mainView.Show();
+
+                    if (input is not null)
+                    {
+                        await mainViewModel.OpenProjectPlanFileAsync(input);
+                    }
 
                     splashView.Close();
                 }

@@ -1,0 +1,1 @@
+Be sure to publish the Windows Desktop and CLI binaries from the make file before building the package.

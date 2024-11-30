@@ -9,7 +9,9 @@
 	<ApplicationManifest>app.manifest</ApplicationManifest>
 	<ApplicationIcon>Assets\zpp.ico</ApplicationIcon>
 	<AssemblyName>projectplandotnet</AssemblyName>
-	<Platforms>AnyCPU;x64;x86</Platforms>
+	<Platforms>AnyCPU;x64;x86;ARM32</Platforms>
+	<StartupObject>Zametek.ProjectPlan.Program</StartupObject>
+	<PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />

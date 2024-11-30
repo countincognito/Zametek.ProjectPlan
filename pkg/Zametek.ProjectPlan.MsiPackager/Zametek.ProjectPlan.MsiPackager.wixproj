@@ -6,6 +6,7 @@
     <SuppressValidation>false</SuppressValidation>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="readme.txt" />
     <Content Include="zpp.ico" />
   </ItemGroup>
   <ItemGroup>
