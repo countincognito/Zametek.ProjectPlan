@@ -1,0 +1,21 @@
+﻿<!--
+This file contains the declaration of all the localizable strings.
+-->
+<WixLocalization xmlns="http://wixtoolset.org/schemas/v4/wxl" Culture="en-US">
+
+	<String Id="DowngradeError"
+			Value="A newer version of [ProductName] is already installed." />
+	
+	<String Id="DesktopFeatureTitle"
+			Value="Desktop Application" />
+	
+	<String Id="DesktopFeatureDescription"
+			Value="Create and edit [ProductName] projects using the desktop interface." />
+	
+	<String Id="CommandLineFeatureTitle"
+			Value="CLI Tool" />
+
+	<String Id="CommandLineFeatureDescription"
+			Value="Generate selected outputs from [ProductName] files via the command line." />
+	
+</WixLocalization>

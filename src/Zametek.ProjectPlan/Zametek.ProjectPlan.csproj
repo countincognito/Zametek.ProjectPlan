@@ -9,6 +9,7 @@
 	<ApplicationManifest>app.manifest</ApplicationManifest>
 	<ApplicationIcon>Assets\zpp.ico</ApplicationIcon>
 	<AssemblyName>projectplandotnet</AssemblyName>
+	<Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />

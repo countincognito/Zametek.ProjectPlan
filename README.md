@@ -1,4 +1,4 @@
-# Zametek.ProjectPlan
+# projectplan.net
 
 For documentation, see [here](https://github.com/countincognito/Zametek.ProjectPlan/wiki).
 

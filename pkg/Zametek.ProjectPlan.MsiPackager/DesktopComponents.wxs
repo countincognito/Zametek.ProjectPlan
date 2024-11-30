@@ -1,0 +1,63 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+	<Fragment>
+		<Icon Id="ico.exe" SourceFile="zpp.ico"/>
+		
+		<ComponentGroup Id="DesktopComponents"
+						Directory="INSTALLFOLDER">
+
+			<!-- Create a single component which is the projectplandotnet.exe file -->
+			<Component Id="DesktopExecutable"
+					   Bitness="always64">
+
+				<!-- Copies the projectplandotnet.exe file using the
+                     project reference preprocessor variables -->
+				<File Id="DesktopExe"
+					  Name="projectplandotnet.exe"
+					  Source="$(var.Zametek.ProjectPlan.TargetDir)win-x64\publish\projectplandotnet.exe"
+					  KeyPath="true"
+					  Checksum="yes" />
+
+				<Shortcut Id="ProductExeMenuShortcut"
+						  Name="!(bind.Property.ProductName)"
+						  Directory="MenuFolder"
+						  Advertise="yes"
+						  Icon="ico.exe" />
+
+				<RemoveFolder Id="CleanupMenuShortcut"
+							  Directory="MenuFolder"
+							  On="uninstall" />
+
+				<ProgId Id="projectplandotnet.zppfile"
+						Description="!(bind.Property.ProductName) file">
+
+					<Extension Id="zpp"
+							   ContentType="application/zpp">
+						<Verb Id="open"
+							  Command="Open"
+							  TargetFile="DesktopExe"
+							  Argument='"%1"' />
+						<MIME ContentType="application/zpp"
+							  Default="yes" />
+					</Extension>
+				</ProgId>
+			</Component>
+
+			<Component Id="DesktopShortcut"
+					   Directory="DesktopFolder">
+
+				<Shortcut Id="ProductExeDesktopShortcut"
+						  Name="!(bind.Property.ProductName)"
+						  Directory="DesktopFolder"
+						  Target="[#DesktopExe]"
+						  Icon="ico.exe" />
+
+				<RegistryValue Root="HKCU"
+							   Key="SOFTWARE\!(bind.Property.Manufacturer)\!(bind.Property.ProductName)"
+							   KeyPath="yes"
+							   Type="integer"
+							   Value="1"
+							   Name="DesktopShortcutEnabled" />
+			</Component>
+		</ComponentGroup>
+	</Fragment>
+</Wix>

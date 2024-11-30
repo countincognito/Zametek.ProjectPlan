@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Define the variables in "$(var.*) expressions" -->
+<?define Name = "projectplan.net" ?>
+<?define ExeName = "projectplandotnet.exe" ?>
+<?define Manufacturer = "Zametek" ?>
+<?define Version = "0.9.0.0" ?>
+<?define UpgradeCode = "95a70689-f0fe-4e3c-9a86-deb6fcd7305c" ?>
+
+<!-- Remember to watch https://www.youtube.com/watch?v=-Y7dOtciOJw&list=PLDlzbQXIs18slmqmdlS10_de_Cps-QRg6 -->
+
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+	 xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+	<Package Name="$(var.Name)"
+             Manufacturer="$(var.Manufacturer)"
+             Version="$(var.Version)"
+             UpgradeCode="$(var.UpgradeCode)"
+             Compressed="yes">
+		<MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+
+		<MediaTemplate EmbedCab="yes" />
+
+		<!--This is the icon in Add/Remove Programs-->
+		<Property Id="ARPPRODUCTICON" Value="ico.exe" />
+
+		<Feature Id="DesktopFeature"
+				 Title="!(loc.DesktopFeatureTitle)"
+				 Description="!(loc.DesktopFeatureDescription)"
+				 AllowAbsent="no">
+			<ComponentGroupRef Id="DesktopComponents" />
+		</Feature>
+		<Feature Id="CommandLineFeature"
+				 Title="!(loc.CommandLineFeatureTitle)"
+				 Description="!(loc.CommandLineFeatureDescription)">
+			<ComponentGroupRef Id="CommandLineComponents" />
+		</Feature>
+
+		<ui:WixUI Id="WixUI_FeatureTree" />
+
+		<WixVariable Id="WixUILicenseRtf" Value="bsd2.rtf"/>
+	</Package>
+</Wix>

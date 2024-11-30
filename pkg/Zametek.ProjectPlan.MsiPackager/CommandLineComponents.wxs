@@ -1,0 +1,27 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+	<Fragment>
+		<ComponentGroup Id="CommandLineComponents"
+						Directory="INSTALLFOLDER">
+
+			<!-- Create a single component which is thzpp.exe file -->
+			<Component Id="CommandLineExecutable"
+					   Bitness="always64">
+
+				<!-- Copies the zpp.exe file using the
+                     project reference preprocessor variables -->
+				<File Id="CommandLineExe"
+					  Name="zpp.exe"
+					  Source="$(var.Zametek.ProjectPlan.CommandLine.TargetDir)win-x64\publish\zpp.exe"
+					  KeyPath="true"
+					  Checksum="yes" />
+
+				<Environment Name="PATH"
+							 System="yes"
+							 Permanent="no"
+							 Value="[INSTALLFOLDER]"
+							 Action="set"
+							 Part="last" />
+			</Component>
+		</ComponentGroup>
+	</Fragment>
+</Wix>
