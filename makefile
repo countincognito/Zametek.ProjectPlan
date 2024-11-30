@@ -26,20 +26,20 @@ run-mac-desktop: build-desktop ## Start ProjectPlan in macOS
 
 
 
-publish-win-desktop: ## Publish ProjectPlan in Windows for x64
+publish-win-desktop: build-desktop ## Publish ProjectPlan in Windows for x64
 	dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os win --arch x64 src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj
 
-publish-win-cli: ## Publish ProjectPlan CLI in Windows for x64 
+publish-win-cli: build-cli ## Publish ProjectPlan CLI in Windows for x64 
 	dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os win --arch x64 src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj
 
 publish-win: publish-win-desktop publish-win-cli ## Publish ProjectPlan and ProjectPlan CLI in Windows for x64 
 
 
 
-publish-linux-desktop: ## Publish ProjectPlan in Linux for x64 
+publish-linux-desktop: build-desktop ## Publish ProjectPlan in Linux for x64 
 	dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os linux --arch x64 src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj
 
-publish-linux-cli: ## Publish ProjectPlan CLI in Linux for x64 
+publish-linux-cli: build-cli ## Publish ProjectPlan CLI in Linux for x64 
 	dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os linux --arch x64 src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj
 
 publish-linux: publish-linux-desktop publish-linux-cli ## Publish ProjectPlan and ProjectPlan CLI in Linux for x64 
