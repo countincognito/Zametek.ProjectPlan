@@ -7,13 +7,13 @@
 
 			<!-- Create a single component which is the projectplandotnet.exe file -->
 			<Component Id="DesktopExecutable"
-					   Bitness="always64">
+					   Bitness="default">
 
 				<!-- Copies the projectplandotnet.exe file using the
                      project reference preprocessor variables -->
 				<File Id="DesktopExe"
 					  Name="projectplandotnet.exe"
-					  Source="$(var.Zametek.ProjectPlan.TargetDir)win-x64\publish\projectplandotnet.exe"
+					  Source="$(var.Zametek.ProjectPlan.TargetDir)win-$(var.Platform)\publish\projectplandotnet.exe"
 					  KeyPath="true"
 					  Checksum="yes" />
 
@@ -40,6 +40,11 @@
 							  Default="yes" />
 					</Extension>
 				</ProgId>
+
+				<RemoveRegistryKey Id="removeRegistryKey.zppfile"
+								   Action="removeOnUninstall"
+								   Key="projectplandotnet.zppfile"
+								   Root="HKCR"/>
 			</Component>
 
 			<Component Id="DesktopShortcut"

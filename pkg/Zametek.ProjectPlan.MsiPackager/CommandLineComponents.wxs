@@ -5,13 +5,13 @@
 
 			<!-- Create a single component which is thzpp.exe file -->
 			<Component Id="CommandLineExecutable"
-					   Bitness="always64">
+					   Bitness="default">
 
 				<!-- Copies the zpp.exe file using the
                      project reference preprocessor variables -->
 				<File Id="CommandLineExe"
 					  Name="zpp.exe"
-					  Source="$(var.Zametek.ProjectPlan.CommandLine.TargetDir)win-x64\publish\zpp.exe"
+					  Source="$(var.Zametek.ProjectPlan.CommandLine.TargetDir)win-$(var.Platform)\publish\zpp.exe"
 					  KeyPath="true"
 					  Checksum="yes" />
 

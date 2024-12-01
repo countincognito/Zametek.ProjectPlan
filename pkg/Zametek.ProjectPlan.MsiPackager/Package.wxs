@@ -1,11 +1,12 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 
 <!-- Define the variables in "$(var.*) expressions" -->
-<?define Name = "projectplan.net" ?>
+
+<?define Name = "!(loc.ProductName)" ?>
 <?define ExeName = "projectplandotnet.exe" ?>
 <?define Manufacturer = "Zametek" ?>
 <?define Version = "0.9.0.0" ?>
-<?define UpgradeCode = "95a70689-f0fe-4e3c-9a86-deb6fcd7305c" ?>
+<?define UpgradeCode = "{95a70689-f0fe-4e3c-9a86-deb6fcd7305c}" ?>
 
 <!-- Remember to watch https://www.youtube.com/watch?v=-Y7dOtciOJw&list=PLDlzbQXIs18slmqmdlS10_de_Cps-QRg6 -->
 

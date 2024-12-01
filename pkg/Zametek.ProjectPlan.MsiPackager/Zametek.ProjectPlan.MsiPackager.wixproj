@@ -1,6 +1,6 @@
 ﻿<Project Sdk="WixToolset.Sdk/5.0.2">
   <PropertyGroup>
-    <OutputName>projectplandotnet.0.9.0</OutputName>
+    <OutputName>projectplandotnet.0.9.0.installer.$(Platform)</OutputName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <SuppressValidation>false</SuppressValidation>
