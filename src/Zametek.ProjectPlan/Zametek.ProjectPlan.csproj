@@ -9,8 +9,10 @@
 	<ApplicationManifest>app.manifest</ApplicationManifest>
 	<ApplicationIcon>Assets\zpp.ico</ApplicationIcon>
 	<AssemblyName>projectplandotnet</AssemblyName>
-	<Platforms>AnyCPU</Platforms>
+	<Platforms>AnyCPU;x86;x64</Platforms>
 	<StartupObject>Zametek.ProjectPlan.Program</StartupObject>
+	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+	<SelfContained>true</SelfContained>
 	<PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>

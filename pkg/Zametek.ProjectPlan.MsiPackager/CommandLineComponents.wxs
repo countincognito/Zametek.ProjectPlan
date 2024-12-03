@@ -11,7 +11,7 @@
                      project reference preprocessor variables -->
 				<File Id="CommandLineExe"
 					  Name="zpp.exe"
-					  Source="$(var.Zametek.ProjectPlan.CommandLine.TargetDir)win-$(var.Platform)\publish\zpp.exe"
+					  Source="$(var.Zametek.ProjectPlan.CommandLine.TargetDir)publish\zpp.exe"
 					  KeyPath="true"
 					  Checksum="yes" />
 
