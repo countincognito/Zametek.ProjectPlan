@@ -15,6 +15,8 @@
 
         public v0_3_2.WorkStreamSettingsModel WorkStreamSettings { get; init; } = new v0_3_2.WorkStreamSettingsModel();
 
+        public DisplaySettingsModel DisplaySettings { get; init; } = new DisplaySettingsModel();
+
         public GraphCompilationModel GraphCompilation { get; init; } = new GraphCompilationModel();
 
         public ArrowGraphModel ArrowGraph { get; init; } = new ArrowGraphModel();

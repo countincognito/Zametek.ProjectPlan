@@ -684,6 +684,14 @@ namespace Zametek.ViewModel.ProjectPlan
             return vertexGraphCompiler.CyclomaticComplexity;
         }
 
+        private void SetIsProjectUpdatedWithoutStaleOutputs(bool isProjectUpdated)
+        {
+            lock (m_Lock)
+            {
+                this.RaiseAndSetIfChanged(ref m_IsProjectUpdated, isProjectUpdated, nameof(IsProjectUpdated));
+            }
+        }
+
         #endregion
 
         #region ICoreViewModel Members
@@ -855,7 +863,81 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ViewEarnedValueProjections;
             set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_ViewEarnedValueProjections, value);
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_ViewEarnedValueProjections, value);
+                }
+            }
+        }
+
+        private GroupByMode m_GanttChartGroupByMode;
+        public GroupByMode GanttChartGroupByMode
+        {
+            get => m_GanttChartGroupByMode;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_GanttChartGroupByMode, value);
+                }
+            }
+        }
+
+        private AnnotationStyle m_GanttChartAnnotationStyle;
+        public AnnotationStyle GanttChartAnnotationStyle
+        {
+            get => m_GanttChartAnnotationStyle;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_GanttChartAnnotationStyle, value);
+                }
+            }
+        }
+
+        private bool m_ViewGanttChartGroupLabels;
+        public bool ViewGanttChartGroupLabels
+        {
+            get => m_ViewGanttChartGroupLabels;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_ViewGanttChartGroupLabels, value);
+                }
+            }
+        }
+
+        private bool m_ViewGanttChartProjectFinish;
+        public bool ViewGanttChartProjectFinish
+        {
+            get => m_ViewGanttChartProjectFinish;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_ViewGanttChartProjectFinish, value);
+                }
+            }
+        }
+
+        private bool m_ViewGanttChartTracking;
+        public bool ViewGanttChartTracking
+        {
+            get => m_ViewGanttChartTracking;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_ViewGanttChartTracking, value);
+                }
             }
         }
 
@@ -1052,6 +1134,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
                     ResourceSettings = m_SettingService.DefaultResourceSettings;
                     WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
+                    ViewEarnedValueProjections = false;
+                    GanttChartGroupByMode = default;
+                    GanttChartAnnotationStyle = default;
+                    ViewGanttChartGroupLabels = false;
+                    ViewGanttChartProjectFinish = false;
+                    ViewGanttChartTracking = false;
                 }
             }
             finally
@@ -1187,6 +1275,19 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Project Start Date.
                     ProjectStart = projectPlanModel.ProjectStart;
 
+                    // Display settings.
+                    ViewEarnedValueProjections = projectPlanModel.DisplaySettings.ViewEarnedValueProjections; // TODO
+
+                    GanttChartGroupByMode = projectPlanModel.DisplaySettings.GanttChartGroupByMode;
+
+                    GanttChartAnnotationStyle = projectPlanModel.DisplaySettings.GanttChartAnnotationStyle;
+
+                    ViewGanttChartGroupLabels = projectPlanModel.DisplaySettings.ViewGanttChartGroupLabels;
+
+                    ViewGanttChartProjectFinish = projectPlanModel.DisplaySettings.ViewGanttChartProjectFinish;
+
+                    ViewGanttChartTracking = projectPlanModel.DisplaySettings.ViewGanttChartTracking;
+
                     // Work Stream Settings.
                     WorkStreamSettings = projectPlanModel.WorkStreamSettings;
 
@@ -1246,6 +1347,15 @@ namespace Zametek.ViewModel.ProjectPlan
                         ResourceSettings = ResourceSettings.CloneObject(),
                         ArrowGraphSettings = ArrowGraphSettings.CloneObject(),
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),
+                        DisplaySettings = new DisplaySettingsModel
+                        {
+                            ViewEarnedValueProjections = ViewEarnedValueProjections,
+                            GanttChartAnnotationStyle = GanttChartAnnotationStyle,
+                            GanttChartGroupByMode = GanttChartGroupByMode,
+                            ViewGanttChartGroupLabels = ViewGanttChartGroupLabels,
+                            ViewGanttChartProjectFinish = ViewGanttChartProjectFinish,
+                            ViewGanttChartTracking = ViewGanttChartTracking,
+                        },
                         GraphCompilation = graphCompilation,
                         ArrowGraph = ArrowGraph.CloneObject(),
                         HasStaleOutputs = HasStaleOutputs

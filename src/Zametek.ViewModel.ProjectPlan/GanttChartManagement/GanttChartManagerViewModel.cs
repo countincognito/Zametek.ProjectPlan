@@ -105,6 +105,26 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, rcm => rcm.HasCompilationErrors);
 
+            m_GroupByMode = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartGroupByMode)
+                .ToProperty(this, rcm => rcm.GroupByMode);
+
+            m_AnnotationStyle = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartAnnotationStyle)
+                .ToProperty(this, rcm => rcm.AnnotationStyle);
+
+            m_LabelGroups = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ViewGanttChartGroupLabels)
+                .ToProperty(this, rcm => rcm.LabelGroups);
+
+            m_ShowProjectFinish = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ViewGanttChartProjectFinish)
+                .ToProperty(this, rcm => rcm.ShowProjectFinish);
+
+            m_ShowTracking = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ViewGanttChartTracking)
+                .ToProperty(this, rcm => rcm.ShowTracking);
+
             m_IsGrouped = this
                 .WhenAnyValue(
                     rcm => rcm.GroupByMode,
@@ -908,39 +928,54 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
-        private GroupByMode m_GroupByMode;
+        private readonly ObservableAsPropertyHelper<GroupByMode> m_GroupByMode;
         public GroupByMode GroupByMode
         {
-            get => m_GroupByMode;
-            set => this.RaiseAndSetIfChanged(ref m_GroupByMode, value);
+            get => m_GroupByMode.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.GanttChartGroupByMode = value;
+            }
         }
 
-        private AnnotationStyle m_AnnotationStyle;
+        private readonly ObservableAsPropertyHelper<AnnotationStyle> m_AnnotationStyle;
         public AnnotationStyle AnnotationStyle
         {
-            get => m_AnnotationStyle;
-            set => this.RaiseAndSetIfChanged(ref m_AnnotationStyle, value);
+            get => m_AnnotationStyle.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.GanttChartAnnotationStyle = value;
+            }
         }
 
-        private bool m_LabelGroups;
+        private readonly ObservableAsPropertyHelper<bool> m_LabelGroups;
         public bool LabelGroups
         {
-            get => m_LabelGroups;
-            set => this.RaiseAndSetIfChanged(ref m_LabelGroups, value);
+            get => m_LabelGroups.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.ViewGanttChartGroupLabels = value;
+            }
         }
 
-        private bool m_ShowProjectFinish;
+        private readonly ObservableAsPropertyHelper<bool> m_ShowProjectFinish;
         public bool ShowProjectFinish
         {
-            get => m_ShowProjectFinish;
-            set => this.RaiseAndSetIfChanged(ref m_ShowProjectFinish, value);
+            get => m_ShowProjectFinish.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.ViewGanttChartProjectFinish = value;
+            }
         }
 
-        private bool m_ShowTracking;
+        private readonly ObservableAsPropertyHelper<bool> m_ShowTracking;
         public bool ShowTracking
         {
-            get => m_ShowTracking;
-            set => this.RaiseAndSetIfChanged(ref m_ShowTracking, value);
+            get => m_ShowTracking.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.ViewGanttChartTracking = value;
+            }
         }
 
         public ICommand SaveGanttChartImageFileCommand { get; }
@@ -1071,6 +1106,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
+                m_GroupByMode?.Dispose();
+                m_AnnotationStyle?.Dispose();
+                m_LabelGroups?.Dispose();
+                m_ShowProjectFinish?.Dispose();
+                m_ShowTracking?.Dispose();
                 m_IsGrouped?.Dispose();
                 m_IsAnnotated?.Dispose();
             }

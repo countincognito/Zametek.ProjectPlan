@@ -1,5 +1,6 @@
 using Dock.Model.Controls;
 using Dock.Model.Core;
+using Org.BouncyCastle.Operators.Utilities;
 using ReactiveUI;
 using System.Diagnostics;
 using System.Reactive;
@@ -202,9 +203,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.BaseTheme)
                 .ToProperty(this, main => main.BaseTheme);
 
-            m_CoreViewModel.IsProjectUpdated = false;
             m_CoreViewModel.AutoCompile = true;
             m_CoreViewModel.ViewEarnedValueProjections = false;
+            m_CoreViewModel.GanttChartAnnotationStyle = default;
+            m_CoreViewModel.GanttChartGroupByMode = default;
+            m_CoreViewModel.ViewGanttChartGroupLabels = false;
+            m_CoreViewModel.ViewGanttChartProjectFinish = false;
+            m_CoreViewModel.ViewGanttChartTracking = false;
+            m_CoreViewModel.IsProjectUpdated = false;
 
 #if DEBUG
             DebugFactoryEvents(m_DockFactory);
