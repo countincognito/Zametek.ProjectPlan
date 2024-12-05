@@ -18,7 +18,9 @@ namespace Zametek.Contract.ProjectPlan
 
         string SelectedTheme { get; set; }
 
-        void SetProjectFilePath(string filename);
+        bool IsTitleBoundToFilename { get; set; }
+
+        void SetProjectFilePath(string filename, bool bindTitleToFilename);
 
         void SetProjectTitle(string filename);
 

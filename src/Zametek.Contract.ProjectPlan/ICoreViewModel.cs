@@ -7,7 +7,7 @@ namespace Zametek.Contract.ProjectPlan
     public interface ICoreViewModel
         : IKillSubscriptions, IDisposable
     {
-        string ProjectTitle { get; set; }
+        string ProjectTitle { get; }
 
         bool IsBusy { get; }
 

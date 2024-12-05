@@ -368,7 +368,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ProjectPlanModel planModel = await m_ProjectFileOpen.OpenProjectPlanFileAsync(filename);
                 ProcessProjectPlan(planModel);
-                m_SettingService.SetProjectFilePath(filename);
+                m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
                 //await RunAutoCompileAsync();
             }
         }
@@ -387,7 +387,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ProjectPlanModel projectPlan = await BuildProjectPlanAsync();
                 await m_ProjectFileSave.SaveProjectPlanFileAsync(projectPlan, filename);
                 m_CoreViewModel.IsProjectUpdated = false;
-                m_SettingService.SetProjectFilePath(filename);
+                m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
             }
         }
 
@@ -414,10 +414,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public string ProjectTitle
         {
             get => m_ProjectTitle.Value;
-            private set
-            {
-                lock (m_Lock) m_CoreViewModel.ProjectTitle = value;
-            }
         }
 
         private readonly ObservableAsPropertyHelper<bool> m_IsBusy;
@@ -653,7 +649,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 string projectTitle = m_SettingService.ProjectTitle;
 
-                if (string.IsNullOrWhiteSpace(projectTitle))
+                if (string.IsNullOrWhiteSpace(projectTitle)
+                    || !m_SettingService.IsTitleBoundToFilename)
                 {
                     await SaveAsProjectPlanFileAsync();
                     return;
@@ -678,7 +675,8 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 string directory = m_SettingService.ProjectDirectory;
-                string? filename = await m_DialogService.ShowSaveFileDialogAsync(string.Empty, directory, s_ProjectPlanFileFilters);
+                string projectTitle = m_SettingService.ProjectTitle;
+                string? filename = await m_DialogService.ShowSaveFileDialogAsync(projectTitle, directory, s_ProjectPlanFileFilters);
 
                 if (string.IsNullOrWhiteSpace(filename))
                 {
@@ -719,7 +717,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ProjectImportModel importModel = await m_ProjectFileImport.ImportProjectFileAsync(filename);
                     ProcessProjectImport(importModel);
-                    m_SettingService.SetProjectFilePath(filename);
+                    m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: false);
                     await RunAutoCompileAsync();
                 }
             }
@@ -750,7 +748,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         m_CoreViewModel.TrackingSeriesSet,
                         ShowDates,
                         filename);
-                    m_SettingService.SetProjectFilePath(filename);
                 }
             }
             catch (Exception ex)

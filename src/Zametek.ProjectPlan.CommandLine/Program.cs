@@ -188,13 +188,13 @@ namespace Zametek.ProjectPlan.CommandLine
 
                             if (outputFilename is not null)
                             {
-                                settingService.SetProjectFilePath(outputFilename);
+                                settingService.SetProjectFilePath(outputFilename, bindTitleToFilename: false);
                                 ProjectPlanModel plan = core.BuildProjectPlan();
                                 projectFileSave.SaveProjectPlanFileAsync(plan, outputFilename).Wait();
                             }
                             else if (exportFilename is not null)
                             {
-                                settingService.SetProjectFilePath(exportFilename);
+                                settingService.SetProjectFilePath(exportFilename, bindTitleToFilename: false);
                                 ProjectPlanModel plan = core.BuildProjectPlan();
                                 projectFileExport.ExportProjectFile(
                                     plan,

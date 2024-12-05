@@ -19,6 +19,8 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
+        private bool m_TrackIsProjectUpdated;
+        private bool m_TrackHasStaleOutputs;
 
         private readonly VertexGraphCompiler<int, int, int, IDependentActivity> m_VertexGraphCompiler;
 
@@ -46,6 +48,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(mapper);
             m_Lock = new object();
+            m_TrackIsProjectUpdated = true;
+            m_TrackHasStaleOutputs = true;
             m_VertexGraphCompiler = new VertexGraphCompiler<int, int, int, IDependentActivity>();
             m_SettingService = settingService;
             m_DateTimeCalculator = dateTimeCalculator;
@@ -686,9 +690,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void SetIsProjectUpdatedWithoutStaleOutputs(bool isProjectUpdated)
         {
-            lock (m_Lock)
+            try
             {
-                this.RaiseAndSetIfChanged(ref m_IsProjectUpdated, isProjectUpdated, nameof(IsProjectUpdated));
+                lock (m_Lock)
+                {
+                    m_TrackHasStaleOutputs = false;
+                    IsProjectUpdated = isProjectUpdated;
+                }
+            }
+            finally
+            {
+                m_TrackHasStaleOutputs = true;
             }
         }
 
@@ -700,10 +712,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public string ProjectTitle
         {
             get => m_ProjectTitle.Value;
-            set
-            {
-                lock (m_Lock) m_SettingService.SetProjectTitle(value);
-            }
         }
 
         private bool m_IsBusy;
@@ -739,7 +747,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     HasStaleOutputs = value;
-                    this.RaiseAndSetIfChanged(ref m_IsProjectUpdated, value);
+                    if (m_TrackIsProjectUpdated)
+                    {
+                        this.RaiseAndSetIfChanged(ref m_IsProjectUpdated, value);
+                    }
                 }
             }
         }
@@ -750,7 +761,13 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_HasStaleOutputs;
             set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_HasStaleOutputs, value);
+                lock (m_Lock)
+                {
+                    if (m_TrackHasStaleOutputs)
+                    {
+                        this.RaiseAndSetIfChanged(ref m_HasStaleOutputs, value);
+                    }
+                }
             }
         }
 
@@ -1155,6 +1172,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
+                    m_TrackIsProjectUpdated = false;
+                    m_TrackHasStaleOutputs = false;
+
                     ClearManagedActivities();
 
                     ClearSettings();
@@ -1163,18 +1183,23 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ArrowGraph = new ArrowGraphModel();
 
-                    IsProjectUpdated = false;
-                    HasStaleOutputs = false;
-
                     IsReadyToCompile = ReadyToCompile.No;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
                     IsReadyToReviseSettings = ReadyToRevise.No;
 
                     m_SettingService.Reset();
+
+                    m_TrackIsProjectUpdated = true;
+                    IsProjectUpdated = false;
+
+                    m_TrackHasStaleOutputs = true;
+                    HasStaleOutputs = false;
                 }
             }
             finally
             {
+                m_TrackIsProjectUpdated = true;
+                m_TrackHasStaleOutputs = true;
                 IsBusy = false;
             }
         }
@@ -1187,6 +1212,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     IsBusy = true;
                     ResetProject();
+                    m_TrackIsProjectUpdated = false;
+                    m_TrackHasStaleOutputs = false;
 
                     // Default display mode is required for all file opening and closing.
                     DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
@@ -1249,12 +1276,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Put display mode back to the way it was.
                     m_DateTimeCalculator.DisplayMode = oldDisplayMode;
 
-                    IsProjectUpdated = false;
+                    m_TrackIsProjectUpdated = true;
+                    IsProjectUpdated = true;
+
+                    m_TrackHasStaleOutputs = true;
                     HasStaleOutputs = true;
                 }
             }
             finally
             {
+                m_TrackIsProjectUpdated = true;
+                m_TrackHasStaleOutputs = true;
                 IsBusy = false;
             }
         }
@@ -1267,6 +1299,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     IsBusy = true;
                     ResetProject();
+                    m_TrackIsProjectUpdated = false;
+                    m_TrackHasStaleOutputs = false;
 
                     // Default display mode is required for all file opening and closing.
                     DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
@@ -1316,12 +1350,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Arrow Graph.
                     ArrowGraph = projectPlanModel.ArrowGraph;
 
+                    m_TrackIsProjectUpdated = true;
                     IsProjectUpdated = false;
+
+                    m_TrackHasStaleOutputs = true;
                     HasStaleOutputs = projectPlanModel.HasStaleOutputs;
                 }
             }
             finally
             {
+                m_TrackIsProjectUpdated = true;
+                m_TrackHasStaleOutputs = true;
                 IsBusy = false;
             }
         }

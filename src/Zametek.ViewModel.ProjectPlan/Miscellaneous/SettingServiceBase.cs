@@ -69,10 +69,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public abstract string ProjectDirectory { get; protected set; }
 
-        public void SetProjectFilePath(string filename)//!!)
+        public bool IsTitleBoundToFilename { get; set; }
+
+        public void SetProjectFilePath(
+            string filename,
+            bool bindTitleToFilename)//!!)
         {
             SetProjectTitle(filename);
             SetProjectDirectory(filename);
+            IsTitleBoundToFilename = bindTitleToFilename;
         }
 
         public void SetProjectTitle(string filename)//!!)
