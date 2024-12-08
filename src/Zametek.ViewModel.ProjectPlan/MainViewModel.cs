@@ -1,6 +1,5 @@
 using Dock.Model.Controls;
 using Dock.Model.Core;
-using Org.BouncyCastle.Operators.Utilities;
 using ReactiveUI;
 using System.Diagnostics;
 using System.Reactive;

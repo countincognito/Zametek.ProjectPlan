@@ -31,6 +31,8 @@ Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "Zametek.ProjectPlan.MsiPack
 EndProject
 Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "Zametek.ProjectPlan.WapPackager", "pkg\Zametek.ProjectPlan.WapPackager\Zametek.ProjectPlan.WapPackager.wapproj", "{E0E0348B-B129-44B2-8D57-4C587EC48232}"
 EndProject
+Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "Zametek.ProjectPlan.CommandLine.WapPackager", "pkg\Zametek.ProjectPlan.CommandLine.WapPackager\Zametek.ProjectPlan.CommandLine.WapPackager.wapproj", "{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -173,6 +175,24 @@ Global
 		{E0E0348B-B129-44B2-8D57-4C587EC48232}.Release|x86.ActiveCfg = Release|x86
 		{E0E0348B-B129-44B2-8D57-4C587EC48232}.Release|x86.Build.0 = Release|x86
 		{E0E0348B-B129-44B2-8D57-4C587EC48232}.Release|x86.Deploy.0 = Release|x86
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Debug|x64.ActiveCfg = Debug|x64
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Debug|x64.Build.0 = Debug|x64
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Debug|x64.Deploy.0 = Debug|x64
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Debug|x86.ActiveCfg = Debug|x86
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Debug|x86.Build.0 = Debug|x86
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Debug|x86.Deploy.0 = Debug|x86
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Release|x64.ActiveCfg = Release|x64
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Release|x64.Build.0 = Release|x64
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Release|x64.Deploy.0 = Release|x64
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Release|x86.ActiveCfg = Release|x86
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Release|x86.Build.0 = Release|x86
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Release|x86.Deploy.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -189,6 +209,7 @@ Global
 		{85174477-C943-4582-8813-2AF1871B72D8} = {00473AF6-71E3-4AF8-8036-79F8A167BD4F}
 		{46EC2746-BADD-4055-976C-97A0EA9FE5A5} = {58CA6F41-53CD-4303-9E7D-D8E078FB8790}
 		{E0E0348B-B129-44B2-8D57-4C587EC48232} = {58CA6F41-53CD-4303-9E7D-D8E078FB8790}
+		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE} = {58CA6F41-53CD-4303-9E7D-D8E078FB8790}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FC2AE5E7-6877-4295-9E87-C83CA5C3FB40}
