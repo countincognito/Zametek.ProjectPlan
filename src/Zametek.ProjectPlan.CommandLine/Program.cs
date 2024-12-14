@@ -369,15 +369,15 @@ namespace Zametek.ProjectPlan.CommandLine
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_ProjectFinish} {metrics.ProjectFinish}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_Efficiency} {metrics.Efficiency:F3}");
 
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DirectCost} {metrics.DirectCost:F2}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_IndirectCost} {metrics.IndirectCost:F2}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_OtherCost} {metrics.OtherCost:F2}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_TotalCost} {metrics.TotalCost:F2}");
-
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DirectEffort} {metrics.DirectEffort:F0}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_IndirectEffort} {metrics.IndirectEffort:F0}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_OtherEffort} {metrics.OtherEffort:F0}");
                             builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_TotalEffort} {metrics.TotalEffort:F0}");
+
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DirectCost} {metrics.DirectCost:F2}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_IndirectCost} {metrics.IndirectCost:F2}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_OtherCost} {metrics.OtherCost:F2}");
+                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_TotalCost} {metrics.TotalCost:F2}");
 
                             Display(builder.ToString());
                         }
