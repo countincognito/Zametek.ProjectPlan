@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
 	<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
 	<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+	<Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />
