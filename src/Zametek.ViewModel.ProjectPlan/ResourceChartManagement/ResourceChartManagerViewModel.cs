@@ -286,7 +286,8 @@ namespace Zametek.ViewModel.ProjectPlan
             return new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = Resource.ProjectPlan.Labels.Label_ResourcesAxisTitle
+                Title = Resource.ProjectPlan.Labels.Label_ResourcesAxisTitle,
+                MinorStep = 1
             };
         }
 
