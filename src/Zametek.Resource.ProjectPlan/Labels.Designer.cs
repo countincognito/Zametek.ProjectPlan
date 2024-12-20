@@ -187,7 +187,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.9.0-rc.2.
+        ///   Looks up a localized string similar to 0.9.0.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -196,7 +196,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to R M Bennett-Lovsey.
+        ///   Looks up a localized string similar to R. M. Bennett-Lovsey.
         /// </summary>
         public static string Label_Author {
             get {
