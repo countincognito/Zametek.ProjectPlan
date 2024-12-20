@@ -145,7 +145,7 @@
     <value>Add</value>
   </data>
   <data name="Label_AddMilestone" xml:space="preserve">
-    <value>Add Milestone</value>
+    <value>Milestone</value>
   </data>
   <data name="Label_AllocatedToResources" xml:space="preserve">
     <value>Allocated to Resources</value>

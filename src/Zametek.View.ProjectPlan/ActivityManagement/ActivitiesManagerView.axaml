@@ -65,17 +65,11 @@
 			<Button DockPanel.Dock="Bottom"
 					IsTabStop="True"
                     Margin="0,0,0,0"
-                    Height="50" Width="75"
+                    Height="25" Width="75"
                     VerticalContentAlignment="Center"
 					HorizontalContentAlignment="Center"
-                    Command="{Binding Path=AddMilestoneCommand, Mode=OneWay}">
-				<TextBlock TextAlignment="Center"
-						   Margin="0"
-						   Padding="0"
-						   Width="75"
-						   TextWrapping="Wrap"
-						   Text="{x:Static resources:Labels.Label_AddMilestone}"/>
-			</Button>
+                    Command="{Binding Path=AddMilestoneCommand, Mode=OneWay}"
+					Content="{x:Static resources:Labels.Label_AddMilestone}"/>
 
 			<Grid/>
 		</DockPanel>
@@ -115,6 +109,13 @@
 				<!--<Style Selector="DataGridCell:selected:pointerover:current:focus Grid.editable">
 					<Setter Property="Background" Value="Green"/>
 				</Style>-->
+
+				<Style Selector="TextBox.displayOnly">
+					<Setter Property="IsHitTestVisible" Value="False"/>
+					<Setter Property="IsReadOnly" Value="False"/>
+					<Setter Property="Background" Value="Transparent"/>
+					<Setter Property="BorderThickness" Value="0"/>
+				</Style>
 			</DataGrid.Styles>
 
 			<i:Interaction.Behaviors>
@@ -169,10 +170,11 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Path=Duration, Mode=OneWay}"/>
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=Duration, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -207,10 +209,11 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Path=Name, Mode=OneWay}"/>
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=Name, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -243,10 +246,11 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-									       Text="{Binding Path=DependenciesString, Mode=OneWay}"/>
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=DependenciesString, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -588,11 +592,12 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Left"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Path=MinimumFreeSlack, Mode=OneWay}"/>
+								<TextBox VerticalAlignment="Center"
+										 TextAlignment="Left"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=MinimumFreeSlack, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -627,18 +632,20 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-								<TextBlock IsVisible="{Binding Path=!ShowDates, Mode=OneWay}"
-										   VerticalAlignment="Center"
-										   TextAlignment="Left"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Path=MinimumEarliestStartTime, Mode=OneWay}"/>
-								<TextBlock IsVisible="{Binding Path=ShowDates, Mode=OneWay}"
-										   VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Path=MinimumEarliestStartDateTime, Mode=OneWay, StringFormat={}{0:d}}}"/>
+								<TextBox IsVisible="{Binding Path=!ShowDates, Mode=OneWay}"
+										 VerticalAlignment="Center"
+										 TextAlignment="Left"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=MinimumEarliestStartTime, Mode=OneWay}"/>
+								<TextBox IsVisible="{Binding Path=ShowDates, Mode=OneWay}"
+										 VerticalAlignment="Center"
+										 TextAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=MinimumEarliestStartDateTime, Mode=OneWay, StringFormat={}{0:d}}}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -684,19 +691,21 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-								<TextBlock IsVisible="{Binding Path=!ShowDates, Mode=OneWay}"
-										   VerticalAlignment="Center"
-										   TextAlignment="Left"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Path=MaximumLatestFinishTime, Mode=OneWay}"/>
+								<TextBox IsVisible="{Binding Path=!ShowDates, Mode=OneWay}"
+										 VerticalAlignment="Center"
+										 TextAlignment="Left"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=MaximumLatestFinishTime, Mode=OneWay}"/>
 
-								<TextBlock IsVisible="{Binding Path=ShowDates, Mode=OneWay}"
-										   VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Path=MaximumLatestFinishDateTime, Mode=OneWay, StringFormat={}{0:d}}}"/>
+								<TextBox IsVisible="{Binding Path=ShowDates, Mode=OneWay}"
+										 VerticalAlignment="Center"
+										 TextAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=MaximumLatestFinishDateTime, Mode=OneWay, StringFormat={}{0:d}}}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -742,11 +751,12 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   x:DataType="vm:ManagedActivityViewModel"
-										   Text="{Binding Path=WorkStreamSelector.TargetWorkStreamsString, Mode=OneWay}"/>
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 x:DataType="vm:ManagedActivityViewModel"
+										 Classes="displayOnly"
+										 Text="{Binding Path=WorkStreamSelector.TargetWorkStreamsString, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -792,11 +802,12 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   x:DataType="vm:ManagedActivityViewModel"
-										   Text="{Binding Path=ResourceSelector.TargetResourcesString, Mode=OneWay}"/>
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 x:DataType="vm:ManagedActivityViewModel"
+										 Classes="displayOnly"
+										 Text="{Binding Path=ResourceSelector.TargetResourcesString, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -873,11 +884,12 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Path=TargetResourceOperator, Mode=OneWay}"/>
+								<TextBox VerticalAlignment="Center"
+										 TextAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=TargetResourceOperator, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -967,10 +979,11 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Path=Notes, Mode=OneWay}"/>
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=Notes, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>

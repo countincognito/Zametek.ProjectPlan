@@ -291,25 +291,61 @@ namespace Zametek.ViewModel.ProjectPlan
             return result;
         }
 
+        private void ValidateDuration(int input)
+        {
+            Validate(MinimumFreeSlack, MinimumEarliestStartTime, MaximumLatestFinishTime, input);
+        }
+
+        private void ValidateMinimumFreeSlack(int? input)
+        {
+            Validate(input, MinimumEarliestStartTime, MaximumLatestFinishTime, Duration);
+        }
+
         private void ValidateMinimumEarliestStartTime(int? input)
         {
-            ClearErrors();
-            string? errorMessage = ConstraintsValidationRule.Validate(MinimumFreeSlack, input, MaximumLatestFinishTime, Duration);
-            if (errorMessage is not null)
-            {
-                SetError(nameof(MinimumEarliestStartTime), errorMessage);
-                SetError(nameof(MinimumEarliestStartDateTime), errorMessage);
-            }
+            Validate(MinimumFreeSlack, input, MaximumLatestFinishTime, Duration);
         }
 
         private void ValidateMaximumLatestFinishTime(int? input)
         {
-            ClearErrors();
-            string? errorMessage = ConstraintsValidationRule.Validate(MinimumFreeSlack, MinimumEarliestStartTime, input, Duration);
-            if (errorMessage is not null)
+            Validate(MinimumFreeSlack, MinimumEarliestStartTime, input, Duration);
+        }
+
+        private void Validate(
+            int? minimumFreeSlack,
+            int? minimumEarliestStartTime,
+            int? maximumLatestFinishTime,
+            int duration)
+        {
+            ClearErrors(nameof(Duration));
+            ClearErrors(nameof(MinimumFreeSlack));
+            ClearErrors(nameof(MinimumEarliestStartTime));
+            ClearErrors(nameof(MinimumEarliestStartDateTime));
+            ClearErrors(nameof(MaximumLatestFinishTime));
+            ClearErrors(nameof(MaximumLatestFinishDateTime));
+
             {
-                SetError(nameof(MaximumLatestFinishTime), errorMessage);
-                SetError(nameof(MaximumLatestFinishDateTime), errorMessage);
+                string? errorMessage = ConstraintsValidationRule.ValidateDuration(minimumEarliestStartTime, maximumLatestFinishTime, duration);
+                if (errorMessage is not null)
+                {
+                    SetError(nameof(Duration), errorMessage);
+                    SetError(nameof(MinimumEarliestStartTime), errorMessage);
+                    SetError(nameof(MinimumEarliestStartDateTime), errorMessage);
+                    SetError(nameof(MaximumLatestFinishTime), errorMessage);
+                    SetError(nameof(MaximumLatestFinishDateTime), errorMessage);
+                }
+            }
+
+            {
+                string? errorMessage = ConstraintsValidationRule.ValidateMinimumFreeSlack(minimumFreeSlack, minimumEarliestStartTime, maximumLatestFinishTime);
+                if (errorMessage is not null)
+                {
+                    SetError(nameof(MinimumFreeSlack), errorMessage);
+                    SetError(nameof(MinimumEarliestStartTime), errorMessage);
+                    SetError(nameof(MinimumEarliestStartDateTime), errorMessage);
+                    SetError(nameof(MaximumLatestFinishTime), errorMessage);
+                    SetError(nameof(MaximumLatestFinishDateTime), errorMessage);
+                }
             }
         }
 
@@ -406,7 +442,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void SetError(string propertyName, string error)
         {
-            if (m_ErrorsByPropertyName.TryGetValue(propertyName, out var errorList))
+            if (m_ErrorsByPropertyName.TryGetValue(propertyName, out List<string>? errorList))
             {
                 if (!errorList.Contains(error))
                 {
@@ -421,13 +457,26 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(HasErrors));
         }
 
-
-
+        private void ClearErrors(string? propertyName)
+        {
+            if (!string.IsNullOrWhiteSpace(propertyName)
+                && m_ErrorsByPropertyName.TryGetValue(propertyName, out List<string>? errorList))
+            {
+                errorList.Clear();
+            }
+            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
+        }
 
         private void ClearErrors()
         {
+            IList<string> propertyNames = [.. m_ErrorsByPropertyName.Keys];
             m_ErrorsByPropertyName.Clear();
-            //ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
+
+            foreach (string propertyName in propertyNames)
+            {
+                ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
+            }
+
             this.RaisePropertyChanged(nameof(HasErrors));
         }
 
@@ -474,12 +523,12 @@ namespace Zametek.ViewModel.ProjectPlan
             get => string.Join(DependenciesStringValidationRule.Separator, Dependencies.OrderBy(x => x));
             set
             {
-                ClearErrors();
+                //ClearErrors();
                 (IEnumerable<int>? updatedDependencies, string? errorMessage) = DependenciesStringValidationRule.Validate(value, Id);
-                if (errorMessage is not null)
-                {
-                    SetError(nameof(DependenciesString), errorMessage);
-                }
+                //if (errorMessage is not null)
+                //{
+                //    SetError(nameof(DependenciesString), errorMessage);
+                //}
 
                 if (updatedDependencies is not null)
                 {
@@ -568,12 +617,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     value = 0;
                 }
 
-                ClearErrors();
-                string? errorMessage = ConstraintsValidationRule.Validate(MinimumFreeSlack, MinimumEarliestStartTime, MaximumLatestFinishTime, value);
-                if (errorMessage is not null)
-                {
-                    SetError(nameof(Duration), errorMessage);
-                }
+                ValidateDuration(value);
 
                 DependentActivity.Duration = value;
                 this.RaisePropertyChanged();
@@ -735,12 +779,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     value = 0;
                 }
 
-                ClearErrors();
-                string? errorMessage = ConstraintsValidationRule.Validate(value, MinimumEarliestStartTime, MaximumLatestFinishTime, Duration);
-                if (errorMessage is not null)
-                {
-                    SetError(nameof(MinimumFreeSlack), errorMessage);
-                }
+                ValidateMinimumFreeSlack(value);
 
                 DependentActivity.MinimumFreeSlack = value;
                 this.RaisePropertyChanged();
@@ -911,7 +950,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public IEnumerable GetErrors(string? propertyName)
         {
             if (!string.IsNullOrWhiteSpace(propertyName)
-                && m_ErrorsByPropertyName.TryGetValue(propertyName, out var errorList))
+                && m_ErrorsByPropertyName.TryGetValue(propertyName, out List<string>? errorList))
             {
                 return errorList;
             }

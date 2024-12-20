@@ -151,7 +151,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add Milestone.
+        ///   Looks up a localized string similar to Milestone.
         /// </summary>
         public static string Label_AddMilestone {
             get {
