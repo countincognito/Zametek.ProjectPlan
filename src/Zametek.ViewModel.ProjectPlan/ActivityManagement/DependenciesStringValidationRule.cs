@@ -54,7 +54,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public static IList<int> Parse(string input)//!!)
         {
             return [.. input
-                .Split([Separator], StringSplitOptions.RemoveEmptyEntries)
+                .Split(new[] { Separator }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(int.Parse)
                 .Distinct()
                 .OrderBy(x => x)];
