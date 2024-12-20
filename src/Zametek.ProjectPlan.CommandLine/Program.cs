@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using CommandLine;
 using CommandLine.Text;
+using ConsoleTables;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NPOI.SS.Formula.Functions;
 using Serilog;
 using System.Text;
 using Zametek.Common.ProjectPlan;
@@ -168,7 +170,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                             if (core.HasCompilationErrors)
                             {
-                                Display(outputs.CompilationOutput);
+                                Display(outputs.CompilationOutput, core.HasCompilationErrors);
                                 return;
                             }
 
@@ -192,7 +194,7 @@ namespace Zametek.ProjectPlan.CommandLine
                                 ProjectPlanModel plan = core.BuildProjectPlan();
                                 projectFileSave.SaveProjectPlanFileAsync(plan, outputFilename).Wait();
                             }
-                            else if (exportFilename is not null)
+                            if (exportFilename is not null)
                             {
                                 settingService.SetProjectFilePath(exportFilename, bindTitleToFilename: false);
                                 ProjectPlanModel plan = core.BuildProjectPlan();
@@ -202,11 +204,6 @@ namespace Zametek.ProjectPlan.CommandLine
                                     core.TrackingSeriesSet,
                                     core.ShowDates,
                                     exportFilename);
-                            }
-                            else
-                            {
-                                DisplayHelp(parserResult);
-                                return;
                             }
                         }
 
@@ -350,36 +347,42 @@ namespace Zametek.ProjectPlan.CommandLine
                             }
                         }
 
-                        // Metrics and costs.
+                        // Metrics.
                         {
-                            var builder = new StringBuilder();
+                            var table = new ConsoleTable(Resource.ProjectPlan.Titles.Title_Metrics, Resource.ProjectPlan.Titles.Title_Values);
 
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_ActivityRisk} {metrics.ActivityRisk:F3}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_ActivityRiskWithStdDevCorrection} {metrics.ActivityRiskWithStdDevCorrection:F3}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_CriticalityRisk} {metrics.CriticalityRisk:F3}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_FibonacciRisk} {metrics.FibonacciRisk:F3}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_ActivityRisk, $@"{metrics.ActivityRisk:F3}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_ActivityRiskWithStdDevCorrection, $@"{metrics.ActivityRiskWithStdDevCorrection:F3}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_CriticalityRisk, $@"{metrics.CriticalityRisk:F3}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_FibonacciRisk, $@"{metrics.FibonacciRisk:F3}");
 
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_GeometricActivityRisk} {metrics.GeometricActivityRisk:F3}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_GeometricCriticalityRisk} {metrics.GeometricCriticalityRisk:F3}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_GeometricFibonacciRisk} {metrics.GeometricFibonacciRisk:F3}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_CyclomaticComplexity} {metrics.CyclomaticComplexity}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_GeometricActivityRisk, $@"{metrics.GeometricActivityRisk:F3}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_GeometricCriticalityRisk, $@"{metrics.GeometricCriticalityRisk:F3}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_GeometricFibonacciRisk, $@"{metrics.GeometricFibonacciRisk:F3}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_CyclomaticComplexity, $@"{metrics.CyclomaticComplexity}");
 
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_ActivityEffort} {metrics.ActivityEffort:F0}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DurationManMonths} {metrics.DurationManMonths:F1}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_ProjectFinish} {metrics.ProjectFinish}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_Efficiency} {metrics.Efficiency:F3}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_ActivityEffort, $@"{metrics.ActivityEffort:F0}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_DurationManMonths, $@"{metrics.DurationManMonths:F1}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_ProjectFinish, $@"{metrics.ProjectFinish}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_Efficiency, $@"{metrics.Efficiency:F3}");
 
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DirectEffort} {metrics.DirectEffort:F0}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_IndirectEffort} {metrics.IndirectEffort:F0}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_OtherEffort} {metrics.OtherEffort:F0}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_TotalEffort} {metrics.TotalEffort:F0}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_DirectEffort, $@"{metrics.DirectEffort:F0}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_IndirectEffort, $@"{metrics.IndirectEffort:F0}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_OtherEffort, $@"{metrics.OtherEffort:F0}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_TotalEffort, $@"{metrics.TotalEffort:F0}");
 
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_DirectCost} {metrics.DirectCost:F2}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_IndirectCost} {metrics.IndirectCost:F2}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_OtherCost} {metrics.OtherCost:F2}");
-                            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_TotalCost} {metrics.TotalCost:F2}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_DirectCost, $@"{metrics.DirectCost:F2}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_IndirectCost, $@"{metrics.IndirectCost:F2}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_OtherCost, $@"{metrics.OtherCost:F2}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_TotalCost, $@"{metrics.TotalCost:F2}");
 
-                            Display(builder.ToString());
+                            table.Configure(x =>
+                            {
+                                x.NumberAlignment = Alignment.Left;
+                                x.EnableCount = false;
+                            });
+
+                            Display(table.ToMarkDownString());
                         }
                     });
 
@@ -392,9 +395,21 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        private static void Display(string content)
+        private static void Display(
+            string content,
+            bool hasErrors = false)
         {
+            if (hasErrors)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+            }
+            Console.Out.WriteLine();
             Console.Out.WriteLine(content);
+            Console.ResetColor();
         }
 
         private static void DisplayHelp<T>(ParserResult<T> result)

@@ -13,10 +13,10 @@ namespace Zametek.ProjectPlan.CommandLine
 
 
 
-        [Option('o', "output", Group = "file-out", HelpText = "Output file path")]
+        [Option('o', "output", HelpText = "Output file path")]
         public string? OutputFilename { get; set; } = default;
 
-        [Option('x', "export", Group = "file-out", HelpText = "Export file path - must end in .xlsx")]
+        [Option('x', "export", HelpText = "Export file path - must end in .xlsx")]
         public string? ExportFilename { get; set; } = default;
 
 

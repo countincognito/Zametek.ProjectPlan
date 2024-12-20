@@ -159,7 +159,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     output.AppendLine($@">{Resource.ProjectPlan.Messages.Message_Error}: {error.ErrorCode}");
                     output.AppendLine($@">{error.ErrorMessage}");
-                    output.AppendLine();
                 }
             }
             else if (scheduled.Any())

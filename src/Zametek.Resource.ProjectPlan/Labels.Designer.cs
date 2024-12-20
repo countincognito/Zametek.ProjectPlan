@@ -196,7 +196,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Riccardo M Bennett-Lovsey.
+        ///   Looks up a localized string similar to R M Bennett-Lovsey.
         /// </summary>
         public static string Label_Author {
             get {

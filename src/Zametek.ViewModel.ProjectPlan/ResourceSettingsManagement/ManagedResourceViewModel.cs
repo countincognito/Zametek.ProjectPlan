@@ -5,7 +5,6 @@ using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
-using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {

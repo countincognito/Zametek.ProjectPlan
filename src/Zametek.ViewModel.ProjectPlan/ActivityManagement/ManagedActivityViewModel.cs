@@ -1,5 +1,4 @@
-﻿using Avalonia.Data;
-using ReactiveUI;
+﻿using ReactiveUI;
 using System.Collections;
 using System.ComponentModel;
 using System.Reactive.Concurrency;
@@ -7,7 +6,6 @@ using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
-using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -295,27 +293,23 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ValidateMinimumEarliestStartTime(int? input)
         {
-            //RemoveErrors(nameof(MinimumEarliestStartTime));
-            //RemoveErrors(nameof(MinimumEarliestStartDateTime));
+            ClearErrors();
             string? errorMessage = ConstraintsValidationRule.Validate(MinimumFreeSlack, input, MaximumLatestFinishTime, Duration);
             if (errorMessage is not null)
             {
-                //SetError(nameof(MinimumEarliestStartTime), errorMessage);
-                //SetError(nameof(MinimumEarliestStartDateTime), errorMessage);
-                throw new DataValidationException(errorMessage);
+                SetError(nameof(MinimumEarliestStartTime), errorMessage);
+                SetError(nameof(MinimumEarliestStartDateTime), errorMessage);
             }
         }
 
         private void ValidateMaximumLatestFinishTime(int? input)
         {
-            //RemoveErrors(nameof(MaximumLatestFinishTime));
-            //RemoveErrors(nameof(MaximumLatestFinishDateTime));
+            ClearErrors();
             string? errorMessage = ConstraintsValidationRule.Validate(MinimumFreeSlack, MinimumEarliestStartTime, input, Duration);
             if (errorMessage is not null)
             {
-                //SetError(nameof(MaximumLatestFinishTime), errorMessage);
-                //SetError(nameof(MaximumLatestFinishDateTime), errorMessage);
-                throw new DataValidationException(errorMessage);
+                SetError(nameof(MaximumLatestFinishTime), errorMessage);
+                SetError(nameof(MaximumLatestFinishDateTime), errorMessage);
             }
         }
 
@@ -427,10 +421,13 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(HasErrors));
         }
 
-        private void RemoveErrors(string propertyName)
+
+
+
+        private void ClearErrors()
         {
-            m_ErrorsByPropertyName.Remove(propertyName);
-            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
+            m_ErrorsByPropertyName.Clear();
+            //ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
             this.RaisePropertyChanged(nameof(HasErrors));
         }
 
@@ -477,12 +474,11 @@ namespace Zametek.ViewModel.ProjectPlan
             get => string.Join(DependenciesStringValidationRule.Separator, Dependencies.OrderBy(x => x));
             set
             {
-                //RemoveErrors(nameof(DependenciesString)); // TODO
+                ClearErrors();
                 (IEnumerable<int>? updatedDependencies, string? errorMessage) = DependenciesStringValidationRule.Validate(value, Id);
                 if (errorMessage is not null)
                 {
-                    //SetError(nameof(DependenciesString), errorMessage); // TODO
-                    throw new DataValidationException(errorMessage);
+                    SetError(nameof(DependenciesString), errorMessage);
                 }
 
                 if (updatedDependencies is not null)
@@ -572,12 +568,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     value = 0;
                 }
 
-                //RemoveErrors(nameof(Duration));
+                ClearErrors();
                 string? errorMessage = ConstraintsValidationRule.Validate(MinimumFreeSlack, MinimumEarliestStartTime, MaximumLatestFinishTime, value);
                 if (errorMessage is not null)
                 {
-                    //SetError(nameof(Duration), errorMessage);
-                    throw new DataValidationException(errorMessage);
+                    SetError(nameof(Duration), errorMessage);
                 }
 
                 DependentActivity.Duration = value;
@@ -740,12 +735,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     value = 0;
                 }
 
-                //RemoveErrors(nameof(MinimumFreeSlack));
+                ClearErrors();
                 string? errorMessage = ConstraintsValidationRule.Validate(value, MinimumEarliestStartTime, MaximumLatestFinishTime, Duration);
                 if (errorMessage is not null)
                 {
-                    //SetError(nameof(MinimumFreeSlack), errorMessage);
-                    throw new DataValidationException(errorMessage);
+                    SetError(nameof(MinimumFreeSlack), errorMessage);
                 }
 
                 DependentActivity.MinimumFreeSlack = value;

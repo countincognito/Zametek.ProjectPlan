@@ -77,6 +77,10 @@
 		<Style Selector="oxy|PlotView">
 			<Setter Property="Background" Value="{DynamicResource OxyplotPlotViewBackgroundBrush}" />
 		</Style>
+
+		<Style Selector="DataValidationErrors">
+			<Setter Property="Theme" Value="{StaticResource TooltipDataValidationErrors}" />
+		</Style>
 	</Application.Styles>
 
 	<Application.Resources>
