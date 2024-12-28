@@ -2,12 +2,12 @@
 	<Fragment>
 		<StandardDirectory Id="ProgramFiles6432Folder">
 			<Directory Id="INSTALLFOLDER"
-					   Name="!(bind.Property.ManufacturerShort)\!(bind.Property.ProductName)" />
+					   Name="!(bind.Property.Manufacturer)\!(bind.Property.ProductName)" />
 		</StandardDirectory>
 
 		<StandardDirectory Id="ProgramMenuFolder">
 			<Directory Id="MenuFolder"
-					   Name="!(bind.Property.ManufacturerShort)" />
+					   Name="!(bind.Property.Manufacturer)" />
 		</StandardDirectory>
 	</Fragment>
 </Wix>
