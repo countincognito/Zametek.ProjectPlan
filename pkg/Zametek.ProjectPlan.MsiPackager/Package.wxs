@@ -4,7 +4,8 @@
 
 <?define Name = "!(loc.ProductName)" ?>
 <?define ExeName = "projectplandotnet.exe" ?>
-<?define Manufacturer = "Zametek" ?>
+<?define Manufacturer = "Zametek Ltd" ?>
+<?define ManufacturerShort = "Zametek" ?>
 <?define Version = "0.9.0.0" ?>
 <?define UpgradeCode = "{95a70689-f0fe-4e3c-9a86-deb6fcd7305c}" ?>
 

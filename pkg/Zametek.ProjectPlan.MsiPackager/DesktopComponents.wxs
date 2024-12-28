@@ -57,7 +57,7 @@
 						  Icon="ico.exe" />
 
 				<RegistryValue Root="HKCU"
-							   Key="SOFTWARE\!(bind.Property.Manufacturer)\!(bind.Property.ProductName)"
+							   Key="SOFTWARE\!(bind.Property.ManufacturerShort)\!(bind.Property.ProductName)"
 							   KeyPath="yes"
 							   Type="integer"
 							   Value="1"

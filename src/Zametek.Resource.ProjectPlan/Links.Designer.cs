@@ -70,7 +70,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://github.com/sponsors/countincognito.
+        ///   Looks up a localized string similar to https://github.com/countincognito/Zametek.ProjectPlan/blob/master/README.md.
         /// </summary>
         public static string Link_Donate {
             get {
