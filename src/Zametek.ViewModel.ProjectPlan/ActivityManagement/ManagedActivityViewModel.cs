@@ -155,10 +155,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public IDependentActivity DependentActivity { get; }
 
-        public IResourceSelectorViewModel ResourceSelector { get; }
-
-        public IWorkStreamSelectorViewModel WorkStreamSelector { get; }
-
         #endregion
 
         #region Private Methods
@@ -833,6 +829,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 SetMaximumLatestFinishTimes(input);
             }
         }
+
+        public IResourceSelectorViewModel ResourceSelector { get; }
+
+        public IWorkStreamSelectorViewModel WorkStreamSelector { get; }
 
         public IActivityTrackerSetViewModel TrackerSet { get; }
 

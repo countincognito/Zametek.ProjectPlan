@@ -6,6 +6,7 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Data.ProjectPlan.v0_3_2;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -153,29 +154,32 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-
-
-
-
+                var editViewModel = new ActivityEditViewModel(
+                    m_CoreViewModel.ResourceSettings.Resources,
+                     m_CoreViewModel.WorkStreamSettings.WorkStreams);
 
                 await m_DialogService.ShowContextAsync<ViewModelBase>(
-                    "A",
-                    new ActivitiesEditViewModel());
+                    Resource.ProjectPlan.Titles.Title_EditActivities,
+                    editViewModel);
 
+                lock (m_Lock)
+                {
+                    ICollection<int> activityIds = SelectedActivities.Keys;
 
-                //lock (m_Lock)
-                //{
-                //    ICollection<int> activityIds = SelectedActivities.Keys;
+                    if (activityIds.Count == 0)
+                    {
+                        return;
+                    }
 
-                //    if (activityIds.Count == 0)
-                //    {
-                //        return;
-                //    }
+                    UpdateActivityModel updateActivityModel = editViewModel.BuildUpdateActivityModel();
 
-                //    m_CoreViewModel.RemoveManagedActivities(activityIds);
-                //    m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                //}
-                //await RunAutoCompileAsync();
+                    IEnumerable<UpdateActivityModel> updateActivityModels = activityIds
+                        .Select(x => updateActivityModel with { Id = x })
+                        .ToList(); ;
+
+                    m_CoreViewModel.UpdateManagedActivities(updateActivityModels);
+                }
+                await RunAutoCompileAsync();
             }
             catch (Exception ex)
             {

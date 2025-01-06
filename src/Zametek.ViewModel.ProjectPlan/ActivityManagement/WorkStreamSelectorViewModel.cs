@@ -204,6 +204,25 @@ namespace Zametek.ViewModel.ProjectPlan
             RaiseTargetWorkStreamsPropertiesChanged();
         }
 
+        public void SetSelectedTargetWorkStreams(HashSet<int> selectedTargetWorkStreams)
+        {
+            ArgumentNullException.ThrowIfNull(selectedTargetWorkStreams);
+            lock (m_Lock)
+            {
+                m_SelectedTargetWorkStreams.Clear();
+                Dictionary<int, ISelectableWorkStreamViewModel> targetWorkStreamLookup = m_TargetWorkStreams.ToDictionary(x => x.Id);
+
+                foreach (int selectedTargetWorkStreamId in selectedTargetWorkStreams)
+                {
+                    if (targetWorkStreamLookup.TryGetValue(selectedTargetWorkStreamId, out ISelectableWorkStreamViewModel? vm))
+                    {
+                        m_SelectedTargetWorkStreams.Add(vm);
+                    }
+                }
+            }
+            RaiseTargetWorkStreamsPropertiesChanged();
+        }
+
         public void RaiseTargetWorkStreamsPropertiesChanged()
         {
             this.RaisePropertyChanged(nameof(TargetWorkStreams));

@@ -199,6 +199,25 @@ namespace Zametek.ViewModel.ProjectPlan
             RaiseTargetResourcesPropertiesChanged();
         }
 
+        public void SetSelectedTargetResources(HashSet<int> selectedTargetResources)
+        {
+            ArgumentNullException.ThrowIfNull(selectedTargetResources);
+            lock (m_Lock)
+            {
+                m_SelectedTargetResources.Clear();
+                Dictionary<int, ISelectableResourceViewModel> targetResourceLookup = m_TargetResources.ToDictionary(x => x.Id);
+
+                foreach (int selectedTargetResourceId in selectedTargetResources)
+                {
+                    if (targetResourceLookup.TryGetValue(selectedTargetResourceId, out ISelectableResourceViewModel? vm))
+                    {
+                        m_SelectedTargetResources.Add(vm);
+                    }
+                }
+            }
+            RaiseTargetResourcesPropertiesChanged();
+        }
+
         public void RaiseTargetResourcesPropertiesChanged()
         {
             this.RaisePropertyChanged(nameof(TargetResources));

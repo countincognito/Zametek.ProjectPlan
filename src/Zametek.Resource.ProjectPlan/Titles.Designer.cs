@@ -97,6 +97,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edit Activities.
+        /// </summary>
+        public static string Title_EditActivities {
+            get {
+                return ResourceManager.GetString("Title_EditActivities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error.
         /// </summary>
         public static string Title_Error {

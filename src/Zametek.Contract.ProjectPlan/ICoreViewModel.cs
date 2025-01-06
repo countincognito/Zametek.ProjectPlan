@@ -91,6 +91,8 @@ namespace Zametek.Contract.ProjectPlan
 
         void RemoveManagedActivities(IEnumerable<int> dependentActivities);
 
+        void UpdateManagedActivities(IEnumerable<UpdateActivityModel> updateActivityModels);
+
         void AddMilestone(IEnumerable<int> dependentActivities);
 
         void ClearManagedActivities();

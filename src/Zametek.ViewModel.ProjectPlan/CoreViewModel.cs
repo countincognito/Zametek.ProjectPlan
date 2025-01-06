@@ -3,6 +3,7 @@ using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
@@ -1503,6 +1504,44 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             m_Activities.Remove(dependentActivity);
                             dependentActivity.Dispose();
+                        }
+                    }
+
+                    IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        public void UpdateManagedActivities(IEnumerable<UpdateActivityModel> updateActivityModels)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    Dictionary<int, IManagedActivityViewModel> activityLookup = Activities.ToDictionary(x => x.Id);
+
+                    foreach (UpdateActivityModel updateActivityModel in updateActivityModels)
+                    {
+                        if (activityLookup.TryGetValue(updateActivityModel.Id, out IManagedActivityViewModel? activity))
+                        {
+                            if (activity is IEditableObject editable)
+                            {
+                                editable.BeginEdit();
+
+                                //activity.Name = updateActivityModel.Name;
+                                //activity.Notes = updateActivityModel.Notes;
+
+                                activity.ResourceSelector.SetSelectedTargetResources([.. updateActivityModel.TargetResources]);
+                                activity.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateActivityModel.TargetWorkStreams]);
+                                activity.TargetResourceOperator = updateActivityModel.TargetResourceOperator;
+
+                                editable.EndEdit();
+                            }
                         }
                     }
 

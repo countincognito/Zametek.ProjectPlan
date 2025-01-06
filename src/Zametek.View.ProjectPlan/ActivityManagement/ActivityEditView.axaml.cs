@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace Zametek.View.ProjectPlan;
 
-public partial class ActivitiesEditView : UserControl
+public partial class ActivityEditView : UserControl
 {
-    public ActivitiesEditView()
+    public ActivityEditView()
     {
         InitializeComponent();
     }

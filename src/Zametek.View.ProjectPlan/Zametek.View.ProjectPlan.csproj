@@ -35,8 +35,8 @@
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="ActivityManagement\ActivitiesEditView.axaml.cs">
-      <DependentUpon>ActivitiesEditView.axaml</DependentUpon>
+    <Compile Update="ActivityManagement\ActivityEditView.axaml.cs">
+      <DependentUpon>ActivityEditView.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

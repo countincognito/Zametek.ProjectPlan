@@ -15,6 +15,8 @@ namespace Zametek.Contract.ProjectPlan
 
         void SetTargetWorkStreams(IEnumerable<TargetWorkStreamModel> targetWorkStreams, HashSet<int> selectedTargetWorkStreams);
 
+        void SetSelectedTargetWorkStreams(HashSet<int> selectedTargetWorkStreams);
+
         void RaiseTargetWorkStreamsPropertiesChanged();
     }
 }

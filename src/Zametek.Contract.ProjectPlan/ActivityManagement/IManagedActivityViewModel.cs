@@ -31,6 +31,10 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTime? MaximumLatestFinishDateTime { get; set; }
 
+        IResourceSelectorViewModel ResourceSelector { get; }
+
+        IWorkStreamSelectorViewModel WorkStreamSelector { get; }
+
         IActivityTrackerSetViewModel TrackerSet { get; }
     }
 }
