@@ -465,4 +465,7 @@
   <data name="Label_Version" xml:space="preserve">
     <value>Version</value>
   </data>
+  <data name="Label_EditManagedActivity" xml:space="preserve">
+    <value>Edit</value>
+  </data>
 </root>

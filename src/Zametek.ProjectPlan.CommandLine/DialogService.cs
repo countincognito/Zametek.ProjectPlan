@@ -73,6 +73,24 @@ namespace Zametek.ProjectPlan.CommandLine
             throw new InvalidOperationException();
         }
 
+        public Task ShowContextAsync<T>(
+            string title,
+            T context,
+            bool markdown = false)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public Task ShowContextAsync<T>(
+            string title,
+            T context,
+            double height,
+            double width,
+            bool markdown = false)
+        {
+            throw new InvalidOperationException();
+        }
+
         public Task<string?> ShowOpenFileDialogAsync(
             string initialDirectory,
             IList<IFileFilter> fileFilters)

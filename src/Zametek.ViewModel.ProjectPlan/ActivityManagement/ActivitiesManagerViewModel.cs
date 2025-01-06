@@ -38,6 +38,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SetSelectedManagedActivitiesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedActivities);
             AddManagedActivityCommand = ReactiveCommand.CreateFromTask(AddManagedActivityAsync);
             RemoveManagedActivitiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitiesAsync, this.WhenAnyValue(am => am.HasActivities));
+            EditManagedActivitiesCommand = ReactiveCommand.CreateFromTask(EditManagedActivitiesAsync, this.WhenAnyValue(am => am.HasActivities));
 
             m_IsBusy = this
                 .WhenAnyValue(am => am.m_CoreViewModel.IsBusy)
@@ -148,6 +149,43 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private async Task EditManagedActivitiesAsync()
+        {
+            try
+            {
+
+
+
+
+
+                await m_DialogService.ShowContextAsync<ViewModelBase>(
+                    "A",
+                    new ActivitiesEditViewModel());
+
+
+                //lock (m_Lock)
+                //{
+                //    ICollection<int> activityIds = SelectedActivities.Keys;
+
+                //    if (activityIds.Count == 0)
+                //    {
+                //        return;
+                //    }
+
+                //    m_CoreViewModel.RemoveManagedActivities(activityIds);
+                //    m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                //}
+                //await RunAutoCompileAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
         private async Task AddMilestoneAsync()
         {
             try
@@ -214,6 +252,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand AddManagedActivityCommand { get; }
 
         public ICommand RemoveManagedActivitiesCommand { get; }
+
+        public ICommand EditManagedActivitiesCommand { get; }
 
         public ICommand AddMilestoneCommand { get; }
 

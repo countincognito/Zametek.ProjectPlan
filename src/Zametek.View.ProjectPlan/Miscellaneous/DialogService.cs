@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using MsBox.Avalonia;
 using MsBox.Avalonia.Base;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -33,8 +34,27 @@ namespace Zametek.View.ProjectPlan
         private async Task<ButtonResult> ShowMessageBoxAsync(MessageBoxStandardParams standardParams)
         {
             standardParams.WindowIcon = m_Parent!.Icon ?? throw new ArgumentNullException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable);
-            IMsBox<ButtonResult>? msg = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(standardParams);
+            IMsBox<ButtonResult>? msg = MessageBoxManager.GetMessageBoxStandard(standardParams);
             return await msg.ShowWindowDialogAsync(m_Parent);
+        }
+
+        private async Task<ButtonResult> ShowMessageContextBoxAsync<T>(MessageBoxContextParams<T> contextParams)
+        {
+            contextParams.WindowIcon = m_Parent!.Icon ?? throw new ArgumentNullException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable);
+            IMsBox<ButtonResult>? msg = GetMessageBoxContext(contextParams);
+            return await msg.ShowWindowDialogAsync(m_Parent);
+        }
+
+        private static IMsBox<ButtonResult> GetMessageBoxContext<T>(MessageBoxContextParams<T> contextParams)
+        {
+            var msBoxContextViewModel = new MsBoxContextViewModel<T>(contextParams);
+            var msBoxContextView = new MsBoxContextView
+            {
+                DataContext = msBoxContextViewModel
+            };
+            return new MsBox<MsBoxContextView, MsBoxContextViewModel<T>, ButtonResult>(
+                msBoxContextView,
+                msBoxContextViewModel);
         }
 
         #endregion
@@ -134,6 +154,42 @@ namespace Zametek.View.ProjectPlan
                 Icon = Icon.Info,
                 Markdown = markdown
             });
+        }
+
+        public async Task ShowContextAsync<T>(
+            string title,
+            T context,
+            bool markdown = false)
+        {
+            await ShowMessageContextBoxAsync(
+                new MessageBoxContextParams<T>(context)
+                {
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    SizeToContent = SizeToContent.WidthAndHeight,
+                    ContentTitle = title,
+                    Icon = Icon.Info,
+                    Markdown = markdown
+                });
+        }
+
+        public async Task ShowContextAsync<T>(
+            string title,
+            T context,
+            double height,
+            double width,
+            bool markdown = false)
+        {
+            await ShowMessageContextBoxAsync(
+                new MessageBoxContextParams<T>(context)
+                {
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    SizeToContent = SizeToContent.Manual,
+                    ContentTitle = title,
+                    Height = height,
+                    Width = width,
+                    Icon = Icon.Info,
+                    Markdown = markdown
+                });
         }
 
         public async Task<bool> ShowConfirmationAsync(
