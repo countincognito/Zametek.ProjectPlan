@@ -11,7 +11,7 @@ public partial class MsBoxContextView
     : UserControl, IFullApi<ButtonResult>, ISetCloseAction
 {
     private ButtonResult _buttonResult = ButtonResult.None;
-    private Action _closeAction;
+    private Action? _closeAction;
 
     public MsBoxContextView()
     {
@@ -30,13 +30,13 @@ public partial class MsBoxContextView
 
     public Task Copy()
     {
-        var clipboard = TopLevel.GetTopLevel(this).Clipboard;
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
         var text = ContentTextBox.SelectedText;
         if (string.IsNullOrEmpty(text))
         {
             text = (DataContext as AbstractMsBoxViewModel)?.ContentMessage;
         }
-        return clipboard?.SetTextAsync(text);
+        return clipboard?.SetTextAsync(text) ?? Task.CompletedTask;
     }
 
     public void Close()
