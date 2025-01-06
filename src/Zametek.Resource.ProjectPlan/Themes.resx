@@ -129,8 +129,8 @@
   <data name="Theme_Desert" xml:space="preserve">
     <value>Desert</value>
   </data>
-  <data name="Theme_Dust" xml:space="preserve">
-    <value>Dust</value>
+  <data name="Theme_Dusk" xml:space="preserve">
+    <value>Dusk</value>
   </data>
   <data name="Theme_Light" xml:space="preserve">
     <value>Light</value>

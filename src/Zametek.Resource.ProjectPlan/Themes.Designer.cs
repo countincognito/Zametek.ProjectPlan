@@ -97,11 +97,11 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Dust.
+        ///   Looks up a localized string similar to Dusk.
         /// </summary>
-        public static string Theme_Dust {
+        public static string Theme_Dusk {
             get {
-                return ResourceManager.GetString("Theme_Dust", resourceCulture);
+                return ResourceManager.GetString("Theme_Dusk", resourceCulture);
             }
         }
         

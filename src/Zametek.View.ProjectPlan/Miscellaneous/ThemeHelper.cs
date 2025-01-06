@@ -17,7 +17,7 @@ namespace Zametek.View.ProjectPlan
                 .Case(Resource.ProjectPlan.Themes.Theme_Dark, _ => { themeVariant = ThemeVariant.Dark; })
                 .Case(Resource.ProjectPlan.Themes.Theme_Aquatic, _ => { themeVariant = SemiTheme.Aquatic; })
                 .Case(Resource.ProjectPlan.Themes.Theme_Desert, _ => { themeVariant = SemiTheme.Desert; })
-                .Case(Resource.ProjectPlan.Themes.Theme_Dust, _ => { themeVariant = SemiTheme.Dust; })
+                .Case(Resource.ProjectPlan.Themes.Theme_Dusk, _ => { themeVariant = SemiTheme.Dusk; })
                 .Case(Resource.ProjectPlan.Themes.Theme_NightSky, _ => { themeVariant = SemiTheme.NightSky; });
 
             return themeVariant;

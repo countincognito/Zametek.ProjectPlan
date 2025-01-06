@@ -146,10 +146,10 @@
 									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
 								      CommandParameter="{x:Static resources:Themes.Theme_Desert}"
 									  ToggleType="Radio" />
-							<MenuItem Header="{x:Static resources:Themes.Theme_Dust}"
-									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Dust}, Mode=OneWay}"
+							<MenuItem Header="{x:Static resources:Themes.Theme_Dusk}"
+									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Dusk}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
-								      CommandParameter="{x:Static resources:Themes.Theme_Dust}"
+								      CommandParameter="{x:Static resources:Themes.Theme_Dusk}"
 									  ToggleType="Radio" />
 							<MenuItem Header="{x:Static resources:Themes.Theme_NightSky}"
 									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_NightSky}, Mode=OneWay}"
