@@ -14,9 +14,9 @@
 
         Task ShowInfoAsync(string title, string header, string message, double height, double width, bool markdown = false);
 
-        Task ShowContextAsync<T>(string title, T context, bool markdown = false);
+        Task<bool> ShowContextAsync<T>(string title, T context, bool markdown = false);
 
-        Task ShowContextAsync<T>(string title, T context, double height, double width, bool markdown = false);
+        Task<bool> ShowContextAsync<T>(string title, T context, double height, double width, bool markdown = false);
 
         Task<bool> ShowConfirmationAsync(string title, string header, string message, bool markdown = false);
 

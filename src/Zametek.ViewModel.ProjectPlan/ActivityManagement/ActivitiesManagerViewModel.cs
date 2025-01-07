@@ -158,9 +158,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.ResourceSettings.Resources,
                      m_CoreViewModel.WorkStreamSettings.WorkStreams);
 
-                await m_DialogService.ShowContextAsync<ViewModelBase>(
+                bool result = await m_DialogService.ShowContextAsync<ViewModelBase>(
                     Resource.ProjectPlan.Titles.Title_EditActivities,
                     editViewModel);
+
+                if (!result)
+                {
+                    return;
+                }
 
                 lock (m_Lock)
                 {

@@ -3,6 +3,129 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:u="https://irihi.tech/ursa"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:sys="using:System"
+             xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
+			 x:DataType="vm:ActivityEditViewModel"
              x:Class="Zametek.View.ProjectPlan.ActivityEditView">
-  Welcome to Avalonia!
+	<Grid Margin="7">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="50"/>
+			<ColumnDefinition Width="155"/>
+			<ColumnDefinition Width="155"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="30"/>
+			<RowDefinition Height="30"/>
+			<RowDefinition Height="30"/>
+			<RowDefinition Height="30"/>
+		</Grid.RowDefinitions>
+
+		<ToggleSwitch Grid.Row="0" Grid.Column="0"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+					  Padding="3"
+					  OffContent="{x:Static resources:Labels.Label_No}"
+					  OnContent="{x:Static resources:Labels.Label_Yes}"
+					  IsChecked="{Binding Path=IsWorkStreamSelectorActive, Mode=TwoWay}"/>
+
+		<Label Grid.Row="0" Grid.Column="1"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Center"
+			   Margin="0"
+			   Padding="3"
+			   Content="{x:Static resources:Labels.Label_TargetWorkStreams}"/>
+
+		<u:MultiComboBox Grid.Row="0" Grid.Column="2"
+						 MaxHeight="200"
+						 Width="{x:Static sys:Double.NaN}"
+						 Focusable="True"
+						 HorizontalAlignment="Stretch"
+						 VerticalAlignment="Stretch"
+						 ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}"
+						 SelectedItems="{Binding Path=WorkStreamSelector.SelectedTargetWorkStreams, Mode=OneWay}"
+						 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
+						 IsDropDownOpen="False"
+					     IsEnabled="{Binding Path=IsWorkStreamSelectorActive, Mode=OneWay}">
+			<u:MultiComboBox.SelectedItemTemplate>
+				<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
+					<Grid>
+						<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
+					</Grid>
+				</DataTemplate>
+			</u:MultiComboBox.SelectedItemTemplate>
+		</u:MultiComboBox>
+
+
+
+		<ToggleSwitch Grid.Row="1" Grid.Column="0"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+					  Padding="3"
+					  OffContent="{x:Static resources:Labels.Label_No}"
+					  OnContent="{x:Static resources:Labels.Label_Yes}"
+					  IsChecked="{Binding Path=IsResourceSelectorActive, Mode=TwoWay}"/>
+
+		<Label Grid.Row="1" Grid.Column="1"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Center"
+			   Margin="0"
+			   Padding="3"
+			   Content="{x:Static resources:Labels.Label_TargetResources}"/>
+
+		<u:MultiComboBox Grid.Row="1" Grid.Column="2"
+						 MaxHeight="200"
+						 Width="{x:Static sys:Double.NaN}"
+						 HorizontalAlignment="Stretch"
+						 VerticalAlignment="Stretch"
+						 Focusable="True"
+						 ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}"
+						 SelectedItems="{Binding Path=ResourceSelector.SelectedTargetResources, Mode=OneWay}"
+						 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
+						 IsDropDownOpen="False"
+						 IsEnabled="{Binding Path=IsResourceSelectorActive, Mode=OneWay}">
+			<u:MultiComboBox.SelectedItemTemplate>
+				<DataTemplate x:DataType="vm:SelectableResourceViewModel">
+					<Grid>
+						<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
+					</Grid>
+				</DataTemplate>
+			</u:MultiComboBox.SelectedItemTemplate>
+		</u:MultiComboBox>
+
+
+
+		<ToggleSwitch Grid.Row="3" Grid.Column="0"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+					  Padding="3"
+					  OffContent="{x:Static resources:Labels.Label_No}"
+					  OnContent="{x:Static resources:Labels.Label_Yes}"
+					  IsChecked="{Binding Path=IsTargetResourceOperatorActive, Mode=TwoWay}"/>
+
+		<Label Grid.Row="3" Grid.Column="1"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Center"
+			   Margin="0"
+			   Padding="3"
+			   Content="{x:Static resources:Labels.Label_TargetResourceOperator}"/>
+
+		<ComboBox Grid.Row="3" Grid.Column="2"
+				  ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:LogicalOperator}}}"
+				  SelectedItem="{Binding Path=TargetResourceOperator, Mode=TwoWay}"
+				  Focusable="True"
+				  VerticalAlignment="Center"
+				  VerticalContentAlignment="Center"
+				  HorizontalAlignment="Stretch"
+				  HorizontalContentAlignment="Left"
+				  IsEnabled="{Binding Path=IsTargetResourceOperatorActive, Mode=OneWay}"/>
+
+
+	</Grid>
 </UserControl>

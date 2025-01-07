@@ -1533,12 +1533,26 @@ namespace Zametek.ViewModel.ProjectPlan
                             {
                                 editable.BeginEdit();
 
-                                //activity.Name = updateActivityModel.Name;
-                                //activity.Notes = updateActivityModel.Notes;
-
-                                activity.ResourceSelector.SetSelectedTargetResources([.. updateActivityModel.TargetResources]);
-                                activity.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateActivityModel.TargetWorkStreams]);
-                                activity.TargetResourceOperator = updateActivityModel.TargetResourceOperator;
+                                if (updateActivityModel.IsNameEdited)
+                                {
+                                    activity.Name = updateActivityModel.Name;
+                                }
+                                if (updateActivityModel.IsNotesEdited)
+                                {
+                                    activity.Notes = updateActivityModel.Notes;
+                                }
+                                if (updateActivityModel.IsTargetWorkStreamsEdited)
+                                {
+                                    activity.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateActivityModel.TargetWorkStreams]);
+                                }
+                                if (updateActivityModel.IsTargetResourcesEdited)
+                                {
+                                    activity.ResourceSelector.SetSelectedTargetResources([.. updateActivityModel.TargetResources]);
+                                }
+                                if (updateActivityModel.IsTargetResourceOperatorEdited)
+                                {
+                                    activity.TargetResourceOperator = updateActivityModel.TargetResourceOperator;
+                                }
 
                                 editable.EndEdit();
                             }

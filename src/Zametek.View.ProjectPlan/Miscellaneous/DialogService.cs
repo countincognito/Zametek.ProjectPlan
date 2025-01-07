@@ -156,30 +156,32 @@ namespace Zametek.View.ProjectPlan
             });
         }
 
-        public async Task ShowContextAsync<T>(
+        public async Task<bool> ShowContextAsync<T>(
             string title,
             T context,
             bool markdown = false)
         {
-            await ShowMessageContextBoxAsync(
+           var result = await ShowMessageContextBoxAsync(
                 new MessageBoxContextParams<T>(context)
                 {
                     WindowStartupLocation = WindowStartupLocation.CenterOwner,
                     SizeToContent = SizeToContent.WidthAndHeight,
                     ContentTitle = title,
-                    Icon = Icon.Info,
+                    ButtonDefinitions = ButtonEnum.OkCancel,
+                    Icon = Icon.None,
                     Markdown = markdown
                 });
+            return result == ButtonResult.Ok;
         }
 
-        public async Task ShowContextAsync<T>(
+        public async Task<bool> ShowContextAsync<T>(
             string title,
             T context,
             double height,
             double width,
             bool markdown = false)
         {
-            await ShowMessageContextBoxAsync(
+            var result = await ShowMessageContextBoxAsync(
                 new MessageBoxContextParams<T>(context)
                 {
                     WindowStartupLocation = WindowStartupLocation.CenterOwner,
@@ -187,9 +189,11 @@ namespace Zametek.View.ProjectPlan
                     ContentTitle = title,
                     Height = height,
                     Width = width,
-                    Icon = Icon.Info,
+                    ButtonDefinitions = ButtonEnum.OkCancel,
+                    Icon = Icon.None,
                     Markdown = markdown
                 });
+            return result == ButtonResult.Ok;
         }
 
         public async Task<bool> ShowConfirmationAsync(

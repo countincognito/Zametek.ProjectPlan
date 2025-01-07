@@ -96,7 +96,18 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             var updateModel = new UpdateActivityModel
             {
-                TargetResourceOperator = TargetResourceOperator
+                Name = string.Empty,
+                IsNameEdited = false,
+
+                Notes = string.Empty,
+                IsNotesEdited = false,
+
+                IsTargetWorkStreamsEdited = IsWorkStreamSelectorActive,
+
+                IsTargetResourcesEdited = IsResourceSelectorActive,
+
+                TargetResourceOperator = TargetResourceOperator,
+                IsTargetResourceOperatorEdited = IsTargetResourceOperatorActive,
             };
             updateModel.TargetResources.AddRange(ResourceSelector.SelectedResourceIds);
             updateModel.TargetWorkStreams.AddRange(WorkStreamSelector.SelectedWorkStreamIds);
