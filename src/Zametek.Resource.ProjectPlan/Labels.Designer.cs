@@ -800,6 +800,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Off.
+        /// </summary>
+        public static string Label_Off {
+            get {
+                return ResourceManager.GetString("Label_Off", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to On.
+        /// </summary>
+        public static string Label_On {
+            get {
+                return ResourceManager.GetString("Label_On", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Other Cost:.
         /// </summary>
         public static string Label_OtherCost {

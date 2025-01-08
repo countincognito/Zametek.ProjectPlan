@@ -468,4 +468,10 @@
   <data name="Label_EditManagedActivity" xml:space="preserve">
     <value>Edit</value>
   </data>
+  <data name="Label_On" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Label_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
 </root>

@@ -12,9 +12,12 @@ namespace Zametek.Contract.ProjectPlan
         IWorkStreamSelectorViewModel WorkStreamSelector { get; }
         bool IsWorkStreamSelectorActive { get; set; }
 
+        bool HasNoCost { get; set; }
+        bool IsHasNoCostActive { get; set; }
+
         LogicalOperator TargetResourceOperator { get; set; }
         bool IsTargetResourceOperatorActive { get; set; }
 
-        UpdateActivityModel BuildUpdateActivityModel();
+        UpdateDependentActivityModel BuildUpdateModel();
     }
 }

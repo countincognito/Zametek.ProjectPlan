@@ -1516,7 +1516,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void UpdateManagedActivities(IEnumerable<UpdateActivityModel> updateActivityModels)
+        public void UpdateManagedActivities(IEnumerable<UpdateDependentActivityModel> updateModels)
         {
             try
             {
@@ -1525,33 +1525,37 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     Dictionary<int, IManagedActivityViewModel> activityLookup = Activities.ToDictionary(x => x.Id);
 
-                    foreach (UpdateActivityModel updateActivityModel in updateActivityModels)
+                    foreach (UpdateDependentActivityModel updateModel in updateModels)
                     {
-                        if (activityLookup.TryGetValue(updateActivityModel.Id, out IManagedActivityViewModel? activity))
+                        if (activityLookup.TryGetValue(updateModel.Id, out IManagedActivityViewModel? activity))
                         {
                             if (activity is IEditableObject editable)
                             {
                                 editable.BeginEdit();
 
-                                if (updateActivityModel.IsNameEdited)
+                                if (updateModel.IsNameEdited)
                                 {
-                                    activity.Name = updateActivityModel.Name;
+                                    activity.Name = updateModel.Name;
                                 }
-                                if (updateActivityModel.IsNotesEdited)
+                                if (updateModel.IsNotesEdited)
                                 {
-                                    activity.Notes = updateActivityModel.Notes;
+                                    activity.Notes = updateModel.Notes;
                                 }
-                                if (updateActivityModel.IsTargetWorkStreamsEdited)
+                                if (updateModel.IsTargetWorkStreamsEdited)
                                 {
-                                    activity.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateActivityModel.TargetWorkStreams]);
+                                    activity.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateModel.TargetWorkStreams]);
                                 }
-                                if (updateActivityModel.IsTargetResourcesEdited)
+                                if (updateModel.IsTargetResourcesEdited)
                                 {
-                                    activity.ResourceSelector.SetSelectedTargetResources([.. updateActivityModel.TargetResources]);
+                                    activity.ResourceSelector.SetSelectedTargetResources([.. updateModel.TargetResources]);
                                 }
-                                if (updateActivityModel.IsTargetResourceOperatorEdited)
+                                if (updateModel.IsTargetResourceOperatorEdited)
                                 {
-                                    activity.TargetResourceOperator = updateActivityModel.TargetResourceOperator;
+                                    activity.TargetResourceOperator = updateModel.TargetResourceOperator;
+                                }
+                                if (updateModel.IsHasNoCostEdited)
+                                {
+                                    activity.HasNoCost = updateModel.HasNoCost;
                                 }
 
                                 editable.EndEdit();

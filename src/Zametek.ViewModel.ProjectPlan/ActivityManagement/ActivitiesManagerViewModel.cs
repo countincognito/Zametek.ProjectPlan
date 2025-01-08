@@ -156,7 +156,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var editViewModel = new ActivityEditViewModel(
                     m_CoreViewModel.ResourceSettings.Resources,
-                     m_CoreViewModel.WorkStreamSettings.WorkStreams);
+                    m_CoreViewModel.WorkStreamSettings.WorkStreams);
 
                 bool result = await m_DialogService.ShowContextAsync<ViewModelBase>(
                     Resource.ProjectPlan.Titles.Title_EditActivities,
@@ -176,13 +176,13 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
 
-                    UpdateActivityModel updateActivityModel = editViewModel.BuildUpdateActivityModel();
+                    UpdateDependentActivityModel updateModel = editViewModel.BuildUpdateModel();
 
-                    IEnumerable<UpdateActivityModel> updateActivityModels = activityIds
-                        .Select(x => updateActivityModel with { Id = x })
+                    IEnumerable<UpdateDependentActivityModel> updateModels = activityIds
+                        .Select(x => updateModel with { Id = x })
                         .ToList(); ;
 
-                    m_CoreViewModel.UpdateManagedActivities(updateActivityModels);
+                    m_CoreViewModel.UpdateManagedActivities(updateModels);
                 }
                 await RunAutoCompileAsync();
             }

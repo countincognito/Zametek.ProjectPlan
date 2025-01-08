@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:u="https://irihi.tech/ursa"
@@ -13,34 +13,35 @@
              x:Class="Zametek.View.ProjectPlan.ActivityEditView">
 	<Grid Margin="7">
 		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="50"/>
-			<ColumnDefinition Width="155"/>
+			<ColumnDefinition Width="140"/>
+			<ColumnDefinition Width="80"/>
 			<ColumnDefinition Width="155"/>
 		</Grid.ColumnDefinitions>
 		<Grid.RowDefinitions>
-			<RowDefinition Height="30"/>
-			<RowDefinition Height="30"/>
-			<RowDefinition Height="30"/>
-			<RowDefinition Height="30"/>
+			<RowDefinition Height="36"/>
+			<RowDefinition Height="36"/>
+			<RowDefinition Height="36"/>
+			<RowDefinition Height="36"/>
 		</Grid.RowDefinitions>
 
-		<ToggleSwitch Grid.Row="0" Grid.Column="0"
+		<Label Grid.Row="0" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_TargetWorkStreams}"/>
+
+		<ToggleSwitch Grid.Row="0" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
 					  Padding="3"
-					  OffContent="{x:Static resources:Labels.Label_No}"
-					  OnContent="{x:Static resources:Labels.Label_Yes}"
+					  OffContent="{x:Static resources:Labels.Label_Off}"
+					  OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsWorkStreamSelectorActive, Mode=TwoWay}"/>
 
-		<Label Grid.Row="0" Grid.Column="1"
-			   VerticalAlignment="Center"
-			   HorizontalAlignment="Center"
-			   Margin="0"
-			   Padding="3"
-			   Content="{x:Static resources:Labels.Label_TargetWorkStreams}"/>
-
 		<u:MultiComboBox Grid.Row="0" Grid.Column="2"
+						 Margin="3"
 						 MaxHeight="200"
 						 Width="{x:Static sys:Double.NaN}"
 						 Focusable="True"
@@ -62,23 +63,24 @@
 
 
 
-		<ToggleSwitch Grid.Row="1" Grid.Column="0"
+		<Label Grid.Row="1" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_TargetResources}"/>
+
+		<ToggleSwitch Grid.Row="1" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
-					  Padding="3"
-					  OffContent="{x:Static resources:Labels.Label_No}"
-					  OnContent="{x:Static resources:Labels.Label_Yes}"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsResourceSelectorActive, Mode=TwoWay}"/>
 
-		<Label Grid.Row="1" Grid.Column="1"
-			   VerticalAlignment="Center"
-			   HorizontalAlignment="Center"
-			   Margin="0"
-			   Padding="3"
-			   Content="{x:Static resources:Labels.Label_TargetResources}"/>
-
 		<u:MultiComboBox Grid.Row="1" Grid.Column="2"
+						 Margin="3"
 						 MaxHeight="200"
 						 Width="{x:Static sys:Double.NaN}"
 						 HorizontalAlignment="Stretch"
@@ -100,32 +102,60 @@
 
 
 
-		<ToggleSwitch Grid.Row="3" Grid.Column="0"
+		<Label Grid.Row="2" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_HasNoCost}"/>
+
+		<ToggleSwitch Grid.Row="2" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
-					  Padding="3"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsHasNoCostActive, Mode=TwoWay}"/>
+
+		<ToggleSwitch Grid.Row="2" Grid.Column="2"
+					  Margin="3"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Padding="0"
 					  OffContent="{x:Static resources:Labels.Label_No}"
 					  OnContent="{x:Static resources:Labels.Label_Yes}"
-					  IsChecked="{Binding Path=IsTargetResourceOperatorActive, Mode=TwoWay}"/>
+					  IsChecked="{Binding Path=HasNoCost, Mode=TwoWay}"
+					  IsEnabled="{Binding Path=IsHasNoCostActive, Mode=OneWay}"/>
 
-		<Label Grid.Row="3" Grid.Column="1"
+
+
+		<Label Grid.Row="3" Grid.Column="0"
 			   VerticalAlignment="Center"
-			   HorizontalAlignment="Center"
+			   HorizontalAlignment="Right"
 			   Margin="0"
-			   Padding="3"
+			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_TargetResourceOperator}"/>
 
+		<ToggleSwitch Grid.Row="3" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsTargetResourceOperatorActive, Mode=TwoWay}"/>
+
 		<ComboBox Grid.Row="3" Grid.Column="2"
+				  Margin="3"
 				  ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:LogicalOperator}}}"
 				  SelectedItem="{Binding Path=TargetResourceOperator, Mode=TwoWay}"
 				  Focusable="True"
 				  VerticalAlignment="Center"
 				  VerticalContentAlignment="Center"
 				  HorizontalAlignment="Stretch"
-				  HorizontalContentAlignment="Left"
+				  HorizontalContentAlignment="Center"
 				  IsEnabled="{Binding Path=IsTargetResourceOperatorActive, Mode=OneWay}"/>
-
 
 	</Grid>
 </UserControl>

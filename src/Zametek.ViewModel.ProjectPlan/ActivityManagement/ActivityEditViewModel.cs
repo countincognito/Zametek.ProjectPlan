@@ -70,6 +70,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_HasNoCost;
+        public bool HasNoCost
+        {
+            get => m_HasNoCost;
+            set
+            {
+                m_HasNoCost = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsHasNoCostActive;
+        public bool IsHasNoCostActive
+        {
+            get => m_IsHasNoCostActive;
+            set
+            {
+                m_IsHasNoCostActive = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         private LogicalOperator m_TargetResourceOperator;
         public LogicalOperator TargetResourceOperator
         {
@@ -92,9 +114,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public UpdateActivityModel BuildUpdateActivityModel()
+        public UpdateDependentActivityModel BuildUpdateModel()
         {
-            var updateModel = new UpdateActivityModel
+            var updateModel = new UpdateDependentActivityModel
             {
                 Name = string.Empty,
                 IsNameEdited = false,
@@ -105,6 +127,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsTargetWorkStreamsEdited = IsWorkStreamSelectorActive,
 
                 IsTargetResourcesEdited = IsResourceSelectorActive,
+
+                HasNoCost = HasNoCost,
+                IsHasNoCostEdited = IsHasNoCostActive,
 
                 TargetResourceOperator = TargetResourceOperator,
                 IsTargetResourceOperatorEdited = IsTargetResourceOperatorActive,

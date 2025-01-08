@@ -910,7 +910,7 @@
 									  VerticalAlignment="Center"
 									  VerticalContentAlignment="Center"
 									  HorizontalAlignment="Stretch"
-									  HorizontalContentAlignment="Left"/>
+									  HorizontalContentAlignment="Center"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
