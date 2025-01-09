@@ -715,7 +715,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static void WriteResourceChartToWorkbook<T>(
             ResourceSeriesSetModel resourceSeriesSet,
-            Func<ResourceSeriesModel, int, T> resourceseriesFunc,
+            Func<ResourceSeriesModel, int> resourceAllocationCountFunc,
+            Func<ResourceSeriesModel, int, T> resourceSeriesFunc,
             string sheetTitle,//!!,
             XSSFWorkbook workbook,
             ICellStyle titleStyle,
@@ -724,7 +725,8 @@ namespace Zametek.ViewModel.ProjectPlan
             IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
-            ArgumentNullException.ThrowIfNull(resourceseriesFunc);
+            ArgumentNullException.ThrowIfNull(resourceAllocationCountFunc);
+            ArgumentNullException.ThrowIfNull(resourceSeriesFunc);
             ArgumentNullException.ThrowIfNull(workbook);
             ArgumentNullException.ThrowIfNull(titleStyle);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
@@ -737,8 +739,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             int rowIndex = 0;
 
-            Debug.Assert(combinedResourceSeries.Select(x => x.ResourceSchedule.ActivityAllocation.Count).Distinct().Count() <= 1);
-            int valueCount = combinedResourceSeries.Select(x => x.ResourceSchedule.ActivityAllocation.Count).FirstOrDefault();
+            Debug.Assert(combinedResourceSeries.Select(resourceAllocationCountFunc).Distinct().Count() <= 1);
+            int valueCount = combinedResourceSeries.Select(resourceAllocationCountFunc).FirstOrDefault();
 
             {
                 int titleColumnIndex = 0;
@@ -777,7 +779,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         ICell cell = row.CreateCell(columnIndex);
                         AddToCell(
-                            resourceseriesFunc(resourceSeries, timeIndex),
+                            resourceSeriesFunc(resourceSeries, timeIndex),
                             cell,
                             dateTimeCellStyle);
                         columnIndex++;
@@ -982,10 +984,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             WriteResourceChartToWorkbook(
                 resourceSeriesSet,
-                (resourceSeries, timeIndex) =>
-                {
-                    return resourceSeries.ResourceSchedule.ActivityAllocation[timeIndex];
-                },
+                x => x.ResourceSchedule.ActivityAllocation.Count,
+                (resourceSeries, timeIndex) => resourceSeries.ResourceSchedule.ActivityAllocation[timeIndex],
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartData,
                 workbook,
                 titleStyle,
@@ -995,9 +995,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
             WriteResourceChartToWorkbook(
                 resourceSeriesSet,
+                x => x.ResourceSchedule.CostAllocation.Count,
                 (resourceSeries, timeIndex) =>
                 {
-                    return resourceSeries.ResourceSchedule.ActivityAllocation[timeIndex] ? resourceSeries.UnitCost : 0.0;
+                    return resourceSeries.ResourceSchedule.CostAllocation[timeIndex] ? resourceSeries.UnitCost : 0.0;
                 },
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartCosts,
                 workbook,

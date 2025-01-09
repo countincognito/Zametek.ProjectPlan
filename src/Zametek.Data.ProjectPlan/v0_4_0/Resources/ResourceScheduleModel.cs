@@ -9,6 +9,8 @@
 
         public List<bool> ActivityAllocation { get; init; } = [];
 
+        public List<bool> CostAllocation { get; init; } = [];
+
         public int FinishTime { get; init; }
     }
 }

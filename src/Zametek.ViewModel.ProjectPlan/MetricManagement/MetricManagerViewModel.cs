@@ -417,21 +417,21 @@ namespace Zametek.ViewModel.ProjectPlan
                     .Sum(static x =>
                     {
                         double accumulator(bool y) => y ? x.UnitCost : 0.0;
-                        return x.ResourceSchedule.ActivityAllocation.Sum(accumulator);
+                        return x.ResourceSchedule.CostAllocation.Sum(accumulator);
                     }),
                 Indirect = resourceSeriesModels
                     .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
                     .Sum(static x =>
                     {
                         double accumulator(bool y) => y ? x.UnitCost : 0.0;
-                        return x.ResourceSchedule.ActivityAllocation.Sum(accumulator);
+                        return x.ResourceSchedule.CostAllocation.Sum(accumulator);
                     }),
                 Other = resourceSeriesModels
                     .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
                     .Sum(static x =>
                     {
                         double accumulator(bool y) => y ? x.UnitCost : 0.0;
-                        return x.ResourceSchedule.ActivityAllocation.Sum(accumulator);
+                        return x.ResourceSchedule.CostAllocation.Sum(accumulator);
                     })
             };
         }

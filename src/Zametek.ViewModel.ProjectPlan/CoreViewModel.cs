@@ -284,27 +284,34 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (ResourceSeriesModel scheduledSeries in scheduledSeriesSet)
                 {
-                    IList<bool> values = new List<bool>(Enumerable.Repeat(false, finishTime));
+                    IList<bool> combinedActivityAllocations = new List<bool>(Enumerable.Repeat(false, finishTime));
+                    IList<bool> combinedCostAllocations = new List<bool>(Enumerable.Repeat(false, finishTime));
+
                     if (scheduledSeries.ResourceSchedule.Resource.Id != default)
                     {
                         int resourceId = scheduledSeries.ResourceSchedule.Resource.Id;
                         if (unscheduledResourceSeriesLookup.TryGetValue(resourceId, out ResourceSeriesModel? unscheduledResourceSeries))
                         {
-                            values = scheduledSeries.ResourceSchedule.ActivityAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.ActivityAllocation, (x, y) => x || y).ToList();
+                            combinedActivityAllocations = scheduledSeries.ResourceSchedule.ActivityAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.ActivityAllocation, (x, y) => x || y).ToList();
+                            combinedCostAllocations = scheduledSeries.ResourceSchedule.CostAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.CostAllocation, (x, y) => x || y).ToList();
                             unscheduledSeriesAlreadyIncluded.Add(resourceId);
                         }
                         else
                         {
-                            values = [.. scheduledSeries.ResourceSchedule.ActivityAllocation];
+                            combinedActivityAllocations = [.. scheduledSeries.ResourceSchedule.ActivityAllocation];
+                            combinedCostAllocations = [.. scheduledSeries.ResourceSchedule.CostAllocation];
                         }
                     }
                     else
                     {
-                        values = [.. scheduledSeries.ResourceSchedule.ActivityAllocation];
+                        combinedActivityAllocations = [.. scheduledSeries.ResourceSchedule.ActivityAllocation];
+                        combinedCostAllocations = [.. scheduledSeries.ResourceSchedule.CostAllocation];
                     }
 
                     scheduledSeries.ResourceSchedule.ActivityAllocation.Clear();
-                    scheduledSeries.ResourceSchedule.ActivityAllocation.AddRange(values);
+                    scheduledSeries.ResourceSchedule.ActivityAllocation.AddRange(combinedActivityAllocations);
+                    scheduledSeries.ResourceSchedule.CostAllocation.Clear();
+                    scheduledSeries.ResourceSchedule.CostAllocation.AddRange(combinedCostAllocations);
                     combinedScheduled.Add(scheduledSeries);
                 }
 
