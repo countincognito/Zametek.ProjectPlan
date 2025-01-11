@@ -700,6 +700,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Isolated.
+        /// </summary>
+        public static string Label_IsIsolated {
+            get {
+                return ResourceManager.GetString("Label_IsIsolated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Phase.
         /// </summary>
         public static string Label_IsPhase {

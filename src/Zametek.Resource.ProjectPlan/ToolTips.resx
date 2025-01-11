@@ -231,4 +231,7 @@
   <data name="ToolTip_PercentageCompleted" xml:space="preserve">
     <value>Percentage Completed</value>
   </data>
+  <data name="ToolTip_IsIsolated" xml:space="preserve">
+    <value>Isolated Activity</value>
+  </data>
 </root>

@@ -250,6 +250,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Isolated Activity.
+        /// </summary>
+        public static string ToolTip_IsIsolated {
+            get {
+                return ResourceManager.GetString("ToolTip_IsIsolated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Phase.
         /// </summary>
         public static string ToolTip_IsPhase {

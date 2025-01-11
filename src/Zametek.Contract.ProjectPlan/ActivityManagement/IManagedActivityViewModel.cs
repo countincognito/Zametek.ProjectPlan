@@ -5,6 +5,8 @@ namespace Zametek.Contract.ProjectPlan
     public interface IManagedActivityViewModel
         : IDependentActivity, IDisposable, INotifyPropertyChanged, IKillSubscriptions
     {
+        bool IsIsolated { get; }
+
         bool IsCompiled { get; }
 
         bool ShowDates { get; }

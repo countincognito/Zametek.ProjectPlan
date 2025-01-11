@@ -204,4 +204,10 @@
   <data name="Message_SplashScreenLoading" xml:space="preserve">
     <value>Application is loading...</value>
   </data>
+  <data name="Message_VertexGraphCannotContainNormalNodesWithoutAnyEndNodes" xml:space="preserve">
+    <value>Vertex graph cannot contain Normal nodes without any End nodes</value>
+  </data>
+  <data name="Message_VertexGraphCannotContainNormalNodesWithoutAnyStartNodes" xml:space="preserve">
+    <value>Vertex graph cannot contain Normal nodes without any Start nodes</value>
+  </data>
 </root>

@@ -474,4 +474,7 @@
   <data name="Label_Off" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="Label_IsIsolated" xml:space="preserve">
+    <value>Isolated</value>
+  </data>
 </root>

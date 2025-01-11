@@ -18,7 +18,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private DateTimeOffset? m_MinimumEarliestStartDateTime;
         private DateTimeOffset? m_MaximumLatestFinishDateTime;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
-        private readonly VertexGraphCompiler<int, int, int, IDependentActivity> m_VertexGraphCompiler;
+        private readonly VertexGraphCompiler m_VertexGraphCompiler;
 
         private readonly IDisposable? m_ProjectStartSub;
         private readonly IDisposable? m_ResourceSettingsSub;
@@ -38,7 +38,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             IDependentActivity dependentActivity,
             IDateTimeCalculator dateTimeCalculator,
-            VertexGraphCompiler<int, int, int, IDependentActivity> vertexGraphCompiler,
+            VertexGraphCompiler vertexGraphCompiler,
             DateTimeOffset projectStart,
             IEnumerable<ActivityTrackerModel>? trackers,
             DateTimeOffset? minimumEarliestStartDateTime,
@@ -433,6 +433,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private void SetAsCompiled()
         {
             m_IsCompiled = true;
+            this.RaisePropertyChanged(nameof(IsIsolated));
             this.RaisePropertyChanged(nameof(AllocatedToResourcesString));
         }
 
@@ -479,6 +480,8 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region IManagedActivityViewModel Members
+
+        public bool IsIsolated => m_VertexGraphCompiler.IsIsolated(Id);
 
         private bool m_IsCompiled;
         public bool IsCompiled

@@ -21,6 +21,7 @@
 		<local:ManagedActivitySortComparer x:Key="dependenciesStringSortComparer" SortMemberPath="DependenciesString"/>
 		<local:ManagedActivitySortComparer x:Key="resourceDependenciesStringSortComparer" SortMemberPath="ResourceDependenciesString"/>
 		<local:ManagedActivitySortComparer x:Key="isDummySortComparer" SortMemberPath="IsDummy"/>
+		<local:ManagedActivitySortComparer x:Key="isIsolatedSortComparer" SortMemberPath="IsIsolated"/>
 		<local:ManagedActivitySortComparer x:Key="isCriticalSortComparer" SortMemberPath="IsCritical"/>
 		<local:ManagedActivitySortComparer x:Key="earliestStartTimeSortComparer" SortMemberPath="EarliestStartTime"/>
 		<local:ManagedActivitySortComparer x:Key="latestStartTimeSortComparer" SortMemberPath="LatestStartTime"/>
@@ -325,6 +326,35 @@
 										  Margin="0"
 										  Padding="3"
 										  IsChecked="{Binding Path=IsDummy, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+									CanUserReorder="True"
+									CanUserSort="True"
+									IsReadOnly="True"
+									CustomSortComparer="{StaticResource isIsolatedSortComparer}"
+									Width="80">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_IsIsolated}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_IsIsolated}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<CheckBox VerticalAlignment="Center"
+										  HorizontalAlignment="Center"
+										  IsHitTestVisible="False"
+										  Margin="0"
+										  Padding="3"
+										  IsChecked="{Binding Path=IsIsolated, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>

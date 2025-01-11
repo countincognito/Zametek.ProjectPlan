@@ -23,7 +23,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private bool m_TrackIsProjectUpdated;
         private bool m_TrackHasStaleOutputs;
 
-        private readonly VertexGraphCompiler<int, int, int, IDependentActivity> m_VertexGraphCompiler;
+        private readonly VertexGraphCompiler m_VertexGraphCompiler;
 
         private readonly ISettingService m_SettingService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
@@ -51,7 +51,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new object();
             m_TrackIsProjectUpdated = true;
             m_TrackHasStaleOutputs = true;
-            m_VertexGraphCompiler = new VertexGraphCompiler<int, int, int, IDependentActivity>();
+            m_VertexGraphCompiler = new VertexGraphCompiler();
             m_SettingService = settingService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_Mapper = mapper;
@@ -683,7 +683,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static int CalculateCyclomaticComplexity(IEnumerable<IDependentActivity> dependentActivities)
         {
             ArgumentNullException.ThrowIfNull(dependentActivities);
-            var vertexGraphCompiler = new VertexGraphCompiler<int, int, int, IDependentActivity>();
+            var vertexGraphCompiler = new VertexGraphCompiler();
 
             foreach (var dependentActivity in dependentActivities.Cast<DependentActivity>())
             {

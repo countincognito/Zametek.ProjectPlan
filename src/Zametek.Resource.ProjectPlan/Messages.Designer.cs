@@ -320,5 +320,23 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Message_UnsavedChanges", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Vertex graph cannot contain Normal nodes without any End nodes.
+        /// </summary>
+        public static string Message_VertexGraphCannotContainNormalNodesWithoutAnyEndNodes {
+            get {
+                return ResourceManager.GetString("Message_VertexGraphCannotContainNormalNodesWithoutAnyEndNodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Vertex graph cannot contain Normal nodes without any Start nodes.
+        /// </summary>
+        public static string Message_VertexGraphCannotContainNormalNodesWithoutAnyStartNodes {
+            get {
+                return ResourceManager.GetString("Message_VertexGraphCannotContainNormalNodesWithoutAnyStartNodes", resourceCulture);
+            }
+        }
     }
 }
