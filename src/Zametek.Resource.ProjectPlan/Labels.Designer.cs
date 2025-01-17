@@ -466,6 +466,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edit.
+        /// </summary>
+        public static string Label_EditManagedResource {
+            get {
+                return ResourceManager.GetString("Label_EditManagedResource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Efficiency:.
         /// </summary>
         public static string Label_Efficiency {

@@ -43,13 +43,23 @@
 
 			<Button DockPanel.Dock="Top"
 					IsTabStop="True"
-                    Margin="0,0,0,11"
+                    Margin="0,0,0,7"
                     Height="25" Width="75"
                     VerticalAlignment="Center"
                     VerticalContentAlignment="Center"
 					IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
                     Command="{Binding Path=RemoveManagedResourcesCommand, Mode=OneWay}"
                     Content="{x:Static resources:Labels.Label_DeleteManagedResources}"/>
+
+			<Button DockPanel.Dock="Top"
+					IsTabStop="True"
+                    Margin="0,0,0,11"
+                    Height="25" Width="75"
+                    VerticalAlignment="Center"
+                    VerticalContentAlignment="Center"
+					IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
+                    Command="{Binding Path=EditManagedResourcesCommand, Mode=OneWay}"
+                    Content="{x:Static resources:Labels.Label_EditManagedResource}"/>
 
 			<Label DockPanel.Dock="Top"
 				   IsTabStop="False"

@@ -54,6 +54,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SetSelectedManagedResourcesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedResources);
             AddManagedResourceCommand = ReactiveCommand.CreateFromTask(AddManagedResourceAsync);
             RemoveManagedResourcesCommand = ReactiveCommand.CreateFromTask(RemoveManagedResourcesAsync, this.WhenAnyValue(rm => rm.HasResources));
+            EditManagedResourcesCommand = ReactiveCommand.CreateFromTask(EditManagedResourcesAsync, this.WhenAnyValue(am => am.HasResources));
 
             m_IsBusy = this
                 .WhenAnyValue(rm => rm.m_CoreViewModel.IsBusy)
@@ -209,6 +210,88 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+
+
+
+
+
+
+
+
+
+
+        private async Task EditManagedResourcesAsync()
+        {
+            try
+            {
+                var editViewModel = new ResourceEditViewModel(m_CoreViewModel.WorkStreamSettings.WorkStreams);
+
+                bool result = await m_DialogService.ShowContextAsync<ViewModelBase>(
+                    Resource.ProjectPlan.Titles.Title_EditResources,
+                    editViewModel);
+
+                if (!result)
+                {
+                    return;
+                }
+
+                lock (m_Lock)
+                {
+                    ICollection<int> resourceIds = SelectedResources.Keys;
+
+                    if (resourceIds.Count == 0)
+                    {
+                        return;
+                    }
+
+                    UpdateDependentResourceModel updateModel = editViewModel.BuildUpdateModel();
+
+                    IEnumerable<UpdateDependentResourceModel> updateModels = resourceIds
+                        .Select(x => updateModel with { Id = x })
+                        .ToList();
+
+
+                    // TODO update local resources
+
+
+
+                    //m_CoreViewModel.UpdateManagedActivities(updateModels);
+                }
+                UpdateResourceSettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         private void UpdateResourceSettingsToCore()
         {
             lock (m_Lock)
@@ -354,6 +437,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand AddManagedResourceCommand { get; }
 
         public ICommand RemoveManagedResourcesCommand { get; }
+
+        public ICommand EditManagedResourcesCommand { get; }
 
         #endregion
 

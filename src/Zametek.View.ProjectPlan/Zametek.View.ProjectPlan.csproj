@@ -35,8 +35,17 @@
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <AvaloniaXaml Update="ResourceSettingsManagement\ResourceEditView.axaml">
+      <SubType>Designer</SubType>
+    </AvaloniaXaml>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Update="ActivityManagement\ActivityEditView.axaml.cs">
       <DependentUpon>ActivityEditView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="ResourceSettingsManagement\ResourceEditView.axaml.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>ResourceEditView.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

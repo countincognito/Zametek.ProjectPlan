@@ -477,4 +477,7 @@
   <data name="Label_IsIsolated" xml:space="preserve">
     <value>Isolated</value>
   </data>
+  <data name="Label_EditManagedResource" xml:space="preserve">
+    <value>Edit</value>
+  </data>
 </root>

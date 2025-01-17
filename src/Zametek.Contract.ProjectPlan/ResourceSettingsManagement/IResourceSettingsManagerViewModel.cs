@@ -26,5 +26,7 @@ namespace Zametek.Contract.ProjectPlan
         ICommand AddManagedResourceCommand { get; }
 
         ICommand RemoveManagedResourcesCommand { get; }
+
+        ICommand EditManagedResourcesCommand { get; }
     }
 }

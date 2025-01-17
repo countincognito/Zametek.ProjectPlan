@@ -5,6 +5,8 @@ namespace Zametek.Common.ProjectPlan
     [Serializable]
     public record UpdateDependentActivityModel
     {
+        // TODO clean up
+
         public int Id { get; init; } = default;
 
         //public List<int> Dependencies { get; init; } = [];

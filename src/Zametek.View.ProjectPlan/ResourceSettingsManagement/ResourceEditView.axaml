@@ -1,0 +1,179 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:u="https://irihi.tech/ursa"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:sys="using:System"
+             xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
+			 x:DataType="vm:ResourceEditViewModel"
+             x:Class="Zametek.View.ProjectPlan.ResourceEditView">
+	<Grid Margin="7">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="140"/>
+			<ColumnDefinition Width="80"/>
+			<ColumnDefinition Width="155"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="36"/>
+			<RowDefinition Height="36"/>
+			<RowDefinition Height="36"/>
+			<RowDefinition Height="36"/>
+			<RowDefinition Height="36"/>
+		</Grid.RowDefinitions>
+
+		<Label Grid.Row="0" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_IsExplicitTarget}"/>
+
+		<ToggleSwitch Grid.Row="0" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsIsExplicitTargetActive, Mode=TwoWay}"/>
+
+		<ToggleSwitch Grid.Row="0" Grid.Column="2"
+					  Margin="3"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Padding="0"
+					  OffContent="{x:Static resources:Labels.Label_No}"
+					  OnContent="{x:Static resources:Labels.Label_Yes}"
+					  IsChecked="{Binding Path=IsExplicitTarget, Mode=TwoWay}"
+					  IsEnabled="{Binding Path=IsIsExplicitTargetActive, Mode=OneWay}"/>
+
+
+
+		<Label Grid.Row="1" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_IsInactive}"/>
+
+		<ToggleSwitch Grid.Row="1" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsIsInactiveActive, Mode=TwoWay}"/>
+
+		<ToggleSwitch Grid.Row="1" Grid.Column="2"
+					  Margin="3"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Padding="0"
+					  OffContent="{x:Static resources:Labels.Label_No}"
+					  OnContent="{x:Static resources:Labels.Label_Yes}"
+					  IsChecked="{Binding Path=IsInactive, Mode=TwoWay}"
+					  IsEnabled="{Binding Path=IsIsInactiveActive, Mode=OneWay}"/>
+
+
+
+		<Label Grid.Row="2" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_InterActivityAllocationType}"/>
+
+		<ToggleSwitch Grid.Row="2" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsInterActivityAllocationTypeActive, Mode=TwoWay}"/>
+
+		<ComboBox Grid.Row="2" Grid.Column="2"
+				  Margin="3"
+				  ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:InterActivityAllocationType}}}"
+				  SelectedItem="{Binding Path=InterActivityAllocationType, Mode=TwoWay}"
+				  Focusable="True"
+				  VerticalAlignment="Center"
+				  VerticalContentAlignment="Center"
+				  HorizontalAlignment="Stretch"
+				  HorizontalContentAlignment="Center"
+				  IsEnabled="{Binding Path=IsInterActivityAllocationTypeActive, Mode=OneWay}"/>
+
+
+
+		<Label Grid.Row="3" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_InterActivityPhases}"/>
+
+		<ToggleSwitch Grid.Row="3" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+					  Padding="3"
+					  OffContent="{x:Static resources:Labels.Label_Off}"
+					  OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsWorkStreamSelectorActive, Mode=TwoWay}"/>
+
+		<u:MultiComboBox Grid.Row="3" Grid.Column="2"
+						 Margin="3"
+						 MaxHeight="200"
+						 Width="{x:Static sys:Double.NaN}"
+						 Focusable="True"
+						 HorizontalAlignment="Stretch"
+						 VerticalAlignment="Stretch"
+						 ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}"
+						 SelectedItems="{Binding Path=WorkStreamSelector.SelectedTargetWorkStreams, Mode=OneWay}"
+						 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
+						 IsDropDownOpen="False"
+					     IsEnabled="{Binding Path=IsWorkStreamSelectorActive, Mode=OneWay}">
+			<u:MultiComboBox.SelectedItemTemplate>
+				<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
+					<Grid>
+						<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
+					</Grid>
+				</DataTemplate>
+			</u:MultiComboBox.SelectedItemTemplate>
+		</u:MultiComboBox>
+
+
+
+		<Label Grid.Row="4" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_UnitCost}"/>
+
+		<ToggleSwitch Grid.Row="4" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsUnitCostActive, Mode=TwoWay}"/>
+
+		<u:NumericDoubleUpDown Grid.Row="4" Grid.Column="2"
+							   IsEnabled="{Binding Path=IsUnitCostActive, Mode=OneWay}"
+							   Value="{Binding Path=UnitCost, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+							   VerticalAlignment="Center"
+							   ShowButtonSpinner="False"
+							   Focusable="True"
+							   Margin="3"
+							   Padding="0"
+							   Minimum="0"/>
+
+	</Grid>
+</UserControl>

@@ -132,6 +132,9 @@
   <data name="Title_EditActivities" xml:space="preserve">
     <value>Edit Activities</value>
   </data>
+  <data name="Title_EditResources" xml:space="preserve">
+    <value>Edit Resources</value>
+  </data>
   <data name="Title_Error" xml:space="preserve">
     <value>Error</value>
   </data>

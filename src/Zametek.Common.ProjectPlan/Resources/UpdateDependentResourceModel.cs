@@ -1,0 +1,31 @@
+﻿using Zametek.Maths.Graphs;
+
+namespace Zametek.Common.ProjectPlan
+{
+    [Serializable]
+    public record UpdateDependentResourceModel
+    {
+        public int Id { get; init; } = default;
+
+        public string Name { get; init; } = string.Empty;
+        public bool IsNameEdited { get; init; } = false;
+
+        public string Notes { get; init; } = string.Empty;
+        public bool IsNotesEdited { get; init; } = false;
+
+        public bool IsExplicitTarget { get; init; }
+        public bool IsIsExplicitTargetEdited { get; init; } = false;
+
+        public bool IsInactive { get; init; }
+        public bool IsIsInactiveEdited { get; init; } = false;
+
+        public InterActivityAllocationType InterActivityAllocationType { get; init; }
+        public bool IsInterActivityAllocationTypeEdited { get; init; } = false;
+
+        public double UnitCost { get; init; }
+        public bool IsUnitCostEdited { get; init; } = false;
+
+        public List<int> InterActivityPhases { get; init; } = [];
+        public bool IsInterActivityPhasesEdited { get; init; } = false;
+    }
+}

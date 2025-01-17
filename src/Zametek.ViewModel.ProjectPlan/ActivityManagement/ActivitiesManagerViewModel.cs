@@ -180,7 +180,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IEnumerable<UpdateDependentActivityModel> updateModels = activityIds
                         .Select(x => updateModel with { Id = x })
-                        .ToList(); ;
+                        .ToList();
 
                     m_CoreViewModel.UpdateManagedActivities(updateModels);
                 }

@@ -41,6 +41,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_AllocationOrder = resource.AllocationOrder;
             m_DisplayOrder = resource.DisplayOrder;
             m_ColorFormat = resource.ColorFormat;
+            m_IsEditMuted = false;
 
             m_TargetWorkStreams = new HashSet<int>(resource.InterActivityPhases);
             WorkStreamSelector = new WorkStreamSelectorViewModel(phaseOnly: true);
@@ -83,6 +84,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region Private Members
+
         private void UpdateActivityTargetWorkStreams()
         {
             m_TargetWorkStreams.Clear();
@@ -113,6 +116,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             WorkStreamSelector.SetTargetWorkStreams(targetWorkStreams, selectedTargetWorkStreams);
         }
+
+        #endregion
 
         #region IManagedResourceViewModel Members
 
@@ -243,7 +248,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_isDirty = false;
                 UpdateActivityTargetWorkStreams();
                 TrackerSet.RefreshIndex();
-                m_ResourceSettingsManagerViewModel.AreSettingsUpdated = true;
+
+                if (!IsEditMuted)
+                {
+                    m_ResourceSettingsManagerViewModel.AreSettingsUpdated = true;
+                }
             }
         }
 
@@ -254,6 +263,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IMuteEdits Members
+
+        private bool m_IsEditMuted;
+        public bool IsEditMuted
+        {
+            get => m_IsEditMuted;
+            set => this.RaiseAndSetIfChanged(ref m_IsEditMuted, value);
+        }
+
+        #endregion
 
         #region IKillSubscriptions Members
 
