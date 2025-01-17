@@ -3,11 +3,13 @@ using Avalonia.Data;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -210,16 +212,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
-
-
-
-
-
-
-
-
-
         private async Task EditManagedResourcesAsync()
         {
             try
@@ -244,18 +236,13 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
 
-                    UpdateDependentResourceModel updateModel = editViewModel.BuildUpdateModel();
+                    UpdateResourceModel updateModel = editViewModel.BuildUpdateModel();
 
-                    IEnumerable<UpdateDependentResourceModel> updateModels = resourceIds
+                    IEnumerable<UpdateResourceModel> updateModels = resourceIds
                         .Select(x => updateModel with { Id = x })
                         .ToList();
 
-
-                    // TODO update local resources
-
-
-
-                    //m_CoreViewModel.UpdateManagedActivities(updateModels);
+                    UpdateManagedResources(updateModels);
                 }
                 UpdateResourceSettingsToCore();
             }
@@ -268,29 +255,53 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private void UpdateManagedResources(IEnumerable<UpdateResourceModel> updateModels)
+        {
+            lock (m_Lock)
+            {
+                Dictionary<int, IManagedResourceViewModel> resourceLookup = Resources.ToDictionary(x => x.Id);
 
+                foreach (UpdateResourceModel updateModel in updateModels)
+                {
+                    if (resourceLookup.TryGetValue(updateModel.Id, out IManagedResourceViewModel? resource))
+                    {
+                        if (resource is IEditableObject editable)
+                        {
+                            resource.IsEditMuted = true;
+                            editable.BeginEdit();
 
+                            if (updateModel.IsNameEdited)
+                            {
+                                resource.Name = updateModel.Name;
+                            }
+                            if (updateModel.IsIsExplicitTargetEdited)
+                            {
+                                resource.IsExplicitTarget = updateModel.IsExplicitTarget;
+                            }
+                            if (updateModel.IsIsInactiveEdited)
+                            {
+                                resource.IsInactive = updateModel.IsInactive;
+                            }
+                            if (updateModel.IsInterActivityAllocationTypeEdited)
+                            {
+                                resource.InterActivityAllocationType = updateModel.InterActivityAllocationType;
+                            }
+                            if (updateModel.IsUnitCostEdited)
+                            {
+                                resource.UnitCost = updateModel.UnitCost;
+                            }
+                            if (updateModel.IsInterActivityPhasesEdited)
+                            {
+                                resource.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateModel.InterActivityPhases]);
+                            }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                            editable.EndEdit();
+                            resource.IsEditMuted = false;
+                        }
+                    }
+                }
+            }
+        }
 
         private void UpdateResourceSettingsToCore()
         {

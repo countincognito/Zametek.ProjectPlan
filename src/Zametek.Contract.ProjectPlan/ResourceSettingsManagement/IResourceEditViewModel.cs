@@ -21,6 +21,6 @@ namespace Zametek.Contract.ProjectPlan
         IWorkStreamSelectorViewModel WorkStreamSelector { get; }
         bool IsWorkStreamSelectorActive { get; set; }
 
-        UpdateDependentResourceModel BuildUpdateModel();
+        UpdateResourceModel BuildUpdateModel();
     }
 }

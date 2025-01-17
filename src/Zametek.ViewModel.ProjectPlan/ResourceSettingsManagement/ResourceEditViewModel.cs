@@ -133,15 +133,12 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public UpdateDependentResourceModel BuildUpdateModel()
+        public UpdateResourceModel BuildUpdateModel()
         {
-            var updateModel = new UpdateDependentResourceModel
+            var updateModel = new UpdateResourceModel
             {
                 Name = string.Empty,
                 IsNameEdited = false,
-
-                Notes = string.Empty,
-                IsNotesEdited = false,
 
                 IsExplicitTarget = IsExplicitTarget,
                 IsIsExplicitTargetEdited = IsIsExplicitTargetActive,

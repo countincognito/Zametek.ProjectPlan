@@ -123,7 +123,7 @@ namespace Zametek.ProjectPlan
                 (
                     new ToolDock
                     {
-                        Proportion = 0.65,
+                        Proportion = 0.6,
                         ActiveDockable = m_ActivitiesManagerViewModel,
                         CanClose = false,
                         CanFloat = false,
@@ -146,7 +146,7 @@ namespace Zametek.ProjectPlan
                     },
                     new ProportionalDock
                     {
-                        Proportion = 0.35,
+                        Proportion = 0.4,
                         Orientation = Orientation.Horizontal,
                         ActiveDockable = m_MetricManagerViewModel,
                         CanClose = false,

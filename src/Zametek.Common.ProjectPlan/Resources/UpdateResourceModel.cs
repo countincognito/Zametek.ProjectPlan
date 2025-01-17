@@ -3,15 +3,12 @@
 namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public record UpdateDependentResourceModel
+    public record UpdateResourceModel
     {
         public int Id { get; init; } = default;
 
         public string Name { get; init; } = string.Empty;
         public bool IsNameEdited { get; init; } = false;
-
-        public string Notes { get; init; } = string.Empty;
-        public bool IsNotesEdited { get; init; } = false;
 
         public bool IsExplicitTarget { get; init; }
         public bool IsIsExplicitTargetEdited { get; init; } = false;
