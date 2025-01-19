@@ -73,17 +73,17 @@ namespace Zametek.ProjectPlan.CommandLine
             throw new InvalidOperationException();
         }
 
-        public Task<bool> ShowContextAsync<T>(
+        public Task<bool> ShowContextAsync(
             string title,
-            T context,
+            object context,
             bool markdown = false)
         {
             throw new InvalidOperationException();
         }
 
-        public Task<bool> ShowContextAsync<T>(
+        public Task<bool> ShowContextAsync(
             string title,
-            T context,
+            object context,
             double height,
             double width,
             bool markdown = false)

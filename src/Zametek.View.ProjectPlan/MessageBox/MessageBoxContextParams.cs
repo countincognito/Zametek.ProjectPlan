@@ -2,14 +2,14 @@
 
 namespace Zametek.View.ProjectPlan
 {
-    public class MessageBoxContextParams<T> :
+    public class MessageBoxContextParams :
         MessageBoxStandardParams
     {
-        public MessageBoxContextParams(T context)
+        public MessageBoxContextParams(object context)
         {
             Context = context;
         }
 
-        public T Context { get; init; }
+        public object Context { get; init; }
     }
 }

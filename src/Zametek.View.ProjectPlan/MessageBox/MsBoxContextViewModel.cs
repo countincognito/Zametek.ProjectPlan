@@ -1,12 +1,11 @@
 ﻿using MsBox.Avalonia.ViewModels;
-using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
-    public class MsBoxContextViewModel<T>
+    public class MsBoxContextViewModel
         : MsBoxStandardViewModel
     {
-        public MsBoxContextViewModel(MessageBoxContextParams<T> @params)
+        public MsBoxContextViewModel(MessageBoxContextParams @params)
             : base(@params)
         {
             Context = @params.Context;
@@ -26,17 +25,8 @@ namespace Zametek.View.ProjectPlan
 
         public bool IsContentMessageVisible { get; init; } = false;
 
-        public T Context { get; init; }
+        public object? Context { get; init; }
 
         public bool IsContextVisible { get; init; } = false;
-    }
-
-    public class MsBoxContextViewModel
-       : MsBoxContextViewModel<ViewModelBase>
-    {
-        public MsBoxContextViewModel(MessageBoxContextParams<ViewModelBase> @params)
-            : base(@params)
-        {
-        }
     }
 }
