@@ -17,9 +17,6 @@
              Padding="15"
              x:DataType="local:MsBoxContextViewModel"
              x:Class="Zametek.View.ProjectPlan.MsBoxContextView">
-	<UserControl.DataTemplates>
-		<local:ViewLocator />
-	</UserControl.DataTemplates>
 	<UserControl.Resources>
 		<converters:ConditionalGridLengthStarConverter x:Key="conditionalGridLengthStarConverter" />
 	</UserControl.Resources>
