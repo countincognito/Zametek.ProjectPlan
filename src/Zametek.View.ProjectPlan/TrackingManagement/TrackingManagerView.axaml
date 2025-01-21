@@ -14,6 +14,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.TrackingManagerView">
 	<UserControl.Resources>
+		<local:GDPdLengthConverter x:Key="GDPWidthConverter"/>
 		<local:ManagedActivitySortComparer x:Key="activityIdSortComparer" SortMemberPath="Id"/>
 		<local:ManagedActivitySortComparer x:Key="activityNameSortComparer" SortMemberPath="Name"/>
 		<local:ManagedResourceSortComparer x:Key="resourceIdSortComparer" SortMemberPath="Id"/>
@@ -41,7 +42,7 @@
 		<Grid RowDefinitions="*, 4, *">
 			<DataGrid Name="ResourcesGrid"
 					  Grid.Row="0"
-					  FrozenColumnCount="2"
+					  FrozenColumnCount="25"
 					  AutoGenerateColumns="False"
 					  RowHeight="30"
 					  ItemsSource="{Binding Path=Resources, Mode=OneWay}"
@@ -79,7 +80,7 @@
 				</DataGrid.Styles>
 
 				<DataGrid.Columns>
-					<DataGridTemplateColumn CanUserResize="True"
+					<DataGridTemplateColumn CanUserResize="False"
 											CanUserReorder="False"
 											CanUserSort="True"
 											IsReadOnly="True"
@@ -110,7 +111,7 @@
 											CanUserReorder="False"
 											CanUserSort="True"
 											CustomSortComparer="{StaticResource resourceNameSortComparer}"
-											Width="125">
+											Width="{Binding Path=NameColumnWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource GDPWidthConverter}}">
 						<DataGridTemplateColumn.HeaderTemplate>
 							<DataTemplate>
 								<TextBlock VerticalAlignment="Center"
@@ -132,7 +133,7 @@
 						</DataGridTemplateColumn.CellTemplate>
 					</DataGridTemplateColumn>
 
-					<DataGridTemplateColumn CanUserResize="True"
+					<DataGridTemplateColumn CanUserResize="False"
 											CanUserReorder="False"
 											CanUserSort="False"
 											Width="60">
@@ -171,7 +172,7 @@
 
 			<DataGrid Name="ActivitiesGrid"
 					  Grid.Row="2"
-					  FrozenColumnCount="2"
+					  FrozenColumnCount="25"
 					  AutoGenerateColumns="False"
 					  RowHeight="30"
 					  ItemsSource="{Binding Path=Activities, Mode=OneWay}"
@@ -209,7 +210,7 @@
 				</DataGrid.Styles>
 
 				<DataGrid.Columns>
-					<DataGridTemplateColumn CanUserResize="True"
+					<DataGridTemplateColumn CanUserResize="False"
 											CanUserReorder="False"
 											CanUserSort="True"
 											IsReadOnly="True"
@@ -240,7 +241,7 @@
 											CanUserReorder="False"
 											CanUserSort="True"
 											CustomSortComparer="{StaticResource activityNameSortComparer}"
-											Width="125">
+											Width="{Binding Path=NameColumnWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource GDPWidthConverter}}">
 						<DataGridTemplateColumn.HeaderTemplate>
 							<DataTemplate>
 								<TextBlock VerticalAlignment="Center"
@@ -262,7 +263,7 @@
 						</DataGridTemplateColumn.CellTemplate>
 					</DataGridTemplateColumn>
 
-					<DataGridTemplateColumn CanUserResize="True"
+					<DataGridTemplateColumn CanUserResize="False"
 											CanUserReorder="False"
 											CanUserSort="False"
 											Width="60">

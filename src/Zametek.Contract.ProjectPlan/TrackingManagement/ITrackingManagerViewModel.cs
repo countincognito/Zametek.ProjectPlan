@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Windows.Input;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -21,6 +20,8 @@ namespace Zametek.Contract.ProjectPlan
         ReadOnlyObservableCollection<IManagedResourceViewModel> Resources { get; }
 
         IDateTimeCalculator DateTimeCalculator { get; }
+
+        double NameColumnWidth { get; set; }
 
         int TrackerIndex { get; set; }
 

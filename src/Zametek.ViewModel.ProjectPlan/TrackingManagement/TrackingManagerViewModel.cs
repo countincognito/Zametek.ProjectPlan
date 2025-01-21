@@ -14,7 +14,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IResourceSettingsManagerViewModel m_ResourceSettingsManagerViewModel;
-        private readonly IDialogService m_DialogService;
 
         private readonly IDisposable? m_ColumnTitleSub;
 
@@ -25,18 +24,16 @@ namespace Zametek.ViewModel.ProjectPlan
         public TrackingManagerViewModel(
             ICoreViewModel coreViewModel,
             IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
-            IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(resourceSettingsManagerViewModel);
-            ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;
-            m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
+            m_NameColumnWidth = 125;
 
             m_IsBusy = this
                 .WhenAnyValue(tm => tm.m_CoreViewModel.IsBusy)
@@ -144,6 +141,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         public IDateTimeCalculator DateTimeCalculator => m_DateTimeCalculator;
+
+        private double m_NameColumnWidth;
+        public double NameColumnWidth
+        {
+            get => m_NameColumnWidth;
+            set => this.RaiseAndSetIfChanged(ref m_NameColumnWidth, value);
+        }
 
         public int TrackerIndex
         {
