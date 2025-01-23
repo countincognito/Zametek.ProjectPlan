@@ -21,7 +21,7 @@
     <Content Include="Assets\zpp.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia.Themes.Simple" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Themes.Simple" Version="11.2.0" />
     <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.7.0" />
 	<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.0" />
     <PackageReference Include="Splat.DependencyInjection.SourceGenerator" Version="1.2.3">
