@@ -1,19 +1,24 @@
 ﻿using Microsoft.Msagl.Drawing;
 using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class CustomSvgGraphWriter
         : SvgGraphWriter
     {
+        private readonly static Func<string, string> s_NodeSanitizer = (unescaped) => new System.Xml.Linq.XText(unescaped).ToString();
+
         public CustomSvgGraphWriter()
-            : base()
+                : base()
         {
+            NodeSanitizer = s_NodeSanitizer;
         }
 
         public CustomSvgGraphWriter(Stream streamPar, Graph graphP)
             : base(streamPar, graphP)
         {
+            NodeSanitizer = s_NodeSanitizer;
         }
 
         protected override void WriteLabel(Label label)
