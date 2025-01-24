@@ -896,6 +896,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_ViewArrowGraphNames;
+        public bool ViewArrowGraphNames
+        {
+            get => m_ViewArrowGraphNames;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_ViewArrowGraphNames, value);
+                }
+            }
+        }
+
         private GroupByMode m_GanttChartGroupByMode;
         public GroupByMode GanttChartGroupByMode
         {
@@ -1160,6 +1174,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResourceSettings = m_SettingService.DefaultResourceSettings;
                     WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
                     ViewEarnedValueProjections = false;
+                    ViewArrowGraphNames = false;
                     GanttChartGroupByMode = default;
                     GanttChartAnnotationStyle = default;
                     ViewGanttChartGroupLabels = false;
@@ -1320,6 +1335,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Display settings.
                     ViewEarnedValueProjections = projectPlanModel.DisplaySettings.ViewEarnedValueProjections; // TODO
 
+                    ViewArrowGraphNames = projectPlanModel.DisplaySettings.ViewArrowGraphNames; // TODO
+
                     GanttChartGroupByMode = projectPlanModel.DisplaySettings.GanttChartGroupByMode;
 
                     GanttChartAnnotationStyle = projectPlanModel.DisplaySettings.GanttChartAnnotationStyle;
@@ -1397,6 +1414,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         DisplaySettings = new DisplaySettingsModel
                         {
                             ViewEarnedValueProjections = ViewEarnedValueProjections,
+                            ViewArrowGraphNames = ViewArrowGraphNames,
                             GanttChartAnnotationStyle = GanttChartAnnotationStyle,
                             GanttChartGroupByMode = GanttChartGroupByMode,
                             ViewGanttChartGroupLabels = ViewGanttChartGroupLabels,

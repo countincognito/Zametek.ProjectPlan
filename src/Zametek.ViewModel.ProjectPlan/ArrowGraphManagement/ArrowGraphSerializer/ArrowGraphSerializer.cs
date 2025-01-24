@@ -85,7 +85,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         }
 
-        private static (bool isVisible, string labelText) BuildSingleLineEdgeLabel(ActivityModel activityModel)
+        private static (bool isVisible, string labelText) BuildSingleLineEdgeLabel(ActivityModel activityModel, bool viewNames)
         {
             ArgumentNullException.ThrowIfNull(activityModel);
             var labelText = new StringBuilder();
@@ -96,6 +96,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (!activityModel.CanBeRemoved)
                 {
                     labelText.Append(@$"{activityModel.Id}");
+                    if (viewNames)
+                    {
+                        labelText.Append(@$" {activityModel.Name}");
+                    }
                     if (!activityModel.IsCritical())
                     {
                         labelText.Append(@$" [{activityModel.FreeSlack}|{activityModel.TotalSlack}]");
@@ -113,7 +117,12 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             else
             {
-                labelText.Append(@$"{activityModel.Id}({activityModel.Duration})");
+                labelText.Append(@$"{activityModel.Id}");
+                if (viewNames)
+                {
+                    labelText.Append(@$" {activityModel.Name}");
+                }
+                labelText.Append(@$" ({activityModel.Duration})");
                 if (!activityModel.IsCritical())
                 {
                     labelText.Append(@$" [{activityModel.FreeSlack}|{activityModel.TotalSlack}]");
@@ -123,7 +132,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return (isVisible, labelText.ToString());
         }
 
-        private static (bool isVisible, string labelText) BuildMultiLineEdgeLabel(ActivityModel activityModel)
+        private static (bool isVisible, string labelText) BuildMultiLineEdgeLabel(ActivityModel activityModel, bool viewNames)
         {
             ArgumentNullException.ThrowIfNull(activityModel);
             var labelText = new StringBuilder();
@@ -134,6 +143,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (!activityModel.CanBeRemoved)
                 {
                     labelText.AppendFormat($@"{activityModel.Id}");
+                    if (viewNames)
+                    {
+                        labelText.AppendFormat(@$" {activityModel.Name}");
+                    }
                     if (!activityModel.IsCritical())
                     {
                         labelText.AppendLine();
@@ -152,7 +165,12 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             else
             {
-                labelText.AppendFormat($@"{activityModel.Id} ({activityModel.Duration})");
+                labelText.AppendFormat($@"{activityModel.Id}");
+                if (viewNames)
+                {
+                    labelText.AppendFormat(@$" {activityModel.Name}");
+                }
+                labelText.AppendFormat($@" ({activityModel.Duration})");
                 if (!activityModel.IsCritical())
                 {
                     labelText.AppendLine();
@@ -166,7 +184,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private static DiagramArrowGraphModel BuildArrowGraphDiagram(
             ArrowGraphModel arrowGraphModel,
             ArrowGraphSettingsModel arrowGraphSettingsModel,
-            bool multiLineEdgeLabels = false)
+            bool multiLineEdgeLabels = false,
+            bool viewNames = false)
         {
             ArgumentNullException.ThrowIfNull(arrowGraphModel);
             ArgumentNullException.ThrowIfNull(arrowGraphSettingsModel);
@@ -246,11 +265,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (multiLineEdgeLabels)
                 {
-                    (showLabel, labelText) = BuildMultiLineEdgeLabel(activityModel);
+                    (showLabel, labelText) = BuildMultiLineEdgeLabel(activityModel, viewNames);
                 }
                 else
                 {
-                    (showLabel, labelText) = BuildSingleLineEdgeLabel(activityModel);
+                    (showLabel, labelText) = BuildSingleLineEdgeLabel(activityModel, viewNames);
                 }
 
                 // Source == tail
@@ -373,11 +392,12 @@ namespace Zametek.ViewModel.ProjectPlan
         public byte[] BuildArrowGraphSvgData(
             ArrowGraphModel arrowGraph,
             ArrowGraphSettingsModel arrowGraphSettings,
-            BaseTheme baseTheme)
+            BaseTheme baseTheme,
+            bool viewNames)
         {
             ArgumentNullException.ThrowIfNull(arrowGraph);
             ArgumentNullException.ThrowIfNull(arrowGraphSettings);
-            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, arrowGraphSettings);
+            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, arrowGraphSettings, viewNames: viewNames);
 
             // Fill the graph.
             var drawingGraph = new Microsoft.Msagl.Drawing.Graph();
@@ -470,9 +490,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public byte[] BuildArrowGraphMLData(
             ArrowGraphModel arrowGraph,
-            ArrowGraphSettingsModel arrowGraphSettings)
+            ArrowGraphSettingsModel arrowGraphSettings,
+            bool viewNames)
         {
-            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, arrowGraphSettings, multiLineEdgeLabels: true);
+            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, arrowGraphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
             graphml graphML = GraphMLBuilder.ToGraphML(diagramArrowGraph);
             using var ms = new MemoryStream();
             var xmlSerializer = new XmlSerializer(typeof(graphml));
@@ -485,9 +506,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public byte[] BuildArrowGraphVizData(
             ArrowGraphModel arrowGraph,
-            ArrowGraphSettingsModel arrowGraphSettings)
+            ArrowGraphSettingsModel arrowGraphSettings,
+            bool viewNames)
         {
-            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, arrowGraphSettings, multiLineEdgeLabels: true);
+            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, arrowGraphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
             string graphviz = GraphVizBuilder.ToGraphViz(diagramArrowGraph);
             return graphviz.StringToByteArray();
         }

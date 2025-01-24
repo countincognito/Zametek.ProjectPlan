@@ -12,6 +12,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
+        bool ViewNames { get; set; }
+
         string ArrowGraphData { get; }
 
         BaseTheme BaseTheme { get; }

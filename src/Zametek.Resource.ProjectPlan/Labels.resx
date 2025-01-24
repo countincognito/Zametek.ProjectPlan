@@ -480,4 +480,7 @@
   <data name="Label_EditManagedResource" xml:space="preserve">
     <value>Edit</value>
   </data>
+  <data name="Label_ViewNames" xml:space="preserve">
+    <value>View Names</value>
+  </data>
 </root>

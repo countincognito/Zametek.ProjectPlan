@@ -204,6 +204,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_CoreViewModel.AutoCompile = true;
             m_CoreViewModel.ViewEarnedValueProjections = false;
+            m_CoreViewModel.ViewArrowGraphNames = false;
             m_CoreViewModel.GanttChartAnnotationStyle = default;
             m_CoreViewModel.GanttChartGroupByMode = default;
             m_CoreViewModel.ViewGanttChartGroupLabels = false;

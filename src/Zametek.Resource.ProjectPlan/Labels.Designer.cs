@@ -1124,6 +1124,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to View Names.
+        /// </summary>
+        public static string Label_ViewNames {
+            get {
+                return ResourceManager.GetString("Label_ViewNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to View Projections.
         /// </summary>
         public static string Label_ViewProjections {

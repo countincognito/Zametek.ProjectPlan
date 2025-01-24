@@ -31,6 +31,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ViewEarnedValueProjections { get; set; }
 
+        bool ViewArrowGraphNames { get; set; }
+
         GroupByMode GanttChartGroupByMode { get; set; }
 
         AnnotationStyle GanttChartAnnotationStyle { get; set; }

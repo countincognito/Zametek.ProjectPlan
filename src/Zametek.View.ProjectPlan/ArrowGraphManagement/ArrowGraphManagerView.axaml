@@ -16,6 +16,27 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
+		<DockPanel DockPanel.Dock="Right"
+                   Margin="11,0,0,0">
+			<Label VerticalContentAlignment="Center"
+				   HorizontalContentAlignment="Left"
+				   Height="25"
+				   DockPanel.Dock="Top"
+				   IsTabStop="False"
+				   Margin="0,0,0,3"
+				   Content="{x:Static resources:Labels.Label_ViewNames}"/>
+
+			<ToggleSwitch DockPanel.Dock="Top"
+					      IsTabStop="False"
+					      Margin="0,0,0,11"
+					      VerticalAlignment="Center"
+					      VerticalContentAlignment="Center"
+						  HorizontalAlignment="Center"
+						  HorizontalContentAlignment="Center"
+					      IsChecked="{Binding Path=ViewNames, Mode=TwoWay}"/>
+			<Grid/>
+		</DockPanel>
+		
 		<DockPanel>
 			<DockPanel Width="250"
 					   DockPanel.Dock="Top">

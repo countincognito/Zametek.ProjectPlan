@@ -5,6 +5,8 @@
     {
         public bool ViewEarnedValueProjections { get; init; }
 
+        public bool ViewArrowGraphNames { get; init; }
+
         public GroupByMode GanttChartGroupByMode { get; init; }
 
         public AnnotationStyle GanttChartAnnotationStyle { get; init; }
