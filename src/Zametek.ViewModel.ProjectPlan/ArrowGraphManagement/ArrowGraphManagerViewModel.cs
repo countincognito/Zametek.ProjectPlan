@@ -1,4 +1,5 @@
 ﻿using Avalonia.Svg.Skia;
+using Avalonia.Threading;
 using ReactiveUI;
 using SkiaSharp;
 using Svg.Skia;
@@ -132,7 +133,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_BuildArrowGraphImageSub = this
                 .ObservableForProperty(agm => agm.ArrowGraphData)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildArrowGraphDiagramImageAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
@@ -181,7 +182,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    BuildArrowGraphDiagramImage();
+                    Dispatcher.UIThread.Post(BuildArrowGraphDiagramImage);
                 }
             }
             catch (Exception ex)

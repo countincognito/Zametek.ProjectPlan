@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Base;
 using MsBox.Avalonia.Dto;
@@ -33,16 +34,22 @@ namespace Zametek.View.ProjectPlan
 
         private async Task<ButtonResult> ShowMessageBoxAsync(MessageBoxStandardParams standardParams)
         {
-            standardParams.WindowIcon = m_Parent!.Icon ?? throw new ArgumentNullException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable);
-            IMsBox<ButtonResult>? msg = MessageBoxManager.GetMessageBoxStandard(standardParams);
-            return await msg.ShowWindowDialogAsync(m_Parent);
+            return await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                standardParams.WindowIcon = m_Parent!.Icon ?? throw new ArgumentNullException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable);
+                IMsBox<ButtonResult>? msg = MessageBoxManager.GetMessageBoxStandard(standardParams);
+                return msg.ShowWindowDialogAsync(m_Parent);
+            });
         }
 
         private async Task<ButtonResult> ShowMessageContextBoxAsync(MessageBoxContextParams contextParams)
         {
-            contextParams.WindowIcon = m_Parent!.Icon ?? throw new ArgumentNullException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable);
-            IMsBox<ButtonResult>? msg = GetMessageBoxContext(contextParams);
-            return await msg.ShowWindowDialogAsync(m_Parent);
+            return await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                contextParams.WindowIcon = m_Parent!.Icon ?? throw new ArgumentNullException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable);
+                IMsBox<ButtonResult>? msg = GetMessageBoxContext(contextParams);
+                return msg.ShowWindowDialogAsync(m_Parent);
+            });
         }
 
         private static IMsBox<ButtonResult> GetMessageBoxContext(MessageBoxContextParams contextParams)
@@ -236,7 +243,7 @@ namespace Zametek.View.ProjectPlan
                 FileTypeFilter = filters
             };
 
-            IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+            IReadOnlyList<IStorageFile> files = await Dispatcher.UIThread.InvokeAsync(() => topLevel.StorageProvider.OpenFilePickerAsync(options));
 
             Uri? path = files?.FirstOrDefault()?.Path;
 
@@ -270,7 +277,7 @@ namespace Zametek.View.ProjectPlan
                 FileTypeChoices = filters
             };
 
-            IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(options);
+            IStorageFile? file = await Dispatcher.UIThread.InvokeAsync(() => topLevel.StorageProvider.SaveFilePickerAsync(options));
 
             Uri? path = file?.Path;
 
