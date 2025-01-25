@@ -440,19 +440,19 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(resourceSeriesModels);
             static double allocationAccumulator(bool x) => x ? 1.0 : 0.0;
-            static int durationAccumulator(ScheduledActivityModel x) => x.Duration;
+            static int durationAccumulator(ScheduledActivityModel x) => x.HasNoEffort ? 0 : x.Duration;
 
             return new EffortsModel
             {
                 Direct = resourceSeriesModels
                     .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
-                    .Sum(static x => x.ResourceSchedule.ActivityAllocation.Sum(allocationAccumulator)),
+                    .Sum(static x => x.ResourceSchedule.EffortAllocation.Sum(allocationAccumulator)),
                 Indirect = resourceSeriesModels
                     .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
-                    .Sum(static x => x.ResourceSchedule.ActivityAllocation.Sum(allocationAccumulator)),
+                    .Sum(static x => x.ResourceSchedule.EffortAllocation.Sum(allocationAccumulator)),
                 Other = resourceSeriesModels
                     .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
-                    .Sum(static x => x.ResourceSchedule.ActivityAllocation.Sum(allocationAccumulator)),
+                    .Sum(static x => x.ResourceSchedule.EffortAllocation.Sum(allocationAccumulator)),
                 Activity = resourceSeriesModels
                     .Sum(static x => x.ResourceSchedule.ScheduledActivities.Sum(durationAccumulator))
             };

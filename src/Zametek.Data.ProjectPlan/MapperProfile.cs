@@ -177,6 +177,9 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<DependentActivityModel, v0_4_0.DependentActivityModel>().ReverseMap();
             CreateMap<v0_3_2.DependentActivityModel, v0_4_0.DependentActivityModel>().ReverseMap();
 
+            CreateMap<ScheduledActivityModel, v0_4_0.ScheduledActivityModel>().ReverseMap();
+            CreateMap<v0_2_1.ScheduledActivityModel, v0_4_0.ScheduledActivityModel>().ReverseMap();
+
             CreateMap<ArrowGraphModel, v0_4_0.ArrowGraphModel>().ReverseMap();
             CreateMap<v0_3_2.ArrowGraphModel, v0_4_0.ArrowGraphModel>().ReverseMap();
 

@@ -234,4 +234,7 @@
   <data name="ToolTip_IsIsolated" xml:space="preserve">
     <value>Isolated Activity</value>
   </data>
+  <data name="ToolTip_HasNoEffort" xml:space="preserve">
+    <value>Ignore Effort</value>
+  </data>
 </root>

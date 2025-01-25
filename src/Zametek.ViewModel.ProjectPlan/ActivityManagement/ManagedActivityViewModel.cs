@@ -608,6 +608,21 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public bool HasNoEffort
+        {
+            get => DependentActivity.HasNoEffort;
+            set
+            {
+                if (DependentActivity.HasNoEffort != value)
+                {
+                    BeginEdit();
+                    DependentActivity.HasNoEffort = value;
+                    EndEdit();
+                }
+                this.RaisePropertyChanged();
+            }
+        }
+
         public int Duration
         {
             get => DependentActivity.Duration;

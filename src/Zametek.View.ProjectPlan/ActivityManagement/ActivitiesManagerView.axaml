@@ -36,6 +36,7 @@
 		<local:ManagedActivitySortComparer x:Key="resourceSelectorTargetResourcesStringSortComparer" SortMemberPath="ResourceSelector.TargetResourcesString"/>
 		<local:ManagedActivitySortComparer x:Key="workStreamSelectorTargetWorkStreamsStringSortComparer" SortMemberPath="WorkStreamSelector.TargetWorkStreamsString"/>
 		<local:ManagedActivitySortComparer x:Key="hasNoCostSortComparer" SortMemberPath="HasNoCost"/>
+		<local:ManagedActivitySortComparer x:Key="hasNoEffortSortComparer" SortMemberPath="HasNoEffort"/>
 		<local:ManagedActivitySortComparer x:Key="targetResourceOperatorSortComparer" SortMemberPath="TargetResourceOperator"/>
 		<local:ManagedActivitySortComparer x:Key="allocatedToResourcesStringSortComparer" SortMemberPath="AllocatedToResourcesString"/>
 		<local:ManagedActivitySortComparer x:Key="lastTrackerValueSortComparer" SortMemberPath="TrackerSet.LastTrackerValue"/>
@@ -900,6 +901,37 @@
 											  OffContent="{x:Static resources:Labels.Label_No}"
 											  OnContent="{x:Static resources:Labels.Label_Yes}"
 											  IsChecked="{Binding Path=HasNoCost, Mode=TwoWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										IsReadOnly="True"
+										CustomSortComparer="{StaticResource hasNoEffortSortComparer}"
+										Width="110">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_HasNoEffort}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_HasNoEffort}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<ToggleSwitch VerticalAlignment="Center"
+											  HorizontalAlignment="Center"
+											  Margin="0"
+											  Padding="3"
+											  OffContent="{x:Static resources:Labels.Label_No}"
+											  OnContent="{x:Static resources:Labels.Label_Yes}"
+											  IsChecked="{Binding Path=HasNoEffort, Mode=TwoWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>

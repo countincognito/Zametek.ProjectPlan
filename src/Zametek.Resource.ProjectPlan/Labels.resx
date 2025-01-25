@@ -483,4 +483,7 @@
   <data name="Label_ViewNames" xml:space="preserve">
     <value>View Names</value>
   </data>
+  <data name="Label_HasNoEffort" xml:space="preserve">
+    <value>Ignore Effort</value>
+  </data>
 </root>

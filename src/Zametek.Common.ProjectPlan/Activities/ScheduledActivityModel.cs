@@ -9,6 +9,8 @@
 
         public bool HasNoCost { get; init; }
 
+        public bool HasNoEffort { get; init; }
+
         public int Duration { get; init; }
 
         public int StartTime { get; init; }

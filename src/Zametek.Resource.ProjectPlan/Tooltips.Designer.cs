@@ -178,6 +178,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ignore Effort.
+        /// </summary>
+        public static string ToolTip_HasNoEffort {
+            get {
+                return ResourceManager.GetString("ToolTip_HasNoEffort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Identifier.
         /// </summary>
         public static string ToolTip_Id {

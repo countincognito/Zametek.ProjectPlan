@@ -341,6 +341,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(resources);
 
             IList<ActivityModel> orderedActivities = [.. activities
+                .Where(x => !x.HasNoEffort)
                 .Select(x => x.CloneObject())
                 .OrderBy(x => x.EarliestFinishTime.GetValueOrDefault())
                 .ThenBy(x => x.EarliestStartTime.GetValueOrDefault())];
@@ -391,6 +392,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     int time = activity.EarliestFinishTime.GetValueOrDefault();
 
                     // Remember to count the time spent for each resource used.
+                    // Ignore effort if necessary.
                     runningTotalTime += activity.AllocatedToResources.Count * activity.Duration;
 
                     double percentage = totalWorkingTime == 0 ? 0.0 : 100.0 * runningTotalTime / totalWorkingTime;

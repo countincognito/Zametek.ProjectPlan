@@ -11,6 +11,8 @@
 
         public List<bool> CostAllocation { get; init; } = [];
 
+        public List<bool> EffortAllocation { get; init; } = [];
+
         public int FinishTime { get; init; }
     }
 }

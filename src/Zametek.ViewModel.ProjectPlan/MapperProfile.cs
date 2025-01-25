@@ -258,7 +258,7 @@ namespace Zametek.ViewModel.ProjectPlan
             CreateMap<WorkStream<int>, WorkStreamModel>();
 
             CreateMap<ScheduledActivityModel, ScheduledActivity<int>>()
-                .ConstructUsing(src => new ScheduledActivity<int>(src.Id, src.Name, src.HasNoCost, src.Duration, src.StartTime, src.FinishTime));
+                .ConstructUsing(src => new ScheduledActivity<int>(src.Id, src.Name, src.HasNoCost, src.HasNoEffort, src.Duration, src.StartTime, src.FinishTime));
 
             CreateMap<ScheduledActivityModel, IScheduledActivity<int>>()
                 .ConstructUsing((src, ctx) => ctx.Mapper.Map<ScheduledActivityModel, ScheduledActivity<int>>(src));
