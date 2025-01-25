@@ -29,5 +29,8 @@ namespace Zametek.Common.ProjectPlan
 
         public bool HasNoCost { get; init; } = default;
         public bool IsHasNoCostEdited { get; init; } = false;
+
+        public bool HasNoEffort { get; init; } = default;
+        public bool IsHasNoEffortEdited { get; init; } = false;
     }
 }

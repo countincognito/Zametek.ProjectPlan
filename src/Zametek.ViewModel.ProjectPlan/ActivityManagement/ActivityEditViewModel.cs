@@ -92,6 +92,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_HasNoEffort;
+        public bool HasNoEffort
+        {
+            get => m_HasNoEffort;
+            set
+            {
+                m_HasNoEffort = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsHasNoEffortActive;
+        public bool IsHasNoEffortActive
+        {
+            get => m_IsHasNoEffortActive;
+            set
+            {
+                m_IsHasNoEffortActive = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         private LogicalOperator m_TargetResourceOperator;
         public LogicalOperator TargetResourceOperator
         {
@@ -130,6 +152,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 HasNoCost = HasNoCost,
                 IsHasNoCostEdited = IsHasNoCostActive,
+
+                HasNoEffort = HasNoEffort,
+                IsHasNoEffortEdited = IsHasNoEffortActive,
 
                 TargetResourceOperator = TargetResourceOperator,
                 IsTargetResourceOperatorEdited = IsTargetResourceOperatorActive,
