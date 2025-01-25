@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.Internal;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -379,42 +380,195 @@ namespace Zametek.ViewModel.ProjectPlan
                 return trackingSeriesSet;
             }
 
-            planPointSeries.Add(new TrackingPointModel());
 
             double totalWorkingTime = Convert.ToDouble(orderedActivities.Sum(s => s.AllocatedToResources.Count * s.Duration));
 
-            // Plan.
-            if (orderedActivities.All(x => x.EarliestFinishTime.HasValue))
-            {
-                int runningTotalTime = 0;
-                foreach (ActivityModel activity in orderedActivities)
-                {
-                    int time = activity.EarliestFinishTime.GetValueOrDefault();
-
-                    // Remember to count the time spent for each resource used.
-                    // Ignore effort if necessary.
-                    runningTotalTime += activity.AllocatedToResources.Count * activity.Duration;
-
-                    double percentage = totalWorkingTime == 0 ? 0.0 : 100.0 * runningTotalTime / totalWorkingTime;
-
-                    planPointSeries.Add(new TrackingPointModel
-                    {
-                        Time = time,
-                        ActivityId = activity.Id,
-                        ActivityName = activity.Name,
-                        Value = runningTotalTime,
-                        ValuePercentage = percentage
-                    });
-                }
-            }
-
-            // Find the planned end time.
+            // Find the anticipated end time according to the design plan.
             int endTime = 0;
 
-            if (planPointSeries.Count > 0)
+            if (orderedActivities.Count > 0)
             {
-                endTime = planPointSeries.Last().Time;
+                endTime = orderedActivities.Last().EarliestFinishTime.GetValueOrDefault();
             }
+
+            planPointSeries.Add(new TrackingPointModel());
+
+            // Only bother calculating the plan is there is an end time.
+            if (endTime > 0)
+            {
+                // Plan.
+
+                // Build out a matrix of how we would expect progress to proceed
+                // for each activity if conditions were predictable.
+
+                var progressTimeline = new List<Dictionary<int, TrackingPointModel>>();
+
+                for (int i = 0; i < endTime; i++)
+                {
+                    progressTimeline.Add([]);
+                }
+
+                // Cycle through each activity and add its individual progress to the matrix.
+                foreach (ActivityModel activity in orderedActivities)
+                {
+                    int startTime = activity.EarliestStartTime.GetValueOrDefault();
+                    int finishTime = activity.EarliestFinishTime.GetValueOrDefault();
+
+                    // Check finish time < endtime
+                    ArgumentOutOfRangeException.ThrowIfGreaterThan(finishTime, endTime);
+
+                    // Do not bother if these values are not valid.
+                    if (finishTime > startTime)
+                    {
+                        double timeSpent = 0.0;
+
+                        // Cycle through each time index.
+                        for (int timeIndex = 0; timeIndex < endTime; timeIndex++)
+                        {
+                            if (timeIndex >= startTime
+                                && timeIndex < finishTime)
+                            {
+                                timeSpent++;
+                            }
+
+                            double plannedProgress = timeSpent;
+
+                            Dictionary<int, TrackingPointModel> trackingPointLookup = progressTimeline[timeIndex];
+
+                            if (!trackingPointLookup.TryGetValue(activity.Id, out TrackingPointModel? trackingPointModel))
+                            {
+                                trackingPointModel = new TrackingPointModel
+                                {
+                                    Time = timeIndex,
+                                    ActivityId = activity.Id,
+                                    ActivityName = activity.Name,
+                                    Value = plannedProgress,
+                                    ValuePercentage = 0.0,
+                                };
+                                trackingPointLookup.Add(activity.Id, trackingPointModel);
+                            }
+                            else
+                            {
+                                trackingPointModel.Value = plannedProgress;
+                                trackingPointModel.ValuePercentage = 0.0;
+                            }
+                        }
+                    }
+                }
+
+
+
+
+
+                Dictionary<int, ActivityModel> activityLookup = orderedActivities.ToDictionary(activity => activity.Id);
+
+
+
+                // Cycle through each time index.
+                for (int timeIndex = 0; timeIndex < endTime; timeIndex++)
+                {
+                    double runningTotalSpent = 0.0;
+                    Dictionary<int, TrackingPointModel> trackingPointLookup = progressTimeline[timeIndex];
+
+                    foreach (KeyValuePair<int, TrackingPointModel> trackingPoint in trackingPointLookup)
+                    {
+                        int activityId = trackingPoint.Key;
+                        double portionOfActivityDuration = trackingPoint.Value.Value;
+
+                        if (activityLookup.TryGetValue(activityId, out ActivityModel? activity))
+                        {
+                            // Remember to count the time spent for each resource used.
+                            runningTotalSpent += activity.AllocatedToResources.Count * portionOfActivityDuration;
+                        }
+                    }
+
+                    int time = timeIndex + 1; // Since the equivalent finish time would be the next day.
+
+                    foreach (KeyValuePair<int, TrackingPointModel> trackingPoint in trackingPointLookup)
+                    {
+                        int activityId = trackingPoint.Key;
+
+                        double percentage = totalWorkingTime == 0 ? 0.0 : 100.0 * runningTotalSpent / totalWorkingTime;
+
+                        if (activityLookup.TryGetValue(activityId, out ActivityModel? activity))
+                        {
+
+                            int startTime = activity.EarliestStartTime.GetValueOrDefault();
+                            int finishTime = activity.EarliestFinishTime.GetValueOrDefault();
+
+                            if (timeIndex >= startTime
+                                && timeIndex < finishTime)
+                            {
+                                planPointSeries.Add(new TrackingPointModel
+                                {
+                                    Time = time,
+                                    ActivityId = activityId,
+                                    ActivityName = activity.Name,
+                                    Value = runningTotalSpent,
+                                    ValuePercentage = percentage
+                                });
+                            }
+
+                        }
+
+
+
+
+
+
+                    }
+
+
+
+
+                }
+
+
+
+
+                //if (orderedActivities.All(x => x.EarliestFinishTime.HasValue))
+                //{
+                //    int runningTotalTime = 0;
+                //    foreach (ActivityModel activity in orderedActivities)
+                //    {
+                //        int time = activity.EarliestFinishTime.GetValueOrDefault();
+
+                //        // Remember to count the time spent for each resource used.
+                //        // Ignore effort if necessary.
+                //        runningTotalTime += activity.AllocatedToResources.Count * activity.Duration;
+
+                //        double percentage = totalWorkingTime == 0 ? 0.0 : 100.0 * runningTotalTime / totalWorkingTime;
+
+                //        planPointSeries.Add(new TrackingPointModel
+                //        {
+                //            Time = time,
+                //            ActivityId = activity.Id,
+                //            ActivityName = activity.Name,
+                //            Value = runningTotalTime,
+                //            ValuePercentage = percentage
+                //        });
+                //    }
+                //}
+
+
+
+
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            // Find the new end time based on the tracking data.
 
             int progressTime = activities
                 .SelectMany(x => x.Trackers)
