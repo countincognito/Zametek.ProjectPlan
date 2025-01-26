@@ -342,7 +342,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             // Find all the resource series with at least 1 scheduled activity.
 
-                            IEnumerable<ResourceSeriesModel> scheduledResourceSeries = resourceSeriesSet.Scheduled
+                            IEnumerable<ResourceSeriesModel> scheduledResourceSeriesSet = resourceSeriesSet.Combined
                                 .Where(x => x.ResourceSchedule.ScheduledActivities.Count != 0);
 
                             // Record the resource name, and the scheduled activities (in order).
@@ -350,7 +350,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             var scheduledResourceActivitiesSet =
                                 new List<(string ResourceName, ColorFormatModel ColorFormat, int DisplayOrder, IList<ScheduledActivityModel> ScheduledActivities)>();
 
-                            foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeries)
+                            foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeriesSet)
                             {
                                 IList<ScheduledActivityModel> orderedScheduledActivities = [.. resourceSeries
                                     .ResourceSchedule.ScheduledActivities
@@ -536,7 +536,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             // Create a scheduled activity lookup.
 
-                            Dictionary<int, ScheduledActivityModel> scheduledActivityLookup = resourceSeriesSet.Scheduled
+                            Dictionary<int, ScheduledActivityModel> scheduledActivityLookup = resourceSeriesSet.Combined
                                 .SelectMany(x => x.ResourceSchedule.ScheduledActivities)
                                 .DistinctBy(x => x.Id)
                                 .ToDictionary(x => x.Id);

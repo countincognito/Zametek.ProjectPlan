@@ -146,7 +146,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
 
             IEnumerable<IGraphCompilationError> errors = graphCompilation.CompilationErrors;
-            IEnumerable<ResourceSeriesModel> scheduled = resourceSeriesSet.Scheduled;
+            IEnumerable<ResourceSeriesModel> resourceSeries = resourceSeriesSet.Combined;
 
             var output = new StringBuilder();
 
@@ -161,9 +161,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     output.AppendLine($@">{error.ErrorMessage}");
                 }
             }
-            else if (scheduled.Any())
+            else if (resourceSeries.Any())
             {
-                output.Append(CalculateActivitySchedules(showDates, projectStart, dateTimeCalculator, scheduled));
+                output.Append(CalculateActivitySchedules(showDates, projectStart, dateTimeCalculator, resourceSeries));
             }
 
             return output.ToString();

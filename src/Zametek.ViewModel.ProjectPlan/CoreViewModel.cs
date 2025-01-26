@@ -180,12 +180,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 //var resourceScheduleLookup = resourceSchedules.ToDictionary(x => x.Resource.Id);
 
                 // Scheduled resource series.
-                // These are the series that apply to scheduled activities (whether allocated to named or unnamed resources).
+                // These are the series that apply to None and Direct resources.
                 var scheduledSeriesSet = new List<ResourceSeriesModel>();
 
-                foreach (ResourceScheduleModel resourceSchedule in resourceSchedules)
+                IEnumerable<ResourceScheduleModel> scheduledResourceSchedules = resourceSchedules
+                    .Where(x => x.Resource.InterActivityAllocationType == InterActivityAllocationType.None || x.Resource.InterActivityAllocationType == InterActivityAllocationType.Direct);
+
+                foreach (ResourceScheduleModel scheduledResourceSchedule in scheduledResourceSchedules)
                 {
-                    if (resourceSchedule.ScheduledActivities.Count > 0)
+                    if (scheduledResourceSchedule.ScheduledActivities.Count > 0)
                     {
                         var stringBuilder = new StringBuilder();
                         InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
@@ -193,8 +196,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         double unitCost = defaultUnitCost;
                         int displayOrder = 0;
 
-                        if (resourceSchedule.Resource.Id != default
-                            && resourceLookup.TryGetValue(resourceSchedule.Resource.Id, out ResourceModel? resource))
+                        if (scheduledResourceSchedule.Resource.Id != default
+                            && resourceLookup.TryGetValue(scheduledResourceSchedule.Resource.Id, out ResourceModel? resource))
                         {
                             int resourceId = resource.Id;
                             interActivityAllocationType = resource.InterActivityAllocationType;
@@ -227,7 +230,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             ColorFormat = color,
                             UnitCost = unitCost,
                             DisplayOrder = displayOrder,
-                            ResourceSchedule = resourceSchedule,
+                            ResourceSchedule = scheduledResourceSchedule,
                             InterActivityAllocationType = interActivityAllocationType,
                         };
 
@@ -235,9 +238,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
+
                 // Unscheduled resource series.
-                // These are the series that apply to named resources that need to be included, even if they are not
-                // scheduled to specific activities.
+                // These are series the that apply to Indirect resources.
                 var unscheduledSeriesSet = new List<ResourceSeriesModel>();
                 var unscheduledResourceSeriesLookup = new Dictionary<int, ResourceSeriesModel>();
 
@@ -278,58 +281,48 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
 
-
-
-
-
-
-
-
-
                 // Combined resource series.
                 // The intersection of the scheduled and unscheduled series.
-                var combinedScheduled = new List<ResourceSeriesModel>();
+                List<ResourceSeriesModel> combinedSeriesSet = scheduledSeriesSet.CloneObject();
                 var unscheduledSeriesAlreadyIncluded = new HashSet<int>();
 
-                foreach (ResourceSeriesModel scheduledSeries in scheduledSeriesSet)
+                foreach (ResourceSeriesModel combinedSeries in combinedSeriesSet)
                 {
                     IList<bool> combinedActivityAllocations = new List<bool>(Enumerable.Repeat(false, finishTime));
                     IList<bool> combinedCostAllocations = new List<bool>(Enumerable.Repeat(false, finishTime));
+                    IList<bool> combinedEffortAllocations = new List<bool>(Enumerable.Repeat(false, finishTime));
 
-                    if (scheduledSeries.ResourceSchedule.Resource.Id != default)
+                    if (combinedSeries.ResourceSchedule.Resource.Id != default)
                     {
-                        int resourceId = scheduledSeries.ResourceSchedule.Resource.Id;
+                        int resourceId = combinedSeries.ResourceSchedule.Resource.Id;
                         if (unscheduledResourceSeriesLookup.TryGetValue(resourceId, out ResourceSeriesModel? unscheduledResourceSeries))
                         {
-                            combinedActivityAllocations = scheduledSeries.ResourceSchedule.ActivityAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.ActivityAllocation, (x, y) => x || y).ToList();
-                            combinedCostAllocations = scheduledSeries.ResourceSchedule.CostAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.CostAllocation, (x, y) => x || y).ToList();
+                            combinedActivityAllocations = combinedSeries.ResourceSchedule.ActivityAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.ActivityAllocation, (x, y) => x || y).ToList();
+                            combinedCostAllocations = combinedSeries.ResourceSchedule.CostAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.CostAllocation, (x, y) => x || y).ToList();
+                            combinedEffortAllocations = combinedSeries.ResourceSchedule.EffortAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.EffortAllocation, (x, y) => x || y).ToList();
                             unscheduledSeriesAlreadyIncluded.Add(resourceId);
                         }
                         else
                         {
-                            combinedActivityAllocations = [.. scheduledSeries.ResourceSchedule.ActivityAllocation];
-                            combinedCostAllocations = [.. scheduledSeries.ResourceSchedule.CostAllocation];
+                            combinedActivityAllocations = [.. combinedSeries.ResourceSchedule.ActivityAllocation];
+                            combinedCostAllocations = [.. combinedSeries.ResourceSchedule.CostAllocation];
+                            combinedEffortAllocations = [.. combinedSeries.ResourceSchedule.EffortAllocation];
                         }
                     }
                     else
                     {
-                        combinedActivityAllocations = [.. scheduledSeries.ResourceSchedule.ActivityAllocation];
-                        combinedCostAllocations = [.. scheduledSeries.ResourceSchedule.CostAllocation];
+                        combinedActivityAllocations = [.. combinedSeries.ResourceSchedule.ActivityAllocation];
+                        combinedCostAllocations = [.. combinedSeries.ResourceSchedule.CostAllocation];
+                        combinedEffortAllocations = [.. combinedSeries.ResourceSchedule.EffortAllocation];
                     }
 
-                    scheduledSeries.ResourceSchedule.ActivityAllocation.Clear();
-                    scheduledSeries.ResourceSchedule.ActivityAllocation.AddRange(combinedActivityAllocations);
-                    scheduledSeries.ResourceSchedule.CostAllocation.Clear();
-                    scheduledSeries.ResourceSchedule.CostAllocation.AddRange(combinedCostAllocations);
-                    combinedScheduled.Add(scheduledSeries);
+                    combinedSeries.ResourceSchedule.ActivityAllocation.Clear();
+                    combinedSeries.ResourceSchedule.ActivityAllocation.AddRange(combinedActivityAllocations);
+                    combinedSeries.ResourceSchedule.CostAllocation.Clear();
+                    combinedSeries.ResourceSchedule.CostAllocation.AddRange(combinedCostAllocations);
+                    combinedSeries.ResourceSchedule.EffortAllocation.Clear();
+                    combinedSeries.ResourceSchedule.EffortAllocation.AddRange(combinedEffortAllocations);
                 }
-
-
-
-
-
-
-
 
 
                 // Finally, add the unscheduled series that have not already been included above.
@@ -339,7 +332,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     .Where(x => !unscheduledSeriesAlreadyIncluded.Contains(x.ResourceSchedule.Resource.Id))
                     .ToList();
 
-                combined.AddRange(combinedScheduled);
+                combined.AddRange(combinedSeriesSet);
 
                 resourceSeriesSet.ResourceSchedules.AddRange(resourceSchedules);
                 resourceSeriesSet.Scheduled.AddRange(scheduledSeriesSet);

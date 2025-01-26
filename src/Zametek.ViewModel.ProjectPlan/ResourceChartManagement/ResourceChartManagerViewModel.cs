@@ -171,9 +171,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
             var plotModel = new PlotModel();
 
-
-
-
+            // Select the type of allocation to be displayed.
 
             Func<ResourceScheduleModel, List<bool>>? allocationFunction = null;
 
@@ -185,6 +183,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 _ => throw new ArgumentOutOfRangeException(nameof(allocationMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownAllocationMode} {allocationMode}"),
             };
 
+            // Select the type of schedule to be displayed.
+
             Func<ResourceSeriesSetModel, List<ResourceSeriesModel>>? scheduleFunction = null;
 
             scheduleFunction = scheduleMode switch
@@ -195,12 +195,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 _ => throw new ArgumentOutOfRangeException(nameof(scheduleMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownScheduleMode} {scheduleMode}"),
             };
 
-
-
-
-
-
-
+            // Now build the plot.
 
             if (scheduleFunction(resourceSeriesSet).Count == 0)
             {
@@ -249,7 +244,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             StrokeThickness = 0.0,
                             Title = series.Title,
                             Fill = color,
-                            Color = color
+                            Color = color,
                         };
 
                         if (allocationFunction(series.ResourceSchedule).Count != 0)
@@ -260,7 +255,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             for (int i = 0; i < allocationFunction(series.ResourceSchedule).Count; i++)
                             {
-                                bool j = allocationFunction(series.ResourceSchedule)[i];
+                                bool allocationExists = allocationFunction(series.ResourceSchedule)[i];
                                 if (i >= total.Count)
                                 {
                                     total.Add(0);
@@ -269,7 +264,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 areaSeries.Points.Add(
                                     new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStartDateTime, dateTimeCalculator),
                                     total[i]));
-                                total[i] += j ? 1 : 0;
+                                total[i] += allocationExists ? 1 : 0;
                                 areaSeries.Points2.Add(
                                     new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStartDateTime, dateTimeCalculator),
                                     total[i]));

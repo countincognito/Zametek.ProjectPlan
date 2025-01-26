@@ -17,7 +17,7 @@
 
 	<DockPanel Margin="7">
 		<DockPanel DockPanel.Dock="Right"
-				   Width="100"
+				   Width="120"
                    Margin="11,0,0,0">
 
 			<DockPanel DockPanel.Dock="Top">
