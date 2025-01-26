@@ -210,6 +210,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CoreViewModel.ViewGanttChartGroupLabels = false;
             m_CoreViewModel.ViewGanttChartProjectFinish = false;
             m_CoreViewModel.ViewGanttChartTracking = false;
+            m_CoreViewModel.ResourceChartAllocationMode = default;
+            m_CoreViewModel.ResourceChartScheduleMode = default;
             m_CoreViewModel.IsProjectUpdated = false;
 
 #if DEBUG

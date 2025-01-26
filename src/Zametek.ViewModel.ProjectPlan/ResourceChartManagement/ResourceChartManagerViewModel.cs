@@ -94,11 +94,21 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, rcm => rcm.HasCompilationErrors);
 
+            m_AllocationMode = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ResourceChartAllocationMode)
+                .ToProperty(this, rcm => rcm.AllocationMode);
+
+            m_ScheduleMode = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ResourceChartScheduleMode)
+                .ToProperty(this, rcm => rcm.ScheduleMode);
+
             m_BuildResourceChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
                     rcm => rcm.m_CoreViewModel.ShowDates,
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
+                    rcm => rcm.AllocationMode,
+                    rcm => rcm.ScheduleMode,
                     rcm => rcm.m_CoreViewModel.BaseTheme)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
@@ -153,18 +163,51 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceSeriesSetModel resourceSeriesSet,
             bool showDates,
             DateTime projectStartDateTime,
+            AllocationMode allocationMode,
+            ScheduleMode scheduleMode,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
             var plotModel = new PlotModel();
 
-            if (resourceSeriesSet.Combined.Count == 0)
+
+
+
+
+            Func<ResourceScheduleModel, List<bool>>? allocationFunction = null;
+
+            allocationFunction = allocationMode switch
+            {
+                AllocationMode.Activity => (ResourceScheduleModel model) => model.ActivityAllocation,
+                AllocationMode.Cost => (ResourceScheduleModel model) => model.CostAllocation,
+                AllocationMode.Effort => (ResourceScheduleModel model) => model.EffortAllocation,
+                _ => throw new ArgumentOutOfRangeException(nameof(allocationMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownAllocationMode} {allocationMode}"),
+            };
+
+            Func<ResourceSeriesSetModel, List<ResourceSeriesModel>>? scheduleFunction = null;
+
+            scheduleFunction = scheduleMode switch
+            {
+                ScheduleMode.Combined => (ResourceSeriesSetModel model) => model.Combined,
+                ScheduleMode.Scheduled => (ResourceSeriesSetModel model) => model.Scheduled,
+                ScheduleMode.Unscheduled => (ResourceSeriesSetModel model) => model.Unscheduled,
+                _ => throw new ArgumentOutOfRangeException(nameof(scheduleMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownScheduleMode} {scheduleMode}"),
+            };
+
+
+
+
+
+
+
+
+            if (scheduleFunction(resourceSeriesSet).Count == 0)
             {
                 return plotModel.SetBaseTheme(baseTheme);
             }
 
-            IEnumerable<ResourceSeriesModel> combinedResourceSeries = resourceSeriesSet.Combined.OrderBy(x => x.DisplayOrder);
+            IEnumerable<ResourceSeriesModel> resourceSeries = scheduleFunction(resourceSeriesSet).OrderBy(x => x.DisplayOrder);
             int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
 
             plotModel.Axes.Add(BuildResourceChartXAxis(dateTimeCalculator, finishTime, showDates, projectStartDateTime));
@@ -186,11 +229,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             plotModel.Legends.Add(legend);
 
-            if (combinedResourceSeries.Any())
+            if (resourceSeries.Any())
             {
                 IList<int> total = [];
 
-                foreach (ResourceSeriesModel series in combinedResourceSeries)
+                foreach (ResourceSeriesModel series in resourceSeries)
                 {
                     if (series != null)
                     {
@@ -209,15 +252,15 @@ namespace Zametek.ViewModel.ProjectPlan
                             Color = color
                         };
 
-                        if (series.ResourceSchedule.ActivityAllocation.Count != 0)
+                        if (allocationFunction(series.ResourceSchedule).Count != 0)
                         {
                             // Mark the start of the plot.
                             areaSeries.Points.Add(new DataPoint(0.0, 0.0));
                             areaSeries.Points2.Add(new DataPoint(0.0, 0.0));
 
-                            for (int i = 0; i < series.ResourceSchedule.ActivityAllocation.Count; i++)
+                            for (int i = 0; i < allocationFunction(series.ResourceSchedule).Count; i++)
                             {
-                                bool j = series.ResourceSchedule.ActivityAllocation[i];
+                                bool j = allocationFunction(series.ResourceSchedule)[i];
                                 if (i >= total.Count)
                                 {
                                     total.Add(0);
@@ -330,6 +373,26 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
+        private readonly ObservableAsPropertyHelper<AllocationMode> m_AllocationMode;
+        public AllocationMode AllocationMode
+        {
+            get => m_AllocationMode.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.ResourceChartAllocationMode = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<ScheduleMode> m_ScheduleMode;
+        public ScheduleMode ScheduleMode
+        {
+            get => m_ScheduleMode.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.ResourceChartScheduleMode = value;
+            }
+        }
+
         public ICommand SaveResourceChartImageFileCommand { get; }
 
         public async Task SaveResourceChartImageFileAsync(
@@ -402,6 +465,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.ResourceSeriesSet,
                     m_CoreViewModel.ShowDates,
                     m_CoreViewModel.ProjectStartDateTime,
+                    AllocationMode,
+                    ScheduleMode,
                     m_CoreViewModel.BaseTheme);
             }
 
@@ -437,6 +502,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
+                m_AllocationMode?.Dispose();
+                m_ScheduleMode?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

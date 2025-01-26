@@ -16,5 +16,9 @@
         public bool ViewGanttChartProjectFinish { get; init; }
 
         public bool ViewGanttChartTracking { get; init; }
+
+        public AllocationMode ResourceChartAllocationMode { get; init; }
+
+        public ScheduleMode ResourceChartScheduleMode { get; init; }
     }
 }

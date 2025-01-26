@@ -8,6 +8,7 @@
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:oxy="using:OxyPlot.Avalonia"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:common="using:Zametek.Common.ProjectPlan"
 			 x:DataType="vm:ResourceChartManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ResourceChartManagerView">
@@ -15,6 +16,51 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
+		<DockPanel DockPanel.Dock="Right"
+				   Width="100"
+                   Margin="11,0,0,0">
+
+			<DockPanel DockPanel.Dock="Top">
+				<Label VerticalContentAlignment="Center"
+					   HorizontalContentAlignment="Left"
+					   Height="25"
+					   DockPanel.Dock="Top"
+					   IsTabStop="False"
+					   Margin="0,0,0,3"
+					   Content="{x:Static resources:Labels.Label_AllocationMode}"/>
+
+				<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:AllocationMode}}}"
+						  SelectedItem="{Binding Path=AllocationMode, Mode=TwoWay}"
+						  BorderBrush="Gray"
+						  BorderThickness="1"
+						  DockPanel.Dock="Top"
+						  IsTabStop="False"
+						  Margin="0,0,0,11"
+						  Height="25"/>
+			</DockPanel>
+
+			<DockPanel DockPanel.Dock="Top">
+				<Label VerticalContentAlignment="Center"
+					   HorizontalContentAlignment="Left"
+					   Height="25"
+					   DockPanel.Dock="Top"
+					   IsTabStop="False"
+					   Margin="0,0,0,3"
+					   Content="{x:Static resources:Labels.Label_ScheduleMode}"/>
+
+				<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:ScheduleMode}}}"
+						  SelectedItem="{Binding Path=ScheduleMode, Mode=TwoWay}"
+						  BorderBrush="Gray"
+						  BorderThickness="1"
+						  DockPanel.Dock="Top"
+						  IsTabStop="False"
+						  Margin="0,0,0,11"
+						  Height="25"/>
+			</DockPanel>
+
+			<Grid/>
+		</DockPanel>
+
 		<Grid>
 			<Grid.ContextMenu>
 				<ContextMenu>

@@ -18,5 +18,9 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
         public bool ViewGanttChartProjectFinish { get; init; }
 
         public bool ViewGanttChartTracking { get; init; }
+
+        public AllocationMode ResourceChartAllocationMode { get; init; }
+
+        public ScheduleMode ResourceChartScheduleMode { get; init; }
     }
 }

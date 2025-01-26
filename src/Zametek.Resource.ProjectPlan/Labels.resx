@@ -486,4 +486,10 @@
   <data name="Label_HasNoEffort" xml:space="preserve">
     <value>Ignore Effort</value>
   </data>
+  <data name="Label_AllocationMode" xml:space="preserve">
+    <value>Allocation</value>
+  </data>
+  <data name="Label_ScheduleMode" xml:space="preserve">
+    <value>Schedule</value>
+  </data>
 </root>

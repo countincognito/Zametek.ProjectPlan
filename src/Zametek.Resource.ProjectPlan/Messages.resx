@@ -210,4 +210,13 @@
   <data name="Message_VertexGraphCannotContainNormalNodesWithoutAnyStartNodes" xml:space="preserve">
     <value>Vertex graph cannot contain Normal nodes without any Start nodes</value>
   </data>
+  <data name="Message_UnknownAllocationMode" xml:space="preserve">
+    <value>Unknown AllocationMode value:</value>
+  </data>
+  <data name="Message_UnknownGroupByMode" xml:space="preserve">
+    <value>Unknown GroupByMode value:</value>
+  </data>
+  <data name="Message_UnknownScheduleMode" xml:space="preserve">
+    <value>Unknown ScheduleMode value:</value>
+  </data>
 </root>

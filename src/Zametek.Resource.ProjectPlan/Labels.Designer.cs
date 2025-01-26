@@ -169,6 +169,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allocation.
+        /// </summary>
+        public static string Label_AllocationMode {
+            get {
+                return ResourceManager.GetString("Label_AllocationMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Annotation Style.
         /// </summary>
         public static string Label_AnnotationStyle {
@@ -985,6 +994,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_ResourcesAxisTitle {
             get {
                 return ResourceManager.GetString("Label_ResourcesAxisTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Schedule.
+        /// </summary>
+        public static string Label_ScheduleMode {
+            get {
+                return ResourceManager.GetString("Label_ScheduleMode", resourceCulture);
             }
         }
         

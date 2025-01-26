@@ -286,6 +286,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown AllocationMode value:.
+        /// </summary>
+        public static string Message_UnknownAllocationMode {
+            get {
+                return ResourceManager.GetString("Message_UnknownAllocationMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown DateTimeCalculatorMode value:.
         /// </summary>
         public static string Message_UnknownDateTimeCalculatorMode {
@@ -309,6 +318,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_UnknownEdgeDashStyleValue {
             get {
                 return ResourceManager.GetString("Message_UnknownEdgeDashStyleValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown GroupByMode value:.
+        /// </summary>
+        public static string Message_UnknownGroupByMode {
+            get {
+                return ResourceManager.GetString("Message_UnknownGroupByMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown ScheduleMode value:.
+        /// </summary>
+        public static string Message_UnknownScheduleMode {
+            get {
+                return ResourceManager.GetString("Message_UnknownScheduleMode", resourceCulture);
             }
         }
         

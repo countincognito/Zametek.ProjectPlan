@@ -12,6 +12,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
+        AllocationMode AllocationMode { get; set; }
+
+        ScheduleMode ScheduleMode { get; set; }
+
         ICommand SaveResourceChartImageFileCommand { get; }
 
         Task SaveResourceChartImageFileAsync(string? filename, int width, int height);

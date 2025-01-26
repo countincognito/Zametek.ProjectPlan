@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using AutoMapper.Internal;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -278,6 +277,15 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
+
+
+
+
+
+
+
+
+
                 // Combined resource series.
                 // The intersection of the scheduled and unscheduled series.
                 var combinedScheduled = new List<ResourceSeriesModel>();
@@ -315,6 +323,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     scheduledSeries.ResourceSchedule.CostAllocation.AddRange(combinedCostAllocations);
                     combinedScheduled.Add(scheduledSeries);
                 }
+
+
+
+
+
+
+
+
 
                 // Finally, add the unscheduled series that have not already been included above.
 
@@ -1082,6 +1098,34 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private AllocationMode m_ResourceChartAllocationMode;
+        public AllocationMode ResourceChartAllocationMode
+        {
+            get => m_ResourceChartAllocationMode;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_ResourceChartAllocationMode, value);
+                }
+            }
+        }
+
+        private ScheduleMode m_ResourceChartScheduleMode;
+        public ScheduleMode ResourceChartScheduleMode
+        {
+            get => m_ResourceChartScheduleMode;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_ResourceChartScheduleMode, value);
+                }
+            }
+        }
+
         private bool m_AutoCompile;
         public bool AutoCompile
         {
@@ -1282,6 +1326,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     ViewGanttChartGroupLabels = false;
                     ViewGanttChartProjectFinish = false;
                     ViewGanttChartTracking = false;
+                    ResourceChartAllocationMode = default;
+                    ResourceChartScheduleMode = default;
                 }
             }
             finally
@@ -1449,6 +1495,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ViewGanttChartTracking = projectPlanModel.DisplaySettings.ViewGanttChartTracking;
 
+                    ResourceChartAllocationMode = projectPlanModel.DisplaySettings.ResourceChartAllocationMode; // TODO
+
+                    ResourceChartScheduleMode = projectPlanModel.DisplaySettings.ResourceChartScheduleMode; // TODO
+
                     // Work Stream Settings.
                     WorkStreamSettings = projectPlanModel.WorkStreamSettings;
 
@@ -1522,6 +1572,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             ViewGanttChartGroupLabels = ViewGanttChartGroupLabels,
                             ViewGanttChartProjectFinish = ViewGanttChartProjectFinish,
                             ViewGanttChartTracking = ViewGanttChartTracking,
+                            ResourceChartAllocationMode = ResourceChartAllocationMode,
                         },
                         GraphCompilation = graphCompilation,
                         ArrowGraph = ArrowGraph.CloneObject(),

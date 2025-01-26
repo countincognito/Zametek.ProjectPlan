@@ -730,7 +730,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(groupByMode));
+                        throw new ArgumentOutOfRangeException(nameof(groupByMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownGroupByMode} {groupByMode}");
                 }
 
                 if (showProjectFinish)
