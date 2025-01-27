@@ -102,6 +102,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.ResourceChartScheduleMode)
                 .ToProperty(this, rcm => rcm.ScheduleMode);
 
+            m_DisplayStyle = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ResourceChartDisplayStyle)
+                .ToProperty(this, rcm => rcm.DisplayStyle);
+
             m_BuildResourceChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
@@ -109,6 +113,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
                     rcm => rcm.AllocationMode,
                     rcm => rcm.ScheduleMode,
+                    rcm => rcm.DisplayStyle,
                     rcm => rcm.m_CoreViewModel.BaseTheme)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
@@ -165,6 +170,7 @@ namespace Zametek.ViewModel.ProjectPlan
             DateTime projectStartDateTime,
             AllocationMode allocationMode,
             ScheduleMode scheduleMode,
+            DisplayStyle displayStyle,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
@@ -226,7 +232,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (resourceSeries.Any())
             {
-                IList<int> total = [];
+                IList<int> total1 = [];
+                IList<int> total2 = [];
 
                 foreach (ResourceSeriesModel series in resourceSeries)
                 {
@@ -240,35 +247,89 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         var areaSeries = new AreaSeries
                         {
-                            //Smooth = false,
                             StrokeThickness = 0.0,
                             Title = series.Title,
                             Fill = color,
                             Color = color,
                         };
 
-                        if (allocationFunction(series.ResourceSchedule).Count != 0)
+                        switch (displayStyle)
                         {
-                            // Mark the start of the plot.
-                            areaSeries.Points.Add(new DataPoint(0.0, 0.0));
-                            areaSeries.Points2.Add(new DataPoint(0.0, 0.0));
-
-                            for (int i = 0; i < allocationFunction(series.ResourceSchedule).Count; i++)
-                            {
-                                bool allocationExists = allocationFunction(series.ResourceSchedule)[i];
-                                if (i >= total.Count)
+                            case DisplayStyle.Slanted:
                                 {
-                                    total.Add(0);
+                                    if (allocationFunction(series.ResourceSchedule).Count != 0)
+                                    {
+                                        // Mark the start of the plot.
+                                        areaSeries.Points.Add(new DataPoint(0.0, 0.0));
+                                        areaSeries.Points2.Add(new DataPoint(0.0, 0.0));
+
+                                        for (int i = 0; i < allocationFunction(series.ResourceSchedule).Count; i++)
+                                        {
+                                            bool allocationExists = allocationFunction(series.ResourceSchedule)[i];
+                                            if (i >= total1.Count)
+                                            {
+                                                total1.Add(0);
+                                            }
+                                            int dayNumber = i + 1;
+                                            areaSeries.Points.Add(
+                                                new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStartDateTime, dateTimeCalculator),
+                                                total1[i]));
+                                            total1[i] += allocationExists ? 1 : 0;
+                                            areaSeries.Points2.Add(
+                                                new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStartDateTime, dateTimeCalculator),
+                                                total1[i]));
+                                        }
+                                    }
                                 }
-                                int dayNumber = i + 1;
-                                areaSeries.Points.Add(
-                                    new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStartDateTime, dateTimeCalculator),
-                                    total[i]));
-                                total[i] += allocationExists ? 1 : 0;
-                                areaSeries.Points2.Add(
-                                    new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStartDateTime, dateTimeCalculator),
-                                    total[i]));
-                            }
+                                break;
+                            case DisplayStyle.Block:
+                                {
+                                    if (allocationFunction(series.ResourceSchedule).Count != 0)
+                                    {
+                                        for (int i = 0; i < allocationFunction(series.ResourceSchedule).Count; i++)
+                                        {
+                                            bool allocationExists = allocationFunction(series.ResourceSchedule)[i];
+
+                                            // First point.
+                                            int dayNumber = i;
+
+                                            if (dayNumber >= total1.Count)
+                                            {
+                                                total1.Add(0);
+                                            }
+                                            areaSeries.Points.Add(
+                                                new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStartDateTime, dateTimeCalculator),
+                                                total1[dayNumber]));
+                                            total1[dayNumber] += allocationExists ? 1 : 0;
+                                            areaSeries.Points2.Add(
+                                                new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStartDateTime, dateTimeCalculator),
+                                                total1[dayNumber]));
+
+                                            // Second point.
+                                            if (dayNumber >= total2.Count)
+                                            {
+                                                total2.Add(0);
+                                            }
+
+                                            dayNumber++;
+
+                                            if (dayNumber >= total2.Count)
+                                            {
+                                                total2.Add(0);
+                                            }
+                                            areaSeries.Points.Add(
+                                                new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStartDateTime, dateTimeCalculator),
+                                                total2[dayNumber]));
+                                            total2[dayNumber] += allocationExists ? 1 : 0;
+                                            areaSeries.Points2.Add(
+                                                new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStartDateTime, dateTimeCalculator),
+                                                total2[dayNumber]));
+                                        }
+                                    }
+                                }
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException(nameof(displayStyle), @$"{Resource.ProjectPlan.Messages.Message_UnknownDisplayStyle} {displayStyle}");
                         }
 
                         plotModel.Series.Add(areaSeries);
@@ -388,6 +449,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<DisplayStyle> m_DisplayStyle;
+        public DisplayStyle DisplayStyle
+        {
+            get => m_DisplayStyle.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.ResourceChartDisplayStyle = value;
+            }
+        }
+
         public ICommand SaveResourceChartImageFileCommand { get; }
 
         public async Task SaveResourceChartImageFileAsync(
@@ -462,6 +533,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.ProjectStartDateTime,
                     AllocationMode,
                     ScheduleMode,
+                    DisplayStyle,
                     m_CoreViewModel.BaseTheme);
             }
 
@@ -499,6 +571,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_AllocationMode?.Dispose();
                 m_ScheduleMode?.Dispose();
+                m_DisplayStyle?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

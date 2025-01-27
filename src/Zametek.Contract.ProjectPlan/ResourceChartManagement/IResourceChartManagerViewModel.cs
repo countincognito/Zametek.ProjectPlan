@@ -16,6 +16,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ScheduleMode ScheduleMode { get; set; }
 
+        DisplayStyle DisplayStyle { get; set; }
+
         ICommand SaveResourceChartImageFileCommand { get; }
 
         Task SaveResourceChartImageFileAsync(string? filename, int width, int height);

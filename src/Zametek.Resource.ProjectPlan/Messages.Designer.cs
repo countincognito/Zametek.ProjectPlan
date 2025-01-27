@@ -313,6 +313,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown DisplayStyle value:.
+        /// </summary>
+        public static string Message_UnknownDisplayStyle {
+            get {
+                return ResourceManager.GetString("Message_UnknownDisplayStyle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown EdgeDashStyle value.
         /// </summary>
         public static string Message_UnknownEdgeDashStyleValue {

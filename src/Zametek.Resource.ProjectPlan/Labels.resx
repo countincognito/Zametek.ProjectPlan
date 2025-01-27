@@ -492,4 +492,7 @@
   <data name="Label_ScheduleMode" xml:space="preserve">
     <value>Schedule</value>
   </data>
+  <data name="Label_DisplayStyle" xml:space="preserve">
+    <value>Display style</value>
+  </data>
 </root>

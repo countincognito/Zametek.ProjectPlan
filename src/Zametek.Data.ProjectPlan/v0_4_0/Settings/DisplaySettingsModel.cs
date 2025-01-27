@@ -22,5 +22,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
         public AllocationMode ResourceChartAllocationMode { get; init; }
 
         public ScheduleMode ResourceChartScheduleMode { get; init; }
+
+        public DisplayStyle ResourceChartDisplayStyle { get; init; }
     }
 }

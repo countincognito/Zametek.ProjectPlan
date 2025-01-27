@@ -20,5 +20,7 @@
         public AllocationMode ResourceChartAllocationMode { get; init; }
 
         public ScheduleMode ResourceChartScheduleMode { get; init; }
+
+        public DisplayStyle ResourceChartDisplayStyle { get; init; }
     }
 }

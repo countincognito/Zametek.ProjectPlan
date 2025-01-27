@@ -47,6 +47,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ScheduleMode ResourceChartScheduleMode { get; set; }
 
+        DisplayStyle ResourceChartDisplayStyle { get; set; }
+
         bool AutoCompile { get; set; }
 
         string SelectedTheme { get; set; }

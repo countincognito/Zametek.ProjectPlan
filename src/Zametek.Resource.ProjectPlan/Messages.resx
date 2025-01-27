@@ -219,4 +219,7 @@
   <data name="Message_UnknownScheduleMode" xml:space="preserve">
     <value>Unknown ScheduleMode value:</value>
   </data>
+  <data name="Message_UnknownDisplayStyle" xml:space="preserve">
+    <value>Unknown DisplayStyle value:</value>
+  </data>
 </root>

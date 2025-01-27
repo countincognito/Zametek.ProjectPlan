@@ -1119,6 +1119,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private DisplayStyle m_ResourceChartDisplayStyle;
+        public DisplayStyle ResourceChartDisplayStyle
+        {
+            get => m_ResourceChartDisplayStyle;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_ResourceChartDisplayStyle, value);
+                }
+            }
+        }
+
         private bool m_AutoCompile;
         public bool AutoCompile
         {
@@ -1321,6 +1335,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ViewGanttChartTracking = false;
                     ResourceChartAllocationMode = default;
                     ResourceChartScheduleMode = default;
+                    ResourceChartDisplayStyle = default;
                 }
             }
             finally
@@ -1492,6 +1507,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ResourceChartScheduleMode = projectPlanModel.DisplaySettings.ResourceChartScheduleMode; // TODO
 
+                    ResourceChartDisplayStyle = projectPlanModel.DisplaySettings.ResourceChartDisplayStyle; // TODO
+
                     // Work Stream Settings.
                     WorkStreamSettings = projectPlanModel.WorkStreamSettings;
 
@@ -1566,6 +1583,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             ViewGanttChartProjectFinish = ViewGanttChartProjectFinish,
                             ViewGanttChartTracking = ViewGanttChartTracking,
                             ResourceChartAllocationMode = ResourceChartAllocationMode,
+                            ResourceChartScheduleMode = ResourceChartScheduleMode,
+                            ResourceChartDisplayStyle = ResourceChartDisplayStyle,
                         },
                         GraphCompilation = graphCompilation,
                         ArrowGraph = ArrowGraph.CloneObject(),
