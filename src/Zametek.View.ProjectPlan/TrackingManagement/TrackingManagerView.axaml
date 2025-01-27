@@ -21,10 +21,17 @@
 		<local:ManagedResourceSortComparer x:Key="resourceNameSortComparer" SortMemberPath="Name"/>
 		<sys:Int32 x:Key="paginationPageSize">1</sys:Int32>
 		<sys:Int32 x:Key="paginationTotalCount">10000</sys:Int32>
+		<sys:Double x:Key="nameColumnMaxWidth">400</sys:Double>
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
 		<DockPanel DockPanel.Dock="Bottom">
+			<DockPanel.Styles>
+				<Style Selector="#PART_QuickJumpInput"
+					   x:SetterTargetType="{x:Type u:NumericIntUpDown}">
+					<Setter Property="Minimum" Value="1"/>
+				</Style>
+			</DockPanel.Styles>
 			<u:Pagination PageSize="{StaticResource paginationPageSize}"
 						  TotalCount="{StaticResource paginationTotalCount}"
 						  DockPanel.Dock="Left"
@@ -34,7 +41,7 @@
 						  TotalCount="{StaticResource paginationTotalCount}"
 						  Theme="{DynamicResource TinyPagination}"
 						  DockPanel.Dock="Right"
-						  CurrentPage="{Binding Path=PageIndex, Mode=TwoWay}" />
+						  CurrentPage="{Binding Path=PageIndex, Mode=TwoWay}"/>
 
 			<Grid />
 		</DockPanel>
@@ -110,6 +117,7 @@
 					<DataGridTemplateColumn CanUserResize="True"
 											CanUserReorder="False"
 											CanUserSort="True"
+											MaxWidth="{StaticResource nameColumnMaxWidth}"
 											CustomSortComparer="{StaticResource resourceNameSortComparer}"
 											Width="{Binding Path=NameColumnWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource GDPWidthConverter}}">
 						<DataGridTemplateColumn.HeaderTemplate>
@@ -240,6 +248,7 @@
 					<DataGridTemplateColumn CanUserResize="True"
 											CanUserReorder="False"
 											CanUserSort="True"
+											MaxWidth="{StaticResource nameColumnMaxWidth}"
 											CustomSortComparer="{StaticResource activityNameSortComparer}"
 											Width="{Binding Path=NameColumnWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource GDPWidthConverter}}">
 						<DataGridTemplateColumn.HeaderTemplate>
