@@ -109,8 +109,8 @@ namespace Zametek.ProjectPlan.CommandLine
                         IArrowGraphManagerViewModel graph = host.Services.GetRequiredService<IArrowGraphManagerViewModel>();
                         graph.KillSubscriptions();
 
-                        IResourceChartManagerViewModel resouces = host.Services.GetRequiredService<IResourceChartManagerViewModel>();
-                        resouces.KillSubscriptions();
+                        IResourceChartManagerViewModel resources = host.Services.GetRequiredService<IResourceChartManagerViewModel>();
+                        resources.KillSubscriptions();
 
                         IEarnedValueChartManagerViewModel ev = host.Services.GetRequiredService<IEarnedValueChartManagerViewModel>();
                         ev.KillSubscriptions();
@@ -265,6 +265,10 @@ namespace Zametek.ProjectPlan.CommandLine
                                     throw new InvalidOperationException($@"Directory {graphDirectory} does not exist");
                                 }
 
+                                bool graphNames = options.GraphNames ?? default;
+
+                                graph.ViewNames = graphNames;
+
                                 graph.BuildArrowGraphDiagramData();
                                 graph.BuildArrowGraphDiagramImage();
 
@@ -298,7 +302,15 @@ namespace Zametek.ProjectPlan.CommandLine
                                 int width = resourceSize[0];
                                 int height = resourceSize[1];
 
-                                resouces.BuildResourceChartPlotModel();
+                                AllocationMode resourceAllocation = options.ResourceAllocation;
+                                ScheduleMode resourceSchedule = options.ResourceSchedule;
+                                DisplayStyle resourceDisplay = options.ResourceDisplay;
+
+                                resources.AllocationMode = resourceAllocation;
+                                resources.ScheduleMode = resourceSchedule;
+                                resources.DisplayStyle = resourceDisplay;
+
+                                resources.BuildResourceChartPlotModel();
 
                                 PlotExport resourceFormat = options.ResourceFormat;
 
@@ -306,7 +318,7 @@ namespace Zametek.ProjectPlan.CommandLine
                                     resourceDirectory,
                                     $@"{settingService.ProjectTitle}{c_ResourceSuffix}.{resourceFormat.GetDescription().ToLowerInvariant()}");
 
-                                resouces.SaveResourceChartImageFileAsync(resourceOutputFile, width, height).Wait();
+                                resources.SaveResourceChartImageFileAsync(resourceOutputFile, width, height).Wait();
                             }
                         }
 

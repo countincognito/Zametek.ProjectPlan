@@ -69,6 +69,9 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option("graph-format", Default = GraphExport.Jpeg, HelpText = "Arrow graph format (Jpeg|Png|Pdf|Svg|GraphML|Dot)")]
         public GraphExport GraphFormat { get; set; } = default;
 
+        [Option("graph-names", Default = false, Required = false, HelpText = "Show names in arrow graph (true|false)")]
+        public bool? GraphNames { get; set; } = default;
+
 
 
         [Option("resource-directory", HelpText = "Resource chart output file directory")]
@@ -79,6 +82,15 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option("resource-size", Min = 2, Max = 2, Separator = ':', HelpText = "Resource chart dimensions in pixels (<width>:<height>)")]
         public IEnumerable<int> ResourceSize { get; set; } = [];
+
+        [Option("resource-allocation", Default = AllocationMode.Activity, Required = false, HelpText = "Resource chart allocation mode (Activity|Cost|Effort)")]
+        public AllocationMode ResourceAllocation { get; set; } = default;
+
+        [Option("resource-schedule", Default = ScheduleMode.Combined, Required = false, HelpText = "Resource chart schedule mode (Combined|Scheduled|Unscheduled)")]
+        public ScheduleMode ResourceSchedule { get; set; } = default;
+
+        [Option("resource-display", Default = DisplayStyle.Slanted, Required = false, HelpText = "Resource chart display style (Slanted|Block)")]
+        public DisplayStyle ResourceDisplay { get; set; } = default;
 
 
 
