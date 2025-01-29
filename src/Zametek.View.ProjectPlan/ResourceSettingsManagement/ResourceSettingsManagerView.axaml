@@ -28,77 +28,81 @@
 		<local:ManagedResourceSortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
 	</UserControl.Resources>
 
+
 	<DockPanel Margin="7">
-		<DockPanel DockPanel.Dock="Right"
-                   Margin="11,0,0,0">
-			<Button DockPanel.Dock="Top"
-                    IsTabStop="True"
-                    Margin="0,0,0,7"
-                    Height="25" Width="75"
-                    VerticalAlignment="Center"
-                    VerticalContentAlignment="Center"
-					IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
-                    Command="{Binding Path=AddManagedResourceCommand, Mode=OneWay}"
-                    Content="{x:Static resources:Labels.Label_AddManagedResource}"/>
+		<ScrollViewer DockPanel.Dock="Right"
+					  VerticalScrollBarVisibility="Hidden"
+					  HorizontalScrollBarVisibility="Disabled">
+			<DockPanel Margin="11,0,0,0">
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,7"
+						Height="25" Width="75"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
+						Command="{Binding Path=AddManagedResourceCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_AddManagedResource}"/>
 
-			<Button DockPanel.Dock="Top"
-					IsTabStop="True"
-                    Margin="0,0,0,7"
-                    Height="25" Width="75"
-                    VerticalAlignment="Center"
-                    VerticalContentAlignment="Center"
-					IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
-                    Command="{Binding Path=RemoveManagedResourcesCommand, Mode=OneWay}"
-                    Content="{x:Static resources:Labels.Label_DeleteManagedResources}"/>
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,7"
+						Height="25" Width="75"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
+						Command="{Binding Path=RemoveManagedResourcesCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_DeleteManagedResources}"/>
 
-			<Button DockPanel.Dock="Top"
-					IsTabStop="True"
-                    Margin="0,0,0,11"
-                    Height="25" Width="75"
-                    VerticalAlignment="Center"
-                    VerticalContentAlignment="Center"
-					IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
-                    Command="{Binding Path=EditManagedResourcesCommand, Mode=OneWay}"
-                    Content="{x:Static resources:Labels.Label_EditManagedResource}"/>
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,11"
+						Height="25" Width="75"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
+						Command="{Binding Path=EditManagedResourcesCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_EditManagedResource}"/>
 
-			<Label DockPanel.Dock="Top"
-				   IsTabStop="False"
-				   VerticalAlignment="Center"
-				   VerticalContentAlignment="Center"
-				   Content="{x:Static resources:Labels.Label_DefaultUnitCost}"
-				   Height="25"
-				   Margin="0,0,0,0"/>
+				<Label DockPanel.Dock="Top"
+					   IsTabStop="False"
+					   VerticalAlignment="Center"
+					   VerticalContentAlignment="Center"
+					   Content="{x:Static resources:Labels.Label_DefaultUnitCost}"
+					   Height="25"
+					   Margin="0,0,0,0"/>
 
-			<u:NumericDoubleUpDown DockPanel.Dock="Top"
-								   Height="25" Width="75"
-								   Value="{Binding Path=DefaultUnitCost, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-								   VerticalAlignment="Center"
-								   ShowButtonSpinner="False"
-							       Margin="0,0,0,11"
-								   Padding="0"
-								   Minimum="0"/>
+				<u:NumericDoubleUpDown DockPanel.Dock="Top"
+									   Height="25" Width="75"
+									   Value="{Binding Path=DefaultUnitCost, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+									   VerticalAlignment="Center"
+									   ShowButtonSpinner="False"
+									   Margin="0,0,0,11"
+									   Padding="0"
+									   Minimum="0"/>
 
-			<Label DockPanel.Dock="Top"
-				   IsTabStop="False"
-				   VerticalAlignment="Center"
-				   VerticalContentAlignment="Center"
-				   Content="{x:Static resources:Labels.Label_DisableResources}"
-				   Height="25"
-				   Margin="0,0,0,0"/>
+				<Label DockPanel.Dock="Top"
+					   IsTabStop="False"
+					   VerticalAlignment="Center"
+					   VerticalContentAlignment="Center"
+					   Content="{x:Static resources:Labels.Label_DisableResources}"
+					   Height="25"
+					   Margin="0,0,0,0"/>
 
-			<ToggleSwitch DockPanel.Dock="Top"
-					      IsTabStop="True"
-					      Margin="0,0,0,11"
-					      VerticalAlignment="Center"
-					      VerticalContentAlignment="Center"
-						  HorizontalAlignment="Center"
-					      HorizontalContentAlignment="Center"
-					      OffContent="{x:Static resources:Labels.Label_No}"
-					      OnContent="{x:Static resources:Labels.Label_Yes}"
-					      IsChecked="{Binding Path=DisableResources, Mode=TwoWay}"/>
+				<ToggleSwitch DockPanel.Dock="Top"
+							  IsTabStop="True"
+							  Margin="0,0,0,11"
+							  VerticalAlignment="Center"
+							  VerticalContentAlignment="Center"
+							  HorizontalAlignment="Center"
+							  HorizontalContentAlignment="Center"
+							  OffContent="{x:Static resources:Labels.Label_No}"
+							  OnContent="{x:Static resources:Labels.Label_Yes}"
+							  IsChecked="{Binding Path=DisableResources, Mode=TwoWay}"/>
 
-			<Grid/>
-		</DockPanel>
+				<Grid/>
+			</DockPanel>
+		</ScrollViewer>
 
 		<DataGrid Name="resourcesGrid"
 				  FrozenColumnCount="1"

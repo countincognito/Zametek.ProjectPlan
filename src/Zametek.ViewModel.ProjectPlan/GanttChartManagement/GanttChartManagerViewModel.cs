@@ -255,12 +255,13 @@ namespace Zametek.ViewModel.ProjectPlan
             plotModel.IsLegendVisible = false;
 
             var colorFormatLookup = new SlackColorFormatLookup(arrowGraphSettings.ActivitySeverities);
+            string startEndFormat = showDates ? DateTimeCalculator.DateFormat : "0";
 
             var series = new IntervalBarSeries
             {
                 Title = Resource.ProjectPlan.Labels.Label_GanttChartSeries,
                 LabelFormatString = @"",
-                TrackerFormatString = $"{Resource.ProjectPlan.Labels.Label_Activity}: {{2}}\n{Resource.ProjectPlan.Labels.Label_Start}: {{4}}\n{Resource.ProjectPlan.Labels.Label_End}: {{5}}",
+                TrackerFormatString = $"{Resource.ProjectPlan.Labels.Label_Activity}: {{2}}\n{Resource.ProjectPlan.Labels.Label_Start}: {{4:{startEndFormat}}}\n{Resource.ProjectPlan.Labels.Label_End}: {{5:{startEndFormat}}}",
             };
 
             var labels = new List<string>();

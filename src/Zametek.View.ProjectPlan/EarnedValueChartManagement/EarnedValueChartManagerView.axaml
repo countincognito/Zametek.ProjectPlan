@@ -15,26 +15,29 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<DockPanel DockPanel.Dock="Right"
-                   Margin="11,0,0,0">
-			<Label VerticalContentAlignment="Center"
-				   HorizontalContentAlignment="Left"
-				   Height="25"
-				   DockPanel.Dock="Top"
-				   IsTabStop="False"
-				   Margin="0,0,0,3"
-				   Content="{x:Static resources:Labels.Label_ViewProjections}"/>
+		<ScrollViewer DockPanel.Dock="Right"
+					  VerticalScrollBarVisibility="Hidden"
+					  HorizontalScrollBarVisibility="Disabled">
+			<DockPanel Margin="11,0,0,0">
+				<Label VerticalContentAlignment="Center"
+					   HorizontalContentAlignment="Left"
+					   Height="25"
+					   DockPanel.Dock="Top"
+					   IsTabStop="False"
+					   Margin="0,0,0,3"
+					   Content="{x:Static resources:Labels.Label_ViewProjections}"/>
 
-			<ToggleSwitch DockPanel.Dock="Top"
-					      IsTabStop="False"
-					      Margin="0,0,0,11"
-					      VerticalAlignment="Center"
-					      VerticalContentAlignment="Center"
-						  HorizontalAlignment="Center"
-						  HorizontalContentAlignment="Center"
-					      IsChecked="{Binding Path=ViewProjections, Mode=TwoWay}"/>
-			<Grid/>
-		</DockPanel>
+				<ToggleSwitch DockPanel.Dock="Top"
+							  IsTabStop="False"
+							  Margin="0,0,0,11"
+							  VerticalAlignment="Center"
+							  VerticalContentAlignment="Center"
+							  HorizontalAlignment="Center"
+							  HorizontalContentAlignment="Center"
+							  IsChecked="{Binding Path=ViewProjections, Mode=TwoWay}"/>
+				<Grid/>
+			</DockPanel>
+		</ScrollViewer>
 
 		<Grid>
 			<Grid.ContextMenu>

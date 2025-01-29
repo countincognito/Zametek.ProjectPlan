@@ -16,69 +16,72 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<DockPanel DockPanel.Dock="Right"
-				   Width="120"
-                   Margin="11,0,0,0">
+		<ScrollViewer DockPanel.Dock="Right"
+					  VerticalScrollBarVisibility="Hidden"
+					  HorizontalScrollBarVisibility="Disabled">
+			<DockPanel Width="120"
+					   Margin="11,0,0,0">
 
-			<DockPanel DockPanel.Dock="Top">
-				<Label VerticalContentAlignment="Center"
-					   HorizontalContentAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_AllocationMode}"/>
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_AllocationMode}"/>
 
-				<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:AllocationMode}}}"
-						  SelectedItem="{Binding Path=AllocationMode, Mode=TwoWay}"
-						  BorderBrush="Gray"
-						  BorderThickness="1"
-						  DockPanel.Dock="Top"
-						  IsTabStop="False"
-						  Margin="0,0,0,11"
-						  Height="25"/>
+					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:AllocationMode}}}"
+							  SelectedItem="{Binding Path=AllocationMode, Mode=TwoWay}"
+							  BorderBrush="Gray"
+							  BorderThickness="1"
+							  DockPanel.Dock="Top"
+							  IsTabStop="False"
+							  Margin="0,0,0,11"
+							  Height="25"/>
+				</DockPanel>
+
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_ScheduleMode}"/>
+
+					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:ScheduleMode}}}"
+							  SelectedItem="{Binding Path=ScheduleMode, Mode=TwoWay}"
+							  BorderBrush="Gray"
+							  BorderThickness="1"
+							  DockPanel.Dock="Top"
+							  IsTabStop="False"
+							  Margin="0,0,0,11"
+							  Height="25"/>
+				</DockPanel>
+
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_DisplayStyle}"/>
+
+					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:DisplayStyle}}}"
+							  SelectedItem="{Binding Path=DisplayStyle, Mode=TwoWay}"
+							  BorderBrush="Gray"
+							  BorderThickness="1"
+							  DockPanel.Dock="Top"
+							  IsTabStop="False"
+							  Margin="0,0,0,11"
+							  Height="25"/>
+				</DockPanel>
+
+				<Grid/>
 			</DockPanel>
-
-			<DockPanel DockPanel.Dock="Top">
-				<Label VerticalContentAlignment="Center"
-					   HorizontalContentAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_ScheduleMode}"/>
-
-				<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:ScheduleMode}}}"
-						  SelectedItem="{Binding Path=ScheduleMode, Mode=TwoWay}"
-						  BorderBrush="Gray"
-						  BorderThickness="1"
-						  DockPanel.Dock="Top"
-						  IsTabStop="False"
-						  Margin="0,0,0,11"
-						  Height="25"/>
-			</DockPanel>
-
-			<DockPanel DockPanel.Dock="Top">
-				<Label VerticalContentAlignment="Center"
-					   HorizontalContentAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_DisplayStyle}"/>
-
-				<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:DisplayStyle}}}"
-						  SelectedItem="{Binding Path=DisplayStyle, Mode=TwoWay}"
-						  BorderBrush="Gray"
-						  BorderThickness="1"
-						  DockPanel.Dock="Top"
-						  IsTabStop="False"
-						  Margin="0,0,0,11"
-						  Height="25"/>
-			</DockPanel>
-
-			<Grid/>
-		</DockPanel>
+		</ScrollViewer>
 
 		<Grid>
 			<Grid.ContextMenu>

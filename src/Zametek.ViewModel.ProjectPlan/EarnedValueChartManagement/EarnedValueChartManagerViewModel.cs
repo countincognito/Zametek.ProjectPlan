@@ -249,13 +249,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
             const double mainStrokeThickness = 2.0;
             const double projectionStrokeThickness = 1.0;
+            string startEndFormat = showDates ? DateTimeCalculator.DateFormat : "0";
+            string trackerFormatString = $"{{0}}\n{Resource.ProjectPlan.Labels.Label_TimeAxisTitle}: {{2:{startEndFormat}}}\n{Resource.ProjectPlan.Labels.Label_PercentageAxisTitle}: {{4:0.00}}";
 
             PopulateLineSeries(
                 new LineSeries
                 {
                     Title = Resource.ProjectPlan.Labels.Label_Plan,
                     Color = OxyColor.FromAColor(ColorHelper.AnnotationAFull, OxyColors.Blue),
-                    StrokeThickness = mainStrokeThickness
+                    StrokeThickness = mainStrokeThickness,
+                    CanTrackerInterpolatePoints = true,
+                    TrackerFormatString = trackerFormatString,
                 },
                 trackingSeriesSet.Plan);
 
@@ -266,7 +270,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         Title = Resource.ProjectPlan.Labels.Label_PlanProjection,
                         Color = OxyColor.FromAColor(ColorHelper.AnnotationAMedium, OxyColors.Blue),
-                        StrokeThickness = projectionStrokeThickness
+                        StrokeThickness = projectionStrokeThickness,
+                        CanTrackerInterpolatePoints = true,
+                        TrackerFormatString = trackerFormatString,
                     },
                     trackingSeriesSet.PlanProjection);
             }
@@ -276,7 +282,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     Title = Resource.ProjectPlan.Labels.Label_Progress,
                     Color = OxyColor.FromAColor(ColorHelper.AnnotationAFull, OxyColors.Green),
-                    StrokeThickness = mainStrokeThickness
+                    StrokeThickness = mainStrokeThickness,
+                    CanTrackerInterpolatePoints = true,
+                    TrackerFormatString = trackerFormatString,
                 },
                 trackingSeriesSet.Progress);
 
@@ -287,7 +295,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         Title = Resource.ProjectPlan.Labels.Label_ProgressProjection,
                         Color = OxyColor.FromAColor(ColorHelper.AnnotationAMedium, OxyColors.Green),
-                        StrokeThickness = projectionStrokeThickness
+                        StrokeThickness = projectionStrokeThickness,
+                        CanTrackerInterpolatePoints = true,
+                        TrackerFormatString = trackerFormatString,
                     },
                     trackingSeriesSet.ProgressProjection);
             }
@@ -297,7 +307,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     Title = Resource.ProjectPlan.Labels.Label_Effort,
                     Color = OxyColor.FromAColor(ColorHelper.AnnotationAFull, OxyColors.Red),
-                    StrokeThickness = mainStrokeThickness
+                    StrokeThickness = mainStrokeThickness,
+                    CanTrackerInterpolatePoints = true,
+                    TrackerFormatString = trackerFormatString,
                 },
                 trackingSeriesSet.Effort);
 
@@ -308,7 +320,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         Title = Resource.ProjectPlan.Labels.Label_EffortProjection,
                         Color = OxyColor.FromAColor(ColorHelper.AnnotationAMedium, OxyColors.Red),
-                        StrokeThickness = projectionStrokeThickness
+                        StrokeThickness = projectionStrokeThickness,
+                        CanTrackerInterpolatePoints = true,
+                        TrackerFormatString = trackerFormatString,
                     },
                     trackingSeriesSet.EffortProjection);
             }

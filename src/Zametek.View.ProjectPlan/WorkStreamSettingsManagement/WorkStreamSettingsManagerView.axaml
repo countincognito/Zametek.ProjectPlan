@@ -24,28 +24,31 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<DockPanel DockPanel.Dock="Right"
-                   Margin="11,0,0,0">
-			<Button DockPanel.Dock="Top"
-                    IsTabStop="True"
-                    Margin="0,0,0,7"
-                    Height="25" Width="75"
-                    VerticalAlignment="Center"
-                    VerticalContentAlignment="Center"
-                    Command="{Binding Path=AddManagedWorkStreamCommand, Mode=OneWay}"
-                    Content="{x:Static resources:Labels.Label_AddManagedWorkStream}"/>
+		<ScrollViewer DockPanel.Dock="Right"
+					  VerticalScrollBarVisibility="Hidden"
+					  HorizontalScrollBarVisibility="Disabled">
+			<DockPanel Margin="11,0,0,0">
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,7"
+						Height="25" Width="75"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						Command="{Binding Path=AddManagedWorkStreamCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_AddManagedWorkStream}"/>
 
-			<Button DockPanel.Dock="Top"
-					IsTabStop="True"
-                    Margin="0,0,0,11"
-                    Height="25" Width="75"
-                    VerticalAlignment="Center"
-                    VerticalContentAlignment="Center"
-                    Command="{Binding Path=RemoveManagedWorkStreamsCommand, Mode=OneWay}"
-                    Content="{x:Static resources:Labels.Label_DeleteManagedWorkStreams}"/>
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,11"
+						Height="25" Width="75"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						Command="{Binding Path=RemoveManagedWorkStreamsCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_DeleteManagedWorkStreams}"/>
 
-			<Grid/>
-		</DockPanel>
+				<Grid/>
+			</DockPanel>
+		</ScrollViewer>
 
 		<DataGrid Name="workStreams"
 				  FrozenColumnCount="1"

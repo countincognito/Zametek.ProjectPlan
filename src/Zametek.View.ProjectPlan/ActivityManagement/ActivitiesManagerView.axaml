@@ -44,46 +44,49 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<DockPanel DockPanel.Dock="Right"
-                   Margin="11,0,0,0">
-			<Button DockPanel.Dock="Top"
-                    IsTabStop="True"
-                    Margin="0,0,0,7"
-                    Height="25" Width="75"
-                    VerticalAlignment="Center"
-                    VerticalContentAlignment="Center"
-                    Command="{Binding Path=AddManagedActivityCommand, Mode=OneWay}"
-                    Content="{x:Static resources:Labels.Label_AddManagedActivity}"/>
+		<ScrollViewer DockPanel.Dock="Right"
+					  VerticalScrollBarVisibility="Hidden"
+					  HorizontalScrollBarVisibility="Disabled">
+			<DockPanel Margin="11,0,0,0">
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,7"
+						Height="25" Width="75"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						Command="{Binding Path=AddManagedActivityCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_AddManagedActivity}"/>
 
-			<Button DockPanel.Dock="Top"
-					IsTabStop="True"
-                    Margin="0,0,0,7"
-                    Height="25" Width="75"
-                    VerticalAlignment="Center"
-                    VerticalContentAlignment="Center"
-                    Command="{Binding Path=RemoveManagedActivitiesCommand, Mode=OneWay}"
-                    Content="{x:Static resources:Labels.Label_DeleteManagedActivity}"/>
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,7"
+						Height="25" Width="75"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						Command="{Binding Path=RemoveManagedActivitiesCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_DeleteManagedActivity}"/>
 
-			<Button DockPanel.Dock="Top"
-					IsTabStop="True"
-                    Margin="0,0,0,7"
-                    Height="25" Width="75"
-                    VerticalAlignment="Center"
-                    VerticalContentAlignment="Center"
-                    Command="{Binding Path=EditManagedActivitiesCommand, Mode=OneWay}"
-                    Content="{x:Static resources:Labels.Label_EditManagedActivity}"/>
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,7"
+						Height="25" Width="75"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						Command="{Binding Path=EditManagedActivitiesCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_EditManagedActivity}"/>
 
-			<Button DockPanel.Dock="Bottom"
-					IsTabStop="True"
-                    Margin="0,0,0,0"
-                    Height="25" Width="75"
-                    VerticalContentAlignment="Center"
-					HorizontalContentAlignment="Center"
-                    Command="{Binding Path=AddMilestoneCommand, Mode=OneWay}"
-					Content="{x:Static resources:Labels.Label_AddMilestone}"/>
+				<Button DockPanel.Dock="Bottom"
+						IsTabStop="True"
+						Margin="0,0,0,0"
+						Height="25" Width="75"
+						VerticalContentAlignment="Center"
+						HorizontalContentAlignment="Center"
+						Command="{Binding Path=AddMilestoneCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_AddMilestone}"/>
 
-			<Grid/>
-		</DockPanel>
+				<Grid/>
+			</DockPanel>
+		</ScrollViewer>
 
 		<DataGrid Name="activitiesGrid"
 				  FrozenColumnCount="1"

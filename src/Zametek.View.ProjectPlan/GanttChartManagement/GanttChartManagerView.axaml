@@ -16,114 +16,116 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<DockPanel DockPanel.Dock="Right"
-                   Margin="11,0,0,0">
+		<ScrollViewer DockPanel.Dock="Right"
+					  VerticalScrollBarVisibility="Hidden"
+					  HorizontalScrollBarVisibility="Disabled">
+			<DockPanel Margin="11,0,0,0">
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_GroupByMode}"/>
 
-			<DockPanel DockPanel.Dock="Top">
-				<Label VerticalContentAlignment="Center"
-					   HorizontalContentAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_GroupByMode}"/>
-
-				<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:GroupByMode}}}"
-						  SelectedItem="{Binding Path=GroupByMode, Mode=TwoWay}"
-						  BorderBrush="Gray"
-						  BorderThickness="1"
-						  DockPanel.Dock="Top"
-						  IsTabStop="False"
-						  Margin="0,0,0,11"
-						  Height="25"/>
-			</DockPanel>
-
-			<DockPanel DockPanel.Dock="Top"
-					   IsEnabled="{Binding Path=IsGrouped, Mode=OneWay}">
-				<Label VerticalContentAlignment="Center"
-					   HorizontalContentAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_AnnotationStyle}"/>
-
-				<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:AnnotationStyle}}}"
-						  SelectedItem="{Binding Path=AnnotationStyle, Mode=TwoWay}"
-						  BorderBrush="Gray"
-						  BorderThickness="1"
-						  DockPanel.Dock="Top"
-						  IsTabStop="False"
-						  Margin="0,0,0,11"
-						  Height="25"/>
-			</DockPanel>
-
-			<DockPanel DockPanel.Dock="Top"
-					   IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}">
-				<Label VerticalContentAlignment="Center"
-					   HorizontalContentAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_LabelGroups}"/>
-
-				<ToggleSwitch DockPanel.Dock="Top"
+					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:GroupByMode}}}"
+							  SelectedItem="{Binding Path=GroupByMode, Mode=TwoWay}"
+							  BorderBrush="Gray"
+							  BorderThickness="1"
+							  DockPanel.Dock="Top"
 							  IsTabStop="False"
 							  Margin="0,0,0,11"
-							  VerticalAlignment="Center"
-							  VerticalContentAlignment="Center"
-							  HorizontalAlignment="Center"
-						      HorizontalContentAlignment="Center"
-					          OffContent="{x:Static resources:Labels.Label_No}"
-					          OnContent="{x:Static resources:Labels.Label_Yes}"
-							  IsChecked="{Binding Path=LabelGroups, Mode=TwoWay}"/>
-			</DockPanel>
+							  Height="25"/>
+				</DockPanel>
 
-			<DockPanel DockPanel.Dock="Top">
-				<Label VerticalContentAlignment="Center"
-					   HorizontalContentAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_ShowProjectFinish}"/>
+				<DockPanel DockPanel.Dock="Top"
+						   IsEnabled="{Binding Path=IsGrouped, Mode=OneWay}">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_AnnotationStyle}"/>
 
-				<ToggleSwitch DockPanel.Dock="Top"
+					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:AnnotationStyle}}}"
+							  SelectedItem="{Binding Path=AnnotationStyle, Mode=TwoWay}"
+							  BorderBrush="Gray"
+							  BorderThickness="1"
+							  DockPanel.Dock="Top"
 							  IsTabStop="False"
 							  Margin="0,0,0,11"
-							  VerticalAlignment="Center"
-							  VerticalContentAlignment="Center"
-							  HorizontalAlignment="Center"
-						      HorizontalContentAlignment="Center"
-					          OffContent="{x:Static resources:Labels.Label_No}"
-					          OnContent="{x:Static resources:Labels.Label_Yes}"
-							  IsChecked="{Binding Path=ShowProjectFinish, Mode=TwoWay}"/>
+							  Height="25"/>
+				</DockPanel>
+
+				<DockPanel DockPanel.Dock="Top"
+						   IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_LabelGroups}"/>
+
+					<ToggleSwitch DockPanel.Dock="Top"
+								  IsTabStop="False"
+								  Margin="0,0,0,11"
+								  VerticalAlignment="Center"
+								  VerticalContentAlignment="Center"
+								  HorizontalAlignment="Center"
+								  HorizontalContentAlignment="Center"
+								  OffContent="{x:Static resources:Labels.Label_No}"
+								  OnContent="{x:Static resources:Labels.Label_Yes}"
+								  IsChecked="{Binding Path=LabelGroups, Mode=TwoWay}"/>
+				</DockPanel>
+
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_ShowProjectFinish}"/>
+
+					<ToggleSwitch DockPanel.Dock="Top"
+								  IsTabStop="False"
+								  Margin="0,0,0,11"
+								  VerticalAlignment="Center"
+								  VerticalContentAlignment="Center"
+								  HorizontalAlignment="Center"
+								  HorizontalContentAlignment="Center"
+								  OffContent="{x:Static resources:Labels.Label_No}"
+								  OnContent="{x:Static resources:Labels.Label_Yes}"
+								  IsChecked="{Binding Path=ShowProjectFinish, Mode=TwoWay}"/>
+				</DockPanel>
+
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_ShowTracking}"/>
+
+					<ToggleSwitch DockPanel.Dock="Top"
+								  IsTabStop="False"
+								  Margin="0,0,0,11"
+								  VerticalAlignment="Center"
+								  VerticalContentAlignment="Center"
+								  HorizontalAlignment="Center"
+								  HorizontalContentAlignment="Center"
+								  OffContent="{x:Static resources:Labels.Label_No}"
+								  OnContent="{x:Static resources:Labels.Label_Yes}"
+								  IsChecked="{Binding Path=ShowTracking, Mode=TwoWay}"/>
+				</DockPanel>
+
+				<Grid/>
 			</DockPanel>
-
-			<DockPanel DockPanel.Dock="Top">
-				<Label VerticalContentAlignment="Center"
-					   HorizontalContentAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_ShowTracking}"/>
-
-				<ToggleSwitch DockPanel.Dock="Top"
-							  IsTabStop="False"
-							  Margin="0,0,0,11"
-							  VerticalAlignment="Center"
-							  VerticalContentAlignment="Center"
-							  HorizontalAlignment="Center"
-						      HorizontalContentAlignment="Center"
-					          OffContent="{x:Static resources:Labels.Label_No}"
-					          OnContent="{x:Static resources:Labels.Label_Yes}"
-							  IsChecked="{Binding Path=ShowTracking, Mode=TwoWay}"/>
-			</DockPanel>
-
-			<Grid/>
-		</DockPanel>
+		</ScrollViewer>
 
 		<Grid>
 			<Grid.ContextMenu>

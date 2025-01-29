@@ -234,6 +234,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 IList<int> total1 = [];
                 IList<int> total2 = [];
+                string startEndFormat = showDates ? DateTimeCalculator.DateFormat : "0";
 
                 foreach (ResourceSeriesModel series in resourceSeries)
                 {
@@ -251,6 +252,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             Title = series.Title,
                             Fill = color,
                             Color = color,
+                            CanTrackerInterpolatePoints = false,
+                            TrackerFormatString = $"{{0}}\n{Resource.ProjectPlan.Labels.Label_TimeAxisTitle}: {{2:{startEndFormat}}}\n{Resource.ProjectPlan.Labels.Label_ResourcesAxisTitle}: {{4}}",
                         };
 
                         switch (displayStyle)
