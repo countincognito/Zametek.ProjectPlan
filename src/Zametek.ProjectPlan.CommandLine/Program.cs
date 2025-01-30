@@ -4,9 +4,7 @@ using CommandLine.Text;
 using ConsoleTables;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NPOI.SS.Formula.Functions;
 using Serilog;
-using System.Text;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
@@ -19,11 +17,6 @@ namespace Zametek.ProjectPlan.CommandLine
 {
     public class Program
     {
-        private const string c_GanttSuffix = @"-gantt";
-        private const string c_GraphSuffix = @"-graph";
-        private const string c_ResourceSuffix = @"-resource";
-        private const string c_EVSuffix = @"-ev";
-
         public static async Task<int> Main(string[] args)
         {
             try
@@ -247,7 +240,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                                 string ganttOutputFile = Path.Combine(
                                     ganttDirectory,
-                                    $@"{settingService.ProjectTitle}{c_GanttSuffix}.{ganttFormat.GetDescription().ToLowerInvariant()}");
+                                    $@"{settingService.ProjectTitle}{Resource.ProjectPlan.Suffixes.Suffix_GanttChart}.{ganttFormat.GetDescription().ToLowerInvariant()}");
 
                                 gantt.SaveGanttChartImageFileAsync(ganttOutputFile, width, height).Wait();
                             }
@@ -274,7 +267,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                                 string graphOutputFile = Path.Combine(
                                     graphDirectory,
-                                    $@"{settingService.ProjectTitle}{c_GraphSuffix}.{graphFormat.GetDescription().ToLowerInvariant()}");
+                                    $@"{settingService.ProjectTitle}{Resource.ProjectPlan.Suffixes.Suffix_ArrowChart}.{graphFormat.GetDescription().ToLowerInvariant()}");
 
                                 graph.SaveArrowGraphImageFileAsync(graphOutputFile).Wait();
                             }
@@ -316,7 +309,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                                 string resourceOutputFile = Path.Combine(
                                     resourceDirectory,
-                                    $@"{settingService.ProjectTitle}{c_ResourceSuffix}.{resourceFormat.GetDescription().ToLowerInvariant()}");
+                                    $@"{settingService.ProjectTitle}{Resource.ProjectPlan.Suffixes.Suffix_ResourceChart}.{resourceFormat.GetDescription().ToLowerInvariant()}");
 
                                 resources.SaveResourceChartImageFileAsync(resourceOutputFile, width, height).Wait();
                             }
@@ -353,7 +346,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                                 string evOutputFile = Path.Combine(
                                     evDirectory,
-                                    $@"{settingService.ProjectTitle}{c_EVSuffix}.{evFormat.GetDescription().ToLowerInvariant()}");
+                                    $@"{settingService.ProjectTitle}{Resource.ProjectPlan.Suffixes.Suffix_EarnedValueChart}.{evFormat.GetDescription().ToLowerInvariant()}");
 
                                 ev.SaveEarnedValueChartImageFileAsync(evOutputFile, width, height).Wait();
                             }

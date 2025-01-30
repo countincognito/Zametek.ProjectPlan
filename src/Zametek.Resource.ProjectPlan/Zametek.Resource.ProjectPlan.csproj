@@ -18,6 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Suffixes.Designer.cs">
+      <DependentUpon>Suffixes.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
     <Compile Update="Reporting.Designer.cs">
       <DependentUpon>Reporting.resx</DependentUpon>
       <DesignTime>True</DesignTime>
@@ -71,6 +76,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="Suffixes.resx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <LastGenOutput>Suffixes.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
     <EmbeddedResource Update="Reporting.resx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <LastGenOutput>Reporting.Designer.cs</LastGenOutput>

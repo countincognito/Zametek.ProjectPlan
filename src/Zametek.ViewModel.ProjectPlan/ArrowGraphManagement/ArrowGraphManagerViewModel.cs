@@ -203,9 +203,9 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                string projectTitle = m_SettingService.ProjectTitle;
+                string graphOutputFile = $@"{m_SettingService.ProjectTitle}{Resource.ProjectPlan.Suffixes.Suffix_ArrowChart}";
                 string directory = m_SettingService.ProjectDirectory;
-                string? filename = await m_DialogService.ShowSaveFileDialogAsync(projectTitle, directory, s_ExportFileFilters);
+                string? filename = await m_DialogService.ShowSaveFileDialogAsync(graphOutputFile, directory, s_ExportFileFilters);
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
