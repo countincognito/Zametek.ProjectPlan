@@ -42,19 +42,19 @@ namespace Zametek.ViewModel.ProjectPlan
             [
                 new FileFilter
                 {
+                    Name = Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ProjectXlsxFilePattern
+                    ]
+                },
+                new FileFilter
+                {
                     Name = Resource.ProjectPlan.Filters.Filter_MicrosoftProjectFileType,
                     Patterns =
                     [
                         Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFilePattern,
                         Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFilePattern
-                    ]
-                },
-                new FileFilter
-                {
-                    Name = Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileType,
-                    Patterns =
-                    [
-                        Resource.ProjectPlan.Filters.Filter_ProjectXlsxFilePattern
                     ]
                 }
             ];
