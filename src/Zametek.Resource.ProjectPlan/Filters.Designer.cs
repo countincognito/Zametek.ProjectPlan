@@ -61,6 +61,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to *.*.
+        /// </summary>
+        public static string Filter_AllFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_AllFilePattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All Files.
+        /// </summary>
+        public static string Filter_AllFileType {
+            get {
+                return ResourceManager.GetString("Filter_AllFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Excel.
         /// </summary>
         public static string Filter_ExcelFileType {

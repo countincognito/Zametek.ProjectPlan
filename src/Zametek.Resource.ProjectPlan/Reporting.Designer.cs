@@ -151,20 +151,29 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Resource Chart (Costs).
+        ///   Looks up a localized string similar to Resource Chart (Activity).
         /// </summary>
-        public static string Reporting_WorksheetResourceChartCosts {
+        public static string Reporting_WorksheetResourceChartActivity {
             get {
-                return ResourceManager.GetString("Reporting_WorksheetResourceChartCosts", resourceCulture);
+                return ResourceManager.GetString("Reporting_WorksheetResourceChartActivity", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Resource Chart (Data).
+        ///   Looks up a localized string similar to Resource Chart (Cost).
         /// </summary>
-        public static string Reporting_WorksheetResourceChartData {
+        public static string Reporting_WorksheetResourceChartCost {
             get {
-                return ResourceManager.GetString("Reporting_WorksheetResourceChartData", resourceCulture);
+                return ResourceManager.GetString("Reporting_WorksheetResourceChartCost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource Chart (Effort).
+        /// </summary>
+        public static string Reporting_WorksheetResourceChartEffort {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetResourceChartEffort", resourceCulture);
             }
         }
         

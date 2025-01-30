@@ -986,7 +986,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 resourceSeriesSet,
                 x => x.ResourceSchedule.ActivityAllocation.Count,
                 (resourceSeries, timeIndex) => resourceSeries.ResourceSchedule.ActivityAllocation[timeIndex],
-                Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartData,
+                Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartActivity,
                 workbook,
                 titleStyle,
                 showDates,
@@ -996,11 +996,19 @@ namespace Zametek.ViewModel.ProjectPlan
             WriteResourceChartToWorkbook(
                 resourceSeriesSet,
                 x => x.ResourceSchedule.CostAllocation.Count,
-                (resourceSeries, timeIndex) =>
-                {
-                    return resourceSeries.ResourceSchedule.CostAllocation[timeIndex] ? resourceSeries.UnitCost : 0.0;
-                },
-                Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartCosts,
+                (resourceSeries, timeIndex) => resourceSeries.ResourceSchedule.CostAllocation[timeIndex] ? resourceSeries.UnitCost : 0.0,
+                Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartCost,
+                workbook,
+                titleStyle,
+                showDates,
+                projectPlan.ProjectStart,
+                m_DateTimeCalculator);
+
+            WriteResourceChartToWorkbook(
+                resourceSeriesSet,
+                x => x.ResourceSchedule.EffortAllocation.Count,
+                (resourceSeries, timeIndex) => resourceSeries.ResourceSchedule.EffortAllocation[timeIndex],
+                Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartEffort,
                 workbook,
                 titleStyle,
                 showDates,

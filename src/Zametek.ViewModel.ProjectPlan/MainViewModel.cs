@@ -27,6 +27,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     [
                         Resource.ProjectPlan.Filters.Filter_ProjectPlanFilePattern
                     ]
+                },
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_AllFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_AllFilePattern
+                    ]
                 }
             ];
 
