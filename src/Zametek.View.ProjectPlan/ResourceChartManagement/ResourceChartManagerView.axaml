@@ -19,7 +19,7 @@
 		<ScrollViewer DockPanel.Dock="Right"
 					  VerticalScrollBarVisibility="Hidden"
 					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Width="120"
+			<DockPanel MinWidth="120"
 					   Margin="11,0,0,0">
 
 				<DockPanel DockPanel.Dock="Top">
