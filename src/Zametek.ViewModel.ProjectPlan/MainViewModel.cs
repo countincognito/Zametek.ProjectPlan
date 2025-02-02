@@ -803,11 +803,7 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 var uri = new Uri(hyperlink);
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = uri.AbsoluteUri,
-                    UseShellExecute = true,
-                });
+                UriHelper.Open(uri);
             }
             catch (Exception ex)
             {
@@ -830,7 +826,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 await m_DialogService.ShowInfoAsync(
                     Resource.ProjectPlan.Titles.Title_ProjectPlan,
                     Resource.ProjectPlan.Titles.Title_ProjectPlan,
-                    about.ToString());
+                    about.ToString(),
+                    link: new Uri(Resource.ProjectPlan.Links.Link_MainPage));
             }
             catch (Exception ex)
             {

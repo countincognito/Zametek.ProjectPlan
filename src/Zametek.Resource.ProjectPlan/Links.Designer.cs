@@ -79,6 +79,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to https://getprojectplan.net.
+        /// </summary>
+        public static string Link_MainPage {
+            get {
+                return ResourceManager.GetString("Link_MainPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to https://github.com/countincognito/Zametek.ProjectPlan/issues.
         /// </summary>
         public static string Link_ReportIssue {

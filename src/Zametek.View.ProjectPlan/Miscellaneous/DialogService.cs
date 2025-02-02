@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Zametek.Contract.ProjectPlan;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -127,9 +128,10 @@ namespace Zametek.View.ProjectPlan
             string title,
             string header,
             string message,
-            bool markdown = false)
+            bool markdown = false,
+            Uri? link = null)
         {
-            await ShowMessageBoxAsync(new MessageBoxStandardParams
+            var @params = new MessageBoxStandardParams
             {
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.WidthAndHeight,
@@ -138,7 +140,18 @@ namespace Zametek.View.ProjectPlan
                 ContentMessage = message,
                 Icon = Icon.Info,
                 Markdown = markdown
-            });
+            };
+
+            if (link is not null)
+            {
+                @params.HyperLinkParams = new HyperLinkParams
+                {
+                    Text = link.AbsoluteUri,
+                    Action = () => UriHelper.Open(link),
+                };
+            }
+
+            await ShowMessageBoxAsync(@params);
         }
 
         public async Task ShowInfoAsync(
@@ -147,9 +160,10 @@ namespace Zametek.View.ProjectPlan
             string message,
             double height,
             double width,
-            bool markdown = false)
+            bool markdown = false,
+            Uri? link = null)
         {
-            await ShowMessageBoxAsync(new MessageBoxStandardParams
+            var @params = new MessageBoxStandardParams
             {
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.Manual,
@@ -160,7 +174,18 @@ namespace Zametek.View.ProjectPlan
                 Width = width,
                 Icon = Icon.Info,
                 Markdown = markdown
-            });
+            };
+
+            if (link is not null)
+            {
+                @params.HyperLinkParams = new HyperLinkParams
+                {
+                    Text = link.AbsoluteUri,
+                    Action = () => UriHelper.Open(link),
+                };
+            }
+
+            await ShowMessageBoxAsync(@params);
         }
 
         public async Task<bool> ShowContextAsync(

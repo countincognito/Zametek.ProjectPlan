@@ -123,6 +123,9 @@
   <data name="Link_Donate" xml:space="preserve">
     <value>https://github.com/countincognito/Zametek.ProjectPlan/blob/master/README.md</value>
   </data>
+  <data name="Link_MainPage" xml:space="preserve">
+    <value>https://getprojectplan.net</value>
+  </data>
   <data name="Link_ReportIssue" xml:space="preserve">
     <value>https://github.com/countincognito/Zametek.ProjectPlan/issues</value>
   </data>

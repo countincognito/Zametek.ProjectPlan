@@ -10,9 +10,9 @@
 
         Task ShowWarningAsync(string title, string header, string message, bool markdown = false);
 
-        Task ShowInfoAsync(string title, string header, string message, bool markdown = false);
+        Task ShowInfoAsync(string title, string header, string message, bool markdown = false, Uri? link = null);
 
-        Task ShowInfoAsync(string title, string header, string message, double height, double width, bool markdown = false);
+        Task ShowInfoAsync(string title, string header, string message, double height, double width, bool markdown = false, Uri? link = null);
 
         Task<bool> ShowContextAsync(string title, object context, bool markdown = false);
 

@@ -48,7 +48,8 @@ namespace Zametek.ProjectPlan.CommandLine
             string title,
             string header,
             string message,
-            bool markdown = false)
+            bool markdown = false,
+            Uri? link = null)
         {
             await Console.Out.WriteLineAsync($@"{title}: {message}");
         }
@@ -59,7 +60,8 @@ namespace Zametek.ProjectPlan.CommandLine
             string message,
             double height,
             double width,
-            bool markdown = false)
+            bool markdown = false,
+            Uri? link = null)
         {
             await Console.Out.WriteLineAsync($@"{title}: {message}");
         }
