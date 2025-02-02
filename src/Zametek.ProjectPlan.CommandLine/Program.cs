@@ -116,11 +116,13 @@ namespace Zametek.ProjectPlan.CommandLine
 
                             if (inputFilename is not null)
                             {
+                                settingService.SetProjectFilePath(inputFilename, bindTitleToFilename: true);
                                 ProjectPlanModel projectPlan = projectFileOpen.OpenProjectPlanFileAsync(inputFilename).Result;
                                 core.ProcessProjectPlan(projectPlan);
                             }
                             else if (importFilename is not null)
                             {
+                                settingService.SetProjectFilePath(importFilename, bindTitleToFilename: true);
                                 ProjectImportModel projectImport = projectFileImport.ImportProjectFile(importFilename);
                                 core.ProcessProjectImport(projectImport);
                             }
@@ -183,13 +185,13 @@ namespace Zametek.ProjectPlan.CommandLine
 
                             if (outputFilename is not null)
                             {
-                                settingService.SetProjectFilePath(outputFilename, bindTitleToFilename: false);
+                                settingService.SetProjectFilePath(outputFilename, bindTitleToFilename: true);
                                 ProjectPlanModel plan = core.BuildProjectPlan();
                                 projectFileSave.SaveProjectPlanFileAsync(plan, outputFilename).Wait();
                             }
                             if (exportFilename is not null)
                             {
-                                settingService.SetProjectFilePath(exportFilename, bindTitleToFilename: false);
+                                settingService.SetProjectFilePath(exportFilename, bindTitleToFilename: true);
                                 ProjectPlanModel plan = core.BuildProjectPlan();
                                 projectFileExport.ExportProjectFile(
                                     plan,
