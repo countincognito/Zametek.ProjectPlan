@@ -186,13 +186,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 IEnumerable<ResourceScheduleModel> scheduledResourceSchedules = resourceSchedules
                     .Where(x => x.Resource.InterActivityAllocationType == InterActivityAllocationType.None || x.Resource.InterActivityAllocationType == InterActivityAllocationType.Direct);
 
+                // Make 'random' colors seem consistent.
+                ColorHelper.PresetReset();
+
                 foreach (ResourceScheduleModel scheduledResourceSchedule in scheduledResourceSchedules)
                 {
                     if (scheduledResourceSchedule.ScheduledActivities.Count > 0)
                     {
                         var stringBuilder = new StringBuilder();
                         InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
-                        ColorFormatModel color = ColorHelper.Random();
+                        ColorFormatModel color = ColorHelper.Preset();
                         double unitCost = defaultUnitCost;
                         int displayOrder = 0;
 
@@ -270,7 +273,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Title = title,
                             InterActivityAllocationType = resource.InterActivityAllocationType,
                             ResourceSchedule = resourceSchedule,
-                            ColorFormat = resource.ColorFormat != null ? resource.ColorFormat.CloneObject() : ColorHelper.Random(),
+                            ColorFormat = resource.ColorFormat != null ? resource.ColorFormat.CloneObject() : ColorHelper.Preset(),
                             UnitCost = resource.UnitCost,
                             DisplayOrder = resource.DisplayOrder,
                         };

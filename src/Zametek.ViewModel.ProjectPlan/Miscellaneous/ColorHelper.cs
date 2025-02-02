@@ -29,6 +29,32 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly Random s_Rnd = new();
         private static readonly Regex s_HtmlHexMatch = new(@"^#(([A-Fa-f0-9]{2}){3,4})$", RegexOptions.Compiled);
 
+        // Preset colors.
+        private static int s_PresetColorIndex = 0;
+        private static readonly List<Color> s_PresetColors =
+            [
+            Colors.Blue,
+            Colors.Coral,
+            Colors.Red,
+            Colors.LimeGreen,
+            Colors.Purple,
+            Colors.MediumTurquoise,
+            Colors.SteelBlue,
+            Colors.Crimson,
+            Colors.Chocolate,
+            Colors.Salmon,
+            Colors.RosyBrown,
+            Colors.MediumSeaGreen,
+            Colors.Orchid,
+            Colors.Firebrick,
+            Colors.Peru,
+            Colors.DarkKhaki,
+            Colors.OrangeRed,
+            Colors.Sienna,
+            Colors.PaleVioletRed,
+            Colors.OliveDrab,
+            ];
+
         public static ColorFormatModel None()
         {
             return new ColorFormatModel
@@ -92,6 +118,29 @@ namespace Zametek.ViewModel.ProjectPlan
                 R = b[0],
                 G = b[1],
                 B = b[2]
+            };
+        }
+
+        // https://stackoverflow.com/questions/26075697/repeatedly-iterating-through-a-list
+        public static ColorFormatModel Preset()
+        {
+            s_PresetColorIndex = (s_PresetColorIndex + 1) % s_PresetColors.Count;
+            return ColorToColorFormatModel(s_PresetColors[s_PresetColorIndex]);
+        }
+
+        public static void PresetReset()
+        {
+            s_PresetColorIndex = 0;
+        }
+
+        public static ColorFormatModel ColorToColorFormatModel(Color color)
+        {
+            return new ColorFormatModel
+            {
+                R = color.R,
+                G = color.G,
+                B = color.B,
+                A = color.A
             };
         }
 
