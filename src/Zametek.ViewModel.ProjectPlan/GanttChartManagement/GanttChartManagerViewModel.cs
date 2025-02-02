@@ -894,7 +894,9 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                string ganttOutputFile = $@"{m_SettingService.ProjectTitle}{Resource.ProjectPlan.Suffixes.Suffix_GanttChart}";
+                string title = m_SettingService.ProjectTitle;
+                title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
+                string ganttOutputFile = $@"{title}{Resource.ProjectPlan.Suffixes.Suffix_GanttChart}";
                 string directory = m_SettingService.ProjectDirectory;
                 string? filename = await m_DialogService.ShowSaveFileDialogAsync(ganttOutputFile, directory, s_ExportFileFilters);
 

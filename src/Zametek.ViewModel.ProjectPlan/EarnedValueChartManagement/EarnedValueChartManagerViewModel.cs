@@ -385,7 +385,9 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                string evOutputFile = $@"{m_SettingService.ProjectTitle}{Resource.ProjectPlan.Suffixes.Suffix_EarnedValueChart}";
+                string title = m_SettingService.ProjectTitle;
+                title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
+                string evOutputFile = $@"{title}{Resource.ProjectPlan.Suffixes.Suffix_EarnedValueChart}";
                 string directory = m_SettingService.ProjectDirectory;
                 string? filename = await m_DialogService.ShowSaveFileDialogAsync(evOutputFile, directory, s_ExportFileFilters);
 

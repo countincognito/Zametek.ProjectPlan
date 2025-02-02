@@ -397,7 +397,9 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                string resourceOutputFile = $@"{m_SettingService.ProjectTitle}{Resource.ProjectPlan.Suffixes.Suffix_ResourceChart}";
+                string title = m_SettingService.ProjectTitle;
+                title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
+                string resourceOutputFile = $@"{title}{Resource.ProjectPlan.Suffixes.Suffix_ResourceChart}";
                 string directory = m_SettingService.ProjectDirectory;
                 string? filename = await m_DialogService.ShowSaveFileDialogAsync(resourceOutputFile, directory, s_ExportFileFilters);
 
