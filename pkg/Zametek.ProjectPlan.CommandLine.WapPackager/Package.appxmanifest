@@ -11,7 +11,7 @@
   <Identity
     Name="9ac68289-8dc0-46b1-a1b3-df24b5d4501a"
     Publisher="CN=ztkadmin"
-    Version="0.9.0.0" />
+    Version="0.9.1.0" />
 
   <Properties>
     <DisplayName>projectplan.net cli</DisplayName>
