@@ -42,16 +42,16 @@ namespace Zametek.ViewModel.ProjectPlan
             Colors.SteelBlue,
             Colors.Crimson,
             Colors.Chocolate,
-            Colors.Salmon,
-            Colors.RosyBrown,
-            Colors.MediumSeaGreen,
+            Colors.BlueViolet,
+            Colors.Goldenrod,
             Colors.Orchid,
+            Colors.MediumSeaGreen,
             Colors.Firebrick,
             Colors.Peru,
             Colors.DarkKhaki,
             Colors.OrangeRed,
             Colors.Sienna,
-            Colors.PaleVioletRed,
+            Colors.YellowGreen,
             Colors.OliveDrab,
             ];
 
@@ -124,8 +124,10 @@ namespace Zametek.ViewModel.ProjectPlan
         // https://stackoverflow.com/questions/26075697/repeatedly-iterating-through-a-list
         public static ColorFormatModel Preset()
         {
-            s_PresetColorIndex = (s_PresetColorIndex + 1) % s_PresetColors.Count;
-            return ColorToColorFormatModel(s_PresetColors[s_PresetColorIndex]);
+            s_PresetColorIndex = s_PresetColorIndex % s_PresetColors.Count;
+            var color = ColorToColorFormatModel(s_PresetColors[s_PresetColorIndex]);
+            s_PresetColorIndex++;
+            return color;
         }
 
         public static void PresetReset()
