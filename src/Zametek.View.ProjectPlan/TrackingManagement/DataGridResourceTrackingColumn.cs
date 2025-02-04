@@ -103,7 +103,7 @@ namespace Zametek.View.ProjectPlan
                             Margin = new Avalonia.Thickness(0),
                             Padding = new Avalonia.Thickness(0),
                             Minimum = 0,
-                            Maximum = 100,
+                            Maximum = 200,
                             [!NumericIntUpDown.ValueProperty] = new Binding(nameof(ISelectableResourceActivityViewModel.PercentageWorked), BindingMode.TwoWay)
                             {
                                 UpdateSourceTrigger = UpdateSourceTrigger.LostFocus,
