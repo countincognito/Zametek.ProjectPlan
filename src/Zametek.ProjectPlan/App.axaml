@@ -100,6 +100,10 @@
 
 			<x:String x:Key="STRING_PAGINATION_PAGE">.</x:String>
 
+			<!--This needs to be here in order to prevent text in NumericIntUpDown being obfuscated in ComboBoxItems-->
+			<SolidColorBrush x:Key="TextBoxDefaultBackground" Color="Transparent" />
+			<SolidColorBrush x:Key="TextBoxPointeroverBackground" Color="Transparent" />
+
 			<ResourceDictionary.ThemeDictionaries>
 				<ResourceDictionary x:Key="Light">
 					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">#FFFFFFE0</SolidColorBrush>

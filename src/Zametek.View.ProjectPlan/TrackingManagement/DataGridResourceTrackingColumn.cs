@@ -119,7 +119,7 @@ namespace Zametek.View.ProjectPlan
                             Padding = new Avalonia.Thickness(3, 0),
                             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
-                            [!ToolTip.TipProperty] = new Binding(nameof(ISelectableResourceActivityViewModel.Name), BindingMode.OneWay),
+                            [!ToolTip.TipProperty] = new Binding(nameof(ISelectableResourceActivityViewModel.DisplayName), BindingMode.OneWay),
                         });
 
                     templatePanel.Children.Add(new Grid());
