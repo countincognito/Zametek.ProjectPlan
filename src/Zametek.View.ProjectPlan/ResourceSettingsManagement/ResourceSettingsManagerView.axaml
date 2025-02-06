@@ -105,6 +105,7 @@
 		</ScrollViewer>
 
 		<DataGrid Name="resourcesGrid"
+				  IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
 				  FrozenColumnCount="1"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
