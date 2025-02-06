@@ -33,7 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static int s_PresetColorIndex = 0;
         private static readonly List<Color> s_PresetColors =
             [
-            Colors.Blue,
+            Colors.RoyalBlue,
             Colors.Coral,
             Colors.Red,
             Colors.LimeGreen,
