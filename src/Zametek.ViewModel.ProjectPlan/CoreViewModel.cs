@@ -1471,13 +1471,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Resources.
                     ResourceSettingsModel resourceSettings = m_SettingService.DefaultResourceSettings.CloneObject();
-                    resourceSettings = resourceSettings with { DefaultUnitCost = projectImportModel.DefaultUnitCost };
+                    resourceSettings = resourceSettings with
+                    {
+                        DefaultUnitCost = projectImportModel.ResourceSettings.DefaultUnitCost,
+                        AreDisabled = projectImportModel.ResourceSettings.AreDisabled,
+                    };
 
-                    if (projectImportModel.Resources.Count != 0)
+                    if (projectImportModel.ResourceSettings.Resources.Count != 0)
                     {
                         resourceSettings.Resources.Clear();
 
-                        foreach (ResourceModel resource in projectImportModel.Resources)
+                        foreach (ResourceModel resource in projectImportModel.ResourceSettings.Resources)
                         {
                             resourceSettings.Resources.Add(resource);
                         }

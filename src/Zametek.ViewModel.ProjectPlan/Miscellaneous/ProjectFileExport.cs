@@ -16,8 +16,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly IList<string> s_GeneralColumnTitles =
         [
-            nameof(ProjectPlanModel.ProjectStart),
-            nameof(ProjectPlanModel.ResourceSettings.DefaultUnitCost)
+            nameof(ProjectPlanModel.ProjectStart)
+        ];
+
+        private static readonly IList<string> s_ResourceSettingsColumnTitles =
+        [
+            nameof(ProjectPlanModel.ResourceSettings.DefaultUnitCost),
+            nameof(ProjectPlanModel.ResourceSettings.AreDisabled),
         ];
 
         private static readonly IList<string> s_ActivityColumnTitles =
@@ -266,24 +271,67 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     columnTitle.ValueSwitchOn()
                         .Case(nameof(ProjectPlanModel.ProjectStart),
-                            colName => AddToCell(projectPlan.ProjectStart, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectPlanModel.ResourceSettings.DefaultUnitCost),
-                            colName => AddToCell(projectPlan.ResourceSettings.DefaultUnitCost, cell, dateTimeCellStyle));
+                            colName => AddToCell(projectPlan.ProjectStart, cell, dateTimeCellStyle));
 
                     columnIndex++;
                 }
 
                 rowIndex++;
             }
-            //{
-            //    int titleColumnIndex = 0;
+        }
 
-            //    foreach (string columnTitle in s_GeneralColumnTitles)
-            //    {
-            //        sheet.AutoSizeColumn(titleColumnIndex);
-            //        titleColumnIndex++;
-            //    }
-            //}
+        private static void WriteResourceSettingsToWorkbook(
+            ProjectPlanModel projectPlan,
+            XSSFWorkbook workbook,
+            ICellStyle titleStyle)
+        {
+            ArgumentNullException.ThrowIfNull(projectPlan);
+            ArgumentNullException.ThrowIfNull(workbook);
+            ArgumentNullException.ThrowIfNull(titleStyle);
+            ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
+            dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+
+            ISheet sheet = workbook.CreateSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceSettings);
+
+            int rowIndex = 0;
+
+            {
+                int titleColumnIndex = 0;
+                IRow titleRow = sheet.CreateRow(rowIndex);
+
+                foreach (string columnTitle in s_ResourceSettingsColumnTitles)
+                {
+                    ICell cell = titleRow.CreateCell(titleColumnIndex);
+                    cell.CellStyle = titleStyle;
+                    AddToCell(columnTitle, cell, dateTimeCellStyle);
+                    titleColumnIndex++;
+                }
+
+                rowIndex++;
+            }
+            {
+                Type activityType = typeof(ProjectPlanModel);
+                PropertyInfo[] propertyInfos = activityType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
+                var propertyInfoLookup = propertyInfos.ToDictionary(x => x.Name);
+
+                IRow row = sheet.CreateRow(rowIndex);
+                int columnIndex = 0;
+
+                foreach (string columnTitle in s_ResourceSettingsColumnTitles)
+                {
+                    ICell cell = row.CreateCell(columnIndex);
+
+                    columnTitle.ValueSwitchOn()
+                        .Case(nameof(ProjectPlanModel.ResourceSettings.DefaultUnitCost),
+                            colName => AddToCell(projectPlan.ResourceSettings.DefaultUnitCost, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectPlanModel.ResourceSettings.AreDisabled),
+                            colName => AddToCell(projectPlan.ResourceSettings.AreDisabled, cell, dateTimeCellStyle)); ;
+
+                    columnIndex++;
+                }
+
+                rowIndex++;
+            }
         }
 
         private static void WriteActivitiesToWorkbook(
@@ -930,6 +978,11 @@ namespace Zametek.ViewModel.ProjectPlan
             titleStyle.SetFont(titleFont);
 
             WriteGeneralToWorkbook(
+                projectPlan,
+                workbook,
+                titleStyle);
+
+            WriteResourceSettingsToWorkbook(
                 projectPlan,
                 workbook,
                 titleStyle);

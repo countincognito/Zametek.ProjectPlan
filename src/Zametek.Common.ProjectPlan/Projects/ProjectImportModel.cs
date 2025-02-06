@@ -7,9 +7,13 @@
 
         public List<DependentActivityModel> DependentActivities { get; init; } = [];
 
-        public List<ResourceModel> Resources { get; init; } = [];
+        public ResourceSettingsModel ResourceSettings { get; init; } = new ResourceSettingsModel();
 
-        public double DefaultUnitCost { get; init; }
+
+
+        //public List<ResourceModel> Resources { get; init; } = [];
+
+        //public double DefaultUnitCost { get; init; }
 
         public List<ActivitySeverityModel> ActivitySeverities { get; init; } = [];
 

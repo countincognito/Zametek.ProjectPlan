@@ -187,6 +187,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Resource Settings.
+        /// </summary>
+        public static string Reporting_WorksheetResourceSettings {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetResourceSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resource Tracker.
         /// </summary>
         public static string Reporting_WorksheetResourceTracker {

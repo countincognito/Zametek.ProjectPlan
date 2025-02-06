@@ -17,8 +17,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly IList<string> s_GeneralColumnTitles =
         [
-            nameof(ProjectImportModel.ProjectStart),
-            nameof(ProjectImportModel.DefaultUnitCost)
+            nameof(ProjectImportModel.ProjectStart)
+        ];
+
+        private static readonly IList<string> s_ResourceSettingsColumnTitles =
+        [
+            nameof(ProjectImportModel.ResourceSettings.DefaultUnitCost),
+            nameof(ProjectImportModel.ResourceSettings.AreDisabled)
         ];
 
         private static readonly IList<string> s_ActivityColumnTitles =
@@ -252,7 +257,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ProjectStart = projectStart,
                 DependentActivities = dependentActivities,
-                Resources = resources
+                ResourceSettings = new ResourceSettingsModel
+                {
+                    Resources = resources
+                }
             };
         }
 
@@ -263,46 +271,87 @@ namespace Zametek.ViewModel.ProjectPlan
             var workbook = new XSSFWorkbook(file);
             DateTimeOffset projectStart = new(DateTime.Today);
 
-            double defaultUnitCost = 1;
-
-            ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral);
-            if (sheet is not null)
             {
-                DataTable dtTable = SheetToDataTable(sheet);
-                DataColumnCollection columns = dtTable.Columns;
-
-                // Check columns.
-                var columnNames = new List<string>();
-
-                foreach (string title in s_GeneralColumnTitles)
+                ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral);
+                if (sheet is not null)
                 {
-                    if (columns.Contains(title))
+                    DataTable dtTable = SheetToDataTable(sheet);
+                    DataColumnCollection columns = dtTable.Columns;
+
+                    // Check columns.
+                    var columnNames = new List<string>();
+
+                    foreach (string title in s_GeneralColumnTitles)
                     {
-                        columnNames.Add(title);
+                        if (columns.Contains(title))
+                        {
+                            columnNames.Add(title);
+                        }
+                    }
+
+                    foreach (DataRow row in dtTable.Rows)
+                    {
+                        foreach (string columnName in columnNames)
+                        {
+                            columnName.ValueSwitchOn()
+                                .Case(nameof(ProjectImportModel.ProjectStart),
+                                    name =>
+                                    {
+                                        if (DateTime.TryParse(row[name]?.ToString(), out DateTime output))
+                                        {
+                                            projectStart = new DateTimeOffset(output);
+                                        }
+                                    });
+                        }
                     }
                 }
 
-                foreach (DataRow row in dtTable.Rows)
+            }
+
+            double defaultUnitCost = 1;
+            bool areDisabled = false;
+
+            {
+
+                ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceSettings);
+                if (sheet is not null)
                 {
-                    foreach (string columnName in columnNames)
+                    DataTable dtTable = SheetToDataTable(sheet);
+                    DataColumnCollection columns = dtTable.Columns;
+
+                    // Check columns.
+                    var columnNames = new List<string>();
+
+                    foreach (string title in s_ResourceSettingsColumnTitles)
                     {
-                        columnName.ValueSwitchOn()
-                            .Case(nameof(ProjectImportModel.ProjectStart),
-                                name =>
-                                {
-                                    if (DateTime.TryParse(row[name]?.ToString(), out DateTime output))
+                        if (columns.Contains(title))
+                        {
+                            columnNames.Add(title);
+                        }
+                    }
+
+                    foreach (DataRow row in dtTable.Rows)
+                    {
+                        foreach (string columnName in columnNames)
+                        {
+                            columnName.ValueSwitchOn()
+                                .Case(nameof(ProjectImportModel.ResourceSettings.DefaultUnitCost),
+                                    name =>
                                     {
-                                        projectStart = new DateTimeOffset(output);
-                                    }
-                                })
-                            .Case(nameof(ProjectImportModel.DefaultUnitCost),
-                                name =>
-                                {
-                                    if (double.TryParse(row[name]?.ToString(), out double output))
+                                        if (double.TryParse(row[name]?.ToString(), out double output))
+                                        {
+                                            defaultUnitCost = output;
+                                        }
+                                    })
+                                .Case(nameof(ProjectImportModel.ResourceSettings.AreDisabled),
+                                    name =>
                                     {
-                                        defaultUnitCost = output;
-                                    }
-                                });
+                                        if (bool.TryParse(row[name]?.ToString(), out bool output))
+                                        {
+                                            areDisabled = output;
+                                        }
+                                    });
+                        }
                     }
                 }
             }
@@ -323,8 +372,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ProjectStart = projectStart,
                 DependentActivities = [.. dependentActivities.Values],
-                Resources = [.. resources.Values],
-                DefaultUnitCost = defaultUnitCost,
+                ResourceSettings = new ResourceSettingsModel
+                {
+                    Resources = [.. resources.Values],
+                    DefaultUnitCost = defaultUnitCost,
+                    AreDisabled = areDisabled,
+                },
                 ActivitySeverities = [.. activitySeverities],
                 WorkStreams = [.. workStreams.Values]
             };

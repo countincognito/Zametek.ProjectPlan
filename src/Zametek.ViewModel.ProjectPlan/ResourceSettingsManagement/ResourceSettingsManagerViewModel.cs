@@ -164,7 +164,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             new ResourceModel
                             {
                                 Id = resourceId,
-                                IsExplicitTarget = true,
+                                IsExplicitTarget = false,
                                 IsInactive = false,
                                 UnitCost = DefaultUnitCost,
                                 ColorFormat = ColorHelper.Random(),

@@ -165,4 +165,7 @@
   <data name="Reporting_WorksheetResourceChartEffort" xml:space="preserve">
     <value>Resource Chart (Effort)</value>
   </data>
+  <data name="Reporting_WorksheetResourceSettings" xml:space="preserve">
+    <value>Resource Settings</value>
+  </data>
 </root>
