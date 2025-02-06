@@ -63,6 +63,8 @@ namespace Zametek.Contract.ProjectPlan
 
         WorkStreamSettingsModel WorkStreamSettings { get; set; }
 
+        bool IsUsingInfiniteResources { get; }
+
         bool HasCompilationErrors { get; }
 
         IGraphCompilation<int, int, int, IDependentActivity> GraphCompilation { get; }

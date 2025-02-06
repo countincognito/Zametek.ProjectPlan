@@ -587,6 +587,14 @@ namespace Zametek.ViewModel.ProjectPlan
             get
             {
                 HashSet<int> allocatedToResources = AllocatedToResources;
+
+                if (m_CoreViewModel.IsUsingInfiniteResources)
+                {
+                    return string.Join(
+                        DependenciesStringValidationRule.Separator,
+                        allocatedToResources.Order());
+                }
+
                 return ResourceSelector.GetAllocatedToResourcesString(allocatedToResources);
             }
         }

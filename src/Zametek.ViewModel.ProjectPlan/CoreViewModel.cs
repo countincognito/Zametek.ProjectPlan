@@ -80,6 +80,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(core => core.m_SettingService.ProjectTitle)
                 .ToProperty(this, core => core.ProjectTitle);
 
+            m_IsUsingInfiniteResources = this
+                .WhenAnyValue(
+                    core => core.ResourceSettings,
+                    settings => settings.Resources.Count == 0 || settings.AreDisabled)
+                .ToProperty(this, core => core.IsUsingInfiniteResources);
+
             m_HasCompilationErrors = this
                 .WhenAnyValue(
                     core => core.GraphCompilation,
@@ -164,12 +170,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static ResourceSeriesSetModel CalculateResourceSeriesSet(
             IEnumerable<ResourceScheduleModel> resourceSchedules,
-            IEnumerable<ResourceModel> resources,
-            double defaultUnitCost)
+            ResourceSettingsModel resourceSettings)
         {
             ArgumentNullException.ThrowIfNull(resourceSchedules);
-            ArgumentNullException.ThrowIfNull(resources);
+            ArgumentNullException.ThrowIfNull(resourceSettings);
             var resourceSeriesSet = new ResourceSeriesSetModel();
+
+            IList<ResourceModel> resources = resourceSettings.Resources;
+            double defaultUnitCost = resourceSettings.DefaultUnitCost;
+
             var resourceLookup = resources.ToDictionary(x => x.Id);
 
             if (resourceSchedules.Any())
@@ -348,10 +357,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static TrackingSeriesSetModel CalculateTrackingSeriesSet(
             IEnumerable<ActivityModel> activities,
-            IEnumerable<ResourceModel> resources)
+            ResourceSettingsModel resourceSettings,
+            bool isUsingInfiniteResources)
         {
             ArgumentNullException.ThrowIfNull(activities);
-            ArgumentNullException.ThrowIfNull(resources);
+            ArgumentNullException.ThrowIfNull(resourceSettings);
+
+            List<ResourceModel> resources = resourceSettings.Resources;
 
             IList<ActivityModel> orderedActivities = [.. activities
                 .Where(x => !x.HasNoEffort)
@@ -636,6 +648,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
+                // Do not bother with effort measures if we are assuming infinite resources.
+                if (!isUsingInfiniteResources)
                 {
                     // Effort
                     effortPointSeries.Add(new TrackingPointModel());
@@ -733,38 +747,71 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Projections.
 
-            planProjectionPointSeries.Add(new TrackingPointModel());
-            progressProjectionPointSeries.Add(new TrackingPointModel());
-            effortProjectionPointSeries.Add(new TrackingPointModel());
-
-            // Each series will always have at least one item.
-            planProjectionPointSeries.Add(planPointSeries.Last());
-
-            if (progressPointSeries.Count > 1)
+            // Plan
             {
-                var projectedLinearFit = MathNet.Numerics.Fit.LineThroughOrigin(
-                    progressPointSeries.Select(p => (double)p.Time).ToArray(),
-                    progressPointSeries.Select(p => p.Value).ToArray());
+                planProjectionPointSeries.Add(new TrackingPointModel());
 
-                var lastTrackingPoint = planPointSeries.Last();
+                //if (planPointSeries.Count > 1)
+                //{
+                //    var projectedLinearFit = MathNet.Numerics.Fit.LineThroughOrigin(
+                //        planPointSeries.Select(p => (double)p.Time).ToArray(),
+                //        planPointSeries.Select(p => p.Value).ToArray());
 
-                if (projectedLinearFit > 0)
+                //    var lastTrackingPoint = planPointSeries.Last();
+
+                //    if (projectedLinearFit > 0)
+                //    {
+                //        var projectedCompletion = lastTrackingPoint.Value / projectedLinearFit;
+
+                //        planProjectionPointSeries.Add(new TrackingPointModel
+                //        {
+                //            ActivityId = lastTrackingPoint.ActivityId,
+                //            ActivityName = lastTrackingPoint.ActivityName,
+                //            Value = lastTrackingPoint.Value,
+                //            ValuePercentage = lastTrackingPoint.ValuePercentage,
+                //            Time = (int)Math.Ceiling(projectedCompletion)
+                //        });
+                //    }
+                //}
+
+                // Each series will always have at least one item.
+                planProjectionPointSeries.Add(planPointSeries.Last());
+            }
+
+            // Progress
+            {
+                progressProjectionPointSeries.Add(new TrackingPointModel());
+
+                if (progressPointSeries.Count > 1)
                 {
-                    var projectedCompletion = lastTrackingPoint.Value / projectedLinearFit;
+                    var projectedLinearFit = MathNet.Numerics.Fit.LineThroughOrigin(
+                        progressPointSeries.Select(p => (double)p.Time).ToArray(),
+                        progressPointSeries.Select(p => p.Value).ToArray());
 
-                    progressProjectionPointSeries.Add(new TrackingPointModel
+                    var lastTrackingPoint = planPointSeries.Last();
+
+                    if (projectedLinearFit > 0)
                     {
-                        ActivityId = lastTrackingPoint.ActivityId,
-                        ActivityName = lastTrackingPoint.ActivityName,
-                        Value = lastTrackingPoint.Value,
-                        ValuePercentage = lastTrackingPoint.ValuePercentage,
-                        Time = (int)Math.Ceiling(projectedCompletion)
-                    });
+                        var projectedCompletion = lastTrackingPoint.Value / projectedLinearFit;
+
+                        progressProjectionPointSeries.Add(new TrackingPointModel
+                        {
+                            ActivityId = lastTrackingPoint.ActivityId,
+                            ActivityName = lastTrackingPoint.ActivityName,
+                            Value = lastTrackingPoint.Value,
+                            ValuePercentage = lastTrackingPoint.ValuePercentage,
+                            Time = (int)Math.Ceiling(projectedCompletion)
+                        });
+                    }
                 }
             }
 
-            if (effortPointSeries.Count > 1)
+            // Effort
+            if (!isUsingInfiniteResources
+                && effortPointSeries.Count > 1)
             {
+                effortProjectionPointSeries.Add(new TrackingPointModel());
+
                 // We want to project effort out to the greater of the plan or the progress projection
                 var projectedCompletion = Math.Max(
                     progressProjectionPointSeries.Last().Time,
@@ -1230,6 +1277,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
         }
+
+        private readonly ObservableAsPropertyHelper<bool> m_IsUsingInfiniteResources;
+        public bool IsUsingInfiniteResources => m_IsUsingInfiniteResources.Value;
 
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
@@ -1982,15 +2032,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!HasCompilationErrors)
                 {
-                    IList<ResourceModel> resourceModels = ResourceSettings.Resources;
-
                     IList<ResourceScheduleModel> resourceScheduleModels =
                         m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity>, IList<ResourceScheduleModel>>(GraphCompilation);
 
                     resourceSeriesSet = CalculateResourceSeriesSet(
                         resourceScheduleModels,
-                        resourceModels,
-                        ResourceSettings.DefaultUnitCost);
+                        ResourceSettings);
                 }
 
                 ResourceSeriesSet = resourceSeriesSet;
@@ -2007,7 +2054,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     // TODO fix this mapping
                     IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(Activities);
-                    trackingSeriesSet = CalculateTrackingSeriesSet(activityModels, ResourceSettings.Resources);
+                    trackingSeriesSet = CalculateTrackingSeriesSet(activityModels, ResourceSettings, IsUsingInfiniteResources);
                 }
 
                 TrackingSeriesSet = trackingSeriesSet;
@@ -2046,6 +2093,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_ProjectTitle?.Dispose();
+                m_IsUsingInfiniteResources?.Dispose();
                 m_HasCompilationErrors?.Dispose();
                 m_Duration?.Dispose();
                 ClearManagedActivities();
