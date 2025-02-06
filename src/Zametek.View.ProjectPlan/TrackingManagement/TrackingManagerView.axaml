@@ -48,6 +48,7 @@
 
 		<Grid RowDefinitions="*, 4, *">
 			<DataGrid Name="ResourcesGrid"
+					  IsEnabled="{Binding Path=!IsUsingInfiniteResources, Mode=OneWay}"
 					  Grid.Row="0"
 					  FrozenColumnCount="25"
 					  AutoGenerateColumns="False"

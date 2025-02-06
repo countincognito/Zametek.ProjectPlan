@@ -7,6 +7,8 @@ namespace Zametek.Contract.ProjectPlan
     {
         bool IsBusy { get; }
 
+        bool IsUsingInfiniteResources { get; }
+
         bool HasStaleOutputs { get; }
 
         bool HasCompilationErrors { get; }

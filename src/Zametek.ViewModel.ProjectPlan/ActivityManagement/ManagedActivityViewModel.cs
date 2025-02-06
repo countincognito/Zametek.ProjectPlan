@@ -92,6 +92,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(x => x.m_CoreViewModel.ShowDates)
                 .ToProperty(this, x => x.ShowDates);
 
+            m_IsUsingInfiniteResources = this
+                .WhenAnyValue(x => x.m_CoreViewModel.IsUsingInfiniteResources)
+                .ToProperty(this, x => x.IsUsingInfiniteResources);
+
             m_ProjectStartSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.ProjectStart)
                 .ObserveOn(Scheduler.CurrentThread)
@@ -499,6 +503,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
         public bool ShowDates => m_ShowDates.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_IsUsingInfiniteResources;
+        public bool IsUsingInfiniteResources => m_IsUsingInfiniteResources.Value;
 
         private DateTimeOffset m_ProjectStart;
         public DateTimeOffset ProjectStart
@@ -953,6 +960,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 KillSubscriptions();
                 TrackerSet.Dispose();
                 m_ShowDates?.Dispose();
+                m_IsUsingInfiniteResources?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

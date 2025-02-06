@@ -39,6 +39,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(tm => tm.m_CoreViewModel.IsBusy)
                 .ToProperty(this, tm => tm.IsBusy);
 
+            m_IsUsingInfiniteResources = this
+                .WhenAnyValue(tm => tm.m_CoreViewModel.IsUsingInfiniteResources)
+                .ToProperty(this, tm => tm.IsUsingInfiniteResources);
+
             m_HasStaleOutputs = this
                 .WhenAnyValue(tm => tm.m_CoreViewModel.HasStaleOutputs)
                 .ToProperty(this, tm => tm.HasStaleOutputs);
@@ -122,6 +126,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<bool> m_IsBusy;
         public bool IsBusy => m_IsBusy.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_IsUsingInfiniteResources;
+        public bool IsUsingInfiniteResources => m_IsUsingInfiniteResources.Value;
 
         private readonly ObservableAsPropertyHelper<bool> m_HasStaleOutputs;
         public bool HasStaleOutputs => m_HasStaleOutputs.Value;
@@ -224,6 +231,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_IsBusy?.Dispose();
+                m_IsUsingInfiniteResources?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_ShowDates?.Dispose();
                 m_ProjectStart?.Dispose();

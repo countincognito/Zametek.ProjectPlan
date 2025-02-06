@@ -11,6 +11,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowDates { get; }
 
+        bool IsUsingInfiniteResources { get; }
+
         DateTimeOffset ProjectStart { get; }
 
         TimeSpan ProjectStartTimeOffset { get; }
