@@ -29,6 +29,8 @@ namespace Zametek.Contract.ProjectPlan
 
         IWorkStreamSelectorViewModel WorkStreamSelector { get; }
 
+        bool HasPhases { get; }
+
         IResourceTrackerSetViewModel TrackerSet { get; }
 
         bool IsEditing { get; }

@@ -80,11 +80,28 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(core => core.m_SettingService.ProjectTitle)
                 .ToProperty(this, core => core.ProjectTitle);
 
-            m_IsUsingInfiniteResources = this
+            m_HasActivities = m_ReadOnlyActivities
+                .ToObservableChangeSet()
+                .Select(x => m_ReadOnlyActivities.Count > 0)
+                .ToProperty(this, core => core.HasActivities);
+
+            m_HasResources = this
                 .WhenAnyValue(
                     core => core.ResourceSettings,
-                    settings => settings.Resources.Count == 0 || settings.AreDisabled)
-                .ToProperty(this, core => core.IsUsingInfiniteResources);
+                    settings => settings.Resources.Count > 0 && !settings.AreDisabled)
+                .ToProperty(this, core => core.HasResources);
+
+            m_HasWorkStreams = this
+                .WhenAnyValue(
+                    core => core.WorkStreamSettings,
+                    settings => settings.WorkStreams.Count > 0)
+                .ToProperty(this, core => core.HasWorkStreams);
+
+            m_HasPhases = this
+                .WhenAnyValue(
+                    core => core.WorkStreamSettings,
+                    settings => settings.WorkStreams.Count(x => x.IsPhase) > 0)
+                .ToProperty(this, core => core.HasPhases);
 
             m_HasCompilationErrors = this
                 .WhenAnyValue(
@@ -358,7 +375,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static TrackingSeriesSetModel CalculateTrackingSeriesSet(
             IEnumerable<ActivityModel> activities,
             ResourceSettingsModel resourceSettings,
-            bool isUsingInfiniteResources)
+            bool hasResources)
         {
             ArgumentNullException.ThrowIfNull(activities);
             ArgumentNullException.ThrowIfNull(resourceSettings);
@@ -649,7 +666,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 // Do not bother with effort measures if we are assuming infinite resources.
-                if (!isUsingInfiniteResources)
+                if (hasResources)
                 {
                     // Effort
                     effortPointSeries.Add(new TrackingPointModel());
@@ -807,7 +824,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // Effort
-            if (!isUsingInfiniteResources
+            if (hasResources
                 && effortPointSeries.Count > 1)
             {
                 effortProjectionPointSeries.Add(new TrackingPointModel());
@@ -1278,8 +1295,17 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<bool> m_IsUsingInfiniteResources;
-        public bool IsUsingInfiniteResources => m_IsUsingInfiniteResources.Value;
+        private readonly ObservableAsPropertyHelper<bool> m_HasActivities;
+        public bool HasActivities => m_HasActivities.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasResources;
+        public bool HasResources => m_HasResources.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasWorkStreams;
+        public bool HasWorkStreams => m_HasWorkStreams.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasPhases;
+        public bool HasPhases => m_HasPhases.Value;
 
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
@@ -2058,7 +2084,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     // TODO fix this mapping
                     IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(Activities);
-                    trackingSeriesSet = CalculateTrackingSeriesSet(activityModels, ResourceSettings, IsUsingInfiniteResources);
+                    trackingSeriesSet = CalculateTrackingSeriesSet(activityModels, ResourceSettings, HasResources);
                 }
 
                 TrackingSeriesSet = trackingSeriesSet;
@@ -2097,7 +2123,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_ProjectTitle?.Dispose();
-                m_IsUsingInfiniteResources?.Dispose();
+                m_HasActivities?.Dispose();
+                m_HasResources?.Dispose();
+                m_HasWorkStreams?.Dispose();
+                m_HasPhases?.Dispose();
                 m_HasCompilationErrors?.Dispose();
                 m_Duration?.Dispose();
                 ClearManagedActivities();

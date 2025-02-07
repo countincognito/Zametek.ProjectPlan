@@ -7,7 +7,9 @@ namespace Zametek.Contract.ProjectPlan
     {
         bool IsBusy { get; }
 
-        bool IsUsingInfiniteResources { get; }
+        bool HasActivities { get; }
+
+        bool HasResources { get; }
 
         bool HasStaleOutputs { get; }
 

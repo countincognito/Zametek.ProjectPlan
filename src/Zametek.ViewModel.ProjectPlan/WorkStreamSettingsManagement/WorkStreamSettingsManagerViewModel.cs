@@ -46,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             SelectedWorkStreams = new ConcurrentDictionary<int, IManagedWorkStreamViewModel>();
-            m_HasWorkStreams = false;
+            m_HasSelectedWorkStreams = false;
             m_AreSettingsUpdated = false; ;
 
             m_WorkStreams = [];
@@ -54,7 +54,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             SetSelectedManagedWorkStreamsCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedWorkStreams);
             AddManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(AddManagedWorkStreamAsync);
-            RemoveManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(RemoveManagedWorkStreamsAsync, this.WhenAnyValue(rm => rm.HasWorkStreams));
+            RemoveManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(RemoveManagedWorkStreamsAsync, this.WhenAnyValue(rm => rm.HasSelectedWorkStreams));
 
             m_IsBusy = this
                 .WhenAnyValue(rm => rm.m_CoreViewModel.IsBusy)
@@ -133,7 +133,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
-                HasWorkStreams = SelectedWorkStreams.Any();
+                HasSelectedWorkStreams = SelectedWorkStreams.Any();
             }
         }
 
@@ -263,15 +263,15 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
-        private bool m_HasWorkStreams;
-        public bool HasWorkStreams
+        private bool m_HasSelectedWorkStreams;
+        public bool HasSelectedWorkStreams
         {
-            get => m_HasWorkStreams;
+            get => m_HasSelectedWorkStreams;
             set
             {
                 lock (m_Lock)
                 {
-                    m_HasWorkStreams = value;
+                    m_HasSelectedWorkStreams = value;
                     this.RaisePropertyChanged();
                 }
             }

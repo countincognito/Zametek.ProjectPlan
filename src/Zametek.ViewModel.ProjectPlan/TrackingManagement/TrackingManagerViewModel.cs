@@ -39,9 +39,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(tm => tm.m_CoreViewModel.IsBusy)
                 .ToProperty(this, tm => tm.IsBusy);
 
-            m_IsUsingInfiniteResources = this
-                .WhenAnyValue(tm => tm.m_CoreViewModel.IsUsingInfiniteResources)
-                .ToProperty(this, tm => tm.IsUsingInfiniteResources);
+            m_HasActivities = this
+                .WhenAnyValue(tm => tm.m_CoreViewModel.HasActivities)
+                .ToProperty(this, tm => tm.HasActivities);
+
+            m_HasResources = this
+                .WhenAnyValue(tm => tm.m_CoreViewModel.HasResources)
+                .ToProperty(this, tm => tm.HasResources);
 
             m_HasStaleOutputs = this
                 .WhenAnyValue(tm => tm.m_CoreViewModel.HasStaleOutputs)
@@ -127,8 +131,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_IsBusy;
         public bool IsBusy => m_IsBusy.Value;
 
-        private readonly ObservableAsPropertyHelper<bool> m_IsUsingInfiniteResources;
-        public bool IsUsingInfiniteResources => m_IsUsingInfiniteResources.Value;
+        private readonly ObservableAsPropertyHelper<bool> m_HasActivities;
+        public bool HasActivities => m_HasActivities.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasResources;
+        public bool HasResources => m_HasResources.Value;
 
         private readonly ObservableAsPropertyHelper<bool> m_HasStaleOutputs;
         public bool HasStaleOutputs => m_HasStaleOutputs.Value;
@@ -231,7 +238,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_IsBusy?.Dispose();
-                m_IsUsingInfiniteResources?.Dispose();
+                m_HasActivities?.Dispose();
+                m_HasResources?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_ShowDates?.Dispose();
                 m_ProjectStart?.Dispose();

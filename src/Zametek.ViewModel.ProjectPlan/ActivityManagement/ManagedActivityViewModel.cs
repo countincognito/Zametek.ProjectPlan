@@ -92,9 +92,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(x => x.m_CoreViewModel.ShowDates)
                 .ToProperty(this, x => x.ShowDates);
 
-            m_IsUsingInfiniteResources = this
-                .WhenAnyValue(x => x.m_CoreViewModel.IsUsingInfiniteResources)
-                .ToProperty(this, x => x.IsUsingInfiniteResources);
+            m_HasResources = this
+                .WhenAnyValue(x => x.m_CoreViewModel.HasResources)
+                .ToProperty(this, x => x.HasResources);
+
+            m_HasWorkStreams = this
+                .WhenAnyValue(x => x.m_CoreViewModel.HasWorkStreams)
+                .ToProperty(this, x => x.HasWorkStreams);
 
             m_ProjectStartSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.ProjectStart)
@@ -504,8 +508,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
         public bool ShowDates => m_ShowDates.Value;
 
-        private readonly ObservableAsPropertyHelper<bool> m_IsUsingInfiniteResources;
-        public bool IsUsingInfiniteResources => m_IsUsingInfiniteResources.Value;
+        private readonly ObservableAsPropertyHelper<bool> m_HasResources;
+        public bool HasResources => m_HasResources.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasWorkStreams;
+        public bool HasWorkStreams => m_HasWorkStreams.Value;
 
         private DateTimeOffset m_ProjectStart;
         public DateTimeOffset ProjectStart
@@ -595,7 +602,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 HashSet<int> allocatedToResources = AllocatedToResources;
 
-                if (m_CoreViewModel.IsUsingInfiniteResources)
+                if (!m_CoreViewModel.HasResources)
                 {
                     return string.Join(
                         DependenciesStringValidationRule.Separator,
@@ -960,7 +967,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 KillSubscriptions();
                 TrackerSet.Dispose();
                 m_ShowDates?.Dispose();
-                m_IsUsingInfiniteResources?.Dispose();
+                m_HasResources?.Dispose();
+                m_HasWorkStreams?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

@@ -307,6 +307,7 @@
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
 							<u:MultiComboBox x:DataType="vm:ManagedResourceViewModel"
+											 IsEnabled="{Binding Path=HasPhases, Mode=OneWay}"
 											 MaxHeight="200"
 											 Width="{x:Static sys:Double.NaN}"
 											 HorizontalAlignment="Stretch"
@@ -315,7 +316,7 @@
 											 ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}"
 											 SelectedItems="{Binding Path=WorkStreamSelector.SelectedTargetWorkStreams, Mode=OneWay}"
 											 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
-											 IsDropDownOpen="True">
+											 IsDropDownOpen="{Binding Path=HasPhases, Mode=OneWay}">
 								<u:MultiComboBox.SelectedItemTemplate>
 									<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
 										<Grid>

@@ -12,7 +12,7 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
-        bool HasWorkStreams { get; }
+        bool HasSelectedWorkStreams { get; }
 
         bool AreSettingsUpdated { get; set; }
 

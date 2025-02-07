@@ -63,7 +63,13 @@ namespace Zametek.Contract.ProjectPlan
 
         WorkStreamSettingsModel WorkStreamSettings { get; set; }
 
-        bool IsUsingInfiniteResources { get; }
+        bool HasActivities { get; }
+
+        bool HasResources { get; }
+
+        bool HasWorkStreams { get; }
+
+        bool HasPhases { get; }
 
         bool HasCompilationErrors { get; }
 

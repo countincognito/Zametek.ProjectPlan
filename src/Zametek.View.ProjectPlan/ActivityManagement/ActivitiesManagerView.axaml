@@ -793,7 +793,8 @@
 					<DataGridTemplateColumn.CellTemplate>
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
-								  Classes="editable">
+								  Classes="editable"
+								  IsEnabled="{Binding Path=HasWorkStreams, Mode=OneWay}">
 								<TextBox VerticalAlignment="Center"
 										 Margin="0"
 										 Padding="3"
@@ -806,6 +807,7 @@
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
 							<u:MultiComboBox x:DataType="vm:ManagedActivityViewModel"
+											 IsEnabled="{Binding Path=HasWorkStreams, Mode=OneWay}"
 											 MaxHeight="200"
 											 Width="{x:Static sys:Double.NaN}"
 											 Focusable="True"
@@ -814,7 +816,7 @@
 											 ItemsSource="{Binding Path=WorkStreamSelector.TargetWorkStreams, Mode=OneWay}"
 											 SelectedItems="{Binding Path=WorkStreamSelector.SelectedTargetWorkStreams, Mode=OneWay}"
 											 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
-											 IsDropDownOpen="True">
+											 IsDropDownOpen="{Binding Path=HasWorkStreams, Mode=OneWay}">
 								<u:MultiComboBox.SelectedItemTemplate>
 									<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
 										<Grid>
@@ -845,7 +847,7 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable"
-								  IsEnabled="{Binding Path=!IsUsingInfiniteResources, Mode=OneWay}">
+								  IsEnabled="{Binding Path=HasResources, Mode=OneWay}">
 								<TextBox VerticalAlignment="Center"
 										 Margin="0"
 										 Padding="3"
@@ -858,7 +860,7 @@
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
 							<u:MultiComboBox x:DataType="vm:ManagedActivityViewModel"
-											 IsEnabled="{Binding Path=!IsUsingInfiniteResources, Mode=OneWay}"
+											 IsEnabled="{Binding Path=HasResources, Mode=OneWay}"
 											 MaxHeight="200"
 											 Width="{x:Static sys:Double.NaN}"
 											 HorizontalAlignment="Stretch"
@@ -867,7 +869,7 @@
 											 ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}"
 											 SelectedItems="{Binding Path=ResourceSelector.SelectedTargetResources, Mode=OneWay}"
 											 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
-											 IsDropDownOpen="{Binding Path=!IsUsingInfiniteResources, Mode=OneWay}">
+											 IsDropDownOpen="{Binding Path=HasResources, Mode=OneWay}">
 								<u:MultiComboBox.SelectedItemTemplate>
 									<DataTemplate x:DataType="vm:SelectableResourceViewModel">
 										<Grid>

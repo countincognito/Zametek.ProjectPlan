@@ -9,7 +9,6 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -47,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             SelectedResources = new ConcurrentDictionary<int, IManagedResourceViewModel>();
-            m_HasResources = false;
+            m_HasSelectedResources = false;
             m_AreSettingsUpdated = false; ;
 
             m_Resources = [];
@@ -55,8 +54,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             SetSelectedManagedResourcesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedResources);
             AddManagedResourceCommand = ReactiveCommand.CreateFromTask(AddManagedResourceAsync);
-            RemoveManagedResourcesCommand = ReactiveCommand.CreateFromTask(RemoveManagedResourcesAsync, this.WhenAnyValue(rm => rm.HasResources));
-            EditManagedResourcesCommand = ReactiveCommand.CreateFromTask(EditManagedResourcesAsync, this.WhenAnyValue(am => am.HasResources));
+            RemoveManagedResourcesCommand = ReactiveCommand.CreateFromTask(RemoveManagedResourcesAsync, this.WhenAnyValue(rm => rm.HasSelectedResources));
+            EditManagedResourcesCommand = ReactiveCommand.CreateFromTask(EditManagedResourcesAsync, this.WhenAnyValue(am => am.HasSelectedResources));
 
             m_IsBusy = this
                 .WhenAnyValue(rm => rm.m_CoreViewModel.IsBusy)
@@ -146,7 +145,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
-                HasResources = SelectedResources.Any();
+                HasSelectedResources = SelectedResources.Any();
             }
         }
 
@@ -385,15 +384,15 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
-        private bool m_HasResources;
-        public bool HasResources
+        private bool m_HasSelectedResources;
+        public bool HasSelectedResources
         {
-            get => m_HasResources;
+            get => m_HasSelectedResources;
             set
             {
                 lock (m_Lock)
                 {
-                    m_HasResources = value;
+                    m_HasSelectedResources = value;
                     this.RaisePropertyChanged();
                 }
             }

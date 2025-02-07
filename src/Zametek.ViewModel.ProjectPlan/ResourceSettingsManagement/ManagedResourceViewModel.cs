@@ -62,6 +62,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 //.ObserveOn(RxApp.TaskpoolScheduler)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x => WorkStreamSettings = x);
+
+            m_HasPhases = this
+                .WhenAnyValue(x => x.m_CoreViewModel.HasPhases)
+                .ToProperty(this, x => x.HasPhases);
         }
 
         #endregion
@@ -218,6 +222,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public IWorkStreamSelectorViewModel WorkStreamSelector { get; }
 
+        private readonly ObservableAsPropertyHelper<bool> m_HasPhases;
+        public bool HasPhases => m_HasPhases.Value;
+
         public IResourceTrackerSetViewModel TrackerSet { get; }
 
         public bool IsEditing => m_isDirty;
@@ -298,6 +305,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
+                m_HasPhases?.Dispose();
                 TrackerSet.Dispose();
                 m_InterActivityAllocationIsIndirect?.Dispose();
             }
