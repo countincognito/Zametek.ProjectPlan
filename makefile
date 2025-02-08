@@ -6,7 +6,7 @@ OS := win
 CONFIGURATION := Release
 
 help:
-	@echo "ARCH=x64|x86"
+	@echo "ARCH=x64|x86|arm64"
 	@echo "OS=win|linux|osx"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
