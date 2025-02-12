@@ -217,6 +217,33 @@
 										IsTodayHighlighted="True"
 										VerticalAlignment="Center"/>
 
+					<Label DockPanel.Dock="Left"
+						   IsTabStop="False"
+						   Content="{x:Static resources:Labels.Label_Today}"
+						   VerticalContentAlignment="Center"
+						   Height="25"
+						   Margin="0,0,7,0"/>
+
+					<Grid VerticalAlignment="Stretch">
+						<u:NumericIntUpDown IsVisible="{Binding Path=!ShowDates, Mode=OneWay}"
+											Value="{Binding Path=NowTime, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+											VerticalAlignment="Center"
+											Width="75"
+											ShowButtonSpinner="False"
+											Focusable="True"
+											Margin="0"
+											Padding="0"
+											Minimum="0"/>
+
+						<CalendarDatePicker IsVisible="{Binding Path=ShowDates, Mode=OneWay}"
+											SelectedDate="{Binding Path=NowDateTime, Mode=TwoWay}"
+											Margin="0"
+											Padding="3"
+											Focusable="True"
+											IsTodayHighlighted="True"
+											VerticalAlignment="Center"/>
+					</Grid>
+					
 					<Grid />
 				</DockPanel>
 
