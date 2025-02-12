@@ -195,22 +195,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe(_ => RefreshNowValues());
         }
 
-
-
-
-        private void UpdateNowDateTimes()
-        {
-            RefreshNowValues();
-            SetNowTimes(m_NowDateTime);
-        }
-        private void RefreshNowValues()
-        {
-            this.RaisePropertyChanged(nameof(NowTime));
-            this.RaisePropertyChanged(nameof(NowDateTime));
-        }
-
-
-
         #endregion
 
         #region Private Methods
@@ -919,6 +903,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_TrackHasStaleOutputs = true;
             }
         }
+        private void UpdateNowDateTimes()
+        {
+            RefreshNowValues();
+            SetNowTimes(m_NowDateTime);
+        }
+        private void RefreshNowValues()
+        {
+            this.RaisePropertyChanged(nameof(NowTime));
+            this.RaisePropertyChanged(nameof(NowDateTime));
+        }
 
         #endregion
 
@@ -999,6 +993,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
                     this.RaisePropertyChanged(nameof(ProjectStartDateTime));
                     this.RaisePropertyChanged(nameof(ProjectStartTimeOffset));
+                    RefreshNowValues();
+                    UpdateNowDateTimes();
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
             }
