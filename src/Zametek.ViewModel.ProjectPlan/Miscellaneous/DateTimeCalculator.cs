@@ -304,6 +304,104 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public int? CalculateTime(
+            DateTimeOffset projectStart,
+            DateTimeOffset? input)
+        {
+            lock (m_Lock)
+            {
+                int? result = null;
+                if (input.HasValue)
+                {
+                    result = CountDays(projectStart, input.GetValueOrDefault());
+                    result = CalculateTime(result);
+                }
+                return result;
+            }
+        }
+
+        public int? CalculateTime(int? input)
+        {
+            lock (m_Lock)
+            {
+                int? result = input;
+                if (result.HasValue && result < 0)
+                {
+                    result = 0;
+                }
+                return result;
+            }
+        }
+
+        public DateTimeOffset? CalculateDateTime(
+            DateTimeOffset projectStart,
+            int? input)
+        {
+            lock (m_Lock)
+            {
+                DateTimeOffset? result = null;
+                if (input.HasValue)
+                {
+                    result = AddDays(projectStart, input.GetValueOrDefault());
+                    result = CalculateDateTime(projectStart, result);
+                }
+                return result;
+            }
+        }
+
+        public DateTimeOffset? CalculateDateTime(
+            DateTimeOffset projectStart,
+            DateTimeOffset? input)
+        {
+            lock (m_Lock)
+            {
+                DateTimeOffset? result = input;
+                if (result.HasValue)
+                {
+                    if (result < projectStart)
+                    {
+                        result = projectStart.DateTime;
+                    }
+                    result = new DateTimeOffset(result.GetValueOrDefault().Date + projectStart.TimeOfDay, projectStart.Offset);
+                }
+                return result;
+            }
+        }
+
+        public (int?, DateTimeOffset?) CalculateTimeAndDateTime(
+            DateTimeOffset projectStart,
+            int? input)
+        {
+            lock (m_Lock)
+            {
+                // Calculate integer and DateTimeOffset values (double pass).
+                int? intValue = CalculateTime(input);
+                DateTimeOffset? dateTimeOffsetValue = CalculateDateTime(projectStart, intValue);
+
+                dateTimeOffsetValue = CalculateDateTime(projectStart, dateTimeOffsetValue);
+                intValue = CalculateTime(projectStart, dateTimeOffsetValue);
+
+                return (intValue, dateTimeOffsetValue);
+            }
+        }
+
+        public (int?, DateTimeOffset?) CalculateTimeAndDateTime(
+            DateTimeOffset projectStart,
+            DateTimeOffset? input)
+        {
+            lock (m_Lock)
+            {
+                // Calculate integer and DateTimeOffset values (double pass).
+                DateTimeOffset? dateTimeOffsetValue = CalculateDateTime(projectStart, input);
+                int? intValue = CalculateTime(projectStart, dateTimeOffsetValue);
+
+                intValue = CalculateTime(intValue);
+                dateTimeOffsetValue = CalculateDateTime(projectStart, intValue);
+
+                return (intValue, dateTimeOffsetValue);
+            }
+        }
+
         private Func<DateTimeOffset, int, DateTimeOffset> m_AddDaysFunc;
 
         public DateTimeOffset AddDays(DateTimeOffset startDateTime, int days)

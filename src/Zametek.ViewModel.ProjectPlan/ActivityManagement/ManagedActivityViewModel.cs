@@ -171,12 +171,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void SetMinimumEarliestStartTimes(int? input)
         {
-            // Calculate integer and DateTimeOffset values (double pass).
-            int? intValue = CalculateTime(input);
-            DateTimeOffset? dateTimeOffsetValue = CalculateDateTime(intValue);
-
-            dateTimeOffsetValue = CalculateDateTime(dateTimeOffsetValue);
-            intValue = CalculateTime(dateTimeOffsetValue);
+            (int? intValue, DateTimeOffset? dateTimeOffsetValue) = m_DateTimeCalculator.CalculateTimeAndDateTime(ProjectStart, input);
 
             // Validate integer value.
             ValidateMinimumEarliestStartTime(intValue);
@@ -190,12 +185,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void SetMinimumEarliestStartTimes(DateTimeOffset? input, bool skipValidation = false)
         {
-            // Calculate integer and DateTimeOffset values (double pass).
-            DateTimeOffset? dateTimeOffsetValue = CalculateDateTime(input);
-            int? intValue = CalculateTime(dateTimeOffsetValue);
-
-            intValue = CalculateTime(intValue);
-            dateTimeOffsetValue = CalculateDateTime(intValue);
+            (int? intValue, DateTimeOffset? dateTimeOffsetValue) = m_DateTimeCalculator.CalculateTimeAndDateTime(ProjectStart, input);
 
             if (!skipValidation)
             {
@@ -212,12 +202,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void SetMaximumLatestFinishTimes(int? input)
         {
-            // Calculate integer and DateTimeOffset values (double pass).
-            int? intValue = CalculateTime(input);
-            DateTimeOffset? dateTimeOffsetValue = CalculateDateTime(intValue);
-
-            dateTimeOffsetValue = CalculateDateTime(dateTimeOffsetValue);
-            intValue = CalculateTime(dateTimeOffsetValue);
+            (int? intValue, DateTimeOffset? dateTimeOffsetValue) = m_DateTimeCalculator.CalculateTimeAndDateTime(ProjectStart, input);
 
             // Validate integer value.
             ValidateMaximumLatestFinishTime(intValue);
@@ -231,12 +216,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void SetMaximumLatestFinishTimes(DateTimeOffset? input, bool skipValidation = false)
         {
-            // Calculate integer and DateTimeOffset values (double pass).
-            DateTimeOffset? dateTimeOffsetValue = CalculateDateTime(input);
-            int? intValue = CalculateTime(dateTimeOffsetValue);
-
-            intValue = CalculateTime(intValue);
-            dateTimeOffsetValue = CalculateDateTime(intValue);
+            (int? intValue, DateTimeOffset? dateTimeOffsetValue) = m_DateTimeCalculator.CalculateTimeAndDateTime(ProjectStart, input);
 
             if (!skipValidation)
             {
@@ -249,52 +229,6 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(MaximumLatestFinishTime));
             this.RaiseAndSetIfChanged(ref m_MaximumLatestFinishDateTime, dateTimeOffsetValue, nameof(MaximumLatestFinishDateTime));
             RefreshStartAndFinishValues();
-        }
-
-        private int? CalculateTime(DateTimeOffset? input)
-        {
-            int? result = null;
-            if (input.HasValue)
-            {
-                result = m_DateTimeCalculator.CountDays(ProjectStart, input.GetValueOrDefault());
-                result = CalculateTime(result);
-            }
-            return result;
-        }
-
-        private static int? CalculateTime(int? input)
-        {
-            int? result = input;
-            if (result.HasValue && result < 0)
-            {
-                result = 0;
-            }
-            return result;
-        }
-
-        private DateTimeOffset? CalculateDateTime(int? input)
-        {
-            DateTimeOffset? result = null;
-            if (input.HasValue)
-            {
-                result = m_DateTimeCalculator.AddDays(ProjectStart, input.GetValueOrDefault());
-                result = CalculateDateTime(result);
-            }
-            return result;
-        }
-
-        private DateTimeOffset? CalculateDateTime(DateTimeOffset? input)
-        {
-            DateTimeOffset? result = input;
-            if (result.HasValue)
-            {
-                if (result < ProjectStart)
-                {
-                    result = ProjectStart.DateTime;
-                }
-                result = new DateTimeOffset(result.GetValueOrDefault().Date + ProjectStart.TimeOfDay, ProjectStartTimeOffset);
-            }
-            return result;
         }
 
         private void ValidateDuration(int input)

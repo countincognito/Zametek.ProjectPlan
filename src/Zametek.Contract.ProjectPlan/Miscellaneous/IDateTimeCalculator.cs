@@ -1,4 +1,5 @@
-﻿using Zametek.Common.ProjectPlan;
+﻿using System.Reflection.Emit;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -9,6 +10,18 @@ namespace Zametek.Contract.ProjectPlan
         DateTimeDisplayMode DisplayMode { get; set; }
 
         int DaysPerWeek { get; }
+
+        int? CalculateTime(DateTimeOffset projectStart, DateTimeOffset? input);
+
+        int? CalculateTime(int? input);
+
+        DateTimeOffset? CalculateDateTime(DateTimeOffset projectStart, int? input);
+
+        DateTimeOffset? CalculateDateTime(DateTimeOffset projectStart, DateTimeOffset? input);
+
+        (int?, DateTimeOffset?) CalculateTimeAndDateTime(DateTimeOffset projectStart, int? input);
+
+        (int?, DateTimeOffset?) CalculateTimeAndDateTime(DateTimeOffset projectStart, DateTimeOffset? input);
 
         DateTimeOffset AddDays(DateTimeOffset startDateTime, int days);
 
