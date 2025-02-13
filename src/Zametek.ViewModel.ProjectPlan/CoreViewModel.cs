@@ -35,8 +35,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable? m_BuildArrowGraphSub;
         private readonly IDisposable? m_BuildResourceSeriesSetSub;
         private readonly IDisposable? m_BuildTrackingSeriesSetSub;
-        private readonly IDisposable? m_DateTimeCalculatorCalculatorModeSub;
-        private readonly IDisposable? m_DateTimeCalculatorDisplayModeSub;
 
         #endregion
 
@@ -181,18 +179,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObservableForProperty(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildTrackingSeriesSet());
-
-            m_DateTimeCalculatorCalculatorModeSub = this
-                .ObservableForProperty(x => x.m_DateTimeCalculator.CalculatorMode)
-                //.ObserveOn(RxApp.TaskpoolScheduler)
-                .ObserveOn(Scheduler.CurrentThread)
-                .Subscribe(_ => UpdateNowDateTimes());
-
-            m_DateTimeCalculatorDisplayModeSub = this
-                .ObservableForProperty(x => x.m_DateTimeCalculator.DisplayMode)
-                //.ObserveOn(RxApp.TaskpoolScheduler)
-                .ObserveOn(Scheduler.CurrentThread)
-                .Subscribe(_ => RefreshNowValues());
         }
 
         #endregion
@@ -903,16 +889,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_TrackHasStaleOutputs = true;
             }
         }
-        private void UpdateNowDateTimes()
-        {
-            RefreshNowValues();
-            SetNowTimes(m_NowDateTime);
-        }
-        private void RefreshNowValues()
-        {
-            this.RaisePropertyChanged(nameof(NowTime));
-            this.RaisePropertyChanged(nameof(NowDateTime));
-        }
+        //private void UpdateNowDateTimes()
+        //{
+        //    RefreshNowValues();
+        //    SetNowTimes(m_NowDateTime);
+        //}
+        //private void RefreshNowValues()
+        //{
+        //    this.RaisePropertyChanged(nameof(NowTime));
+        //    this.RaisePropertyChanged(nameof(NowDateTime));
+        //}
 
         #endregion
 
@@ -993,8 +979,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
                     this.RaisePropertyChanged(nameof(ProjectStartDateTime));
                     this.RaisePropertyChanged(nameof(ProjectStartTimeOffset));
-                    RefreshNowValues();
-                    UpdateNowDateTimes();
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
             }
@@ -1421,45 +1405,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private int? m_NowTime;
-        public int? NowTime
-        {
-            get => m_NowTime;
-            set => SetNowTimes(value);
-        }
-
         private DateTimeOffset? m_NowDateTime;
         public DateTime? NowDateTime
         {
             get => m_NowDateTime?.DateTime;
-            set => SetNowTimes(value);
-        }
-
-        private void SetNowTimes(int? input)
-        {
-            lock (m_Lock)
+            set
             {
-                (int? intValue, DateTimeOffset? dateTimeOffsetValue) = m_DateTimeCalculator.CalculateTimeAndDateTime(ProjectStart, input);
-
-                // Set integer and DateTimeOffset values.
-                m_NowTime = intValue;
-                this.RaisePropertyChanged(nameof(NowTime));
-                this.RaiseAndSetIfChanged(ref m_NowDateTime, dateTimeOffsetValue, nameof(NowDateTime));
-                RefreshNowValues();
-            }
-        }
-
-        private void SetNowTimes(DateTimeOffset? input)
-        {
-            lock (m_Lock)
-            {
-                (int? intValue, DateTimeOffset? dateTimeOffsetValue) = m_DateTimeCalculator.CalculateTimeAndDateTime(ProjectStart, input);
-
-                // Set integer and DateTimeOffset values.
-                m_NowTime = intValue;
-                this.RaisePropertyChanged(nameof(NowTime));
-                this.RaiseAndSetIfChanged(ref m_NowDateTime, dateTimeOffsetValue, nameof(NowDateTime));
-                RefreshNowValues();
+                m_NowDateTime = value;
+                this.RaisePropertyChanged();
             }
         }
 
@@ -2171,8 +2124,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_BuildArrowGraphSub?.Dispose();
             m_BuildResourceSeriesSetSub?.Dispose();
             m_BuildTrackingSeriesSetSub?.Dispose();
-            m_DateTimeCalculatorCalculatorModeSub?.Dispose();
-            m_DateTimeCalculatorDisplayModeSub?.Dispose();
         }
 
         #endregion

@@ -138,7 +138,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     (isGrouped, annotationStyle) => isGrouped && annotationStyle != AnnotationStyle.None)
                 .ToProperty(this, rcm => rcm.IsAnnotated);
 
-            m_BuildGanttChartPlotModelSub = this
+             m_BuildGanttChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
                     rcm => rcm.m_CoreViewModel.ResourceSettings,
@@ -161,6 +161,17 @@ namespace Zametek.ViewModel.ProjectPlan
             Id = Resource.ProjectPlan.Titles.Title_GanttChartView;
             Title = Resource.ProjectPlan.Titles.Title_GanttChartView;
         }
+
+
+
+
+        //private readonly ObservableAsPropertyHelper<bool> m_BuildGanttChartPlotModelAccumulator;
+        //public bool BuildGanttChartPlotModelAccumulator => m_BuildGanttChartPlotModelAccumulator.Value;
+
+
+
+
+
 
         #endregion
 
@@ -216,6 +227,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ArrowGraphSettingsModel arrowGraphSettings,
             WorkStreamSettingsModel workStreamSettings,
             DateTime projectStartDateTime,
+            DateTime? today,
+            bool showToday,
             bool showDates,
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
             GroupByMode groupByMode,
@@ -772,6 +785,29 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     plotModel.Annotations.Add(finishTimeAnnotation);
                 }
+
+                if (showToday
+                    && today is not null)
+                {
+                    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStartDateTime, today);
+
+                    if (intValue is not null)
+                    {
+                        double todayTimeX = ChartHelper.CalculateChartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+
+                        var todayLine = new LineAnnotation
+                        {
+                            StrokeThickness = 2,
+                            Color = OxyColors.Red,
+                            LineStyle = LineStyle.Dot,
+                            Type = LineAnnotationType.Vertical,
+                            X = todayTimeX,
+                            Y = 0.0
+                        };
+
+                        plotModel.Annotations.Add(todayLine);
+                    }
+                }
             }
 
             plotModel.Axes.Add(BuildResourceChartYAxis(labels));
@@ -1067,6 +1103,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.ArrowGraphSettings,
                     m_CoreViewModel.WorkStreamSettings,
                     m_CoreViewModel.ProjectStartDateTime,
+                    m_CoreViewModel.NowDateTime,
+                    true,
                     m_CoreViewModel.ShowDates,
                     m_CoreViewModel.GraphCompilation,
                     GroupByMode,

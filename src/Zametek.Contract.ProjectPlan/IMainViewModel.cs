@@ -28,8 +28,6 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTime ProjectStartDateTime { get; set; }
 
-        int? NowTime { get; set; }
-
         DateTime? NowDateTime { get; set; }
 
         bool HasStaleOutputs { get; }
