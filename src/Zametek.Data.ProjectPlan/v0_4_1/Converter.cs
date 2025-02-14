@@ -16,6 +16,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_1
             var plan = new ProjectPlanModel
             {
                 ProjectStart = projectPlan.ProjectStart,
+                Today = new(DateTime.Today),
                 DependentActivities = projectPlan.DependentActivities ?? [],
                 ArrowGraphSettings = projectPlan.ArrowGraphSettings ?? new(),
                 ResourceSettings = projectPlan.ResourceSettings ?? new(),

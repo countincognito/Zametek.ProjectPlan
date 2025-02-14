@@ -165,7 +165,7 @@ namespace Zametek.ViewModel.ProjectPlan
             bool showToday,
             bool showDates,
             DateTime projectStartDateTime,
-            DateTime? todayDateTime,
+            DateTime todayDateTime,
             bool showProjections,
             BaseTheme baseTheme)
         {
@@ -335,8 +335,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     trackingSeriesSet.EffortProjection);
             }
 
-            if (showToday
-                && todayDateTime is not null)
+            if (showToday)
             {
                 (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStartDateTime, todayDateTime);
 

@@ -35,6 +35,8 @@
 								  VerticalContentAlignment="Center"
 								  HorizontalAlignment="Center"
 								  HorizontalContentAlignment="Center"
+								  OffContent="{x:Static resources:Labels.Label_No}"
+								  OnContent="{x:Static resources:Labels.Label_Yes}"
 								  IsChecked="{Binding Path=ShowProjections, Mode=TwoWay}"/>
 				</DockPanel>
 

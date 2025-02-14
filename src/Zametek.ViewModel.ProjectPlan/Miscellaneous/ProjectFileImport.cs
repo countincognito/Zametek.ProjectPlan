@@ -17,7 +17,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly IList<string> s_GeneralColumnTitles =
         [
-            nameof(ProjectImportModel.ProjectStart)
+            nameof(ProjectImportModel.ProjectStart),
+            nameof(ProjectImportModel.Today)
         ];
 
         private static readonly IList<string> s_ResourceSettingsColumnTitles =
@@ -256,6 +257,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return new ProjectImportModel
             {
                 ProjectStart = projectStart,
+                Today = new(DateTime.Today),
                 DependentActivities = dependentActivities,
                 ResourceSettings = new ResourceSettingsModel
                 {
@@ -270,6 +272,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             var workbook = new XSSFWorkbook(file);
             DateTimeOffset projectStart = new(DateTime.Today);
+            DateTimeOffset today = new(DateTime.Today);
 
             {
                 ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetGeneral);
@@ -297,9 +300,17 @@ namespace Zametek.ViewModel.ProjectPlan
                                 .Case(nameof(ProjectImportModel.ProjectStart),
                                     name =>
                                     {
-                                        if (DateTime.TryParse(row[name]?.ToString(), out DateTime output))
+                                        if (DateTimeOffset.TryParse(row[name]?.ToString(), out DateTimeOffset output))
                                         {
-                                            projectStart = new DateTimeOffset(output);
+                                            projectStart = output;
+                                        }
+                                    })
+                                .Case(nameof(ProjectImportModel.Today),
+                                    name =>
+                                    {
+                                        if (DateTimeOffset.TryParse(row[name]?.ToString(), out DateTimeOffset output))
+                                        {
+                                            today = output;
                                         }
                                     });
                         }
@@ -371,6 +382,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return new ProjectImportModel
             {
                 ProjectStart = projectStart,
+                Today = today,
                 DependentActivities = [.. dependentActivities.Values],
                 ResourceSettings = new ResourceSettingsModel
                 {

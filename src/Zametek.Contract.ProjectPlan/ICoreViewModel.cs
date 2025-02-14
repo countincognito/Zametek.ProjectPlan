@@ -23,7 +23,11 @@ namespace Zametek.Contract.ProjectPlan
 
         TimeSpan ProjectStartTimeOffset { get; }
 
-        DateTime? TodayDateTime { get; set; }
+        DateTimeOffset Today { get; set; }
+
+        DateTime TodayDateTime { get; set; }
+
+        TimeSpan TodayTimeOffset { get; }
 
         bool ShowDates { get; set; }
 

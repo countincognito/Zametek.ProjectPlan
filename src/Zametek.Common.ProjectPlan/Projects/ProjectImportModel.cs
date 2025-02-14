@@ -5,15 +5,11 @@
     {
         public DateTimeOffset ProjectStart { get; init; }
 
+        public DateTimeOffset Today { get; init; }
+
         public List<DependentActivityModel> DependentActivities { get; init; } = [];
 
         public ResourceSettingsModel ResourceSettings { get; init; } = new ResourceSettingsModel();
-
-
-
-        //public List<ResourceModel> Resources { get; init; } = [];
-
-        //public double DefaultUnitCost { get; init; }
 
         public List<ActivitySeverityModel> ActivitySeverities { get; init; } = [];
 

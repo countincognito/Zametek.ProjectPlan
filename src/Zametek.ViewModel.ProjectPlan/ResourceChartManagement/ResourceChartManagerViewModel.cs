@@ -176,7 +176,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceSeriesSetModel resourceSeriesSet,
             bool showDates,
             DateTime projectStartDateTime,
-            DateTime? todayDateTime,
+            DateTime todayDateTime,
             AllocationMode allocationMode,
             ScheduleMode scheduleMode,
             DisplayStyle displayStyle,
@@ -349,8 +349,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
-                if (showToday
-                    && todayDateTime is not null)
+                if (showToday)
                 {
                     (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStartDateTime, todayDateTime);
 

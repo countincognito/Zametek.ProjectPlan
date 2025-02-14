@@ -241,7 +241,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArrowGraphSettingsModel arrowGraphSettings,
             WorkStreamSettingsModel workStreamSettings,
             DateTime projectStartDateTime,
-            DateTime? todayDateTime,
+            DateTime todayDateTime,
             bool showToday,
             bool showDates,
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
@@ -800,8 +800,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     plotModel.Annotations.Add(finishTimeAnnotation);
                 }
 
-                if (showToday
-                    && todayDateTime is not null)
+                if (showToday)
                 {
                     (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStartDateTime, todayDateTime);
 

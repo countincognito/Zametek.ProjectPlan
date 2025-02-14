@@ -59,7 +59,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_IsReadyToCompile = ReadyToCompile.No;
             m_IsBusy = false;
             m_HasStaleOutputs = false;
-            m_ProjectStart = new DateTimeOffset(DateTime.Today);
+            m_ProjectStart = new(DateTime.Today);
+            m_Today = new(DateTime.Today);
             m_ResourceSettings = new ResourceSettingsModel();
             m_Activities = [];
             m_ReadOnlyActivities = new ReadOnlyObservableCollection<IManagedActivityViewModel>(m_Activities);
@@ -998,6 +999,46 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private DateTimeOffset m_Today;
+        public DateTimeOffset Today
+        {
+            get => m_Today;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_Today, value);
+                    this.RaisePropertyChanged(nameof(TodayDateTime));
+                    this.RaisePropertyChanged(nameof(TodayTimeOffset));
+                }
+            }
+        }
+
+        public DateTime TodayDateTime
+        {
+            get => m_Today.DateTime;
+            set
+            {
+                lock (m_Lock)
+                {
+                    Today = new DateTimeOffset(value, TodayTimeOffset);
+                }
+            }
+        }
+
+        public TimeSpan TodayTimeOffset
+        {
+            get => m_Today.Offset;
+            set
+            {
+                lock (m_Lock)
+                {
+                    Today = new DateTimeOffset(TodayDateTime, value);
+                }
+            }
+        }
+
         private bool m_ShowDates;
         public bool ShowDates
         {
@@ -1447,17 +1488,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private DateTimeOffset? m_TodayDateTime;
-        public DateTime? TodayDateTime
-        {
-            get => m_TodayDateTime?.DateTime;
-            set
-            {
-                m_TodayDateTime = value;
-                this.RaisePropertyChanged();
-            }
-        }
-
         public void ClearSettings()
         {
             try
@@ -1465,19 +1495,28 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
+                    ProjectStart = new(DateTime.Today);
+                    Today = new(DateTime.Today);
                     ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
                     ResourceSettings = m_SettingService.DefaultResourceSettings;
                     WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
-                    EarnedValueShowProjections = false;
+
                     ArrowGraphShowNames = false;
+
                     GanttChartGroupByMode = default;
                     GanttChartAnnotationStyle = default;
                     GanttChartShowGroupLabels = false;
                     GanttChartShowProjectFinish = false;
                     GanttChartShowTracking = false;
+                    GanttChartShowToday = false;
+
                     ResourceChartAllocationMode = default;
                     ResourceChartScheduleMode = default;
                     ResourceChartDisplayStyle = default;
+                    ResourceChartShowToday = false;
+
+                    EarnedValueShowProjections = false;
+                    EarnedValueShowToday = false;
                 }
             }
             finally
@@ -1542,6 +1581,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Project Start Date.
                     ProjectStart = projectImportModel.ProjectStart;
+
+                    // Project Start Date.
+                    Today = projectImportModel.Today;
 
                     // Work Stream settings.
                     WorkStreamSettingsModel workStreamSettings = m_SettingService.DefaultWorkStreamSettings.CloneObject();
@@ -1634,6 +1676,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Project Start Date.
                     ProjectStart = projectPlanModel.ProjectStart;
 
+                    // Project Start Date.
+                    Today = projectPlanModel.Today;
+
                     // Display settings.
                     ArrowGraphShowNames = projectPlanModel.DisplaySettings.ArrowGraphShowNames; // TODO
 
@@ -1724,6 +1769,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         Version = Data.ProjectPlan.Versions.Latest,
                         ProjectStart = ProjectStart,
+                        Today = Today,
                         DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(Activities),
                         ResourceSettings = ResourceSettings.CloneObject(),
                         ArrowGraphSettings = ArrowGraphSettings.CloneObject(),

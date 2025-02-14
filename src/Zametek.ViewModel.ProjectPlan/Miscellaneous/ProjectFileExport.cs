@@ -16,7 +16,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly IList<string> s_GeneralColumnTitles =
         [
-            nameof(ProjectPlanModel.ProjectStart)
+            nameof(ProjectPlanModel.ProjectStart),
+            nameof(ProjectPlanModel.Today)
         ];
 
         private static readonly IList<string> s_ResourceSettingsColumnTitles =
@@ -219,7 +220,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Case<DateTimeOffset>(x =>
                 {
                     cell.CellStyle = dateTimeStyle;
-                    cell.SetCellValue(x.DateTime);
+                    cell.SetCellValue(x.ToISO8601String());
                 })
                 .Case<IEnumerable>(x =>
                 {
@@ -271,7 +272,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     columnTitle.ValueSwitchOn()
                         .Case(nameof(ProjectPlanModel.ProjectStart),
-                            colName => AddToCell(projectPlan.ProjectStart, cell, dateTimeCellStyle));
+                            colName => AddToCell(projectPlan.ProjectStart, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectPlanModel.Today),
+                            colName => AddToCell(projectPlan.Today, cell, dateTimeCellStyle));
 
                     columnIndex++;
                 }

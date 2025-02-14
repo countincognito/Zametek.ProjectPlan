@@ -214,6 +214,7 @@
 										SelectedDate="{Binding Path=ProjectStartDateTime, Mode=TwoWay}"
 										Margin="0,0,11,0"
 										Padding="3"
+										Focusable="True"
 										IsTodayHighlighted="True"
 										VerticalAlignment="Center"/>
 
