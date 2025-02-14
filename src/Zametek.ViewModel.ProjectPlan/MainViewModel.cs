@@ -178,9 +178,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.ProjectStartDateTime)
                 .ToProperty(this, main => main.ProjectStartDateTime);
 
-            m_NowDateTime = this
-                .WhenAnyValue(main => main.m_CoreViewModel.NowDateTime)
-                .ToProperty(this, main => main.NowDateTime);
+            m_TodayDateTime = this
+                .WhenAnyValue(main => main.m_CoreViewModel.TodayDateTime)
+                .ToProperty(this, main => main.TodayDateTime);
 
             m_HasStaleOutputs = this
                 .WhenAnyValue(main => main.m_CoreViewModel.HasStaleOutputs)
@@ -483,13 +483,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<DateTime?> m_NowDateTime;
-        public DateTime? NowDateTime
+        private readonly ObservableAsPropertyHelper<DateTime?> m_TodayDateTime;
+        public DateTime? TodayDateTime
         {
-            get => m_NowDateTime.Value;
+            get => m_TodayDateTime.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.NowDateTime = value;
+                lock (m_Lock) m_CoreViewModel.TodayDateTime = value;
             }
         }
 
@@ -881,7 +881,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsProjectUpdated?.Dispose();
                 m_ProjectStart?.Dispose();
                 m_ProjectStartDateTime?.Dispose();
-                m_NowDateTime?.Dispose();
+                m_TodayDateTime?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
                 m_ShowDates?.Dispose();

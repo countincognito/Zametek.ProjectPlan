@@ -1447,13 +1447,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private DateTimeOffset? m_NowDateTime;
-        public DateTime? NowDateTime
+        private DateTimeOffset? m_TodayDateTime;
+        public DateTime? TodayDateTime
         {
-            get => m_NowDateTime?.DateTime;
+            get => m_TodayDateTime?.DateTime;
             set
             {
-                m_NowDateTime = value;
+                m_TodayDateTime = value;
                 this.RaisePropertyChanged();
             }
         }

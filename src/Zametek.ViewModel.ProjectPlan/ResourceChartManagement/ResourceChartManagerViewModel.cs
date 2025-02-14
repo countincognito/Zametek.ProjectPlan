@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using OxyPlot;
+using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Legends;
 using OxyPlot.Series;
@@ -115,10 +116,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
                     rcm => rcm.m_CoreViewModel.ShowDates,
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
+                    rcm => rcm.m_CoreViewModel.TodayDateTime,
                     rcm => rcm.AllocationMode,
                     rcm => rcm.ScheduleMode,
                     rcm => rcm.DisplayStyle,
-                    rcm => rcm.m_CoreViewModel.BaseTheme)
+                    rcm => rcm.ShowToday,
+                    rcm => rcm.m_CoreViewModel.BaseTheme,
+                    (a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
 
@@ -172,9 +176,11 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceSeriesSetModel resourceSeriesSet,
             bool showDates,
             DateTime projectStartDateTime,
+            DateTime? todayDateTime,
             AllocationMode allocationMode,
             ScheduleMode scheduleMode,
             DisplayStyle displayStyle,
+            bool showToday,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
@@ -340,6 +346,29 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
 
                         plotModel.Series.Add(areaSeries);
+                    }
+                }
+
+                if (showToday
+                    && todayDateTime is not null)
+                {
+                    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStartDateTime, todayDateTime);
+
+                    if (intValue is not null)
+                    {
+                        double todayTimeX = ChartHelper.CalculateChartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+
+                        var todayLine = new LineAnnotation
+                        {
+                            StrokeThickness = 2,
+                            Color = OxyColors.Red,
+                            LineStyle = LineStyle.Dot,
+                            Type = LineAnnotationType.Vertical,
+                            X = todayTimeX,
+                            Y = 0.0
+                        };
+
+                        plotModel.Annotations.Add(todayLine);
                     }
                 }
             }
@@ -550,9 +579,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.ResourceSeriesSet,
                     m_CoreViewModel.ShowDates,
                     m_CoreViewModel.ProjectStartDateTime,
+                    m_CoreViewModel.TodayDateTime,
                     AllocationMode,
                     ScheduleMode,
                     DisplayStyle,
+                    ShowToday,
                     m_CoreViewModel.BaseTheme);
             }
 

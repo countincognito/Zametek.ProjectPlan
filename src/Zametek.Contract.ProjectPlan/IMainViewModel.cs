@@ -28,7 +28,7 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTime ProjectStartDateTime { get; set; }
 
-        DateTime? NowDateTime { get; set; }
+        DateTime? TodayDateTime { get; set; }
 
         bool HasStaleOutputs { get; }
 

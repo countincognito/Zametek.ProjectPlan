@@ -106,7 +106,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.TrackingSeriesSet,
                     rcm => rcm.m_CoreViewModel.ShowDates,
+                    rcm => rcm.ShowToday,
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
+                    rcm => rcm.m_CoreViewModel.TodayDateTime,
                     rcm => rcm.m_CoreViewModel.EarnedValueShowProjections,
                     rcm => rcm.m_CoreViewModel.BaseTheme)
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -160,8 +162,10 @@ namespace Zametek.ViewModel.ProjectPlan
         private static PlotModel BuildEarnedValueChartPlotModelInternal(
             IDateTimeCalculator dateTimeCalculator,
             TrackingSeriesSetModel trackingSeriesSet,
+            bool showToday,
             bool showDates,
             DateTime projectStartDateTime,
+            DateTime? todayDateTime,
             bool showProjections,
             BaseTheme baseTheme)
         {
@@ -331,6 +335,29 @@ namespace Zametek.ViewModel.ProjectPlan
                     trackingSeriesSet.EffortProjection);
             }
 
+            if (showToday
+                && todayDateTime is not null)
+            {
+                (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStartDateTime, todayDateTime);
+
+                if (intValue is not null)
+                {
+                    double todayTimeX = ChartHelper.CalculateChartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+
+                    var todayLine = new LineAnnotation
+                    {
+                        StrokeThickness = 2,
+                        Color = OxyColors.Red,
+                        LineStyle = LineStyle.Dot,
+                        Type = LineAnnotationType.Vertical,
+                        X = todayTimeX,
+                        Y = 0.0
+                    };
+
+                    plotModel.Annotations.Add(todayLine);
+                }
+            }
+
             if (plotModel is IPlotModel plotModelInterface)
             {
                 plotModelInterface.Update(true);
@@ -442,7 +469,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowToday.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.EarnedValueShowProjections = value;
+                lock (m_Lock) m_CoreViewModel.EarnedValueShowToday = value;
             }
         }
 
@@ -516,8 +543,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 plotModel = BuildEarnedValueChartPlotModelInternal(
                     m_DateTimeCalculator,
                     m_CoreViewModel.TrackingSeriesSet,
+                    ShowToday,
                     m_CoreViewModel.ShowDates,
                     m_CoreViewModel.ProjectStartDateTime,
+                    m_CoreViewModel.TodayDateTime,
                     m_CoreViewModel.EarnedValueShowProjections,
                     m_CoreViewModel.BaseTheme);
             }

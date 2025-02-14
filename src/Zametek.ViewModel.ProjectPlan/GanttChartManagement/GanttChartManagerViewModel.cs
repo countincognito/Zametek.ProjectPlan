@@ -170,7 +170,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ArrowGraphSettings,
                     //rcm => rcm.m_CoreViewModel.WorkStreamSettings,
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
-                    rcm => rcm.m_CoreViewModel.NowDateTime,
+                    rcm => rcm.m_CoreViewModel.TodayDateTime,
                     //rcm => rcm.m_CoreViewModel.GraphCompilation,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
                     rcm => rcm.GroupByMode,
@@ -241,7 +241,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArrowGraphSettingsModel arrowGraphSettings,
             WorkStreamSettingsModel workStreamSettings,
             DateTime projectStartDateTime,
-            DateTime? today,
+            DateTime? todayDateTime,
             bool showToday,
             bool showDates,
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
@@ -801,9 +801,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 if (showToday
-                    && today is not null)
+                    && todayDateTime is not null)
                 {
-                    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStartDateTime, today);
+                    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStartDateTime, todayDateTime);
 
                     if (intValue is not null)
                     {
@@ -1127,7 +1127,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.ArrowGraphSettings,
                     m_CoreViewModel.WorkStreamSettings,
                     m_CoreViewModel.ProjectStartDateTime,
-                    m_CoreViewModel.NowDateTime,
+                    m_CoreViewModel.TodayDateTime,
                     ShowToday,
                     m_CoreViewModel.ShowDates,
                     m_CoreViewModel.GraphCompilation,

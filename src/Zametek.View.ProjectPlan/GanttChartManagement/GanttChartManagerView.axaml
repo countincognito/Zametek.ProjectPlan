@@ -123,7 +123,6 @@
 								  IsChecked="{Binding Path=ShowTracking, Mode=TwoWay}"/>
 				</DockPanel>
 
-
 				<DockPanel DockPanel.Dock="Top">
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
@@ -144,8 +143,7 @@
 								  OnContent="{x:Static resources:Labels.Label_Yes}"
 								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"/>
 				</DockPanel>
-				
-				
+
 				<Grid/>
 			</DockPanel>
 		</ScrollViewer>
