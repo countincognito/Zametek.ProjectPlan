@@ -12,7 +12,7 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
-        bool ViewNames { get; set; }
+        bool ShowNames { get; set; }
 
         string ArrowGraphData { get; }
 

@@ -67,7 +67,7 @@
 						   DockPanel.Dock="Top"
 						   IsTabStop="False"
 						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_LabelGroups}"/>
+						   Content="{x:Static resources:Labels.Label_ShowGroupLabels}"/>
 
 					<ToggleSwitch DockPanel.Dock="Top"
 								  IsTabStop="False"
@@ -78,7 +78,7 @@
 								  HorizontalContentAlignment="Center"
 								  OffContent="{x:Static resources:Labels.Label_No}"
 								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=LabelGroups, Mode=TwoWay}"/>
+								  IsChecked="{Binding Path=ShowGroupLabels, Mode=TwoWay}"/>
 				</DockPanel>
 
 				<DockPanel DockPanel.Dock="Top">

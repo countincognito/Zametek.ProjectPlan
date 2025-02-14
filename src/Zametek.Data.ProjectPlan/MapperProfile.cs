@@ -206,6 +206,18 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<ProjectPlanModel, v0_4_0.ProjectPlanModel>().ReverseMap();
 
             #endregion
+
+            #region v0.4.1
+
+            CreateMap<DisplaySettingsModel, v0_4_1.DisplaySettingsModel>().ReverseMap();
+            CreateMap<v0_4_0.DisplaySettingsModel, v0_4_1.DisplaySettingsModel>().ReverseMap();
+
+            CreateMap<ProjectPlanModel, v0_4_1.ProjectPlanModel>().ReverseMap();
+            CreateMap<v0_4_0.ProjectPlanModel, v0_4_1.ProjectPlanModel>().ReverseMap();
+
+            #endregion
+
+
         }
     }
 }

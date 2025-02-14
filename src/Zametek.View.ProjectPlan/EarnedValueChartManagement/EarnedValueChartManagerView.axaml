@@ -25,7 +25,7 @@
 					   DockPanel.Dock="Top"
 					   IsTabStop="False"
 					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_ViewProjections}"/>
+					   Content="{x:Static resources:Labels.Label_ShowProjections}"/>
 
 				<ToggleSwitch DockPanel.Dock="Top"
 							  IsTabStop="False"
@@ -34,7 +34,7 @@
 							  VerticalContentAlignment="Center"
 							  HorizontalAlignment="Center"
 							  HorizontalContentAlignment="Center"
-							  IsChecked="{Binding Path=ViewProjections, Mode=TwoWay}"/>
+							  IsChecked="{Binding Path=ShowProjections, Mode=TwoWay}"/>
 				<Grid/>
 			</DockPanel>
 		</ScrollViewer>

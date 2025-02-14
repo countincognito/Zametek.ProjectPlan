@@ -11,7 +11,9 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
-        bool ViewProjections { get; set; }
+        bool ShowProjections { get; set; }
+
+        bool ShowToday { get; set; }
 
         ICommand SaveEarnedValueChartImageFileCommand { get; }
 

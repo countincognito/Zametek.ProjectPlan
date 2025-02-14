@@ -113,17 +113,21 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartAnnotationStyle)
                 .ToProperty(this, rcm => rcm.AnnotationStyle);
 
-            m_LabelGroups = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ViewGanttChartGroupLabels)
-                .ToProperty(this, rcm => rcm.LabelGroups);
+            m_ShowGroupLabels = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartShowGroupLabels)
+                .ToProperty(this, rcm => rcm.ShowGroupLabels);
 
             m_ShowProjectFinish = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ViewGanttChartProjectFinish)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartShowProjectFinish)
                 .ToProperty(this, rcm => rcm.ShowProjectFinish);
 
             m_ShowTracking = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ViewGanttChartTracking)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartShowTracking)
                 .ToProperty(this, rcm => rcm.ShowTracking);
+
+            m_ShowToday = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartShowToday)
+                .ToProperty(this, rcm => rcm.ShowToday);
 
             m_IsGrouped = this
                 .WhenAnyValue(
@@ -138,15 +142,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     (isGrouped, annotationStyle) => isGrouped && annotationStyle != AnnotationStyle.None)
                 .ToProperty(this, rcm => rcm.IsAnnotated);
 
-            // We need to use an enum here because booleans do not trigger an update.
+            // We need to use an enum because raised changes on bools aren't always captured.
+            // https://github.com/reactiveui/ReactiveUI/issues/3846
             m_BoolAccumulator = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ShowDates,
                     rcm => rcm.m_CoreViewModel.UseClassicDates,
-                    rcm => rcm.LabelGroups,
+                    rcm => rcm.ShowGroupLabels,
                     rcm => rcm.ShowProjectFinish,
                     rcm => rcm.ShowTracking,
-                    (a, b, c, d, e) =>
+                    rcm => rcm.ShowToday,
+                    (a, b, c, d, e, f) =>
                     {
                         if (m_BoolAccumulator is null
                             || m_BoolAccumulator.Value == BoolToggle.Up)
@@ -995,13 +1001,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<bool> m_LabelGroups;
-        public bool LabelGroups
+        private readonly ObservableAsPropertyHelper<bool> m_ShowGroupLabels;
+        public bool ShowGroupLabels
         {
-            get => m_LabelGroups.Value;
+            get => m_ShowGroupLabels.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ViewGanttChartGroupLabels = value;
+                lock (m_Lock) m_CoreViewModel.GanttChartShowGroupLabels = value;
             }
         }
 
@@ -1011,7 +1017,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowProjectFinish.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ViewGanttChartProjectFinish = value;
+                lock (m_Lock) m_CoreViewModel.GanttChartShowProjectFinish = value;
             }
         }
 
@@ -1021,17 +1027,17 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowTracking.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ViewGanttChartTracking = value;
+                lock (m_Lock) m_CoreViewModel.GanttChartShowTracking = value;
             }
         }
 
         private readonly ObservableAsPropertyHelper<bool> m_ShowToday;
-        public bool ShowTracking
+        public bool ShowToday
         {
-            get => m_ShowTracking.Value;
+            get => m_ShowToday.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ViewGanttChartTracking = value;
+                lock (m_Lock) m_CoreViewModel.GanttChartShowToday = value;
             }
         }
 
@@ -1127,7 +1133,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.GraphCompilation,
                     GroupByMode,
                     AnnotationStyle,
-                    LabelGroups,
+                    ShowGroupLabels,
                     ShowProjectFinish,
                     ShowTracking,
                     m_CoreViewModel.BaseTheme);
@@ -1167,9 +1173,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_GroupByMode?.Dispose();
                 m_AnnotationStyle?.Dispose();
-                m_LabelGroups?.Dispose();
+                m_ShowGroupLabels?.Dispose();
                 m_ShowProjectFinish?.Dispose();
                 m_ShowTracking?.Dispose();
+                m_ShowToday?.Dispose();
                 m_IsGrouped?.Dispose();
                 m_IsAnnotated?.Dispose();
                 m_BoolAccumulator?.Dispose();

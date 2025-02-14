@@ -226,13 +226,13 @@ namespace Zametek.ProjectPlan.CommandLine
 
                                 GroupByMode ganttGroup = options.GanttGroup;
                                 AnnotationStyle ganttAnnotate = options.GanttAnnotate;
-                                bool labelGroups = options.GanttLabel ?? default;
+                                bool showGroupLabels = options.GanttLabel ?? default;
                                 bool showProjectFinish = options.GanttFinish ?? default;
                                 bool showTracking = options.GanttTracking ?? default;
 
                                 gantt.GroupByMode = ganttGroup;
                                 gantt.AnnotationStyle = ganttAnnotate;
-                                gantt.LabelGroups = labelGroups;
+                                gantt.ShowGroupLabels = showGroupLabels;
                                 gantt.ShowProjectFinish = showProjectFinish;
                                 gantt.ShowTracking = showTracking;
 
@@ -262,7 +262,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                                 bool graphNames = options.GraphNames ?? default;
 
-                                graph.ViewNames = graphNames;
+                                graph.ShowNames = graphNames;
 
                                 graph.BuildArrowGraphDiagramData();
                                 graph.BuildArrowGraphDiagramImage();
@@ -340,7 +340,7 @@ namespace Zametek.ProjectPlan.CommandLine
                                 int height = evSize[1];
 
                                 bool evProjections = options.EVProjections ?? default;
-                                ev.ViewProjections = evProjections;
+                                ev.ShowProjections = evProjections;
 
                                 ev.BuildEarnedValueChartPlotModel();
 

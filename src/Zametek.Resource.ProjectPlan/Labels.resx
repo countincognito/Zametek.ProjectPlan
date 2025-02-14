@@ -315,8 +315,8 @@
   <data name="Label_IsPhase" xml:space="preserve">
     <value>Phase</value>
   </data>
-  <data name="Label_LabelGroups" xml:space="preserve">
-    <value>Label Groups</value>
+  <data name="Label_ShowGroupLabels" xml:space="preserve">
+    <value>Show Group Labels</value>
   </data>
   <data name="Label_LatestFinishTime" xml:space="preserve">
     <value>LFT</value>
@@ -420,8 +420,8 @@
   <data name="Label_UnitCost" xml:space="preserve">
     <value>Unit Cost</value>
   </data>
-  <data name="Label_ViewProjections" xml:space="preserve">
-    <value>View Projections</value>
+  <data name="Label_ShowProjections" xml:space="preserve">
+    <value>Show Projections</value>
   </data>
   <data name="Label_WorkStreamName" xml:space="preserve">
     <value>Work Stream Name</value>
@@ -480,8 +480,8 @@
   <data name="Label_EditManagedResource" xml:space="preserve">
     <value>Edit</value>
   </data>
-  <data name="Label_ViewNames" xml:space="preserve">
-    <value>View Names</value>
+  <data name="Label_ShowNames" xml:space="preserve">
+    <value>Show Names</value>
   </data>
   <data name="Label_HasNoEffort" xml:space="preserve">
     <value>Ignore Effort</value>

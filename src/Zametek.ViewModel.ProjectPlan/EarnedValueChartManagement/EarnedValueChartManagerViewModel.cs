@@ -94,16 +94,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, rcm => rcm.HasCompilationErrors);
 
-            m_ViewProjections = this
-                .WhenAnyValue(main => main.m_CoreViewModel.ViewEarnedValueProjections)
-                .ToProperty(this, main => main.ViewProjections);
+            m_ShowProjections = this
+                .WhenAnyValue(main => main.m_CoreViewModel.EarnedValueShowProjections)
+                .ToProperty(this, main => main.ShowProjections);
+
+            m_ShowToday = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.EarnedValueShowToday)
+                .ToProperty(this, rcm => rcm.ShowToday);
 
             m_BuildEarnedValueChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.TrackingSeriesSet,
                     rcm => rcm.m_CoreViewModel.ShowDates,
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
-                    rcm => rcm.m_CoreViewModel.ViewEarnedValueProjections,
+                    rcm => rcm.m_CoreViewModel.EarnedValueShowProjections,
                     rcm => rcm.m_CoreViewModel.BaseTheme)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildEarnedValueChartPlotModelAsync());
@@ -422,13 +426,23 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
-        private readonly ObservableAsPropertyHelper<bool> m_ViewProjections;
-        public bool ViewProjections
+        private readonly ObservableAsPropertyHelper<bool> m_ShowProjections;
+        public bool ShowProjections
         {
-            get => m_ViewProjections.Value;
+            get => m_ShowProjections.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ViewEarnedValueProjections = value;
+                lock (m_Lock) m_CoreViewModel.EarnedValueShowProjections = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ShowToday;
+        public bool ShowToday
+        {
+            get => m_ShowToday.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.EarnedValueShowProjections = value;
             }
         }
 
@@ -504,7 +518,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.TrackingSeriesSet,
                     m_CoreViewModel.ShowDates,
                     m_CoreViewModel.ProjectStartDateTime,
-                    m_CoreViewModel.ViewEarnedValueProjections,
+                    m_CoreViewModel.EarnedValueShowProjections,
                     m_CoreViewModel.BaseTheme);
             }
 
@@ -540,7 +554,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
-                m_ViewProjections?.Dispose();
+                m_ShowProjections?.Dispose();
+                m_ShowToday?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

@@ -754,15 +754,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Label Groups.
-        /// </summary>
-        public static string Label_LabelGroups {
-            get {
-                return ResourceManager.GetString("Label_LabelGroups", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to LFT.
         /// </summary>
         public static string Label_LatestFinishTime {
@@ -1025,11 +1016,38 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Group Labels.
+        /// </summary>
+        public static string Label_ShowGroupLabels {
+            get {
+                return ResourceManager.GetString("Label_ShowGroupLabels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Names.
+        /// </summary>
+        public static string Label_ShowNames {
+            get {
+                return ResourceManager.GetString("Label_ShowNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Project Finish.
         /// </summary>
         public static string Label_ShowProjectFinish {
             get {
                 return ResourceManager.GetString("Label_ShowProjectFinish", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Projections.
+        /// </summary>
+        public static string Label_ShowProjections {
+            get {
+                return ResourceManager.GetString("Label_ShowProjections", resourceCulture);
             }
         }
         
@@ -1165,24 +1183,6 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_Version {
             get {
                 return ResourceManager.GetString("Label_Version", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to View Names.
-        /// </summary>
-        public static string Label_ViewNames {
-            get {
-                return ResourceManager.GetString("Label_ViewNames", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to View Projections.
-        /// </summary>
-        public static string Label_ViewProjections {
-            get {
-                return ResourceManager.GetString("Label_ViewProjections", resourceCulture);
             }
         }
         

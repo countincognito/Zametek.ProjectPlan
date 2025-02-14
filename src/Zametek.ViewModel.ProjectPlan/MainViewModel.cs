@@ -215,16 +215,24 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, main => main.BaseTheme);
 
             m_CoreViewModel.AutoCompile = true;
-            m_CoreViewModel.ViewEarnedValueProjections = false;
-            m_CoreViewModel.ViewArrowGraphNames = false;
+
+            m_CoreViewModel.ArrowGraphShowNames = false;
+
             m_CoreViewModel.GanttChartAnnotationStyle = default;
             m_CoreViewModel.GanttChartGroupByMode = default;
-            m_CoreViewModel.ViewGanttChartGroupLabels = false;
-            m_CoreViewModel.ViewGanttChartProjectFinish = false;
-            m_CoreViewModel.ViewGanttChartTracking = false;
+            m_CoreViewModel.GanttChartShowGroupLabels = false;
+            m_CoreViewModel.GanttChartShowProjectFinish = false;
+            m_CoreViewModel.GanttChartShowTracking = false;
+            m_CoreViewModel.GanttChartShowToday = false;
+
             m_CoreViewModel.ResourceChartAllocationMode = default;
             m_CoreViewModel.ResourceChartScheduleMode = default;
             m_CoreViewModel.ResourceChartDisplayStyle = default;
+            m_CoreViewModel.ResourceChartShowToday = false;
+
+            m_CoreViewModel.EarnedValueShowProjections = false;
+            m_CoreViewModel.EarnedValueShowToday = false;
+
             m_CoreViewModel.IsProjectUpdated = false;
 
 #if DEBUG

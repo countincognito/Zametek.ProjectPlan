@@ -889,16 +889,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_TrackHasStaleOutputs = true;
             }
         }
-        //private void UpdateNowDateTimes()
-        //{
-        //    RefreshNowValues();
-        //    SetNowTimes(m_NowDateTime);
-        //}
-        //private void RefreshNowValues()
-        //{
-        //    this.RaisePropertyChanged(nameof(NowTime));
-        //    this.RaisePropertyChanged(nameof(NowDateTime));
-        //}
 
         #endregion
 
@@ -1070,33 +1060,23 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private bool m_ViewEarnedValueProjections;
-        public bool ViewEarnedValueProjections
+        #region Display Settings
+
+        private bool m_ArrowGraphShowNames;
+        public bool ArrowGraphShowNames
         {
-            get => m_ViewEarnedValueProjections;
+            get => m_ArrowGraphShowNames;
             set
             {
                 lock (m_Lock)
                 {
                     SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_ViewEarnedValueProjections, value);
+                    this.RaiseAndSetIfChanged(ref m_ArrowGraphShowNames, value);
                 }
             }
         }
 
-        private bool m_ViewArrowGraphNames;
-        public bool ViewArrowGraphNames
-        {
-            get => m_ViewArrowGraphNames;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_ViewArrowGraphNames, value);
-                }
-            }
-        }
+
 
         private GroupByMode m_GanttChartGroupByMode;
         public GroupByMode GanttChartGroupByMode
@@ -1126,47 +1106,63 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private bool m_ViewGanttChartGroupLabels;
-        public bool ViewGanttChartGroupLabels
+        private bool m_GanttChartShowGroupLabels;
+        public bool GanttChartShowGroupLabels
         {
-            get => m_ViewGanttChartGroupLabels;
+            get => m_GanttChartShowGroupLabels;
             set
             {
                 lock (m_Lock)
                 {
                     SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_ViewGanttChartGroupLabels, value);
+                    this.RaiseAndSetIfChanged(ref m_GanttChartShowGroupLabels, value);
                 }
             }
         }
 
-        private bool m_ViewGanttChartProjectFinish;
-        public bool ViewGanttChartProjectFinish
+        private bool m_GanttChartShowProjectFinish;
+        public bool GanttChartShowProjectFinish
         {
-            get => m_ViewGanttChartProjectFinish;
+            get => m_GanttChartShowProjectFinish;
             set
             {
                 lock (m_Lock)
                 {
                     SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_ViewGanttChartProjectFinish, value);
+                    this.RaiseAndSetIfChanged(ref m_GanttChartShowProjectFinish, value);
                 }
             }
         }
 
-        private bool m_ViewGanttChartTracking;
-        public bool ViewGanttChartTracking
+        private bool m_GanttChartShowTracking;
+        public bool GanttChartShowTracking
         {
-            get => m_ViewGanttChartTracking;
+            get => m_GanttChartShowTracking;
             set
             {
                 lock (m_Lock)
                 {
                     SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_ViewGanttChartTracking, value);
+                    this.RaiseAndSetIfChanged(ref m_GanttChartShowTracking, value);
                 }
             }
         }
+
+        private bool m_GanttChartShowToday;
+        public bool GanttChartShowToday
+        {
+            get => m_GanttChartShowToday;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_GanttChartShowToday, value);
+                }
+            }
+        }
+
+
 
         private AllocationMode m_ResourceChartAllocationMode;
         public AllocationMode ResourceChartAllocationMode
@@ -1209,6 +1205,52 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
         }
+
+        private bool m_ResourceChartShowToday;
+        public bool ResourceChartShowToday
+        {
+            get => m_ResourceChartShowToday;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_ResourceChartShowToday, value);
+                }
+            }
+        }
+
+
+
+        private bool m_EarnedValueShowProjections;
+        public bool EarnedValueShowProjections
+        {
+            get => m_EarnedValueShowProjections;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_EarnedValueShowProjections, value);
+                }
+            }
+        }
+
+        private bool m_EarnedValueShowToday;
+        public bool EarnedValueShowToday
+        {
+            get => m_EarnedValueShowToday;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    this.RaiseAndSetIfChanged(ref m_EarnedValueShowToday, value);
+                }
+            }
+        }
+
+        #endregion
 
         private bool m_AutoCompile;
         public bool AutoCompile
@@ -1426,13 +1468,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
                     ResourceSettings = m_SettingService.DefaultResourceSettings;
                     WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
-                    ViewEarnedValueProjections = false;
-                    ViewArrowGraphNames = false;
+                    EarnedValueShowProjections = false;
+                    ArrowGraphShowNames = false;
                     GanttChartGroupByMode = default;
                     GanttChartAnnotationStyle = default;
-                    ViewGanttChartGroupLabels = false;
-                    ViewGanttChartProjectFinish = false;
-                    ViewGanttChartTracking = false;
+                    GanttChartShowGroupLabels = false;
+                    GanttChartShowProjectFinish = false;
+                    GanttChartShowTracking = false;
                     ResourceChartAllocationMode = default;
                     ResourceChartScheduleMode = default;
                     ResourceChartDisplayStyle = default;
@@ -1593,25 +1635,34 @@ namespace Zametek.ViewModel.ProjectPlan
                     ProjectStart = projectPlanModel.ProjectStart;
 
                     // Display settings.
-                    ViewEarnedValueProjections = projectPlanModel.DisplaySettings.ViewEarnedValueProjections; // TODO
+                    ArrowGraphShowNames = projectPlanModel.DisplaySettings.ArrowGraphShowNames; // TODO
 
-                    ViewArrowGraphNames = projectPlanModel.DisplaySettings.ViewArrowGraphNames; // TODO
 
                     GanttChartGroupByMode = projectPlanModel.DisplaySettings.GanttChartGroupByMode;
 
                     GanttChartAnnotationStyle = projectPlanModel.DisplaySettings.GanttChartAnnotationStyle;
 
-                    ViewGanttChartGroupLabels = projectPlanModel.DisplaySettings.ViewGanttChartGroupLabels;
+                    GanttChartShowGroupLabels = projectPlanModel.DisplaySettings.GanttChartShowGroupLabels;
 
-                    ViewGanttChartProjectFinish = projectPlanModel.DisplaySettings.ViewGanttChartProjectFinish;
+                    GanttChartShowProjectFinish = projectPlanModel.DisplaySettings.GanttChartShowProjectFinish;
 
-                    ViewGanttChartTracking = projectPlanModel.DisplaySettings.ViewGanttChartTracking;
+                    GanttChartShowTracking = projectPlanModel.DisplaySettings.GanttChartShowTracking;
+
+                    GanttChartShowToday = projectPlanModel.DisplaySettings.GanttChartShowToday;
+
 
                     ResourceChartAllocationMode = projectPlanModel.DisplaySettings.ResourceChartAllocationMode; // TODO
 
                     ResourceChartScheduleMode = projectPlanModel.DisplaySettings.ResourceChartScheduleMode; // TODO
 
                     ResourceChartDisplayStyle = projectPlanModel.DisplaySettings.ResourceChartDisplayStyle; // TODO
+
+                    ResourceChartShowToday = projectPlanModel.DisplaySettings.ResourceChartShowToday; // TODO
+
+
+                    EarnedValueShowProjections = projectPlanModel.DisplaySettings.EarnedValueShowProjections; // TODO
+
+                    EarnedValueShowToday = projectPlanModel.DisplaySettings.EarnedValueShowToday; // TODO
 
                     // Work Stream Settings.
                     WorkStreamSettings = projectPlanModel.WorkStreamSettings;
@@ -1671,7 +1722,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     var plan = new ProjectPlanModel
                     {
-                        Version = Data.ProjectPlan.Versions.v0_4_0,
+                        Version = Data.ProjectPlan.Versions.Latest,
                         ProjectStart = ProjectStart,
                         DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(Activities),
                         ResourceSettings = ResourceSettings.CloneObject(),
@@ -1679,16 +1730,22 @@ namespace Zametek.ViewModel.ProjectPlan
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),
                         DisplaySettings = new DisplaySettingsModel
                         {
-                            ViewEarnedValueProjections = ViewEarnedValueProjections,
-                            ViewArrowGraphNames = ViewArrowGraphNames,
-                            GanttChartAnnotationStyle = GanttChartAnnotationStyle,
+                            ArrowGraphShowNames = ArrowGraphShowNames,
+
                             GanttChartGroupByMode = GanttChartGroupByMode,
-                            ViewGanttChartGroupLabels = ViewGanttChartGroupLabels,
-                            ViewGanttChartProjectFinish = ViewGanttChartProjectFinish,
-                            ViewGanttChartTracking = ViewGanttChartTracking,
+                            GanttChartAnnotationStyle = GanttChartAnnotationStyle,
+                            GanttChartShowGroupLabels = GanttChartShowGroupLabels,
+                            GanttChartShowProjectFinish = GanttChartShowProjectFinish,
+                            GanttChartShowTracking = GanttChartShowTracking,
+                            GanttChartShowToday = GanttChartShowToday,
+
                             ResourceChartAllocationMode = ResourceChartAllocationMode,
                             ResourceChartScheduleMode = ResourceChartScheduleMode,
                             ResourceChartDisplayStyle = ResourceChartDisplayStyle,
+                            ResourceChartShowToday = ResourceChartShowToday,
+
+                            EarnedValueShowProjections = EarnedValueShowProjections,
+                            EarnedValueShowToday = EarnedValueShowToday,
                         },
                         GraphCompilation = graphCompilation,
                         ArrowGraph = ArrowGraph.CloneObject(),

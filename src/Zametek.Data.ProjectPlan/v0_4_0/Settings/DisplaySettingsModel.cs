@@ -7,8 +7,6 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
     {
         public bool ViewEarnedValueProjections { get; init; }
 
-        public bool ViewArrowGraphNames { get; init; }
-
         public GroupByMode GanttChartGroupByMode { get; init; }
 
         public AnnotationStyle GanttChartAnnotationStyle { get; init; }
@@ -18,11 +16,5 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
         public bool ViewGanttChartProjectFinish { get; init; }
 
         public bool ViewGanttChartTracking { get; init; }
-
-        public AllocationMode ResourceChartAllocationMode { get; init; }
-
-        public ScheduleMode ResourceChartScheduleMode { get; init; }
-
-        public DisplayStyle ResourceChartDisplayStyle { get; init; }
     }
 }

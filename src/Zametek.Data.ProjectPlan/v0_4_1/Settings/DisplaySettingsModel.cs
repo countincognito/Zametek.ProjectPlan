@@ -1,4 +1,6 @@
-﻿namespace Zametek.Common.ProjectPlan
+﻿using Zametek.Common.ProjectPlan;
+
+namespace Zametek.Data.ProjectPlan.v0_4_1
 {
     [Serializable]
     public record DisplaySettingsModel

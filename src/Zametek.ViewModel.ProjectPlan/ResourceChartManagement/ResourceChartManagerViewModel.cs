@@ -106,6 +106,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.ResourceChartDisplayStyle)
                 .ToProperty(this, rcm => rcm.DisplayStyle);
 
+            m_ShowToday = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ResourceChartShowToday)
+                .ToProperty(this, rcm => rcm.ShowToday);
+
             m_BuildResourceChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
@@ -464,6 +468,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_ShowToday;
+        public bool ShowToday
+        {
+            get => m_ShowToday.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.ResourceChartShowToday = value;
+            }
+        }
+
         public ICommand SaveResourceChartImageFileCommand { get; }
 
         public async Task SaveResourceChartImageFileAsync(
@@ -577,6 +591,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_AllocationMode?.Dispose();
                 m_ScheduleMode?.Dispose();
                 m_DisplayStyle?.Dispose();
+                m_ShowToday?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

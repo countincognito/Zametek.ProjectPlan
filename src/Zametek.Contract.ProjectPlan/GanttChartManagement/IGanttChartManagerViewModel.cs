@@ -16,7 +16,7 @@ namespace Zametek.Contract.ProjectPlan
 
         AnnotationStyle AnnotationStyle { get; set; }
 
-        bool LabelGroups { get; set; }
+        bool ShowGroupLabels { get; set; }
 
         bool ShowProjectFinish { get; set; }
 

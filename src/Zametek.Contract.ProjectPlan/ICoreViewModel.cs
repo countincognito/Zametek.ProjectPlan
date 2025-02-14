@@ -31,27 +31,45 @@ namespace Zametek.Contract.ProjectPlan
 
         bool UseBusinessDays { get; set; }
 
-        bool ViewEarnedValueProjections { get; set; }
+        #region Display Settings
 
-        bool ViewArrowGraphNames { get; set; }
+
+
+        bool ArrowGraphShowNames { get; set; }
+
+
 
         GroupByMode GanttChartGroupByMode { get; set; }
 
         AnnotationStyle GanttChartAnnotationStyle { get; set; }
 
-        bool ViewGanttChartGroupLabels { get; set; }
+        bool GanttChartShowGroupLabels { get; set; }
 
-        bool ViewGanttChartProjectFinish { get; set; }
+        bool GanttChartShowProjectFinish { get; set; }
 
-        bool ViewGanttChartTracking { get; set; }
+        bool GanttChartShowTracking { get; set; }
 
-        bool ViewGanttChartToday { get; set; }
+        bool GanttChartShowToday { get; set; }
+
+
 
         AllocationMode ResourceChartAllocationMode { get; set; }
 
         ScheduleMode ResourceChartScheduleMode { get; set; }
 
         DisplayStyle ResourceChartDisplayStyle { get; set; }
+
+        bool ResourceChartShowToday { get; set; }
+
+
+
+        public bool EarnedValueShowProjections { get; set; }
+
+        public bool EarnedValueShowToday { get; set; }
+
+
+
+        #endregion
 
         bool AutoCompile { get; set; }
 
