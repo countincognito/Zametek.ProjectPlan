@@ -22,6 +22,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowTracking { get; set; }
 
+        bool ShowToday { get; set; }
+
         ICommand SaveGanttChartImageFileCommand { get; }
 
         Task SaveGanttChartImageFileAsync(string? filename, int width, int height);

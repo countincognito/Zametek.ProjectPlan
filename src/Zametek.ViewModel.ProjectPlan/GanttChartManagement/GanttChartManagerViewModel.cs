@@ -138,23 +138,39 @@ namespace Zametek.ViewModel.ProjectPlan
                     (isGrouped, annotationStyle) => isGrouped && annotationStyle != AnnotationStyle.None)
                 .ToProperty(this, rcm => rcm.IsAnnotated);
 
-             m_BuildGanttChartPlotModelSub = this
+            // We need to use an enum here because booleans do not trigger an update.
+            m_BoolAccumulator = this
+                .WhenAnyValue(
+                    rcm => rcm.m_CoreViewModel.ShowDates,
+                    rcm => rcm.m_CoreViewModel.UseClassicDates,
+                    rcm => rcm.LabelGroups,
+                    rcm => rcm.ShowProjectFinish,
+                    rcm => rcm.ShowTracking,
+                    (a, b, c, d, e) =>
+                    {
+                        if (m_BoolAccumulator is null
+                            || m_BoolAccumulator.Value == BoolToggle.Up)
+                        {
+                            return BoolToggle.Down;
+                        }
+                        return BoolToggle.Up;
+                    })
+                .ToProperty(this, rcm => rcm.BoolAccumulator);
+
+            m_BuildGanttChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
                     rcm => rcm.m_CoreViewModel.ResourceSettings,
                     rcm => rcm.m_CoreViewModel.ArrowGraphSettings,
                     //rcm => rcm.m_CoreViewModel.WorkStreamSettings,
                     rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
-                    rcm => rcm.m_CoreViewModel.ShowDates,
-                    rcm => rcm.m_CoreViewModel.UseClassicDates,
+                    rcm => rcm.m_CoreViewModel.NowDateTime,
                     //rcm => rcm.m_CoreViewModel.GraphCompilation,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
                     rcm => rcm.GroupByMode,
                     rcm => rcm.AnnotationStyle,
-                    rcm => rcm.LabelGroups,
-                    rcm => rcm.ShowProjectFinish,
-                    rcm => rcm.ShowTracking,
-                    (a, b, c, d, e, f, g, h, i, j, k, l) => (a, b, c, d, e, f, g, h, i, j, k, l)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                    rcm => rcm.BoolAccumulator,
+                    (a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
 
@@ -162,20 +178,12 @@ namespace Zametek.ViewModel.ProjectPlan
             Title = Resource.ProjectPlan.Titles.Title_GanttChartView;
         }
 
-
-
-
-        //private readonly ObservableAsPropertyHelper<bool> m_BuildGanttChartPlotModelAccumulator;
-        //public bool BuildGanttChartPlotModelAccumulator => m_BuildGanttChartPlotModelAccumulator.Value;
-
-
-
-
-
-
         #endregion
 
         #region Properties
+
+        private readonly ObservableAsPropertyHelper<BoolToggle> m_BoolAccumulator;
+        public BoolToggle BoolAccumulator => m_BoolAccumulator.Value;
 
         private PlotModel m_GanttChartPlotModel;
         public PlotModel GanttChartPlotModel
@@ -1017,6 +1025,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_ShowToday;
+        public bool ShowTracking
+        {
+            get => m_ShowTracking.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.ViewGanttChartTracking = value;
+            }
+        }
+
         public ICommand SaveGanttChartImageFileCommand { get; }
 
         public async Task SaveGanttChartImageFileAsync(
@@ -1104,7 +1122,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.WorkStreamSettings,
                     m_CoreViewModel.ProjectStartDateTime,
                     m_CoreViewModel.NowDateTime,
-                    true,
+                    ShowToday,
                     m_CoreViewModel.ShowDates,
                     m_CoreViewModel.GraphCompilation,
                     GroupByMode,
@@ -1154,6 +1172,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ShowTracking?.Dispose();
                 m_IsGrouped?.Dispose();
                 m_IsAnnotated?.Dispose();
+                m_BoolAccumulator?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
