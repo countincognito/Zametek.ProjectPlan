@@ -1052,6 +1052,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Today.
+        /// </summary>
+        public static string Label_ShowToday {
+            get {
+                return ResourceManager.GetString("Label_ShowToday", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Tracking.
         /// </summary>
         public static string Label_ShowTracking {

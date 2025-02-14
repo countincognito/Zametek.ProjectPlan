@@ -498,4 +498,7 @@
   <data name="Label_Today" xml:space="preserve">
     <value>Today:</value>
   </data>
+  <data name="Label_ShowToday" xml:space="preserve">
+    <value>Show Today</value>
+  </data>
 </root>
