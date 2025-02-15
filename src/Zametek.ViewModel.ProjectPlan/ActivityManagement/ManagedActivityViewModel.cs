@@ -465,8 +465,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public TimeSpan ProjectStartTimeOffset => m_ProjectStart.Offset;
-
         public string DependenciesString
         {
             get => string.Join(DependenciesStringValidationRule.Separator, Dependencies.OrderBy(x => x));

@@ -17,8 +17,6 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeOffset ProjectStart { get; }
 
-        TimeSpan ProjectStartTimeOffset { get; }
-
         string DependenciesString { get; set; }
 
         string ResourceDependenciesString { get; }

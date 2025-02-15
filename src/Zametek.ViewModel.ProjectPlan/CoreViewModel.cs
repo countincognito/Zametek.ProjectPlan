@@ -968,37 +968,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     IsProjectUpdated = true;
                     this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
-                    this.RaisePropertyChanged(nameof(ProjectStartDateTime));
-                    this.RaisePropertyChanged(nameof(ProjectStartTimeOffset));
                     IsReadyToCompile = ReadyToCompile.Yes;
-                }
-            }
-        }
-
-        public DateTime? ProjectStartDateTime
-        {
-            get => m_ProjectStart.DateTime;
-            set
-            {
-                lock (m_Lock)
-                {
-                    if (value is not null)
-                    {
-                        ProjectStart = new DateTimeOffset(value.GetValueOrDefault(), ProjectStartTimeOffset);
-                    }
-                    this.RaisePropertyChanged();
-                }
-            }
-        }
-
-        public TimeSpan ProjectStartTimeOffset
-        {
-            get => m_ProjectStart.Offset;
-            set
-            {
-                lock (m_Lock)
-                {
-                    ProjectStart = new DateTimeOffset(ProjectStartDateTime.GetValueOrDefault(), value);
                 }
             }
         }
@@ -1013,36 +983,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     SetIsProjectUpdatedWithoutStaleOutputs(true);
                     this.RaiseAndSetIfChanged(ref m_Today, value);
-                    this.RaisePropertyChanged(nameof(TodayDateTime));
-                    this.RaisePropertyChanged(nameof(TodayTimeOffset));
-                }
-            }
-        }
-
-        public DateTime? TodayDateTime
-        {
-            get => m_Today.DateTime;
-            set
-            {
-                lock (m_Lock)
-                {
-                    if (value is not null)
-                    {
-                        Today = new DateTimeOffset(value.GetValueOrDefault(), TodayTimeOffset);
-                    }
-                    this.RaisePropertyChanged();
-                }
-            }
-        }
-
-        public TimeSpan TodayTimeOffset
-        {
-            get => m_Today.Offset;
-            set
-            {
-                lock (m_Lock)
-                {
-                    Today = new DateTimeOffset(TodayDateTime.GetValueOrDefault(), value);
                 }
             }
         }
