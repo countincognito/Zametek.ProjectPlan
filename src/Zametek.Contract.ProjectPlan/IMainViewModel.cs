@@ -26,11 +26,11 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeOffset ProjectStart { get; set; }
 
-        DateTime ProjectStartDateTime { get; set; }
+        DateTime? ProjectStartDateTime { get; set; }
 
         DateTimeOffset Today { get; set; }
 
-        DateTime TodayDateTime { get; set; }
+        DateTime? TodayDateTime { get; set; }
 
         bool HasStaleOutputs { get; }
 

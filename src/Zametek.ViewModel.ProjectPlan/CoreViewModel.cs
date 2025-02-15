@@ -975,14 +975,18 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public DateTime ProjectStartDateTime
+        public DateTime? ProjectStartDateTime
         {
             get => m_ProjectStart.DateTime;
             set
             {
                 lock (m_Lock)
                 {
-                    ProjectStart = new DateTimeOffset(value, ProjectStartTimeOffset);
+                    if (value is not null)
+                    {
+                        ProjectStart = new DateTimeOffset(value.GetValueOrDefault(), ProjectStartTimeOffset);
+                    }
+                    this.RaisePropertyChanged();
                 }
             }
         }
@@ -994,7 +998,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    ProjectStart = new DateTimeOffset(ProjectStartDateTime, value);
+                    ProjectStart = new DateTimeOffset(ProjectStartDateTime.GetValueOrDefault(), value);
                 }
             }
         }
@@ -1015,14 +1019,18 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public DateTime TodayDateTime
+        public DateTime? TodayDateTime
         {
             get => m_Today.DateTime;
             set
             {
                 lock (m_Lock)
                 {
-                    Today = new DateTimeOffset(value, TodayTimeOffset);
+                    if (value is not null)
+                    {
+                        Today = new DateTimeOffset(value.GetValueOrDefault(), TodayTimeOffset);
+                    }
+                    this.RaisePropertyChanged();
                 }
             }
         }
@@ -1034,7 +1042,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    Today = new DateTimeOffset(TodayDateTime, value);
+                    Today = new DateTimeOffset(TodayDateTime.GetValueOrDefault(), value);
                 }
             }
         }

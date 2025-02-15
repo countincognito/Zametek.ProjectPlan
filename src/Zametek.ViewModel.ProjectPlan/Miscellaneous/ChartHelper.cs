@@ -16,7 +16,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (showDates)
             {
                 return dateTimeCalculator
-                    .AddDays(projectStart, days)
+                    .AddDays(projectStart.Date, days)
                     .ToString(DateTimeCalculator.DateFormat);
             }
             return days.ToString(CultureInfo.InvariantCulture);
@@ -32,7 +32,7 @@ namespace Zametek.ViewModel.ProjectPlan
             double output = days;
             if (showDates)
             {
-                output = Axis.ToDouble(dateTimeCalculator.AddDays(projectStart, days).Date);
+                output = Axis.ToDouble(dateTimeCalculator.AddDays(projectStart.Date, days).Date);
             }
             return output;
         }

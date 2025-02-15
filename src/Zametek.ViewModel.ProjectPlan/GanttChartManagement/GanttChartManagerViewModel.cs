@@ -169,8 +169,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ResourceSettings,
                     rcm => rcm.m_CoreViewModel.ArrowGraphSettings,
                     //rcm => rcm.m_CoreViewModel.WorkStreamSettings,
-                    rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
-                    rcm => rcm.m_CoreViewModel.TodayDateTime,
+                    rcm => rcm.m_CoreViewModel.ProjectStart,
+                    rcm => rcm.m_CoreViewModel.Today,
                     //rcm => rcm.m_CoreViewModel.GraphCompilation,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
                     rcm => rcm.GroupByMode,
@@ -240,8 +240,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceSettingsModel resourceSettingsSettings,
             ArrowGraphSettingsModel arrowGraphSettings,
             WorkStreamSettingsModel workStreamSettings,
-            DateTime projectStartDateTime,
-            DateTime todayDateTime,
+            DateTimeOffset projectStart,
+            DateTimeOffset today,
             bool showToday,
             bool showDates,
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
@@ -267,7 +267,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
 
-            plotModel.Axes.Add(BuildResourceChartXAxis(dateTimeCalculator, finishTime, showDates, projectStartDateTime));
+            plotModel.Axes.Add(BuildResourceChartXAxis(dateTimeCalculator, finishTime, showDates, projectStart));
 
             var legend = new Legend
             {
@@ -329,8 +329,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                           slackColor.G,
                                           slackColor.B);
 
-                                    double start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
-                                    double end = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+                                    double start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
+                                    double end = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
 
                                     var item = new IntervalBarItem
                                     {
@@ -433,8 +433,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                                   slackColor.G,
                                                   slackColor.B);
 
-                                            double start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
-                                            double end = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+                                            double start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
+                                            double end = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
 
                                             var item = new IntervalBarItem
                                             {
@@ -487,8 +487,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                                             OxyColor fillColor = OxyColor.FromAColor(aLevel, resourceColor);
 
-                                            double minimumX = ChartHelper.CalculateChartTimeXValue(resourceStartTime, showDates, projectStartDateTime, dateTimeCalculator);
-                                            double maximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStartDateTime, dateTimeCalculator);
+                                            double minimumX = ChartHelper.CalculateChartTimeXValue(resourceStartTime, showDates, projectStart, dateTimeCalculator);
+                                            double maximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStart, dateTimeCalculator);
 
                                             var annotation = new RectangleAnnotation
                                             {
@@ -660,8 +660,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                                   slackColor.G,
                                                   slackColor.B);
 
-                                            double start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
-                                            double end = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+                                            double start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
+                                            double end = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
 
                                             var item = new IntervalBarItem
                                             {
@@ -714,8 +714,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                                 aLevel = ColorHelper.AnnotationALight;
                                             }
 
-                                            double minimumX = ChartHelper.CalculateChartTimeXValue(workStreamStartTime, showDates, projectStartDateTime, dateTimeCalculator);
-                                            double maximumX = ChartHelper.CalculateChartTimeXValue(workStreamFinishTime, showDates, projectStartDateTime, dateTimeCalculator);
+                                            double minimumX = ChartHelper.CalculateChartTimeXValue(workStreamStartTime, showDates, projectStart, dateTimeCalculator);
+                                            double maximumX = ChartHelper.CalculateChartTimeXValue(workStreamFinishTime, showDates, projectStart, dateTimeCalculator);
 
                                             var annotation = new RectangleAnnotation
                                             {
@@ -771,10 +771,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         projectFinish.Append(
                             dateTimeCalculator.DisplayFinishDate(
                                 dateTimeCalculator.AddDays(
-                                    projectStartDateTime,
+                                    projectStart,
                                     finishTime),
                                 dateTimeCalculator.AddDays(
-                                    projectStartDateTime,
+                                    projectStart,
                                     finishTime),
                                 1).ToString(DateTimeCalculator.DateFormat));
                     }
@@ -783,7 +783,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         projectFinish.Append(finishTime);
                     }
 
-                    double finishTimeX = ChartHelper.CalculateChartTimeXValue(finishTime, showDates, projectStartDateTime, dateTimeCalculator);
+                    double finishTimeX = ChartHelper.CalculateChartTimeXValue(finishTime, showDates, projectStart, dateTimeCalculator);
                     double finishTimeY = labels.Count;
 
                     var finishTimeAnnotation = new RectangleAnnotation
@@ -802,11 +802,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (showToday)
                 {
-                    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStartDateTime, todayDateTime);
+                    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
 
                     if (intValue is not null)
                     {
-                        double todayTimeX = ChartHelper.CalculateChartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+                        double todayTimeX = ChartHelper.CalculateChartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
 
                         var todayLine = new LineAnnotation
                         {
@@ -868,13 +868,13 @@ namespace Zametek.ViewModel.ProjectPlan
             IDateTimeCalculator dateTimeCalculator,
             int finishTime,
             bool showDates,
-            DateTime projectStartDateTime)
+            DateTimeOffset projectStart)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             if (finishTime != default)
             {
-                double minValue = ChartHelper.CalculateChartTimeXValue(-1, showDates, projectStartDateTime, dateTimeCalculator);
-                double maxValue = ChartHelper.CalculateChartTimeXValue(finishTime + 1, showDates, projectStartDateTime, dateTimeCalculator);
+                double minValue = ChartHelper.CalculateChartTimeXValue(-1, showDates, projectStart, dateTimeCalculator);
+                double maxValue = ChartHelper.CalculateChartTimeXValue(finishTime + 1, showDates, projectStart, dateTimeCalculator);
 
                 if (showDates)
                 {
@@ -1125,8 +1125,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.ResourceSettings,
                     m_CoreViewModel.ArrowGraphSettings,
                     m_CoreViewModel.WorkStreamSettings,
-                    m_CoreViewModel.ProjectStartDateTime,
-                    m_CoreViewModel.TodayDateTime,
+                    m_CoreViewModel.ProjectStart,
+                    m_CoreViewModel.Today,
                     ShowToday,
                     m_CoreViewModel.ShowDates,
                     m_CoreViewModel.GraphCompilation,

@@ -107,8 +107,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.TrackingSeriesSet,
                     rcm => rcm.m_CoreViewModel.ShowDates,
                     rcm => rcm.ShowToday,
-                    rcm => rcm.m_CoreViewModel.ProjectStartDateTime,
-                    rcm => rcm.m_CoreViewModel.TodayDateTime,
+                    rcm => rcm.m_CoreViewModel.ProjectStart,
+                    rcm => rcm.m_CoreViewModel.Today,
                     rcm => rcm.m_CoreViewModel.EarnedValueShowProjections,
                     rcm => rcm.m_CoreViewModel.BaseTheme)
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -164,8 +164,8 @@ namespace Zametek.ViewModel.ProjectPlan
             TrackingSeriesSetModel trackingSeriesSet,
             bool showToday,
             bool showDates,
-            DateTime projectStartDateTime,
-            DateTime todayDateTime,
+            DateTimeOffset projectStart,
+            DateTimeOffset today,
             bool showProjections,
             BaseTheme baseTheme)
         {
@@ -203,7 +203,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     .Select(x => x.ValuePercentage).DefaultIfEmpty(defaultMaxPercentage).Max());
             }
 
-            plotModel.Axes.Add(BuildEarnedValueChartXAxis(dateTimeCalculator, chartEnd, showDates, projectStartDateTime));
+            plotModel.Axes.Add(BuildEarnedValueChartXAxis(dateTimeCalculator, chartEnd, showDates, projectStart));
             plotModel.Axes.Add(BuildEarnedValueChartYAxis(maxPercentage));
 
             var legend = new Legend()
@@ -248,7 +248,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach (TrackingPointModel planPoint in pointSeries)
                     {
                         lineSeries.Points.Add(
-                            new DataPoint(ChartHelper.CalculateChartTimeXValue(planPoint.Time, showDates, projectStartDateTime, dateTimeCalculator),
+                            new DataPoint(ChartHelper.CalculateChartTimeXValue(planPoint.Time, showDates, projectStart, dateTimeCalculator),
                             planPoint.ValuePercentage));
                     }
                     plotModel.Series.Add(lineSeries);
@@ -337,11 +337,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (showToday)
             {
-                (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStartDateTime, todayDateTime);
+                (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
 
                 if (intValue is not null)
                 {
-                    double todayTimeX = ChartHelper.CalculateChartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStartDateTime, dateTimeCalculator);
+                    double todayTimeX = ChartHelper.CalculateChartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
 
                     var todayLine = new LineAnnotation
                     {
@@ -369,13 +369,13 @@ namespace Zametek.ViewModel.ProjectPlan
             IDateTimeCalculator dateTimeCalculator,
             int chartEnd,
             bool showDates,
-            DateTime projectStartDateTime)
+            DateTimeOffset projectStart)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             if (chartEnd != default)
             {
-                double minValue = ChartHelper.CalculateChartTimeXValue(0, showDates, projectStartDateTime, dateTimeCalculator);
-                double maxValue = ChartHelper.CalculateChartTimeXValue(chartEnd, showDates, projectStartDateTime, dateTimeCalculator);
+                double minValue = ChartHelper.CalculateChartTimeXValue(0, showDates, projectStart, dateTimeCalculator);
+                double maxValue = ChartHelper.CalculateChartTimeXValue(chartEnd, showDates, projectStart, dateTimeCalculator);
 
                 if (showDates)
                 {
@@ -544,8 +544,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.TrackingSeriesSet,
                     ShowToday,
                     m_CoreViewModel.ShowDates,
-                    m_CoreViewModel.ProjectStartDateTime,
-                    m_CoreViewModel.TodayDateTime,
+                    m_CoreViewModel.ProjectStart,
+                    m_CoreViewModel.Today,
                     m_CoreViewModel.EarnedValueShowProjections,
                     m_CoreViewModel.BaseTheme);
             }

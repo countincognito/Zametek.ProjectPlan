@@ -176,7 +176,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ProjectStartDateTime = this
                 .WhenAnyValue(main => main.m_CoreViewModel.ProjectStartDateTime)
-                .ToProperty(this, main => main.ProjectStartDateTime);
+                .ToProperty(this, main => main.ProjectStartDateTime); //main => main.ProjectStartDateTime);
 
             m_Today = this
                 .WhenAnyValue(main => main.m_CoreViewModel.Today)
@@ -477,13 +477,19 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<DateTime> m_ProjectStartDateTime;
-        public DateTime ProjectStartDateTime
+        private readonly ObservableAsPropertyHelper<DateTime?> m_ProjectStartDateTime;
+        public DateTime? ProjectStartDateTime
         {
             get => m_ProjectStartDateTime.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ProjectStartDateTime = value;
+                lock (m_Lock)
+                {
+                    if (value is not null)
+                    {
+                        m_CoreViewModel.ProjectStartDateTime = value.GetValueOrDefault();
+                    }
+                }
             }
         }
 
@@ -497,13 +503,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<DateTime> m_TodayDateTime;
-        public DateTime TodayDateTime
+        private readonly ObservableAsPropertyHelper<DateTime?> m_TodayDateTime;
+        public DateTime? TodayDateTime
         {
             get => m_TodayDateTime.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.TodayDateTime = value;
+                if (value is not null)
+                {
+                    m_CoreViewModel.TodayDateTime = value.GetValueOrDefault();
+                }
             }
         }
 

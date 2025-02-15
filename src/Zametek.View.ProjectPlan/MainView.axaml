@@ -210,13 +210,16 @@
 						   VerticalContentAlignment="Center"
 						   Height="25"
 						   Margin="0,0,7,0"/>
-					<CalendarDatePicker DockPanel.Dock="Left"
-										SelectedDate="{Binding Path=ProjectStartDateTime, Mode=TwoWay}"
-										Margin="0,0,11,0"
-										Padding="3"
-										Focusable="True"
-										IsTodayHighlighted="True"
-										VerticalAlignment="Center"/>
+					<DatePicker DockPanel.Dock="Left"
+								SelectedDate="{Binding Path=ProjectStart, Mode=TwoWay}"
+								Margin="0,0,11,0"
+								Padding="3"
+								Focusable="True"
+								DayFormat="d (ddd)"
+								DayVisible="True"
+								MonthVisible="True"
+								YearVisible="True"
+								VerticalAlignment="Center"/>
 
 					<Label DockPanel.Dock="Left"
 						   IsTabStop="False"
@@ -225,14 +228,17 @@
 						   Height="25"
 						   Margin="0,0,7,0"/>
 
-					<CalendarDatePicker DockPanel.Dock="Left"
-										SelectedDate="{Binding Path=TodayDateTime, Mode=TwoWay}"
-										Margin="0,0,11,0"
-										Padding="3"
-										Focusable="True"
-										IsTodayHighlighted="True"
-										VerticalAlignment="Center"/>
-					
+					<DatePicker DockPanel.Dock="Left"
+								SelectedDate="{Binding Path=Today, Mode=TwoWay}"
+								Margin="0,0,11,0"
+								Padding="3"
+								Focusable="True"
+								DayFormat="d (ddd)"
+								DayVisible="True"
+								MonthVisible="True"
+								YearVisible="True"
+								VerticalAlignment="Center"/>
+
 					<Grid />
 				</DockPanel>
 
