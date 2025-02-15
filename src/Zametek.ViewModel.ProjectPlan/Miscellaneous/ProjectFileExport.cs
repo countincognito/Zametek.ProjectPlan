@@ -220,7 +220,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Case<DateTimeOffset>(x =>
                 {
                     cell.CellStyle = dateTimeStyle;
-                    cell.SetCellValue(x.ToISO8601String());
+                    cell.SetCellValue(x.DateTime);
                 })
                 .Case<IEnumerable>(x =>
                 {

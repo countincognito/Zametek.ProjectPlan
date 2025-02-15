@@ -24,6 +24,12 @@
     <Content Include="TestFiles\test-a_v0_3_2.zpp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestFiles\test-b_v0_4_1.zpp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\test-b_v0_4_0.zpp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestFiles\test-a_v0_4_0.zpp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
