@@ -97,6 +97,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Display Settings.
+        /// </summary>
+        public static string Reporting_WorksheetDisplaySettings {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetDisplaySettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Earned-Value.
         /// </summary>
         public static string Reporting_WorksheetEarnedValue {

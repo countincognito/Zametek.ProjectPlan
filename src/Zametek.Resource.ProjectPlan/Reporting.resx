@@ -168,4 +168,7 @@
   <data name="Reporting_WorksheetResourceSettings" xml:space="preserve">
     <value>Resource Settings</value>
   </data>
+  <data name="Reporting_WorksheetDisplaySettings" xml:space="preserve">
+    <value>Display Settings</value>
+  </data>
 </root>

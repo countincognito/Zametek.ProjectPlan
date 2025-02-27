@@ -26,6 +26,13 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ProjectPlanModel.ResourceSettings.AreDisabled),
         ];
 
+        private static readonly IList<string> s_DisplaySettingsColumnTitles =
+        [
+            nameof(ProjectPlanModel.DisplaySettings.ShowDates),
+            nameof(ProjectPlanModel.DisplaySettings.UseClassicDates),
+            nameof(ProjectPlanModel.DisplaySettings.UseBusinessDays),
+        ];
+
         private static readonly IList<string> s_ActivityColumnTitles =
         [
             nameof(ActivityModel.Id),
@@ -275,6 +282,62 @@ namespace Zametek.ViewModel.ProjectPlan
                             colName => AddToCell(projectPlan.ProjectStart, cell, dateTimeCellStyle))
                         .Case(nameof(ProjectPlanModel.Today),
                             colName => AddToCell(projectPlan.Today, cell, dateTimeCellStyle));
+
+                    columnIndex++;
+                }
+
+                rowIndex++;
+            }
+        }
+
+        private static void WriteDisplaySettingsToWorkbook(
+            ProjectPlanModel projectPlan,
+            XSSFWorkbook workbook,
+            ICellStyle titleStyle)
+        {
+            ArgumentNullException.ThrowIfNull(projectPlan);
+            ArgumentNullException.ThrowIfNull(workbook);
+            ArgumentNullException.ThrowIfNull(titleStyle);
+            ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
+            dateTimeCellStyle.DataFormat = workbook.GetCreationHelper().CreateDataFormat().GetFormat(DateTimeCalculator.DateFormat);
+
+            ISheet sheet = workbook.CreateSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetDisplaySettings);
+
+            int rowIndex = 0;
+
+            {
+                int titleColumnIndex = 0;
+                IRow titleRow = sheet.CreateRow(rowIndex);
+
+                foreach (string columnTitle in s_DisplaySettingsColumnTitles)
+                {
+                    ICell cell = titleRow.CreateCell(titleColumnIndex);
+                    cell.CellStyle = titleStyle;
+                    AddToCell(columnTitle, cell, dateTimeCellStyle);
+                    titleColumnIndex++;
+                }
+
+                rowIndex++;
+            }
+            {
+                Type activityType = typeof(ProjectPlanModel);
+                PropertyInfo[] propertyInfos = activityType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
+                var propertyInfoLookup = propertyInfos.ToDictionary(x => x.Name);
+
+                IRow row = sheet.CreateRow(rowIndex);
+                int columnIndex = 0;
+
+                foreach (string columnTitle in s_DisplaySettingsColumnTitles)
+                {
+                    ICell cell = row.CreateCell(columnIndex);
+
+                    columnTitle.ValueSwitchOn()
+                        .Case(nameof(ProjectPlanModel.DisplaySettings.ShowDates),
+                            colName => AddToCell(projectPlan.DisplaySettings.ShowDates, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectPlanModel.DisplaySettings.UseClassicDates),
+                            colName => AddToCell(projectPlan.DisplaySettings.UseClassicDates, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectPlanModel.DisplaySettings.UseBusinessDays),
+                            colName => AddToCell(projectPlan.DisplaySettings.UseBusinessDays, cell, dateTimeCellStyle));
 
                     columnIndex++;
                 }
@@ -981,6 +1044,11 @@ namespace Zametek.ViewModel.ProjectPlan
             titleStyle.SetFont(titleFont);
 
             WriteGeneralToWorkbook(
+                projectPlan,
+                workbook,
+                titleStyle);
+
+            WriteDisplaySettingsToWorkbook(
                 projectPlan,
                 workbook,
                 titleStyle);

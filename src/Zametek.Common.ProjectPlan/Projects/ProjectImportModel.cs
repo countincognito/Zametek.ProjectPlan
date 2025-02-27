@@ -14,5 +14,7 @@
         public List<ActivitySeverityModel> ActivitySeverities { get; init; } = [];
 
         public List<WorkStreamModel> WorkStreams { get; init; } = [];
+
+        public DisplaySettingsModel DisplaySettings { get; init; } = new DisplaySettingsModel();
     }
 }

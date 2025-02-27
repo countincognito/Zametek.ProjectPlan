@@ -1,4 +1,5 @@
-﻿using net.sf.mpxj.MpxjUtilities;
+﻿using java.util.stream;
+using net.sf.mpxj.MpxjUtilities;
 using net.sf.mpxj.reader;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
@@ -15,6 +16,8 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
+        private readonly ISettingService m_SettingService;
+
         private static readonly IList<string> s_GeneralColumnTitles =
         [
             nameof(ProjectImportModel.ProjectStart),
@@ -25,6 +28,13 @@ namespace Zametek.ViewModel.ProjectPlan
         [
             nameof(ProjectImportModel.ResourceSettings.DefaultUnitCost),
             nameof(ProjectImportModel.ResourceSettings.AreDisabled)
+        ];
+
+        private static readonly IList<string> s_DisplaySettingsColumnTitles =
+        [
+            nameof(ProjectPlanModel.DisplaySettings.ShowDates),
+            nameof(ProjectPlanModel.DisplaySettings.UseClassicDates),
+            nameof(ProjectPlanModel.DisplaySettings.UseBusinessDays),
         ];
 
         private static readonly IList<string> s_ActivityColumnTitles =
@@ -87,6 +97,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region Ctors
+
+        public ProjectFileImport(ISettingService settingService)
+        {
+            ArgumentNullException.ThrowIfNull(settingService);
+            m_SettingService = settingService;
+        }
+
+        #endregion
+
+        #region Private Members
+
         private static DataTable SheetToDataTable(ISheet sheet)
         {
             ArgumentNullException.ThrowIfNull(sheet);
@@ -131,6 +153,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             return dtTable;
         }
+
+        #endregion
 
         #region IProjectFileImport Members
 
@@ -254,6 +278,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
+            bool showDates = m_SettingService.DefaultShowDates;
+            bool useClassicDates = m_SettingService.DefaultUseClassicDates;
+            bool useBusinessDays = m_SettingService.DefaultUseBusinessDays;
+
             return new ProjectImportModel
             {
                 ProjectStart = projectStart,
@@ -262,6 +290,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 ResourceSettings = new ResourceSettingsModel
                 {
                     Resources = resources
+                },
+                DisplaySettings = new()
+                {
+                    ShowDates = showDates,
+                    UseClassicDates = useClassicDates,
+                    UseBusinessDays = useBusinessDays,
                 }
             };
         }
@@ -317,6 +351,62 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
+            }
+
+            bool showDates = false;
+            bool useClassicDates = false;
+            bool useBusinessDays = false;
+
+            {
+                ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetDisplaySettings);
+                if (sheet is not null)
+                {
+                    DataTable dtTable = SheetToDataTable(sheet);
+                    DataColumnCollection columns = dtTable.Columns;
+
+                    // Check columns.
+                    var columnNames = new List<string>();
+
+                    foreach (string title in s_DisplaySettingsColumnTitles)
+                    {
+                        if (columns.Contains(title))
+                        {
+                            columnNames.Add(title);
+                        }
+                    }
+
+                    foreach (DataRow row in dtTable.Rows)
+                    {
+                        foreach (string columnName in columnNames)
+                        {
+                            columnName.ValueSwitchOn()
+                                .Case(nameof(ProjectImportModel.DisplaySettings.ShowDates),
+                                    name =>
+                                    {
+                                        if (bool.TryParse(row[name]?.ToString(), out bool output))
+                                        {
+                                            showDates = output;
+                                        }
+                                    })
+                                .Case(nameof(ProjectImportModel.DisplaySettings.UseClassicDates),
+                                    name =>
+                                    {
+                                        if (bool.TryParse(row[name]?.ToString(), out bool output))
+                                        {
+                                            useClassicDates = output;
+                                        }
+                                    })
+                                .Case(nameof(ProjectImportModel.DisplaySettings.UseBusinessDays),
+                                    name =>
+                                    {
+                                        if (bool.TryParse(row[name]?.ToString(), out bool output))
+                                        {
+                                            useBusinessDays = output;
+                                        }
+                                    });
+                        }
+                    }
+                }
             }
 
             double defaultUnitCost = 1;
@@ -384,14 +474,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 ProjectStart = projectStart,
                 Today = today,
                 DependentActivities = [.. dependentActivities.Values],
-                ResourceSettings = new ResourceSettingsModel
+                ResourceSettings = new()
                 {
                     Resources = [.. resources.Values],
                     DefaultUnitCost = defaultUnitCost,
                     AreDisabled = areDisabled,
                 },
                 ActivitySeverities = [.. activitySeverities],
-                WorkStreams = [.. workStreams.Values]
+                WorkStreams = [.. workStreams.Values],
+                DisplaySettings = new()
+                {
+                    ShowDates = showDates,
+                    UseClassicDates = useClassicDates,
+                    UseBusinessDays = useBusinessDays,
+                }
             };
         }
 

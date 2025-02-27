@@ -1575,6 +1575,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Project Start Date.
                     Today = projectImportModel.Today;
 
+                    // Display settings.
+                    ShowDates = projectImportModel.DisplaySettings.ShowDates;
+                    UseClassicDates = projectImportModel.DisplaySettings.UseClassicDates;
+                    UseBusinessDays = projectImportModel.DisplaySettings.UseBusinessDays;
+
                     // Work Stream settings.
                     WorkStreamSettingsModel workStreamSettings = m_SettingService.DefaultWorkStreamSettings.CloneObject();
 
@@ -1671,39 +1676,24 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Display settings.
                     ShowDates = projectPlanModel.DisplaySettings.ShowDates;
-
                     UseClassicDates = projectPlanModel.DisplaySettings.UseClassicDates;
-
                     UseBusinessDays = projectPlanModel.DisplaySettings.UseBusinessDays;
-
 
                     ArrowGraphShowNames = projectPlanModel.DisplaySettings.ArrowGraphShowNames; // TODO
 
-
                     GanttChartGroupByMode = projectPlanModel.DisplaySettings.GanttChartGroupByMode;
-
                     GanttChartAnnotationStyle = projectPlanModel.DisplaySettings.GanttChartAnnotationStyle;
-
                     GanttChartShowGroupLabels = projectPlanModel.DisplaySettings.GanttChartShowGroupLabels;
-
                     GanttChartShowProjectFinish = projectPlanModel.DisplaySettings.GanttChartShowProjectFinish;
-
                     GanttChartShowTracking = projectPlanModel.DisplaySettings.GanttChartShowTracking;
-
                     GanttChartShowToday = projectPlanModel.DisplaySettings.GanttChartShowToday;
 
-
                     ResourceChartAllocationMode = projectPlanModel.DisplaySettings.ResourceChartAllocationMode; // TODO
-
                     ResourceChartScheduleMode = projectPlanModel.DisplaySettings.ResourceChartScheduleMode; // TODO
-
                     ResourceChartDisplayStyle = projectPlanModel.DisplaySettings.ResourceChartDisplayStyle; // TODO
-
                     ResourceChartShowToday = projectPlanModel.DisplaySettings.ResourceChartShowToday; // TODO
 
-
                     EarnedValueShowProjections = projectPlanModel.DisplaySettings.EarnedValueShowProjections; // TODO
-
                     EarnedValueShowToday = projectPlanModel.DisplaySettings.EarnedValueShowToday; // TODO
 
                     // Work Stream Settings.
