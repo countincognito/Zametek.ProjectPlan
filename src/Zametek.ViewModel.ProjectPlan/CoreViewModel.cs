@@ -67,9 +67,9 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
-            ShowDates = m_SettingService.ShowDates;
-            UseClassicDates = m_SettingService.UseClassicDates;
-            UseBusinessDays = m_SettingService.UseBusinessDays;
+            ShowDates = m_SettingService.DefaultShowDates;
+            UseClassicDates = m_SettingService.DefaultUseClassicDates;
+            UseBusinessDays = m_SettingService.DefaultUseBusinessDays;
             m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
             m_ArrowGraph = new ArrowGraphModel();
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
@@ -987,6 +987,8 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        #region Display Settings
+
         private bool m_ShowDates;
         public bool ShowDates
         {
@@ -995,7 +997,6 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_SettingService.ShowDates = value;
                     this.RaiseAndSetIfChanged(ref m_ShowDates, value);
                 }
             }
@@ -1010,7 +1011,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_UseClassicDates = value;
-                    m_SettingService.UseClassicDates = m_UseClassicDates;
                     if (m_UseClassicDates)
                     {
                         m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Classic;
@@ -1033,7 +1033,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_UseBusinessDays = value;
-                    m_SettingService.UseBusinessDays = m_UseBusinessDays;
                     if (m_UseBusinessDays)
                     {
                         m_DateTimeCalculator.CalculatorMode = DateTimeCalculatorMode.BusinessDays;
@@ -1049,7 +1048,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        #region Display Settings
+
 
         private bool m_ArrowGraphShowNames;
         public bool ArrowGraphShowNames
@@ -1240,6 +1239,45 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         #endregion
+
+        public bool DefaultShowDates
+        {
+            get => m_SettingService.DefaultShowDates;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_SettingService.DefaultShowDates = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        public bool DefaultUseClassicDates
+        {
+            get => m_SettingService.DefaultUseClassicDates;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_SettingService.DefaultUseClassicDates = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        public bool DefaultUseBusinessDays
+        {
+            get => m_SettingService.DefaultUseBusinessDays;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_SettingService.DefaultUseBusinessDays = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
 
         private bool m_AutoCompile;
         public bool AutoCompile
@@ -1449,6 +1487,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResourceSettings = m_SettingService.DefaultResourceSettings;
                     WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
 
+                    ShowDates = m_SettingService.DefaultShowDates;
+                    UseClassicDates = m_SettingService.DefaultUseClassicDates;
+                    UseBusinessDays = m_SettingService.DefaultUseBusinessDays;
+
                     ArrowGraphShowNames = false;
 
                     GanttChartGroupByMode = default;
@@ -1628,6 +1670,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     Today = projectPlanModel.Today;
 
                     // Display settings.
+                    ShowDates = projectPlanModel.DisplaySettings.ShowDates;
+
+                    UseClassicDates = projectPlanModel.DisplaySettings.UseClassicDates;
+
+                    UseBusinessDays = projectPlanModel.DisplaySettings.UseBusinessDays;
+
+
                     ArrowGraphShowNames = projectPlanModel.DisplaySettings.ArrowGraphShowNames; // TODO
 
 
@@ -1724,6 +1773,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),
                         DisplaySettings = new DisplaySettingsModel
                         {
+                            ShowDates = ShowDates,
+                            UseClassicDates = UseClassicDates,
+                            UseBusinessDays = UseBusinessDays,
+
                             ArrowGraphShowNames = ArrowGraphShowNames,
 
                             GanttChartGroupByMode = GanttChartGroupByMode,

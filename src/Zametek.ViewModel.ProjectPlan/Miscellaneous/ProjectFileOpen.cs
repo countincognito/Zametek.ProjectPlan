@@ -15,7 +15,9 @@ namespace Zametek.ViewModel.ProjectPlan
             using StreamReader reader = File.OpenText(filename);
             string content = await reader.ReadToEndAsync();
             JObject json = JObject.Parse(content);
-            string version = json?.GetValue(nameof(ProjectPlanModel.Version), StringComparison.OrdinalIgnoreCase)?.ToString() ?? string.Empty;
+            string version = 
+                json?.GetValue(nameof(ProjectPlanModel.Version), StringComparison.OrdinalIgnoreCase)?.ToString()
+                ?? string.Empty;
             string jsonString = json?.ToString() ?? string.Empty;
 
             Func<string, ProjectPlanModel> func =

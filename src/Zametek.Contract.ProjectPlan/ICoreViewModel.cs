@@ -21,13 +21,13 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeOffset Today { get; set; }
 
+        #region Display Settings
+
         bool ShowDates { get; set; }
 
         bool UseClassicDates { get; set; }
 
         bool UseBusinessDays { get; set; }
-
-        #region Display Settings
 
 
 
@@ -66,6 +66,12 @@ namespace Zametek.Contract.ProjectPlan
 
 
         #endregion
+
+        bool DefaultShowDates { get; set; }
+
+        bool DefaultUseClassicDates { get; set; }
+
+        bool DefaultUseBusinessDays { get; set; }
 
         bool AutoCompile { get; set; }
 

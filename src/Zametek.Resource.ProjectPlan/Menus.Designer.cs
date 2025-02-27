@@ -97,6 +97,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default Settings.
+        /// </summary>
+        public static string Menu_DefaultSettings {
+            get {
+                return ResourceManager.GetString("Menu_DefaultSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Documentation.
         /// </summary>
         public static string Menu_Documentation {

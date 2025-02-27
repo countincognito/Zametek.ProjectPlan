@@ -129,6 +129,9 @@
   <data name="Menu_Compile" xml:space="preserve">
     <value>Compile</value>
   </data>
+  <data name="Menu_DefaultSettings" xml:space="preserve">
+    <value>Default Settings</value>
+  </data>
   <data name="Menu_Documentation" xml:space="preserve">
     <value>Documentation</value>
   </data>

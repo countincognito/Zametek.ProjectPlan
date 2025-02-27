@@ -9,9 +9,9 @@ namespace Zametek.ProjectPlan.CommandLine
 
         private readonly object m_Lock;
         private string m_ProjectDirectory;
-        private bool m_ShowDates;
-        private bool m_UseClassicDates;
-        private bool m_UseBusinessDays;
+        private bool m_DefaultShowDates;
+        private bool m_DefaultUseClassicDates;
+        private bool m_DefaultUseBusinessDays;
         private string m_SelectedTheme;
 
         #endregion
@@ -48,47 +48,47 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        public override bool ShowDates
+        public override bool DefaultShowDates
         {
             get
             {
-                return m_ShowDates;
+                return m_DefaultShowDates;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_ShowDates = value;
+                    m_DefaultShowDates = value;
                 }
             }
         }
 
-        public override bool UseClassicDates
+        public override bool DefaultUseClassicDates
         {
             get
             {
-                return m_UseClassicDates;
+                return m_DefaultUseClassicDates;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_UseClassicDates = value;
+                    m_DefaultUseClassicDates = value;
                 }
             }
         }
 
-        public override bool UseBusinessDays
+        public override bool DefaultUseBusinessDays
         {
             get
             {
-                return m_UseBusinessDays;
+                return m_DefaultUseBusinessDays;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_UseBusinessDays = value;
+                    m_DefaultUseBusinessDays = value;
                 }
             }
         }

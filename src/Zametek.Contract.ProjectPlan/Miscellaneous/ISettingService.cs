@@ -10,11 +10,11 @@ namespace Zametek.Contract.ProjectPlan
 
         string ProjectDirectory { get; }
 
-        bool ShowDates { get; set; }
+        bool DefaultShowDates { get; set; }
 
-        bool UseClassicDates { get; set; }
+        bool DefaultUseClassicDates { get; set; }
 
-        bool UseBusinessDays { get; set; }
+        bool DefaultUseBusinessDays { get; set; }
 
         string SelectedTheme { get; set; }
 

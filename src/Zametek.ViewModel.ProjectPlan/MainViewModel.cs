@@ -146,6 +146,9 @@ namespace Zametek.ViewModel.ProjectPlan
             ToggleShowDatesCommand = ReactiveCommand.Create(ToggleShowDates);
             ToggleUseClassicDatesCommand = ReactiveCommand.Create(ToggleUseClassicDates);
             ToggleUseBusinessDaysCommand = ReactiveCommand.Create(ToggleUseBusinessDays);
+            ToggleDefaultShowDatesCommand = ReactiveCommand.Create(ToggleDefaultShowDates);
+            ToggleDefaultUseClassicDatesCommand = ReactiveCommand.Create(ToggleDefaultUseClassicDates);
+            ToggleDefaultUseBusinessDaysCommand = ReactiveCommand.Create(ToggleDefaultUseBusinessDays);
             ChangeThemeCommand = ReactiveCommand.CreateFromTask<string>(ChangeThemeAsync);
 
             CompileCommand = ReactiveCommand.CreateFromTask(ForceCompileAsync);
@@ -197,6 +200,18 @@ namespace Zametek.ViewModel.ProjectPlan
             m_UseBusinessDays = this
                 .WhenAnyValue(main => main.m_CoreViewModel.UseBusinessDays)
                 .ToProperty(this, main => main.UseBusinessDays);
+
+            m_DefaultShowDates = this
+                .WhenAnyValue(main => main.m_CoreViewModel.DefaultShowDates)
+                .ToProperty(this, main => main.DefaultShowDates);
+
+            m_DefaultUseClassicDates = this
+                .WhenAnyValue(main => main.m_CoreViewModel.DefaultUseClassicDates)
+                .ToProperty(this, main => main.DefaultUseClassicDates);
+
+            m_DefaultUseBusinessDays = this
+                .WhenAnyValue(main => main.m_CoreViewModel.DefaultUseBusinessDays)
+                .ToProperty(this, main => main.DefaultUseBusinessDays);
 
             m_AutoCompile = this
                 .WhenAnyValue(main => main.m_CoreViewModel.AutoCompile)
@@ -359,6 +374,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleUseBusinessDays() => UseBusinessDays = !UseBusinessDays;
 
+        private void ToggleDefaultShowDates() => DefaultShowDates = !DefaultShowDates;
+
+        private void ToggleDefaultUseClassicDates() => DefaultUseClassicDates = !DefaultUseClassicDates;
+
+        private void ToggleDefaultUseBusinessDays() => DefaultUseBusinessDays = !DefaultUseBusinessDays;
+
         private void ToggleAutoCompile() => AutoCompile = !AutoCompile;
 
         private void ProcessProjectImport(ProjectImportModel importModel) => m_CoreViewModel.ProcessProjectImport(importModel);
@@ -504,6 +525,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock) m_CoreViewModel.UseClassicDates = value;
             }
         }
+
         private readonly ObservableAsPropertyHelper<bool> m_UseBusinessDays;
         public bool UseBusinessDays
         {
@@ -511,6 +533,36 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 lock (m_Lock) m_CoreViewModel.UseBusinessDays = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_DefaultShowDates;
+        public bool DefaultShowDates
+        {
+            get => m_DefaultShowDates.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DefaultShowDates = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_DefaultUseClassicDates;
+        public bool DefaultUseClassicDates
+        {
+            get => m_DefaultUseClassicDates.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DefaultUseClassicDates = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_DefaultUseBusinessDays;
+        public bool DefaultUseBusinessDays
+        {
+            get => m_DefaultUseBusinessDays.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DefaultUseBusinessDays = value;
             }
         }
 
@@ -561,6 +613,12 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand ToggleUseClassicDatesCommand { get; }
 
         public ICommand ToggleUseBusinessDaysCommand { get; }
+
+        public ICommand ToggleDefaultShowDatesCommand { get; }
+
+        public ICommand ToggleDefaultUseClassicDatesCommand { get; }
+
+        public ICommand ToggleDefaultUseBusinessDaysCommand { get; }
 
         public ICommand ChangeThemeCommand { get; }
 

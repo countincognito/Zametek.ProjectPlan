@@ -5,6 +5,14 @@ namespace Zametek.Data.ProjectPlan.v0_4_1
     [Serializable]
     public record DisplaySettingsModel
     {
+        public bool ShowDates { get; init; }
+
+        public bool UseClassicDates { get; init; }
+
+        public bool UseBusinessDays { get; init; }
+
+
+
         public bool ArrowGraphShowNames { get; init; }
 
 

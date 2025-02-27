@@ -23,6 +23,9 @@ namespace Zametek.Data.ProjectPlan.v0_4_1
                 WorkStreamSettings = projectPlan.WorkStreamSettings ?? new(),
                 DisplaySettings = new()
                 {
+                    ShowDates = default,
+                    UseClassicDates = default,
+                    UseBusinessDays = default,
                     ArrowGraphShowNames = default,
                     GanttChartGroupByMode = displaySettings.GanttChartGroupByMode,
                     GanttChartAnnotationStyle = displaySettings.GanttChartAnnotationStyle,
@@ -43,6 +46,18 @@ namespace Zametek.Data.ProjectPlan.v0_4_1
             };
 
             return plan;
+        }
+
+        public static AppSettingsModel Upgrade(v0_3_0.AppSettingsModel appSettingsModel)
+        {
+            return new AppSettingsModel
+            {
+                ProjectPlanDirectory = appSettingsModel.ProjectPlanDirectory,
+                DefaultShowDates = appSettingsModel.ShowDates,
+                DefaultUseClassicDates = appSettingsModel.UseClassicDates,
+                DefaultUseBusinessDays = appSettingsModel.UseBusinessDays,
+                SelectedTheme = appSettingsModel.SelectedTheme,
+            };
         }
     }
 }

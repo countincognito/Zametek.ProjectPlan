@@ -3,7 +3,9 @@ using Newtonsoft.Json.Linq;
 using ReactiveUI;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Data.ProjectPlan;
 using Zametek.Maths.Graphs;
+using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -13,7 +15,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
-        protected Data.ProjectPlan.v0_3_0.AppSettingsModel m_AppSettingsModel;
+        protected AppSettingsModel m_AppSettingsModel;
 
         private static readonly double s_GoldenRatio = (1.0 + Math.Sqrt(5.0)) / 2.0;
 
@@ -23,9 +25,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public SettingServiceBase(string settingsFilename)
         {
-            m_Lock = new object();
+            m_Lock = new();
             m_ProjectTitle = string.Empty;
-            m_AppSettingsModel = new Data.ProjectPlan.v0_3_0.AppSettingsModel();
+            m_AppSettingsModel = new();
             SettingsFilename = settingsFilename;
 
             if (File.Exists(SettingsFilename))
@@ -34,12 +36,28 @@ namespace Zametek.ViewModel.ProjectPlan
                 string content = reader.ReadToEnd();
                 JObject json = JObject.Parse(content);
                 string version =
-                    json?.GetValue(nameof(Data.ProjectPlan.v0_3_0.AppSettingsModel.Version), StringComparison.OrdinalIgnoreCase)?.ToString()
+                    json?.GetValue(nameof(AppSettingsModel.Version), StringComparison.OrdinalIgnoreCase)?.ToString()
                     ?? string.Empty;
                 string jsonString = json?.ToString() ?? string.Empty;
-                m_AppSettingsModel =
-                    JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_0.AppSettingsModel>(jsonString)
-                    ?? new Data.ProjectPlan.v0_3_0.AppSettingsModel();
+
+                Func<string, AppSettingsModel> func =
+                    jString => new AppSettingsModel();
+
+                version.ValueSwitchOn()
+                    .Case(Versions.v0_3_0, x =>
+                    {
+                        func = jString => Converter.Upgrade(
+                            JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_0.AppSettingsModel>(jString)
+                            ?? new Data.ProjectPlan.v0_3_0.AppSettingsModel());
+                    })
+                    .Case(Versions.v0_4_1, x =>
+                    {
+                        func = jString => Converter.Upgrade(
+                            JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_1.AppSettingsModel>(jString)
+                            ?? new Data.ProjectPlan.v0_4_1.AppSettingsModel());
+                    });
+
+                m_AppSettingsModel = func(jsonString);
             }
         }
 
@@ -59,11 +77,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public abstract bool ShowDates { get; set; }
+        public abstract bool DefaultShowDates { get; set; }
 
-        public abstract bool UseClassicDates { get; set; }
+        public abstract bool DefaultUseClassicDates { get; set; }
 
-        public abstract bool UseBusinessDays { get; set; }
+        public abstract bool DefaultUseBusinessDays { get; set; }
 
         public abstract string SelectedTheme { get; set; }
 

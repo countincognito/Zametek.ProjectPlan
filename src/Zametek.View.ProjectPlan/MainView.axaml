@@ -120,6 +120,37 @@
 							</MenuItem.Icon>
 						</MenuItem>
 						<Separator />
+						<MenuItem Header="{x:Static resources:Menus.Menu_DefaultSettings}">
+							<MenuItem Header="{x:Static resources:Menus.Menu_ShowDates}"
+									  Command="{Binding Path=ToggleDefaultShowDatesCommand, Mode=OneWay}">
+								<MenuItem.Icon>
+									<CheckBox BorderThickness="0"
+											  Theme="{StaticResource SimpleCheckBox}"
+											  IsHitTestVisible="False"
+											  IsChecked="{Binding Path=DefaultShowDates, Mode=OneWay}" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{x:Static resources:Menus.Menu_UseClassicDates}"
+									  Command="{Binding Path=ToggleDefaultUseClassicDatesCommand, Mode=OneWay}"
+									  IsEnabled="{Binding Path=DefaultShowDates, Mode=OneWay}">
+								<MenuItem.Icon>
+									<CheckBox BorderThickness="0"
+											  Theme="{StaticResource SimpleCheckBox}"
+											  IsHitTestVisible="False"
+											  IsChecked="{Binding Path=DefaultUseClassicDates, Mode=OneWay}" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{x:Static resources:Menus.Menu_UseBusinessDays}"
+									  Command="{Binding Path=ToggleDefaultUseBusinessDaysCommand, Mode=OneWay}">
+								<MenuItem.Icon>
+									<CheckBox BorderThickness="0"
+											  Theme="{StaticResource SimpleCheckBox}"
+											  IsHitTestVisible="False"
+											  IsChecked="{Binding Path=DefaultUseBusinessDays, Mode=OneWay}" />
+								</MenuItem.Icon>
+							</MenuItem>
+						</MenuItem>
+						<Separator />
 						<MenuItem Header="{x:Static resources:Menus.Menu_Themes}">
 							<MenuItem Header="{x:Static resources:Themes.Theme_Default}"
 									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Default}, Mode=OneWay}"

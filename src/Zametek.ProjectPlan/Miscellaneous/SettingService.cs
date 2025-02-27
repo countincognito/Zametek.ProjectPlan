@@ -66,49 +66,49 @@ namespace Zametek.ProjectPlan
             }
         }
 
-        public override bool ShowDates
+        public override bool DefaultShowDates
         {
             get
             {
-                return m_AppSettingsModel.ShowDates;
+                return m_AppSettingsModel.DefaultShowDates;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_AppSettingsModel = m_AppSettingsModel with { ShowDates = value };
+                    m_AppSettingsModel = m_AppSettingsModel with { DefaultShowDates = value };
                     SaveSettings();
                 }
             }
         }
 
-        public override bool UseClassicDates
+        public override bool DefaultUseClassicDates
         {
             get
             {
-                return m_AppSettingsModel.UseClassicDates;
+                return m_AppSettingsModel.DefaultUseClassicDates;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_AppSettingsModel = m_AppSettingsModel with { UseClassicDates = value };
+                    m_AppSettingsModel = m_AppSettingsModel with { DefaultUseClassicDates = value };
                     SaveSettings();
                 }
             }
         }
 
-        public override bool UseBusinessDays
+        public override bool DefaultUseBusinessDays
         {
             get
             {
-                return m_AppSettingsModel.UseBusinessDays;
+                return m_AppSettingsModel.DefaultUseBusinessDays;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_AppSettingsModel = m_AppSettingsModel with { UseBusinessDays = value };
+                    m_AppSettingsModel = m_AppSettingsModel with { DefaultUseBusinessDays = value };
                     SaveSettings();
                 }
             }
