@@ -7509,6 +7509,9 @@
     "IsStale": false
   },
   "DisplaySettings": {
+    "ShowDates": false,
+    "UseClassicDates": false,
+    "UseBusinessDays": false,
     "ArrowGraphShowNames": false,
     "GanttChartGroupByMode": 1,
     "GanttChartAnnotationStyle": 1,
