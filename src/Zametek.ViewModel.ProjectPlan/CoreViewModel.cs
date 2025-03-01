@@ -997,6 +997,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
                     this.RaiseAndSetIfChanged(ref m_ShowDates, value);
                 }
             }
@@ -1019,6 +1020,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
                     }
+                    SetIsProjectUpdatedWithoutStaleOutputs(true);
                     this.RaisePropertyChanged();
                 }
             }
@@ -1048,8 +1050,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
-
         private bool m_ArrowGraphShowNames;
         public bool ArrowGraphShowNames
         {
@@ -1063,8 +1063,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
         }
-
-
 
         private GroupByMode m_GanttChartGroupByMode;
         public GroupByMode GanttChartGroupByMode
