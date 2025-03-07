@@ -22,8 +22,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Themes.Simple" Version="11.2.0" />
-    <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.8.0" />
-	<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.1" />
+    <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.9.0" />
+	<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.2" />
     <PackageReference Include="Splat.DependencyInjection.SourceGenerator" Version="1.2.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

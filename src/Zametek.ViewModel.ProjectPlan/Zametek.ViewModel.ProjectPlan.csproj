@@ -10,17 +10,17 @@
   <ItemGroup>
 	<PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
     <PackageReference Include="Avalonia.Svg.Skia" Version="11.2.0.2" />
-    <PackageReference Include="Dock.Model.ReactiveUI" Version="11.2.0" />
+    <PackageReference Include="Dock.Model.ReactiveUI" Version="11.2.0.2" />
     <PackageReference Include="FluentDateTime" Version="3.0.0" />
-    <PackageReference Include="net.sf.mpxj-for-csharp" Version="13.9.0" />
+    <PackageReference Include="net.sf.mpxj-for-csharp" Version="13.10.0" />
     <PackageReference Include="NPOI" Version="2.7.2" />
 	<PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-Avalonia11" />
 	<PackageReference Include="OxyPlot.SkiaSharp" Version="2.2.0" />
 	<PackageReference Include="Avalonia.ReactiveUI" Version="11.2.0" />
-	<PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+	<PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
-    <PackageReference Include="System.Drawing.Common" Version="9.0.1" />
-    <PackageReference Include="System.Formats.Asn1" Version="9.0.1" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.2" />
+    <PackageReference Include="System.Formats.Asn1" Version="9.0.2" />
     <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="2.3.3" />
   </ItemGroup>
 
