@@ -133,21 +133,6 @@ namespace Zametek.ProjectPlan.CommandLine
                             }
                         }
 
-                        // Use business days.
-                        {
-                            core.UseBusinessDays = options.UseBusinessDays ?? default;
-                        }
-
-                        // Classic date format.
-                        {
-                            core.UseClassicDates = options.ClassicDateFormat ?? default;
-                        }
-
-                        // Show dates.
-                        {
-                            core.ShowDates = options.ShowDates ?? default;
-                        }
-
                         // Base theme
                         {
                             core.BaseTheme = options.BaseTheme;
@@ -224,18 +209,6 @@ namespace Zametek.ProjectPlan.CommandLine
                                 int width = ganttSize[0];
                                 int height = ganttSize[1];
 
-                                GroupByMode ganttGroup = options.GanttGroup;
-                                AnnotationStyle ganttAnnotate = options.GanttAnnotate;
-                                bool showGroupLabels = options.GanttLabel ?? default;
-                                bool showProjectFinish = options.GanttFinish ?? default;
-                                bool showTracking = options.GanttTracking ?? default;
-
-                                gantt.GroupByMode = ganttGroup;
-                                gantt.AnnotationStyle = ganttAnnotate;
-                                gantt.ShowGroupLabels = showGroupLabels;
-                                gantt.ShowProjectFinish = showProjectFinish;
-                                gantt.ShowTracking = showTracking;
-
                                 gantt.BuildGanttChartPlotModel();
 
                                 PlotExport ganttFormat = options.GanttFormat;
@@ -259,10 +232,6 @@ namespace Zametek.ProjectPlan.CommandLine
                                 {
                                     throw new InvalidOperationException($@"Directory {graphDirectory} does not exist");
                                 }
-
-                                bool graphNames = options.GraphNames ?? default;
-
-                                graph.ShowNames = graphNames;
 
                                 graph.BuildArrowGraphDiagramData();
                                 graph.BuildArrowGraphDiagramImage();
@@ -297,14 +266,6 @@ namespace Zametek.ProjectPlan.CommandLine
                                 int width = resourceSize[0];
                                 int height = resourceSize[1];
 
-                                AllocationMode resourceAllocation = options.ResourceAllocation;
-                                ScheduleMode resourceSchedule = options.ResourceSchedule;
-                                DisplayStyle resourceDisplay = options.ResourceDisplay;
-
-                                resources.AllocationMode = resourceAllocation;
-                                resources.ScheduleMode = resourceSchedule;
-                                resources.DisplayStyle = resourceDisplay;
-
                                 resources.BuildResourceChartPlotModel();
 
                                 PlotExport resourceFormat = options.ResourceFormat;
@@ -338,9 +299,6 @@ namespace Zametek.ProjectPlan.CommandLine
 
                                 int width = evSize[0];
                                 int height = evSize[1];
-
-                                bool evProjections = options.EVProjections ?? default;
-                                ev.ShowProjections = evProjections;
 
                                 ev.BuildEarnedValueChartPlotModel();
 
