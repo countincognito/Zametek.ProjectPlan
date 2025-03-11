@@ -62,8 +62,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectStart = new(DateTime.Today);
             m_Today = new(DateTime.Today);
             m_ResourceSettings = new ResourceSettingsModel();
-            m_Activities = [];
-            m_ReadOnlyActivities = new ReadOnlyObservableCollection<IManagedActivityViewModel>(m_Activities);
+            m_Activities = new();
             m_ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
@@ -76,6 +75,12 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TrackingSeriesSet = new TrackingSeriesSetModel();
 
             m_SelectedTheme = m_SettingService.SelectedTheme;
+
+            // Create read-only view to the source list.
+            m_Activities.Connect()
+               .ObserveOn(RxApp.MainThreadScheduler)
+               .Bind(out m_ReadOnlyActivities)
+               .Subscribe();
 
             m_ProjectTitle = this
                 .WhenAnyValue(core => core.m_SettingService.ProjectTitle)
@@ -1320,7 +1325,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableCollection<IManagedActivityViewModel> m_Activities;
+        private readonly SourceList<IManagedActivityViewModel> m_Activities;
         private readonly ReadOnlyObservableCollection<IManagedActivityViewModel> m_ReadOnlyActivities;
         public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_ReadOnlyActivities;
 
@@ -1840,29 +1845,32 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
-
-                    foreach (DependentActivityModel dependentActivity in dependentActivityModels)
+                    m_Activities.Edit(activities =>
                     {
-                        var activity = new ManagedActivityViewModel(
-                            this,
-                            m_Mapper.Map<DependentActivityModel, DependentActivity>(dependentActivity),
-                            m_DateTimeCalculator,
-                            m_VertexGraphCompiler,
-                            ProjectStart,
-                            dependentActivity.Activity.Trackers,
-                            dependentActivity.Activity.MinimumEarliestStartDateTime,
-                            dependentActivity.Activity.MaximumLatestFinishDateTime);
+                        IsBusy = true;
 
-                        if (m_VertexGraphCompiler.AddActivity(activity))
+                        foreach (DependentActivityModel dependentActivity in dependentActivityModels)
                         {
-                            m_Activities.Add(activity);
+                            var activity = new ManagedActivityViewModel(
+                                this,
+                                m_Mapper.Map<DependentActivityModel, DependentActivity>(dependentActivity),
+                                m_DateTimeCalculator,
+                                m_VertexGraphCompiler,
+                                ProjectStart,
+                                dependentActivity.Activity.Trackers,
+                                dependentActivity.Activity.MinimumEarliestStartDateTime,
+                                dependentActivity.Activity.MaximumLatestFinishDateTime);
+
+                            if (m_VertexGraphCompiler.AddActivity(activity))
+                            {
+                                activities.Add(activity);
+                            }
+                            else
+                            {
+                                activity.Dispose();
+                            }
                         }
-                        else
-                        {
-                            activity.Dispose();
-                        }
-                    }
+                    });
 
                     IsProjectUpdated = true;
                 }
@@ -1879,19 +1887,22 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
-                    IEnumerable<IManagedActivityViewModel> dependentActivities = Activities
-                        .Where(x => dependentActivityIds.Contains(x.Id))
-                        .ToList();
-
-                    foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
+                    m_Activities.Edit(activities =>
                     {
-                        if (m_VertexGraphCompiler.RemoveActivity(dependentActivity.Id))
+                        IsBusy = true;
+                        IEnumerable<IManagedActivityViewModel> dependentActivities = Activities
+                            .Where(x => dependentActivityIds.Contains(x.Id))
+                            .ToList();
+
+                        foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
                         {
-                            m_Activities.Remove(dependentActivity);
-                            dependentActivity.Dispose();
+                            if (m_VertexGraphCompiler.RemoveActivity(dependentActivity.Id))
+                            {
+                                activities.Remove(dependentActivity);
+                                dependentActivity.Dispose();
+                            }
                         }
-                    }
+                    });
 
                     IsProjectUpdated = true;
                 }
@@ -1908,50 +1919,53 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
-                    Dictionary<int, IManagedActivityViewModel> activityLookup = Activities.ToDictionary(x => x.Id);
-
-                    foreach (UpdateDependentActivityModel updateModel in updateModels)
+                    m_Activities.Edit(list =>
                     {
-                        if (activityLookup.TryGetValue(updateModel.Id, out IManagedActivityViewModel? activity))
+                        IsBusy = true;
+                        Dictionary<int, IManagedActivityViewModel> activityLookup = Activities.ToDictionary(x => x.Id);
+
+                        foreach (UpdateDependentActivityModel updateModel in updateModels)
                         {
-                            if (activity is IEditableObject editable)
+                            if (activityLookup.TryGetValue(updateModel.Id, out IManagedActivityViewModel? activity))
                             {
-                                editable.BeginEdit();
+                                if (activity is IEditableObject editable)
+                                {
+                                    editable.BeginEdit();
 
-                                if (updateModel.IsNameEdited)
-                                {
-                                    activity.Name = updateModel.Name;
-                                }
-                                if (updateModel.IsNotesEdited)
-                                {
-                                    activity.Notes = updateModel.Notes;
-                                }
-                                if (updateModel.IsTargetWorkStreamsEdited)
-                                {
-                                    activity.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateModel.TargetWorkStreams]);
-                                }
-                                if (updateModel.IsTargetResourcesEdited)
-                                {
-                                    activity.ResourceSelector.SetSelectedTargetResources([.. updateModel.TargetResources]);
-                                }
-                                if (updateModel.IsTargetResourceOperatorEdited)
-                                {
-                                    activity.TargetResourceOperator = updateModel.TargetResourceOperator;
-                                }
-                                if (updateModel.IsHasNoCostEdited)
-                                {
-                                    activity.HasNoCost = updateModel.HasNoCost;
-                                }
-                                if (updateModel.IsHasNoEffortEdited)
-                                {
-                                    activity.HasNoEffort = updateModel.HasNoEffort;
-                                }
+                                    if (updateModel.IsNameEdited)
+                                    {
+                                        activity.Name = updateModel.Name;
+                                    }
+                                    if (updateModel.IsNotesEdited)
+                                    {
+                                        activity.Notes = updateModel.Notes;
+                                    }
+                                    if (updateModel.IsTargetWorkStreamsEdited)
+                                    {
+                                        activity.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateModel.TargetWorkStreams]);
+                                    }
+                                    if (updateModel.IsTargetResourcesEdited)
+                                    {
+                                        activity.ResourceSelector.SetSelectedTargetResources([.. updateModel.TargetResources]);
+                                    }
+                                    if (updateModel.IsTargetResourceOperatorEdited)
+                                    {
+                                        activity.TargetResourceOperator = updateModel.TargetResourceOperator;
+                                    }
+                                    if (updateModel.IsHasNoCostEdited)
+                                    {
+                                        activity.HasNoCost = updateModel.HasNoCost;
+                                    }
+                                    if (updateModel.IsHasNoEffortEdited)
+                                    {
+                                        activity.HasNoEffort = updateModel.HasNoEffort;
+                                    }
 
-                                editable.EndEdit();
+                                    editable.EndEdit();
+                                }
                             }
                         }
-                    }
+                    });
 
                     IsProjectUpdated = true;
                 }
@@ -2030,15 +2044,18 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
-
-                    foreach (IManagedActivityViewModel activity in Activities)
+                    m_Activities.Edit(activities =>
                     {
-                        activity.Dispose();
-                    }
-                    m_Activities.Clear();
+                        IsBusy = true;
 
-                    m_VertexGraphCompiler.Reset();
+                        foreach (IManagedActivityViewModel activity in Activities)
+                        {
+                            activity.Dispose();
+                        }
+                        activities.Clear();
+
+                        m_VertexGraphCompiler.Reset();
+                    });
                 }
             }
             finally
@@ -2243,6 +2260,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_Duration?.Dispose();
                 ClearManagedActivities();
+                m_Activities?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

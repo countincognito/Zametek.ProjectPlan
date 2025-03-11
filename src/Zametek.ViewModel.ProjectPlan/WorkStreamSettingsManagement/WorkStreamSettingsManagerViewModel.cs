@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using DynamicData;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -49,12 +50,17 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasSelectedWorkStreams = false;
             m_AreSettingsUpdated = false; ;
 
-            m_WorkStreams = [];
-            m_ReadOnlyWorkStreams = new ReadOnlyObservableCollection<IManagedWorkStreamViewModel>(m_WorkStreams);
+            m_WorkStreams = new();
 
             SetSelectedManagedWorkStreamsCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedWorkStreams);
             AddManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(AddManagedWorkStreamAsync);
             RemoveManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(RemoveManagedWorkStreamsAsync, this.WhenAnyValue(rm => rm.HasSelectedWorkStreams));
+
+            // Create read-only view to the source list.
+            m_WorkStreams.Connect()
+               .ObserveOn(RxApp.MainThreadScheduler)
+               .Bind(out m_ReadOnlyWorkStreams)
+               .Subscribe();
 
             m_IsBusy = this
                 .WhenAnyValue(rm => rm.m_CoreViewModel.IsBusy)
@@ -143,15 +149,18 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    int id = GetNextId();
-                    m_WorkStreams.Add(
-                        new ManagedWorkStreamViewModel(
-                            this,
-                            new WorkStreamModel
-                            {
-                                Id = id,
-                                ColorFormat = ColorHelper.Random()
-                            }));
+                    m_WorkStreams.Edit(workStreams =>
+                    {
+                        int id = GetNextId();
+                        workStreams.Add(
+                            new ManagedWorkStreamViewModel(
+                                this,
+                                new WorkStreamModel
+                                {
+                                    Id = id,
+                                    ColorFormat = ColorHelper.Random()
+                                }));
+                    });
                 }
                 UpdateWorkStreamSettingsToCore();
             }
@@ -170,18 +179,21 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    ICollection<IManagedWorkStreamViewModel> workStreams = SelectedWorkStreams.Values;
-
-                    if (workStreams.Count == 0)
+                    m_WorkStreams.Edit(workStreams =>
                     {
-                        return;
-                    }
+                        ICollection<IManagedWorkStreamViewModel> selectedWorkStreams = SelectedWorkStreams.Values;
 
-                    foreach (IManagedWorkStreamViewModel workStream in workStreams)
-                    {
-                        m_WorkStreams.Remove(workStream);
-                        workStream.Dispose();
-                    }
+                        if (selectedWorkStreams.Count == 0)
+                        {
+                            return;
+                        }
+
+                        foreach (IManagedWorkStreamViewModel workStream in selectedWorkStreams)
+                        {
+                            workStreams.Remove(workStream);
+                            workStream.Dispose();
+                        }
+                    });
                 }
 
                 UpdateWorkStreamSettingsToCore();
@@ -228,12 +240,15 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ClearManagedWorkStreams();
 
-                foreach (WorkStreamModel workStream in workStreamSettings.WorkStreams)
+                m_WorkStreams.Edit(workStreams =>
                 {
-                    m_WorkStreams.Add(new ManagedWorkStreamViewModel(
-                        this,
-                        workStream));
-                }
+                    foreach (WorkStreamModel workStream in workStreamSettings.WorkStreams)
+                    {
+                        workStreams.Add(new ManagedWorkStreamViewModel(
+                            this,
+                            workStream));
+                    }
+                });
             }
             AreSettingsUpdated = false;
         }
@@ -242,11 +257,15 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                foreach (IManagedWorkStreamViewModel workStream in m_WorkStreams)
+
+                m_WorkStreams.Edit(workStreams =>
                 {
-                    workStream.Dispose();
-                }
-                m_WorkStreams.Clear();
+                    foreach (IManagedWorkStreamViewModel workStream in WorkStreams)
+                    {
+                        workStream.Dispose();
+                    }
+                    workStreams.Clear();
+                });
             }
         }
 
@@ -284,7 +303,7 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_AreSettingsUpdated, value);
         }
 
-        private readonly ObservableCollection<IManagedWorkStreamViewModel> m_WorkStreams;
+        private readonly SourceList<IManagedWorkStreamViewModel> m_WorkStreams;
         private readonly ReadOnlyObservableCollection<IManagedWorkStreamViewModel> m_ReadOnlyWorkStreams;
         public ReadOnlyObservableCollection<IManagedWorkStreamViewModel> WorkStreams => m_ReadOnlyWorkStreams;
 
@@ -316,6 +335,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ProcessWorkStreamSettingsSub?.Dispose();
                 m_UpdateWorkStreamSettingsSub?.Dispose();
                 ClearManagedWorkStreams();
+                m_WorkStreams?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

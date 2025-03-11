@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using DynamicData;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -47,12 +48,17 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasActivitySeverities = false;
             m_AreSettingsUpdated = false; ;
 
-            m_ActivitySeverities = [];
-            m_ReadOnlyActivitySeverities = new ReadOnlyObservableCollection<IManagedActivitySeverityViewModel>(m_ActivitySeverities);
+            m_ActivitySeverities = new();
 
             SetSelectedManagedActivitySeveritiesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedActivitySeverities);
             AddManagedActivitySeverityCommand = ReactiveCommand.CreateFromTask(AddManagedActivitySeverityAsync);
             RemoveManagedActivitySeveritiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitySeveritiesAsync, this.WhenAnyValue(rm => rm.HasActivitySeverities));
+
+            // Create read-only view to the source list.
+            m_ActivitySeverities.Connect()
+               .ObserveOn(RxApp.MainThreadScheduler)
+               .Bind(out m_ReadOnlyActivitySeverities)
+               .Subscribe();
 
             m_IsBusy = this
                 .WhenAnyValue(rm => rm.m_CoreViewModel.IsBusy)
@@ -135,15 +141,18 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    Guid id = GetNextId();
-                    m_ActivitySeverities.Add(
-                        new ManagedActivitySeverityViewModel(
-                            this,
-                            id,
-                            new ActivitySeverityModel
-                            {
-                                ColorFormat = ColorHelper.Random()
-                            }));
+                    m_ActivitySeverities.Edit(activitySeverities =>
+                    {
+                        Guid id = GetNextId();
+                        activitySeverities.Add(
+                            new ManagedActivitySeverityViewModel(
+                                this,
+                                id,
+                                new ActivitySeverityModel
+                                {
+                                    ColorFormat = ColorHelper.Random()
+                                }));
+                    });
                 }
                 UpdateArrowGraphSettingsToCore();
             }
@@ -162,18 +171,21 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    ICollection<IManagedActivitySeverityViewModel> activitySeverities = SelectedActivitySeverities.Values;
-
-                    if (activitySeverities.Count == 0)
+                    m_ActivitySeverities.Edit(activitySeverities =>
                     {
-                        return;
-                    }
+                        ICollection<IManagedActivitySeverityViewModel> selectedActivitySeverities = SelectedActivitySeverities.Values;
 
-                    foreach (IManagedActivitySeverityViewModel activitySeverity in activitySeverities)
-                    {
-                        m_ActivitySeverities.Remove(activitySeverity);
-                        activitySeverity.Dispose();
-                    }
+                        if (selectedActivitySeverities.Count == 0)
+                        {
+                            return;
+                        }
+
+                        foreach (IManagedActivitySeverityViewModel activitySeverity in selectedActivitySeverities)
+                        {
+                            activitySeverities.Remove(activitySeverity);
+                            activitySeverity.Dispose();
+                        }
+                    });
                 }
 
                 CheckForMaxSlackLimit();
@@ -236,13 +248,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 ClearManagedActivitySeverities();
 
-                foreach (ActivitySeverityModel activitySeverity in arrowGraphSettings.ActivitySeverities)
+                m_ActivitySeverities.Edit(activitySeverities =>
                 {
-                    m_ActivitySeverities.Add(new ManagedActivitySeverityViewModel(
-                        this,
-                        GetNextId(),
-                        activitySeverity));
-                }
+                    foreach (ActivitySeverityModel activitySeverity in arrowGraphSettings.ActivitySeverities)
+                    {
+                        activitySeverities.Add(new ManagedActivitySeverityViewModel(
+                            this,
+                            GetNextId(),
+                            activitySeverity));
+                    }
+                });
 
                 CheckForMaxSlackLimit();
             }
@@ -253,11 +268,14 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                foreach (IManagedActivitySeverityViewModel activitySeverity in m_ActivitySeverities)
+                m_ActivitySeverities.Edit(activitySeverities =>
                 {
-                    activitySeverity.Dispose();
-                }
-                m_ActivitySeverities.Clear();
+                    foreach (IManagedActivitySeverityViewModel activitySeverity in ActivitySeverities)
+                    {
+                        activitySeverity.Dispose();
+                    }
+                    activitySeverities.Clear();
+                });
             }
         }
 
@@ -265,19 +283,22 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                if (!m_ActivitySeverities.Any(x => x.SlackLimit == int.MaxValue))
+                m_ActivitySeverities.Edit(activitySeverities =>
                 {
-                    m_ActivitySeverities.Add(new ManagedActivitySeverityViewModel(
-                        this,
-                        GetNextId(),
-                        new ActivitySeverityModel
-                        {
-                            SlackLimit = int.MaxValue,
-                            CriticalityWeight = 1.0,
-                            FibonacciWeight = 1.0,
-                            ColorFormat = ColorHelper.Green()
-                        }));
-                }
+                    if (!ActivitySeverities.Any(x => x.SlackLimit == int.MaxValue))
+                    {
+                        activitySeverities.Add(new ManagedActivitySeverityViewModel(
+                            this,
+                            GetNextId(),
+                            new ActivitySeverityModel
+                            {
+                                SlackLimit = int.MaxValue,
+                                CriticalityWeight = 1.0,
+                                FibonacciWeight = 1.0,
+                                ColorFormat = ColorHelper.Green()
+                            }));
+                    }
+                });
             }
         }
 
@@ -315,7 +336,7 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_AreSettingsUpdated, value);
         }
 
-        private readonly ObservableCollection<IManagedActivitySeverityViewModel> m_ActivitySeverities;
+        private readonly SourceList<IManagedActivitySeverityViewModel> m_ActivitySeverities;
         private readonly ReadOnlyObservableCollection<IManagedActivitySeverityViewModel> m_ReadOnlyActivitySeverities;
         public ReadOnlyObservableCollection<IManagedActivitySeverityViewModel> ActivitySeverities => m_ReadOnlyActivitySeverities;
 
@@ -347,6 +368,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ProcessArrowGraphSettingsSub?.Dispose();
                 m_UpdateArrowGraphSettingsSub?.Dispose();
                 ClearManagedActivitySeverities();
+                m_ActivitySeverities?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

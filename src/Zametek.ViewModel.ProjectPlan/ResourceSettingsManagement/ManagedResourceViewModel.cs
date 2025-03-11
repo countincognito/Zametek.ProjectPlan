@@ -43,7 +43,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ColorFormat = resource.ColorFormat;
             m_IsEditMuted = false;
 
-            m_TargetWorkStreams = new HashSet<int>(resource.InterActivityPhases);
+            m_TargetWorkStreams = [.. resource.InterActivityPhases];
             WorkStreamSelector = new WorkStreamSelectorViewModel(phaseOnly: true);
             m_WorkStreamSettings = m_CoreViewModel.WorkStreamSettings;
             RefreshWorkStreamSelector();

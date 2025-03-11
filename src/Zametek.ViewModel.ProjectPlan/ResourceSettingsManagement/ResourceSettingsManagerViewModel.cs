@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Data;
+using DynamicData;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -49,13 +50,18 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasSelectedResources = false;
             m_AreSettingsUpdated = false; ;
 
-            m_Resources = [];
-            m_ReadOnlyResources = new ReadOnlyObservableCollection<IManagedResourceViewModel>(m_Resources);
+            m_Resources = new();
 
             SetSelectedManagedResourcesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedResources);
             AddManagedResourceCommand = ReactiveCommand.CreateFromTask(AddManagedResourceAsync);
             RemoveManagedResourcesCommand = ReactiveCommand.CreateFromTask(RemoveManagedResourcesAsync, this.WhenAnyValue(rm => rm.HasSelectedResources));
             EditManagedResourcesCommand = ReactiveCommand.CreateFromTask(EditManagedResourcesAsync, this.WhenAnyValue(am => am.HasSelectedResources));
+
+            // Create read-only view to the source list.
+            m_Resources.Connect()
+               .ObserveOn(RxApp.MainThreadScheduler)
+               .Bind(out m_ReadOnlyResources)
+               .Subscribe();
 
             m_IsBusy = this
                 .WhenAnyValue(rm => rm.m_CoreViewModel.IsBusy)
@@ -155,20 +161,23 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    int resourceId = GetNextId();
-                    m_Resources.Add(
-                        new ManagedResourceViewModel(
-                            m_CoreViewModel,
-                            this,
-                            new ResourceModel
-                            {
-                                Id = resourceId,
-                                IsExplicitTarget = false,
-                                IsInactive = false,
-                                UnitCost = DefaultUnitCost,
-                                ColorFormat = ColorHelper.Random(),
-                                Trackers = []
-                            }));
+                    m_Resources.Edit(resources =>
+                    {
+                        int resourceId = GetNextId();
+                        resources.Add(
+                            new ManagedResourceViewModel(
+                                m_CoreViewModel,
+                                this,
+                                new ResourceModel
+                                {
+                                    Id = resourceId,
+                                    IsExplicitTarget = false,
+                                    IsInactive = false,
+                                    UnitCost = DefaultUnitCost,
+                                    ColorFormat = ColorHelper.Random(),
+                                    Trackers = []
+                                }));
+                    });
                 }
                 UpdateResourceSettingsToCore();
             }
@@ -187,18 +196,21 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    ICollection<IManagedResourceViewModel> resources = SelectedResources.Values;
-
-                    if (resources.Count == 0)
+                    m_Resources.Edit(resources =>
                     {
-                        return;
-                    }
+                        ICollection<IManagedResourceViewModel> selectedResources = SelectedResources.Values;
 
-                    foreach (IManagedResourceViewModel resouce in resources)
-                    {
-                        m_Resources.Remove(resouce);
-                        resouce.Dispose();
-                    }
+                        if (selectedResources.Count == 0)
+                        {
+                            return;
+                        }
+
+                        foreach (IManagedResourceViewModel resouce in selectedResources)
+                        {
+                            resources.Remove(resouce);
+                            resouce.Dispose();
+                        }
+                    });
                 }
                 UpdateResourceSettingsToCore();
             }
@@ -348,13 +360,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 ClearManagedResources();
 
-                foreach (ResourceModel resouce in resourceSettings.Resources)
+                m_Resources.Edit(resources =>
                 {
-                    m_Resources.Add(new ManagedResourceViewModel(
-                        m_CoreViewModel,
-                        this,
-                        resouce));
-                }
+                    foreach (ResourceModel resouce in resourceSettings.Resources)
+                    {
+                        resources.Add(new ManagedResourceViewModel(
+                            m_CoreViewModel,
+                            this,
+                            resouce));
+                    }
+                });
             }
             AreSettingsUpdated = false;
         }
@@ -363,11 +378,14 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                foreach (IManagedResourceViewModel resource in m_Resources)
+                m_Resources.Edit(resources =>
                 {
-                    resource.Dispose();
-                }
-                m_Resources.Clear();
+                    foreach (IManagedResourceViewModel resource in Resources)
+                    {
+                        resource.Dispose();
+                    }
+                    resources.Clear();
+                });
             }
         }
 
@@ -438,7 +456,7 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_AreSettingsUpdated, value);
         }
 
-        private readonly ObservableCollection<IManagedResourceViewModel> m_Resources;
+        private readonly SourceList<IManagedResourceViewModel> m_Resources;
         private readonly ReadOnlyObservableCollection<IManagedResourceViewModel> m_ReadOnlyResources;
         public ReadOnlyObservableCollection<IManagedResourceViewModel> Resources => m_ReadOnlyResources;
 
@@ -473,6 +491,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_UpdateResourceSettingsSub?.Dispose();
                 m_ReviseSettingsSub?.Dispose();
                 ClearManagedResources();
+                m_Resources?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
