@@ -6,7 +6,6 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Data.ProjectPlan.v0_3_2;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
