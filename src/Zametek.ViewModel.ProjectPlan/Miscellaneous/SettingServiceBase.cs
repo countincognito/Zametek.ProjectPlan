@@ -27,7 +27,10 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             m_Lock = new();
             m_ProjectTitle = string.Empty;
-            m_AppSettingsModel = new();
+            m_AppSettingsModel = new()
+            {
+                Version = Versions.AppSettingsLatest,
+            };
             SettingsFilename = settingsFilename;
 
             if (File.Exists(SettingsFilename))

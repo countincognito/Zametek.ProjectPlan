@@ -13,5 +13,6 @@
         public const string v0_4_1 = @"v0.4.1";
 
         public const string Latest = v0_4_1;
+        public const string AppSettingsLatest = v0_4_1;
     }
 }
