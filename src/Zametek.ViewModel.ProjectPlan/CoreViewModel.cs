@@ -109,12 +109,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     settings => settings.WorkStreams.Count(x => x.IsPhase) > 0)
                 .ToProperty(this, core => core.HasPhases);
 
-            m_HasCompilationErrors = this
-                .WhenAnyValue(
-                    core => core.GraphCompilation,
-                    compilation => compilation.CompilationErrors.Any())
-                .ToProperty(this, core => core.HasCompilationErrors);
-
             m_CyclomaticComplexitySub = this
                 .ObservableForProperty(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -1389,8 +1383,18 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasPhases;
         public bool HasPhases => m_HasPhases.Value;
 
-        private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
-        public bool HasCompilationErrors => m_HasCompilationErrors.Value;
+        private bool m_HasCompilationErrors;
+        public bool HasCompilationErrors
+        {
+            get => m_HasCompilationErrors;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_HasCompilationErrors, value);
+                }
+            }
+        }
 
         private IGraphCompilation<int, int, int, IDependentActivity> m_GraphCompilation;
         public IGraphCompilation<int, int, int, IDependentActivity> GraphCompilation
@@ -1398,7 +1402,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_GraphCompilation;
             private set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_GraphCompilation, value);
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_GraphCompilation, value);
+                }
             }
         }
 
@@ -1532,6 +1539,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ClearSettings();
 
+                    HasCompilationErrors = false;
                     GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
 
                     ArrowGraph = new ArrowGraphModel();
@@ -2081,7 +2089,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     var workStreams = new List<IWorkStream<int>>();
                     workStreams.AddRange(m_Mapper.Map<IEnumerable<WorkStreamModel>, IEnumerable<WorkStream<int>>>(WorkStreamSettings.WorkStreams));
 
-                    GraphCompilation = m_VertexGraphCompiler.Compile(availableResources, workStreams);
+                    var graphCompilation = m_VertexGraphCompiler.Compile(availableResources, workStreams);
+                    HasCompilationErrors = graphCompilation.CompilationErrors.Any();
+                    GraphCompilation = graphCompilation;
 
                     IsProjectUpdated = true;
                     HasStaleOutputs = false;
@@ -2257,7 +2267,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasResources?.Dispose();
                 m_HasWorkStreams?.Dispose();
                 m_HasPhases?.Dispose();
-                m_HasCompilationErrors?.Dispose();
                 m_Duration?.Dispose();
                 ClearManagedActivities();
                 m_Activities?.Dispose();
