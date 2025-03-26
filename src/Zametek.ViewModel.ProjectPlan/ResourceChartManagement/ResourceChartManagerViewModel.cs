@@ -115,6 +115,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
                     rcm => rcm.m_CoreViewModel.ShowDates,
+                    rcm => rcm.m_CoreViewModel.UseClassicDates,
+                    rcm => rcm.m_CoreViewModel.UseBusinessDays,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
                     rcm => rcm.m_CoreViewModel.Today,
                     rcm => rcm.AllocationMode,
@@ -122,7 +124,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.DisplayStyle,
                     rcm => rcm.ShowToday,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
-                    (a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                    (a, b, c, d, e, f, g, h, i, j, k) => (a, b, c, d, e, f, g, h, i, j, k)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
 
@@ -285,12 +287,14 @@ namespace Zametek.ViewModel.ProjectPlan
                                             }
                                             int dayNumber = i + 1;
                                             areaSeries.Points.Add(
-                                                new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
-                                                total1[i]));
+                                                new DataPoint(
+                                                    ChartHelper.CalculateChartStartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
+                                                    total1[i]));
                                             total1[i] += allocationExists ? 1 : 0;
                                             areaSeries.Points2.Add(
-                                                new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
-                                                total1[i]));
+                                                new DataPoint(
+                                                    ChartHelper.CalculateChartStartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
+                                                    total1[i]));
                                         }
                                     }
                                 }
@@ -311,12 +315,14 @@ namespace Zametek.ViewModel.ProjectPlan
                                                 total1.Add(0);
                                             }
                                             areaSeries.Points.Add(
-                                                new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
-                                                total1[dayNumber]));
+                                                new DataPoint(
+                                                    ChartHelper.CalculateChartStartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
+                                                    total1[dayNumber]));
                                             total1[dayNumber] += allocationExists ? 1 : 0;
                                             areaSeries.Points2.Add(
-                                                new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
-                                                total1[dayNumber]));
+                                                new DataPoint(
+                                                    ChartHelper.CalculateChartStartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
+                                                    total1[dayNumber]));
 
                                             // Second point.
                                             if (dayNumber >= total2.Count)
@@ -331,12 +337,14 @@ namespace Zametek.ViewModel.ProjectPlan
                                                 total2.Add(0);
                                             }
                                             areaSeries.Points.Add(
-                                                new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
-                                                total2[dayNumber]));
+                                                new DataPoint(
+                                                    ChartHelper.CalculateChartFinishTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
+                                                    total2[dayNumber]));
                                             total2[dayNumber] += allocationExists ? 1 : 0;
                                             areaSeries.Points2.Add(
-                                                new DataPoint(ChartHelper.CalculateChartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
-                                                total2[dayNumber]));
+                                                new DataPoint(
+                                                    ChartHelper.CalculateChartFinishTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
+                                                    total2[dayNumber]));
                                         }
                                     }
                                 }
@@ -355,7 +363,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (intValue is not null)
                     {
-                        double todayTimeX = ChartHelper.CalculateChartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
+                        double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
 
                         var todayLine = new LineAnnotation
                         {
@@ -389,8 +397,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             if (finishTime != default)
             {
-                double minValue = ChartHelper.CalculateChartTimeXValue(0, showDates, projectStart, dateTimeCalculator);
-                double maxValue = ChartHelper.CalculateChartTimeXValue(finishTime, showDates, projectStart, dateTimeCalculator);
+                double minValue = ChartHelper.CalculateChartStartTimeXValue(0, showDates, projectStart, dateTimeCalculator);
+                double maxValue = ChartHelper.CalculateChartFinishTimeXValue(finishTime, showDates, projectStart, dateTimeCalculator);
 
                 if (showDates)
                 {

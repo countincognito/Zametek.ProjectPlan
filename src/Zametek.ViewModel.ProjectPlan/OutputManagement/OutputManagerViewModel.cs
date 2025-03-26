@@ -54,6 +54,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(om => om.m_CoreViewModel.ShowDates)
                 .ToProperty(this, om => om.ShowDates);
 
+            m_UseClassicDates = this
+                .WhenAnyValue(om => om.m_CoreViewModel.UseClassicDates)
+                .ToProperty(this, om => om.UseClassicDates);
+
             m_UseBusinessDays = this
                 .WhenAnyValue(om => om.m_CoreViewModel.UseBusinessDays)
                 .ToProperty(this, om => om.UseBusinessDays);
@@ -67,6 +71,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     om => om.m_CoreViewModel.GraphCompilation,
                     om => om.m_CoreViewModel.ResourceSeriesSet,
                     om => om.ShowDates,
+                    om => om.UseClassicDates,
                     om => om.UseBusinessDays,
                     om => om.ProjectStart,
                     om => om.HasCompilationErrors)
@@ -83,6 +88,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
         public bool ShowDates => m_ShowDates.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_UseClassicDates;
+        public bool UseClassicDates => m_UseClassicDates.Value;
 
         private readonly ObservableAsPropertyHelper<bool> m_UseBusinessDays;
         public bool UseBusinessDays => m_UseBusinessDays.Value;
@@ -117,14 +125,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int startTime = scheduledActivity.StartTime;
                     int finishTime = scheduledActivity.FinishTime;
+                    int duration = scheduledActivity.Duration;
+
                     if (startTime > previousFinishTime)
                     {
-                        string from = ChartHelper.FormatScheduleOutput(previousFinishTime, showDates, projectStart, dateTimeCalculator);
-                        string to = ChartHelper.FormatScheduleOutput(startTime, showDates, projectStart, dateTimeCalculator);
+                        string from = ChartHelper.FormatStartScheduleOutput(previousFinishTime, showDates, projectStart, duration, dateTimeCalculator);
+                        string to = ChartHelper.FormatFinishScheduleOutput(startTime, showDates, projectStart, duration, dateTimeCalculator);
                         output.AppendLine($@"*** {from} -> {to} ***");
                     }
-                    string start = ChartHelper.FormatScheduleOutput(startTime, showDates, projectStart, dateTimeCalculator);
-                    string finish = ChartHelper.FormatScheduleOutput(finishTime, showDates, projectStart, dateTimeCalculator);
+                    string start = ChartHelper.FormatStartScheduleOutput(startTime, showDates, projectStart, duration, dateTimeCalculator);
+                    string finish = ChartHelper.FormatFinishScheduleOutput(finishTime, showDates, projectStart, duration, dateTimeCalculator);
                     output.AppendLine($@"{Resource.ProjectPlan.Labels.Label_Activity} {scheduledActivity.Id}: {start} -> {finish}");
                     previousFinishTime = finishTime;
                 }
@@ -258,6 +268,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
                 m_ShowDates?.Dispose();
+                m_UseClassicDates?.Dispose();
                 m_UseBusinessDays?.Dispose();
                 m_ProjectStart?.Dispose();
             }

@@ -106,11 +106,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.TrackingSeriesSet,
                     rcm => rcm.m_CoreViewModel.ShowDates,
+                    rcm => rcm.m_CoreViewModel.UseClassicDates,
+                    rcm => rcm.m_CoreViewModel.UseBusinessDays,
                     rcm => rcm.ShowToday,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
                     rcm => rcm.m_CoreViewModel.Today,
                     rcm => rcm.m_CoreViewModel.EarnedValueShowProjections,
-                    rcm => rcm.m_CoreViewModel.BaseTheme)
+                    rcm => rcm.m_CoreViewModel.BaseTheme,
+                    (a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i))
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildEarnedValueChartPlotModelAsync());
 
@@ -248,7 +251,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach (TrackingPointModel planPoint in pointSeries)
                     {
                         lineSeries.Points.Add(
-                            new DataPoint(ChartHelper.CalculateChartTimeXValue(planPoint.Time, showDates, projectStart, dateTimeCalculator),
+                            new DataPoint(
+                                ChartHelper.CalculateChartStartTimeXValue(
+                                    planPoint.Time,
+                                    showDates,
+                                    projectStart,
+                                    dateTimeCalculator),
                             planPoint.ValuePercentage));
                     }
                     plotModel.Series.Add(lineSeries);
@@ -341,7 +349,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (intValue is not null)
                 {
-                    double todayTimeX = ChartHelper.CalculateChartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
+                    double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(
+                        intValue.GetValueOrDefault(),
+                        showDates,
+                        projectStart,
+                        dateTimeCalculator);
 
                     var todayLine = new LineAnnotation
                     {
@@ -374,8 +386,16 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             if (chartEnd != default)
             {
-                double minValue = ChartHelper.CalculateChartTimeXValue(0, showDates, projectStart, dateTimeCalculator);
-                double maxValue = ChartHelper.CalculateChartTimeXValue(chartEnd, showDates, projectStart, dateTimeCalculator);
+                double minValue = ChartHelper.CalculateChartStartTimeXValue(
+                    0,
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator);
+                double maxValue = ChartHelper.CalculateChartFinishTimeXValue(
+                    chartEnd,
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator);
 
                 if (showDates)
                 {

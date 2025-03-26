@@ -329,8 +329,16 @@ namespace Zametek.ViewModel.ProjectPlan
                                           slackColor.G,
                                           slackColor.B);
 
-                                    double start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
-                                    double end = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
+                                    double start = ChartHelper.CalculateChartStartTimeXValue(
+                                        activity.EarliestStartTime.GetValueOrDefault(),
+                                        showDates,
+                                        projectStart,
+                                        dateTimeCalculator);
+                                    double end = ChartHelper.CalculateChartFinishTimeXValue(
+                                        activity.EarliestFinishTime.GetValueOrDefault(),
+                                        showDates,
+                                        projectStart,
+                                        dateTimeCalculator);
 
                                     var item = new IntervalBarItem
                                     {
@@ -402,8 +410,12 @@ namespace Zametek.ViewModel.ProjectPlan
                                 IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
                                 Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
-                                int resourceStartTime = orderedScheduledActivities.Select(x => x.StartTime).DefaultIfEmpty().Min();
-                                int resourceFinishTime = orderedScheduledActivities.Select(x => x.FinishTime).DefaultIfEmpty().Max();
+                                ScheduledActivityModel? firstItem = orderedScheduledActivities.OrderBy(x => x.StartTime).FirstOrDefault();
+                                ScheduledActivityModel? lastItem = orderedScheduledActivities.OrderByDescending(x => x.FinishTime).FirstOrDefault();
+
+                                int resourceStartTime = firstItem?.StartTime ?? 0;
+                                int resourceFinishTime = lastItem?.FinishTime ?? 0;
+
                                 int minimumY = labels.Count;
 
                                 // Add an extra row for padding.
@@ -433,8 +445,16 @@ namespace Zametek.ViewModel.ProjectPlan
                                                   slackColor.G,
                                                   slackColor.B);
 
-                                            double start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
-                                            double end = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
+                                            double start = ChartHelper.CalculateChartStartTimeXValue(
+                                                activity.EarliestStartTime.GetValueOrDefault(),
+                                                showDates,
+                                                projectStart,
+                                                dateTimeCalculator);
+                                            double end = ChartHelper.CalculateChartFinishTimeXValue(
+                                                activity.EarliestFinishTime.GetValueOrDefault(),
+                                                showDates,
+                                                projectStart,
+                                                dateTimeCalculator);
 
                                             var item = new IntervalBarItem
                                             {
@@ -487,8 +507,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
                                             OxyColor fillColor = OxyColor.FromAColor(aLevel, resourceColor);
 
-                                            double minimumX = ChartHelper.CalculateChartTimeXValue(resourceStartTime, showDates, projectStart, dateTimeCalculator);
-                                            double maximumX = ChartHelper.CalculateChartTimeXValue(resourceFinishTime, showDates, projectStart, dateTimeCalculator);
+                                            double minimumX = ChartHelper.CalculateChartStartTimeXValue(
+                                                resourceStartTime,
+                                                showDates,
+                                                projectStart,
+                                                dateTimeCalculator);
+                                            double maximumX = ChartHelper.CalculateChartFinishTimeXValue(
+                                                resourceFinishTime,
+                                                showDates,
+                                                projectStart,
+                                                dateTimeCalculator);
 
                                             var annotation = new RectangleAnnotation
                                             {
@@ -629,8 +657,12 @@ namespace Zametek.ViewModel.ProjectPlan
                                 IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
                                 Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
-                                int workStreamStartTime = orderedScheduledActivities.Select(x => x.StartTime).DefaultIfEmpty().Min();
-                                int workStreamFinishTime = orderedScheduledActivities.Select(x => x.FinishTime).DefaultIfEmpty().Max();
+                                ScheduledActivityModel? firstItem = orderedScheduledActivities.OrderBy(x => x.StartTime).FirstOrDefault();
+                                ScheduledActivityModel? lastItem = orderedScheduledActivities.OrderByDescending(x => x.FinishTime).FirstOrDefault();
+
+                                int workStreamStartTime = firstItem?.StartTime ?? 0;
+                                int workStreamFinishTime = lastItem?.FinishTime ?? 0;
+
                                 int minimumY = labels.Count;
 
                                 // Add an extra row for padding.
@@ -660,8 +692,16 @@ namespace Zametek.ViewModel.ProjectPlan
                                                   slackColor.G,
                                                   slackColor.B);
 
-                                            double start = ChartHelper.CalculateChartTimeXValue(activity.EarliestStartTime.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
-                                            double end = ChartHelper.CalculateChartTimeXValue(activity.EarliestFinishTime.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
+                                            double start = ChartHelper.CalculateChartStartTimeXValue(
+                                                activity.EarliestStartTime.GetValueOrDefault(),
+                                                showDates,
+                                                projectStart,
+                                                dateTimeCalculator);
+                                            double end = ChartHelper.CalculateChartFinishTimeXValue(
+                                                activity.EarliestFinishTime.GetValueOrDefault(),
+                                                showDates,
+                                                projectStart,
+                                                dateTimeCalculator);
 
                                             var item = new IntervalBarItem
                                             {
@@ -714,8 +754,16 @@ namespace Zametek.ViewModel.ProjectPlan
                                                 aLevel = ColorHelper.AnnotationALight;
                                             }
 
-                                            double minimumX = ChartHelper.CalculateChartTimeXValue(workStreamStartTime, showDates, projectStart, dateTimeCalculator);
-                                            double maximumX = ChartHelper.CalculateChartTimeXValue(workStreamFinishTime, showDates, projectStart, dateTimeCalculator);
+                                            double minimumX = ChartHelper.CalculateChartStartTimeXValue(
+                                                workStreamStartTime,
+                                                showDates,
+                                                projectStart,
+                                                dateTimeCalculator);
+                                            double maximumX = ChartHelper.CalculateChartFinishTimeXValue(
+                                                workStreamFinishTime,
+                                                showDates,
+                                                projectStart,
+                                                dateTimeCalculator);
 
                                             var annotation = new RectangleAnnotation
                                             {
@@ -780,7 +828,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         projectFinish.Append(finishTime);
                     }
 
-                    double finishTimeX = ChartHelper.CalculateChartTimeXValue(finishTime, showDates, projectStart, dateTimeCalculator);
+                    double finishTimeX = ChartHelper.CalculateChartFinishTimeXValue(
+                        finishTime,
+                        showDates,
+                        projectStart,
+                        dateTimeCalculator);
                     double finishTimeY = labels.Count;
 
                     var finishTimeAnnotation = new RectangleAnnotation
@@ -803,7 +855,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (intValue is not null)
                     {
-                        double todayTimeX = ChartHelper.CalculateChartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
+                        double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(
+                            intValue.GetValueOrDefault(),
+                            showDates,
+                            projectStart,
+                            dateTimeCalculator);
 
                         var todayLine = new LineAnnotation
                         {
@@ -870,8 +926,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             if (finishTime != default)
             {
-                double minValue = ChartHelper.CalculateChartTimeXValue(-1, showDates, projectStart, dateTimeCalculator);
-                double maxValue = ChartHelper.CalculateChartTimeXValue(finishTime + 1, showDates, projectStart, dateTimeCalculator);
+                double minValue = ChartHelper.CalculateChartStartTimeXValue(-1, showDates, projectStart, dateTimeCalculator);
+                double maxValue = ChartHelper.CalculateChartFinishTimeXValue(finishTime + 1, showDates, projectStart, dateTimeCalculator);
 
                 if (showDates)
                 {
