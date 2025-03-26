@@ -768,15 +768,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (showDates)
                     {
+
+                        DateTimeOffset startAndFinish = dateTimeCalculator.AddDays(projectStart, finishTime);
                         projectFinish.Append(
-                            dateTimeCalculator.DisplayFinishDate(
-                                dateTimeCalculator.AddDays(
-                                    projectStart,
-                                    finishTime),
-                                dateTimeCalculator.AddDays(
-                                    projectStart,
-                                    finishTime),
-                                1).ToString(DateTimeCalculator.DateFormat));
+                            dateTimeCalculator
+                                .DisplayFinishDate(startAndFinish, startAndFinish, 1)
+                                .ToString(DateTimeCalculator.DateFormat));
                     }
                     else
                     {

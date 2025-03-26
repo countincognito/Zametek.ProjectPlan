@@ -139,15 +139,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         if (showDates)
                         {
                             int durationValue = duration.GetValueOrDefault();
-                            return m_DateTimeCalculator.DisplayFinishDate(
-                                m_DateTimeCalculator.AddDays(
-                                    projectStart,
-                                    durationValue),
-                                m_DateTimeCalculator.AddDays(
-                                    projectStart,
-                                    durationValue),
-                                1)
-                            .ToString(DateTimeCalculator.DateFormat);
+                            DateTimeOffset startAndFinish = m_DateTimeCalculator.AddDays(projectStart, durationValue);
+                            return m_DateTimeCalculator
+                                .DisplayFinishDate(startAndFinish, startAndFinish, 1)
+                                .ToString(DateTimeCalculator.DateFormat);
                         }
 
                         return duration.GetValueOrDefault().ToString();
