@@ -211,10 +211,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             typeSwitch
-                .Case<string>(cell.SetCellValue)
+                .Case<string>(x => cell.SetCellValue(x))
                 .Case<int>(x => cell.SetCellValue(x))
-                .Case<double>(cell.SetCellValue)
-                .Case<bool>(cell.SetCellValue)
+                .Case<double>(x => cell.SetCellValue(x))
+                .Case<bool>(x => cell.SetCellValue(x))
                 .Case<ColorFormatModel>(x =>
                 {
                     cell.SetCellValue(ColorHelper.ColorFormatToHtmlHexCode(x));

@@ -13,7 +13,7 @@
     <PackageReference Include="Dock.Model.ReactiveUI" Version="11.2.0.2" />
     <PackageReference Include="FluentDateTime" Version="3.0.0" />
     <PackageReference Include="net.sf.mpxj-for-csharp" Version="13.11.0" />
-    <PackageReference Include="NPOI" Version="2.7.2" />
+    <PackageReference Include="NPOI" Version="2.7.3" />
 	<PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-Avalonia11" />
 	<PackageReference Include="OxyPlot.SkiaSharp" Version="2.2.0" />
 	<PackageReference Include="Avalonia.ReactiveUI" Version="11.2.5" />
