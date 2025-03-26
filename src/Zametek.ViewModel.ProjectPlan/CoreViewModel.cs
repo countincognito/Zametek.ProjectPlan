@@ -1577,7 +1577,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_TrackHasStaleOutputs = false;
 
                     // Default display mode is required for all file opening and closing.
-                    DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
                     // Project Start Date.
@@ -1585,11 +1584,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Project Start Date.
                     Today = projectImportModel.Today;
-
-                    // Display settings.
-                    ShowDates = projectImportModel.DisplaySettings.ShowDates;
-                    UseClassicDates = projectImportModel.DisplaySettings.UseClassicDates;
-                    UseBusinessDays = projectImportModel.DisplaySettings.UseBusinessDays;
 
                     // Work Stream settings.
                     WorkStreamSettingsModel workStreamSettings = m_SettingService.DefaultWorkStreamSettings.CloneObject();
@@ -1646,8 +1640,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     // which resources are being referred to when marking them as selected.
                     AddManagedActivities(projectImportModel.DependentActivities);
 
-                    // Put display mode back to the way it was.
-                    m_DateTimeCalculator.DisplayMode = oldDisplayMode;
+                    // Display settings.
+                    ShowDates = projectImportModel.DisplaySettings.ShowDates;
+                    UseClassicDates = projectImportModel.DisplaySettings.UseClassicDates;
+                    UseBusinessDays = projectImportModel.DisplaySettings.UseBusinessDays;
 
                     m_TrackIsProjectUpdated = true;
                     IsProjectUpdated = true;
@@ -1676,7 +1672,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_TrackHasStaleOutputs = false;
 
                     // Default display mode is required for all file opening and closing.
-                    DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
                     // Project Start Date.
@@ -1684,11 +1679,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Project Start Date.
                     Today = projectPlanModel.Today;
-
-                    // Display settings.
-                    ShowDates = projectPlanModel.DisplaySettings.ShowDates;
-                    UseClassicDates = projectPlanModel.DisplaySettings.UseClassicDates;
-                    UseBusinessDays = projectPlanModel.DisplaySettings.UseBusinessDays;
 
                     ArrowGraphShowNames = projectPlanModel.DisplaySettings.ArrowGraphShowNames; // TODO
 
@@ -1722,9 +1712,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Activities.
                     AddManagedActivities(projectPlanModel.DependentActivities);
 
-                    // Put display mode back to the way it was.
-                    m_DateTimeCalculator.DisplayMode = oldDisplayMode;
-
                     // Now that Resources and Activities are in place,
                     // revise all tracker values.
                     IsReadyToReviseTrackers = ReadyToRevise.Yes;
@@ -1734,6 +1721,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Arrow Graph.
                     ArrowGraph = projectPlanModel.ArrowGraph;
+
+                    // Display settings.
+                    ShowDates = projectPlanModel.DisplaySettings.ShowDates;
+                    UseClassicDates = projectPlanModel.DisplaySettings.UseClassicDates;
+                    UseBusinessDays = projectPlanModel.DisplaySettings.UseBusinessDays;
 
                     m_TrackIsProjectUpdated = true;
                     IsProjectUpdated = false;
