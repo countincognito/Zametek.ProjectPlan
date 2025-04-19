@@ -162,8 +162,8 @@
   <data name="Message_TrackerCountMustBeEqualOrGreaterThanZero" xml:space="preserve">
     <value>Tracker Count must be equal or greater than 0</value>
   </data>
-  <data name="Message_UnableToDetermineUserSecretsPath" xml:space="preserve">
-    <value>Unable to determine file path for User Secrets</value>
+  <data name="Message_UnableToDetermineUserSettingsPath" xml:space="preserve">
+    <value>Unable to determine file path for User Settings</value>
   </data>
   <data name="Message_UnableToExportFile" xml:space="preserve">
     <value>Unable to export file:</value>
@@ -221,5 +221,8 @@
   </data>
   <data name="Message_UnknownDisplayStyle" xml:space="preserve">
     <value>Unknown DisplayStyle value:</value>
+  </data>
+  <data name="Message_UnableToDetermineUserSettingsDirectory" xml:space="preserve">
+    <value>Unable to determine file directory for User Settings</value>
   </data>
 </root>

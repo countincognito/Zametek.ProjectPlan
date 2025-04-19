@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
 using Dock.Model.Core;
-using Microsoft.Extensions.Configuration.UserSecrets;
 using Splat;
-using System.Reflection;
 using Zametek.Contract.ProjectPlan;
 using Zametek.View.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
@@ -13,9 +11,7 @@ namespace Zametek.ProjectPlan
     {
         public static void RegisterSettings()
         {
-            string secretsId = Assembly.GetExecutingAssembly().GetCustomAttribute<UserSecretsIdAttribute>()!.UserSecretsId;
-            string settingsFilename = PathHelper.GetSecretsPathFromSecretsId(secretsId);
-
+            string settingsFilename = SettingFileHelper.DefaultFileLocation();
             var settingService = new SettingService(settingsFilename);
             SplatRegistrations.RegisterConstant<ISettingService>(settingService);
         }

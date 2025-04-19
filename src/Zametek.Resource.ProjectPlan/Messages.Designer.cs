@@ -223,11 +223,20 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to determine file path for User Secrets.
+        ///   Looks up a localized string similar to Unable to determine file directory for User Settings.
         /// </summary>
-        public static string Message_UnableToDetermineUserSecretsPath {
+        public static string Message_UnableToDetermineUserSettingsDirectory {
             get {
-                return ResourceManager.GetString("Message_UnableToDetermineUserSecretsPath", resourceCulture);
+                return ResourceManager.GetString("Message_UnableToDetermineUserSettingsDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to determine file path for User Settings.
+        /// </summary>
+        public static string Message_UnableToDetermineUserSettingsPath {
+            get {
+                return ResourceManager.GetString("Message_UnableToDetermineUserSettingsPath", resourceCulture);
             }
         }
         

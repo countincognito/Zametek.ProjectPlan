@@ -25,7 +25,7 @@ namespace Zametek.ProjectPlan
 
             if (string.IsNullOrWhiteSpace(directory))
             {
-                throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_UnableToDetermineUserSecretsPath);
+                throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_UnableToDetermineUserSettingsDirectory);
             }
 
             Directory.CreateDirectory(directory);

@@ -4,7 +4,6 @@
 	<TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-	<UserSecretsId>ProjectPlan-515098bc-c9a8-47a9-a73d-a3d6104d2953</UserSecretsId>
 	<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
 	<ApplicationManifest>app.manifest</ApplicationManifest>
 	<ApplicationIcon>Assets\zpp.ico</ApplicationIcon>
@@ -23,7 +22,6 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.Themes.Simple" Version="11.2.5" />
     <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.9.0" />
-	<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.3" />
     <PackageReference Include="Splat.DependencyInjection.SourceGenerator" Version="1.2.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
