@@ -1,8 +1,8 @@
 # projectplan.net
 
-Projectplan.net is an Open Source, cross-platform desktop application for designing and creating project plans. It is built to automate many of the arduous and error-prone tasks necessary for good project design. However, it can be also used as a free and simple desktop alternative to Microsoft Project for basic planning and tracking.
+Projectplan.net is an Open Source, cross-platform desktop application for designing and creating project plans. It is built to automate many of the arduous and error-prone tasks necessary for good project design, as detailed in [Righting Software](https://rightingsoftware.org/). However, it can be also used as a free and simple desktop alternative to Microsoft Project for basic planning and tracking.
 
-This product is freely available for download from: https://getprojectplan.net
+This product is freely available for download from: [https://getprojectplan.net](https://getprojectplan.net)
 
 ## Donations
 
