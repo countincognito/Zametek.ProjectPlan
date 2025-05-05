@@ -6,7 +6,7 @@ This product is freely available for download from: [https://getprojectplan.net]
 
 ## Donations
 
-You can view options to donate or sponsor the project on the download site.
+You can donate to the project [here](https://www.patreon.com/zametek).
 
 You should only spend money on projectplan.net if you can afford to and if you want to support ongoing development.
 
