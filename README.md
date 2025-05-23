@@ -1,5 +1,9 @@
 # projectplan.net
 
+<a href="https://apps.microsoft.com/detail/9mw5mdp78528?referrer=appbadge&cid=github&mode=direct">
+	<img src="https://get.microsoft.com/images/en-us%20light.svg" width="200"/>
+</a>
+
 Projectplan.net is an Open Source, cross-platform desktop application for designing and creating project plans. It is built to automate many of the tasks necessary for good project design, as detailed in [Righting Software](https://rightingsoftware.org/). However, it can be also used as a free and simple desktop alternative to Microsoft Project for project planning and tracking.
 
 This product is freely available for download from: [https://www.getprojectplan.net](https://www.getprojectplan.net)
