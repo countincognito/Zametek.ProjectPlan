@@ -19,6 +19,7 @@
 		<local:ManagedActivitySortComparer x:Key="durationSortComparer" SortMemberPath="Duration"/>
 		<local:ManagedActivitySortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
 		<local:ManagedActivitySortComparer x:Key="dependenciesStringSortComparer" SortMemberPath="DependenciesString"/>
+		<local:ManagedActivitySortComparer x:Key="manualDependenciesStringSortComparer" SortMemberPath="ManualDependenciesString"/>
 		<local:ManagedActivitySortComparer x:Key="resourceDependenciesStringSortComparer" SortMemberPath="ResourceDependenciesString"/>
 		<local:ManagedActivitySortComparer x:Key="isDummySortComparer" SortMemberPath="IsDummy"/>
 		<local:ManagedActivitySortComparer x:Key="isIsolatedSortComparer" SortMemberPath="IsIsolated"/>
@@ -279,6 +280,77 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										CustomSortComparer="{StaticResource manualDependenciesStringSortComparer}"
+										Width="150">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_ManualDependencies}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ManualDependencies}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=ManualDependenciesString, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<TextBox VerticalAlignment="Center"
+									 Margin="0"
+									 Padding="3"
+									 Focusable="True"
+									 Text="{Binding Path=ManualDependenciesString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
+				</DataGridTemplateColumn>
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"

@@ -295,6 +295,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Manual Dependencies .
+        /// </summary>
+        public static string ToolTip_ManualDependencies {
+            get {
+                return ResourceManager.GetString("ToolTip_ManualDependencies", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maximum Latest Finish Time.
         /// </summary>
         public static string ToolTip_MaximumLatestFinishTime {

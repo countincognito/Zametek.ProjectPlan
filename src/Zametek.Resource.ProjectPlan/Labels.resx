@@ -501,4 +501,7 @@
   <data name="Label_ShowToday" xml:space="preserve">
     <value>Show Today</value>
   </data>
+  <data name="Label_ManualDependencies" xml:space="preserve">
+    <value>Manual Dependencies </value>
+  </data>
 </root>

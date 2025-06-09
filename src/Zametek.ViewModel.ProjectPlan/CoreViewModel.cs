@@ -858,12 +858,21 @@ namespace Zametek.ViewModel.ProjectPlan
             return trackingSeriesSet;
         }
 
-        private static int CalculateCyclomaticComplexity(IEnumerable<IDependentActivity> dependentActivities)
+        private static int? CalculateCyclomaticComplexity(IEnumerable<IDependentActivity> dependentActivities)
         {
             ArgumentNullException.ThrowIfNull(dependentActivities);
+
+            IEnumerable<IDependentActivity> dependentActivitiesCopy =
+                dependentActivities.Select(x => (IDependentActivity)x.CloneObject());
+
+            if (!dependentActivitiesCopy.Any())
+            {
+                return null;
+            }
+
             var vertexGraphCompiler = new VertexGraphCompiler();
 
-            foreach (var dependentActivity in dependentActivities.Cast<DependentActivity>())
+            foreach (var dependentActivity in dependentActivitiesCopy.Cast<DependentActivity>())
             {
                 dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
                 dependentActivity.ResourceDependencies.Clear();
@@ -1796,6 +1805,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach (DependentActivityModel activityModel in plan.DependentActivities)
                     {
                         activityModel.Dependencies.Sort();
+                        activityModel.ManualDependencies.Sort();
                         activityModel.ResourceDependencies.Sort();
                     }
 
@@ -1987,11 +1997,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (!HasCompilationErrors)
                     {
                         // Check the upstream activities to be milestoned are all present.
-                        IEnumerable<IManagedActivityViewModel> upstreamActivities = Activities
-                        .Where(x => dependentActivityIds.Contains(x.Id))
-                        .ToList();
-
-                        HashSet<int> upstreamActivityIds = upstreamActivities.Select(x => x.Id).ToHashSet();
+                        IEnumerable<IManagedActivityViewModel> upstreamActivities = [.. Activities.Where(x => dependentActivityIds.Contains(x.Id))];
+                        HashSet<int> upstreamActivityIds = [.. upstreamActivities.Select(x => x.Id)];
 
                         if (upstreamActivityIds.Count != 0)
                         {
@@ -1999,8 +2006,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             int milestoneId = AddManagedActivity();
 
                             IManagedActivityViewModel? milestoneActivity = Activities
-                                     .Where(x => x.Id == milestoneId)
-                                     .FirstOrDefault();
+                                .Where(x => x.Id == milestoneId)
+                                .FirstOrDefault();
 
                             if (milestoneActivity != null)
                             {
@@ -2008,23 +2015,36 @@ namespace Zametek.ViewModel.ProjectPlan
                                 // contain the upstream activity IDs, and add the ID of the milestone.
                                 // Be sure to exclude the upstream activities themselves to avoid
                                 // circular dependencies.
-                                IEnumerable<IManagedActivityViewModel> downstreamActivities = Activities
-                                .Where(x => x.Dependencies.Intersect(upstreamActivityIds).Any())
-                                .Except(upstreamActivities)
-                                .ToList();
+                                IEnumerable<IManagedActivityViewModel> downstreamCompiledActivities = [.. Activities
+                                    .Where(x => x.Dependencies.Intersect(upstreamActivityIds).Any())
+                                    .Except(upstreamActivities)];
+
+                                IEnumerable<IManagedActivityViewModel> downstreamManualActivities = [.. Activities
+                                    .Where(x => x.ManualDependencies.Intersect(upstreamActivityIds).Any())
+                                    .Except(upstreamActivities)];
 
                                 // Repopulate the selected downstream activities' dependencies.
                                 // This time with the new milestone activity ID.
-                                foreach (IManagedActivityViewModel downstreamActivity in downstreamActivities)
+                                foreach (IManagedActivityViewModel downstreamActivity in downstreamCompiledActivities)
                                 {
                                     m_VertexGraphCompiler.SetActivityDependencies(
-                                        downstreamActivity.Id, [.. downstreamActivity.Dependencies, milestoneId]);
+                                        downstreamActivity.Id,
+                                        [.. downstreamActivity.Dependencies, milestoneId],
+                                        downstreamActivity.ManualDependencies);
+                                }
+
+                                foreach (IManagedActivityViewModel downstreamActivity in downstreamManualActivities)
+                                {
+                                    m_VertexGraphCompiler.SetActivityDependencies(
+                                        downstreamActivity.Id,
+                                        downstreamActivity.Dependencies,
+                                        [.. downstreamActivity.ManualDependencies, milestoneId]);
                                 }
 
                                 // Finally, add the upstream activities' IDs as dependencies
                                 // for the milestone activity.
                                 m_VertexGraphCompiler.SetActivityDependencies(
-                                    milestoneId, upstreamActivityIds);
+                                    milestoneId, upstreamActivityIds, []);
                             }
                         }
 
@@ -2143,15 +2163,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!HasCompilationErrors)
                 {
-                    IEnumerable<IDependentActivity> dependentActivities =
-                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject());
-
-                    if (!dependentActivities.Any())
+                    if (!GraphCompilation.DependentActivities.Any())
                     {
                         return;
                     }
 
-                    CyclomaticComplexity = CalculateCyclomaticComplexity(dependentActivities);
+                    CyclomaticComplexity = CalculateCyclomaticComplexity(GraphCompilation.DependentActivities);
                 }
             }
         }

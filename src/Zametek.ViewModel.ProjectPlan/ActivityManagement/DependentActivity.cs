@@ -25,15 +25,21 @@ namespace Zametek.ViewModel.ProjectPlan
             Trackers = [];
         }
 
-        public DependentActivity(int id, string name, string notes, IEnumerable<int> targetWorkStreams, IEnumerable<int> targetResources, IEnumerable<int> dependencies, IEnumerable<int> resourceDependencies, LogicalOperator targetLogicalOperator, IEnumerable<int> allocatedToResources, bool canBeRemoved, bool hasNoCost, bool hasNoEffort, int duration, int? freeSlack, int? earliestStartTime, int? latestFinishTime, int? minimumFreeSlack, int? minimumEarliestStartTime, int? maximumLatestFinishTime)
-            : base(id, name, notes, targetWorkStreams, targetResources, dependencies, resourceDependencies, targetLogicalOperator, allocatedToResources, canBeRemoved, hasNoCost, hasNoEffort, duration, freeSlack, earliestStartTime, latestFinishTime, minimumFreeSlack, minimumEarliestStartTime, maximumLatestFinishTime)
+        public DependentActivity(int id, int duration, IEnumerable<int> dependencies, IEnumerable<int> manualDependencies)
+            : base(id, duration, dependencies, manualDependencies)
+        {
+            Trackers = [];
+        }
+
+        public DependentActivity(int id, string name, string notes, IEnumerable<int> targetWorkStreams, IEnumerable<int> targetResources, IEnumerable<int> dependencies, IEnumerable<int> manualDependencies, IEnumerable<int> resourceDependencies, LogicalOperator targetLogicalOperator, IEnumerable<int> allocatedToResources, bool canBeRemoved, bool hasNoCost, bool hasNoEffort, int duration, int? freeSlack, int? earliestStartTime, int? latestFinishTime, int? minimumFreeSlack, int? minimumEarliestStartTime, int? maximumLatestFinishTime)
+            : base(id, name, notes, targetWorkStreams, targetResources, dependencies, manualDependencies, resourceDependencies, targetLogicalOperator, allocatedToResources, canBeRemoved, hasNoCost, hasNoEffort, duration, freeSlack, earliestStartTime, latestFinishTime, minimumFreeSlack, minimumEarliestStartTime, maximumLatestFinishTime)
         {
             Trackers = [];
         }
 
 
-        public DependentActivity(int id, string name, string notes, IEnumerable<int> targetWorkStreams, IEnumerable<int> targetResources, IEnumerable<int> dependencies, IEnumerable<int> resourceDependencies, LogicalOperator targetLogicalOperator, IEnumerable<int> allocatedToResources, bool canBeRemoved, bool hasNoCost, bool hasNoEffort, int duration, int? freeSlack, int? earliestStartTime, int? latestFinishTime, int? minimumFreeSlack, int? minimumEarliestStartTime, int? maximumLatestFinishTime, IEnumerable<ActivityTrackerModel> trackers)
-            : base(id, name, notes, targetWorkStreams, targetResources, dependencies, resourceDependencies, targetLogicalOperator, allocatedToResources, canBeRemoved, hasNoCost, hasNoEffort, duration, freeSlack, earliestStartTime, latestFinishTime, minimumFreeSlack, minimumEarliestStartTime, maximumLatestFinishTime)
+        public DependentActivity(int id, string name, string notes, IEnumerable<int> targetWorkStreams, IEnumerable<int> targetResources, IEnumerable<int> dependencies, IEnumerable<int> manualDependencies, IEnumerable<int> resourceDependencies, LogicalOperator targetLogicalOperator, IEnumerable<int> allocatedToResources, bool canBeRemoved, bool hasNoCost, bool hasNoEffort, int duration, int? freeSlack, int? earliestStartTime, int? latestFinishTime, int? minimumFreeSlack, int? minimumEarliestStartTime, int? maximumLatestFinishTime, IEnumerable<ActivityTrackerModel> trackers)
+            : base(id, name, notes, targetWorkStreams, targetResources, dependencies, manualDependencies, resourceDependencies, targetLogicalOperator, allocatedToResources, canBeRemoved, hasNoCost, hasNoEffort, duration, freeSlack, earliestStartTime, latestFinishTime, minimumFreeSlack, minimumEarliestStartTime, maximumLatestFinishTime)
         {
             ArgumentNullException.ThrowIfNull(nameof(trackers));
             Trackers = [.. trackers];
@@ -43,7 +49,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public override object CloneObject()
         {
-            return new DependentActivity(Id, Name, Notes, TargetWorkStreams, TargetResources, Dependencies, ResourceDependencies, TargetResourceOperator, AllocatedToResources, CanBeRemoved, HasNoCost, HasNoEffort, Duration, FreeSlack, EarliestStartTime, LatestFinishTime, MinimumFreeSlack, MinimumEarliestStartTime, MaximumLatestFinishTime, Trackers);
+            return new DependentActivity(Id, Name, Notes, TargetWorkStreams, TargetResources, Dependencies, ManualDependencies, ResourceDependencies, TargetResourceOperator, AllocatedToResources, CanBeRemoved, HasNoCost, HasNoEffort, Duration, FreeSlack, EarliestStartTime, LatestFinishTime, MinimumFreeSlack, MinimumEarliestStartTime, MaximumLatestFinishTime, Trackers);
         }
     }
 }

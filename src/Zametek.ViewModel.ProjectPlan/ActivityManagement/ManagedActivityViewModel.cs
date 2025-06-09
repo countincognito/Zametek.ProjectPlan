@@ -479,10 +479,31 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (updatedDependencies is not null)
                 {
-                    m_VertexGraphCompiler.SetActivityDependencies(Id, new HashSet<int>(updatedDependencies));
+                    m_VertexGraphCompiler.SetActivityDependencies(Id, [.. updatedDependencies], ManualDependencies);
                 }
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged(nameof(Dependencies));
+            }
+        }
+
+        public string ManualDependenciesString
+        {
+            get => string.Join(DependenciesStringValidationRule.Separator, ManualDependencies.OrderBy(x => x));
+            set
+            {
+                //ClearErrors();
+                (IEnumerable<int>? updatedManualDependencies, string? errorMessage) = DependenciesStringValidationRule.Validate(value, Id);
+                //if (errorMessage is not null)
+                //{
+                //    SetError(nameof(DependenciesString), errorMessage);
+                //}
+
+                if (updatedManualDependencies is not null)
+                {
+                    m_VertexGraphCompiler.SetActivityDependencies(Id, Dependencies, [.. updatedManualDependencies]);
+                }
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged(nameof(ManualDependencies));
             }
         }
 
@@ -613,6 +634,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged(nameof(InterferingSlack));
                 this.RaisePropertyChanged(nameof(DependenciesString));
+                this.RaisePropertyChanged(nameof(ManualDependenciesString));
                 this.RaisePropertyChanged(nameof(ResourceDependenciesString));
             }
         }
@@ -635,6 +657,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged(nameof(IsCritical));
                 this.RaisePropertyChanged(nameof(InterferingSlack));
                 this.RaisePropertyChanged(nameof(DependenciesString));
+                this.RaisePropertyChanged(nameof(ManualDependenciesString));
                 this.RaisePropertyChanged(nameof(ResourceDependenciesString));
             }
         }
@@ -718,6 +741,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged(nameof(IsCritical));
                 this.RaisePropertyChanged(nameof(InterferingSlack));
                 this.RaisePropertyChanged(nameof(DependenciesString));
+                this.RaisePropertyChanged(nameof(ManualDependenciesString));
                 this.RaisePropertyChanged(nameof(ResourceDependenciesString));
             }
         }
@@ -813,6 +837,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public List<ActivityTrackerModel> Trackers => TrackerSet.Trackers;
 
         public HashSet<int> Dependencies => DependentActivity.Dependencies;
+
+        public HashSet<int> ManualDependencies => DependentActivity.ManualDependencies;
 
         public HashSet<int> ResourceDependencies => DependentActivity.ResourceDependencies;
 

@@ -60,6 +60,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         dest.Dependencies.Add(dependency);
                     }
 
+                    dest.ManualDependencies.Clear();
+                    foreach (int manualDependency in src.ManualDependencies)
+                    {
+                        dest.ManualDependencies.Add(manualDependency);
+                    }
+
                     dest.ResourceDependencies.Clear();
                     foreach (int resourceDependency in src.ResourceDependencies)
                     {
@@ -75,6 +81,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ctx.Mapper.Map<ActivityModel, DependentActivity>(src.Activity, dest);
                 })
                 .ForMember(src => src.Dependencies, opt => opt.Ignore())
+                .ForMember(src => src.ManualDependencies, opt => opt.Ignore())
                 .ForMember(src => src.ResourceDependencies, opt => opt.Ignore())
                 .ForMember(src => src.Trackers, opt => opt.Ignore())
                 .ReverseMap()
@@ -91,6 +98,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach (int dependencyId in src.Dependencies)
                     {
                         dest.Dependencies.Add(dependencyId);
+                    }
+
+                    dest.ManualDependencies.Clear();
+                    foreach (int manualDependencyId in src.ManualDependencies)
+                    {
+                        dest.ManualDependencies.Add(manualDependencyId);
                     }
 
                     dest.ResourceDependencies.Clear();
@@ -132,6 +145,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach (int dependencyId in src.Dependencies)
                     {
                         dest.Dependencies.Add(dependencyId);
+                    }
+
+                    dest.ManualDependencies.Clear();
+                    foreach (int manualDependencyId in src.ManualDependencies)
+                    {
+                        dest.ManualDependencies.Add(manualDependencyId);
                     }
 
                     dest.ResourceDependencies.Clear();
