@@ -57,7 +57,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly IList<string> s_DependentActivityColumnTitles =
         [
-            nameof(DependentActivityModel.Dependencies)
+            nameof(DependentActivityModel.Dependencies),
+            nameof(DependentActivityModel.ManualDependencies)
         ];
 
         private static readonly IList<string> s_ResourceColumnTitles =
@@ -616,6 +617,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     DateTimeOffset? maximumLatestFinishDateTime = null;
                     string notes = string.Empty;
                     List<int> dependencies = [];
+                    List<int> manualDependencies = [];
 
                     foreach (string columnName in activityColumnNames)
                     {
@@ -729,7 +731,19 @@ namespace Zametek.ViewModel.ProjectPlan
                                             dependencies.Add(output);
                                         }
                                     }
-                                });
+                                })
+                            .Case(nameof(DependentActivityModel.ManualDependencies),
+                                colName =>
+                                {
+                                    string manualDependenciesString = row[colName]?.ToString() ?? string.Empty;
+                                    foreach (string manualDependency in manualDependenciesString.Split(DependenciesStringValidationRule.Separator))
+                                    {
+                                        if (int.TryParse(manualDependency, out int output))
+                                        {
+                                            manualDependencies.Add(output);
+                                        }
+                                    }
+                                }); ;
                     }
 
                     if (id is not null)
@@ -753,7 +767,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                 MaximumLatestFinishDateTime = maximumLatestFinishDateTime,
                                 Notes = notes
                             },
-                            Dependencies = dependencies
+                            Dependencies = dependencies,
+                            ManualDependencies = manualDependencies
                         });
                     }
                 }
