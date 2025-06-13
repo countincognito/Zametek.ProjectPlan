@@ -504,4 +504,7 @@
   <data name="Label_ManualDependencies" xml:space="preserve">
     <value>Manual Dependencies </value>
   </data>
+  <data name="Label_Successors" xml:space="preserve">
+    <value>Successors</value>
+  </data>
 </root>

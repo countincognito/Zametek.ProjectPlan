@@ -112,5 +112,19 @@ namespace Zametek.Data.ProjectPlan.Tests
             ProjectPlanModel model2 = Converter.Upgrade(projectPlan_v0_4_1!);
             model1.ShouldBeEquivalentTo(model2);
         }
+
+        [Fact]
+        public void Converter_Given_v0_4_1_Input_ThenConvertsTo_v0_4_2()
+        {
+            v0_4_1.ProjectPlanModel? projectPlan_v0_4_1 = JsonConvert.DeserializeObject<v0_4_1.ProjectPlanModel>(m_Fixture.Vc_0_4_1_JsonString);
+            v0_4_2.ProjectPlanModel? projectPlan_v0_4_2 = JsonConvert.DeserializeObject<v0_4_2.ProjectPlanModel>(m_Fixture.Vc_0_4_2_JsonString);
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            v0_4_2.ProjectPlanModel projectPlan_v0_4_1_upgraded = v0_4_2.Converter.Upgrade(mapper, projectPlan_v0_4_1!);
+            projectPlan_v0_4_1_upgraded.ShouldBeEquivalentTo(projectPlan_v0_4_2);
+
+            ProjectPlanModel model1 = Converter.Upgrade(projectPlan_v0_4_1!);
+            ProjectPlanModel model2 = Converter.Upgrade(projectPlan_v0_4_2!);
+            model1.ShouldBeEquivalentTo(model2);
+        }
     }
 }

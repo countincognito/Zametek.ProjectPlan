@@ -1807,6 +1807,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         activityModel.Dependencies.Sort();
                         activityModel.ManualDependencies.Sort();
                         activityModel.ResourceDependencies.Sort();
+                        activityModel.Successors.Sort();
                     }
 
                     // Put display mode back to the way it was.

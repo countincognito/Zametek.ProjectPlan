@@ -1106,6 +1106,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Successors.
+        /// </summary>
+        public static string Label_Successors {
+            get {
+                return ResourceManager.GetString("Label_Successors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resource Operator.
         /// </summary>
         public static string Label_TargetResourceOperator {

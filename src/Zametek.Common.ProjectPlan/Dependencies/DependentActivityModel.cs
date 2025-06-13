@@ -10,5 +10,7 @@
         public List<int> ManualDependencies { get; init; } = [];
 
         public List<int> ResourceDependencies { get; init; } = [];
+
+        public List<int> Successors { get; init; } = [];
     }
 }

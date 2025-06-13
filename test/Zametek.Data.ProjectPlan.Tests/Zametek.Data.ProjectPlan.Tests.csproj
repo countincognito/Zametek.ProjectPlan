@@ -12,6 +12,8 @@
   <ItemGroup>
     <None Remove="TestFiles\test-a_v0_3_2.zpp" />
     <None Remove="TestFiles\test-a_v0_4_0.zpp" />
+    <None Remove="TestFiles\test-c_v0_4_1.zpp" />
+    <None Remove="TestFiles\test-c_v0_4_2.zpp" />
     <None Remove="TestFiles\test_v0_1_0.zpp" />
     <None Remove="TestFiles\test_v0_2_0.zpp" />
     <None Remove="TestFiles\test_v0_2_1.zpp" />
@@ -31,6 +33,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="TestFiles\test-a_v0_4_0.zpp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\test-c_v0_4_1.zpp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\test-c_v0_4_2.zpp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="TestFiles\test_v0_1_0.zpp">

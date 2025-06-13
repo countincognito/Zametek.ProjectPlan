@@ -72,6 +72,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         dest.ResourceDependencies.Add(resourceDependency);
                     }
 
+                    dest.Successors.Clear();
+                    foreach (int successor in src.Successors)
+                    {
+                        dest.Successors.Add(successor);
+                    }
+
                     dest.Trackers.Clear();
                     foreach (ActivityTrackerModel tracker in src.Activity.Trackers)
                     {
@@ -112,6 +118,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         dest.ResourceDependencies.Add(resourceDependencyId);
                     }
 
+                    dest.Successors.Clear();
+                    foreach (int successorId in src.Successors)
+                    {
+                        dest.Successors.Add(successorId);
+                    }
+
                     dest.Activity.Trackers.Clear();
                     foreach (ActivityTrackerModel tracker in src.Trackers)
                     {
@@ -121,7 +133,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     ctx.Mapper.Map<DependentActivity, ActivityModel>(src, dest.Activity);
                 })
                 .ForMember(src => src.Dependencies, opt => opt.Ignore())
-                .ForMember(src => src.ResourceDependencies, opt => opt.Ignore());
+                .ForMember(src => src.ManualDependencies, opt => opt.Ignore())
+                .ForMember(src => src.ResourceDependencies, opt => opt.Ignore())
+                .ForMember(src => src.Successors, opt => opt.Ignore());
 
             CreateMap<ManagedActivityViewModel, ActivityModel>()
                 .BeforeMap((src, dest, ctx) =>
@@ -158,9 +172,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         dest.ResourceDependencies.Add(resourceDependencyId);
                     }
+
+                    dest.Successors.Clear();
+                    foreach (int successorId in src.Successors)
+                    {
+                        dest.Successors.Add(successorId);
+                    }
                 })
                 .ForMember(src => src.Dependencies, opt => opt.Ignore())
-                .ForMember(src => src.ResourceDependencies, opt => opt.Ignore());
+                .ForMember(src => src.ManualDependencies, opt => opt.Ignore())
+                .ForMember(src => src.ResourceDependencies, opt => opt.Ignore())
+                .ForMember(src => src.Successors, opt => opt.Ignore());
 
             // TODO
             //CreateMap<GraphCompilationModel, IEnumerable<IResourceSchedule<int, int, int>>>()

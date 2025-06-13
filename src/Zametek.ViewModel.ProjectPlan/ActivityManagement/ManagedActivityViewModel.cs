@@ -509,6 +509,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public string ResourceDependenciesString => string.Join(DependenciesStringValidationRule.Separator, ResourceDependencies.OrderBy(x => x));
 
+        public string SuccessorsString => string.Join(DependenciesStringValidationRule.Separator, Successors.OrderBy(x => x));
+
         public int Id => DependentActivity.Id;
 
         public bool CanBeRemoved => DependentActivity.CanBeRemoved;
@@ -636,6 +638,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged(nameof(DependenciesString));
                 this.RaisePropertyChanged(nameof(ManualDependenciesString));
                 this.RaisePropertyChanged(nameof(ResourceDependenciesString));
+                this.RaisePropertyChanged(nameof(SuccessorsString));
             }
         }
 
@@ -659,6 +662,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged(nameof(DependenciesString));
                 this.RaisePropertyChanged(nameof(ManualDependenciesString));
                 this.RaisePropertyChanged(nameof(ResourceDependenciesString));
+                this.RaisePropertyChanged(nameof(SuccessorsString));
             }
         }
 
@@ -743,6 +747,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged(nameof(DependenciesString));
                 this.RaisePropertyChanged(nameof(ManualDependenciesString));
                 this.RaisePropertyChanged(nameof(ResourceDependenciesString));
+                this.RaisePropertyChanged(nameof(SuccessorsString));
             }
         }
 
@@ -841,6 +846,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public HashSet<int> ManualDependencies => DependentActivity.ManualDependencies;
 
         public HashSet<int> ResourceDependencies => DependentActivity.ResourceDependencies;
+
+        public HashSet<int> Successors => DependentActivity.Successors;
 
         public void SetAsReadOnly()
         {
