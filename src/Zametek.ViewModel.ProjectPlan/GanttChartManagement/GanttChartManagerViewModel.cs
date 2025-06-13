@@ -293,8 +293,36 @@ namespace Zametek.ViewModel.ProjectPlan
 
             var labels = new List<string>();
 
+
+
+
+
+
+
+
+            //HashSet<int> highlightActivitySuccessors = [2];
+
+
+
+
+
+
+
+
+
+
+
+
             if (!graphCompilation.CompilationErrors.Any())
             {
+                //// If we are highlighting successors, then collate the list
+                //// of successor IDs for the specified activities.
+
+                //Dictionary<int, HashSet<int>> successorIdLookup = graphCompilation
+                //    .DependentActivities
+                //    .Where(x => highlightActivitySuccessors.Contains(x.Id))
+                //    .ToDictionary(x => x.Id, x => x.Successors);
+
                 switch (groupByMode)
                 {
                     case GroupByMode.None:
@@ -315,56 +343,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             foreach (IDependentActivity activity in orderedActivities)
                             {
-                                if (activity.EarliestStartTime.HasValue
-                                    && activity.EarliestFinishTime.HasValue
-                                    && activity.Duration > 0)
-                                {
-                                    string id = activity.Id.ToString(CultureInfo.InvariantCulture);
-                                    string label = string.IsNullOrWhiteSpace(activity.Name) ? id : $"{activity.Name} ({id})";
-                                    Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
-
-                                    var backgroundColor = OxyColor.FromArgb(
-                                          slackColor.A,
-                                          slackColor.R,
-                                          slackColor.G,
-                                          slackColor.B);
-
-                                    double start = ChartHelper.CalculateChartStartTimeXValue(
-                                        activity.EarliestStartTime.GetValueOrDefault(),
-                                        showDates,
-                                        projectStart,
-                                        dateTimeCalculator);
-                                    double end = ChartHelper.CalculateChartFinishTimeXValue(
-                                        activity.EarliestFinishTime.GetValueOrDefault(),
-                                        showDates,
-                                        projectStart,
-                                        dateTimeCalculator);
-
-                                    var item = new IntervalBarItem
-                                    {
-                                        Title = label,
-                                        Start = start,
-                                        End = end,
-                                        Color = backgroundColor,
-                                    };
-
-                                    series.Items.Add(item);
-                                    labels.Add(label);
-
-                                    if (showTracking)
-                                    {
-                                        int labelCount = labels.Count;
-
-                                        // Get the tracker with the highest Time value.
-                                        ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
-                                        RectangleAnnotation? trackerAnnotation = TrackerAnnotation(start, end, labelCount, lastTracker);
-
-                                        if (trackerAnnotation is not null)
-                                        {
-                                            plotModel.Annotations.Add(trackerAnnotation);
-                                        }
-                                    }
-                                }
+                                AddBarItemToSeries(
+                                    dateTimeCalculator,
+                                    projectStart,
+                                    showDates,
+                                    showTracking,
+                                    plotModel,
+                                    colorFormatLookup,
+                                    series,
+                                    labels,
+                                    activity);
                             }
 
                             // Add an extra row for padding.
@@ -431,56 +419,16 @@ namespace Zametek.ViewModel.ProjectPlan
                                 {
                                     if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity? activity))
                                     {
-                                        if (activity.EarliestStartTime.HasValue
-                                            && activity.EarliestFinishTime.HasValue
-                                            && activity.Duration > 0)
-                                        {
-                                            string id = activity.Id.ToString(CultureInfo.InvariantCulture);
-                                            string label = string.IsNullOrWhiteSpace(activity.Name) ? id : $"{activity.Name} ({id})";
-                                            Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
-
-                                            var backgroundColor = OxyColor.FromArgb(
-                                                  slackColor.A,
-                                                  slackColor.R,
-                                                  slackColor.G,
-                                                  slackColor.B);
-
-                                            double start = ChartHelper.CalculateChartStartTimeXValue(
-                                                activity.EarliestStartTime.GetValueOrDefault(),
-                                                showDates,
-                                                projectStart,
-                                                dateTimeCalculator);
-                                            double end = ChartHelper.CalculateChartFinishTimeXValue(
-                                                activity.EarliestFinishTime.GetValueOrDefault(),
-                                                showDates,
-                                                projectStart,
-                                                dateTimeCalculator);
-
-                                            var item = new IntervalBarItem
-                                            {
-                                                Title = label,
-                                                Start = start,
-                                                End = end,
-                                                Color = backgroundColor,
-                                            };
-
-                                            series.Items.Add(item);
-                                            labels.Add(label);
-
-                                            if (showTracking)
-                                            {
-                                                int labelCount = labels.Count;
-
-                                                // Get the tracker with the highest Time value.
-                                                ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
-                                                RectangleAnnotation? trackerAnnotation = TrackerAnnotation(start, end, labelCount, lastTracker);
-
-                                                if (trackerAnnotation is not null)
-                                                {
-                                                    plotModel.Annotations.Add(trackerAnnotation);
-                                                }
-                                            }
-                                        }
+                                        AddBarItemToSeries(
+                                            dateTimeCalculator,
+                                            projectStart,
+                                            showDates,
+                                            showTracking,
+                                            plotModel,
+                                            colorFormatLookup,
+                                            series,
+                                            labels,
+                                            activity);
                                     }
                                 }
 
@@ -678,56 +626,16 @@ namespace Zametek.ViewModel.ProjectPlan
                                 {
                                     if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity? activity))
                                     {
-                                        if (activity.EarliestStartTime.HasValue
-                                            && activity.EarliestFinishTime.HasValue
-                                            && activity.Duration > 0)
-                                        {
-                                            string id = activity.Id.ToString(CultureInfo.InvariantCulture);
-                                            string label = string.IsNullOrWhiteSpace(activity.Name) ? id : $"{activity.Name} ({id})";
-                                            Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
-
-                                            var backgroundColor = OxyColor.FromArgb(
-                                                  slackColor.A,
-                                                  slackColor.R,
-                                                  slackColor.G,
-                                                  slackColor.B);
-
-                                            double start = ChartHelper.CalculateChartStartTimeXValue(
-                                                activity.EarliestStartTime.GetValueOrDefault(),
-                                                showDates,
-                                                projectStart,
-                                                dateTimeCalculator);
-                                            double end = ChartHelper.CalculateChartFinishTimeXValue(
-                                                activity.EarliestFinishTime.GetValueOrDefault(),
-                                                showDates,
-                                                projectStart,
-                                                dateTimeCalculator);
-
-                                            var item = new IntervalBarItem
-                                            {
-                                                Title = label,
-                                                Start = start,
-                                                End = end,
-                                                Color = backgroundColor,
-                                            };
-
-                                            series.Items.Add(item);
-                                            labels.Add(label);
-
-                                            if (showTracking)
-                                            {
-                                                int labelCount = labels.Count;
-
-                                                // Get the tracker with the highest Time value.
-                                                ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
-                                                RectangleAnnotation? trackerAnnotation = TrackerAnnotation(start, end, labelCount, lastTracker);
-
-                                                if (trackerAnnotation is not null)
-                                                {
-                                                    plotModel.Annotations.Add(trackerAnnotation);
-                                                }
-                                            }
-                                        }
+                                        AddBarItemToSeries(
+                                            dateTimeCalculator,
+                                            projectStart,
+                                            showDates,
+                                            showTracking,
+                                            plotModel,
+                                            colorFormatLookup,
+                                            series,
+                                            labels,
+                                            activity);
                                     }
                                 }
 
@@ -809,6 +717,46 @@ namespace Zametek.ViewModel.ProjectPlan
                         throw new ArgumentOutOfRangeException(nameof(groupByMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownGroupByMode} {groupByMode}");
                 }
 
+
+
+                //foreach (var item in suc)
+                //{
+
+                //}
+
+
+
+
+
+
+                //if (showTracking)
+                //{
+                //    int labelCount = labels.Count;
+
+                //    // Get the tracker with the highest Time value.
+                //    ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
+                //    RectangleAnnotation? trackerAnnotation = TrackerAnnotation(start, end, labelCount, lastTracker);
+
+                //    if (trackerAnnotation is not null)
+                //    {
+                //        plotModel.Annotations.Add(trackerAnnotation);
+                //    }
+                //}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 if (showProjectFinish)
                 {
                     var projectFinish = new StringBuilder(Resource.ProjectPlan.Labels.Label_ProjectFinish);
@@ -885,6 +833,72 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             return plotModel.SetBaseTheme(baseTheme);
+
+        }
+
+
+
+        private static void AddBarItemToSeries(
+            IDateTimeCalculator dateTimeCalculator,
+            DateTimeOffset projectStart,
+            bool showDates,
+            bool showTracking,
+            PlotModel plotModel,
+            SlackColorFormatLookup colorFormatLookup,
+            IntervalBarSeries series,
+            List<string> labels,
+            IDependentActivity activity)
+        {
+            if (activity.EarliestStartTime.HasValue
+                && activity.EarliestFinishTime.HasValue
+                && activity.Duration > 0)
+            {
+                string id = activity.Id.ToString(CultureInfo.InvariantCulture);
+                string label = string.IsNullOrWhiteSpace(activity.Name) ? id : $"{activity.Name} ({id})";
+                Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
+
+                var backgroundColor = OxyColor.FromArgb(
+                      slackColor.A,
+                      slackColor.R,
+                      slackColor.G,
+                      slackColor.B);
+
+                double start = ChartHelper.CalculateChartStartTimeXValue(
+                    activity.EarliestStartTime.GetValueOrDefault(),
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator);
+                double end = ChartHelper.CalculateChartFinishTimeXValue(
+                    activity.EarliestFinishTime.GetValueOrDefault(),
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator);
+
+                var item = new IntervalBarItem
+                {
+                    Title = label,
+                    Start = start,
+                    End = end,
+                    Color = backgroundColor,
+                };
+
+                series.Items.Add(item);
+                labels.Add(label);
+
+                if (showTracking)
+                {
+                    int labelCount = labels.Count;
+
+                    // Get the tracker with the highest Time value.
+                    ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
+                    RectangleAnnotation? trackerAnnotation = TrackerAnnotation(start, end, labelCount, lastTracker);
+
+                    if (trackerAnnotation is not null)
+                    {
+                        plotModel.Annotations.Add(trackerAnnotation);
+                    }
+                }
+            }
         }
 
         private static RectangleAnnotation? TrackerAnnotation(
