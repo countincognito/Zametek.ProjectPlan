@@ -298,9 +298,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-
-
-            //HashSet<int> highlightActivitySuccessors = [2];
+            HashSet<int> highlightActivitySuccessors = [2];
 
 
 
@@ -315,14 +313,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (!graphCompilation.CompilationErrors.Any())
             {
-                //// If we are highlighting successors, then collate the list
-                //// of successor IDs for the specified activities.
-
-                //Dictionary<int, HashSet<int>> successorIdLookup = graphCompilation
-                //    .DependentActivities
-                //    .Where(x => highlightActivitySuccessors.Contains(x.Id))
-                //    .ToDictionary(x => x.Id, x => x.Successors);
-
                 switch (groupByMode)
                 {
                     case GroupByMode.None:
@@ -352,7 +342,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                     colorFormatLookup,
                                     series,
                                     labels,
-                                    activity);
+                                    activity,
+                                    highlightActivitySuccessors);
                             }
 
                             // Add an extra row for padding.
@@ -428,7 +419,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                             colorFormatLookup,
                                             series,
                                             labels,
-                                            activity);
+                                            activity,
+                                            highlightActivitySuccessors);
                                     }
                                 }
 
@@ -633,7 +625,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                             colorFormatLookup,
                                             series,
                                             labels,
-                                            activity);
+                                            activity,
+                                            highlightActivitySuccessors);
                                     }
                                 }
 
@@ -715,46 +708,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         throw new ArgumentOutOfRangeException(nameof(groupByMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownGroupByMode} {groupByMode}");
                 }
 
-
-
-                //foreach (var item in suc)
-                //{
-
-                //}
-
-
-
-
-
-
-                //if (showTracking)
-                //{
-                //    int labelCount = labels.Count;
-
-                //    // Get the tracker with the highest Time value.
-                //    ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
-                //    RectangleAnnotation? trackerAnnotation = TrackerAnnotation(start, end, labelCount, lastTracker);
-
-                //    if (trackerAnnotation is not null)
-                //    {
-                //        plotModel.Annotations.Add(trackerAnnotation);
-                //    }
-                //}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 if (showProjectFinish)
                 {
                     var projectFinish = new StringBuilder(Resource.ProjectPlan.Labels.Label_ProjectFinish);
@@ -831,7 +784,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             return plotModel.SetBaseTheme(baseTheme);
-
         }
 
         private static void AddAnnotationToPlot(
@@ -897,7 +849,8 @@ namespace Zametek.ViewModel.ProjectPlan
             SlackColorFormatLookup colorFormatLookup,
             IntervalBarSeries series,
             List<string> labels,
-            IDependentActivity activity)
+            IDependentActivity activity,
+            HashSet<int> highlightActivitySuccessors)
         {
             if (activity.EarliestStartTime.HasValue
                 && activity.EarliestFinishTime.HasValue
@@ -907,11 +860,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 string label = string.IsNullOrWhiteSpace(activity.Name) ? id : $"{activity.Name} ({id})";
                 Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
 
-                var backgroundColor = OxyColor.FromArgb(
-                      slackColor.A,
-                      slackColor.R,
-                      slackColor.G,
-                      slackColor.B);
+                OxyColor backgroundColor = OxyColor.FromAColor(ColorHelper.AnnotationATrackerOverlay, OxyColors.White);
 
                 double start = ChartHelper.CalculateChartStartTimeXValue(
                     activity.EarliestStartTime.GetValueOrDefault(),
@@ -924,6 +873,27 @@ namespace Zametek.ViewModel.ProjectPlan
                     projectStart,
                     dateTimeCalculator);
 
+                bool hasNoHighlightActivitySuccessors = highlightActivitySuccessors.Count == 0;
+
+                bool highlightAsActivity = highlightActivitySuccessors.Contains(activity.Id);
+
+                bool highlightAsSuccessor = activity.Dependencies.Union(activity.ManualDependencies)
+                    .Intersect(highlightActivitySuccessors)
+                    .Any();
+
+                // Only use the slack color if the activity is not
+                // highlighted as an activity or a successor.
+                if (hasNoHighlightActivitySuccessors
+                    || highlightAsActivity
+                    || highlightAsSuccessor)
+                {
+                    backgroundColor = OxyColor.FromArgb(
+                        slackColor.A,
+                        slackColor.R,
+                        slackColor.G,
+                        slackColor.B);
+                }
+
                 var item = new IntervalBarItem
                 {
                     Title = label,
@@ -935,10 +905,21 @@ namespace Zametek.ViewModel.ProjectPlan
                 series.Items.Add(item);
                 labels.Add(label);
 
+                int labelCount = labels.Count;
+
+                if (highlightAsActivity)
+                {
+                    ArrowAnnotation activityAnnotation = ActivityAnnotation(start, labelCount, OxyColors.LimeGreen);
+                    plotModel.Annotations.Add(activityAnnotation);
+                }
+                if (highlightAsSuccessor)
+                {
+                    ArrowAnnotation activityAnnotation = ActivityAnnotation(start, labelCount, OxyColors.Red);
+                    plotModel.Annotations.Add(activityAnnotation);
+                }
+
                 if (showTracking)
                 {
-                    int labelCount = labels.Count;
-
                     // Get the tracker with the highest Time value.
                     ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
                     RectangleAnnotation? trackerAnnotation = TrackerAnnotation(start, end, labelCount, lastTracker);
@@ -949,6 +930,23 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
             }
+        }
+
+        private static ArrowAnnotation ActivityAnnotation(
+            double start,
+            int labelCount,
+            OxyColor color)
+        {
+            double Y = labelCount + (c_TrackerAnnotationMinCorrection + c_TrackerAnnotationMaxCorrection) / 2.0;
+
+            return new ArrowAnnotation
+            {
+                StartPoint = new DataPoint(start - 0.1, Y),
+                EndPoint = new DataPoint(start, Y),
+                Color = color,
+                StrokeThickness = 1,
+                Layer = AnnotationLayer.AboveSeries,
+            };
         }
 
         private static RectangleAnnotation? TrackerAnnotation(
