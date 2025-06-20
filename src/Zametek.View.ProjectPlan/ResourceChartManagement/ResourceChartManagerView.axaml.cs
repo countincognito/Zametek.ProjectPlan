@@ -10,7 +10,10 @@ namespace Zametek.View.ProjectPlan
         {
             InitializeComponent();
             oxyplot.ActualController.UnbindMouseDown(OxyMouseButton.Right);
-            oxyplot.ActualController.UnbindMouseWheel();
+            oxyplot.ActualController.UnbindMouseDown(OxyMouseButton.Left);
+            oxyplot.ActualController.BindMouseDown(OxyMouseButton.Left, PlotCommands.PanAt);
+            //oxyplot.ActualController.BindMouseDown(OxyMouseButton.Left, OxyModifierKeys.Control, PlotCommands.Track);
+            //oxyplot.ActualController.UnbindMouseWheel();
         }
     }
 }

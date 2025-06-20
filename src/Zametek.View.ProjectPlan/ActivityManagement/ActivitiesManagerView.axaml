@@ -281,23 +281,6 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
@@ -334,24 +317,7 @@
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
+
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
@@ -379,17 +345,6 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-
-
-
-
-
-
-
-
-
-
-
 				<DataGridTemplateColumn CanUserResize="True"
 									CanUserReorder="True"
 									CanUserSort="True"
@@ -416,20 +371,6 @@
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"

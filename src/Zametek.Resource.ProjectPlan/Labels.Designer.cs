@@ -1061,6 +1061,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Successors.
+        /// </summary>
+        public static string Label_ShowSuccessors {
+            get {
+                return ResourceManager.GetString("Label_ShowSuccessors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Today.
         /// </summary>
         public static string Label_ShowToday {

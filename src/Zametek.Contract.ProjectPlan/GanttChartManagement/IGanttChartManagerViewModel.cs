@@ -24,6 +24,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowToday { get; set; }
 
+        IActivitySelectorViewModel ActivitySelector { get; }
+
         ICommand SaveGanttChartImageFileCommand { get; }
 
         Task SaveGanttChartImageFileAsync(string? filename, int width, int height);

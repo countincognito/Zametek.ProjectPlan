@@ -10,6 +10,8 @@
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 			 xmlns:common="using:Zametek.Common.ProjectPlan"
 			 x:DataType="vm:GanttChartManagerViewModel"
+			 xmlns:sys="using:System"
+			 xmlns:u="https://irihi.tech/ursa"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.GanttChartManagerView">
 	<UserControl.Resources>
@@ -19,7 +21,8 @@
 		<ScrollViewer DockPanel.Dock="Right"
 					  VerticalScrollBarVisibility="Hidden"
 					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
+			<DockPanel Margin="11,0,0,0"
+					   Width="120">
 				<DockPanel DockPanel.Dock="Top">
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
@@ -142,6 +145,41 @@
 								  OffContent="{x:Static resources:Labels.Label_No}"
 								  OnContent="{x:Static resources:Labels.Label_Yes}"
 								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"/>
+				</DockPanel>
+
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_ShowSuccessors}"/>
+
+					<u:MultiComboBox MaxHeight="200"
+									 Width="{x:Static sys:Double.NaN}"
+									 HorizontalAlignment="Stretch"
+									 VerticalAlignment="Stretch"
+									 Focusable="True"
+									 Height="25"
+									 ItemsSource="{Binding Path=ActivitySelector.TargetActivities, Mode=OneWay}"
+									 SelectedItems="{Binding Path=ActivitySelector.SelectedTargetActivities, Mode=OneWay}">
+						<u:MultiComboBox.SelectedItemTemplate>
+							<DataTemplate x:DataType="vm:SelectableActivityViewModel">
+								<Grid>
+									<TextBlock Text="{Binding Path=Id, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</u:MultiComboBox.SelectedItemTemplate>
+						<u:MultiComboBox.ItemTemplate>
+							<DataTemplate x:DataType="vm:SelectableActivityViewModel">
+								<Grid>
+									<TextBlock Text="{Binding Path=Id, Mode=OneWay}"
+											   ToolTip.Tip="{Binding Path=DisplayName, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</u:MultiComboBox.ItemTemplate>
+					</u:MultiComboBox>
 				</DockPanel>
 
 				<Grid/>

@@ -86,6 +86,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
+
+            ActivitySelector = new ActivitySelectorViewModel(m_CoreViewModel, []);
             m_GanttChartPlotModel = new PlotModel();
 
             {
@@ -176,7 +178,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.GroupByMode,
                     rcm => rcm.AnnotationStyle,
                     rcm => rcm.BoolAccumulator,
-                    (a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                    rcm => rcm.ActivitySelector.TargetActivitiesString,
+                    (a, b, c, d, e, f, g, h, i, j) => (a, b, c, d, e, f, g, h, i, j)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
 
@@ -250,6 +253,7 @@ namespace Zametek.ViewModel.ProjectPlan
             bool labelGroups,
             bool showProjectFinish,
             bool showTracking,
+            IEnumerable<int> highlightActivitySuccessors,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
@@ -292,24 +296,6 @@ namespace Zametek.ViewModel.ProjectPlan
             };
 
             var labels = new List<string>();
-
-
-
-
-
-
-            HashSet<int> highlightActivitySuccessors = [2];
-
-
-
-
-
-
-
-
-
-
-
 
             if (!graphCompilation.CompilationErrors.Any())
             {
@@ -850,7 +836,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IntervalBarSeries series,
             List<string> labels,
             IDependentActivity activity,
-            HashSet<int> highlightActivitySuccessors)
+            IEnumerable<int> highlightActivitySuccessors)
         {
             if (activity.EarliestStartTime.HasValue
                 && activity.EarliestFinishTime.HasValue
@@ -873,7 +859,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     projectStart,
                     dateTimeCalculator);
 
-                bool hasNoHighlightActivitySuccessors = highlightActivitySuccessors.Count == 0;
+                bool hasNoHighlightActivitySuccessors = !highlightActivitySuccessors.Any();
 
                 bool highlightAsActivity = highlightActivitySuccessors.Contains(activity.Id);
 
@@ -1155,6 +1141,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+
+        public IActivitySelectorViewModel ActivitySelector { get; }
+
+
+
+
+
         public ICommand SaveGanttChartImageFileCommand { get; }
 
         public async Task SaveGanttChartImageFileAsync(
@@ -1250,6 +1243,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ShowGroupLabels,
                     ShowProjectFinish,
                     ShowTracking,
+                    ActivitySelector.SelectedActivityIds,
                     m_CoreViewModel.BaseTheme);
             }
 
@@ -1294,6 +1288,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsGrouped?.Dispose();
                 m_IsAnnotated?.Dispose();
                 m_BoolAccumulator?.Dispose();
+                ActivitySelector?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
