@@ -581,17 +581,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
             lock (m_Lock)
             {
-                plotModel = BuildResourceChartPlotModelInternal(
-                    m_DateTimeCalculator,
-                    m_CoreViewModel.ResourceSeriesSet,
-                    m_CoreViewModel.ShowDates,
-                    m_CoreViewModel.ProjectStart,
-                    m_CoreViewModel.Today,
-                    AllocationMode,
-                    ScheduleMode,
-                    DisplayStyle,
-                    ShowToday,
-                    m_CoreViewModel.BaseTheme);
+                if (!HasCompilationErrors)
+                {
+                    plotModel = BuildResourceChartPlotModelInternal(
+                        m_DateTimeCalculator,
+                        m_CoreViewModel.ResourceSeriesSet,
+                        m_CoreViewModel.ShowDates,
+                        m_CoreViewModel.ProjectStart,
+                        m_CoreViewModel.Today,
+                        AllocationMode,
+                        ScheduleMode,
+                        DisplayStyle,
+                        ShowToday,
+                        m_CoreViewModel.BaseTheme);
+                }
             }
 
             ResourceChartPlotModel = plotModel ?? new PlotModel();

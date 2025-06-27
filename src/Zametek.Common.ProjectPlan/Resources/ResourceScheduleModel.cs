@@ -13,6 +13,8 @@
 
         public List<bool> EffortAllocation { get; init; } = [];
 
+        public int StartTime { get; init; }
+
         public int FinishTime { get; init; }
     }
 }

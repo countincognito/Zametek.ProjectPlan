@@ -332,11 +332,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
             lock (m_Lock)
             {
-                data = m_ArrowGraphExport.BuildArrowGraphSvgData(
-                    m_CoreViewModel.ArrowGraph,
-                    m_CoreViewModel.ArrowGraphSettings,
-                    m_CoreViewModel.BaseTheme,
-                    m_CoreViewModel.ArrowGraphShowNames);
+                if (!HasCompilationErrors)
+                {
+                    data = m_ArrowGraphExport.BuildArrowGraphSvgData(
+                        m_CoreViewModel.ArrowGraph,
+                        m_CoreViewModel.ArrowGraphSettings,
+                        m_CoreViewModel.BaseTheme,
+                        m_CoreViewModel.ArrowGraphShowNames);
+                }
             }
 
             ArrowGraphData = data?.ByteArrayToString() ?? string.Empty;

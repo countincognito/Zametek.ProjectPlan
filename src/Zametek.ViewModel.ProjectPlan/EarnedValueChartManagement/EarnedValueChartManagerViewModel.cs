@@ -559,15 +559,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
             lock (m_Lock)
             {
-                plotModel = BuildEarnedValueChartPlotModelInternal(
-                    m_DateTimeCalculator,
-                    m_CoreViewModel.TrackingSeriesSet,
-                    ShowToday,
-                    m_CoreViewModel.ShowDates,
-                    m_CoreViewModel.ProjectStart,
-                    m_CoreViewModel.Today,
-                    m_CoreViewModel.EarnedValueShowProjections,
-                    m_CoreViewModel.BaseTheme);
+                if (!HasCompilationErrors)
+                {
+                    plotModel = BuildEarnedValueChartPlotModelInternal(
+                        m_DateTimeCalculator,
+                        m_CoreViewModel.TrackingSeriesSet,
+                        ShowToday,
+                        m_CoreViewModel.ShowDates,
+                        m_CoreViewModel.ProjectStart,
+                        m_CoreViewModel.Today,
+                        m_CoreViewModel.EarnedValueShowProjections,
+                        m_CoreViewModel.BaseTheme);
+                }
             }
 
             EarnedValueChartPlotModel = plotModel ?? new PlotModel();

@@ -225,7 +225,20 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<v0_4_0.DependentActivityModel, v0_4_2.DependentActivityModel>().ReverseMap();
 
             CreateMap<ProjectPlanModel, v0_4_2.ProjectPlanModel>().ReverseMap();
-            CreateMap<v0_4_1.ProjectPlanModel, v0_4_1.ProjectPlanModel>().ReverseMap();
+            CreateMap<v0_4_1.ProjectPlanModel, v0_4_2.ProjectPlanModel>().ReverseMap();
+
+            #endregion
+
+            #region v0.4.3
+
+            CreateMap<GraphCompilationModel, v0_4_3.GraphCompilationModel>().ReverseMap();
+            CreateMap<v0_4_0.GraphCompilationModel, v0_4_3.GraphCompilationModel>().ReverseMap();
+
+            CreateMap<ResourceScheduleModel, v0_4_3.ResourceScheduleModel>().ReverseMap();
+            CreateMap<v0_4_0.ResourceScheduleModel, v0_4_3.ResourceScheduleModel>().ReverseMap();
+
+            CreateMap<ProjectPlanModel, v0_4_3.ProjectPlanModel>().ReverseMap();
+            CreateMap<v0_4_2.ProjectPlanModel, v0_4_3.ProjectPlanModel>().ReverseMap();
 
             #endregion
         }

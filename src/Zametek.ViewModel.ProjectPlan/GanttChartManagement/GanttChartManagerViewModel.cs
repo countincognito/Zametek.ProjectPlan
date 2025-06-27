@@ -269,9 +269,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 return plotModel.SetBaseTheme(baseTheme);
             }
 
-            int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
+            int startTime = resourceSeriesSet.ResourceSchedules
+                .Select(x => x.StartTime)
+                .DefaultIfEmpty().Max();
 
-            plotModel.Axes.Add(BuildResourceChartXAxis(dateTimeCalculator, finishTime, showDates, projectStart));
+            int finishTime = resourceSeriesSet.ResourceSchedules
+                .Select(x => x.FinishTime)
+                .DefaultIfEmpty().Max();
+
+            plotModel.Axes.Add(BuildResourceChartXAxis(dateTimeCalculator, startTime, finishTime, showDates, projectStart));
 
             var legend = new Legend
             {
@@ -297,8 +303,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             var labels = new List<string>();
 
-            if (!graphCompilation.CompilationErrors.Any())
-            {
+            //if (!graphCompilation.CompilationErrors.Any())
+            //{
                 switch (groupByMode)
                 {
                     case GroupByMode.None:
@@ -759,7 +765,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         plotModel.Annotations.Add(todayLine);
                     }
                 }
-            }
+            //}
 
             plotModel.Axes.Add(BuildResourceChartYAxis(labels));
             plotModel.Series.Add(series);
@@ -967,6 +973,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static Axis BuildResourceChartXAxis(
             IDateTimeCalculator dateTimeCalculator,
+            int startTime,
             int finishTime,
             bool showDates,
             DateTimeOffset projectStart)
@@ -974,7 +981,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             if (finishTime != default)
             {
-                double minValue = ChartHelper.CalculateChartStartTimeXValue(-1, showDates, projectStart, dateTimeCalculator);
+                double minValue = ChartHelper.CalculateChartStartTimeXValue(startTime - 1, showDates, projectStart, dateTimeCalculator);
                 double maxValue = ChartHelper.CalculateChartFinishTimeXValue(finishTime + 1, showDates, projectStart, dateTimeCalculator);
 
                 if (showDates)

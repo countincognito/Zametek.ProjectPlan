@@ -118,7 +118,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     core => core.HasCompilationErrors,
                     core => core.GraphCompilation,
-                    (hasCompilationErrors, _) => hasCompilationErrors ? (int?)null : m_VertexGraphCompiler.Duration)
+                    (hasCompilationErrors, _) => hasCompilationErrors ? (int?)null : (m_VertexGraphCompiler.FinishTime - m_VertexGraphCompiler.StartTime))
                 .ToProperty(this, core => core.Duration);
 
             m_AreActivitiesUncompiledSub = m_ReadOnlyActivities
@@ -2210,15 +2210,15 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var resourceSeriesSet = new ResourceSeriesSetModel();
 
-                if (!HasCompilationErrors)
-                {
+                //if (!HasCompilationErrors)
+                //{
                     IList<ResourceScheduleModel> resourceScheduleModels =
-                        m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity>, IList<ResourceScheduleModel>>(GraphCompilation);
+                    m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity>, IList<ResourceScheduleModel>>(GraphCompilation);
 
                     resourceSeriesSet = CalculateResourceSeriesSet(
                         resourceScheduleModels,
                         ResourceSettings);
-                }
+                //}
 
                 ResourceSeriesSet = resourceSeriesSet;
             }
@@ -2230,12 +2230,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var trackingSeriesSet = new TrackingSeriesSetModel();
 
-                if (!HasCompilationErrors)
-                {
+                //if (!HasCompilationErrors)
+                //{
                     // TODO fix this mapping
                     IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(Activities);
                     trackingSeriesSet = CalculateTrackingSeriesSet(activityModels, ResourceSettings, HasResources);
-                }
+                //}
 
                 TrackingSeriesSet = trackingSeriesSet;
             }

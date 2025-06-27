@@ -235,7 +235,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         resourceScheduleBuilder.AppendActivityWithoutChecks(scheduledActivity);
                     }
 
-                    return resourceScheduleBuilder.ToResourceSchedule([], src.FinishTime);
+                    return resourceScheduleBuilder.ToResourceSchedule([], src.StartTime, src.FinishTime);
                 });
 
             CreateMap<ResourceScheduleModel, ResourceSchedule<int, int, int>>()
