@@ -237,8 +237,8 @@
   <data name="ToolTip_HasNoEffort" xml:space="preserve">
     <value>Ignore Effort</value>
   </data>
-  <data name="ToolTip_ManualDependencies" xml:space="preserve">
-    <value>Manual Dependencies </value>
+  <data name="ToolTip_PlanningDependencies" xml:space="preserve">
+    <value>Planning Dependencies </value>
   </data>
   <data name="ToolTip_Successors" xml:space="preserve">
     <value>Successors</value>

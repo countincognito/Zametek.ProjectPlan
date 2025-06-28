@@ -130,8 +130,8 @@ namespace Zametek.Data.ProjectPlan.Tests
         [Fact]
         public void Converter_Given_v0_4_2_Input_ThenConvertsTo_v0_4_3()
         {
-            v0_4_2.ProjectPlanModel? projectPlan_v0_4_2 = JsonConvert.DeserializeObject<v0_4_2.ProjectPlanModel>(m_Fixture.Vc_0_4_2_JsonString);
-            v0_4_3.ProjectPlanModel? projectPlan_v0_4_3 = JsonConvert.DeserializeObject<v0_4_3.ProjectPlanModel>(m_Fixture.Vc_0_4_3_JsonString);
+            v0_4_2.ProjectPlanModel? projectPlan_v0_4_2 = JsonConvert.DeserializeObject<v0_4_2.ProjectPlanModel>(m_Fixture.Vd_0_4_2_JsonString);
+            v0_4_3.ProjectPlanModel? projectPlan_v0_4_3 = JsonConvert.DeserializeObject<v0_4_3.ProjectPlanModel>(m_Fixture.Vd_0_4_3_JsonString);
             IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
             v0_4_3.ProjectPlanModel projectPlan_v0_4_2_upgraded = v0_4_3.Converter.Upgrade(mapper, projectPlan_v0_4_2!);
             projectPlan_v0_4_2_upgraded.ShouldBeEquivalentTo(projectPlan_v0_4_3);

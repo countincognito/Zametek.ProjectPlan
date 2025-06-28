@@ -772,15 +772,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Manual Dependencies .
-        /// </summary>
-        public static string Label_ManualDependencies {
-            get {
-                return ResourceManager.GetString("Label_ManualDependencies", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Max.
         /// </summary>
         public static string Label_Max {
@@ -904,6 +895,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_Plan {
             get {
                 return ResourceManager.GetString("Label_Plan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Planning Dependencies .
+        /// </summary>
+        public static string Label_PlanningDependencies {
+            get {
+                return ResourceManager.GetString("Label_PlanningDependencies", resourceCulture);
             }
         }
         

@@ -19,7 +19,7 @@ namespace Zametek.Contract.ProjectPlan
 
         string DependenciesString { get; set; }
 
-        string ManualDependenciesString { get; set; }
+        string PlanningDependenciesString { get; set; }
 
         string ResourceDependenciesString { get; }
 

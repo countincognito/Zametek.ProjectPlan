@@ -20,7 +20,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_2
                 ResourceSettings = projectPlan.ResourceSettings ?? new(),
                 WorkStreamSettings = projectPlan.WorkStreamSettings ?? new(),
                 DisplaySettings = projectPlan.DisplaySettings ?? new(),
-                GraphCompilation = projectPlan.GraphCompilation ?? new(),
+                GraphCompilation = mapper.Map<v0_4_0.GraphCompilationModel, GraphCompilationModel>(projectPlan.GraphCompilation ?? new v0_4_0.GraphCompilationModel()),
                 ArrowGraph = projectPlan.ArrowGraph ?? new(),
                 HasStaleOutputs = projectPlan.HasStaleOutputs,
             };

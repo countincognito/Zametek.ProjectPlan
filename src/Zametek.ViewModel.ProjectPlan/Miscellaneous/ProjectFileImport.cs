@@ -58,7 +58,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly IList<string> s_DependentActivityColumnTitles =
         [
             nameof(DependentActivityModel.Dependencies),
-            nameof(DependentActivityModel.ManualDependencies)
+            nameof(DependentActivityModel.PlanningDependencies)
         ];
 
         private static readonly IList<string> s_ResourceColumnTitles =
@@ -617,7 +617,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     DateTimeOffset? maximumLatestFinishDateTime = null;
                     string notes = string.Empty;
                     List<int> dependencies = [];
-                    List<int> manualDependencies = [];
+                    List<int> planningDependencies = [];
 
                     foreach (string columnName in activityColumnNames)
                     {
@@ -732,15 +732,15 @@ namespace Zametek.ViewModel.ProjectPlan
                                         }
                                     }
                                 })
-                            .Case(nameof(DependentActivityModel.ManualDependencies),
+                            .Case(nameof(DependentActivityModel.PlanningDependencies),
                                 colName =>
                                 {
-                                    string manualDependenciesString = row[colName]?.ToString() ?? string.Empty;
-                                    foreach (string manualDependency in manualDependenciesString.Split(DependenciesStringValidationRule.Separator))
+                                    string planningDependenciesString = row[colName]?.ToString() ?? string.Empty;
+                                    foreach (string planningDependency in planningDependenciesString.Split(DependenciesStringValidationRule.Separator))
                                     {
-                                        if (int.TryParse(manualDependency, out int output))
+                                        if (int.TryParse(planningDependency, out int output))
                                         {
-                                            manualDependencies.Add(output);
+                                            planningDependencies.Add(output);
                                         }
                                     }
                                 }); ;
@@ -768,7 +768,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 Notes = notes
                             },
                             Dependencies = dependencies,
-                            ManualDependencies = manualDependencies
+                            PlanningDependencies = planningDependencies
                         });
                     }
                 }

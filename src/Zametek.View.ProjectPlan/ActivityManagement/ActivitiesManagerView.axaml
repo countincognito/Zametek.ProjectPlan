@@ -19,7 +19,7 @@
 		<local:ManagedActivitySortComparer x:Key="durationSortComparer" SortMemberPath="Duration"/>
 		<local:ManagedActivitySortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
 		<local:ManagedActivitySortComparer x:Key="dependenciesStringSortComparer" SortMemberPath="DependenciesString"/>
-		<local:ManagedActivitySortComparer x:Key="manualDependenciesStringSortComparer" SortMemberPath="ManualDependenciesString"/>
+		<local:ManagedActivitySortComparer x:Key="planningDependenciesStringSortComparer" SortMemberPath="PlanningDependenciesString"/>
 		<local:ManagedActivitySortComparer x:Key="resourceDependenciesStringSortComparer" SortMemberPath="ResourceDependenciesString"/>
 		<local:ManagedActivitySortComparer x:Key="successorsStringSortComparer" SortMemberPath="SuccessorsString"/>
 		<local:ManagedActivitySortComparer x:Key="isDummySortComparer" SortMemberPath="IsDummy"/>
@@ -284,15 +284,15 @@
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
-										CustomSortComparer="{StaticResource manualDependenciesStringSortComparer}"
-										Width="160">
+										CustomSortComparer="{StaticResource planningDependenciesStringSortComparer}"
+										Width="170">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_ManualDependencies}"
-									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ManualDependencies}"/>
+									   Text="{x:Static resources:Labels.Label_PlanningDependencies}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_PlanningDependencies}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -303,7 +303,7 @@
 										 Margin="0"
 										 Padding="3"
 										 Classes="displayOnly"
-										 Text="{Binding Path=ManualDependenciesString, Mode=OneWay}"/>
+										 Text="{Binding Path=PlanningDependenciesString, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -313,7 +313,7 @@
 									 Margin="0"
 									 Padding="3"
 									 Focusable="True"
-									 Text="{Binding Path=ManualDependenciesString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
+									 Text="{Binding Path=PlanningDependenciesString, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>

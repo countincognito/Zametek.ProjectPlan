@@ -479,31 +479,31 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (updatedDependencies is not null)
                 {
-                    m_VertexGraphCompiler.SetActivityDependencies(Id, [.. updatedDependencies], ManualDependencies);
+                    m_VertexGraphCompiler.SetActivityDependencies(Id, [.. updatedDependencies], PlanningDependencies);
                 }
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged(nameof(Dependencies));
             }
         }
 
-        public string ManualDependenciesString
+        public string PlanningDependenciesString
         {
-            get => string.Join(DependenciesStringValidationRule.Separator, ManualDependencies.OrderBy(x => x));
+            get => string.Join(DependenciesStringValidationRule.Separator, PlanningDependencies.OrderBy(x => x));
             set
             {
                 //ClearErrors();
-                (IEnumerable<int>? updatedManualDependencies, string? errorMessage) = DependenciesStringValidationRule.Validate(value, Id);
+                (IEnumerable<int>? updatedPlanningDependencies, string? errorMessage) = DependenciesStringValidationRule.Validate(value, Id);
                 //if (errorMessage is not null)
                 //{
                 //    SetError(nameof(DependenciesString), errorMessage);
                 //}
 
-                if (updatedManualDependencies is not null)
+                if (updatedPlanningDependencies is not null)
                 {
-                    m_VertexGraphCompiler.SetActivityDependencies(Id, Dependencies, [.. updatedManualDependencies]);
+                    m_VertexGraphCompiler.SetActivityDependencies(Id, Dependencies, [.. updatedPlanningDependencies]);
                 }
                 this.RaisePropertyChanged();
-                this.RaisePropertyChanged(nameof(ManualDependencies));
+                this.RaisePropertyChanged(nameof(PlanningDependencies));
             }
         }
 
@@ -636,7 +636,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged(nameof(InterferingSlack));
                 this.RaisePropertyChanged(nameof(DependenciesString));
-                this.RaisePropertyChanged(nameof(ManualDependenciesString));
+                this.RaisePropertyChanged(nameof(PlanningDependenciesString));
                 this.RaisePropertyChanged(nameof(ResourceDependenciesString));
                 this.RaisePropertyChanged(nameof(SuccessorsString));
             }
@@ -660,7 +660,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged(nameof(IsCritical));
                 this.RaisePropertyChanged(nameof(InterferingSlack));
                 this.RaisePropertyChanged(nameof(DependenciesString));
-                this.RaisePropertyChanged(nameof(ManualDependenciesString));
+                this.RaisePropertyChanged(nameof(PlanningDependenciesString));
                 this.RaisePropertyChanged(nameof(ResourceDependenciesString));
                 this.RaisePropertyChanged(nameof(SuccessorsString));
             }
@@ -745,7 +745,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged(nameof(IsCritical));
                 this.RaisePropertyChanged(nameof(InterferingSlack));
                 this.RaisePropertyChanged(nameof(DependenciesString));
-                this.RaisePropertyChanged(nameof(ManualDependenciesString));
+                this.RaisePropertyChanged(nameof(PlanningDependenciesString));
                 this.RaisePropertyChanged(nameof(ResourceDependenciesString));
                 this.RaisePropertyChanged(nameof(SuccessorsString));
             }
@@ -843,7 +843,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public HashSet<int> Dependencies => DependentActivity.Dependencies;
 
-        public HashSet<int> ManualDependencies => DependentActivity.ManualDependencies;
+        public HashSet<int> PlanningDependencies => DependentActivity.PlanningDependencies;
 
         public HashSet<int> ResourceDependencies => DependentActivity.ResourceDependencies;
 

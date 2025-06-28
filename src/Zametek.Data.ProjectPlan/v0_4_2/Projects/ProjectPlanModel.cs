@@ -19,7 +19,7 @@
 
         public v0_4_1.DisplaySettingsModel DisplaySettings { get; init; } = new();
 
-        public v0_4_0.GraphCompilationModel GraphCompilation { get; init; } = new();
+        public GraphCompilationModel GraphCompilation { get; init; } = new();
 
         public v0_4_0.ArrowGraphModel ArrowGraph { get; init; } = new();
 

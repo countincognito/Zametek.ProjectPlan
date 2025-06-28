@@ -1805,7 +1805,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach (DependentActivityModel activityModel in plan.DependentActivities)
                     {
                         activityModel.Dependencies.Sort();
-                        activityModel.ManualDependencies.Sort();
+                        activityModel.PlanningDependencies.Sort();
                         activityModel.ResourceDependencies.Sort();
                         activityModel.Successors.Sort();
                     }
@@ -2020,8 +2020,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                     .Where(x => x.Dependencies.Intersect(upstreamActivityIds).Any())
                                     .Except(upstreamActivities)];
 
-                                IEnumerable<IManagedActivityViewModel> downstreamManualActivities = [.. Activities
-                                    .Where(x => x.ManualDependencies.Intersect(upstreamActivityIds).Any())
+                                IEnumerable<IManagedActivityViewModel> downstreamPlanningActivities = [.. Activities
+                                    .Where(x => x.PlanningDependencies.Intersect(upstreamActivityIds).Any())
                                     .Except(upstreamActivities)];
 
                                 // Repopulate the selected downstream activities' dependencies.
@@ -2031,15 +2031,15 @@ namespace Zametek.ViewModel.ProjectPlan
                                     m_VertexGraphCompiler.SetActivityDependencies(
                                         downstreamActivity.Id,
                                         [.. downstreamActivity.Dependencies, milestoneId],
-                                        downstreamActivity.ManualDependencies);
+                                        downstreamActivity.PlanningDependencies);
                                 }
 
-                                foreach (IManagedActivityViewModel downstreamActivity in downstreamManualActivities)
+                                foreach (IManagedActivityViewModel downstreamActivity in downstreamPlanningActivities)
                                 {
                                     m_VertexGraphCompiler.SetActivityDependencies(
                                         downstreamActivity.Id,
                                         downstreamActivity.Dependencies,
-                                        [.. downstreamActivity.ManualDependencies, milestoneId]);
+                                        [.. downstreamActivity.PlanningDependencies, milestoneId]);
                                 }
 
                                 // Finally, add the upstream activities' IDs as dependencies

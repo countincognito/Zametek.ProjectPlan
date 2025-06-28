@@ -1,11 +1,11 @@
-﻿namespace Zametek.Data.ProjectPlan.v0_4_3
+﻿namespace Zametek.Data.ProjectPlan.v0_4_2
 {
     [Serializable]
     public record GraphCompilationModel
     {
         public List<DependentActivityModel> DependentActivities { get; init; } = [];
 
-        public List<ResourceScheduleModel> ResourceSchedules { get; init; } = [];
+        public List<v0_4_0.ResourceScheduleModel> ResourceSchedules { get; init; } = [];
 
         public List<v0_3_0.GraphCompilationErrorModel> CompilationErrors { get; init; } = [];
 

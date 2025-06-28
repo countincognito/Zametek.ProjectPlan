@@ -869,7 +869,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 bool highlightAsActivity = highlightActivitySuccessors.Contains(activity.Id);
 
-                bool highlightAsSuccessor = activity.Dependencies.Union(activity.ManualDependencies)
+                bool highlightAsSuccessor = activity.Dependencies.Union(activity.PlanningDependencies)
                     .Intersect(highlightActivitySuccessors)
                     .Any();
 

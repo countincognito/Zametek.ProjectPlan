@@ -1,5 +1,5 @@
 {
-  "Version": "v0.4.3",
+  "Version": "v0.4.2",
   "ProjectStart": "2025-01-06T00:00:00+00:00",
   "Today": "2025-01-06T00:00:00+00:00",
   "DependentActivities": [
@@ -114,7 +114,9 @@
         ]
       },
       "Dependencies": [],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [],
       "Successors": []
     },
@@ -183,7 +185,9 @@
       "Dependencies": [
         2
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         2
       ],
@@ -309,7 +313,9 @@
       "Dependencies": [
         3
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         3
       ],
@@ -341,7 +347,9 @@
         2,
         4
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [],
       "Successors": []
     },
@@ -374,7 +382,9 @@
       "Dependencies": [
         16
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [],
       "Successors": []
     },
@@ -406,7 +416,9 @@
       "Dependencies": [
         5
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         4
       ],
@@ -439,7 +451,9 @@
       "Dependencies": [
         7
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [],
       "Successors": []
     },
@@ -470,7 +484,9 @@
       "Dependencies": [
         8
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         8
       ],
@@ -503,7 +519,9 @@
       "Dependencies": [
         5
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [],
       "Successors": []
     },
@@ -532,7 +550,9 @@
       "Dependencies": [
         6
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         6
       ],
@@ -563,7 +583,9 @@
       "Dependencies": [
         11
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         4
       ],
@@ -595,7 +617,9 @@
       "Dependencies": [
         7
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [],
       "Successors": []
     },
@@ -627,7 +651,9 @@
       "Dependencies": [
         7
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         7
       ],
@@ -659,7 +685,9 @@
       "Dependencies": [
         7
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [],
       "Successors": []
     },
@@ -690,7 +718,9 @@
         14,
         15
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [],
       "Successors": []
     },
@@ -722,7 +752,9 @@
       "Dependencies": [
         16
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         20
       ],
@@ -757,7 +789,9 @@
         16,
         22
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         22
       ],
@@ -792,7 +826,9 @@
         16,
         18
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         18
       ],
@@ -827,7 +863,9 @@
         16,
         19
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         19
       ],
@@ -861,7 +899,9 @@
       "Dependencies": [
         14
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         14
       ],
@@ -895,7 +935,9 @@
       "Dependencies": [
         16
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [],
       "Successors": []
     },
@@ -931,7 +973,9 @@
         20,
         22
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         17
       ],
@@ -963,7 +1007,9 @@
       "Dependencies": [
         17
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         27
       ],
@@ -995,7 +1041,9 @@
       "Dependencies": [
         18
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [],
       "Successors": []
     },
@@ -1025,7 +1073,9 @@
       "Dependencies": [
         19
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [],
       "Successors": []
     },
@@ -1055,7 +1105,9 @@
       "Dependencies": [
         20
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         25
       ],
@@ -1087,7 +1139,9 @@
       "Dependencies": [
         21
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         13
       ],
@@ -1119,7 +1173,9 @@
       "Dependencies": [
         22
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         15
       ],
@@ -1151,7 +1207,9 @@
       "Dependencies": [
         29
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         29
       ],
@@ -1184,7 +1242,9 @@
         25,
         26
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         26
       ],
@@ -1218,7 +1278,9 @@
         27,
         30
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         30
       ],
@@ -1251,7 +1313,9 @@
         16,
         28
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         28
       ],
@@ -1286,7 +1350,9 @@
         30,
         33
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         32
       ],
@@ -1321,7 +1387,9 @@
         32,
         33
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         33
       ],
@@ -1353,7 +1421,9 @@
       "Dependencies": [
         33
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         24
       ],
@@ -1385,7 +1455,9 @@
         35,
         36
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [],
       "Successors": []
     },
@@ -1416,7 +1488,9 @@
         11,
         37
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         35
       ],
@@ -1449,7 +1523,9 @@
         11,
         37
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         36
       ],
@@ -1482,7 +1558,9 @@
         11,
         37
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         34
       ],
@@ -1491,7 +1569,7 @@
     {
       "Activity": {
         "Id": 41,
-        "Name": "Manual Polishing",
+        "Name": "Planning Polishing",
         "Notes": "",
         "TargetWorkStreams": [],
         "TargetResources": [
@@ -1515,7 +1593,9 @@
         39,
         40
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         12
       ],
@@ -1551,7 +1631,9 @@
         39,
         40
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         7
       ],
@@ -1589,7 +1671,9 @@
         41,
         42
       ],
-      "ManualDependencies": [],
+      "ManualDependencies": [
+        45
+      ],
       "ResourceDependencies": [
         4,
         21,
@@ -4751,7 +4835,7 @@
       {
         "Activity": {
           "Id": 41,
-          "Name": "Manual Polishing",
+          "Name": "Planning Polishing",
           "Notes": "",
           "TargetWorkStreams": [],
           "TargetResources": [
@@ -4910,7 +4994,7 @@
           },
           {
             "Id": 41,
-            "Name": "Manual Polishing",
+            "Name": "Planning Polishing",
             "HasNoCost": false,
             "HasNoEffort": false,
             "Duration": 10,
@@ -5488,7 +5572,6 @@
           true,
           true
         ],
-        "StartTime": 0,
         "FinishTime": 185
       },
       {
@@ -6135,7 +6218,6 @@
           true,
           true
         ],
-        "StartTime": 0,
         "FinishTime": 185
       },
       {
@@ -6746,7 +6828,6 @@
           true,
           true
         ],
-        "StartTime": 0,
         "FinishTime": 185
       },
       {
@@ -7348,7 +7429,6 @@
           false,
           false
         ],
-        "StartTime": 0,
         "FinishTime": 185
       },
       {
@@ -7986,7 +8066,6 @@
           false,
           false
         ],
-        "StartTime": 0,
         "FinishTime": 185
       },
       {
@@ -8615,7 +8694,6 @@
           false,
           false
         ],
-        "StartTime": 0,
         "FinishTime": 185
       },
       {
@@ -9244,7 +9322,6 @@
           false,
           false
         ],
-        "StartTime": 0,
         "FinishTime": 185
       },
       {
@@ -9846,7 +9923,6 @@
           false,
           false
         ],
-        "StartTime": 0,
         "FinishTime": 185
       },
       {
@@ -10448,7 +10524,6 @@
           false,
           false
         ],
-        "StartTime": 0,
         "FinishTime": 185
       },
       {
@@ -11041,7 +11116,6 @@
           false,
           false
         ],
-        "StartTime": 0,
         "FinishTime": 185
       },
       {
@@ -11643,7 +11717,6 @@
           false,
           false
         ],
-        "StartTime": 0,
         "FinishTime": 185
       },
       {
@@ -12238,7 +12311,6 @@
           false,
           false
         ],
-        "StartTime": 0,
         "FinishTime": 185
       },
       {
@@ -12876,7 +12948,6 @@
           false,
           false
         ],
-        "StartTime": 0,
         "FinishTime": 185
       }
     ],
@@ -14366,7 +14437,7 @@
       {
         "Content": {
           "Id": 41,
-          "Name": "Manual Polishing",
+          "Name": "Planning Polishing",
           "Notes": "",
           "TargetWorkStreams": [],
           "TargetResources": [

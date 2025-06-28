@@ -7,7 +7,7 @@
 
         public List<int> Dependencies { get; init; } = [];
 
-        public List<int> ManualDependencies { get; init; } = [];
+        public List<int> PlanningDependencies { get; init; } = [];
 
         public List<int> ResourceDependencies { get; init; } = [];
 

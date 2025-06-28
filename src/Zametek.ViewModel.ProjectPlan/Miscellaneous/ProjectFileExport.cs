@@ -60,7 +60,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly IList<string> s_DependentActivityColumnTitles =
         [
             nameof(DependentActivityModel.Dependencies),
-            nameof(DependentActivityModel.ManualDependencies),
+            nameof(DependentActivityModel.PlanningDependencies),
             nameof(DependentActivityModel.ResourceDependencies),
             nameof(DependentActivityModel.Successors)
         ];
