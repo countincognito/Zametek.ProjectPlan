@@ -1,5 +1,4 @@
-﻿using sun.tools.tree;
-using Zametek.Contract.ProjectPlan;
+﻿using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
