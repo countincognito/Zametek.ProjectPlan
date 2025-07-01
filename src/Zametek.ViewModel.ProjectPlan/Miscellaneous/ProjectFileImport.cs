@@ -1,6 +1,4 @@
-﻿using java.util.stream;
-using net.sf.mpxj.MpxjUtilities;
-using net.sf.mpxj.reader;
+﻿using MPXJ.Net;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.Data;
@@ -178,22 +176,22 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public async Task<ProjectImportModel> ImportProjectFileAsync(string filename)
         {
-            return await Task.Run(() => ImportProjectFile(filename));
+            return await System.Threading.Tasks.Task.Run(() => ImportProjectFile(filename));
         }
 
         public ProjectImportModel ImportMicrosoftProjectFile(string filename)
         {
             var reader = new UniversalProjectReader();
-            net.sf.mpxj.ProjectFile mpxjProjectFile = reader.read(filename);
-            net.sf.mpxj.ProjectProperties? props = mpxjProjectFile.ProjectProperties;
-            DateTimeOffset projectStart = props?.StartDate?.ToDateTime() ?? DateTimeOffset.Now;
+            ProjectFile mpxjProjectFile = reader.Read(filename);
+            ProjectProperties? props = mpxjProjectFile.ProjectProperties;
+            DateTimeOffset projectStart = props?.StartDate ?? DateTimeOffset.Now;
             TimeSpan projectStartOffset = projectStart.Offset;
 
             var resources = new List<ResourceModel>();
 
-            foreach (net.sf.mpxj.Resource mpxjResource in mpxjProjectFile.Resources.ToIEnumerable<net.sf.mpxj.Resource>())
+            foreach (MPXJ.Net.Resource mpxjResource in mpxjProjectFile.Resources)
             {
-                int id = mpxjResource.ID?.intValue() ?? default;
+                int id = mpxjResource.ID ?? default;
                 if (s_FilterResourceIds.Contains(id))
                 {
                     continue;
@@ -212,35 +210,35 @@ namespace Zametek.ViewModel.ProjectPlan
 
             var dependentActivities = new List<DependentActivityModel>();
 
-            IList<net.sf.mpxj.Task> mpxjTasks = mpxjProjectFile.Tasks.ToIEnumerable<net.sf.mpxj.Task>().ToList();
+            IList<MPXJ.Net.Task> mpxjTasks = [.. mpxjProjectFile.Tasks];
 
-            foreach (net.sf.mpxj.Task mpxjTask in mpxjTasks)
+            foreach (MPXJ.Net.Task mpxjTask in mpxjTasks)
             {
-                int id = mpxjTask.ID?.intValue() ?? default;
+                int id = mpxjTask.ID ?? default;
                 if (s_FilterTaskIds.Contains(id))
                 {
                     continue;
                 }
 
-                java.util.List? preds = mpxjTask.Predecessors; // Predecessors == Dependencies
+                IList<Relation> preds = [.. mpxjTask.Predecessors]; // Predecessors == Dependencies
                 if (preds is not null
-                    && !preds.isEmpty())
+                    && preds.Count != 0)
                 {
-                    foreach (net.sf.mpxj.Relation pred in preds.ToIEnumerable<net.sf.mpxj.Relation>().ToList())
+                    foreach (Relation pred in preds)
                     {
                         // For every dependency that is also a parent task, add all its children as dependencies.
 
-                        foreach (net.sf.mpxj.Task descendantTask in GetDescendantTasks(pred.PredecessorTask))
+                        foreach (MPXJ.Net.Task descendantTask in GetDescendantTasks(pred.PredecessorTask))
                         {
-                            int? descendantTaskId = descendantTask.ID?.intValue();
+                            int? descendantTaskId = descendantTask.ID;
 
                             if (descendantTaskId is not null
                                 && id != descendantTaskId)
                             {
-                                var builder = new net.sf.mpxj.Relation.Builder();
+                                var builder = new Relation.Builder(mpxjProjectFile);
                                 builder.PredecessorTask(descendantTask);
-                                builder.Type(net.sf.mpxj.RelationType.START_FINISH);
-                                builder.Lag(net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units));
+                                builder.Type(RelationType.StartFinish);
+                                builder.Lag(Duration.GetInstance(0.0, TimeUnit.Days));
                                 mpxjTask.AddPredecessor(builder);
                             }
                         }
@@ -249,26 +247,26 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 // Add parent tasks as predecessors.
 
-                net.sf.mpxj.Task parentTask = mpxjTask.ParentTask;
+                MPXJ.Net.Task parentTask = mpxjTask.ParentTask;
 
                 if (parentTask is not null)
                 {
-                    int parentId = parentTask.ID?.intValue() ?? default;
+                    int parentId = parentTask.ID ?? default;
                     if (!s_FilterTaskIds.Contains(parentId))
                     {
-                        var builder = new net.sf.mpxj.Relation.Builder();
+                        var builder = new Relation.Builder(mpxjProjectFile);
                         builder.PredecessorTask(parentTask);
-                        builder.Type(net.sf.mpxj.RelationType.START_FINISH);
-                        builder.Lag(net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units));
+                        builder.Type(RelationType.StartFinish);
+                        builder.Lag(Duration.GetInstance(0.0, TimeUnit.Days));
                         mpxjTask.AddPredecessor(builder);
                     }
                 }
 
                 // If the task is a parent task, ignore duration.
 
-                if (mpxjTask.HasChildTasks())
+                if (mpxjTask.HasChildTasks)
                 {
-                    mpxjTask.Duration = net.sf.mpxj.Duration.getInstance(0.0, mpxjTask.Duration.Units);
+                    mpxjTask.Duration = Duration.GetInstance(0.0, TimeUnit.Days);
                 }
 
                 DependentActivityModel? dependentActivity = ConvertTask(mpxjTask, projectStartOffset);
@@ -492,13 +490,13 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private static IEnumerable<net.sf.mpxj.Task> GetDescendantTasks(net.sf.mpxj.Task parentTask)
+        private static IEnumerable<MPXJ.Net.Task> GetDescendantTasks(MPXJ.Net.Task parentTask)
         {
-            if (parentTask.HasChildTasks())
+            if (parentTask.HasChildTasks)
             {
-                foreach (net.sf.mpxj.Task childTask in parentTask.ChildTasks.ToIEnumerable<net.sf.mpxj.Task>())
+                foreach (MPXJ.Net.Task childTask in parentTask.ChildTasks)
                 {
-                    foreach (net.sf.mpxj.Task grandChildTask in GetDescendantTasks(childTask))
+                    foreach (MPXJ.Net.Task grandChildTask in GetDescendantTasks(childTask))
                     {
                         yield return grandChildTask;
                     }
@@ -510,21 +508,21 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static DependentActivityModel? ConvertTask(
-            net.sf.mpxj.Task mpxjTask,
+            MPXJ.Net.Task mpxjTask,
             TimeSpan projectStartOffset)
         {
-            int id = mpxjTask.ID?.intValue() ?? default;
+            int id = mpxjTask.ID ?? default;
             if (s_FilterTaskIds.Contains(id))
             {
                 return null;
             }
 
-            int duration = Convert.ToInt32(mpxjTask.Duration?.Duration ?? default);
+            int duration = Convert.ToInt32(mpxjTask.Duration.DurationValue);
 
             DateTimeOffset? minimumEarliestStartDateTime = null;
-            if (mpxjTask.ConstraintType == net.sf.mpxj.ConstraintType.START_NO_EARLIER_THAN)
+            if (mpxjTask.ConstraintType == ConstraintType.StartNoEarlierThan)
             {
-                DateTime? mpxContraintDate = mpxjTask.ConstraintDate?.ToDateTime();
+                DateTime? mpxContraintDate = mpxjTask.ConstraintDate;
 
                 if (mpxContraintDate is not null)
                 {
@@ -534,9 +532,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             var targetResources = new List<int>();
-            foreach (net.sf.mpxj.ResourceAssignment resourceAssignment in mpxjTask.ResourceAssignments.ToIEnumerable<net.sf.mpxj.ResourceAssignment>())
+            foreach (ResourceAssignment resourceAssignment in mpxjTask.ResourceAssignments)
             {
-                int? mpxResourceId = resourceAssignment.Resource?.ID?.intValue();
+                int? mpxResourceId = resourceAssignment.Resource?.ID;
 
                 if (mpxResourceId is not null)
                 {
@@ -545,12 +543,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             var dependencies = new List<int>();
-            java.util.List? preds = mpxjTask.Predecessors;
-            if (preds is not null && !preds.isEmpty())
+            IList<Relation> preds = [.. mpxjTask.Predecessors];
+            if (preds is not null
+                && preds.Count != 0)
             {
-                foreach (net.sf.mpxj.Relation pred in preds.ToIEnumerable<net.sf.mpxj.Relation>())
+                foreach (Relation pred in preds)
                 {
-                    int? dependentTaskId = pred.PredecessorTask?.ID?.intValue();
+                    int? dependentTaskId = pred.PredecessorTask?.ID;
 
                     if (dependentTaskId is not null)
                     {
