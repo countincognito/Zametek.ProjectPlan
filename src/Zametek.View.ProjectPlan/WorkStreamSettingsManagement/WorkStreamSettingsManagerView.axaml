@@ -102,7 +102,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource idSortComparer}"
-										Width="50">
+										Width="55">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"
@@ -159,7 +159,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource displayOrderSortComparer}"
-										Width="115">
+										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"
