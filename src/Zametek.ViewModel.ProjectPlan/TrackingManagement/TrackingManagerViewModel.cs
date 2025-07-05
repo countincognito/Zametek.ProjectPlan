@@ -33,7 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CoreViewModel = coreViewModel;
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;
             m_DateTimeCalculator = dateTimeCalculator;
-            m_NameColumnWidth = 125;
+            m_NameColumnWidth = 130;
 
             m_IsBusy = this
                 .WhenAnyValue(tm => tm.m_CoreViewModel.IsBusy)

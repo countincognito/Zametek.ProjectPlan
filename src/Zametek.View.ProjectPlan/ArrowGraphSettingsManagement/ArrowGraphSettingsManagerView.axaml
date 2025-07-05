@@ -118,7 +118,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource slackLimitSortComparer}"
-										Width="95">
+										Width="105">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"
@@ -229,7 +229,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource criticalityWeightSortComparer}"
-										Width="130">
+										Width="140">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"
@@ -267,7 +267,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource fibonacciWeightSortComparer}"
-										Width="135">
+										Width="140">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"

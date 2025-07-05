@@ -93,7 +93,7 @@
 											CanUserSort="True"
 											IsReadOnly="True"
 											CustomSortComparer="{StaticResource resourceIdSortComparer}"
-											Width="50">
+											Width="55">
 						<DataGridTemplateColumn.HeaderTemplate>
 							<DataTemplate>
 								<TextBlock VerticalAlignment="Center"
@@ -145,7 +145,7 @@
 					<DataGridTemplateColumn CanUserResize="False"
 											CanUserReorder="False"
 											CanUserSort="False"
-											Width="60">
+											Width="65">
 						<DataGridTemplateColumn.HeaderTemplate>
 							<DataTemplate>
 								<TextBlock VerticalAlignment="Center"
@@ -225,7 +225,7 @@
 											CanUserSort="True"
 											IsReadOnly="True"
 											CustomSortComparer="{StaticResource activityIdSortComparer}"
-											Width="50">
+											Width="55">
 						<DataGridTemplateColumn.HeaderTemplate>
 							<DataTemplate>
 								<TextBlock VerticalAlignment="Center"
@@ -277,7 +277,7 @@
 					<DataGridTemplateColumn CanUserResize="False"
 											CanUserReorder="False"
 											CanUserSort="False"
-											Width="60">
+											Width="65">
 						<DataGridTemplateColumn.HeaderTemplate>
 							<DataTemplate>
 								<TextBlock VerticalAlignment="Center"
