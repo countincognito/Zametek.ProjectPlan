@@ -874,7 +874,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             foreach (var dependentActivity in dependentActivitiesCopy.Cast<DependentActivity>())
             {
+                dependentActivity.Dependencies.UnionWith(dependentActivity.PlanningDependencies);
                 dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
+                dependentActivity.PlanningDependencies.Clear();
                 dependentActivity.ResourceDependencies.Clear();
                 vertexGraphCompiler.AddActivity(dependentActivity);
             }
@@ -2212,12 +2214,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 //if (!HasCompilationErrors)
                 //{
-                    IList<ResourceScheduleModel> resourceScheduleModels =
-                    m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity>, IList<ResourceScheduleModel>>(GraphCompilation);
+                IList<ResourceScheduleModel> resourceScheduleModels =
+                m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity>, IList<ResourceScheduleModel>>(GraphCompilation);
 
-                    resourceSeriesSet = CalculateResourceSeriesSet(
-                        resourceScheduleModels,
-                        ResourceSettings);
+                resourceSeriesSet = CalculateResourceSeriesSet(
+                    resourceScheduleModels,
+                    ResourceSettings);
                 //}
 
                 ResourceSeriesSet = resourceSeriesSet;
@@ -2232,9 +2234,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 //if (!HasCompilationErrors)
                 //{
-                    // TODO fix this mapping
-                    IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(Activities);
-                    trackingSeriesSet = CalculateTrackingSeriesSet(activityModels, ResourceSettings, HasResources);
+                // TODO fix this mapping
+                IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(Activities);
+                trackingSeriesSet = CalculateTrackingSeriesSet(activityModels, ResourceSettings, HasResources);
                 //}
 
                 TrackingSeriesSet = trackingSeriesSet;

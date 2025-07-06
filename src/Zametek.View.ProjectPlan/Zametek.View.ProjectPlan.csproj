@@ -19,7 +19,7 @@
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.2" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.2" />
-    <PackageReference Include="Dock.Avalonia" Version="11.3.0.2" />
+    <PackageReference Include="Dock.Avalonia" Version="11.3.0.7" />
     <PackageReference Include="Irihi.Ursa" Version="1.11.1" />
     <PackageReference Include="Markdown.Avalonia.SyntaxHigh" Version="11.0.2" />
     <PackageReference Include="MessageBox.Avalonia" Version="3.2.0" />
