@@ -507,7 +507,7 @@
   <data name="Label_Successors" xml:space="preserve">
     <value>Successors</value>
   </data>
-  <data name="Label_ShowSuccessors" xml:space="preserve">
-    <value>Show Successors</value>
+  <data name="Label_ShowConnections" xml:space="preserve">
+    <value>Show Connections</value>
   </data>
 </root>

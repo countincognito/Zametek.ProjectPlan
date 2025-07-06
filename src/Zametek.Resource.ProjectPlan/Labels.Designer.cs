@@ -1025,6 +1025,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Connections.
+        /// </summary>
+        public static string Label_ShowConnections {
+            get {
+                return ResourceManager.GetString("Label_ShowConnections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Group Labels.
         /// </summary>
         public static string Label_ShowGroupLabels {
@@ -1057,15 +1066,6 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_ShowProjections {
             get {
                 return ResourceManager.GetString("Label_ShowProjections", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Show Successors.
-        /// </summary>
-        public static string Label_ShowSuccessors {
-            get {
-                return ResourceManager.GetString("Label_ShowSuccessors", resourceCulture);
             }
         }
         

@@ -253,7 +253,7 @@ namespace Zametek.ViewModel.ProjectPlan
             bool labelGroups,
             bool showProjectFinish,
             bool showTracking,
-            IEnumerable<int> highlightActivitySuccessors,
+            IEnumerable<int> highlightActivityConnections,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
@@ -305,10 +305,90 @@ namespace Zametek.ViewModel.ProjectPlan
 
             //if (!graphCompilation.CompilationErrors.Any())
             //{
-                switch (groupByMode)
-                {
-                    case GroupByMode.None:
+            switch (groupByMode)
+            {
+                case GroupByMode.None:
+                    {
+                        // Add an extra row for padding.
+                        // IntervalBarItems are added in reverse order to how they will be displayed.
+                        // So, this item will appear at the bottom of the grouping.
+
+                        series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
+                        labels.Add(string.Empty);
+
+                        // Add all the activities (in reverse display order).
+
+                        IOrderedEnumerable<IDependentActivity> orderedActivities = graphCompilation
+                            .DependentActivities
+                            .OrderByDescending(x => x.EarliestStartTime)
+                            .ThenByDescending(x => x.TotalSlack);
+
+                        foreach (IDependentActivity activity in orderedActivities)
                         {
+                            AddBarItemToSeries(
+                                dateTimeCalculator,
+                                projectStart,
+                                showDates,
+                                showTracking,
+                                plotModel,
+                                colorFormatLookup,
+                                series,
+                                labels,
+                                activity,
+                                highlightActivityConnections);
+                        }
+
+                        // Add an extra row for padding.
+                        // This item will appear at the top of the grouping.
+                        series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
+                        labels.Add(string.Empty);
+                    }
+
+                    break;
+                case GroupByMode.Resource:
+                    {
+                        // Find all the resource series with at least 1 scheduled activity.
+
+                        IEnumerable<ResourceSeriesModel> scheduledResourceSeriesSet = resourceSeriesSet.Combined
+                            .Where(x => x.ResourceSchedule.ScheduledActivities.Count != 0);
+
+                        // Record the resource name, and the scheduled activities (in order).
+
+                        var scheduledResourceActivitiesSet =
+                            new List<(string ResourceName, ColorFormatModel ColorFormat, int DisplayOrder, IList<ScheduledActivityModel> ScheduledActivities)>();
+
+                        foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeriesSet)
+                        {
+                            IList<ScheduledActivityModel> orderedScheduledActivities = [.. resourceSeries
+                                    .ResourceSchedule.ScheduledActivities
+                                    .OrderByDescending(x => x.StartTime)];
+                            scheduledResourceActivitiesSet.Add(
+                                (resourceSeries.Title, resourceSeries.ColorFormat, resourceSeries.DisplayOrder, orderedScheduledActivities));
+                        }
+
+                        // Order the set according to the display order, followed by the start times of the first activity for each resource.
+
+                        IList<(string, ColorFormatModel, int, IList<ScheduledActivityModel>)> orderedScheduledResourceActivitiesSet = scheduledResourceActivitiesSet
+                            .OrderBy(x => x.DisplayOrder)
+                            .ThenBy(x => x.ScheduledActivities.OrderBy(y => y.StartTime)
+                                .FirstOrDefault()?.StartTime ?? 0)
+                            .ThenByDescending(x => x.ScheduledActivities.OrderBy(y => y.FinishTime)
+                                .LastOrDefault()?.FinishTime ?? 0)
+                            .ToList();
+
+                        foreach ((string resourceName, ColorFormatModel colorFormat, int displayOrder, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
+                        {
+                            IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
+                            Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
+
+                            ScheduledActivityModel? firstItem = orderedScheduledActivities.OrderBy(x => x.StartTime).FirstOrDefault();
+                            ScheduledActivityModel? lastItem = orderedScheduledActivities.OrderByDescending(x => x.FinishTime).FirstOrDefault();
+
+                            int resourceStartTime = firstItem?.StartTime ?? 0;
+                            int resourceFinishTime = lastItem?.FinishTime ?? 0;
+
+                            int minimumY = labels.Count;
+
                             // Add an extra row for padding.
                             // IntervalBarItems are added in reverse order to how they will be displayed.
                             // So, this item will appear at the bottom of the grouping.
@@ -316,455 +396,375 @@ namespace Zametek.ViewModel.ProjectPlan
                             series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
                             labels.Add(string.Empty);
 
-                            // Add all the activities (in reverse display order).
+                            // Now add the scheduled activities (again, in reverse display order).
 
-                            IOrderedEnumerable<IDependentActivity> orderedActivities = graphCompilation
-                                .DependentActivities
-                                .OrderByDescending(x => x.EarliestStartTime)
-                                .ThenByDescending(x => x.TotalSlack);
-
-                            foreach (IDependentActivity activity in orderedActivities)
+                            foreach (ScheduledActivityModel scheduledActivity in orderedScheduledActivities)
                             {
-                                AddBarItemToSeries(
-                                    dateTimeCalculator,
-                                    projectStart,
-                                    showDates,
-                                    showTracking,
-                                    plotModel,
-                                    colorFormatLookup,
-                                    series,
-                                    labels,
-                                    activity,
-                                    highlightActivitySuccessors);
-                            }
-
-                            // Add an extra row for padding.
-                            // This item will appear at the top of the grouping.
-                            series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
-                            labels.Add(string.Empty);
-                        }
-
-                        break;
-                    case GroupByMode.Resource:
-                        {
-                            // Find all the resource series with at least 1 scheduled activity.
-
-                            IEnumerable<ResourceSeriesModel> scheduledResourceSeriesSet = resourceSeriesSet.Combined
-                                .Where(x => x.ResourceSchedule.ScheduledActivities.Count != 0);
-
-                            // Record the resource name, and the scheduled activities (in order).
-
-                            var scheduledResourceActivitiesSet =
-                                new List<(string ResourceName, ColorFormatModel ColorFormat, int DisplayOrder, IList<ScheduledActivityModel> ScheduledActivities)>();
-
-                            foreach (ResourceSeriesModel resourceSeries in scheduledResourceSeriesSet)
-                            {
-                                IList<ScheduledActivityModel> orderedScheduledActivities = [.. resourceSeries
-                                    .ResourceSchedule.ScheduledActivities
-                                    .OrderByDescending(x => x.StartTime)];
-                                scheduledResourceActivitiesSet.Add(
-                                    (resourceSeries.Title, resourceSeries.ColorFormat, resourceSeries.DisplayOrder, orderedScheduledActivities));
-                            }
-
-                            // Order the set according to the display order, followed by the start times of the first activity for each resource.
-
-                            IList<(string, ColorFormatModel, int, IList<ScheduledActivityModel>)> orderedScheduledResourceActivitiesSet = scheduledResourceActivitiesSet
-                                .OrderBy(x => x.DisplayOrder)
-                                .ThenBy(x => x.ScheduledActivities.OrderBy(y => y.StartTime)
-                                    .FirstOrDefault()?.StartTime ?? 0)
-                                .ThenByDescending(x => x.ScheduledActivities.OrderBy(y => y.FinishTime)
-                                    .LastOrDefault()?.FinishTime ?? 0)
-                                .ToList();
-
-                            foreach ((string resourceName, ColorFormatModel colorFormat, int displayOrder, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
-                            {
-                                IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
-                                Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
-
-                                ScheduledActivityModel? firstItem = orderedScheduledActivities.OrderBy(x => x.StartTime).FirstOrDefault();
-                                ScheduledActivityModel? lastItem = orderedScheduledActivities.OrderByDescending(x => x.FinishTime).FirstOrDefault();
-
-                                int resourceStartTime = firstItem?.StartTime ?? 0;
-                                int resourceFinishTime = lastItem?.FinishTime ?? 0;
-
-                                int minimumY = labels.Count;
-
-                                // Add an extra row for padding.
-                                // IntervalBarItems are added in reverse order to how they will be displayed.
-                                // So, this item will appear at the bottom of the grouping.
-
-                                series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
-                                labels.Add(string.Empty);
-
-                                // Now add the scheduled activities (again, in reverse display order).
-
-                                foreach (ScheduledActivityModel scheduledActivity in orderedScheduledActivities)
+                                if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity? activity))
                                 {
-                                    if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity? activity))
+                                    AddBarItemToSeries(
+                                        dateTimeCalculator,
+                                        projectStart,
+                                        showDates,
+                                        showTracking,
+                                        plotModel,
+                                        colorFormatLookup,
+                                        series,
+                                        labels,
+                                        activity,
+                                        highlightActivityConnections);
+                                }
+                            }
+
+                            int maximumY = labels.Count;
+
+                            switch (annotationStyle)
+                            {
+                                case AnnotationStyle.None:
+                                    break;
+                                case AnnotationStyle.Plain:
                                     {
-                                        AddBarItemToSeries(
+                                        OxyColor resourceColor = OxyColors.Blue;
+
+                                        OxyColor fillColor = OxyColor.FromAColor(
+                                            ColorHelper.AnnotationATransparent,
+                                            resourceColor);
+
+                                        AddAnnotationToPlot(
                                             dateTimeCalculator,
                                             projectStart,
                                             showDates,
-                                            showTracking,
+                                            labelGroups,
                                             plotModel,
-                                            colorFormatLookup,
                                             series,
                                             labels,
-                                            activity,
-                                            highlightActivitySuccessors);
+                                            resourceName,
+                                            resourceStartTime,
+                                            resourceFinishTime,
+                                            minimumY,
+                                            maximumY,
+                                            resourceColor,
+                                            fillColor);
                                     }
-                                }
-
-                                int maximumY = labels.Count;
-
-                                switch (annotationStyle)
-                                {
-                                    case AnnotationStyle.None:
-                                        break;
-                                    case AnnotationStyle.Plain:
-                                        {
-                                            OxyColor resourceColor = OxyColors.Blue;
-
-                                            OxyColor fillColor = OxyColor.FromAColor(
-                                                ColorHelper.AnnotationATransparent,
-                                                resourceColor);
-
-                                            AddAnnotationToPlot(
-                                                dateTimeCalculator,
-                                                projectStart,
-                                                showDates,
-                                                labelGroups,
-                                                plotModel,
-                                                series,
-                                                labels,
-                                                resourceName,
-                                                resourceStartTime,
-                                                resourceFinishTime,
-                                                minimumY,
-                                                maximumY,
-                                                resourceColor,
-                                                fillColor);
-                                        }
-                                        break;
-                                    case AnnotationStyle.Color:
-                                        {
-                                            OxyColor resourceColor = OxyColor.FromArgb(
-                                                colorFormat.A,
-                                                colorFormat.R,
-                                                colorFormat.G,
-                                                colorFormat.B);
-
-                                            OxyColor fillColor = OxyColor.FromAColor(
-                                                ColorHelper.AnnotationALight,
-                                                resourceColor);
-
-                                            AddAnnotationToPlot(
-                                                dateTimeCalculator,
-                                                projectStart,
-                                                showDates,
-                                                labelGroups,
-                                                plotModel,
-                                                series,
-                                                labels,
-                                                resourceName,
-                                                resourceStartTime,
-                                                resourceFinishTime,
-                                                minimumY,
-                                                maximumY,
-                                                resourceColor,
-                                                fillColor);
-                                        }
-                                        break;
-                                    default:
-                                        throw new ArgumentOutOfRangeException(nameof(annotationStyle));
-                                }
-                            }
-
-                            // Add an extra row for padding.
-                            // This item will appear at the top of the grouping.
-                            series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
-                            labels.Add(string.Empty);
-                        }
-
-                        break;
-                    case GroupByMode.WorkStream:
-                        {
-                            // Pivot the scheduled activities so that they are grouped by work stream IDs.
-
-                            // Gather all the used work stream
-
-                            var workStreamLookup = new Dictionary<int, WorkStreamModel>();
-
-                            // Include a catch-all work stream as default.
-
-                            workStreamLookup.TryAdd(
-                                default,
-                                new()
-                                {
-                                    Id = default,
-                                    Name = Resource.ProjectPlan.Labels.Label_DefaultWorkStream,
-                                    ColorFormat = ColorHelper.Black(),
-                                    DisplayOrder = -1
-                                });
-
-                            foreach (WorkStreamModel workStream in workStreamSettings.WorkStreams)
-                            {
-                                workStreamLookup.TryAdd(workStream.Id, workStream);
-                            }
-
-                            // Go through all the activities (in reverse display order).
-
-                            IOrderedEnumerable<IDependentActivity> orderedActivities = graphCompilation
-                                .DependentActivities
-                                .OrderByDescending(x => x.EarliestStartTime)
-                                .ThenByDescending(x => x.TotalSlack);
-
-                            // Create a scheduled activity lookup.
-
-                            Dictionary<int, ScheduledActivityModel> scheduledActivityLookup = resourceSeriesSet.Combined
-                                .SelectMany(x => x.ResourceSchedule.ScheduledActivities)
-                                .DistinctBy(x => x.Id)
-                                .ToDictionary(x => x.Id);
-
-                            // Split the activities according to work stream ID.
-
-                            Dictionary<int, IList<ScheduledActivityModel>> activitiesByWorkStream = [];
-
-                            foreach (IDependentActivity activity in orderedActivities)
-                            {
-                                if (!scheduledActivityLookup.ContainsKey(activity.Id))
-                                {
-                                    continue;
-                                }
-
-                                ScheduledActivityModel scheduledActivity = scheduledActivityLookup[activity.Id];
-
-                                HashSet<int> targetWorkStreams = activity.TargetWorkStreams;
-
-                                // If no work streams are targetted, then use the default.
-
-                                if (targetWorkStreams.Count == 0)
-                                {
-                                    targetWorkStreams.Add(default);
-                                }
-
-                                // Cycle through each work stream and add the scheduled activity where required.
-
-                                foreach (int workStreamId in targetWorkStreams)
-                                {
-                                    if (!activitiesByWorkStream.TryGetValue(workStreamId, out IList<ScheduledActivityModel>? scheduledActivities))
+                                    break;
+                                case AnnotationStyle.Color:
                                     {
-                                        scheduledActivities = [];
-                                        activitiesByWorkStream.Add(workStreamId, scheduledActivities);
-                                    }
+                                        OxyColor resourceColor = OxyColor.FromArgb(
+                                            colorFormat.A,
+                                            colorFormat.R,
+                                            colorFormat.G,
+                                            colorFormat.B);
 
-                                    scheduledActivities.Add(scheduledActivity);
-                                }
-                            }
+                                        OxyColor fillColor = OxyColor.FromAColor(
+                                            ColorHelper.AnnotationALight,
+                                            resourceColor);
 
-                            // Check all the work stream IDs that are used can be found in the lookup.
-                            // Otherwise return early.
-
-                            if (!activitiesByWorkStream.Keys.ToHashSet().IsSubsetOf(workStreamLookup.Keys))
-                            {
-                                return plotModel.SetBaseTheme(baseTheme);
-                            }
-
-                            // Order the set according to display order, followed by the start times of the first activity for each work stream.
-
-                            IList<(int WorkStreamId, IList<ScheduledActivityModel>)> orderedActivitiesByWorkStream = activitiesByWorkStream
-                                .OrderBy(x => workStreamLookup[x.Key].DisplayOrder)
-                                .ThenBy(x => x.Value.OrderBy(y => y.StartTime)
-                                    .FirstOrDefault()?.StartTime ?? 0)
-                                .ThenByDescending(x => x.Value.OrderBy(y => y.FinishTime)
-                                    .LastOrDefault()?.FinishTime ?? 0)
-                                .Select(x => (x.Key, x.Value))
-                                .ToList();
-
-                            foreach ((int workStreamId, IList<ScheduledActivityModel> scheduledActivities) in orderedActivitiesByWorkStream)
-                            {
-                                IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
-                                Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
-
-                                ScheduledActivityModel? firstItem = orderedScheduledActivities.OrderBy(x => x.StartTime).FirstOrDefault();
-                                ScheduledActivityModel? lastItem = orderedScheduledActivities.OrderByDescending(x => x.FinishTime).FirstOrDefault();
-
-                                int workStreamStartTime = firstItem?.StartTime ?? 0;
-                                int workStreamFinishTime = lastItem?.FinishTime ?? 0;
-
-                                int minimumY = labels.Count;
-
-                                // Add an extra row for padding.
-                                // IntervalBarItems are added in reverse order to how they will be displayed.
-                                // So, this item will appear at the bottom of the grouping.
-
-                                series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
-                                labels.Add(string.Empty);
-
-                                // Now add the scheduled activities (again, in reverse display order).
-
-                                foreach (ScheduledActivityModel scheduledActivity in orderedScheduledActivities)
-                                {
-                                    if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity? activity))
-                                    {
-                                        AddBarItemToSeries(
+                                        AddAnnotationToPlot(
                                             dateTimeCalculator,
                                             projectStart,
                                             showDates,
-                                            showTracking,
+                                            labelGroups,
                                             plotModel,
-                                            colorFormatLookup,
                                             series,
                                             labels,
-                                            activity,
-                                            highlightActivitySuccessors);
+                                            resourceName,
+                                            resourceStartTime,
+                                            resourceFinishTime,
+                                            minimumY,
+                                            maximumY,
+                                            resourceColor,
+                                            fillColor);
                                     }
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException(nameof(annotationStyle));
+                            }
+                        }
+
+                        // Add an extra row for padding.
+                        // This item will appear at the top of the grouping.
+                        series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
+                        labels.Add(string.Empty);
+                    }
+
+                    break;
+                case GroupByMode.WorkStream:
+                    {
+                        // Pivot the scheduled activities so that they are grouped by work stream IDs.
+
+                        // Gather all the used work stream
+
+                        var workStreamLookup = new Dictionary<int, WorkStreamModel>();
+
+                        // Include a catch-all work stream as default.
+
+                        workStreamLookup.TryAdd(
+                            default,
+                            new()
+                            {
+                                Id = default,
+                                Name = Resource.ProjectPlan.Labels.Label_DefaultWorkStream,
+                                ColorFormat = ColorHelper.Black(),
+                                DisplayOrder = -1
+                            });
+
+                        foreach (WorkStreamModel workStream in workStreamSettings.WorkStreams)
+                        {
+                            workStreamLookup.TryAdd(workStream.Id, workStream);
+                        }
+
+                        // Go through all the activities (in reverse display order).
+
+                        IOrderedEnumerable<IDependentActivity> orderedActivities = graphCompilation
+                            .DependentActivities
+                            .OrderByDescending(x => x.EarliestStartTime)
+                            .ThenByDescending(x => x.TotalSlack);
+
+                        // Create a scheduled activity lookup.
+
+                        Dictionary<int, ScheduledActivityModel> scheduledActivityLookup = resourceSeriesSet.Combined
+                            .SelectMany(x => x.ResourceSchedule.ScheduledActivities)
+                            .DistinctBy(x => x.Id)
+                            .ToDictionary(x => x.Id);
+
+                        // Split the activities according to work stream ID.
+
+                        Dictionary<int, IList<ScheduledActivityModel>> activitiesByWorkStream = [];
+
+                        foreach (IDependentActivity activity in orderedActivities)
+                        {
+                            if (!scheduledActivityLookup.ContainsKey(activity.Id))
+                            {
+                                continue;
+                            }
+
+                            ScheduledActivityModel scheduledActivity = scheduledActivityLookup[activity.Id];
+
+                            HashSet<int> targetWorkStreams = activity.TargetWorkStreams;
+
+                            // If no work streams are targetted, then use the default.
+
+                            if (targetWorkStreams.Count == 0)
+                            {
+                                targetWorkStreams.Add(default);
+                            }
+
+                            // Cycle through each work stream and add the scheduled activity where required.
+
+                            foreach (int workStreamId in targetWorkStreams)
+                            {
+                                if (!activitiesByWorkStream.TryGetValue(workStreamId, out IList<ScheduledActivityModel>? scheduledActivities))
+                                {
+                                    scheduledActivities = [];
+                                    activitiesByWorkStream.Add(workStreamId, scheduledActivities);
                                 }
 
-                                int maximumY = labels.Count;
+                                scheduledActivities.Add(scheduledActivity);
+                            }
+                        }
 
-                                switch (annotationStyle)
+                        // Check all the work stream IDs that are used can be found in the lookup.
+                        // Otherwise return early.
+
+                        if (!activitiesByWorkStream.Keys.ToHashSet().IsSubsetOf(workStreamLookup.Keys))
+                        {
+                            return plotModel.SetBaseTheme(baseTheme);
+                        }
+
+                        // Order the set according to display order, followed by the start times of the first activity for each work stream.
+
+                        IList<(int WorkStreamId, IList<ScheduledActivityModel>)> orderedActivitiesByWorkStream = activitiesByWorkStream
+                            .OrderBy(x => workStreamLookup[x.Key].DisplayOrder)
+                            .ThenBy(x => x.Value.OrderBy(y => y.StartTime)
+                                .FirstOrDefault()?.StartTime ?? 0)
+                            .ThenByDescending(x => x.Value.OrderBy(y => y.FinishTime)
+                                .LastOrDefault()?.FinishTime ?? 0)
+                            .Select(x => (x.Key, x.Value))
+                            .ToList();
+
+                        foreach ((int workStreamId, IList<ScheduledActivityModel> scheduledActivities) in orderedActivitiesByWorkStream)
+                        {
+                            IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
+                            Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
+
+                            ScheduledActivityModel? firstItem = orderedScheduledActivities.OrderBy(x => x.StartTime).FirstOrDefault();
+                            ScheduledActivityModel? lastItem = orderedScheduledActivities.OrderByDescending(x => x.FinishTime).FirstOrDefault();
+
+                            int workStreamStartTime = firstItem?.StartTime ?? 0;
+                            int workStreamFinishTime = lastItem?.FinishTime ?? 0;
+
+                            int minimumY = labels.Count;
+
+                            // Add an extra row for padding.
+                            // IntervalBarItems are added in reverse order to how they will be displayed.
+                            // So, this item will appear at the bottom of the grouping.
+
+                            series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
+                            labels.Add(string.Empty);
+
+                            // Now add the scheduled activities (again, in reverse display order).
+
+                            foreach (ScheduledActivityModel scheduledActivity in orderedScheduledActivities)
+                            {
+                                if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity? activity))
                                 {
-                                    case AnnotationStyle.None:
-                                        break;
-                                    case AnnotationStyle.Plain:
-                                        {
-                                            WorkStreamModel workStreamModel = workStreamLookup[workStreamId];
-                                            OxyColor workStreamColor = OxyColors.Blue;
-
-                                            OxyColor fillColor = OxyColor.FromAColor(
-                                                ColorHelper.AnnotationATransparent,
-                                                workStreamColor);
-
-                                            AddAnnotationToPlot(
-                                                dateTimeCalculator,
-                                                projectStart,
-                                                showDates,
-                                                labelGroups,
-                                                plotModel,
-                                                series,
-                                                labels,
-                                                workStreamModel.Name,
-                                                workStreamStartTime,
-                                                workStreamFinishTime,
-                                                minimumY,
-                                                maximumY,
-                                                workStreamColor,
-                                                fillColor);
-                                        }
-                                        break;
-                                    case AnnotationStyle.Color:
-                                        {
-                                            WorkStreamModel workStreamModel = workStreamLookup[workStreamId];
-                                            OxyColor workStreamColor = OxyColor.FromArgb(
-                                                workStreamModel.ColorFormat.A,
-                                                workStreamModel.ColorFormat.R,
-                                                workStreamModel.ColorFormat.G,
-                                                workStreamModel.ColorFormat.B);
-
-                                            OxyColor fillColor = OxyColor.FromAColor(
-                                                ColorHelper.AnnotationALight,
-                                                workStreamColor);
-
-                                            AddAnnotationToPlot(
-                                                dateTimeCalculator,
-                                                projectStart,
-                                                showDates,
-                                                labelGroups,
-                                                plotModel,
-                                                series,
-                                                labels,
-                                                workStreamModel.Name,
-                                                workStreamStartTime,
-                                                workStreamFinishTime,
-                                                minimumY,
-                                                maximumY,
-                                                workStreamColor,
-                                                fillColor);
-                                        }
-                                        break;
-                                    default:
-                                        throw new ArgumentOutOfRangeException(nameof(annotationStyle));
+                                    AddBarItemToSeries(
+                                        dateTimeCalculator,
+                                        projectStart,
+                                        showDates,
+                                        showTracking,
+                                        plotModel,
+                                        colorFormatLookup,
+                                        series,
+                                        labels,
+                                        activity,
+                                        highlightActivityConnections);
                                 }
                             }
 
-                            // Add an extra row for padding.
-                            // This item will appear at the top of the grouping.
-                            series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
-                            labels.Add(string.Empty);
+                            int maximumY = labels.Count;
+
+                            switch (annotationStyle)
+                            {
+                                case AnnotationStyle.None:
+                                    break;
+                                case AnnotationStyle.Plain:
+                                    {
+                                        WorkStreamModel workStreamModel = workStreamLookup[workStreamId];
+                                        OxyColor workStreamColor = OxyColors.Blue;
+
+                                        OxyColor fillColor = OxyColor.FromAColor(
+                                            ColorHelper.AnnotationATransparent,
+                                            workStreamColor);
+
+                                        AddAnnotationToPlot(
+                                            dateTimeCalculator,
+                                            projectStart,
+                                            showDates,
+                                            labelGroups,
+                                            plotModel,
+                                            series,
+                                            labels,
+                                            workStreamModel.Name,
+                                            workStreamStartTime,
+                                            workStreamFinishTime,
+                                            minimumY,
+                                            maximumY,
+                                            workStreamColor,
+                                            fillColor);
+                                    }
+                                    break;
+                                case AnnotationStyle.Color:
+                                    {
+                                        WorkStreamModel workStreamModel = workStreamLookup[workStreamId];
+                                        OxyColor workStreamColor = OxyColor.FromArgb(
+                                            workStreamModel.ColorFormat.A,
+                                            workStreamModel.ColorFormat.R,
+                                            workStreamModel.ColorFormat.G,
+                                            workStreamModel.ColorFormat.B);
+
+                                        OxyColor fillColor = OxyColor.FromAColor(
+                                            ColorHelper.AnnotationALight,
+                                            workStreamColor);
+
+                                        AddAnnotationToPlot(
+                                            dateTimeCalculator,
+                                            projectStart,
+                                            showDates,
+                                            labelGroups,
+                                            plotModel,
+                                            series,
+                                            labels,
+                                            workStreamModel.Name,
+                                            workStreamStartTime,
+                                            workStreamFinishTime,
+                                            minimumY,
+                                            maximumY,
+                                            workStreamColor,
+                                            fillColor);
+                                    }
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException(nameof(annotationStyle));
+                            }
                         }
 
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(groupByMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownGroupByMode} {groupByMode}");
+                        // Add an extra row for padding.
+                        // This item will appear at the top of the grouping.
+                        series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
+                        labels.Add(string.Empty);
+                    }
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(groupByMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownGroupByMode} {groupByMode}");
+            }
+
+            if (showProjectFinish)
+            {
+                var projectFinish = new StringBuilder(Resource.ProjectPlan.Labels.Label_ProjectFinish);
+                projectFinish.Append(' ');
+
+                if (showDates)
+                {
+
+                    DateTimeOffset startAndFinish = dateTimeCalculator.AddDays(projectStart, finishTime);
+                    projectFinish.Append(
+                        dateTimeCalculator
+                            .DisplayFinishDate(startAndFinish, startAndFinish, 1)
+                            .ToString(DateTimeCalculator.DateFormat));
+                }
+                else
+                {
+                    projectFinish.Append(finishTime);
                 }
 
-                if (showProjectFinish)
+                double finishTimeX = ChartHelper.CalculateChartFinishTimeXValue(
+                    finishTime,
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator);
+                double finishTimeY = labels.Count;
+
+                var finishTimeAnnotation = new RectangleAnnotation
                 {
-                    var projectFinish = new StringBuilder(Resource.ProjectPlan.Labels.Label_ProjectFinish);
-                    projectFinish.Append(' ');
+                    Text = projectFinish.ToString(),
+                    TextPosition = new DataPoint(finishTimeX, finishTimeY),
+                    TextHorizontalAlignment = HorizontalAlignment.Right,
+                    TextVerticalAlignment = VerticalAlignment.Top,
+                    StrokeThickness = 0,
+                    Fill = OxyColors.Transparent,
+                    Layer = AnnotationLayer.BelowSeries,
+                };
 
-                    if (showDates)
-                    {
+                plotModel.Annotations.Add(finishTimeAnnotation);
+            }
 
-                        DateTimeOffset startAndFinish = dateTimeCalculator.AddDays(projectStart, finishTime);
-                        projectFinish.Append(
-                            dateTimeCalculator
-                                .DisplayFinishDate(startAndFinish, startAndFinish, 1)
-                                .ToString(DateTimeCalculator.DateFormat));
-                    }
-                    else
-                    {
-                        projectFinish.Append(finishTime);
-                    }
+            if (showToday)
+            {
+                (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
 
-                    double finishTimeX = ChartHelper.CalculateChartFinishTimeXValue(
-                        finishTime,
+                if (intValue is not null)
+                {
+                    double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(
+                        intValue.GetValueOrDefault(),
                         showDates,
                         projectStart,
                         dateTimeCalculator);
-                    double finishTimeY = labels.Count;
 
-                    var finishTimeAnnotation = new RectangleAnnotation
+                    var todayLine = new LineAnnotation
                     {
-                        Text = projectFinish.ToString(),
-                        TextPosition = new DataPoint(finishTimeX, finishTimeY),
-                        TextHorizontalAlignment = HorizontalAlignment.Right,
-                        TextVerticalAlignment = VerticalAlignment.Top,
-                        StrokeThickness = 0,
-                        Fill = OxyColors.Transparent,
-                        Layer = AnnotationLayer.BelowSeries,
+                        StrokeThickness = 2,
+                        Color = OxyColors.Red,
+                        LineStyle = LineStyle.Dot,
+                        Type = LineAnnotationType.Vertical,
+                        X = todayTimeX,
+                        Y = 0.0
                     };
 
-                    plotModel.Annotations.Add(finishTimeAnnotation);
+                    plotModel.Annotations.Add(todayLine);
                 }
-
-                if (showToday)
-                {
-                    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
-
-                    if (intValue is not null)
-                    {
-                        double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(
-                            intValue.GetValueOrDefault(),
-                            showDates,
-                            projectStart,
-                            dateTimeCalculator);
-
-                        var todayLine = new LineAnnotation
-                        {
-                            StrokeThickness = 2,
-                            Color = OxyColors.Red,
-                            LineStyle = LineStyle.Dot,
-                            Type = LineAnnotationType.Vertical,
-                            X = todayTimeX,
-                            Y = 0.0
-                        };
-
-                        plotModel.Annotations.Add(todayLine);
-                    }
-                }
+            }
             //}
 
             plotModel.Axes.Add(BuildResourceChartYAxis(labels));
@@ -842,7 +842,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IntervalBarSeries series,
             List<string> labels,
             IDependentActivity activity,
-            IEnumerable<int> highlightActivitySuccessors)
+            IEnumerable<int> highlightActivityConnections)
         {
             if (activity.EarliestStartTime.HasValue
                 && activity.EarliestFinishTime.HasValue
@@ -865,19 +865,28 @@ namespace Zametek.ViewModel.ProjectPlan
                     projectStart,
                     dateTimeCalculator);
 
-                bool hasNoHighlightActivitySuccessors = !highlightActivitySuccessors.Any();
+                // When no activity connections are selected.
+                bool hasNoHighlightActivityConnections = !highlightActivityConnections.Any();
 
-                bool highlightAsActivity = highlightActivitySuccessors.Contains(activity.Id);
+                // When the activity is highlighted as a connection.
+                bool highlightAsActivity = highlightActivityConnections.Contains(activity.Id);
 
+                // When the activity is highlighted as a successor.
                 bool highlightAsSuccessor = activity.Dependencies.Union(activity.PlanningDependencies)
-                    .Intersect(highlightActivitySuccessors)
+                    .Intersect(highlightActivityConnections)
+                    .Any();
+
+                // When the activity is highlighted as a dependency.
+                bool highlightAsDependency = activity.Successors
+                    .Intersect(highlightActivityConnections)
                     .Any();
 
                 // Only use the slack color if the activity is not
-                // highlighted as an activity or a successor.
-                if (hasNoHighlightActivitySuccessors
+                // highlighted as an activity or a connection.
+                if (hasNoHighlightActivityConnections
                     || highlightAsActivity
-                    || highlightAsSuccessor)
+                    || highlightAsSuccessor
+                    || highlightAsDependency)
                 {
                     backgroundColor = OxyColor.FromArgb(
                         slackColor.A,
@@ -899,14 +908,21 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 int labelCount = labels.Count;
 
+                if (highlightAsDependency)
+                {
+                    ArrowAnnotation activityAnnotation = ActivityAnnotationForward(start, labelCount, OxyColors.Blue);
+                    plotModel.Annotations.Add(activityAnnotation);
+                }
                 if (highlightAsActivity)
                 {
-                    ArrowAnnotation activityAnnotation = ActivityAnnotation(start, labelCount, OxyColors.LimeGreen);
-                    plotModel.Annotations.Add(activityAnnotation);
+                    ArrowAnnotation activityAnnotationForward = ActivityAnnotationForward(start, labelCount, OxyColors.Magenta);
+                    plotModel.Annotations.Add(activityAnnotationForward);
+                    ArrowAnnotation activityAnnotationBackward = ActivityAnnotationBackward(end, labelCount, OxyColors.Magenta);
+                    plotModel.Annotations.Add(activityAnnotationBackward);
                 }
                 if (highlightAsSuccessor)
                 {
-                    ArrowAnnotation activityAnnotation = ActivityAnnotation(start, labelCount, OxyColors.Red);
+                    ArrowAnnotation activityAnnotation = ActivityAnnotationBackward(end, labelCount, OxyColors.Red);
                     plotModel.Annotations.Add(activityAnnotation);
                 }
 
@@ -924,8 +940,25 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private static ArrowAnnotation ActivityAnnotationForward(
+            double start,
+            int labelCount,
+            OxyColor color)
+        {
+            return ActivityAnnotation(start, -0.1, labelCount, color);
+        }
+
+        private static ArrowAnnotation ActivityAnnotationBackward(
+            double start,
+            int labelCount,
+            OxyColor color)
+        {
+            return ActivityAnnotation(start, 0.1, labelCount, color);
+        }
+
         private static ArrowAnnotation ActivityAnnotation(
             double start,
+            double startDelta,
             int labelCount,
             OxyColor color)
         {
@@ -933,10 +966,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             return new ArrowAnnotation
             {
-                StartPoint = new DataPoint(start - 0.1, Y),
+                StartPoint = new DataPoint(start + startDelta, Y),
                 EndPoint = new DataPoint(start, Y),
                 Color = color,
-                StrokeThickness = 1,
+                StrokeThickness = 1.0,
+                Veeness = 1.0,
                 Layer = AnnotationLayer.AboveSeries,
             };
         }

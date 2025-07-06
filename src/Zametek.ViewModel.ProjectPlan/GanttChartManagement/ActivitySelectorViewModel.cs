@@ -73,13 +73,8 @@ namespace Zametek.ViewModel.ProjectPlan
             // Initial set up.
             ReviseActivities(targetActivities);
 
-
-
             // This needs to be on the current thread because all the tracker updates
             // need to be completed before a compilation can start.
-
-
-
             m_ReviseActivitiesSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.IsReadyToReviseTrackers)
                 .ObserveOn(Scheduler.CurrentThread)
@@ -124,9 +119,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    return SelectedTargetActivities
-                        .Select(x => x.Id)
-                        .ToList();
+                    return [.. SelectedTargetActivities.Select(x => x.Id)];
                 }
             }
         }
@@ -151,12 +144,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 Dictionary<int, TargetActivityModel> activityLookup = targetActivities.ToDictionary(x => x.Id);
 
                 List<TargetActivityModel> newActivities =
-                    m_CoreViewModel.Activities
-                    .Select(activity => new TargetActivityModel
-                    {
-                        Id = activity.Id,
-                        Name = activity.Name
-                    }).ToList();
+                    [.. m_CoreViewModel.Activities
+                        .Select(activity => new TargetActivityModel
+                        {
+                            Id = activity.Id,
+                            Name = activity.Name
+                        })];
 
                 foreach (TargetActivityModel activity in newActivities)
                 {
@@ -174,12 +167,12 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 List<TargetActivityModel> newActivities =
-                    m_CoreViewModel.Activities
-                    .Select(activity => new TargetActivityModel
-                    {
-                        Id = activity.Id,
-                        Name = activity.Name
-                    }).ToList();
+                    [.. m_CoreViewModel.Activities
+                        .Select(activity => new TargetActivityModel
+                        {
+                            Id = activity.Id,
+                            Name = activity.Name
+                        })];
 
                 SetTargetActivities(
                     newActivities,
@@ -214,9 +207,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 {
                     // Find target view models that have been removed.
-                    List<ISelectableActivityViewModel> removedViewModels = m_TargetActivities
-                        .ExceptBy(targetActivities.Select(x => x.Id), x => x.Id)
-                        .ToList();
+                    List<ISelectableActivityViewModel> removedViewModels = [.. m_TargetActivities.ExceptBy(targetActivities.Select(x => x.Id), x => x.Id)];
 
                     // Delete the removed items from the target and selected collections.
                     foreach (ISelectableActivityViewModel vm in removedViewModels)
@@ -226,9 +217,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     // Find the selected view models that have been removed.
-                    List<ISelectableActivityViewModel> removedSelectedViewModels = m_SelectedTargetActivities
-                        .ExceptBy(selectedTargetActivities, x => x.Id)
-                        .ToList();
+                    List<ISelectableActivityViewModel> removedSelectedViewModels = [.. m_SelectedTargetActivities.ExceptBy(selectedTargetActivities, x => x.Id)];
 
                     // Delete the removed selected items from the selected collections.
                     foreach (ISelectableActivityViewModel vm in removedSelectedViewModels)
@@ -238,9 +227,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 {
                     // Find the target models that have been added.
-                    List<TargetActivityModel> addedModels = targetActivities
-                        .ExceptBy(m_TargetActivities.Select(x => x.Id), x => x.Id)
-                        .ToList();
+                    List<TargetActivityModel> addedModels = [.. targetActivities.ExceptBy(m_TargetActivities.Select(x => x.Id), x => x.Id)];
 
                     List<ISelectableActivityViewModel> addedViewModels = [];
 
