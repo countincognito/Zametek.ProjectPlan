@@ -910,19 +910,21 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (highlightAsDependency)
                 {
-                    ArrowAnnotation activityAnnotation = ActivityAnnotationForward(start, labelCount, OxyColors.Blue);
+                    ArrowAnnotation activityAnnotation = ForwardArrowAnnotation(start, labelCount, OxyColors.Blue);
                     plotModel.Annotations.Add(activityAnnotation);
                 }
                 if (highlightAsActivity)
                 {
-                    ArrowAnnotation activityAnnotationForward = ActivityAnnotationForward(start, labelCount, OxyColors.Magenta);
-                    plotModel.Annotations.Add(activityAnnotationForward);
-                    ArrowAnnotation activityAnnotationBackward = ActivityAnnotationBackward(end, labelCount, OxyColors.Magenta);
-                    plotModel.Annotations.Add(activityAnnotationBackward);
+                    PointAnnotation backgroundAnnotation = DotAnnotation(start, end, labelCount, OxyColors.White);
+                    plotModel.Annotations.Add(backgroundAnnotation);
+                    PointAnnotation crossAnnotation = CrossAnnotation(start, end, labelCount, OxyColors.Black);
+                    plotModel.Annotations.Add(crossAnnotation);
+                    PointAnnotation foregroundAnnotation = DotAnnotation(start, end, labelCount, OxyColors.Transparent);
+                    plotModel.Annotations.Add(foregroundAnnotation);
                 }
                 if (highlightAsSuccessor)
                 {
-                    ArrowAnnotation activityAnnotation = ActivityAnnotationBackward(end, labelCount, OxyColors.Red);
+                    ArrowAnnotation activityAnnotation = BackwardArrowAnnotation(end, labelCount, OxyColors.Red);
                     plotModel.Annotations.Add(activityAnnotation);
                 }
 
@@ -940,23 +942,23 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static ArrowAnnotation ActivityAnnotationForward(
+        private static ArrowAnnotation ForwardArrowAnnotation(
             double start,
             int labelCount,
             OxyColor color)
         {
-            return ActivityAnnotation(start, -0.1, labelCount, color);
+            return ArrowAnnotation(start, -0.1, labelCount, color);
         }
 
-        private static ArrowAnnotation ActivityAnnotationBackward(
+        private static ArrowAnnotation BackwardArrowAnnotation(
             double start,
             int labelCount,
             OxyColor color)
         {
-            return ActivityAnnotation(start, 0.1, labelCount, color);
+            return ArrowAnnotation(start, 0.1, labelCount, color);
         }
 
-        private static ArrowAnnotation ActivityAnnotation(
+        private static ArrowAnnotation ArrowAnnotation(
             double start,
             double startDelta,
             int labelCount,
@@ -971,6 +973,50 @@ namespace Zametek.ViewModel.ProjectPlan
                 Color = color,
                 StrokeThickness = 1.0,
                 Veeness = 1.0,
+                Layer = AnnotationLayer.AboveSeries,
+            };
+        }
+
+        private static PointAnnotation DotAnnotation(
+            double start,
+            double end,
+            int labelCount,
+            OxyColor color)
+        {
+            double X = start + (end - start) / 2.0;
+            double Y = labelCount + (c_TrackerAnnotationMinCorrection + c_TrackerAnnotationMaxCorrection) / 2.0;
+
+            return new PointAnnotation
+            {
+                X = X,
+                Y = Y,
+                Shape = MarkerType.Circle,
+                Fill = color,
+                Stroke = OxyColors.Black,
+                Size = 6.0,
+                StrokeThickness = 2.0,
+                Layer = AnnotationLayer.AboveSeries,
+            };
+        }
+
+        private static PointAnnotation CrossAnnotation(
+            double start,
+            double end,
+            int labelCount,
+            OxyColor color)
+        {
+            double X = start + (end - start) / 2.0;
+            double Y = labelCount + (c_TrackerAnnotationMinCorrection + c_TrackerAnnotationMaxCorrection) / 2.0;
+
+            return new PointAnnotation
+            {
+                X = X,
+                Y = Y,
+                Shape = MarkerType.Cross,
+                Fill = color,
+                Stroke = color,
+                Size = 5.0,
+                StrokeThickness = 2.0,
                 Layer = AnnotationLayer.AboveSeries,
             };
         }
