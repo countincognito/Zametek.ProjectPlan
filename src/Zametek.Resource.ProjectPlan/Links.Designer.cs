@@ -79,7 +79,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://getprojectplan.net.
+        ///   Looks up a localized string similar to https://www.getprojectplan.net.
         /// </summary>
         public static string Link_MainPage {
             get {
