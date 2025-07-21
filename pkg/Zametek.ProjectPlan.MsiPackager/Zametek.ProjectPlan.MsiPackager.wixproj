@@ -14,7 +14,7 @@
     <None Include="bsd2.rtf" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="[5.0.2,6.0)" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Zametek.ProjectPlan.CommandLine\Zametek.ProjectPlan.CommandLine.csproj" />
