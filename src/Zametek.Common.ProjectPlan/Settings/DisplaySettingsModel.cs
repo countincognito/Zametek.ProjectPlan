@@ -3,44 +3,44 @@
     [Serializable]
     public record DisplaySettingsModel
     {
-        public bool ShowDates { get; init; }
+        public bool ShowDates { get; init; } = default;
 
-        public bool UseClassicDates { get; init; }
+        public bool UseClassicDates { get; init; } = default;
 
-        public bool UseBusinessDays { get; init; }
-
-
-
-        public bool ArrowGraphShowNames { get; init; }
+        public bool UseBusinessDays { get; init; } = default;
 
 
 
-        public GroupByMode GanttChartGroupByMode { get; init; }
-
-        public AnnotationStyle GanttChartAnnotationStyle { get; init; }
-
-        public bool GanttChartShowGroupLabels { get; init; }
-
-        public bool GanttChartShowProjectFinish { get; init; }
-
-        public bool GanttChartShowTracking { get; init; }
-
-        public bool GanttChartShowToday { get; init; }
+        public bool ArrowGraphShowNames { get; init; } = default;
 
 
 
-        public AllocationMode ResourceChartAllocationMode { get; init; }
+        public GroupByMode GanttChartGroupByMode { get; init; } = default;
 
-        public ScheduleMode ResourceChartScheduleMode { get; init; }
+        public AnnotationStyle GanttChartAnnotationStyle { get; init; } = default;
 
-        public DisplayStyle ResourceChartDisplayStyle { get; init; }
+        public bool GanttChartShowGroupLabels { get; init; } = default;
 
-        public bool ResourceChartShowToday { get; init; }
+        public bool GanttChartShowProjectFinish { get; init; } = default;
+
+        public bool GanttChartShowTracking { get; init; } = default;
+
+        public bool GanttChartShowToday { get; init; } = default;
 
 
 
-        public bool EarnedValueShowProjections { get; init; }
+        public AllocationMode ResourceChartAllocationMode { get; init; } = default;
 
-        public bool EarnedValueShowToday { get; init; }
+        public ScheduleMode ResourceChartScheduleMode { get; init; } = default;
+
+        public DisplayStyle ResourceChartDisplayStyle { get; init; } = default;
+
+        public bool ResourceChartShowToday { get; init; } = default;
+
+
+
+        public bool EarnedValueShowProjections { get; init; } = default;
+
+        public bool EarnedValueShowToday { get; init; } = default;
     }
 }

@@ -52,7 +52,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, tm => tm.HasStaleOutputs);
 
             m_ShowDates = this
-                .WhenAnyValue(tm => tm.m_CoreViewModel.ShowDates)
+                .WhenAnyValue(tm => tm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates)
                 .ToProperty(this, tm => tm.ShowDates);
 
             m_ProjectStart = this
@@ -67,7 +67,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     tm => tm.m_DateTimeCalculator.CalculatorMode,
                     tm => tm.m_CoreViewModel.TrackerIndex,
-                    tm => tm.m_CoreViewModel.ShowDates,
+                    tm => tm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                     tm => tm.m_CoreViewModel.ProjectStart)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => RefreshDays());

@@ -49,7 +49,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, am => am.HasStaleOutputs);
 
             m_ShowDates = this
-                .WhenAnyValue(am => am.m_CoreViewModel.ShowDates)
+                .WhenAnyValue(am => am.m_CoreViewModel.DisplaySettingsViewModel.ShowDates)
                 .ToProperty(this, am => am.ShowDates);
 
             m_HasCompilationErrors = this

@@ -96,27 +96,27 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, rcm => rcm.HasCompilationErrors);
 
             m_AllocationMode = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ResourceChartAllocationMode)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ResourceChartAllocationMode)
                 .ToProperty(this, rcm => rcm.AllocationMode);
 
             m_ScheduleMode = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ResourceChartScheduleMode)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ResourceChartScheduleMode)
                 .ToProperty(this, rcm => rcm.ScheduleMode);
 
             m_DisplayStyle = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ResourceChartDisplayStyle)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ResourceChartDisplayStyle)
                 .ToProperty(this, rcm => rcm.DisplayStyle);
 
             m_ShowToday = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.ResourceChartShowToday)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ResourceChartShowToday)
                 .ToProperty(this, rcm => rcm.ShowToday);
 
             m_BuildResourceChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
-                    rcm => rcm.m_CoreViewModel.ShowDates,
-                    rcm => rcm.m_CoreViewModel.UseClassicDates,
-                    rcm => rcm.m_CoreViewModel.UseBusinessDays,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
                     rcm => rcm.m_CoreViewModel.Today,
                     rcm => rcm.AllocationMode,
@@ -480,7 +480,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_AllocationMode.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ResourceChartAllocationMode = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.ResourceChartAllocationMode = value;
             }
         }
 
@@ -490,7 +490,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ScheduleMode.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ResourceChartScheduleMode = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.ResourceChartScheduleMode = value;
             }
         }
 
@@ -500,7 +500,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_DisplayStyle.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ResourceChartDisplayStyle = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.ResourceChartDisplayStyle = value;
             }
         }
 
@@ -510,7 +510,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowToday.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ResourceChartShowToday = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.ResourceChartShowToday = value;
             }
         }
 
@@ -586,7 +586,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     plotModel = BuildResourceChartPlotModelInternal(
                         m_DateTimeCalculator,
                         m_CoreViewModel.ResourceSeriesSet,
-                        m_CoreViewModel.ShowDates,
+                        m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                         m_CoreViewModel.ProjectStart,
                         m_CoreViewModel.Today,
                         AllocationMode,

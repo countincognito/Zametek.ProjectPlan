@@ -51,15 +51,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, om => om.HasCompilationErrors);
 
             m_ShowDates = this
-                .WhenAnyValue(om => om.m_CoreViewModel.ShowDates)
+                .WhenAnyValue(om => om.m_CoreViewModel.DisplaySettingsViewModel.ShowDates)
                 .ToProperty(this, om => om.ShowDates);
 
             m_UseClassicDates = this
-                .WhenAnyValue(om => om.m_CoreViewModel.UseClassicDates)
+                .WhenAnyValue(om => om.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates)
                 .ToProperty(this, om => om.UseClassicDates);
 
             m_UseBusinessDays = this
-                .WhenAnyValue(om => om.m_CoreViewModel.UseBusinessDays)
+                .WhenAnyValue(om => om.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays)
                 .ToProperty(this, om => om.UseBusinessDays);
 
             m_ProjectStart = this

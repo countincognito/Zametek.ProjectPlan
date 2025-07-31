@@ -95,23 +95,23 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, rcm => rcm.HasCompilationErrors);
 
             m_ShowProjections = this
-                .WhenAnyValue(main => main.m_CoreViewModel.EarnedValueShowProjections)
+                .WhenAnyValue(main => main.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections)
                 .ToProperty(this, main => main.ShowProjections);
 
             m_ShowToday = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.EarnedValueShowToday)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowToday)
                 .ToProperty(this, rcm => rcm.ShowToday);
 
             m_BuildEarnedValueChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.TrackingSeriesSet,
-                    rcm => rcm.m_CoreViewModel.ShowDates,
-                    rcm => rcm.m_CoreViewModel.UseClassicDates,
-                    rcm => rcm.m_CoreViewModel.UseBusinessDays,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
                     rcm => rcm.ShowToday,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
                     rcm => rcm.m_CoreViewModel.Today,
-                    rcm => rcm.m_CoreViewModel.EarnedValueShowProjections,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
                     (a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i))
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -478,7 +478,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowProjections.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.EarnedValueShowProjections = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections = value;
             }
         }
 
@@ -488,7 +488,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowToday.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.EarnedValueShowToday = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowToday = value;
             }
         }
 
@@ -565,10 +565,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         m_DateTimeCalculator,
                         m_CoreViewModel.TrackingSeriesSet,
                         ShowToday,
-                        m_CoreViewModel.ShowDates,
+                        m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                         m_CoreViewModel.ProjectStart,
                         m_CoreViewModel.Today,
-                        m_CoreViewModel.EarnedValueShowProjections,
+                        m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections,
                         m_CoreViewModel.BaseTheme);
                 }
             }

@@ -181,7 +181,7 @@ namespace Zametek.ProjectPlan.CommandLine
                                     plan,
                                     core.ResourceSeriesSet,
                                     core.TrackingSeriesSet,
-                                    core.ShowDates,
+                                    core.DisplaySettingsViewModel.ShowDates,
                                     exportFilename);
                                 settingService.SetProjectFilePath(exportFilename, bindTitleToFilename: true);
                             }

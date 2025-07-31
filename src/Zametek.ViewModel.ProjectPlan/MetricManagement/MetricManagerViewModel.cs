@@ -55,7 +55,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, mm => mm.HasStaleOutputs);
 
             m_ShowDates = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.ShowDates)
+                .WhenAnyValue(mm => mm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates)
                 .ToProperty(this, mm => mm.ShowDates);
 
             m_HasCompilationErrors = this
@@ -123,7 +123,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ProjectFinish = this
                 .WhenAnyValue(
-                    mm => mm.m_CoreViewModel.ShowDates,
+                    mm => mm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                     mm => mm.m_CoreViewModel.ProjectStart,
                     mm => mm.m_CoreViewModel.Duration,
                     mm => mm.m_DateTimeCalculator.DaysPerWeek,

@@ -89,7 +89,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // That way they must complete before the CoreViewModel can proceed to compilation.
 
             m_ShowDates = this
-                .WhenAnyValue(x => x.m_CoreViewModel.ShowDates)
+                .WhenAnyValue(x => x.m_CoreViewModel.DisplaySettingsViewModel.ShowDates)
                 .ToProperty(this, x => x.ShowDates);
 
             m_HasResources = this

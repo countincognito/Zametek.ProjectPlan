@@ -2,6 +2,7 @@
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
+using sun.nio.cs;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive.Concurrency;
@@ -54,6 +55,10 @@ namespace Zametek.ViewModel.ProjectPlan
             m_VertexGraphCompiler = new VertexGraphCompiler();
             m_SettingService = settingService;
             m_DateTimeCalculator = dateTimeCalculator;
+            m_DisplaySettingsViewModel = new DisplaySettingsViewModel(
+                m_DateTimeCalculator,
+                SetIsProjectUpdated,
+                () => IsReadyToCompile = ReadyToCompile.Yes);
             m_Mapper = mapper;
 
             m_IsReadyToCompile = ReadyToCompile.No;
@@ -66,9 +71,11 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
-            ShowDates = m_SettingService.DefaultShowDates;
-            UseClassicDates = m_SettingService.DefaultUseClassicDates;
-            UseBusinessDays = m_SettingService.DefaultUseBusinessDays;
+
+            DisplaySettingsViewModel.ShowDates = m_SettingService.DefaultShowDates;
+            DisplaySettingsViewModel.UseClassicDates = m_SettingService.DefaultUseClassicDates;
+            DisplaySettingsViewModel.UseBusinessDays = m_SettingService.DefaultUseBusinessDays;
+
             m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
             m_ArrowGraph = new ArrowGraphModel();
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
@@ -885,7 +892,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return vertexGraphCompiler.CyclomaticComplexity;
         }
 
-        private void SetIsProjectUpdatedWithoutStaleOutputs(bool isProjectUpdated)
+        private void SetIsProjectUpdated(bool isProjectUpdated, bool trackStaleOutputs)
         {
             try
             {
@@ -893,6 +900,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_TrackHasStaleOutputs = false;
                     IsProjectUpdated = isProjectUpdated;
+                    m_TrackHasStaleOutputs = true;
                 }
             }
             finally
@@ -991,262 +999,17 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
+                    SetIsProjectUpdated(isProjectUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_Today, value);
                 }
             }
         }
 
-        #region Display Settings
-
-        private bool m_ShowDates;
-        public bool ShowDates
+        private readonly IDisplaySettingsViewModel m_DisplaySettingsViewModel;
+        public IDisplaySettingsViewModel DisplaySettingsViewModel
         {
-            get => m_ShowDates;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_ShowDates, value);
-                }
-            }
+            get => m_DisplaySettingsViewModel;
         }
-
-        private bool m_UseClassicDates;
-        public bool UseClassicDates
-        {
-            get => m_UseClassicDates;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_UseClassicDates = value;
-                    if (m_UseClassicDates)
-                    {
-                        m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Classic;
-                    }
-                    else
-                    {
-                        m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
-                    }
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaisePropertyChanged();
-                }
-            }
-        }
-
-        private bool m_UseBusinessDays;
-        public bool UseBusinessDays
-        {
-            get => m_UseBusinessDays;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_UseBusinessDays = value;
-                    if (m_UseBusinessDays)
-                    {
-                        m_DateTimeCalculator.CalculatorMode = DateTimeCalculatorMode.BusinessDays;
-                    }
-                    else
-                    {
-                        m_DateTimeCalculator.CalculatorMode = DateTimeCalculatorMode.AllDays;
-                    }
-                    IsProjectUpdated = true;
-                    this.RaisePropertyChanged();
-                    IsReadyToCompile = ReadyToCompile.Yes;
-                }
-            }
-        }
-
-        private bool m_ArrowGraphShowNames;
-        public bool ArrowGraphShowNames
-        {
-            get => m_ArrowGraphShowNames;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_ArrowGraphShowNames, value);
-                }
-            }
-        }
-
-        private GroupByMode m_GanttChartGroupByMode;
-        public GroupByMode GanttChartGroupByMode
-        {
-            get => m_GanttChartGroupByMode;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_GanttChartGroupByMode, value);
-                }
-            }
-        }
-
-        private AnnotationStyle m_GanttChartAnnotationStyle;
-        public AnnotationStyle GanttChartAnnotationStyle
-        {
-            get => m_GanttChartAnnotationStyle;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_GanttChartAnnotationStyle, value);
-                }
-            }
-        }
-
-        private bool m_GanttChartShowGroupLabels;
-        public bool GanttChartShowGroupLabels
-        {
-            get => m_GanttChartShowGroupLabels;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_GanttChartShowGroupLabels, value);
-                }
-            }
-        }
-
-        private bool m_GanttChartShowProjectFinish;
-        public bool GanttChartShowProjectFinish
-        {
-            get => m_GanttChartShowProjectFinish;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_GanttChartShowProjectFinish, value);
-                }
-            }
-        }
-
-        private bool m_GanttChartShowTracking;
-        public bool GanttChartShowTracking
-        {
-            get => m_GanttChartShowTracking;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_GanttChartShowTracking, value);
-                }
-            }
-        }
-
-        private bool m_GanttChartShowToday;
-        public bool GanttChartShowToday
-        {
-            get => m_GanttChartShowToday;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_GanttChartShowToday, value);
-                }
-            }
-        }
-
-
-
-        private AllocationMode m_ResourceChartAllocationMode;
-        public AllocationMode ResourceChartAllocationMode
-        {
-            get => m_ResourceChartAllocationMode;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_ResourceChartAllocationMode, value);
-                }
-            }
-        }
-
-        private ScheduleMode m_ResourceChartScheduleMode;
-        public ScheduleMode ResourceChartScheduleMode
-        {
-            get => m_ResourceChartScheduleMode;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_ResourceChartScheduleMode, value);
-                }
-            }
-        }
-
-        private DisplayStyle m_ResourceChartDisplayStyle;
-        public DisplayStyle ResourceChartDisplayStyle
-        {
-            get => m_ResourceChartDisplayStyle;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_ResourceChartDisplayStyle, value);
-                }
-            }
-        }
-
-        private bool m_ResourceChartShowToday;
-        public bool ResourceChartShowToday
-        {
-            get => m_ResourceChartShowToday;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_ResourceChartShowToday, value);
-                }
-            }
-        }
-
-
-
-        private bool m_EarnedValueShowProjections;
-        public bool EarnedValueShowProjections
-        {
-            get => m_EarnedValueShowProjections;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_EarnedValueShowProjections, value);
-                }
-            }
-        }
-
-        private bool m_EarnedValueShowToday;
-        public bool EarnedValueShowToday
-        {
-            get => m_EarnedValueShowToday;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdatedWithoutStaleOutputs(true);
-                    this.RaiseAndSetIfChanged(ref m_EarnedValueShowToday, value);
-                }
-            }
-        }
-
-        #endregion
 
         public bool DefaultShowDates
         {
@@ -1508,26 +1271,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResourceSettings = m_SettingService.DefaultResourceSettings;
                     WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
 
-                    ShowDates = m_SettingService.DefaultShowDates;
-                    UseClassicDates = m_SettingService.DefaultUseClassicDates;
-                    UseBusinessDays = m_SettingService.DefaultUseBusinessDays;
+                    var defaultDisplaySettings = new DisplaySettingsModel
+                    {
+                        ShowDates = m_SettingService.DefaultShowDates,
+                        UseClassicDates = m_SettingService.DefaultUseClassicDates,
+                        UseBusinessDays = m_SettingService.DefaultUseBusinessDays,
+                    };
 
-                    ArrowGraphShowNames = false;
-
-                    GanttChartGroupByMode = default;
-                    GanttChartAnnotationStyle = default;
-                    GanttChartShowGroupLabels = false;
-                    GanttChartShowProjectFinish = false;
-                    GanttChartShowTracking = false;
-                    GanttChartShowToday = false;
-
-                    ResourceChartAllocationMode = default;
-                    ResourceChartScheduleMode = default;
-                    ResourceChartDisplayStyle = default;
-                    ResourceChartShowToday = false;
-
-                    EarnedValueShowProjections = false;
-                    EarnedValueShowToday = false;
+                    DisplaySettingsViewModel.SetValues(defaultDisplaySettings);
                 }
             }
             finally
@@ -1652,9 +1403,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     AddManagedActivities(projectImportModel.DependentActivities);
 
                     // Display settings.
-                    ShowDates = projectImportModel.DisplaySettings.ShowDates;
-                    UseClassicDates = projectImportModel.DisplaySettings.UseClassicDates;
-                    UseBusinessDays = projectImportModel.DisplaySettings.UseBusinessDays;
+                    DisplaySettingsViewModel.SetValues(projectImportModel.DisplaySettings);
 
                     m_TrackIsProjectUpdated = true;
                     IsProjectUpdated = true;
@@ -1691,22 +1440,15 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Project Start Date.
                     Today = projectPlanModel.Today;
 
-                    ArrowGraphShowNames = projectPlanModel.DisplaySettings.ArrowGraphShowNames; // TODO
+                    // Display settings.
+                    var displaySettings = projectPlanModel.DisplaySettings with
+                    {
+                        ShowDates = DisplaySettingsViewModel.ShowDates,
+                        UseClassicDates = DisplaySettingsViewModel.UseClassicDates,
+                        UseBusinessDays = DisplaySettingsViewModel.UseBusinessDays,
+                    };
 
-                    GanttChartGroupByMode = projectPlanModel.DisplaySettings.GanttChartGroupByMode;
-                    GanttChartAnnotationStyle = projectPlanModel.DisplaySettings.GanttChartAnnotationStyle;
-                    GanttChartShowGroupLabels = projectPlanModel.DisplaySettings.GanttChartShowGroupLabels;
-                    GanttChartShowProjectFinish = projectPlanModel.DisplaySettings.GanttChartShowProjectFinish;
-                    GanttChartShowTracking = projectPlanModel.DisplaySettings.GanttChartShowTracking;
-                    GanttChartShowToday = projectPlanModel.DisplaySettings.GanttChartShowToday;
-
-                    ResourceChartAllocationMode = projectPlanModel.DisplaySettings.ResourceChartAllocationMode; // TODO
-                    ResourceChartScheduleMode = projectPlanModel.DisplaySettings.ResourceChartScheduleMode; // TODO
-                    ResourceChartDisplayStyle = projectPlanModel.DisplaySettings.ResourceChartDisplayStyle; // TODO
-                    ResourceChartShowToday = projectPlanModel.DisplaySettings.ResourceChartShowToday; // TODO
-
-                    EarnedValueShowProjections = projectPlanModel.DisplaySettings.EarnedValueShowProjections; // TODO
-                    EarnedValueShowToday = projectPlanModel.DisplaySettings.EarnedValueShowToday; // TODO
+                    DisplaySettingsViewModel.SetValues(displaySettings);
 
                     // Work Stream Settings.
                     WorkStreamSettings = projectPlanModel.WorkStreamSettings;
@@ -1733,10 +1475,15 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Arrow Graph.
                     ArrowGraph = projectPlanModel.ArrowGraph;
 
-                    // Display settings.
-                    ShowDates = projectPlanModel.DisplaySettings.ShowDates;
-                    UseClassicDates = projectPlanModel.DisplaySettings.UseClassicDates;
-                    UseBusinessDays = projectPlanModel.DisplaySettings.UseBusinessDays;
+                    // Display settings (the rest of the settings).
+                    displaySettings = projectPlanModel.DisplaySettings with
+                    {
+                        ShowDates = projectPlanModel.DisplaySettings.ShowDates,
+                        UseClassicDates = projectPlanModel.DisplaySettings.UseClassicDates,
+                        UseBusinessDays = projectPlanModel.DisplaySettings.UseBusinessDays,
+                    };
+
+                    DisplaySettingsViewModel.SetValues(displaySettings);
 
                     m_TrackIsProjectUpdated = true;
                     IsProjectUpdated = false;
@@ -1775,29 +1522,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         ResourceSettings = ResourceSettings.CloneObject(),
                         ArrowGraphSettings = ArrowGraphSettings.CloneObject(),
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),
-                        DisplaySettings = new DisplaySettingsModel
-                        {
-                            ShowDates = ShowDates,
-                            UseClassicDates = UseClassicDates,
-                            UseBusinessDays = UseBusinessDays,
-
-                            ArrowGraphShowNames = ArrowGraphShowNames,
-
-                            GanttChartGroupByMode = GanttChartGroupByMode,
-                            GanttChartAnnotationStyle = GanttChartAnnotationStyle,
-                            GanttChartShowGroupLabels = GanttChartShowGroupLabels,
-                            GanttChartShowProjectFinish = GanttChartShowProjectFinish,
-                            GanttChartShowTracking = GanttChartShowTracking,
-                            GanttChartShowToday = GanttChartShowToday,
-
-                            ResourceChartAllocationMode = ResourceChartAllocationMode,
-                            ResourceChartScheduleMode = ResourceChartScheduleMode,
-                            ResourceChartDisplayStyle = ResourceChartDisplayStyle,
-                            ResourceChartShowToday = ResourceChartShowToday,
-
-                            EarnedValueShowProjections = EarnedValueShowProjections,
-                            EarnedValueShowToday = EarnedValueShowToday,
-                        },
+                        DisplaySettings = DisplaySettingsViewModel.GetValues(),
                         GraphCompilation = graphCompilation,
                         ArrowGraph = ArrowGraph.CloneObject(),
                         HasStaleOutputs = HasStaleOutputs
@@ -2282,6 +2007,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_Duration?.Dispose();
                 ClearManagedActivities();
                 m_Activities?.Dispose();
+                m_DisplaySettingsViewModel?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

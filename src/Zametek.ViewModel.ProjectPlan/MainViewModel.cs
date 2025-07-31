@@ -190,15 +190,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, main => main.HasCompilationErrors);
 
             m_ShowDates = this
-                .WhenAnyValue(main => main.m_CoreViewModel.ShowDates)
+                .WhenAnyValue(main => main.m_CoreViewModel.DisplaySettingsViewModel.ShowDates)
                 .ToProperty(this, main => main.ShowDates);
 
             m_UseClassicDates = this
-                .WhenAnyValue(main => main.m_CoreViewModel.UseClassicDates)
+                .WhenAnyValue(main => main.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates)
                 .ToProperty(this, main => main.UseClassicDates);
 
             m_UseBusinessDays = this
-                .WhenAnyValue(main => main.m_CoreViewModel.UseBusinessDays)
+                .WhenAnyValue(main => main.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays)
                 .ToProperty(this, main => main.UseBusinessDays);
 
             m_DefaultShowDates = this
@@ -227,22 +227,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_CoreViewModel.AutoCompile = true;
 
-            m_CoreViewModel.ArrowGraphShowNames = false;
+            var displaySettings = new DisplaySettingsModel
+            {
+                ShowDates = m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                UseClassicDates = m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
+                UseBusinessDays = m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
+            };
 
-            m_CoreViewModel.GanttChartAnnotationStyle = default;
-            m_CoreViewModel.GanttChartGroupByMode = default;
-            m_CoreViewModel.GanttChartShowGroupLabels = false;
-            m_CoreViewModel.GanttChartShowProjectFinish = false;
-            m_CoreViewModel.GanttChartShowTracking = false;
-            m_CoreViewModel.GanttChartShowToday = false;
-
-            m_CoreViewModel.ResourceChartAllocationMode = default;
-            m_CoreViewModel.ResourceChartScheduleMode = default;
-            m_CoreViewModel.ResourceChartDisplayStyle = default;
-            m_CoreViewModel.ResourceChartShowToday = false;
-
-            m_CoreViewModel.EarnedValueShowProjections = false;
-            m_CoreViewModel.EarnedValueShowToday = false;
+            m_CoreViewModel.DisplaySettingsViewModel.SetValues(displaySettings);
 
             m_CoreViewModel.IsProjectUpdated = false;
 
@@ -512,7 +504,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowDates.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ShowDates = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.ShowDates = value;
             }
         }
 
@@ -522,7 +514,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_UseClassicDates.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.UseClassicDates = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates = value;
             }
         }
 
@@ -532,7 +524,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_UseBusinessDays.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.UseBusinessDays = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays = value;
             }
         }
 

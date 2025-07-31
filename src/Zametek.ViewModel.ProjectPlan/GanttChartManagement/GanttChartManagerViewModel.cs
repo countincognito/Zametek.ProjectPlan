@@ -108,27 +108,27 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, rcm => rcm.HasCompilationErrors);
 
             m_GroupByMode = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartGroupByMode)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartGroupByMode)
                 .ToProperty(this, rcm => rcm.GroupByMode);
 
             m_AnnotationStyle = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartAnnotationStyle)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartAnnotationStyle)
                 .ToProperty(this, rcm => rcm.AnnotationStyle);
 
             m_ShowGroupLabels = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartShowGroupLabels)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowGroupLabels)
                 .ToProperty(this, rcm => rcm.ShowGroupLabels);
 
             m_ShowProjectFinish = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartShowProjectFinish)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowProjectFinish)
                 .ToProperty(this, rcm => rcm.ShowProjectFinish);
 
             m_ShowTracking = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartShowTracking)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowTracking)
                 .ToProperty(this, rcm => rcm.ShowTracking);
 
             m_ShowToday = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.GanttChartShowToday)
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowToday)
                 .ToProperty(this, rcm => rcm.ShowToday);
 
             m_IsGrouped = this
@@ -148,8 +148,8 @@ namespace Zametek.ViewModel.ProjectPlan
             // https://github.com/reactiveui/ReactiveUI/issues/3846
             m_BoolAccumulator = this
                 .WhenAnyValue(
-                    rcm => rcm.m_CoreViewModel.ShowDates,
-                    rcm => rcm.m_CoreViewModel.UseClassicDates,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
                     rcm => rcm.ShowGroupLabels,
                     rcm => rcm.ShowProjectFinish,
                     rcm => rcm.ShowTracking,
@@ -1174,7 +1174,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_GroupByMode.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.GanttChartGroupByMode = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.GanttChartGroupByMode = value;
             }
         }
 
@@ -1184,7 +1184,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_AnnotationStyle.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.GanttChartAnnotationStyle = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.GanttChartAnnotationStyle = value;
             }
         }
 
@@ -1194,7 +1194,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowGroupLabels.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.GanttChartShowGroupLabels = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowGroupLabels = value;
             }
         }
 
@@ -1204,7 +1204,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowProjectFinish.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.GanttChartShowProjectFinish = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowProjectFinish = value;
             }
         }
 
@@ -1214,7 +1214,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowTracking.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.GanttChartShowTracking = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowTracking = value;
             }
         }
 
@@ -1224,7 +1224,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowToday.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.GanttChartShowToday = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowToday = value;
             }
         }
 
@@ -1323,7 +1323,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.ProjectStart,
                     m_CoreViewModel.Today,
                     ShowToday,
-                    m_CoreViewModel.ShowDates,
+                    m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                     m_CoreViewModel.GraphCompilation,
                     GroupByMode,
                     AnnotationStyle,

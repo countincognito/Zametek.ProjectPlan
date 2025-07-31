@@ -120,7 +120,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, mm => mm.HasCompilationErrors);
 
             m_ShowNames = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.ArrowGraphShowNames)
+                .WhenAnyValue(mm => mm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames)
                 .ToProperty(this, mm => mm.ShowNames);
 
             m_BaseTheme = this
@@ -132,7 +132,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     agm => agm.m_CoreViewModel.ArrowGraph,
                     agm => agm.m_CoreViewModel.ArrowGraphSettings,
                     agm => agm.m_CoreViewModel.BaseTheme,
-                    agm => agm.m_CoreViewModel.ArrowGraphShowNames)
+                    agm => agm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildArrowGraphDiagramDataAsync());
 
@@ -242,7 +242,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowNames.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.ArrowGraphShowNames = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames = value;
             }
         }
 
@@ -302,11 +302,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
                         {
-                            data = m_ArrowGraphExport.BuildArrowGraphMLData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.ArrowGraphSettings, m_CoreViewModel.ArrowGraphShowNames);
+                            data = m_ArrowGraphExport.BuildArrowGraphMLData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.ArrowGraphSettings, m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
                         {
-                            data = m_ArrowGraphExport.BuildArrowGraphVizData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.ArrowGraphSettings, m_CoreViewModel.ArrowGraphShowNames);
+                            data = m_ArrowGraphExport.BuildArrowGraphVizData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.ArrowGraphSettings, m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
                         })
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
 
@@ -338,7 +338,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         m_CoreViewModel.ArrowGraph,
                         m_CoreViewModel.ArrowGraphSettings,
                         m_CoreViewModel.BaseTheme,
-                        m_CoreViewModel.ArrowGraphShowNames);
+                        m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
                 }
             }
 
