@@ -243,4 +243,10 @@
   <data name="ToolTip_Successors" xml:space="preserve">
     <value>Successors</value>
   </data>
+  <data name="ToolTip_UnitBilling" xml:space="preserve">
+    <value>Unit Billing</value>
+  </data>
+  <data name="ToolTip_HasNoBilling" xml:space="preserve">
+    <value>Ignore Billing</value>
+  </data>
 </root>

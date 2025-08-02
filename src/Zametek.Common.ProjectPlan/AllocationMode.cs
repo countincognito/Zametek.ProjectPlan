@@ -5,6 +5,7 @@
     {
         Activity,
         Cost,
+        Billing,
         Effort
     }
 }

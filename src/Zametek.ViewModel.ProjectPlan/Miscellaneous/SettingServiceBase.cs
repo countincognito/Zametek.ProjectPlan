@@ -182,6 +182,7 @@ namespace Zametek.ViewModel.ProjectPlan
             new()
             {
                 DefaultUnitCost = 1.0,
+                DefaultUnitBilling = 1.0,
                 AreDisabled = false
             };
 

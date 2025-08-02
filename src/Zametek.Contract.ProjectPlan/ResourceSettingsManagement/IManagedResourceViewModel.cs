@@ -21,6 +21,8 @@ namespace Zametek.Contract.ProjectPlan
 
         double UnitCost { get; set; }
 
+        double UnitBilling { get; set; }
+
         int AllocationOrder { get; set; }
 
         int DisplayOrder { get; set; }

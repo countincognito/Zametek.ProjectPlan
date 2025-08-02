@@ -23,6 +23,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly IList<string> s_ResourceSettingsColumnTitles =
         [
             nameof(ProjectPlanModel.ResourceSettings.DefaultUnitCost),
+            nameof(ProjectPlanModel.ResourceSettings.DefaultUnitBilling),
             nameof(ProjectPlanModel.ResourceSettings.AreDisabled),
         ];
 
@@ -42,6 +43,8 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivityModel.TargetResourceOperator),
             nameof(ActivityModel.AllocatedToResources),
             nameof(ActivityModel.HasNoCost),
+            nameof(ActivityModel.HasNoBilling),
+            nameof(ActivityModel.HasNoEffort),
             nameof(ActivityModel.Duration),
             nameof(ActivityModel.FreeSlack),
             nameof(ActivityModel.TotalSlack),
@@ -74,6 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ResourceModel.InterActivityAllocationType),
             nameof(ResourceModel.InterActivityPhases),
             nameof(ResourceModel.UnitCost),
+            nameof(ResourceModel.UnitBilling),
             nameof(ResourceModel.DisplayOrder),
             nameof(ResourceModel.AllocationOrder),
             nameof(ResourceModel.ColorFormat)
@@ -392,6 +396,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     columnTitle.ValueSwitchOn()
                         .Case(nameof(ProjectPlanModel.ResourceSettings.DefaultUnitCost),
                             colName => AddToCell(projectPlan.ResourceSettings.DefaultUnitCost, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectPlanModel.ResourceSettings.DefaultUnitBilling),
+                            colName => AddToCell(projectPlan.ResourceSettings.DefaultUnitBilling, cell, dateTimeCellStyle))
                         .Case(nameof(ProjectPlanModel.ResourceSettings.AreDisabled),
                             colName => AddToCell(projectPlan.ResourceSettings.AreDisabled, cell, dateTimeCellStyle)); ;
 

@@ -120,6 +120,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private double m_UnitBilling;
+        public double UnitBilling
+        {
+            get => m_UnitBilling;
+            set
+            {
+                m_UnitBilling = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsUnitBillingActive;
+        public bool IsUnitBillingActive
+        {
+            get => m_IsUnitBillingActive;
+            set
+            {
+                m_IsUnitBillingActive = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         public IWorkStreamSelectorViewModel WorkStreamSelector { get; }
 
         private bool m_IsWorkStreamSelectorActive;
@@ -151,6 +173,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 UnitCost = UnitCost,
                 IsUnitCostEdited = IsUnitCostActive,
+
+                UnitBilling = UnitBilling,
+                IsUnitBillingEdited = IsUnitBillingActive,
 
                 IsInterActivityPhasesEdited = IsWorkStreamSelectorActive,
             };

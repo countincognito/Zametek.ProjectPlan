@@ -91,6 +91,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     func = jString => Converter.Upgrade(
                         JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_3.ProjectPlanModel>(jString)
                         ?? new Data.ProjectPlan.v0_4_3.ProjectPlanModel());
+                })
+                .Case(Versions.v0_4_4, x =>
+                {
+                    func = jString => Converter.Upgrade(
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_4.ProjectPlanModel>(jString)
+                        ?? new Data.ProjectPlan.v0_4_4.ProjectPlanModel());
                 });
 
             return await Task.Run(() => func(jsonString));

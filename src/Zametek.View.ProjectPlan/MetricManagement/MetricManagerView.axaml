@@ -281,6 +281,59 @@
 						             FontWeight="Bold"
 						             Text="{Binding Path=TotalCost, Mode=OneWay, StringFormat=\{0:N2\}}"/>
 			</Grid>
+
+			<Grid Margin="7">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="135"/>
+					<ColumnDefinition Width="100"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
+					                 VerticalAlignment="Center"
+					                 HorizontalAlignment="Right"
+								     Text="{x:Static resources:Labels.Label_DirectBilling}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=DirectBilling, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
+					                 VerticalAlignment="Center"
+								     HorizontalAlignment="Right"
+							    	 Text="{x:Static resources:Labels.Label_IndirectBilling}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="1"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=IndirectBilling, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
+					                 VerticalAlignment="Center"
+								     HorizontalAlignment="Right"
+								     Text="{x:Static resources:Labels.Label_OtherBilling}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="2"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=OtherBilling, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
+					                 VerticalAlignment="Center"
+					                 HorizontalAlignment="Right"
+								     Text="{x:Static resources:Labels.Label_TotalBilling}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="3"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=TotalBilling, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+			</Grid>
 		</WrapPanel>
 	</ScrollViewer>
 </UserControl>

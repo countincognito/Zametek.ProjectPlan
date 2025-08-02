@@ -196,7 +196,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.9.2-alpha.
+        ///   Looks up a localized string similar to 0.9.2-beta.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -322,6 +322,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default Unit Billing.
+        /// </summary>
+        public static string Label_DefaultUnitBilling {
+            get {
+                return ResourceManager.GetString("Label_DefaultUnitBilling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Default Unit Cost.
         /// </summary>
         public static string Label_DefaultUnitCost {
@@ -390,6 +399,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_Dependencies {
             get {
                 return ResourceManager.GetString("Label_Dependencies", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Direct Billing:.
+        /// </summary>
+        public static string Label_DirectBilling {
+            get {
+                return ResourceManager.GetString("Label_DirectBilling", resourceCulture);
             }
         }
         
@@ -619,6 +637,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ignore Billing.
+        /// </summary>
+        public static string Label_HasNoBilling {
+            get {
+                return ResourceManager.GetString("Label_HasNoBilling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ignore Cost.
         /// </summary>
         public static string Label_HasNoCost {
@@ -642,6 +669,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_Id {
             get {
                 return ResourceManager.GetString("Label_Id", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indirect Billing:.
+        /// </summary>
+        public static string Label_IndirectBilling {
+            get {
+                return ResourceManager.GetString("Label_IndirectBilling", resourceCulture);
             }
         }
         
@@ -850,6 +886,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_On {
             get {
                 return ResourceManager.GetString("Label_On", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Other Billing:.
+        /// </summary>
+        public static string Label_OtherBilling {
+            get {
+                return ResourceManager.GetString("Label_OtherBilling", resourceCulture);
             }
         }
         
@@ -1178,6 +1223,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total Billing:.
+        /// </summary>
+        public static string Label_TotalBilling {
+            get {
+                return ResourceManager.GetString("Label_TotalBilling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Total Cost:.
         /// </summary>
         public static string Label_TotalCost {
@@ -1201,6 +1255,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_TotalSlack {
             get {
                 return ResourceManager.GetString("Label_TotalSlack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unit Billing.
+        /// </summary>
+        public static string Label_UnitBilling {
+            get {
+                return ResourceManager.GetString("Label_UnitBilling", resourceCulture);
             }
         }
         

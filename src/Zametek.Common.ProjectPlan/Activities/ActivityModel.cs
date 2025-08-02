@@ -23,6 +23,8 @@ namespace Zametek.Common.ProjectPlan
 
         public bool HasNoCost { get; init; }
 
+        public bool HasNoBilling { get; init; }
+
         public bool HasNoEffort { get; init; }
 
         public int Duration { get; init; }

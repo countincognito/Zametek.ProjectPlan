@@ -585,6 +585,21 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public bool HasNoBilling
+        {
+            get => DependentActivity.HasNoBilling;
+            set
+            {
+                if (DependentActivity.HasNoBilling != value)
+                {
+                    BeginEdit();
+                    DependentActivity.HasNoBilling = value;
+                    EndEdit();
+                }
+                this.RaisePropertyChanged();
+            }
+        }
+
         public bool HasNoEffort
         {
             get => DependentActivity.HasNoEffort;

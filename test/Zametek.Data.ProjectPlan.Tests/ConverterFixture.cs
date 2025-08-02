@@ -23,6 +23,7 @@ namespace Zametek.Data.ProjectPlan.Tests
             Vc_0_4_2_JsonString = ReadJsonFile(@"TestFiles\test-c_v0_4_2.zpp");
             Vd_0_4_2_JsonString = ReadJsonFile(@"TestFiles\test-d_v0_4_2.zpp");
             Vd_0_4_3_JsonString = ReadJsonFile(@"TestFiles\test-d_v0_4_3.zpp");
+            Vd_0_4_4_JsonString = ReadJsonFile(@"TestFiles\test-d_v0_4_4.zpp");
 
             static string ReadJsonFile(string filename)
             {
@@ -47,6 +48,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         public string Vc_0_4_2_JsonString { get; init; }
         public string Vd_0_4_2_JsonString { get; init; }
         public string Vd_0_4_3_JsonString { get; init; }
+        public string Vd_0_4_4_JsonString { get; init; }
 
         public void Dispose()
         {

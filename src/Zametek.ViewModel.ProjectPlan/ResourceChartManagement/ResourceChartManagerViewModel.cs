@@ -197,6 +197,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 AllocationMode.Activity => (ResourceScheduleModel model) => model.ActivityAllocation,
                 AllocationMode.Cost => (ResourceScheduleModel model) => model.CostAllocation,
+                AllocationMode.Billing => (ResourceScheduleModel model) => model.BillingAllocation,
                 AllocationMode.Effort => (ResourceScheduleModel model) => model.EffortAllocation,
                 _ => throw new ArgumentOutOfRangeException(nameof(allocationMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownAllocationMode} {allocationMode}"),
             };

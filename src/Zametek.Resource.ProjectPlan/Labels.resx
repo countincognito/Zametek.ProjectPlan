@@ -157,7 +157,7 @@
     <value>projectplan.net</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>0.9.2-alpha</value>
+    <value>0.9.2-beta</value>
   </data>
   <data name="Label_Author" xml:space="preserve">
     <value>R. M. Bennett-Lovsey</value>
@@ -509,5 +509,26 @@
   </data>
   <data name="Label_ShowConnections" xml:space="preserve">
     <value>Show Connections</value>
+  </data>
+  <data name="Label_DefaultUnitBilling" xml:space="preserve">
+    <value>Default Unit Billing</value>
+  </data>
+  <data name="Label_UnitBilling" xml:space="preserve">
+    <value>Unit Billing</value>
+  </data>
+  <data name="Label_HasNoBilling" xml:space="preserve">
+    <value>Ignore Billing</value>
+  </data>
+  <data name="Label_DirectBilling" xml:space="preserve">
+    <value>Direct Billing:</value>
+  </data>
+  <data name="Label_IndirectBilling" xml:space="preserve">
+    <value>Indirect Billing:</value>
+  </data>
+  <data name="Label_OtherBilling" xml:space="preserve">
+    <value>Other Billing:</value>
+  </data>
+  <data name="Label_TotalBilling" xml:space="preserve">
+    <value>Total Billing:</value>
   </data>
 </root>

@@ -286,11 +286,20 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unit Cost must be greater than 0.
+        ///   Looks up a localized string similar to Unit Billing must be equal to or greater than 0 .
         /// </summary>
-        public static string Message_UnitCostMustBeGreaterThanZero {
+        public static string Message_UnitBillingMustBeZeroOrGreater {
             get {
-                return ResourceManager.GetString("Message_UnitCostMustBeGreaterThanZero", resourceCulture);
+                return ResourceManager.GetString("Message_UnitBillingMustBeZeroOrGreater", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unit Cost must be equal to or greater than 0.
+        /// </summary>
+        public static string Message_UnitCostMustBeZeroOrGreater {
+            get {
+                return ResourceManager.GetString("Message_UnitCostMustBeZeroOrGreater", resourceCulture);
             }
         }
         

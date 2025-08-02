@@ -180,8 +180,8 @@
   <data name="Message_UnableToSaveFile" xml:space="preserve">
     <value>Unable to save file:</value>
   </data>
-  <data name="Message_UnitCostMustBeGreaterThanZero" xml:space="preserve">
-    <value>Unit Cost must be greater than 0</value>
+  <data name="Message_UnitCostMustBeZeroOrGreater" xml:space="preserve">
+    <value>Unit Cost must be equal to or greater than 0</value>
   </data>
   <data name="Message_UnknownDateTimeCalculatorMode" xml:space="preserve">
     <value>Unknown DateTimeCalculatorMode value:</value>
@@ -224,5 +224,8 @@
   </data>
   <data name="Message_UnableToDetermineUserSettingsDirectory" xml:space="preserve">
     <value>Unable to determine file directory for User Settings</value>
+  </data>
+  <data name="Message_UnitBillingMustBeZeroOrGreater" xml:space="preserve">
+    <value>Unit Billing must be equal to or greater than 0 </value>
   </data>
 </root>

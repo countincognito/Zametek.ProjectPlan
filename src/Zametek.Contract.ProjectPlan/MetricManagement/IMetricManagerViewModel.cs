@@ -39,6 +39,14 @@
 
         double? TotalCost { get; }
 
+        double? DirectBilling { get; }
+
+        double? IndirectBilling { get; }
+
+        double? OtherBilling { get; }
+
+        double? TotalBilling { get; }
+
         double? DirectEffort { get; }
 
         double? IndirectEffort { get; }
@@ -53,6 +61,6 @@
 
         void BuildMetrics();
 
-        void BuildCostsAndEfforts();
+        void BuildCostsBillingsAndEfforts();
     }
 }

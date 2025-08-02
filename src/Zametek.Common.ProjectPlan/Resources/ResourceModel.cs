@@ -17,6 +17,8 @@ namespace Zametek.Common.ProjectPlan
 
         public double UnitCost { get; init; }
 
+        public double UnitBilling { get; init; }
+
         public int DisplayOrder { get; init; }
 
         public int AllocationOrder { get; init; }

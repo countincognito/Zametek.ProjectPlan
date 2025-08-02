@@ -202,6 +202,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             IList<ResourceModel> resources = resourceSettings.Resources;
             double defaultUnitCost = resourceSettings.DefaultUnitCost;
+            double defaultUnitBilling = resourceSettings.DefaultUnitBilling;
 
             var resourceLookup = resources.ToDictionary(x => x.Id);
 
@@ -230,6 +231,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
                         ColorFormatModel color = ColorHelper.Preset();
                         double unitCost = defaultUnitCost;
+                        double unitBilling = defaultUnitBilling;
                         int displayOrder = 0;
 
                         if (scheduledResourceSchedule.Resource.Id != default
@@ -252,6 +254,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             unitCost = resource.UnitCost;
+                            unitBilling = resource.UnitBilling;
                             displayOrder = resource.DisplayOrder;
                         }
                         else
@@ -265,6 +268,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Title = stringBuilder.ToString(),
                             ColorFormat = color,
                             UnitCost = unitCost,
+                            UnitBilling = unitBilling,
                             DisplayOrder = displayOrder,
                             ResourceSchedule = scheduledResourceSchedule,
                             InterActivityAllocationType = interActivityAllocationType,
@@ -308,6 +312,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             ResourceSchedule = resourceSchedule,
                             ColorFormat = resource.ColorFormat != null ? resource.ColorFormat.CloneObject() : ColorHelper.Preset(),
                             UnitCost = resource.UnitCost,
+                            UnitBilling = resource.UnitBilling,
                             DisplayOrder = resource.DisplayOrder,
                         };
 
@@ -324,9 +329,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (ResourceSeriesModel combinedSeries in combinedSeriesSet)
                 {
-                    IList<bool> combinedActivityAllocations = new List<bool>(Enumerable.Repeat(false, finishTime));
-                    IList<bool> combinedCostAllocations = new List<bool>(Enumerable.Repeat(false, finishTime));
-                    IList<bool> combinedEffortAllocations = new List<bool>(Enumerable.Repeat(false, finishTime));
+                    IList<bool> combinedActivityAllocations = [.. Enumerable.Repeat(false, finishTime)];
+                    IList<bool> combinedCostAllocations = [.. Enumerable.Repeat(false, finishTime)];
+                    IList<bool> combinedBillingAllocations = [.. Enumerable.Repeat(false, finishTime)];
+                    IList<bool> combinedEffortAllocations = [.. Enumerable.Repeat(false, finishTime)];
 
                     if (combinedSeries.ResourceSchedule.Resource.Id != default)
                     {
@@ -335,6 +341,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             combinedActivityAllocations = combinedSeries.ResourceSchedule.ActivityAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.ActivityAllocation, (x, y) => x || y).ToList();
                             combinedCostAllocations = combinedSeries.ResourceSchedule.CostAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.CostAllocation, (x, y) => x || y).ToList();
+                            combinedBillingAllocations = combinedSeries.ResourceSchedule.BillingAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.BillingAllocation, (x, y) => x || y).ToList();
                             combinedEffortAllocations = combinedSeries.ResourceSchedule.EffortAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.EffortAllocation, (x, y) => x || y).ToList();
                             unscheduledSeriesAlreadyIncluded.Add(resourceId);
                         }
@@ -342,6 +349,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             combinedActivityAllocations = [.. combinedSeries.ResourceSchedule.ActivityAllocation];
                             combinedCostAllocations = [.. combinedSeries.ResourceSchedule.CostAllocation];
+                            combinedBillingAllocations = [.. combinedSeries.ResourceSchedule.BillingAllocation];
                             combinedEffortAllocations = [.. combinedSeries.ResourceSchedule.EffortAllocation];
                         }
                     }
@@ -349,6 +357,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         combinedActivityAllocations = [.. combinedSeries.ResourceSchedule.ActivityAllocation];
                         combinedCostAllocations = [.. combinedSeries.ResourceSchedule.CostAllocation];
+                        combinedBillingAllocations = [.. combinedSeries.ResourceSchedule.BillingAllocation];
                         combinedEffortAllocations = [.. combinedSeries.ResourceSchedule.EffortAllocation];
                     }
 
@@ -356,6 +365,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     combinedSeries.ResourceSchedule.ActivityAllocation.AddRange(combinedActivityAllocations);
                     combinedSeries.ResourceSchedule.CostAllocation.Clear();
                     combinedSeries.ResourceSchedule.CostAllocation.AddRange(combinedCostAllocations);
+                    combinedSeries.ResourceSchedule.BillingAllocation.Clear();
+                    combinedSeries.ResourceSchedule.BillingAllocation.AddRange(combinedBillingAllocations);
                     combinedSeries.ResourceSchedule.EffortAllocation.Clear();
                     combinedSeries.ResourceSchedule.EffortAllocation.AddRange(combinedEffortAllocations);
                 }
@@ -1367,6 +1378,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     resourceSettings = resourceSettings with
                     {
                         DefaultUnitCost = projectImportModel.ResourceSettings.DefaultUnitCost,
+                        DefaultUnitBilling = projectImportModel.ResourceSettings.DefaultUnitBilling,
                         AreDisabled = projectImportModel.ResourceSettings.AreDisabled,
                     };
 
@@ -1693,6 +1705,10 @@ namespace Zametek.ViewModel.ProjectPlan
                                     if (updateModel.IsHasNoCostEdited)
                                     {
                                         activity.HasNoCost = updateModel.HasNoCost;
+                                    }
+                                    if (updateModel.IsHasNoBillingEdited)
+                                    {
+                                        activity.HasNoBilling = updateModel.HasNoBilling;
                                     }
                                     if (updateModel.IsHasNoEffortEdited)
                                     {

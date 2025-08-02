@@ -11,7 +11,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public MapperProfile()
         {
             CreateMap<ResourceModel, Resource<int, int>>()
-                .ConstructUsing(src => new Resource<int, int>(src.Id, src.Name, src.IsExplicitTarget, src.IsInactive, src.InterActivityAllocationType, src.UnitCost, src.AllocationOrder, src.InterActivityPhases))
+                .ConstructUsing(src => new Resource<int, int>(src.Id, src.Name, src.IsExplicitTarget, src.IsInactive, src.InterActivityAllocationType, src.UnitCost, src.UnitBilling, src.AllocationOrder, src.InterActivityPhases))
                 .ReverseMap();
 
             CreateMap<EventModel, Event<int>>()
@@ -299,7 +299,7 @@ namespace Zametek.ViewModel.ProjectPlan
             CreateMap<WorkStream<int>, WorkStreamModel>();
 
             CreateMap<ScheduledActivityModel, ScheduledActivity<int>>()
-                .ConstructUsing(src => new ScheduledActivity<int>(src.Id, src.Name, src.HasNoCost, src.HasNoEffort, src.Duration, src.StartTime, src.FinishTime));
+                .ConstructUsing(src => new ScheduledActivity<int>(src.Id, src.Name, src.HasNoCost, src.HasNoBilling, src.HasNoEffort, src.Duration, src.StartTime, src.FinishTime));
 
             CreateMap<ScheduledActivityModel, IScheduledActivity<int>>()
                 .ConstructUsing((src, ctx) => ctx.Mapper.Map<ScheduledActivityModel, ScheduledActivity<int>>(src));

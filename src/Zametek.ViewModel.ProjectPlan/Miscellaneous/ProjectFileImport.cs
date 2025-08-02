@@ -26,6 +26,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly IList<string> s_ResourceSettingsColumnTitles =
         [
             nameof(ProjectImportModel.ResourceSettings.DefaultUnitCost),
+            nameof(ProjectImportModel.ResourceSettings.DefaultUnitBilling),
             nameof(ProjectImportModel.ResourceSettings.AreDisabled)
         ];
 
@@ -45,6 +46,8 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivityModel.TargetResourceOperator),
             nameof(ActivityModel.AllocatedToResources),
             nameof(ActivityModel.HasNoCost),
+            nameof(ActivityModel.HasNoBilling),
+            nameof(ActivityModel.HasNoEffort),
             nameof(ActivityModel.Duration),
             nameof(ActivityModel.MinimumFreeSlack),
             nameof(ActivityModel.MinimumEarliestStartTime),
@@ -69,6 +72,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ResourceModel.InterActivityAllocationType),
             nameof(ResourceModel.InterActivityPhases),
             nameof(ResourceModel.UnitCost),
+            nameof(ResourceModel.UnitBilling),
             nameof(ResourceModel.DisplayOrder),
             nameof(ResourceModel.AllocationOrder),
             nameof(ResourceModel.ColorFormat)
@@ -409,7 +413,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            double defaultUnitCost = 1;
+            double defaultUnitCost = 1.0;
+            double defaultUnitBilling = 1.0;
             bool areDisabled = false;
 
             {
@@ -442,6 +447,14 @@ namespace Zametek.ViewModel.ProjectPlan
                                         if (double.TryParse(row[name]?.ToString(), out double output))
                                         {
                                             defaultUnitCost = output;
+                                        }
+                                    })
+                                .Case(nameof(ProjectImportModel.ResourceSettings.DefaultUnitBilling),
+                                    name =>
+                                    {
+                                        if (double.TryParse(row[name]?.ToString(), out double output))
+                                        {
+                                            defaultUnitBilling = output;
                                         }
                                     })
                                 .Case(nameof(ProjectImportModel.ResourceSettings.AreDisabled),
@@ -478,6 +491,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     Resources = [.. resources.Values],
                     DefaultUnitCost = defaultUnitCost,
+                    DefaultUnitBilling = defaultUnitBilling,
                     AreDisabled = areDisabled,
                 },
                 ActivitySeverities = [.. activitySeverities],
@@ -608,6 +622,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     List<int> targetResources = [];
                     var targetResourceOperator = LogicalOperator.AND;
                     bool hasNoCost = false;
+                    bool hasNoBilling = false;
+                    bool hasNoEffort = false;
                     int duration = 0;
                     int? minimumFreeSlack = null;
                     int? minimumEarliestStartTime = null;
@@ -663,6 +679,22 @@ namespace Zametek.ViewModel.ProjectPlan
                                     if (bool.TryParse(row[colName]?.ToString(), out bool output))
                                     {
                                         hasNoCost = output;
+                                    }
+                                })
+                            .Case(nameof(ActivityModel.HasNoBilling),
+                                colName =>
+                                {
+                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
+                                    {
+                                        hasNoBilling = output;
+                                    }
+                                })
+                            .Case(nameof(ActivityModel.HasNoEffort),
+                                colName =>
+                                {
+                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
+                                    {
+                                        hasNoEffort = output;
                                     }
                                 })
                             .Case(nameof(ActivityModel.Duration),
@@ -758,6 +790,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                 TargetResources = targetResources,
                                 TargetResourceOperator = targetResourceOperator,
                                 HasNoCost = hasNoCost,
+                                HasNoBilling = hasNoBilling,
+                                HasNoEffort = hasNoEffort,
                                 Duration = duration,
                                 MinimumFreeSlack = minimumFreeSlack,
                                 MinimumEarliestStartTime = minimumEarliestStartTime,
@@ -804,6 +838,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     List<int> interActivityPhases = [];
                     InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
                     double unitCost = 0.0;
+                    double unitBilling = 0.0;
                     int displayOrder = 0;
                     int allocationOrder = 0;
                     ColorFormatModel colorFormat = ColorHelper.None();
@@ -859,6 +894,14 @@ namespace Zametek.ViewModel.ProjectPlan
                                         unitCost = output;
                                     }
                                 })
+                            .Case(nameof(ResourceModel.UnitBilling),
+                                colName =>
+                                {
+                                    if (double.TryParse(row[colName]?.ToString(), out double output))
+                                    {
+                                        unitBilling = output;
+                                    }
+                                })
                             .Case(nameof(ResourceModel.DisplayOrder),
                                 colName =>
                                 {
@@ -898,6 +941,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             InterActivityAllocationType = interActivityAllocationType,
                             InterActivityPhases = interActivityPhases,
                             UnitCost = unitCost,
+                            UnitBilling = unitBilling,
                             DisplayOrder = displayOrder,
                             AllocationOrder = allocationOrder,
                             ColorFormat = colorFormat

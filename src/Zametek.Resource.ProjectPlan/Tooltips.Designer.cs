@@ -169,6 +169,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ignore Billing.
+        /// </summary>
+        public static string ToolTip_HasNoBilling {
+            get {
+                return ResourceManager.GetString("ToolTip_HasNoBilling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ignore Cost.
         /// </summary>
         public static string ToolTip_HasNoCost {
@@ -417,6 +426,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string ToolTip_TotalSlack {
             get {
                 return ResourceManager.GetString("ToolTip_TotalSlack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unit Billing.
+        /// </summary>
+        public static string ToolTip_UnitBilling {
+            get {
+                return ResourceManager.GetString("ToolTip_UnitBilling", resourceCulture);
             }
         }
         

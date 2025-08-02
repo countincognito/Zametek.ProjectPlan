@@ -92,6 +92,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_HasNoBilling;
+        public bool HasNoBilling
+        {
+            get => m_HasNoBilling;
+            set
+            {
+                m_HasNoBilling = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsHasNoBillingActive;
+        public bool IsHasNoBillingActive
+        {
+            get => m_IsHasNoBillingActive;
+            set
+            {
+                m_IsHasNoBillingActive = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         private bool m_HasNoEffort;
         public bool HasNoEffort
         {
@@ -152,6 +174,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 HasNoCost = HasNoCost,
                 IsHasNoCostEdited = IsHasNoCostActive,
+
+                HasNoBilling = HasNoBilling,
+                IsHasNoBillingEdited = IsHasNoBillingActive,
 
                 HasNoEffort = HasNoEffort,
                 IsHasNoEffortEdited = IsHasNoEffortActive,

@@ -38,6 +38,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_IsInactive = resource.IsInactive;
             m_InterActivityAllocationType = resource.InterActivityAllocationType;
             m_UnitCost = resource.UnitCost;
+            m_UnitBilling = resource.UnitBilling;
             m_AllocationOrder = resource.AllocationOrder;
             m_DisplayOrder = resource.DisplayOrder;
             m_ColorFormat = resource.ColorFormat;
@@ -184,9 +185,23 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (value < 0)
                 {
-                    throw new DataValidationException(Resource.ProjectPlan.Messages.Message_UnitCostMustBeGreaterThanZero);
+                    throw new DataValidationException(Resource.ProjectPlan.Messages.Message_UnitCostMustBeZeroOrGreater);
                 }
                 this.RaiseAndSetIfChanged(ref m_UnitCost, value);
+            }
+        }
+
+        private double m_UnitBilling;
+        public double UnitBilling
+        {
+            get => m_UnitBilling;
+            set
+            {
+                if (value < 0)
+                {
+                    throw new DataValidationException(Resource.ProjectPlan.Messages.Message_UnitBillingMustBeZeroOrGreater);
+                }
+                this.RaiseAndSetIfChanged(ref m_UnitBilling, value);
             }
         }
 
@@ -231,7 +246,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public object CloneObject()
         {
-            return new Resource<int, int>(Id, Name, IsExplicitTarget, IsInactive, InterActivityAllocationType, UnitCost, AllocationOrder, InterActivityPhases);
+            return new Resource<int, int>(Id, Name, IsExplicitTarget, IsInactive, InterActivityAllocationType, UnitCost, UnitBilling, AllocationOrder, InterActivityPhases);
         }
 
         #endregion

@@ -174,6 +174,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                     IsExplicitTarget = false,
                                     IsInactive = false,
                                     UnitCost = DefaultUnitCost,
+                                    UnitBilling = DefaultUnitBilling,
                                     ColorFormat = ColorHelper.Random(),
                                     Trackers = []
                                 }));
@@ -301,6 +302,10 @@ namespace Zametek.ViewModel.ProjectPlan
                             {
                                 resource.UnitCost = updateModel.UnitCost;
                             }
+                            if (updateModel.IsUnitBillingEdited)
+                            {
+                                resource.UnitBilling = updateModel.UnitBilling;
+                            }
                             if (updateModel.IsInterActivityPhasesEdited)
                             {
                                 resource.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateModel.InterActivityPhases]);
@@ -329,12 +334,14 @@ namespace Zametek.ViewModel.ProjectPlan
                         InterActivityAllocationType = x.InterActivityAllocationType,
                         InterActivityPhases = [.. x.InterActivityPhases],
                         UnitCost = x.UnitCost,
+                        UnitBilling = x.UnitBilling,
                         DisplayOrder = x.DisplayOrder,
                         ColorFormat = x.ColorFormat,
                         Trackers = x.TrackerSet.Trackers,
                     }).ToList(),
 
                     DefaultUnitCost = DefaultUnitCost,
+                    DefaultUnitBilling = DefaultUnitBilling,
                     AreDisabled = DisableResources
                 };
 
@@ -354,6 +361,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_DefaultUnitCost = resourceSettings.DefaultUnitCost;
                 this.RaisePropertyChanged(nameof(DefaultUnitCost));
+
+                m_DefaultUnitBilling = resourceSettings.DefaultUnitBilling;
+                this.RaisePropertyChanged(nameof(DefaultUnitBilling));
 
                 m_DisableResources = resourceSettings.AreDisabled;
                 this.RaisePropertyChanged(nameof(DisableResources));
@@ -424,12 +434,31 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (value < 0)
                 {
-                    throw new DataValidationException(Resource.ProjectPlan.Messages.Message_UnitCostMustBeGreaterThanZero);
+                    throw new DataValidationException(Resource.ProjectPlan.Messages.Message_UnitCostMustBeZeroOrGreater);
                 }
 
                 if (m_DefaultUnitCost != value)
                 {
                     this.RaiseAndSetIfChanged(ref m_DefaultUnitCost, value);
+                    AreSettingsUpdated = true;
+                }
+            }
+        }
+
+        private double m_DefaultUnitBilling;
+        public double DefaultUnitBilling
+        {
+            get => m_DefaultUnitBilling;
+            set
+            {
+                if (value < 0)
+                {
+                    throw new DataValidationException(Resource.ProjectPlan.Messages.Message_UnitBillingMustBeZeroOrGreater);
+                }
+
+                if (m_DefaultUnitBilling != value)
+                {
+                    this.RaiseAndSetIfChanged(ref m_DefaultUnitBilling, value);
                     AreSettingsUpdated = true;
                 }
             }

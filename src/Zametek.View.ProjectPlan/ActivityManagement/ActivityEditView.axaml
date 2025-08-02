@@ -23,6 +23,7 @@
 			<RowDefinition Height="36"/>
 			<RowDefinition Height="36"/>
 			<RowDefinition Height="36"/>
+			<RowDefinition Height="36"/>
 		</Grid.RowDefinitions>
 
 		<Label Grid.Row="0" Grid.Column="0"
@@ -136,7 +137,7 @@
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
-			   Content="{x:Static resources:Labels.Label_HasNoEffort}"/>
+			   Content="{x:Static resources:Labels.Label_HasNoBilling}"/>
 
 		<ToggleSwitch Grid.Row="3" Grid.Column="1"
 					  VerticalAlignment="Center"
@@ -145,9 +146,37 @@
 				      Padding="3"
 				      OffContent="{x:Static resources:Labels.Label_Off}"
 				      OnContent="{x:Static resources:Labels.Label_On}"
-					  IsChecked="{Binding Path=IsHasNoEffortActive, Mode=TwoWay}"/>
+					  IsChecked="{Binding Path=IsHasNoBillingActive, Mode=TwoWay}"/>
 
 		<ToggleSwitch Grid.Row="3" Grid.Column="2"
+					  Margin="3"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Padding="0"
+					  OffContent="{x:Static resources:Labels.Label_No}"
+					  OnContent="{x:Static resources:Labels.Label_Yes}"
+					  IsChecked="{Binding Path=HasNoBilling, Mode=TwoWay}"
+					  IsEnabled="{Binding Path=IsHasNoBillingActive, Mode=OneWay}"/>
+
+		
+
+		<Label Grid.Row="4" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_HasNoEffort}"/>
+
+		<ToggleSwitch Grid.Row="4" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsHasNoEffortActive, Mode=TwoWay}"/>
+
+		<ToggleSwitch Grid.Row="4" Grid.Column="2"
 					  Margin="3"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
@@ -159,14 +188,14 @@
 
 
 
-		<Label Grid.Row="4" Grid.Column="0"
+		<Label Grid.Row="5" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_TargetResourceOperator}"/>
 
-		<ToggleSwitch Grid.Row="4" Grid.Column="1"
+		<ToggleSwitch Grid.Row="5" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
@@ -175,7 +204,7 @@
 				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsTargetResourceOperatorActive, Mode=TwoWay}"/>
 
-		<ComboBox Grid.Row="4" Grid.Column="2"
+		<ComboBox Grid.Row="5" Grid.Column="2"
 				  Margin="3"
 				  ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:LogicalOperator}}}"
 				  SelectedItem="{Binding Path=TargetResourceOperator, Mode=TwoWay}"

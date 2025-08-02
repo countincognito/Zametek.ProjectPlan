@@ -247,6 +247,34 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<v0_4_2.ProjectPlanModel, v0_4_3.ProjectPlanModel>().ReverseMap();
 
             #endregion
+
+            #region v0.4.4
+
+            CreateMap<ActivityModel, v0_4_4.ActivityModel>().ReverseMap();
+            CreateMap<v0_4_0.ActivityModel, v0_4_4.ActivityModel>().ReverseMap();
+
+            CreateMap<ScheduledActivityModel, v0_4_4.ScheduledActivityModel>().ReverseMap();
+            CreateMap<v0_4_0.ScheduledActivityModel, v0_4_4.ScheduledActivityModel>().ReverseMap();
+
+            CreateMap<DependentActivityModel, v0_4_4.DependentActivityModel>().ReverseMap();
+            CreateMap<v0_4_3.DependentActivityModel, v0_4_4.DependentActivityModel>().ReverseMap();
+
+            CreateMap<GraphCompilationModel, v0_4_4.GraphCompilationModel>().ReverseMap();
+            CreateMap<v0_4_3.GraphCompilationModel, v0_4_4.GraphCompilationModel>().ReverseMap();
+
+            CreateMap<ResourceModel, v0_4_4.ResourceModel>().ReverseMap();
+            CreateMap<v0_4_0.ResourceModel, v0_4_4.ResourceModel>().ReverseMap();
+
+            CreateMap<ResourceScheduleModel, v0_4_4.ResourceScheduleModel>().ReverseMap();
+            CreateMap<v0_4_3.ResourceScheduleModel, v0_4_4.ResourceScheduleModel>().ReverseMap();
+
+            CreateMap<ResourceSettingsModel, v0_4_4.ResourceSettingsModel>().ReverseMap();
+            CreateMap<v0_4_0.ResourceSettingsModel, v0_4_4.ResourceSettingsModel>().ReverseMap();
+
+            CreateMap<ProjectPlanModel, v0_4_4.ProjectPlanModel>().ReverseMap();
+            CreateMap<v0_4_3.ProjectPlanModel, v0_4_4.ProjectPlanModel>().ReverseMap();
+
+            #endregion
         }
     }
 }

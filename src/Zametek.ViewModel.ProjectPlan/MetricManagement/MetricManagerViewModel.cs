@@ -44,6 +44,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_Metrics = new MetricsModel();
             m_Costs = new CostsModel();
+            m_Billings = new BillingsModel();
             m_Efforts = new EffortsModel();
 
             m_IsBusy = this
@@ -165,6 +166,22 @@ namespace Zametek.ViewModel.ProjectPlan
                  .WhenAnyValue(mm => mm.Costs, costs => costs.Direct + costs.Indirect + costs.Other)
                  .ToProperty(this, mm => mm.TotalCost);
 
+            m_DirectBilling = this
+                 .WhenAnyValue(mm => mm.Billings, billings => billings.Direct)
+                 .ToProperty(this, mm => mm.DirectBilling);
+
+            m_IndirectBilling = this
+                 .WhenAnyValue(mm => mm.Billings, billings => billings.Indirect)
+                 .ToProperty(this, mm => mm.IndirectBilling);
+
+            m_OtherBilling = this
+                 .WhenAnyValue(mm => mm.Billings, billings => billings.Other)
+                 .ToProperty(this, mm => mm.OtherBilling);
+
+            m_TotalBilling = this
+                 .WhenAnyValue(mm => mm.Billings, billings => billings.Direct + billings.Indirect + billings.Other)
+                 .ToProperty(this, mm => mm.TotalBilling);
+
             m_DirectEffort = this
                  .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Direct)
                  .ToProperty(this, mm => mm.DirectEffort);
@@ -218,6 +235,16 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 lock (m_Lock) this.RaiseAndSetIfChanged(ref m_Costs, value);
+            }
+        }
+
+        private BillingsModel m_Billings;
+        public BillingsModel Billings
+        {
+            get => m_Billings;
+            set
+            {
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_Billings, value);
             }
         }
 
@@ -431,6 +458,36 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
+        private static BillingsModel CalculateProjectBillings(IList<ResourceSeriesModel> resourceSeriesModels)
+        {
+            ArgumentNullException.ThrowIfNull(resourceSeriesModels);
+
+            return new BillingsModel
+            {
+                Direct = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitBilling : 0.0;
+                        return x.ResourceSchedule.BillingAllocation.Sum(accumulator);
+                    }),
+                Indirect = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitBilling : 0.0;
+                        return x.ResourceSchedule.BillingAllocation.Sum(accumulator);
+                    }),
+                Other = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitBilling : 0.0;
+                        return x.ResourceSchedule.BillingAllocation.Sum(accumulator);
+                    })
+            };
+        }
+
         private static EffortsModel CalculateProjectEfforts(IList<ResourceSeriesModel> resourceSeriesModels)
         {
             ArgumentNullException.ThrowIfNull(resourceSeriesModels);
@@ -459,7 +516,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    BuildCostsAndEfforts();
+                    BuildCostsBillingsAndEfforts();
                 }
             }
             catch (Exception ex)
@@ -529,6 +586,18 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<double?> m_TotalCost;
         public double? TotalCost => m_TotalCost.Value;
 
+        private readonly ObservableAsPropertyHelper<double?> m_DirectBilling;
+        public double? DirectBilling => m_DirectBilling.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_IndirectBilling;
+        public double? IndirectBilling => m_IndirectBilling.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_OtherBilling;
+        public double? OtherBilling => m_OtherBilling.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_TotalBilling;
+        public double? TotalBilling => m_TotalBilling.Value;
+
         private readonly ObservableAsPropertyHelper<double?> m_DirectEffort;
         public double? DirectEffort => m_DirectEffort.Value;
 
@@ -574,9 +643,10 @@ namespace Zametek.ViewModel.ProjectPlan
             Metrics = metricsModel;
         }
 
-        public void BuildCostsAndEfforts()
+        public void BuildCostsBillingsAndEfforts()
         {
             var costsModel = new CostsModel();
+            var billingsModel = new BillingsModel();
             var effortsModel = new EffortsModel();
 
             lock (m_Lock)
@@ -588,12 +658,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (!HasCompilationErrors)
                     {
                         costsModel = CalculateProjectCosts(combinedResourceSeriesModels);
+                        billingsModel = CalculateProjectBillings(combinedResourceSeriesModels);
                         effortsModel = CalculateProjectEfforts(combinedResourceSeriesModels);
                     }
                 }
             }
 
             Costs = costsModel;
+            Billings = billingsModel;
             Efforts = effortsModel;
         }
 

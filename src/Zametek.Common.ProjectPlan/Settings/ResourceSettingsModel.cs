@@ -7,6 +7,8 @@
 
         public double DefaultUnitCost { get; init; }
 
+        public double DefaultUnitBilling { get; init; }
+
         public bool AreDisabled { get; init; }
     }
 }

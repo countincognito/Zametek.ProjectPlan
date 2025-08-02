@@ -15,6 +15,9 @@ namespace Zametek.Contract.ProjectPlan
         bool HasNoCost { get; set; }
         bool IsHasNoCostActive { get; set; }
 
+        bool HasNoBilling { get; set; }
+        bool IsHasNoBillingActive { get; set; }
+
         bool HasNoEffort { get; set; }
         bool IsHasNoEffortActive { get; set; }
 

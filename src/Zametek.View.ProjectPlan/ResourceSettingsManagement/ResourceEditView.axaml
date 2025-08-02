@@ -23,6 +23,7 @@
 			<RowDefinition Height="36"/>
 			<RowDefinition Height="36"/>
 			<RowDefinition Height="36"/>
+			<RowDefinition Height="36"/>
 		</Grid.RowDefinitions>
 
 		<Label Grid.Row="0" Grid.Column="0"
@@ -175,5 +176,32 @@
 							   Padding="0"
 							   Minimum="0"/>
 
+
+
+		<Label Grid.Row="5" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_UnitBilling}"/>
+
+		<ToggleSwitch Grid.Row="5" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsUnitBillingActive, Mode=TwoWay}"/>
+
+		<u:NumericDoubleUpDown Grid.Row="5" Grid.Column="2"
+							   IsEnabled="{Binding Path=IsUnitBillingActive, Mode=OneWay}"
+							   Value="{Binding Path=UnitBilling, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+							   VerticalAlignment="Center"
+							   ShowButtonSpinner="False"
+							   Focusable="True"
+							   Margin="3"
+							   Padding="0"
+							   Minimum="0"/>
 	</Grid>
 </UserControl>
