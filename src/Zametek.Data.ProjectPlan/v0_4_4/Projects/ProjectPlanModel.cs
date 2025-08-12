@@ -17,7 +17,7 @@
 
         public v0_3_2.WorkStreamSettingsModel WorkStreamSettings { get; init; } = new();
 
-        public v0_4_1.DisplaySettingsModel DisplaySettings { get; init; } = new();
+        public DisplaySettingsModel DisplaySettings { get; init; } = new();
 
         public GraphCompilationModel GraphCompilation { get; init; } = new();
 

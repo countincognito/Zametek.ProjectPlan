@@ -44,6 +44,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool DefaultUseBusinessDays { get; set; }
 
+        bool DefaultHideCost { get; set; }
+
+        bool DefaultHideBilling { get; set; }
+
         bool AutoCompile { get; set; }
 
         string SelectedTheme { get; set; }
@@ -68,11 +72,19 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ToggleUseBusinessDaysCommand { get; }
 
+        ICommand ToggleHideCostCommand { get; }
+
+        ICommand ToggleHideBillingCommand { get; }
+
         ICommand ToggleDefaultShowDatesCommand { get; }
 
         ICommand ToggleDefaultUseClassicDatesCommand { get; }
 
         ICommand ToggleDefaultUseBusinessDaysCommand { get; }
+
+        ICommand ToggleDefaultHideCostCommand { get; }
+
+        ICommand ToggleDefaultHideBillingCommand { get; }
 
         ICommand ChangeThemeCommand { get; }
 

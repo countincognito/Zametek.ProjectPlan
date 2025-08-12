@@ -35,6 +35,8 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ProjectPlanModel.DisplaySettings.ShowDates),
             nameof(ProjectPlanModel.DisplaySettings.UseClassicDates),
             nameof(ProjectPlanModel.DisplaySettings.UseBusinessDays),
+            nameof(ProjectPlanModel.DisplaySettings.HideCost),
+            nameof(ProjectPlanModel.DisplaySettings.HideBilling),
         ];
 
         private static readonly IList<string> s_ActivityColumnTitles =
@@ -285,6 +287,8 @@ namespace Zametek.ViewModel.ProjectPlan
             bool showDates = m_SettingService.DefaultShowDates;
             bool useClassicDates = m_SettingService.DefaultUseClassicDates;
             bool useBusinessDays = m_SettingService.DefaultUseBusinessDays;
+            bool hideCost = m_SettingService.DefaultHideCost;
+            bool hideBilling = m_SettingService.DefaultHideBilling;
 
             return new ProjectImportModel
             {
@@ -300,6 +304,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     ShowDates = showDates,
                     UseClassicDates = useClassicDates,
                     UseBusinessDays = useBusinessDays,
+                    HideCost = hideCost,
+                    HideBilling = hideBilling,
                 }
             };
         }
@@ -360,6 +366,8 @@ namespace Zametek.ViewModel.ProjectPlan
             bool showDates = false;
             bool useClassicDates = false;
             bool useBusinessDays = false;
+            bool hideCost = false;
+            bool hideBilling = false;
 
             {
                 ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetDisplaySettings);
@@ -406,6 +414,22 @@ namespace Zametek.ViewModel.ProjectPlan
                                         if (bool.TryParse(row[name]?.ToString(), out bool output))
                                         {
                                             useBusinessDays = output;
+                                        }
+                                    })
+                                .Case(nameof(ProjectImportModel.DisplaySettings.HideCost),
+                                    name =>
+                                    {
+                                        if (bool.TryParse(row[name]?.ToString(), out bool output))
+                                        {
+                                            hideCost = output;
+                                        }
+                                    })
+                                .Case(nameof(ProjectImportModel.DisplaySettings.HideBilling),
+                                    name =>
+                                    {
+                                        if (bool.TryParse(row[name]?.ToString(), out bool output))
+                                        {
+                                            hideBilling = output;
                                         }
                                     });
                         }
@@ -501,6 +525,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     ShowDates = showDates,
                     UseClassicDates = useClassicDates,
                     UseBusinessDays = useBusinessDays,
+                    HideCost = hideCost,
+                    HideBilling = hideBilling,
                 }
             };
         }

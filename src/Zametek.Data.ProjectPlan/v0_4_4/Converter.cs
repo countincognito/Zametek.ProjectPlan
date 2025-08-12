@@ -46,6 +46,8 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
                 Resources = resources,
             };
 
+            DisplaySettingsModel displaySettings = mapper.Map<v0_4_1.DisplaySettingsModel, DisplaySettingsModel>(projectPlan.DisplaySettings ?? new());
+
             var plan = new ProjectPlanModel
             {
                 ProjectStart = projectPlan.ProjectStart,
@@ -54,13 +56,21 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
                 ArrowGraphSettings = projectPlan.ArrowGraphSettings ?? new(),
                 ResourceSettings = resourceSettings,
                 WorkStreamSettings = projectPlan.WorkStreamSettings ?? new(),
-                DisplaySettings = projectPlan.DisplaySettings ?? new(),
+                DisplaySettings = displaySettings,
                 GraphCompilation = graphCompilation,
                 ArrowGraph = projectPlan.ArrowGraph ?? new(),
                 HasStaleOutputs = projectPlan.HasStaleOutputs,
             };
 
             return plan;
+        }
+
+        public static AppSettingsModel Upgrade(
+            IMapper mapper,
+            v0_4_1.AppSettingsModel appSettingsModel)
+        {
+            AppSettingsModel appSettings = mapper.Map<v0_4_1.AppSettingsModel, AppSettingsModel>(appSettingsModel);
+            return appSettings;
         }
     }
 }

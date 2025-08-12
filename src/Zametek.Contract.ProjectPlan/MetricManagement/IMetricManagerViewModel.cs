@@ -9,6 +9,12 @@
 
         bool HasCompilationErrors { get; }
 
+        bool HideCost { get; }
+
+        bool HideBilling { get; }
+
+        bool HideMargin { get; }
+
         double? CriticalityRisk { get; }
 
         double? FibonacciRisk { get; }
@@ -46,6 +52,14 @@
         double? OtherBilling { get; }
 
         double? TotalBilling { get; }
+
+        double? DirectMargin { get; }
+
+        double? IndirectMargin { get; }
+
+        double? OtherMargin { get; }
+
+        double? TotalMargin { get; }
 
         double? DirectEffort { get; }
 

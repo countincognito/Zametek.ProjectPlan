@@ -63,6 +63,21 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(mm => mm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, mm => mm.HasCompilationErrors);
 
+            m_HideCost = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.DisplaySettingsViewModel.HideCost)
+                .ToProperty(this, mm => mm.HideCost);
+
+            m_HideBilling = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.DisplaySettingsViewModel.HideBilling)
+                .ToProperty(this, mm => mm.HideBilling);
+
+            m_HideMargin = this
+                .WhenAnyValue(
+                    mm => mm.HideCost,
+                    mm => mm.HideBilling,
+                    (hideCost, hideBilling) => hideCost || hideBilling)
+                .ToProperty(this, mm => mm.HideMargin);
+
             m_BuildMetricsSub = this
                 .WhenAnyValue(
                     mm => mm.m_CoreViewModel.GraphCompilation,
@@ -181,6 +196,44 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TotalBilling = this
                  .WhenAnyValue(mm => mm.Billings, billings => billings.Direct + billings.Indirect + billings.Other)
                  .ToProperty(this, mm => mm.TotalBilling);
+
+            static double? CalculateMargin(double? cost, double? billing)
+            {
+                if (cost is not null
+                    && billing is not null)
+                {
+                    return (billing - cost) / billing;
+                }
+                return null;
+            }
+
+            m_DirectMargin = this
+                 .WhenAnyValue(
+                    mm => mm.DirectCost,
+                    mm => mm.DirectBilling,
+                    CalculateMargin)
+                 .ToProperty(this, mm => mm.DirectMargin);
+
+            m_IndirectMargin = this
+                 .WhenAnyValue(
+                    mm => mm.IndirectCost,
+                    mm => mm.IndirectBilling,
+                    CalculateMargin)
+                 .ToProperty(this, mm => mm.IndirectMargin);
+
+            m_OtherMargin = this
+                 .WhenAnyValue(
+                    mm => mm.OtherCost,
+                    mm => mm.OtherBilling,
+                    CalculateMargin)
+                 .ToProperty(this, mm => mm.OtherMargin);
+
+            m_TotalMargin = this
+                 .WhenAnyValue(
+                    mm => mm.TotalCost,
+                    mm => mm.TotalBilling,
+                    CalculateMargin)
+                 .ToProperty(this, mm => mm.TotalMargin);
 
             m_DirectEffort = this
                  .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Direct)
@@ -541,6 +594,15 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
+        private readonly ObservableAsPropertyHelper<bool> m_HideCost;
+        public bool HideCost => m_HideCost.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HideBilling;
+        public bool HideBilling => m_HideBilling.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HideMargin;
+        public bool HideMargin => m_HideMargin.Value;
+
         private readonly ObservableAsPropertyHelper<double?> m_CriticalityRisk;
         public double? CriticalityRisk => m_CriticalityRisk.Value;
 
@@ -597,6 +659,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<double?> m_TotalBilling;
         public double? TotalBilling => m_TotalBilling.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_DirectMargin;
+        public double? DirectMargin => m_DirectMargin.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_IndirectMargin;
+        public double? IndirectMargin => m_IndirectMargin.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_OtherMargin;
+        public double? OtherMargin => m_OtherMargin.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_TotalMargin;
+        public double? TotalMargin => m_TotalMargin.Value;
 
         private readonly ObservableAsPropertyHelper<double?> m_DirectEffort;
         public double? DirectEffort => m_DirectEffort.Value;

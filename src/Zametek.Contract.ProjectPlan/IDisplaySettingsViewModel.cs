@@ -8,6 +8,8 @@ namespace Zametek.Contract.ProjectPlan
         bool ShowDates { get; set; }
         bool UseClassicDates { get; set; }
         bool UseBusinessDays { get; set; }
+        bool HideCost { get; set; }
+        bool HideBilling { get; set; }
 
 
         bool ArrowGraphShowNames { get; set; }

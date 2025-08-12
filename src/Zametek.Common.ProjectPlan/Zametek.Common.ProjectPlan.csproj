@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Zametek.Maths.Graphs.Primitives" Version="2.4.6" />
+    <PackageReference Include="Zametek.Maths.Graphs.Primitives" Version="2.4.7-alpha.1" />
   </ItemGroup>
 
 </Project>

@@ -123,6 +123,34 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_HideCost;
+        public bool HideCost
+        {
+            get => m_HideCost;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_HideCost = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        private bool m_HideBilling;
+        public bool HideBilling
+        {
+            get => m_HideBilling;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_HideBilling = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
 
 
         private bool m_ArrowGraphShowNames;
@@ -331,6 +359,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     UseBusinessDays = model.UseBusinessDays;
                 }
+                if (HideCost != model.HideCost)
+                {
+                    HideCost = model.HideCost;
+                }
+                if (HideBilling != model.HideBilling)
+                {
+                    HideBilling = model.HideBilling;
+                }
 
 
                 if (ArrowGraphShowNames != model.ArrowGraphShowNames)
@@ -403,6 +439,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     ShowDates = ShowDates,
                     UseClassicDates = UseClassicDates,
                     UseBusinessDays = UseBusinessDays,
+                    HideCost = HideCost,
+                    HideBilling = HideBilling,
 
                     ArrowGraphShowNames = ArrowGraphShowNames,
 

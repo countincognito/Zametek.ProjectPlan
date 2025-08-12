@@ -84,10 +84,16 @@ namespace Zametek.Data.ProjectPlan
 
         #region AppSettingsModels
 
-        public static v0_4_1.AppSettingsModel Format(Common.ProjectPlan.AppSettingsModel appSettings)
+        public static v0_4_4.AppSettingsModel Format(Common.ProjectPlan.AppSettingsModel appSettings)
         {
             ArgumentNullException.ThrowIfNull(appSettings);
-            return m_Mapper.Map<Common.ProjectPlan.AppSettingsModel, v0_4_1.AppSettingsModel>(appSettings);
+            return m_Mapper.Map<Common.ProjectPlan.AppSettingsModel, v0_4_4.AppSettingsModel>(appSettings);
+        }
+
+        public static Common.ProjectPlan.AppSettingsModel Upgrade(v0_4_4.AppSettingsModel appSettings)
+        {
+            ArgumentNullException.ThrowIfNull(appSettings);
+            return m_Mapper.Map<v0_4_4.AppSettingsModel, Common.ProjectPlan.AppSettingsModel>(appSettings);
         }
 
         public static Common.ProjectPlan.AppSettingsModel Upgrade(v0_4_1.AppSettingsModel appSettings)

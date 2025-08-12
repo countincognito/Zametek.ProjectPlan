@@ -11,6 +11,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
+        bool HideCost { get; }
+
+        bool HideBilling { get; }
+
         bool HasSelectedResources { get; }
 
         double DefaultUnitCost { get; set; }

@@ -268,6 +268,12 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<ResourceScheduleModel, v0_4_4.ResourceScheduleModel>().ReverseMap();
             CreateMap<v0_4_3.ResourceScheduleModel, v0_4_4.ResourceScheduleModel>().ReverseMap();
 
+            CreateMap<AppSettingsModel, v0_4_4.AppSettingsModel>().ReverseMap();
+            CreateMap<v0_4_1.AppSettingsModel, v0_4_4.AppSettingsModel>().ReverseMap();
+
+            CreateMap<DisplaySettingsModel, v0_4_4.DisplaySettingsModel>().ReverseMap();
+            CreateMap<v0_4_1.DisplaySettingsModel, v0_4_4.DisplaySettingsModel>().ReverseMap();
+
             CreateMap<ResourceSettingsModel, v0_4_4.ResourceSettingsModel>().ReverseMap();
             CreateMap<v0_4_0.ResourceSettingsModel, v0_4_4.ResourceSettingsModel>().ReverseMap();
 

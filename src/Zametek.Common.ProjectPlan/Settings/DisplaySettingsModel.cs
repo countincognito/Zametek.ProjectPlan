@@ -9,6 +9,10 @@
 
         public bool UseBusinessDays { get; init; } = default;
 
+        public bool HideCost { get; init; } = default;
+
+        public bool HideBilling { get; init; } = default;
+
 
 
         public bool ArrowGraphShowNames { get; init; } = default;

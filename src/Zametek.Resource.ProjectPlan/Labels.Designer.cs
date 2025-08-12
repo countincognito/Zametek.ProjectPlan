@@ -430,6 +430,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Direct Margin:.
+        /// </summary>
+        public static string Label_DirectMargin {
+            get {
+                return ResourceManager.GetString("Label_DirectMargin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Disable Resources.
         /// </summary>
         public static string Label_DisableResources {
@@ -700,6 +709,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Indirect Margin:.
+        /// </summary>
+        public static string Label_IndirectMargin {
+            get {
+                return ResourceManager.GetString("Label_IndirectMargin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Inter-activity Allocation.
         /// </summary>
         public static string Label_InterActivityAllocationType {
@@ -913,6 +931,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_OtherEffort {
             get {
                 return ResourceManager.GetString("Label_OtherEffort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Other Margin:.
+        /// </summary>
+        public static string Label_OtherMargin {
+            get {
+                return ResourceManager.GetString("Label_OtherMargin", resourceCulture);
             }
         }
         
@@ -1246,6 +1273,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_TotalEffort {
             get {
                 return ResourceManager.GetString("Label_TotalEffort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Margin:.
+        /// </summary>
+        public static string Label_TotalMargin {
+            get {
+                return ResourceManager.GetString("Label_TotalMargin", resourceCulture);
             }
         }
         

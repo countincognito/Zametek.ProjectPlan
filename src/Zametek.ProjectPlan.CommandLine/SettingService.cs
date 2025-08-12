@@ -12,6 +12,8 @@ namespace Zametek.ProjectPlan.CommandLine
         private bool m_DefaultShowDates;
         private bool m_DefaultUseClassicDates;
         private bool m_DefaultUseBusinessDays;
+        private bool m_DefaultHideCost;
+        private bool m_DefaultHideBilling;
         private string m_SelectedTheme;
 
         #endregion
@@ -89,6 +91,36 @@ namespace Zametek.ProjectPlan.CommandLine
                 lock (m_Lock)
                 {
                     m_DefaultUseBusinessDays = value;
+                }
+            }
+        }
+
+        public override bool DefaultHideCost
+        {
+            get
+            {
+                return m_DefaultHideCost;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_DefaultHideCost = value;
+                }
+            }
+        }
+
+        public override bool DefaultHideBilling
+        {
+            get
+            {
+                return m_DefaultHideBilling;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_DefaultHideBilling = value;
                 }
             }
         }

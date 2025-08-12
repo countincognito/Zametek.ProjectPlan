@@ -1,9 +1,9 @@
-﻿namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Data.ProjectPlan.v0_4_4
 {
     [Serializable]
     public record AppSettingsModel
     {
-        public string Version { get; init; } = string.Empty;
+        public string Version { get; } = Versions.v0_4_4;
 
         public string ProjectPlanDirectory { get; init; } = string.Empty;
 

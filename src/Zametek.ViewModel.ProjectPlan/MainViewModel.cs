@@ -146,9 +146,15 @@ namespace Zametek.ViewModel.ProjectPlan
             ToggleShowDatesCommand = ReactiveCommand.Create(ToggleShowDates);
             ToggleUseClassicDatesCommand = ReactiveCommand.Create(ToggleUseClassicDates);
             ToggleUseBusinessDaysCommand = ReactiveCommand.Create(ToggleUseBusinessDays);
+            ToggleHideCostCommand = ReactiveCommand.Create(ToggleHideCost);
+            ToggleHideBillingCommand = ReactiveCommand.Create(ToggleHideBilling);
+
             ToggleDefaultShowDatesCommand = ReactiveCommand.Create(ToggleDefaultShowDates);
             ToggleDefaultUseClassicDatesCommand = ReactiveCommand.Create(ToggleDefaultUseClassicDates);
             ToggleDefaultUseBusinessDaysCommand = ReactiveCommand.Create(ToggleDefaultUseBusinessDays);
+            ToggleDefaultHideCostCommand = ReactiveCommand.Create(ToggleDefaultHideCost);
+            ToggleDefaultHideBillingCommand = ReactiveCommand.Create(ToggleDefaultHideBilling);
+
             ChangeThemeCommand = ReactiveCommand.CreateFromTask<string>(ChangeThemeAsync);
 
             CompileCommand = ReactiveCommand.CreateFromTask(ForceCompileAsync);
@@ -201,6 +207,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays)
                 .ToProperty(this, main => main.UseBusinessDays);
 
+            m_HideCost = this
+                .WhenAnyValue(main => main.m_CoreViewModel.DisplaySettingsViewModel.HideCost)
+                .ToProperty(this, main => main.HideCost);
+
+            m_HideBilling = this
+                .WhenAnyValue(main => main.m_CoreViewModel.DisplaySettingsViewModel.HideBilling)
+                .ToProperty(this, main => main.HideBilling);
+
             m_DefaultShowDates = this
                 .WhenAnyValue(main => main.m_CoreViewModel.DefaultShowDates)
                 .ToProperty(this, main => main.DefaultShowDates);
@@ -212,6 +226,14 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DefaultUseBusinessDays = this
                 .WhenAnyValue(main => main.m_CoreViewModel.DefaultUseBusinessDays)
                 .ToProperty(this, main => main.DefaultUseBusinessDays);
+
+            m_DefaultHideCost = this
+                .WhenAnyValue(main => main.m_CoreViewModel.DefaultHideCost)
+                .ToProperty(this, main => main.DefaultHideCost);
+
+            m_DefaultHideBilling = this
+                .WhenAnyValue(main => main.m_CoreViewModel.DefaultHideBilling)
+                .ToProperty(this, main => main.DefaultHideBilling);
 
             m_AutoCompile = this
                 .WhenAnyValue(main => main.m_CoreViewModel.AutoCompile)
@@ -232,6 +254,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 ShowDates = m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                 UseClassicDates = m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
                 UseBusinessDays = m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
+                HideCost = m_CoreViewModel.DisplaySettingsViewModel.HideCost,
+                HideBilling = m_CoreViewModel.DisplaySettingsViewModel.HideBilling,
             };
 
             m_CoreViewModel.DisplaySettingsViewModel.SetValues(displaySettings);
@@ -366,11 +390,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleUseBusinessDays() => UseBusinessDays = !UseBusinessDays;
 
+        private void ToggleHideCost() => HideCost = !HideCost;
+
+        private void ToggleHideBilling() => HideBilling = !HideBilling;
+
         private void ToggleDefaultShowDates() => DefaultShowDates = !DefaultShowDates;
 
         private void ToggleDefaultUseClassicDates() => DefaultUseClassicDates = !DefaultUseClassicDates;
 
         private void ToggleDefaultUseBusinessDays() => DefaultUseBusinessDays = !DefaultUseBusinessDays;
+
+        private void ToggleDefaultHideCost() => DefaultHideCost = !DefaultHideCost;
+
+        private void ToggleDefaultHideBilling() => DefaultHideBilling = !DefaultHideBilling;
 
         private void ToggleAutoCompile() => AutoCompile = !AutoCompile;
 
@@ -528,6 +560,26 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_HideCost;
+        public bool HideCost
+        {
+            get => m_HideCost.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.HideCost = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_HideBilling;
+        public bool HideBilling
+        {
+            get => m_HideBilling.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.HideBilling = value;
+            }
+        }
+
         private readonly ObservableAsPropertyHelper<bool> m_DefaultShowDates;
         public bool DefaultShowDates
         {
@@ -555,6 +607,26 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 lock (m_Lock) m_CoreViewModel.DefaultUseBusinessDays = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_DefaultHideCost;
+        public bool DefaultHideCost
+        {
+            get => m_DefaultHideCost.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DefaultHideCost = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_DefaultHideBilling;
+        public bool DefaultHideBilling
+        {
+            get => m_DefaultHideBilling.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DefaultHideBilling = value;
             }
         }
 
@@ -606,11 +678,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ToggleUseBusinessDaysCommand { get; }
 
+        public ICommand ToggleHideCostCommand { get; }
+
+        public ICommand ToggleHideBillingCommand { get; }
+
         public ICommand ToggleDefaultShowDatesCommand { get; }
 
         public ICommand ToggleDefaultUseClassicDatesCommand { get; }
 
         public ICommand ToggleDefaultUseBusinessDaysCommand { get; }
+
+        public ICommand ToggleDefaultHideCostCommand { get; }
+
+        public ICommand ToggleDefaultHideBillingCommand { get; }
 
         public ICommand ChangeThemeCommand { get; }
 

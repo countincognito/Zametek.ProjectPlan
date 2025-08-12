@@ -147,6 +147,12 @@
   <data name="Menu_Help" xml:space="preserve">
     <value>Help</value>
   </data>
+  <data name="Menu_HideBilling" xml:space="preserve">
+    <value>Hide Billing</value>
+  </data>
+  <data name="Menu_HideCost" xml:space="preserve">
+    <value>Hide Cost</value>
+  </data>
   <data name="Menu_Import" xml:space="preserve">
     <value>_Import...</value>
   </data>

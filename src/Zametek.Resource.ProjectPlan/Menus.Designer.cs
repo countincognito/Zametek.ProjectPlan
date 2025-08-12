@@ -151,6 +151,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hide Billing.
+        /// </summary>
+        public static string Menu_HideBilling {
+            get {
+                return ResourceManager.GetString("Menu_HideBilling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide Cost.
+        /// </summary>
+        public static string Menu_HideCost {
+            get {
+                return ResourceManager.GetString("Menu_HideCost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Import....
         /// </summary>
         public static string Menu_Import {

@@ -75,6 +75,8 @@ namespace Zametek.ViewModel.ProjectPlan
             DisplaySettingsViewModel.ShowDates = m_SettingService.DefaultShowDates;
             DisplaySettingsViewModel.UseClassicDates = m_SettingService.DefaultUseClassicDates;
             DisplaySettingsViewModel.UseBusinessDays = m_SettingService.DefaultUseBusinessDays;
+            DisplaySettingsViewModel.HideCost = m_SettingService.DefaultHideCost;
+            DisplaySettingsViewModel.HideBilling = m_SettingService.DefaultHideBilling;
 
             m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
             m_ArrowGraph = new ArrowGraphModel();
@@ -1061,6 +1063,32 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public bool DefaultHideCost
+        {
+            get => m_SettingService.DefaultHideCost;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_SettingService.DefaultHideCost = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        public bool DefaultHideBilling
+        {
+            get => m_SettingService.DefaultHideBilling;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_SettingService.DefaultHideBilling = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         private bool m_AutoCompile;
         public bool AutoCompile
         {
@@ -1287,6 +1315,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         ShowDates = m_SettingService.DefaultShowDates,
                         UseClassicDates = m_SettingService.DefaultUseClassicDates,
                         UseBusinessDays = m_SettingService.DefaultUseBusinessDays,
+                        HideCost = m_SettingService.DefaultHideCost,
+                        HideBilling = m_SettingService.DefaultHideBilling,
                     };
 
                     DisplaySettingsViewModel.SetValues(defaultDisplaySettings);

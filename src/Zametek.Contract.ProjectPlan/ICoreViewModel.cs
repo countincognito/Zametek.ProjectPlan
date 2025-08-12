@@ -29,6 +29,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool DefaultUseBusinessDays { get; set; }
 
+        bool DefaultHideCost { get; set; }
+
+        bool DefaultHideBilling { get; set; }
+
         bool AutoCompile { get; set; }
 
         string SelectedTheme { get; set; }

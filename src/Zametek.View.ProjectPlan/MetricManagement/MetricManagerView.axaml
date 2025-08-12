@@ -229,7 +229,8 @@
 						             Text="{Binding Path=TotalEffort, Mode=OneWay, StringFormat=\{0:N0\}}"/>
 			</Grid>
 
-			<Grid Margin="7">
+			<Grid Margin="7"
+				  IsVisible="{Binding Path=!HideCost, Mode=OneWay}">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="135"/>
 					<ColumnDefinition Width="100"/>
@@ -282,7 +283,8 @@
 						             Text="{Binding Path=TotalCost, Mode=OneWay, StringFormat=\{0:N2\}}"/>
 			</Grid>
 
-			<Grid Margin="7">
+			<Grid Margin="7"
+				  IsVisible="{Binding Path=!HideBilling, Mode=OneWay}">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="135"/>
 					<ColumnDefinition Width="100"/>
@@ -333,6 +335,60 @@
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
 						             Text="{Binding Path=TotalBilling, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+			</Grid>
+
+			<Grid Margin="7"
+				  IsVisible="{Binding Path=!HideMargin, Mode=OneWay}">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="135"/>
+					<ColumnDefinition Width="100"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
+					                 VerticalAlignment="Center"
+					                 HorizontalAlignment="Right"
+								     Text="{x:Static resources:Labels.Label_DirectMargin}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=DirectMargin, Mode=OneWay, StringFormat=\{0:P2\}}"/>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
+					                 VerticalAlignment="Center"
+								     HorizontalAlignment="Right"
+							    	 Text="{x:Static resources:Labels.Label_IndirectMargin}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="1"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=IndirectMargin, Mode=OneWay, StringFormat=\{0:P2\}}"/>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
+					                 VerticalAlignment="Center"
+								     HorizontalAlignment="Right"
+								     Text="{x:Static resources:Labels.Label_OtherMargin}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="2"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=OtherMargin, Mode=OneWay, StringFormat=\{0:P2\}}"/>
+
+				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
+					                 VerticalAlignment="Center"
+					                 HorizontalAlignment="Right"
+								     Text="{x:Static resources:Labels.Label_TotalMargin}"/>
+				<SelectableTextBlock Grid.Column="1" Grid.Row="3"
+						             VerticalAlignment="Center"
+						             Margin="7,0,0,0"
+						             FontWeight="Bold"
+						             Text="{Binding Path=TotalMargin, Mode=OneWay, StringFormat=\{0:P2\}}"/>
 			</Grid>
 		</WrapPanel>
 	</ScrollViewer>

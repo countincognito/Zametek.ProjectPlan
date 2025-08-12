@@ -75,6 +75,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rm => rm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, rm => rm.HasCompilationErrors);
 
+            m_HideCost = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.DisplaySettingsViewModel.HideCost)
+                .ToProperty(this, mm => mm.HideCost);
+
+            m_HideBilling = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.DisplaySettingsViewModel.HideBilling)
+                .ToProperty(this, mm => mm.HideBilling);
+
             m_ProcessResourceSettingsSub = this
                 .WhenAnyValue(rm => rm.m_CoreViewModel.ResourceSettings)
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -411,6 +419,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HideCost;
+        public bool HideCost => m_HideCost.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HideBilling;
+        public bool HideBilling => m_HideBilling.Value;
 
         private bool m_HasSelectedResources;
         public bool HasSelectedResources

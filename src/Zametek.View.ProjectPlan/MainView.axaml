@@ -119,6 +119,24 @@
 										  IsChecked="{Binding Path=UseBusinessDays, Mode=OneWay}" />
 							</MenuItem.Icon>
 						</MenuItem>
+						<MenuItem Header="{x:Static resources:Menus.Menu_HideCost}"
+								  Command="{Binding Path=ToggleHideCostCommand, Mode=OneWay}">
+							<MenuItem.Icon>
+								<CheckBox BorderThickness="0"
+										  Theme="{StaticResource SimpleCheckBox}"
+										  IsHitTestVisible="False"
+										  IsChecked="{Binding Path=HideCost, Mode=OneWay}" />
+							</MenuItem.Icon>
+						</MenuItem>
+						<MenuItem Header="{x:Static resources:Menus.Menu_HideBilling}"
+								  Command="{Binding Path=ToggleHideBillingCommand, Mode=OneWay}">
+							<MenuItem.Icon>
+								<CheckBox BorderThickness="0"
+										  Theme="{StaticResource SimpleCheckBox}"
+										  IsHitTestVisible="False"
+										  IsChecked="{Binding Path=HideBilling, Mode=OneWay}" />
+							</MenuItem.Icon>
+						</MenuItem>
 						<Separator />
 						<MenuItem Header="{x:Static resources:Menus.Menu_DefaultSettings}">
 							<MenuItem Header="{x:Static resources:Menus.Menu_ShowDates}"
@@ -147,6 +165,24 @@
 											  Theme="{StaticResource SimpleCheckBox}"
 											  IsHitTestVisible="False"
 											  IsChecked="{Binding Path=DefaultUseBusinessDays, Mode=OneWay}" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{x:Static resources:Menus.Menu_HideCost}"
+									  Command="{Binding Path=ToggleDefaultHideCostCommand, Mode=OneWay}">
+								<MenuItem.Icon>
+									<CheckBox BorderThickness="0"
+											  Theme="{StaticResource SimpleCheckBox}"
+											  IsHitTestVisible="False"
+											  IsChecked="{Binding Path=DefaultHideCost, Mode=OneWay}" />
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="{x:Static resources:Menus.Menu_HideBilling}"
+									  Command="{Binding Path=ToggleDefaultHideBillingCommand, Mode=OneWay}">
+								<MenuItem.Icon>
+									<CheckBox BorderThickness="0"
+											  Theme="{StaticResource SimpleCheckBox}"
+											  IsHitTestVisible="False"
+											  IsChecked="{Binding Path=DefaultHideBilling, Mode=OneWay}" />
 								</MenuItem.Icon>
 							</MenuItem>
 						</MenuItem>
@@ -205,6 +241,7 @@
 						<MenuItem Header="{x:Static resources:Menus.Menu_TransitiveReduction}"
 								  Command="{Binding Path=TransitiveReductionCommand, Mode=OneWay}"/>
 					</MenuItem>
+					
 					<MenuItem Header="{x:Static resources:Menus.Menu_Help}">
 						<MenuItem Header="{x:Static resources:Menus.Menu_Documentation}"
 								  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"

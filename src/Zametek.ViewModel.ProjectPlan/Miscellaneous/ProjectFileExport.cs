@@ -32,6 +32,8 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ProjectPlanModel.DisplaySettings.ShowDates),
             nameof(ProjectPlanModel.DisplaySettings.UseClassicDates),
             nameof(ProjectPlanModel.DisplaySettings.UseBusinessDays),
+            nameof(ProjectPlanModel.DisplaySettings.HideCost),
+            nameof(ProjectPlanModel.DisplaySettings.HideBilling),
         ];
 
         private static readonly IList<string> s_ActivityColumnTitles =
@@ -343,7 +345,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         .Case(nameof(ProjectPlanModel.DisplaySettings.UseClassicDates),
                             colName => AddToCell(projectPlan.DisplaySettings.UseClassicDates, cell, dateTimeCellStyle))
                         .Case(nameof(ProjectPlanModel.DisplaySettings.UseBusinessDays),
-                            colName => AddToCell(projectPlan.DisplaySettings.UseBusinessDays, cell, dateTimeCellStyle));
+                            colName => AddToCell(projectPlan.DisplaySettings.UseBusinessDays, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectPlanModel.DisplaySettings.HideCost),
+                            colName => AddToCell(projectPlan.DisplaySettings.HideCost, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectPlanModel.DisplaySettings.HideBilling),
+                            colName => AddToCell(projectPlan.DisplaySettings.HideBilling, cell, dateTimeCellStyle));
 
                     columnIndex++;
                 }

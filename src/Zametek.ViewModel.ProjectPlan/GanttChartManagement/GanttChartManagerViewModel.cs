@@ -172,6 +172,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ArrowGraphSettings,
                     //rcm => rcm.m_CoreViewModel.WorkStreamSettings,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
+                    rcm => rcm.m_CoreViewModel.Duration,
                     rcm => rcm.m_CoreViewModel.Today,
                     //rcm => rcm.m_CoreViewModel.GraphCompilation,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
@@ -179,7 +180,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.AnnotationStyle,
                     rcm => rcm.BoolAccumulator,
                     rcm => rcm.ActivitySelector.TargetActivitiesString,
-                    (a, b, c, d, e, f, g, h, i, j) => (a, b, c, d, e, f, g, h, i, j)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                    (a, b, c, d, e, f, g, h, i, j, k) => (a, b, c, d, e, f, g, h, i, j, k)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
 
@@ -244,6 +245,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArrowGraphSettingsModel arrowGraphSettings,
             WorkStreamSettingsModel workStreamSettings,
             DateTimeOffset projectStart,
+            int? duration,
             DateTimeOffset today,
             bool showToday,
             bool showDates,
@@ -276,6 +278,12 @@ namespace Zametek.ViewModel.ProjectPlan
             int finishTime = resourceSeriesSet.ResourceSchedules
                 .Select(x => x.FinishTime)
                 .DefaultIfEmpty().Max();
+
+            if (duration is not null
+                && duration > finishTime)
+            {
+                finishTime = duration.GetValueOrDefault();
+            }
 
             plotModel.Axes.Add(BuildResourceChartXAxis(dateTimeCalculator, startTime, finishTime, showDates, projectStart));
 
@@ -1321,6 +1329,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.ArrowGraphSettings,
                     m_CoreViewModel.WorkStreamSettings,
                     m_CoreViewModel.ProjectStart,
+                    m_CoreViewModel.Duration,
                     m_CoreViewModel.Today,
                     ShowToday,
                     m_CoreViewModel.DisplaySettingsViewModel.ShowDates,

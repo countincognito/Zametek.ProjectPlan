@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.IO;
+using Zametek.Data.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan
@@ -42,7 +43,8 @@ namespace Zametek.ProjectPlan
                     Formatting = Formatting.Indented,
                     NullValueHandling = NullValueHandling.Ignore,
                 });
-            jsonSerializer.Serialize(writer, m_AppSettingsModel, m_AppSettingsModel.GetType());
+            Data.ProjectPlan.v0_4_4.AppSettingsModel output = Converter.Format(m_AppSettingsModel);
+            jsonSerializer.Serialize(writer, output, output.GetType());
         }
 
         #region ISettingService Members
@@ -109,6 +111,38 @@ namespace Zametek.ProjectPlan
                 lock (m_Lock)
                 {
                     m_AppSettingsModel = m_AppSettingsModel with { DefaultUseBusinessDays = value };
+                    SaveSettings();
+                }
+            }
+        }
+
+        public override bool DefaultHideCost
+        {
+            get
+            {
+                return m_AppSettingsModel.DefaultHideCost;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { DefaultHideCost = value };
+                    SaveSettings();
+                }
+            }
+        }
+
+        public override bool DefaultHideBilling
+        {
+            get
+            {
+                return m_AppSettingsModel.DefaultHideBilling;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { DefaultHideBilling = value };
                     SaveSettings();
                 }
             }

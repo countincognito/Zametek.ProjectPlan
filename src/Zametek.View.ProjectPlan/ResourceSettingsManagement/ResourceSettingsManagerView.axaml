@@ -351,6 +351,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource unitCostSortComparer}"
+										IsVisible="{Binding Path=!HideCost, Mode=OneWay}"
 										Width="95">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
@@ -388,7 +389,8 @@
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
-										CustomSortComparer="{StaticResource unitBillingSortComparer}"
+									    CustomSortComparer="{StaticResource unitBillingSortComparer}"
+									    IsVisible="{Binding Path=!HideBilling, Mode=OneWay}"
 										Width="105">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>

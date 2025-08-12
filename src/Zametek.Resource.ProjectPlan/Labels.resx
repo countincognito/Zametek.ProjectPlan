@@ -531,4 +531,16 @@
   <data name="Label_TotalBilling" xml:space="preserve">
     <value>Total Billing:</value>
   </data>
+  <data name="Label_TotalMargin" xml:space="preserve">
+    <value>Total Margin:</value>
+  </data>
+  <data name="Label_OtherMargin" xml:space="preserve">
+    <value>Other Margin:</value>
+  </data>
+  <data name="Label_IndirectMargin" xml:space="preserve">
+    <value>Indirect Margin:</value>
+  </data>
+  <data name="Label_DirectMargin" xml:space="preserve">
+    <value>Direct Margin:</value>
+  </data>
 </root>
