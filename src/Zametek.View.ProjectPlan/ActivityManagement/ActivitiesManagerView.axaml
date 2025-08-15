@@ -139,6 +139,8 @@
 				<ia:EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #activitiesGrid}">
 					<ia:InvokeCommandAction Command="{Binding Path=SetSelectedManagedActivitiesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
 				</ia:EventTriggerBehavior>
+
+				<local:DataGridCacheScrollBehavior />
 			</i:Interaction.Behaviors>
 
 			<DataGrid.Columns>

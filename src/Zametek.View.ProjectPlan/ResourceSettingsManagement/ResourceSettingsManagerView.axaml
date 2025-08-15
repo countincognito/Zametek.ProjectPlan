@@ -167,6 +167,8 @@
 											Command="{Binding Path=SetSelectedManagedResourcesCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />
 				</ia:EventTriggerBehavior>
+
+				<local:DataGridCacheScrollBehavior />
 			</i:Interaction.Behaviors>
 
 			<DataGrid.Columns>

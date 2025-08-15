@@ -94,6 +94,8 @@
 											Command="{Binding Path=SetSelectedManagedWorkStreamsCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />
 				</ia:EventTriggerBehavior>
+
+				<local:DataGridCacheScrollBehavior />
 			</i:Interaction.Behaviors>
 
 			<DataGrid.Columns>

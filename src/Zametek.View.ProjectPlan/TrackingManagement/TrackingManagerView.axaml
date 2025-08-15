@@ -86,7 +86,11 @@
 					<Setter Property="Background" Value="Green"/>
 				</Style>-->
 				</DataGrid.Styles>
-
+				
+				<i:Interaction.Behaviors>
+					<local:DataGridCacheScrollBehavior />
+				</i:Interaction.Behaviors>
+				
 				<DataGrid.Columns>
 					<DataGridTemplateColumn CanUserResize="False"
 											CanUserReorder="False"
@@ -218,7 +222,11 @@
 					<Setter Property="Background" Value="Green"/>
 				</Style>-->
 				</DataGrid.Styles>
-
+				
+				<i:Interaction.Behaviors>
+					<local:DataGridCacheScrollBehavior />
+				</i:Interaction.Behaviors>
+				
 				<DataGrid.Columns>
 					<DataGridTemplateColumn CanUserResize="False"
 											CanUserReorder="False"
