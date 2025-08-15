@@ -19,12 +19,18 @@ namespace Zametek.ViewModel.ProjectPlan
         // These all match.
         public static readonly string SvgLightThemeBackground = "white";
         public static readonly OxyColor OxyLightThemeBackground = OxyColors.White;
+        public static readonly ScottPlot.Color ScottPlotLightThemeBackgroundColor = ScottPlot.Colors.White;
         public static readonly Color LightThemeBackground = Colors.White;
+
+        public static readonly ScottPlot.Color ScottPlotLightThemeForegroundColor = ScottPlot.Colors.Black.WithAlpha(AnnotationAFull);
 
         // These all match.
         public static readonly string SvgDarkThemeBackground = "#373737";
         public static readonly OxyColor OxyDarkThemeBackground = OxyColor.FromArgb(AnnotationAFull, 55, 55, 55);
+        public static readonly ScottPlot.Color ScottPlotDarkThemeBackgroundColor = new(55, 55, 55, AnnotationAFull);
         public static readonly Color DarkThemeBackground = Color.FromArgb(AnnotationAFull, 55, 55, 55);
+
+        public static readonly ScottPlot.Color ScottPlotDarkThemeForegroundColor = ScottPlot.Color.FromHex(@"#d7d7d7").WithAlpha(AnnotationAFull);
 
         private static readonly Random s_Rnd = new();
         private static readonly Regex s_HtmlHexMatch = new(@"^#(([A-Fa-f0-9]{2}){3,4})$", RegexOptions.Compiled);

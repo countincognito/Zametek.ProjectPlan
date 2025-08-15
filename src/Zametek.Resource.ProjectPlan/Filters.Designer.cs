@@ -160,6 +160,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to *.bmp.
+        /// </summary>
+        public static string Filter_ImageBmpFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_ImageBmpFilePattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to BMP Image.
         /// </summary>
         public static string Filter_ImageBmpFileType {
@@ -273,6 +282,33 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Filter_ImageSvgFileType {
             get {
                 return ResourceManager.GetString("Filter_ImageSvgFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to webp.
+        /// </summary>
+        public static string Filter_ImageWebpFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_ImageWebpFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to *.webp.
+        /// </summary>
+        public static string Filter_ImageWebpFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_ImageWebpFilePattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WebP Image.
+        /// </summary>
+        public static string Filter_ImageWebpFileType {
+            get {
+                return ResourceManager.GetString("Filter_ImageWebpFileType", resourceCulture);
             }
         }
         

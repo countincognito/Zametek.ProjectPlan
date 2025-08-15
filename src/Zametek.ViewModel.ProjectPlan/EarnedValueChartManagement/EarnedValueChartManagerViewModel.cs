@@ -1,10 +1,8 @@
 ﻿using Avalonia;
-using OxyPlot;
-using OxyPlot.Annotations;
-using OxyPlot.Axes;
-using OxyPlot.Legends;
-using OxyPlot.Series;
 using ReactiveUI;
+using ScottPlot;
+using ScottPlot.Avalonia;
+using ScottPlot.Plottables;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Input;
@@ -41,12 +39,36 @@ namespace Zametek.ViewModel.ProjectPlan
                 },
                 new FileFilter
                 {
-                    Name = Resource.ProjectPlan.Filters.Filter_PdfFileType,
+                    Name = Resource.ProjectPlan.Filters.Filter_ImageBmpFileType,
                     Patterns =
                     [
-                        Resource.ProjectPlan.Filters.Filter_PdfFilePattern
+                        Resource.ProjectPlan.Filters.Filter_ImageBmpFilePattern
                     ]
-                }
+                },
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_ImageWebpFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ImageWebpFilePattern
+                    ]
+                },
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_ImageSvgFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ImageSvgFilePattern
+                    ]
+                },
+                //new FileFilter
+                //{
+                //    Name = Resource.ProjectPlan.Filters.Filter_PdfFileType,
+                //    Patterns =
+                //    [
+                //        Resource.ProjectPlan.Filters.Filter_PdfFilePattern
+                //    ]
+                //}
             ];
 
         private readonly ICoreViewModel m_CoreViewModel;
@@ -75,7 +97,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
-            m_EarnedValueChartPlotModel = new PlotModel();
+            m_EarnedValueChartPlotModel = new AvaPlot();
 
             {
                 ReactiveCommand<Unit, Unit> saveEarnedValueChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveEarnedValueChartImageFileAsync);
@@ -114,7 +136,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
                     (a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i))
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(async _ => await BuildEarnedValueChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_EarnedValueChartView;
@@ -125,8 +147,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Properties
 
-        private PlotModel m_EarnedValueChartPlotModel;
-        public PlotModel EarnedValueChartPlotModel
+        private AvaPlot m_EarnedValueChartPlotModel;
+        public AvaPlot EarnedValueChartPlotModel
         {
             get
             {
@@ -162,7 +184,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static PlotModel BuildEarnedValueChartPlotModelInternal(
+        private static AvaPlot BuildEarnedValueChartPlotModelInternal(
             IDateTimeCalculator dateTimeCalculator,
             TrackingSeriesSetModel trackingSeriesSet,
             bool showToday,
@@ -174,7 +196,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(trackingSeriesSet);
-            var plotModel = new PlotModel();
+            var plotModel = new AvaPlot();
+            plotModel.Plot.HideGrid();
 
             if (trackingSeriesSet.Plan.Count == 0)
             {
@@ -206,140 +229,87 @@ namespace Zametek.ViewModel.ProjectPlan
                     .Select(x => x.ValuePercentage).DefaultIfEmpty(defaultMaxPercentage).Max());
             }
 
-            plotModel.Axes.Add(BuildEarnedValueChartXAxis(dateTimeCalculator, chartEnd, showDates, projectStart));
-            plotModel.Axes.Add(BuildEarnedValueChartYAxis(maxPercentage));
+            BuildEarnedValueChartXAxis(plotModel, dateTimeCalculator, chartEnd, showDates, projectStart);
+            BuildEarnedValueChartYAxis(plotModel, maxPercentage);
 
-            var legend = new Legend()
-            {
-                LegendBorder = OxyColors.Black,
-                LegendBackground = OxyColors.Transparent,
-                LegendPosition = LegendPosition.RightMiddle,
-                LegendPlacement = LegendPlacement.Outside,
-                //LegendOrientation = this.LegendOrientation,
-                //LegendItemOrder = this.LegendItemOrder,
-                //LegendItemAlignment = this.LegendItemAlignment,
-                //LegendSymbolPlacement = this.LegendSymbolPlacement,
-                //LegendMaxWidth = this.LegendMaxWidth,
-                //LegendMaxHeight = this.LegendMaxHeight
-            };
+            plotModel.Plot.Legend.OutlineWidth = 1;
+            plotModel.Plot.Legend.BackgroundColor = Colors.Transparent;
+            plotModel.Plot.Legend.ShadowColor = Colors.Transparent;
+            plotModel.Plot.Legend.ShadowOffset = new(0, 0);
 
-            plotModel.Legends.Add(legend);
+            plotModel.Plot.ShowLegend(Edge.Right);
 
             if (showProjections)
             {
-                plotModel.Annotations.Add(new LineAnnotation()
-                {
-                    StrokeThickness = 1,
-                    LineStyle = LineStyle.Dash,
-                    Color = OxyColors.Black,
-                    Text = Resource.ProjectPlan.Labels.Label_ProjectCompletion,
-                    TextHorizontalAlignment = HorizontalAlignment.Left,
-                    TextLinePosition = 0.05,
-                    Type = LineAnnotationType.Horizontal,
-                    Y = defaultMaxPercentage
-                });
+                HorizontalLine line = plotModel.Plot.Add.HorizontalLine(
+                    defaultMaxPercentage,
+                    width: 1,
+                    pattern: LinePattern.Dashed);
             }
 
-            void PopulateLineSeries(
-                LineSeries lineSeries,
-                IList<TrackingPointModel> pointSeries)
-            {
-                ArgumentNullException.ThrowIfNull(lineSeries);
-                ArgumentNullException.ThrowIfNull(pointSeries);
-                if (pointSeries.Any())
-                {
-                    foreach (TrackingPointModel planPoint in pointSeries)
-                    {
-                        lineSeries.Points.Add(
-                            new DataPoint(
-                                ChartHelper.CalculateChartStartTimeXValue(
-                                    planPoint.Time,
-                                    showDates,
-                                    projectStart,
-                                    dateTimeCalculator),
-                            planPoint.ValuePercentage));
-                    }
-                    plotModel.Series.Add(lineSeries);
-                }
-            }
+            const float mainStrokeThickness = 2;
+            const float projectionStrokeThickness = 1;
 
-            const double mainStrokeThickness = 2.0;
-            const double projectionStrokeThickness = 1.0;
-            string startEndFormat = showDates ? DateTimeCalculator.DateFormat : "0";
-            string trackerFormatString = $"{{0}}\n{Resource.ProjectPlan.Labels.Label_TimeAxisTitle}: {{2:{startEndFormat}}}\n{Resource.ProjectPlan.Labels.Label_PercentageAxisTitle}: {{4:0.00}}";
-
-            PopulateLineSeries(
-                new LineSeries
-                {
-                    Title = Resource.ProjectPlan.Labels.Label_Plan,
-                    Color = OxyColor.FromAColor(ColorHelper.AnnotationAFull, OxyColors.Blue),
-                    StrokeThickness = mainStrokeThickness,
-                    CanTrackerInterpolatePoints = true,
-                    TrackerFormatString = trackerFormatString,
-                },
+            AddScatterPlot(
+                title: Resource.ProjectPlan.Labels.Label_Plan,
+                stroke: mainStrokeThickness,
+                color: Colors.Blue.WithAlpha(ColorHelper.AnnotationAFull),
+                showDates,
+                projectStart,
+                dateTimeCalculator,
+                plotModel,
                 trackingSeriesSet.Plan);
 
-            if (showProjections)
-            {
-                PopulateLineSeries(
-                    new LineSeries
-                    {
-                        Title = Resource.ProjectPlan.Labels.Label_PlanProjection,
-                        Color = OxyColor.FromAColor(ColorHelper.AnnotationAMedium, OxyColors.Blue),
-                        StrokeThickness = projectionStrokeThickness,
-                        CanTrackerInterpolatePoints = true,
-                        TrackerFormatString = trackerFormatString,
-                    },
-                    trackingSeriesSet.PlanProjection);
-            }
-
-            PopulateLineSeries(
-                new LineSeries
-                {
-                    Title = Resource.ProjectPlan.Labels.Label_Progress,
-                    Color = OxyColor.FromAColor(ColorHelper.AnnotationAFull, OxyColors.Green),
-                    StrokeThickness = mainStrokeThickness,
-                    CanTrackerInterpolatePoints = true,
-                    TrackerFormatString = trackerFormatString,
-                },
+            AddScatterPlot(
+                title: Resource.ProjectPlan.Labels.Label_Progress,
+                stroke: mainStrokeThickness,
+                color: Colors.Green.WithAlpha(ColorHelper.AnnotationAFull),
+                showDates,
+                projectStart,
+                dateTimeCalculator,
+                plotModel,
                 trackingSeriesSet.Progress);
 
-            if (showProjections)
-            {
-                PopulateLineSeries(
-                    new LineSeries
-                    {
-                        Title = Resource.ProjectPlan.Labels.Label_ProgressProjection,
-                        Color = OxyColor.FromAColor(ColorHelper.AnnotationAMedium, OxyColors.Green),
-                        StrokeThickness = projectionStrokeThickness,
-                        CanTrackerInterpolatePoints = true,
-                        TrackerFormatString = trackerFormatString,
-                    },
-                    trackingSeriesSet.ProgressProjection);
-            }
-
-            PopulateLineSeries(
-                new LineSeries
-                {
-                    Title = Resource.ProjectPlan.Labels.Label_Effort,
-                    Color = OxyColor.FromAColor(ColorHelper.AnnotationAFull, OxyColors.Red),
-                    StrokeThickness = mainStrokeThickness,
-                    CanTrackerInterpolatePoints = true,
-                    TrackerFormatString = trackerFormatString,
-                },
+            AddScatterPlot(
+                title: Resource.ProjectPlan.Labels.Label_Effort,
+                stroke: mainStrokeThickness,
+                color: Colors.Red.WithAlpha(ColorHelper.AnnotationAFull),
+                showDates,
+                projectStart,
+                dateTimeCalculator,
+                plotModel,
                 trackingSeriesSet.Effort);
 
             if (showProjections)
             {
-                PopulateLineSeries(
-                    new LineSeries
-                    {
-                        Title = Resource.ProjectPlan.Labels.Label_EffortProjection,
-                        Color = OxyColor.FromAColor(ColorHelper.AnnotationAMedium, OxyColors.Red),
-                        StrokeThickness = projectionStrokeThickness,
-                        CanTrackerInterpolatePoints = true,
-                        TrackerFormatString = trackerFormatString,
-                    },
+                AddScatterPlot(
+                    title: Resource.ProjectPlan.Labels.Label_PlanProjection,
+                    stroke: projectionStrokeThickness,
+                    color: Colors.Blue.WithAlpha(ColorHelper.AnnotationAMedium),
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator,
+                    plotModel,
+                    trackingSeriesSet.PlanProjection);
+
+                AddScatterPlot(
+                    title: Resource.ProjectPlan.Labels.Label_ProgressProjection,
+                    stroke: projectionStrokeThickness,
+                    color: Colors.Green.WithAlpha(ColorHelper.AnnotationAMedium),
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator,
+                    plotModel,
+                    trackingSeriesSet.ProgressProjection);
+
+                AddScatterPlot(
+                    title: Resource.ProjectPlan.Labels.Label_EffortProjection,
+                    stroke: projectionStrokeThickness,
+                    color: Colors.Red.WithAlpha(ColorHelper.AnnotationAMedium),
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator,
+                    plotModel,
                     trackingSeriesSet.EffortProjection);
             }
 
@@ -355,35 +325,28 @@ namespace Zametek.ViewModel.ProjectPlan
                         projectStart,
                         dateTimeCalculator);
 
-                    var todayLine = new LineAnnotation
-                    {
-                        StrokeThickness = 2,
-                        Color = OxyColors.Red,
-                        LineStyle = LineStyle.Dot,
-                        Type = LineAnnotationType.Vertical,
-                        X = todayTimeX,
-                        Y = 0.0
-                    };
-
-                    plotModel.Annotations.Add(todayLine);
+                    plotModel.Plot.Add.VerticalLine(
+                        todayTimeX,
+                        width: 2,
+                        pattern: LinePattern.Dotted);
                 }
-            }
-
-            if (plotModel is IPlotModel plotModelInterface)
-            {
-                plotModelInterface.Update(true);
             }
 
             return plotModel.SetBaseTheme(baseTheme);
         }
 
-        private static Axis BuildEarnedValueChartXAxis(
+        private static IXAxis BuildEarnedValueChartXAxis(
+            AvaPlot plotModel,
             IDateTimeCalculator dateTimeCalculator,
             int chartEnd,
             bool showDates,
             DateTimeOffset projectStart)
         {
+            ArgumentNullException.ThrowIfNull(plotModel);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+
+            IXAxis xAxis = plotModel.Plot.Axes.Bottom;
+
             if (chartEnd != default)
             {
                 double minValue = ChartHelper.CalculateChartStartTimeXValue(
@@ -399,36 +362,68 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (showDates)
                 {
-                    return new DateTimeAxis
-                    {
-                        Position = AxisPosition.Bottom,
-                        Minimum = minValue,
-                        Maximum = maxValue,
-                        Title = Resource.ProjectPlan.Labels.Label_TimeAxisTitle,
-                        StringFormat = DateTimeCalculator.DateFormat
-                    };
+                    // Setup the plot to display X axis tick labels using date time format.
+                    xAxis = plotModel.Plot.Axes.DateTimeTicksBottom();
                 }
 
-                return new LinearAxis
-                {
-                    Position = AxisPosition.Bottom,
-                    Minimum = minValue,
-                    Maximum = maxValue,
-                    Title = Resource.ProjectPlan.Labels.Label_TimeAxisTitle
-                };
+                xAxis.Min = minValue;
+                xAxis.Max = maxValue;
+                xAxis.Label.Text = Resource.ProjectPlan.Labels.Label_TimeAxisTitle;
+                xAxis.Label.FontSize = 12;
+                xAxis.Label.Bold = false;
             }
-            return new LinearAxis();
+            return xAxis;
         }
 
-        private static LinearAxis BuildEarnedValueChartYAxis(double maximum)
+        private static IYAxis BuildEarnedValueChartYAxis(
+            AvaPlot plotModel,
+            double maximum)
         {
-            return new LinearAxis
+            ArgumentNullException.ThrowIfNull(plotModel);
+            IYAxis yAxis = plotModel.Plot.Axes.Left;
+            yAxis.Min = 0.0;
+            yAxis.Max = maximum;
+            yAxis.Label.Text = Resource.ProjectPlan.Labels.Label_PercentageAxisTitle;
+            yAxis.Label.FontSize = 12;
+            yAxis.Label.Bold = false;
+            return yAxis;
+        }
+
+        private static void AddScatterPlot(
+            string title,
+            float stroke,
+            Color color,
+            bool showDates,
+            DateTimeOffset projectStart,
+            IDateTimeCalculator dateTimeCalculator,
+            AvaPlot plotModel,
+            IList<TrackingPointModel> pointSeries)
+        {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(plotModel);
+            ArgumentNullException.ThrowIfNull(pointSeries);
+
+            var dataX = new List<double>();
+            var dataY = new List<double>();
+
+            if (pointSeries.Any())
             {
-                Position = AxisPosition.Left,
-                Minimum = 0.0,
-                Maximum = maximum,
-                Title = Resource.ProjectPlan.Labels.Label_PercentageAxisTitle
-            };
+                foreach (TrackingPointModel planPoint in pointSeries)
+                {
+                    dataX.Add(
+                        ChartHelper.CalculateChartStartTimeXValue(
+                            planPoint.Time,
+                            showDates,
+                            projectStart,
+                            dateTimeCalculator));
+                    dataY.Add(planPoint.ValuePercentage);
+                }
+                Scatter scatter = plotModel.Plot.Add.Scatter(dataX, dataY);
+                scatter.LegendText = title;
+                scatter.LineWidth = stroke;
+                scatter.Color = color;
+                scatter.MarkerSize = 0;
+            }
         }
 
         private async Task SaveEarnedValueChartImageFileAsync()
@@ -515,32 +510,38 @@ namespace Zametek.ViewModel.ProjectPlan
                     fileExtension.ValueSwitchOn()
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
                         {
-                            using var stream = File.OpenWrite(filename);
-                            OxyPlot.SkiaSharp.JpegExporter.Export(
-                                EarnedValueChartPlotModel,
-                                stream,
-                                width,
-                                height,
-                                100);
+                            EarnedValueChartPlotModel.Plot.Save(
+                                filename, width, height, ImageFormats.FromFilename(filename), 100);
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
                         {
-                            using var stream = File.OpenWrite(filename);
-                            OxyPlot.SkiaSharp.PngExporter.Export(
-                                EarnedValueChartPlotModel,
-                                stream,
-                                width,
-                                height);
+                            EarnedValueChartPlotModel.Plot.Save(
+                                filename, width, height, ImageFormats.FromFilename(filename), 100);
                         })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageBmpFileExtension}", _ =>
                         {
-                            using var stream = File.OpenWrite(filename);
-                            OxyPlot.SkiaSharp.PdfExporter.Export(
-                                EarnedValueChartPlotModel,
-                                stream,
-                                width,
-                                height);
+                            EarnedValueChartPlotModel.Plot.Save(
+                                filename, width, height, ImageFormats.FromFilename(filename), 100);
                         })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageWebpFileExtension}", _ =>
+                        {
+                            EarnedValueChartPlotModel.Plot.Save(
+                                filename, width, height, ImageFormats.FromFilename(filename), 100);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ =>
+                        {
+                            EarnedValueChartPlotModel.Plot.Save(
+                                filename, width, height, ImageFormats.FromFilename(filename), 100);
+                        })
+                        //.Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
+                        //{
+                        //    //using var stream = File.OpenWrite(filename);
+                        //    //OxyPlot.SkiaSharp.PdfExporter.Export(
+                        //    //    EarnedValueChartPlotModel,
+                        //    //    stream,
+                        //    //    width,
+                        //    //    height);
+                        //})
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
                 }
                 catch (Exception ex)
@@ -555,7 +556,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildEarnedValueChartPlotModel()
         {
-            PlotModel? plotModel = null;
+            AvaPlot? plotModel = null;
 
             lock (m_Lock)
             {
@@ -573,7 +574,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            EarnedValueChartPlotModel = plotModel ?? new PlotModel();
+            plotModel ??= new AvaPlot();
+
+            // Clear existing menu items.
+            plotModel.Menu?.Clear();
+
+            // Add menu items with custom actions.
+            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
+            {
+                SaveEarnedValueChartImageFileCommand.Execute(null);
+            });
+
+            EarnedValueChartPlotModel = plotModel;
         }
 
         #endregion

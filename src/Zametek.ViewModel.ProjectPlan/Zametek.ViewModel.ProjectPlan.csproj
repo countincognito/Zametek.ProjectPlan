@@ -16,6 +16,7 @@
 	<PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-Avalonia11" />
 	<PackageReference Include="OxyPlot.SkiaSharp" Version="2.2.0" />
 	<PackageReference Include="Avalonia.ReactiveUI" Version="11.3.2" />
+	<PackageReference Include="ScottPlot.Avalonia" Version="5.0.55" />
 	<PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.0" />
     <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="11.3.0.3" />

@@ -6,7 +6,7 @@
 	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
-			 xmlns:oxy="using:OxyPlot.Avalonia"
+			 xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 			 x:DataType="vm:EarnedValueChartManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -66,15 +66,10 @@
 		</ScrollViewer>
 
 		<Grid>
-			<Grid.ContextMenu>
-				<ContextMenu>
-					<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-							  Command="{Binding Path=SaveEarnedValueChartImageFileCommand, Mode=OneWay}"/>
-				</ContextMenu>
-			</Grid.ContextMenu>
-			<oxy:PlotView x:Name="oxyplot"
-						  Model="{Binding Path=EarnedValueChartPlotModel, Mode=OneWay}"
-						  Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
+			<!-- ScottPlot PlotView -->
+			<ContentControl x:Name="scottplot"
+							Content="{Binding EarnedValueChartPlotModel, Mode=OneWay}"
+							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
 		</Grid>
 	</DockPanel>
 </UserControl>

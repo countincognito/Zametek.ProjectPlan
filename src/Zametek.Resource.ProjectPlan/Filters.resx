@@ -150,6 +150,9 @@
   <data name="Filter_ImageBmpFileExtension" xml:space="preserve">
     <value>bmp</value>
   </data>
+  <data name="Filter_ImageBmpFilePattern" xml:space="preserve">
+    <value>*.bmp</value>
+  </data>
   <data name="Filter_ImageBmpFileType" xml:space="preserve">
     <value>BMP Image</value>
   </data>
@@ -188,6 +191,15 @@
   </data>
   <data name="Filter_ImageSvgFileType" xml:space="preserve">
     <value>SVG Image</value>
+  </data>
+  <data name="Filter_ImageWebpFileExtension" xml:space="preserve">
+    <value>webp</value>
+  </data>
+  <data name="Filter_ImageWebpFilePattern" xml:space="preserve">
+    <value>*.webp</value>
+  </data>
+  <data name="Filter_ImageWebpFileType" xml:space="preserve">
+    <value>WebP Image</value>
   </data>
   <data name="Filter_MicrosoftProjectFileType" xml:space="preserve">
     <value>MS Project</value>
