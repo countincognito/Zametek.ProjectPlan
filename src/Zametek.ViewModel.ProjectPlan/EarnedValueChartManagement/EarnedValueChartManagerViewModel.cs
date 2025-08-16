@@ -1,5 +1,4 @@
 ﻿using Avalonia;
-using OxyPlot.Avalonia;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -246,6 +245,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     defaultMaxPercentage,
                     width: 1,
                     pattern: LinePattern.Dashed);
+
+                line.LabelText = Resource.ProjectPlan.Labels.Label_ProjectCompletion;
+                line.LabelBackgroundColor = Colors.Transparent;
+                line.LabelFontSize = 12;
+                line.LabelBold = false;
+                line.LabelRotation = 0;
+                line.LabelOffsetX = 100;
+                line.LabelOffsetY = 25;
             }
 
             const float mainStrokeThickness = 2;

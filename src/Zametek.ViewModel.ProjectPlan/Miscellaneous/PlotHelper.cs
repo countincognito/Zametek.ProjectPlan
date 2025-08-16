@@ -58,11 +58,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         x.Color = foregroundColor;
                         x.LabelFontColor = foregroundColor;
+                        x.LabelBackgroundColor = ScottPlot.Colors.Transparent;
                     })
                     .Case<ScottPlot.Plottables.VerticalLine>(x =>
                     {
                         x.Color = foregroundColor;
                         x.LabelFontColor = foregroundColor;
+                        x.LabelBackgroundColor = ScottPlot.Colors.Transparent;
                     });
             }
 
