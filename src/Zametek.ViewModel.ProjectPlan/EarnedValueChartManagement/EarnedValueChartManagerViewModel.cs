@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using OxyPlot.Avalonia;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -372,6 +373,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 xAxis.Label.FontSize = 12;
                 xAxis.Label.Bold = false;
             }
+
             return xAxis;
         }
 
@@ -381,6 +383,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(plotModel);
             IYAxis yAxis = plotModel.Plot.Axes.Left;
+
             yAxis.Min = 0.0;
             yAxis.Max = maximum;
             yAxis.Label.Text = Resource.ProjectPlan.Labels.Label_PercentageAxisTitle;
@@ -585,6 +588,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 SaveEarnedValueChartImageFileCommand.Execute(null);
             });
 
+            //plotModel.Plot.Axes.AutoScale();
             EarnedValueChartPlotModel = plotModel;
         }
 

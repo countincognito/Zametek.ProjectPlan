@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using OxyPlot;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -9,10 +8,6 @@ namespace Zametek.View.ProjectPlan
         public GanttChartManagerView()
         {
             InitializeComponent();
-            oxyplot.ActualController.UnbindMouseDown(OxyMouseButton.Right);
-            oxyplot.ActualController.UnbindMouseDown(OxyMouseButton.Left);
-            oxyplot.ActualController.BindMouseDown(OxyMouseButton.Left, PlotCommands.PanAt);
-            //oxyplot.ActualController.BindMouseEnter(PlotCommands.HoverTrack);
         }
     }
 }
