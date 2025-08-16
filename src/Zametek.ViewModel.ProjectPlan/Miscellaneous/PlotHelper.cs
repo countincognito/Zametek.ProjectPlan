@@ -65,8 +65,32 @@ namespace Zametek.ViewModel.ProjectPlan
                         x.Color = foregroundColor;
                         x.LabelFontColor = foregroundColor;
                         x.LabelBackgroundColor = ScottPlot.Colors.Transparent;
+                    })
+                    .Case<ScottPlot.Plottables.Rectangle>(x =>
+                    {
+                        x.LineColor = foregroundColor;
+                    })
+                    .Case<ScottPlot.Plottables.BarPlot>(x =>
+                    {
+                        foreach (ScottPlot.Bar bar in x.Bars)
+                        {
+                            bar.LineColor = foregroundColor.WithAlpha(ColorHelper.AnnotationAHeavy);
+                        }
                     });
             }
+
+
+
+            
+
+
+
+
+
+
+
+
+
 
 
 

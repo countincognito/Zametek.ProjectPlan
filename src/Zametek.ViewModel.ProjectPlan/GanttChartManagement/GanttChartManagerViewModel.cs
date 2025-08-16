@@ -1,5 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Media;
+using com.sun.tools.javadoc;
+
 //using OxyPlot;
 //using OxyPlot.Series;
 using ReactiveUI;
@@ -90,6 +92,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private const double c_YAxisMinimum = -1.0;
         private const double c_TrackerAnnotationMinCorrection = -1.25;
         private const double c_TrackerAnnotationMaxCorrection = -0.75;
+
+
+
+        private const double c_BarSize = 0.5;
+
 
         #endregion
 
@@ -314,12 +321,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
             double minXValue = xAxis.Min;
 
-            plotModel.Plot.Legend.OutlineWidth = 1;
-            plotModel.Plot.Legend.BackgroundColor = ScottPlot.Colors.Transparent;
-            plotModel.Plot.Legend.ShadowColor = ScottPlot.Colors.Transparent;
-            plotModel.Plot.Legend.ShadowOffset = new(0, 0);
+            //plotModel.Plot.Legend.OutlineWidth = 1;
+            //plotModel.Plot.Legend.BackgroundColor = ScottPlot.Colors.Transparent;
+            //plotModel.Plot.Legend.ShadowColor = ScottPlot.Colors.Transparent;
+            //plotModel.Plot.Legend.ShadowOffset = new(0, 0);
 
-            plotModel.Plot.ShowLegend(Edge.Right);
+            //plotModel.Plot.ShowLegend(Edge.Right);
 
             var colorFormatLookup = new SlackColorFormatLookup(arrowGraphSettings.ActivitySeverities);
             string startEndFormat = showDates ? DateTimeCalculator.DateFormat : "0";
@@ -353,12 +360,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 case GroupByMode.None:
                     {
-                        // Add an extra row for padding.
-                        // IntervalBarItems are added in reverse order to how they will be displayed.
-                        // So, this item will appear at the bottom of the grouping.
+                        //// Add an extra row for padding.
+                        //// IntervalBarItems are added in reverse order to how they will be displayed.
+                        //// So, this item will appear at the bottom of the grouping.
 
-                        // TODO
-                        //series.Add(new Bar() { ValueBase = minXValue, Value = minXValue, LineColor = ScottPlot.Colors.Transparent, FillColor = ScottPlot.Colors.Transparent, Size = 0.5 });
+                        //// TODO
+                        //series.Add(BuildEmptyBar(minXValue));
                         //labels.Add(string.Empty);
 
                         // Add all the activities (in reverse display order).
@@ -386,9 +393,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         // Add an extra row for padding.
                         // This item will appear at the top of the grouping.
 
-                        // TODO
-                        //series.Add(new Bar() { ValueBase = minXValue, Value = minXValue, LineColor = ScottPlot.Colors.Transparent, FillColor = ScottPlot.Colors.Transparent, Size = 0.5 });
-                        //labels.Add(string.Empty);
+                        series.Add(BuildEmptyBar(minXValue));
+                        labels.Add(string.Empty);
                     }
 
                     break;
@@ -438,9 +444,9 @@ namespace Zametek.ViewModel.ProjectPlan
                             // IntervalBarItems are added in reverse order to how they will be displayed.
                             // So, this item will appear at the bottom of the grouping.
 
-                            // TODO
-                            series.Add(new Bar() { ValueBase = minXValue, Value = minXValue, LineColor = ScottPlot.Colors.Transparent, FillColor = ScottPlot.Colors.Transparent, Size = 0.5 });
-                            labels.Add(string.Empty);
+                            //// TODO
+                            //series.Add(BuildEmptyBar(minXValue));
+                            //labels.Add(string.Empty);
 
                             int minimumY = labels.Count;
 
@@ -465,7 +471,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             // TODO
-                            series.Add(new Bar() { ValueBase = minXValue, Value = minXValue, LineColor = ScottPlot.Colors.Transparent, FillColor = ScottPlot.Colors.Transparent, Size = 0.5 });
+                            series.Add(BuildEmptyBar(minXValue));
                             labels.Add(string.Empty);
 
 
@@ -532,10 +538,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         // Add an extra row for padding.
                         // This item will appear at the top of the grouping.
 
-                        // TODO
-
-                        //series.Add(new Bar() { ValueBase = minXValue, Value = minXValue });
-                        //labels.Add(string.Empty);
+                        series.Add(BuildEmptyBar(minXValue));
+                        labels.Add(string.Empty);
                     }
 
                     break;
@@ -648,9 +652,9 @@ namespace Zametek.ViewModel.ProjectPlan
                             // IntervalBarItems are added in reverse order to how they will be displayed.
                             // So, this item will appear at the bottom of the grouping.
 
-                            // TODO
-                            series.Add(new Bar() { ValueBase = minXValue, Value = minXValue, LineColor = ScottPlot.Colors.Transparent, FillColor = ScottPlot.Colors.Transparent, Size = 0.5 });
-                            labels.Add(string.Empty);
+                            //// TODO
+                            //series.Add(BuildEmptyBar(minXValue));
+                            //labels.Add(string.Empty);
 
                             int minimumY = labels.Count;
 
@@ -676,7 +680,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
                             // TODO
-                            series.Add(new Bar() { ValueBase = minXValue, Value = minXValue, LineColor = ScottPlot.Colors.Transparent, FillColor = ScottPlot.Colors.Transparent, Size = 0.5 });
+                            series.Add(BuildEmptyBar(minXValue));
                             labels.Add(string.Empty);
 
 
@@ -744,8 +748,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         // Add an extra row for padding.
                         // This item will appear at the top of the grouping.
-                        //series.Add(new Bar() { ValueBase = minXValue, Value = minXValue, LineColor = ScottPlot.Colors.Transparent, FillColor = ScottPlot.Colors.Transparent, Size = 0.5 });
-                        //labels.Add(string.Empty);
+
+                        series.Add(BuildEmptyBar(minXValue));
+                        labels.Add(string.Empty);
                     }
 
                     break;
@@ -836,7 +841,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
             // style the plot so the bars start on the left edge
-            plotModel.Plot.Axes.Margins(left: 0);
+            plotModel.Plot.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
 
 
             BuildResourceChartYAxis(plotModel, labels);
@@ -849,6 +854,18 @@ namespace Zametek.ViewModel.ProjectPlan
             //}
 
             return plotModel.SetBaseTheme(baseTheme);
+        }
+
+        private static Bar BuildEmptyBar(double minValue)
+        {
+            return new Bar
+            {
+                ValueBase = minValue,
+                Value = minValue,
+                LineColor = ScottPlot.Colors.Transparent,
+                FillColor = ScottPlot.Colors.Transparent,
+                Size = c_BarSize
+            };
         }
 
         private static void AddAnnotationToPlot(
@@ -891,9 +908,35 @@ namespace Zametek.ViewModel.ProjectPlan
             rect.FillColor = fillColor;
             rect.LineColor = strokeColor;
             rect.LineWidth = 1;
+            
+
+
+            if (labelGroups)
+            {
 
 
 
+                Text text = plotModel.Plot.Add.Text(itemName, minimumX, maximumY);
+                
+                text.OffsetY = -14;
+                text.LabelBackgroundColor = ScottPlot.Colors.Transparent;
+                text.LabelFontSize = 12;
+                //,
+                //    horizontalAlignment: HorizontalAlignment.Left,
+                //    verticalAlignment: VerticalAlignment.Bottom,
+                //    color: strokeColor,
+                //    fontSize: 12);
+
+
+
+
+
+
+
+
+                series.Add(BuildEmptyBar(minimumX));
+                labels.Add(string.Empty);
+            }
 
 
 
@@ -1002,7 +1045,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ValueBase = start,
                     Value = end,
                     FillColor = backgroundColor,
-                    Size = 0.5,
+                    Size = c_BarSize,
                 };
 
                 series.Add(item);
