@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using com.sun.tools.javadoc;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -86,10 +87,10 @@ namespace Zametek.ViewModel.ProjectPlan
         private const double c_YAxisMinimum = -1.0;
         private const double c_BarSize = 0.5;
         private const double c_TrackerCorrection = c_BarSize / 2.0;
+
         private const double c_ArrowHeadDelta = 0.03;
         private const float c_ArrowHeadWidth = 6;
-        private const float c_ArrowHeadLength = 15;
-        private const float c_CircleWidth = 0.8f;
+        private const float c_ArrowHeadLength = 14;
 
         #endregion
 
@@ -939,17 +940,21 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (highlightAsDependency)
                 {
-                    Arrow arrow = ForwardArrowAnnotation(start, labelCount, Colors.Blue);
+                    Arrow arrow = ForwardArrowHeadAnnotation(start, labelCount, Colors.Blue);
                     highlights.Add(arrow);
                 }
                 if (highlightAsActivity)
                 {
-                    Ellipse circle = CircleAnnotation(start, end, labelCount, Colors.Black, Colors.White);
-                    highlights.Add(circle);
+                    double xPosition = (start + end) / 2.0;
+                    Arrow fArrow = UpArrowHeadAnnotation(xPosition, labelCount, Colors.Yellow);
+                    highlights.Add(fArrow);
+                    Arrow bArrow = DownArrowHeadAnnotation(xPosition, labelCount, Colors.Yellow);
+                    highlights.Add(bArrow);
+
                 }
                 if (highlightAsSuccessor)
                 {
-                    Arrow arrow = BackwardArrowAnnotation(end, labelCount, Colors.Red);
+                    Arrow arrow = BackwardArrowHeadAnnotation(end, labelCount, Colors.Red);
                     highlights.Add(arrow);
                 }
 
@@ -957,7 +962,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     // Get the tracker with the highest Time value.
                     ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
-                    Rectangle? rectangle = RectangleAnnotation(start, end, labelCount, lastTracker);
+                    Rectangle? rectangle = TrackerAnnotation(start, end, labelCount, lastTracker);
 
                     if (rectangle is not null)
                     {
@@ -967,23 +972,23 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static Arrow ForwardArrowAnnotation(
+        private static Arrow ForwardArrowHeadAnnotation(
             double start,
             int labelCount,
             Color color)
         {
-            return ArrowAnnotation(start, startDelta: -c_ArrowHeadDelta, labelCount, color);
+            return HorizontalArrowHeadAnnotation(start, startDelta: -c_ArrowHeadDelta, labelCount, color);
         }
 
-        private static Arrow BackwardArrowAnnotation(
+        private static Arrow BackwardArrowHeadAnnotation(
             double start,
             int labelCount,
             Color color)
         {
-            return ArrowAnnotation(start, startDelta: c_ArrowHeadDelta, labelCount, color);
+            return HorizontalArrowHeadAnnotation(start, startDelta: c_ArrowHeadDelta, labelCount, color);
         }
 
-        private static Arrow ArrowAnnotation(
+        private static Arrow HorizontalArrowHeadAnnotation(
             double start,
             double startDelta,
             int labelCount,
@@ -1006,60 +1011,46 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private static Ellipse CircleAnnotation(
+        private static Arrow UpArrowHeadAnnotation(
             double start,
-            double end,
             int labelCount,
-            Color lineColor,
-            Color backgroundColor)
+            Color color)
         {
-            double X = start + (end - start) / 2.0;
-            double Y = labelCount;
+            return VerticalArrowHeadAnnotation(start, -1, labelCount, color);
+        }
 
-            return new Ellipse
+        private static Arrow DownArrowHeadAnnotation(
+            double start,
+            int labelCount,
+            Color color)
+        {
+            return VerticalArrowHeadAnnotation(start, 1, labelCount, color);
+        }
+
+        private static Arrow VerticalArrowHeadAnnotation(
+            double start,
+            int startDelta,
+            int labelCount,
+            Color color)
+        {
+            double Y = labelCount;
+            var startPoint = new Coordinates(start, Y);
+            var endPoint = new Coordinates(start, Y + startDelta);
+
+            return new Arrow
             {
-                Center = new Coordinates(X, Y),
-                RadiusX = c_CircleWidth,
-                RadiusY = c_CircleWidth,
-                LineWidth = 1.0f,
-                LineColor = lineColor,
-                FillColor = backgroundColor,
+                Base = endPoint,
+                Tip = startPoint,
+                ArrowLineColor = color,
+                ArrowFillColor = color,
+                ArrowShape = ArrowShape.Arrowhead.GetShape(),
+                ArrowheadWidth = c_ArrowHeadWidth,
+                ArrowheadLength = c_ArrowHeadLength,
+                ArrowLineWidth = 1.0f,
             };
         }
 
-
-
-
-
-
-        //private static PointAnnotation CrossAnnotation(
-        //    double start,
-        //    double end,
-        //    int labelCount,
-        //    Color color)
-        //{
-        //    double X = start + (end - start) / 2.0;
-        //    double Y = labelCount + (c_TrackerAnnotationMinCorrection + c_TrackerAnnotationMaxCorrection) / 2.0;
-
-        //    return new PointAnnotation
-        //    {
-        //        X = X,
-        //        Y = Y,
-        //        Shape = MarkerType.Cross,
-        //        Fill = color,
-        //        Stroke = color,
-        //        Size = 5.0,
-        //        StrokeThickness = 2.0,
-        //        Layer = AnnotationLayer.AboveSeries,
-        //    };
-        //}
-
-
-
-
-
-
-        private static Rectangle? RectangleAnnotation(
+        private static Rectangle? TrackerAnnotation(
             double start,
             double end,
             int labelCount,
