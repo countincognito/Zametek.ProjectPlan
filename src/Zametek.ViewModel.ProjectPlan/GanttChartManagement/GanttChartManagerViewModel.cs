@@ -777,6 +777,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             BuildResourceChartYAxis(plotModel, labels);
 
+            plotModel.Plot.Axes.AutoScale();
+
             return plotModel.SetBaseTheme(baseTheme);
         }
 
@@ -1350,8 +1352,11 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 SaveGanttChartImageFileCommand.Execute(null);
             });
+            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
+            {
+                plot.Axes.AutoScale();
+            });
 
-            //plotModel.Plot.Axes.AutoScale();
             GanttChartPlotModel = plotModel;
         }
 

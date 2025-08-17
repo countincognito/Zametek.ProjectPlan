@@ -165,6 +165,9 @@
   <data name="Menu_ReportIssue" xml:space="preserve">
     <value>Report Issue</value>
   </data>
+  <data name="Menu_Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
   <data name="Menu_Save" xml:space="preserve">
     <value>_Save</value>
   </data>

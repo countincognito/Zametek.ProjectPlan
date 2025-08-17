@@ -340,6 +340,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
+            // Style the plot so the bars start on the left edge.
+            plotModel.Plot.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
+
+            plotModel.Plot.Axes.AutoScale();
+
             return plotModel.SetBaseTheme(baseTheme);
         }
 
@@ -587,6 +592,10 @@ namespace Zametek.ViewModel.ProjectPlan
             plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
             {
                 SaveEarnedValueChartImageFileCommand.Execute(null);
+            });
+            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
+            {
+                plot.Axes.AutoScale();
             });
 
             //plotModel.Plot.Axes.AutoScale();

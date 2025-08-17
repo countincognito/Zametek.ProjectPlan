@@ -402,6 +402,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 [.. Enumerable.Range(0, labels.Count).Select(Convert.ToDouble)],
                 [.. Enumerable.Range(0, labels.Count).Select(x => Convert.ToString(x))]);
 
+            plotModel.Plot.Axes.AutoScale();
+
             return plotModel.SetBaseTheme(baseTheme);
         }
 
@@ -622,6 +624,10 @@ namespace Zametek.ViewModel.ProjectPlan
             plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
             {
                 SaveResourceChartImageFileCommand.Execute(null);
+            });
+            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
+            {
+                plot.Axes.AutoScale();
             });
 
             //plotModel.Plot.Axes.AutoScale();

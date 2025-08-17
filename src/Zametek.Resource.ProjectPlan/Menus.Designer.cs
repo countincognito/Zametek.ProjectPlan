@@ -205,6 +205,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reset.
+        /// </summary>
+        public static string Menu_Reset {
+            get {
+                return ResourceManager.GetString("Menu_Reset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Save.
         /// </summary>
         public static string Menu_Save {
