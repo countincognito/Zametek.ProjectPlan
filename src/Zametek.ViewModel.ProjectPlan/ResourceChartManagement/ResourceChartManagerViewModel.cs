@@ -1,5 +1,4 @@
 ﻿using Avalonia;
-using Avalonia.Controls;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -8,7 +7,6 @@ using ScottPlot.Plottables;
 using System.Data;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Security.Cryptography;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -253,7 +251,6 @@ namespace Zametek.ViewModel.ProjectPlan
             int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
 
             BuildResourceChartXAxis(plotModel, dateTimeCalculator, finishTime, showDates, projectStart);
-            BuildResourceChartYAxis(plotModel);
 
             plotModel.Plot.Legend.OutlineWidth = 1;
             plotModel.Plot.Legend.BackgroundColor = Colors.Transparent;
@@ -263,6 +260,7 @@ namespace Zametek.ViewModel.ProjectPlan
             plotModel.Plot.ShowLegend(Edge.Right);
 
             var scatters = new List<Scatter>();
+            var labels = new List<string>();
 
             if (resourceSeries.Any())
             {
@@ -368,30 +366,9 @@ namespace Zametek.ViewModel.ProjectPlan
                         };
 
                         scatters.Add(scatter);
+                        labels.Add(series.Title);
                     }
                 }
-
-                //if (showToday)
-                //{
-                //    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
-
-                //    if (intValue is not null)
-                //    {
-                //        double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
-
-                //        var todayLine = new LineAnnotation
-                //        {
-                //            StrokeThickness = 2,
-                //            Color = OxyColors.Red,
-                //            LineStyle = LineStyle.Dot,
-                //            Type = LineAnnotationType.Vertical,
-                //            X = todayTimeX,
-                //            Y = 0.0
-                //        };
-
-                //        plotModel.Annotations.Add(todayLine);
-                //    }
-                //}
 
                 if (showToday)
                 {
@@ -411,12 +388,6 @@ namespace Zametek.ViewModel.ProjectPlan
                             pattern: LinePattern.Dotted);
                     }
                 }
-
-
-
-
-
-
             }
 
             scatters.Reverse();
@@ -424,6 +395,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Style the plot so the bars start on the left edge.
             plotModel.Plot.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
+
+            IYAxis yAxis = BuildResourceChartYAxis(plotModel);
+
+            yAxis.SetTicks(
+                [.. Enumerable.Range(0, labels.Count).Select(Convert.ToDouble)],
+                [.. Enumerable.Range(0, labels.Count).Select(x => Convert.ToString(x))]);
 
             return plotModel.SetBaseTheme(baseTheme);
         }

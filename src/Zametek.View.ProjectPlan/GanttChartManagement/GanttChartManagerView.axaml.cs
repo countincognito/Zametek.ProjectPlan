@@ -48,7 +48,6 @@ namespace Zametek.View.ProjectPlan
 
                 if (bar is AnnotatedBar annotatedBar)
                 {
-
                     scottplot.SetValue(ToolTip.TipProperty, annotatedBar.Annotation);
                 }
                 else
