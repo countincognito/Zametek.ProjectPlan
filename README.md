@@ -24,7 +24,9 @@ When running on Ubuntu or WSL, you will likely need to install the following pac
 
 ```
 sudo apt-get update
+sudo apt-get install libfreetype6
 sudo apt-get install libfontconfig1
+sudo apt-get install fontconfig
 sudo apt-get install libice6
 sudo apt-get install libsm6
 sudo apt-get install libgtk-3-dev

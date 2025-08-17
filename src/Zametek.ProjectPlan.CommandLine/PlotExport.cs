@@ -4,6 +4,8 @@
     {
         Jpeg,
         Png,
-        Pdf
+        Bmp,
+        Webp,
+        Svg,
     }
 }

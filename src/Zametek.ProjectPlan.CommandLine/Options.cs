@@ -29,7 +29,7 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option("gantt-directory", HelpText = "Gantt chart output file directory")]
         public string? GanttDirectory { get; set; } = default;
 
-        [Option("gantt-format", Default = PlotExport.Jpeg, HelpText = "Gantt chart format (Jpeg|Png|Pdf)")]
+        [Option("gantt-format", Default = PlotExport.Jpeg, HelpText = "Gantt chart format (Jpeg|Png|Bmp|Webp|Svg)")]
         public PlotExport GanttFormat { get; set; } = default;
 
         [Option("gantt-size", Min = 2, Max = 2, Separator = ':', HelpText = "Gantt chart dimensions in pixels (<width>:<height>)")]
@@ -48,7 +48,7 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option("resource-directory", HelpText = "Resource chart output file directory")]
         public string? ResourceDirectory { get; set; } = default;
 
-        [Option("resource-format", Default = PlotExport.Jpeg, HelpText = "Resource chart format (Jpeg|Png|Pdf)")]
+        [Option("resource-format", Default = PlotExport.Jpeg, HelpText = "Resource chart format (Jpeg|Png|Bmp|Webp|Svg)")]
         public PlotExport ResourceFormat { get; set; } = default;
 
         [Option("resource-size", Min = 2, Max = 2, Separator = ':', HelpText = "Resource chart dimensions in pixels (<width>:<height>)")]
@@ -59,7 +59,7 @@ namespace Zametek.ProjectPlan.CommandLine
         [Option("ev-directory", HelpText = "Earned-Value chart output file directory")]
         public string? EVDirectory { get; set; } = default;
 
-        [Option("ev-format", Default = PlotExport.Jpeg, HelpText = "Earned-Value chart format (Jpeg|Png|Pdf)")]
+        [Option("ev-format", Default = PlotExport.Jpeg, HelpText = "Earned-Value chart format (Jpeg|Png|Bmp|Webp|Svg)")]
         public PlotExport EVFormat { get; set; } = default;
 
         [Option("ev-size", Min = 2, Max = 2, Separator = ':', HelpText = "Earned-Value chart dimensions in pixels (<width>:<height>)")]
