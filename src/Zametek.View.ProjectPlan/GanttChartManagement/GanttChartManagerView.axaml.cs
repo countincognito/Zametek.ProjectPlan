@@ -1,4 +1,12 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using ScottPlot;
+using ScottPlot.Avalonia;
+using ScottPlot.Plottables;
+using System.Linq;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -8,6 +16,51 @@ namespace Zametek.View.ProjectPlan
         public GanttChartManagerView()
         {
             InitializeComponent();
+            scottplot.Loaded += Scottplot_Loaded;
+            scottplot.PointerExited += Scottplot_PointerExited;
+            scottplot.PointerMoved += Scottplot_PointerMoved;
+        }
+
+        private void Scottplot_Loaded(object? sender, RoutedEventArgs e)
+        {
+            ClearToolTip();
+        }
+
+        private void Scottplot_PointerExited(object? sender, RoutedEventArgs e)
+        {
+            ClearToolTip();
+        }
+
+        private void Scottplot_PointerMoved(object? sender, PointerEventArgs e)
+        {
+            if (scottplot.Content is not AvaPlot plotModel)
+            {
+                return;
+            }
+
+            Point pos = e.GetPosition(plotModel);
+            Pixel mousePixel = new(pos.X, pos.Y);
+            Coordinates mouseLocation = plotModel.Plot.GetCoordinates(mousePixel);
+
+            if (plotModel.Plot.GetPlottables<BarPlot>().FirstOrDefault() is BarPlot barPlot)
+            {
+                Bar? bar = barPlot.Bars.FirstOrDefault(bar => bar.Rect.Contains(mouseLocation));
+
+                if (bar is AnnotatedBar annotatedBar)
+                {
+
+                    scottplot.SetValue(ToolTip.TipProperty, annotatedBar.Annotation);
+                }
+                else
+                {
+                    ClearToolTip();
+                }
+            }
+        }
+
+        private void ClearToolTip()
+        {
+            scottplot.ClearValue(ToolTip.TipProperty);
         }
     }
 }

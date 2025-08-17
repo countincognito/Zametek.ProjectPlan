@@ -248,7 +248,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 line.LabelText = Resource.ProjectPlan.Labels.Label_ProjectCompletion;
                 line.LabelBackgroundColor = Colors.Transparent;
-                line.LabelFontSize = 12;
+                line.LabelFontSize = PlotHelper.FontSize;
                 line.LabelBold = false;
                 line.LabelRotation = 0;
                 line.LabelOffsetX = 100;
@@ -377,7 +377,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 xAxis.Min = minValue;
                 xAxis.Max = maxValue;
                 xAxis.Label.Text = Resource.ProjectPlan.Labels.Label_TimeAxisTitle;
-                xAxis.Label.FontSize = 12;
+                xAxis.Label.FontSize = PlotHelper.FontSize;
                 xAxis.Label.Bold = false;
             }
 
@@ -394,7 +394,7 @@ namespace Zametek.ViewModel.ProjectPlan
             yAxis.Min = 0.0;
             yAxis.Max = maximum;
             yAxis.Label.Text = Resource.ProjectPlan.Labels.Label_PercentageAxisTitle;
-            yAxis.Label.FontSize = 12;
+            yAxis.Label.FontSize = PlotHelper.FontSize;
             yAxis.Label.Bold = false;
             return yAxis;
         }

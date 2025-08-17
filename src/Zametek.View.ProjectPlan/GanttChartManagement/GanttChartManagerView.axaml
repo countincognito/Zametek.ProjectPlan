@@ -186,11 +186,15 @@
 			</DockPanel>
 		</ScrollViewer>
 
-		<Grid>
+		<DockPanel>
+			<!--<TextBlock x:Name="barannotation"
+					   DockPanel.Dock="Bottom"
+					   Height="25" />-->
+			
 			<!-- ScottPlot PlotView -->
 			<ContentControl x:Name="scottplot"
 							Content="{Binding GanttChartPlotModel, Mode=OneWay}"
 							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
-		</Grid>
+		</DockPanel>
 	</DockPanel>
 </UserControl>

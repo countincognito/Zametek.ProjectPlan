@@ -1,9 +1,4 @@
 ﻿using Avalonia;
-using Avalonia.Media;
-using com.sun.tools.javadoc;
-
-//using OxyPlot;
-//using OxyPlot.Series;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -11,7 +6,6 @@ using ScottPlot.Plottables;
 using System.Data;
 using System.Globalization;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
 using System.Windows.Input;
@@ -90,13 +84,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private const double c_ExportLabelHeightCorrection = 1.2;
         private const double c_YAxisMinimum = -1.0;
-        private const double c_TrackerAnnotationMinCorrection = -1.25;
-        private const double c_TrackerAnnotationMaxCorrection = -0.75;
-
-
-
         private const double c_BarSize = 0.5;
-
+        private const double c_TrackerCorrection = c_BarSize / 2.0;
+        private const double c_ArrowHeadDelta = 0.03;
+        private const float c_ArrowHeadWidth = 6;
+        private const float c_ArrowHeadLength = 15;
+        private const float c_CircleWidth = 0.8f;
 
         #endregion
 
@@ -295,8 +288,13 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(arrowGraphSettings);
             ArgumentNullException.ThrowIfNull(workStreamSettings);
             ArgumentNullException.ThrowIfNull(graphCompilation);
+
             var plotModel = new AvaPlot();
-            plotModel.Plot.HideGrid();
+
+            foreach (var grid in plotModel.Plot.Axes.AllGrids)
+            {
+                grid.YAxisStyle.IsVisible = false;
+            }
 
             if (!graphCompilation.DependentActivities.Any())
             {
@@ -318,56 +316,19 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             var xAxis = BuildResourceChartXAxis(plotModel, dateTimeCalculator, startTime, finishTime, showDates, projectStart);
-
             double minXValue = xAxis.Min;
-
-            //plotModel.Plot.Legend.OutlineWidth = 1;
-            //plotModel.Plot.Legend.BackgroundColor = ScottPlot.Colors.Transparent;
-            //plotModel.Plot.Legend.ShadowColor = ScottPlot.Colors.Transparent;
-            //plotModel.Plot.Legend.ShadowOffset = new(0, 0);
-
-            //plotModel.Plot.ShowLegend(Edge.Right);
 
             var colorFormatLookup = new SlackColorFormatLookup(arrowGraphSettings.ActivitySeverities);
             string startEndFormat = showDates ? DateTimeCalculator.DateFormat : "0";
 
-            //var series = new IntervalBarSeries
-            //{
-            //    Title = Resource.ProjectPlan.Labels.Label_GanttChartSeries,
-            //    LabelFormatString = @"",
-            //    TrackerFormatString = $"{Resource.ProjectPlan.Labels.Label_Activity}: {{2}}\n{Resource.ProjectPlan.Labels.Label_Start}: {{4:{startEndFormat}}}\n{Resource.ProjectPlan.Labels.Label_End}: {{5:{startEndFormat}}}",
-            //};
-
-
             var series = new List<Bar>();
-            //{
-            //    Title = Resource.ProjectPlan.Labels.Label_GanttChartSeries,
-            //    LabelFormatString = @"",
-            //    TrackerFormatString = $"{Resource.ProjectPlan.Labels.Label_Activity}: {{2}}\n{Resource.ProjectPlan.Labels.Label_Start}: {{4:{startEndFormat}}}\n{Resource.ProjectPlan.Labels.Label_End}: {{5:{startEndFormat}}}",
-            //};
-
-
-
-
-
-
-
+            var highlights = new List<IPlottable>();
             var labels = new List<string>();
 
-            //if (!graphCompilation.CompilationErrors.Any())
-            //{
             switch (groupByMode)
             {
                 case GroupByMode.None:
                     {
-                        //// Add an extra row for padding.
-                        //// IntervalBarItems are added in reverse order to how they will be displayed.
-                        //// So, this item will appear at the bottom of the grouping.
-
-                        //// TODO
-                        //series.Add(BuildEmptyBar(minXValue));
-                        //labels.Add(string.Empty);
-
                         // Add all the activities (in reverse display order).
 
                         IOrderedEnumerable<IDependentActivity> orderedActivities = graphCompilation
@@ -386,6 +347,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 colorFormatLookup,
                                 series,
                                 labels,
+                                highlights,
                                 activity,
                                 highlightActivityConnections);
                         }
@@ -440,14 +402,6 @@ namespace Zametek.ViewModel.ProjectPlan
                             int resourceStartTime = firstItem?.StartTime ?? 0;
                             int resourceFinishTime = lastItem?.FinishTime ?? 0;
 
-                            // Add an extra row for padding.
-                            // IntervalBarItems are added in reverse order to how they will be displayed.
-                            // So, this item will appear at the bottom of the grouping.
-
-                            //// TODO
-                            //series.Add(BuildEmptyBar(minXValue));
-                            //labels.Add(string.Empty);
-
                             int minimumY = labels.Count;
 
                             // Now add the scheduled activities (again, in reverse display order).
@@ -465,15 +419,18 @@ namespace Zametek.ViewModel.ProjectPlan
                                         colorFormatLookup,
                                         series,
                                         labels,
+                                        highlights,
                                         activity,
                                         highlightActivityConnections);
                                 }
                             }
 
-                            // TODO
+                            // Add an extra row for padding.
+                            // IntervalBarItems are added in reverse order to how they will be displayed.
+                            // So, this item will appear at the bottom of the grouping.
+
                             series.Add(BuildEmptyBar(minXValue));
                             labels.Add(string.Empty);
-
 
                             int maximumY = labels.Count;
 
@@ -483,8 +440,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                     break;
                                 case AnnotationStyle.Plain:
                                     {
-                                        ScottPlot.Color resourceColor = ScottPlot.Colors.Blue;
-                                        ScottPlot.Color fillColor = resourceColor.WithAlpha(ColorHelper.AnnotationATransparent);
+                                        Color resourceColor = Colors.Blue;
+                                        Color fillColor = resourceColor.WithAlpha(ColorHelper.AnnotationATransparent);
 
                                         AddAnnotationToPlot(
                                             dateTimeCalculator,
@@ -505,13 +462,13 @@ namespace Zametek.ViewModel.ProjectPlan
                                     break;
                                 case AnnotationStyle.Color:
                                     {
-                                        ScottPlot.Color resourceColor = new ScottPlot.Color(
+                                        Color resourceColor = new(
                                             colorFormat.R,
                                             colorFormat.G,
                                             colorFormat.B,
                                             colorFormat.A);
 
-                                        ScottPlot.Color fillColor = resourceColor.WithAlpha(ColorHelper.AnnotationALight);
+                                        Color fillColor = resourceColor.WithAlpha(ColorHelper.AnnotationALight);
 
                                         AddAnnotationToPlot(
                                             dateTimeCalculator,
@@ -648,14 +605,6 @@ namespace Zametek.ViewModel.ProjectPlan
                             int workStreamStartTime = firstItem?.StartTime ?? 0;
                             int workStreamFinishTime = lastItem?.FinishTime ?? 0;
 
-                            // Add an extra row for padding.
-                            // IntervalBarItems are added in reverse order to how they will be displayed.
-                            // So, this item will appear at the bottom of the grouping.
-
-                            //// TODO
-                            //series.Add(BuildEmptyBar(minXValue));
-                            //labels.Add(string.Empty);
-
                             int minimumY = labels.Count;
 
                             // Now add the scheduled activities (again, in reverse display order).
@@ -673,16 +622,18 @@ namespace Zametek.ViewModel.ProjectPlan
                                         colorFormatLookup,
                                         series,
                                         labels,
+                                        highlights,
                                         activity,
                                         highlightActivityConnections);
                                 }
                             }
 
+                            // Add an extra row for padding.
+                            // IntervalBarItems are added in reverse order to how they will be displayed.
+                            // So, this item will appear at the bottom of the grouping.
 
-                            // TODO
                             series.Add(BuildEmptyBar(minXValue));
                             labels.Add(string.Empty);
-
 
                             int maximumY = labels.Count;
 
@@ -693,8 +644,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                 case AnnotationStyle.Plain:
                                     {
                                         WorkStreamModel workStreamModel = workStreamLookup[workStreamId];
-                                        ScottPlot.Color workStreamColor = ScottPlot.Colors.Blue;
-                                        ScottPlot.Color fillColor = workStreamColor.WithAlpha(ColorHelper.AnnotationATransparent);
+                                        Color workStreamColor = Colors.Blue;
+                                        Color fillColor = workStreamColor.WithAlpha(ColorHelper.AnnotationATransparent);
 
                                         AddAnnotationToPlot(
                                             dateTimeCalculator,
@@ -716,13 +667,13 @@ namespace Zametek.ViewModel.ProjectPlan
                                 case AnnotationStyle.Color:
                                     {
                                         WorkStreamModel workStreamModel = workStreamLookup[workStreamId];
-                                        var workStreamColor = new ScottPlot.Color(
+                                        var workStreamColor = new Color(
                                             workStreamModel.ColorFormat.R,
                                             workStreamModel.ColorFormat.G,
                                             workStreamModel.ColorFormat.B,
                                             workStreamModel.ColorFormat.A);
 
-                                        ScottPlot.Color fillColor = workStreamColor.WithAlpha(ColorHelper.AnnotationALight);
+                                        Color fillColor = workStreamColor.WithAlpha(ColorHelper.AnnotationALight);
 
                                         AddAnnotationToPlot(
                                             dateTimeCalculator,
@@ -765,7 +716,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (showDates)
                 {
-
                     DateTimeOffset startAndFinish = dateTimeCalculator.AddDays(projectStart, finishTime);
                     projectFinish.Append(
                         dateTimeCalculator
@@ -784,74 +734,48 @@ namespace Zametek.ViewModel.ProjectPlan
                     dateTimeCalculator);
                 double finishTimeY = labels.Count;
 
-                //var finishTimeAnnotation = new RectangleAnnotation
-                //{
-                //    Text = projectFinish.ToString(),
-                //    TextPosition = new DataPoint(finishTimeX, finishTimeY),
-                //    TextHorizontalAlignment = HorizontalAlignment.Right,
-                //    TextVerticalAlignment = VerticalAlignment.Top,
-                //    StrokeThickness = 0,
-                //    Fill = OxyColors.Transparent,
-                //    Layer = AnnotationLayer.BelowSeries,
-                //};
-
-                //plotModel.Annotations.Add(finishTimeAnnotation);
+                Annotation annotation = plotModel.Plot.Add.Annotation(projectFinish.ToString(), Alignment.UpperRight);
+                annotation.LabelBackgroundColor = Colors.Transparent;
+                annotation.LabelBorderColor = Colors.Transparent;
+                annotation.LabelShadowColor = Colors.Transparent;
             }
 
-            //if (showToday)
-            //{
-            //    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
+            if (showToday)
+            {
+                (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
 
-            //    if (intValue is not null)
-            //    {
-            //        double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(
-            //            intValue.GetValueOrDefault(),
-            //            showDates,
-            //            projectStart,
-            //            dateTimeCalculator);
+                if (intValue is not null)
+                {
+                    double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(
+                        intValue.GetValueOrDefault(),
+                        showDates,
+                        projectStart,
+                        dateTimeCalculator);
 
-            //        var todayLine = new LineAnnotation
-            //        {
-            //            StrokeThickness = 2,
-            //            Color = OxyColors.Red,
-            //            LineStyle = LineStyle.Dot,
-            //            Type = LineAnnotationType.Vertical,
-            //            X = todayTimeX,
-            //            Y = 0.0
-            //        };
+                    plotModel.Plot.Add.VerticalLine(
+                        todayTimeX,
+                        width: 2,
+                        pattern: LinePattern.Dotted);
+                }
+            }
 
-            //        plotModel.Annotations.Add(todayLine);
-            //    }
-            //}
-            //}
-
-
-
+            // Enumerate the bar series and set the position of each bar.
             for (int i = 0; i < series.Count; i++)
             {
                 var bar = series[i];
                 bar.Position = i + 1;
             }
 
-
-
             BarPlot barPlot = plotModel.Plot.Add.Bars(series);
             barPlot.Horizontal = true;
 
+            // Highlights (above the bar plot).
+            plotModel.Plot.PlottableList.AddRange(highlights);
 
-
-            // style the plot so the bars start on the left edge
+            // Style the plot so the bars start on the left edge.
             plotModel.Plot.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
 
-
             BuildResourceChartYAxis(plotModel, labels);
-
-
-
-            //if (plotModel is IPlotModel plotModelInterface)
-            //{
-            //    plotModelInterface.Update(true);
-            //}
 
             return plotModel.SetBaseTheme(baseTheme);
         }
@@ -862,8 +786,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ValueBase = minValue,
                 Value = minValue,
-                LineColor = ScottPlot.Colors.Transparent,
-                FillColor = ScottPlot.Colors.Transparent,
+                LineColor = Colors.Transparent,
+                FillColor = Colors.Transparent,
                 Size = c_BarSize
             };
         }
@@ -881,8 +805,8 @@ namespace Zametek.ViewModel.ProjectPlan
             int itemFinishTime,
             int minimumY,
             int maximumY,
-            ScottPlot.Color strokeColor,
-            ScottPlot.Color fillColor)
+            Color strokeColor,
+            Color fillColor)
         {
             double minimumX = ChartHelper.CalculateChartStartTimeXValue(
                 itemStartTime,
@@ -895,8 +819,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectStart,
                 dateTimeCalculator);
 
-
-
             var coords = new CoordinateRect(
                 left: minimumX,
                 right: maximumX,
@@ -908,65 +830,18 @@ namespace Zametek.ViewModel.ProjectPlan
             rect.FillColor = fillColor;
             rect.LineColor = strokeColor;
             rect.LineWidth = 1;
-            
-
 
             if (labelGroups)
             {
-
-
-
                 Text text = plotModel.Plot.Add.Text(itemName, minimumX, maximumY);
-                
-                text.OffsetY = -14;
-                text.LabelBackgroundColor = ScottPlot.Colors.Transparent;
-                text.LabelFontSize = 12;
-                //,
-                //    horizontalAlignment: HorizontalAlignment.Left,
-                //    verticalAlignment: VerticalAlignment.Bottom,
-                //    color: strokeColor,
-                //    fontSize: 12);
 
-
-
-
-
-
-
+                text.OffsetY = -PlotHelper.FontOffset;
+                text.LabelBackgroundColor = Colors.Transparent;
+                text.LabelFontSize = PlotHelper.FontSize;
 
                 series.Add(BuildEmptyBar(minimumX));
                 labels.Add(string.Empty);
             }
-
-
-
-
-
-            //var annotation = new RectangleAnnotation
-            //{
-            //    MinimumX = minimumX,
-            //    MaximumX = maximumX,
-            //    MinimumY = minimumY,
-            //    MaximumY = maximumY,
-            //    ToolTip = itemName,
-            //    Fill = fillColor,
-            //    Stroke = strokeColor,
-            //    StrokeThickness = 1,
-            //    Layer = AnnotationLayer.BelowSeries,
-            //};
-
-            //if (labelGroups)
-            //{
-            //    annotation.Text = itemName;
-            //    annotation.TextPosition = new DataPoint(minimumX, maximumY);
-            //    annotation.TextHorizontalAlignment = HorizontalAlignment.Left;
-            //    annotation.TextVerticalAlignment = VerticalAlignment.Bottom;
-
-            //    series.Items.Add(new IntervalBarItem { Start = -1, End = -1 });
-            //    labels.Add(string.Empty);
-            //}
-
-            //plotModel.Annotations.Add(annotation);
         }
 
         private static void AddBarItemToSeries(
@@ -978,6 +853,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SlackColorFormatLookup colorFormatLookup,
             List<Bar> series,
             List<string> labels,
+            List<IPlottable> highlights,
             IDependentActivity activity,
             IEnumerable<int> highlightActivityConnections)
         {
@@ -989,7 +865,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 string label = string.IsNullOrWhiteSpace(activity.Name) ? id : $"{activity.Name} ({id})";
                 Avalonia.Media.Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
 
-                ScottPlot.Color backgroundColor = ScottPlot.Colors.White.WithAlpha(ColorHelper.AnnotationATrackerOverlay);
+                Color backgroundColor = Colors.White.WithAlpha(ColorHelper.AnnotationATrackerOverlay);
 
                 double start = ChartHelper.CalculateChartStartTimeXValue(
                     activity.EarliestStartTime.GetValueOrDefault(),
@@ -1025,23 +901,31 @@ namespace Zametek.ViewModel.ProjectPlan
                     || highlightAsSuccessor
                     || highlightAsDependency)
                 {
-                    backgroundColor = new ScottPlot.Color(
+                    backgroundColor = new Color(
                         slackColor.R,
                         slackColor.G,
                         slackColor.B,
                         slackColor.A);
                 }
 
-                //var item = new IntervalBarItem
-                //{
-                //    Title = label,
-                //    Start = start,
-                //    End = end,
-                //    Color = backgroundColor,
-                //};
-                var item = new Bar
+                string from = ChartHelper.FormatStartScheduleOutput(
+                     activity.EarliestStartTime.GetValueOrDefault(),
+                     showDates,
+                     projectStart,
+                     activity.Duration,
+                     dateTimeCalculator);
+                string to = ChartHelper.FormatFinishScheduleOutput(
+                    activity.EarliestFinishTime.GetValueOrDefault(),
+                    showDates,
+                    projectStart,
+                    activity.Duration,
+                    dateTimeCalculator);
+
+                string barAnnotation = $"{Resource.ProjectPlan.Labels.Label_Activity}: {label}\n{Resource.ProjectPlan.Labels.Label_Start}: {from}\n{Resource.ProjectPlan.Labels.Label_End}: {to}";
+
+                var item = new AnnotatedBar
                 {
-                    //Label = label,
+                    Annotation = barAnnotation,
                     ValueBase = start,
                     Value = end,
                     FillColor = backgroundColor,
@@ -1051,104 +935,108 @@ namespace Zametek.ViewModel.ProjectPlan
                 series.Add(item);
                 labels.Add(label);
 
-                //int labelCount = labels.Count;
+                int labelCount = labels.Count;
 
-                //if (highlightAsDependency)
-                //{
-                //    ArrowAnnotation activityAnnotation = ForwardArrowAnnotation(start, labelCount, OxyColors.Blue);
-                //    plotModel.Annotations.Add(activityAnnotation);
-                //}
-                //if (highlightAsActivity)
-                //{
-                //    PointAnnotation backgroundAnnotation = DotAnnotation(start, end, labelCount, OxyColors.White);
-                //    plotModel.Annotations.Add(backgroundAnnotation);
-                //    PointAnnotation crossAnnotation = CrossAnnotation(start, end, labelCount, OxyColors.Black);
-                //    plotModel.Annotations.Add(crossAnnotation);
-                //    PointAnnotation foregroundAnnotation = DotAnnotation(start, end, labelCount, OxyColors.Transparent);
-                //    plotModel.Annotations.Add(foregroundAnnotation);
-                //}
-                //if (highlightAsSuccessor)
-                //{
-                //    ArrowAnnotation activityAnnotation = BackwardArrowAnnotation(end, labelCount, OxyColors.Red);
-                //    plotModel.Annotations.Add(activityAnnotation);
-                //}
+                if (highlightAsDependency)
+                {
+                    Arrow arrow = ForwardArrowAnnotation(start, labelCount, Colors.Blue);
+                    highlights.Add(arrow);
+                }
+                if (highlightAsActivity)
+                {
+                    Ellipse circle = CircleAnnotation(start, end, labelCount, Colors.Black, Colors.White);
+                    highlights.Add(circle);
+                }
+                if (highlightAsSuccessor)
+                {
+                    Arrow arrow = BackwardArrowAnnotation(end, labelCount, Colors.Red);
+                    highlights.Add(arrow);
+                }
 
-                //if (showTracking)
-                //{
-                //    // Get the tracker with the highest Time value.
-                //    ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
-                //    RectangleAnnotation? trackerAnnotation = TrackerAnnotation(start, end, labelCount, lastTracker);
+                if (showTracking)
+                {
+                    // Get the tracker with the highest Time value.
+                    ActivityTrackerModel? lastTracker = activity.Trackers.LastOrDefault();
+                    Rectangle? rectangle = RectangleAnnotation(start, end, labelCount, lastTracker);
 
-                //    if (trackerAnnotation is not null)
-                //    {
-                //        plotModel.Annotations.Add(trackerAnnotation);
-                //    }
-                //}
+                    if (rectangle is not null)
+                    {
+                        highlights.Add(rectangle);
+                    }
+                }
             }
         }
 
-        //private static ArrowAnnotation ForwardArrowAnnotation(
-        //    double start,
-        //    int labelCount,
-        //    OxyColor color)
-        //{
-        //    return ArrowAnnotation(start, -0.1, labelCount, color);
-        //}
+        private static Arrow ForwardArrowAnnotation(
+            double start,
+            int labelCount,
+            Color color)
+        {
+            return ArrowAnnotation(start, startDelta: -c_ArrowHeadDelta, labelCount, color);
+        }
 
-        //private static ArrowAnnotation BackwardArrowAnnotation(
-        //    double start,
-        //    int labelCount,
-        //    OxyColor color)
-        //{
-        //    return ArrowAnnotation(start, 0.1, labelCount, color);
-        //}
+        private static Arrow BackwardArrowAnnotation(
+            double start,
+            int labelCount,
+            Color color)
+        {
+            return ArrowAnnotation(start, startDelta: c_ArrowHeadDelta, labelCount, color);
+        }
 
-        //private static ArrowAnnotation ArrowAnnotation(
-        //    double start,
-        //    double startDelta,
-        //    int labelCount,
-        //    OxyColor color)
-        //{
-        //    double Y = labelCount + (c_TrackerAnnotationMinCorrection + c_TrackerAnnotationMaxCorrection) / 2.0;
+        private static Arrow ArrowAnnotation(
+            double start,
+            double startDelta,
+            int labelCount,
+            Color color)
+        {
+            double Y = labelCount;
+            var startPoint = new Coordinates(start + startDelta, Y);
+            var endPoint = new Coordinates(start, Y);
 
-        //    return new ArrowAnnotation
-        //    {
-        //        StartPoint = new DataPoint(start + startDelta, Y),
-        //        EndPoint = new DataPoint(start, Y),
-        //        Color = color,
-        //        StrokeThickness = 1.0,
-        //        Veeness = 1.0,
-        //        Layer = AnnotationLayer.AboveSeries,
-        //    };
-        //}
+            return new Arrow
+            {
+                Base = startPoint,
+                Tip = endPoint,
+                ArrowLineColor = color,
+                ArrowFillColor = color,
+                ArrowShape = ArrowShape.Arrowhead.GetShape(),
+                ArrowheadWidth = c_ArrowHeadWidth,
+                ArrowheadLength = c_ArrowHeadLength,
+                ArrowLineWidth = 1.0f,
+            };
+        }
 
-        //private static PointAnnotation DotAnnotation(
-        //    double start,
-        //    double end,
-        //    int labelCount,
-        //    OxyColor color)
-        //{
-        //    double X = start + (end - start) / 2.0;
-        //    double Y = labelCount + (c_TrackerAnnotationMinCorrection + c_TrackerAnnotationMaxCorrection) / 2.0;
+        private static Ellipse CircleAnnotation(
+            double start,
+            double end,
+            int labelCount,
+            Color lineColor,
+            Color backgroundColor)
+        {
+            double X = start + (end - start) / 2.0;
+            double Y = labelCount;
 
-        //    return new PointAnnotation
-        //    {
-        //        X = X,
-        //        Y = Y,
-        //        Shape = MarkerType.Circle,
-        //        Fill = color,
-        //        Stroke = OxyColors.Black,
-        //        Size = 6.0,
-        //        StrokeThickness = 2.0,
-        //        Layer = AnnotationLayer.AboveSeries,
-        //    };
-        //}
+            return new Ellipse
+            {
+                Center = new Coordinates(X, Y),
+                RadiusX = c_CircleWidth,
+                RadiusY = c_CircleWidth,
+                LineWidth = 1.0f,
+                LineColor = lineColor,
+                FillColor = backgroundColor,
+            };
+        }
+
+
+
+
+
 
         //private static PointAnnotation CrossAnnotation(
         //    double start,
         //    double end,
         //    int labelCount,
-        //    OxyColor color)
+        //    Color color)
         //{
         //    double X = start + (end - start) / 2.0;
         //    double Y = labelCount + (c_TrackerAnnotationMinCorrection + c_TrackerAnnotationMaxCorrection) / 2.0;
@@ -1166,35 +1054,39 @@ namespace Zametek.ViewModel.ProjectPlan
         //    };
         //}
 
-        //private static RectangleAnnotation? TrackerAnnotation(
-        //    double start,
-        //    double end,
-        //    int labelCount,
-        //    ActivityTrackerModel? tracker)
-        //{
-        //    if (tracker is null)
-        //    {
-        //        return null;
-        //    }
-        //    OxyColor strokeColor = OxyColors.Black;
-        //    OxyColor fillColor = OxyColor.FromAColor(ColorHelper.AnnotationATrackerOverlay, OxyColors.White);
 
-        //    double maxX = start + ((end - start) * tracker.PercentageComplete / 100);
-        //    double minY = labelCount + c_TrackerAnnotationMinCorrection;
-        //    double maxY = labelCount + c_TrackerAnnotationMaxCorrection;
 
-        //    return new RectangleAnnotation
-        //    {
-        //        MinimumX = start,
-        //        MaximumX = maxX,
-        //        MinimumY = minY,
-        //        MaximumY = maxY,
-        //        Fill = fillColor,
-        //        Stroke = strokeColor,
-        //        StrokeThickness = 1,
-        //        Layer = AnnotationLayer.AboveSeries,
-        //    };
-        //}
+
+
+
+        private static Rectangle? RectangleAnnotation(
+            double start,
+            double end,
+            int labelCount,
+            ActivityTrackerModel? tracker)
+        {
+            if (tracker is null)
+            {
+                return null;
+            }
+
+            Color strokeColor = Colors.Black;
+            Color fillColor = Colors.White.WithAlpha(ColorHelper.AnnotationATrackerOverlay);
+            double maxX = start + ((end - start) * tracker.PercentageComplete / 100);
+            double minY = labelCount - c_TrackerCorrection;
+            double maxY = labelCount + c_TrackerCorrection;
+
+            return new Rectangle
+            {
+                X1 = start,
+                X2 = maxX,
+                Y1 = minY,
+                Y2 = maxY,
+                FillColor = fillColor,
+                LineColor = strokeColor,
+                LineWidth = 1,
+            };
+        }
 
         private static IXAxis BuildResourceChartXAxis(
             AvaPlot plotModel,
@@ -1218,44 +1110,21 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     // Setup the plot to display X axis tick labels using date time format.
                     xAxis = plotModel.Plot.Axes.DateTimeTicksBottom();
-                    //return new DateTimeAxis
-                    //{
-                    //    MajorGridlineStyle = LineStyle.Solid,
-                    //    MinorGridlineStyle = LineStyle.Dot,
-                    //    MaximumPadding = 0.1,
-                    //    MinimumPadding = 0.1,
-                    //};
                 }
 
-                //return new LinearAxis
-                //{
-                //    MajorGridlineStyle = LineStyle.Solid,
-                //    MinorGridlineStyle = LineStyle.Dot,
-                //    MaximumPadding = 0.1,
-                //    MinimumPadding = 0.1,
-                //};
                 xAxis.Min = minValue;
                 xAxis.Max = maxValue;
             }
 
-            //return new LinearAxis
-            //{
-            //    MajorGridlineStyle = LineStyle.Solid,
-            //    MinorGridlineStyle = LineStyle.Dot,
-            //    MaximumPadding = 0.1,
-            //    MinimumPadding = 0.1,
-            //};
-
-
             xAxis.Label.Text = Resource.ProjectPlan.Labels.Label_TimeAxisTitle;
-            xAxis.Label.FontSize = 12;
+            xAxis.Label.FontSize = PlotHelper.FontSize;
             xAxis.Label.Bold = false;
             return xAxis;
         }
 
         private static IYAxis BuildResourceChartYAxis(
             AvaPlot plotModel,
-            IList<string> labels)
+            List<string> labels)
         {
             ArgumentNullException.ThrowIfNull(plotModel);
             ArgumentNullException.ThrowIfNull(labels);
@@ -1268,7 +1137,7 @@ namespace Zametek.ViewModel.ProjectPlan
             yAxis.Min = minValue;
             yAxis.Max = maxValue;
             yAxis.Label.Text = Resource.ProjectPlan.Labels.Label_GanttAxisTitle;
-            yAxis.Label.FontSize = 12;
+            yAxis.Label.FontSize = PlotHelper.FontSize;
             yAxis.Label.Bold = false;
 
             double[] tickPositions = [.. Enumerable.Range(1, labels.Count).Select(Convert.ToDouble)];
@@ -1379,12 +1248,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
         public IActivitySelectorViewModel ActivitySelector { get; }
-
-
-
-
 
         public ICommand SaveGanttChartImageFileCommand { get; }
 
@@ -1407,18 +1271,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     string fileExtension = Path.GetExtension(filename);
                     int calculatedHeight = 0;
 
-                    //if (GanttChartPlotModel.Plot.Axes.Left is CategoryAxis yAxis)
-                    //{
-                    //    int labelCount = yAxis.ActualLabels.Count;
-                    //    calculatedHeight = Convert.ToInt32(GanttChartPlotModel.DefaultFontSize * labelCount * c_ExportLabelHeightCorrection);
-                    //}
-
                     if (GanttChartPlotModel.Plot.GetPlottables<BarPlot>().FirstOrDefault() is BarPlot barPlot)
                     {
                         int barCount = barPlot.Bars.Count;
                         calculatedHeight = Convert.ToInt32(barPlot.Axes.YAxis.TickLabelStyle.FontSize * barCount * c_ExportLabelHeightCorrection);
                     }
-
 
                     if (calculatedHeight <= height)
                     {
