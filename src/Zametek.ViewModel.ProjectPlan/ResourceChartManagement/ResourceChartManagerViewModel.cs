@@ -392,6 +392,31 @@ namespace Zametek.ViewModel.ProjectPlan
                 //        plotModel.Annotations.Add(todayLine);
                 //    }
                 //}
+
+                if (showToday)
+                {
+                    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
+
+                    if (intValue is not null)
+                    {
+                        double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(
+                            intValue.GetValueOrDefault(),
+                            showDates,
+                            projectStart,
+                            dateTimeCalculator);
+
+                        plotModel.Plot.Add.VerticalLine(
+                            todayTimeX,
+                            width: 2,
+                            pattern: LinePattern.Dotted);
+                    }
+                }
+
+
+
+
+
+
             }
 
             scatters.Reverse();
@@ -440,7 +465,6 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(plotModel);
             IYAxis yAxis = plotModel.Plot.Axes.Left;
-
             yAxis.Min = 0.0;
             yAxis.Label.Text = Resource.ProjectPlan.Labels.Label_ResourcesAxisTitle;
             yAxis.Label.FontSize = PlotHelper.FontSize;
