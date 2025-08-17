@@ -1,11 +1,13 @@
-﻿using OxyPlot.Axes;
-using System.Globalization;
+﻿using System.Globalization;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public static class ChartHelper
     {
+
+        private static readonly DateTime s_TimeOrigin = new(1899, 12, 31, 0, 0, 0, DateTimeKind.Utc);
+
         public static string FormatStartScheduleOutput(
             int days,
             bool showDates,
@@ -56,7 +58,7 @@ namespace Zametek.ViewModel.ProjectPlan
             double output = days;
             if (showDates)
             {
-                output = Axis.ToDouble(
+                output = ToDouble(
                     dateTimeCalculator.AddDays(
                         projectStart.Date,
                         days)
@@ -75,7 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan
             double output = days;
             if (showDates)
             {
-                output = Axis.ToDouble(
+                output = ToDouble(
                     dateTimeCalculator.AddDays(
                         projectStart.Date,
                         days)
@@ -116,6 +118,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     projectStart.Date,
                     days),
                 duration);
+        }
+
+        private static double ToDouble(DateTime value)
+        {
+            var span = value - s_TimeOrigin;
+            return span.TotalDays + 1;
         }
     }
 }

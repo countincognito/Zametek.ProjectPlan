@@ -1,5 +1,4 @@
 ﻿using Avalonia.Media;
-using OxyPlot;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Zametek.Common.ProjectPlan;
@@ -18,7 +17,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         // These all match.
         public static readonly string SvgLightThemeBackground = "white";
-        public static readonly OxyColor OxyLightThemeBackground = OxyColors.White;
         public static readonly ScottPlot.Color ScottPlotLightThemeBackgroundColor = ScottPlot.Colors.White;
         public static readonly Color LightThemeBackground = Colors.White;
 
@@ -26,7 +24,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         // These all match.
         public static readonly string SvgDarkThemeBackground = "#373737";
-        public static readonly OxyColor OxyDarkThemeBackground = OxyColor.FromArgb(AnnotationAFull, 55, 55, 55);
         public static readonly ScottPlot.Color ScottPlotDarkThemeBackgroundColor = new(55, 55, 55, AnnotationAFull);
         public static readonly Color DarkThemeBackground = Color.FromArgb(AnnotationAFull, 55, 55, 55);
 

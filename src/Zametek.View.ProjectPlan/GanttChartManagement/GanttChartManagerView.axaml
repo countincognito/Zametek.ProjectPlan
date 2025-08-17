@@ -187,10 +187,6 @@
 		</ScrollViewer>
 
 		<DockPanel>
-			<!--<TextBlock x:Name="barannotation"
-					   DockPanel.Dock="Bottom"
-					   Height="25" />-->
-			
 			<!-- ScottPlot PlotView -->
 			<ContentControl x:Name="scottplot"
 							Content="{Binding GanttChartPlotModel, Mode=OneWay}"

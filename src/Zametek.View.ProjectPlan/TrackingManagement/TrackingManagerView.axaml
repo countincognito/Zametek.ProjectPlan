@@ -6,7 +6,6 @@
 	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
-			 xmlns:oxy="using:OxyPlot.Avalonia"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 			 xmlns:sys="using:System"
 			 x:DataType="vm:TrackingManagerViewModel"

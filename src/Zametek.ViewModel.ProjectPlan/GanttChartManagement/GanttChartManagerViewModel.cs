@@ -1,5 +1,4 @@
 ﻿using Avalonia;
-using com.sun.tools.javadoc;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -322,7 +321,7 @@ namespace Zametek.ViewModel.ProjectPlan
             var colorFormatLookup = new SlackColorFormatLookup(arrowGraphSettings.ActivitySeverities);
             string startEndFormat = showDates ? DateTimeCalculator.DateFormat : "0";
 
-            var series = new List<Bar>();
+            var bars = new List<Bar>();
             var highlights = new List<IPlottable>();
             var labels = new List<string>();
 
@@ -346,7 +345,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 showTracking,
                                 plotModel,
                                 colorFormatLookup,
-                                series,
+                                bars,
                                 labels,
                                 highlights,
                                 activity,
@@ -356,7 +355,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         // Add an extra row for padding.
                         // This item will appear at the top of the grouping.
 
-                        series.Add(BuildEmptyBar(minXValue));
+                        bars.Add(BuildEmptyBar(minXValue));
                         labels.Add(string.Empty);
                     }
 
@@ -418,7 +417,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                         showTracking,
                                         plotModel,
                                         colorFormatLookup,
-                                        series,
+                                        bars,
                                         labels,
                                         highlights,
                                         activity,
@@ -430,7 +429,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             // IntervalBarItems are added in reverse order to how they will be displayed.
                             // So, this item will appear at the bottom of the grouping.
 
-                            series.Add(BuildEmptyBar(minXValue));
+                            bars.Add(BuildEmptyBar(minXValue));
                             labels.Add(string.Empty);
 
                             int maximumY = labels.Count;
@@ -450,7 +449,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             showDates,
                                             labelGroups,
                                             plotModel,
-                                            series,
+                                            bars,
                                             labels,
                                             resourceName,
                                             resourceStartTime,
@@ -477,7 +476,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             showDates,
                                             labelGroups,
                                             plotModel,
-                                            series,
+                                            bars,
                                             labels,
                                             resourceName,
                                             resourceStartTime,
@@ -496,7 +495,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         // Add an extra row for padding.
                         // This item will appear at the top of the grouping.
 
-                        series.Add(BuildEmptyBar(minXValue));
+                        bars.Add(BuildEmptyBar(minXValue));
                         labels.Add(string.Empty);
                     }
 
@@ -621,7 +620,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                         showTracking,
                                         plotModel,
                                         colorFormatLookup,
-                                        series,
+                                        bars,
                                         labels,
                                         highlights,
                                         activity,
@@ -633,7 +632,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             // IntervalBarItems are added in reverse order to how they will be displayed.
                             // So, this item will appear at the bottom of the grouping.
 
-                            series.Add(BuildEmptyBar(minXValue));
+                            bars.Add(BuildEmptyBar(minXValue));
                             labels.Add(string.Empty);
 
                             int maximumY = labels.Count;
@@ -654,7 +653,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             showDates,
                                             labelGroups,
                                             plotModel,
-                                            series,
+                                            bars,
                                             labels,
                                             workStreamModel.Name,
                                             workStreamStartTime,
@@ -682,7 +681,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             showDates,
                                             labelGroups,
                                             plotModel,
-                                            series,
+                                            bars,
                                             labels,
                                             workStreamModel.Name,
                                             workStreamStartTime,
@@ -701,7 +700,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         // Add an extra row for padding.
                         // This item will appear at the top of the grouping.
 
-                        series.Add(BuildEmptyBar(minXValue));
+                        bars.Add(BuildEmptyBar(minXValue));
                         labels.Add(string.Empty);
                     }
 
@@ -761,13 +760,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // Enumerate the bar series and set the position of each bar.
-            for (int i = 0; i < series.Count; i++)
+            for (int i = 0; i < bars.Count; i++)
             {
-                var bar = series[i];
+                var bar = bars[i];
                 bar.Position = i + 1;
             }
 
-            BarPlot barPlot = plotModel.Plot.Add.Bars(series);
+            BarPlot barPlot = plotModel.Plot.Add.Bars(bars);
             barPlot.Horizontal = true;
 
             // Highlights (above the bar plot).
@@ -1301,12 +1300,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         })
                         //.Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
                         //{
-                        //    using var stream = File.OpenWrite(filename);
-                        //    OxyPlot.SkiaSharp.PdfExporter.Export(
-                        //        GanttChartPlotModel,
-                        //        stream,
-                        //        width,
-                        //        calculatedHeight);
                         //})
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
                 }

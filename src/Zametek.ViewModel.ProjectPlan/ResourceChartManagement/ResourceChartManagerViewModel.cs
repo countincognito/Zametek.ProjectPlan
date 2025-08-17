@@ -1,13 +1,14 @@
 ﻿using Avalonia;
-using OxyPlot;
-using OxyPlot.Annotations;
-using OxyPlot.Axes;
-using OxyPlot.Legends;
-using OxyPlot.Series;
+using Avalonia.Controls;
 using ReactiveUI;
+using ScottPlot;
+using ScottPlot.Avalonia;
+using ScottPlot.DataSources;
+using ScottPlot.Plottables;
 using System.Data;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Security.Cryptography;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -42,12 +43,36 @@ namespace Zametek.ViewModel.ProjectPlan
                 },
                 new FileFilter
                 {
-                    Name = Resource.ProjectPlan.Filters.Filter_PdfFileType,
+                    Name = Resource.ProjectPlan.Filters.Filter_ImageBmpFileType,
                     Patterns =
                     [
-                        Resource.ProjectPlan.Filters.Filter_PdfFilePattern
+                        Resource.ProjectPlan.Filters.Filter_ImageBmpFilePattern
                     ]
-                }
+                },
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_ImageWebpFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ImageWebpFilePattern
+                    ]
+                },
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_ImageSvgFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ImageSvgFilePattern
+                    ]
+                },
+                //new FileFilter
+                //{
+                //    Name = Resource.ProjectPlan.Filters.Filter_PdfFileType,
+                //    Patterns =
+                //    [
+                //        Resource.ProjectPlan.Filters.Filter_PdfFilePattern
+                //    ]
+                //}
             ];
 
         private readonly ICoreViewModel m_CoreViewModel;
@@ -56,6 +81,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
 
         private readonly IDisposable? m_BuildResourceChartPlotModelSub;
+
+        private const float c_ScatterLineWidth = 5.0f;
 
         #endregion
 
@@ -76,7 +103,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
-            m_ResourceChartPlotModel = new PlotModel();
+            m_ResourceChartPlotModel = new AvaPlot();
 
             {
                 ReactiveCommand<Unit, Unit> saveResourceChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveResourceChartImageFileAsync);
@@ -125,7 +152,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.ShowToday,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
                     (a, b, c, d, e, f, g, h, i, j, k) => (a, b, c, d, e, f, g, h, i, j, k)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ResourceChartView;
@@ -136,8 +163,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Properties
 
-        private PlotModel m_ResourceChartPlotModel;
-        public PlotModel ResourceChartPlotModel
+        private AvaPlot m_ResourceChartPlotModel;
+        public AvaPlot ResourceChartPlotModel
         {
             get
             {
@@ -173,7 +200,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static PlotModel BuildResourceChartPlotModelInternal(
+        private static AvaPlot BuildResourceChartPlotModelInternal(
             IDateTimeCalculator dateTimeCalculator,
             ResourceSeriesSetModel resourceSeriesSet,
             bool showDates,
@@ -187,7 +214,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
-            var plotModel = new PlotModel();
+            var plotModel = new AvaPlot();
+            plotModel.Plot.HideGrid();
 
             // Select the type of allocation to be displayed.
 
@@ -224,50 +252,35 @@ namespace Zametek.ViewModel.ProjectPlan
             IEnumerable<ResourceSeriesModel> resourceSeries = scheduleFunction(resourceSeriesSet).OrderBy(x => x.DisplayOrder);
             int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
 
-            plotModel.Axes.Add(BuildResourceChartXAxis(dateTimeCalculator, finishTime, showDates, projectStart));
-            plotModel.Axes.Add(BuildResourceChartYAxis());
+            BuildResourceChartXAxis(plotModel, dateTimeCalculator, finishTime, showDates, projectStart);
+            BuildResourceChartYAxis(plotModel);
 
-            var legend = new Legend()
-            {
-                LegendBorder = OxyColors.Black,
-                LegendBackground = OxyColors.Transparent,
-                LegendPosition = LegendPosition.RightMiddle,
-                LegendPlacement = LegendPlacement.Outside,
-                //LegendOrientation = this.LegendOrientation,
-                //LegendItemOrder = this.LegendItemOrder,
-                //LegendItemAlignment = this.LegendItemAlignment,
-                //LegendSymbolPlacement = this.LegendSymbolPlacement,
-                //LegendMaxWidth = this.LegendMaxWidth,
-                //LegendMaxHeight = this.LegendMaxHeight
-            };
+            plotModel.Plot.Legend.OutlineWidth = 1;
+            plotModel.Plot.Legend.BackgroundColor = Colors.Transparent;
+            plotModel.Plot.Legend.ShadowColor = Colors.Transparent;
+            plotModel.Plot.Legend.ShadowOffset = new(0, 0);
 
-            plotModel.Legends.Add(legend);
+            plotModel.Plot.ShowLegend(Edge.Right);
+
+            var scatters = new List<Scatter>();
 
             if (resourceSeries.Any())
             {
                 IList<int> total1 = [];
                 IList<int> total2 = [];
-                string startEndFormat = showDates ? DateTimeCalculator.DateFormat : "0";
 
                 foreach (ResourceSeriesModel series in resourceSeries)
                 {
                     if (series != null)
                     {
-                        var color = OxyColor.FromArgb(
-                            series.ColorFormat.A,
+                        var color = new Color(
                             series.ColorFormat.R,
                             series.ColorFormat.G,
-                            series.ColorFormat.B);
+                            series.ColorFormat.B,
+                            series.ColorFormat.A);
 
-                        var areaSeries = new AreaSeries
-                        {
-                            StrokeThickness = 0.0,
-                            Title = series.Title,
-                            Fill = color,
-                            Color = color,
-                            CanTrackerInterpolatePoints = false,
-                            TrackerFormatString = $"{{0}}\n{Resource.ProjectPlan.Labels.Label_TimeAxisTitle}: {{2:{startEndFormat}}}\n{Resource.ProjectPlan.Labels.Label_ResourcesAxisTitle}: {{4}}",
-                        };
+                        IList<double> xs = [];
+                        IList<double> ys = [];
 
                         switch (displayStyle)
                         {
@@ -276,26 +289,23 @@ namespace Zametek.ViewModel.ProjectPlan
                                     if (allocationFunction(series.ResourceSchedule).Count != 0)
                                     {
                                         // Mark the start of the plot.
-                                        areaSeries.Points.Add(new DataPoint(0.0, 0.0));
-                                        areaSeries.Points2.Add(new DataPoint(0.0, 0.0));
+                                        xs.Add(ChartHelper.CalculateChartStartTimeXValue(0, showDates, projectStart, dateTimeCalculator));
+                                        ys.Add(0.0);
 
                                         for (int i = 0; i < allocationFunction(series.ResourceSchedule).Count; i++)
                                         {
                                             bool allocationExists = allocationFunction(series.ResourceSchedule)[i];
+
                                             if (i >= total1.Count)
                                             {
                                                 total1.Add(0);
                                             }
+
                                             int dayNumber = i + 1;
-                                            areaSeries.Points.Add(
-                                                new DataPoint(
-                                                    ChartHelper.CalculateChartStartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
-                                                    total1[i]));
+
+                                            xs.Add(ChartHelper.CalculateChartStartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator));
                                             total1[i] += allocationExists ? 1 : 0;
-                                            areaSeries.Points2.Add(
-                                                new DataPoint(
-                                                    ChartHelper.CalculateChartStartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
-                                                    total1[i]));
+                                            ys.Add(total1[i]);
                                         }
                                     }
                                 }
@@ -315,15 +325,10 @@ namespace Zametek.ViewModel.ProjectPlan
                                             {
                                                 total1.Add(0);
                                             }
-                                            areaSeries.Points.Add(
-                                                new DataPoint(
-                                                    ChartHelper.CalculateChartStartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
-                                                    total1[dayNumber]));
+
+                                            xs.Add(ChartHelper.CalculateChartStartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator));
                                             total1[dayNumber] += allocationExists ? 1 : 0;
-                                            areaSeries.Points2.Add(
-                                                new DataPoint(
-                                                    ChartHelper.CalculateChartStartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
-                                                    total1[dayNumber]));
+                                            ys.Add(total1[dayNumber]);
 
                                             // Second point.
                                             if (dayNumber >= total2.Count)
@@ -337,15 +342,10 @@ namespace Zametek.ViewModel.ProjectPlan
                                             {
                                                 total2.Add(0);
                                             }
-                                            areaSeries.Points.Add(
-                                                new DataPoint(
-                                                    ChartHelper.CalculateChartFinishTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
-                                                    total2[dayNumber]));
+
+                                            xs.Add(ChartHelper.CalculateChartStartTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator));
                                             total2[dayNumber] += allocationExists ? 1 : 0;
-                                            areaSeries.Points2.Add(
-                                                new DataPoint(
-                                                    ChartHelper.CalculateChartFinishTimeXValue(dayNumber, showDates, projectStart, dateTimeCalculator),
-                                                    total2[dayNumber]));
+                                            ys.Add(total2[dayNumber]);
                                         }
                                     }
                                 }
@@ -354,48 +354,67 @@ namespace Zametek.ViewModel.ProjectPlan
                                 throw new ArgumentOutOfRangeException(nameof(displayStyle), @$"{Resource.ProjectPlan.Messages.Message_UnknownDisplayStyle} {displayStyle}");
                         }
 
-                        plotModel.Series.Add(areaSeries);
-                    }
-                }
-
-                if (showToday)
-                {
-                    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
-
-                    if (intValue is not null)
-                    {
-                        double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
-
-                        var todayLine = new LineAnnotation
+                        ScatterSourceDoubleArray source = new([.. xs], [.. ys]);
+                        Scatter scatter = new(source)
                         {
-                            StrokeThickness = 2,
-                            Color = OxyColors.Red,
-                            LineStyle = LineStyle.Dot,
-                            Type = LineAnnotationType.Vertical,
-                            X = todayTimeX,
-                            Y = 0.0
+                            LegendText = series.Title,
+                            LineColor = color,
+                            LineWidth = c_ScatterLineWidth,
+                            MarkerFillColor = color,
+                            MarkerLineColor = color,
+                            MarkerSize = 0,
+                            FillY = true,
+                            FillYColor = color,
                         };
 
-                        plotModel.Annotations.Add(todayLine);
+                        scatters.Add(scatter);
                     }
                 }
+
+                //if (showToday)
+                //{
+                //    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
+
+                //    if (intValue is not null)
+                //    {
+                //        double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(intValue.GetValueOrDefault(), showDates, projectStart, dateTimeCalculator);
+
+                //        var todayLine = new LineAnnotation
+                //        {
+                //            StrokeThickness = 2,
+                //            Color = OxyColors.Red,
+                //            LineStyle = LineStyle.Dot,
+                //            Type = LineAnnotationType.Vertical,
+                //            X = todayTimeX,
+                //            Y = 0.0
+                //        };
+
+                //        plotModel.Annotations.Add(todayLine);
+                //    }
+                //}
             }
 
-            if (plotModel is IPlotModel plotModelInterface)
-            {
-                plotModelInterface.Update(true);
-            }
+            scatters.Reverse();
+            plotModel.Plot.PlottableList.AddRange(scatters);
+
+            // Style the plot so the bars start on the left edge.
+            plotModel.Plot.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
 
             return plotModel.SetBaseTheme(baseTheme);
         }
 
-        private static Axis BuildResourceChartXAxis(
+        private static IXAxis BuildResourceChartXAxis(
+            AvaPlot plotModel,
             IDateTimeCalculator dateTimeCalculator,
             int finishTime,
             bool showDates,
             DateTimeOffset projectStart)
         {
+            ArgumentNullException.ThrowIfNull(plotModel);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+
+            IXAxis xAxis = plotModel.Plot.Axes.Bottom;
+
             if (finishTime != default)
             {
                 double minValue = ChartHelper.CalculateChartStartTimeXValue(0, showDates, projectStart, dateTimeCalculator);
@@ -403,35 +422,30 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (showDates)
                 {
-                    return new DateTimeAxis
-                    {
-                        Position = AxisPosition.Bottom,
-                        Minimum = minValue,
-                        Maximum = maxValue,
-                        Title = Resource.ProjectPlan.Labels.Label_TimeAxisTitle,
-                        StringFormat = DateTimeCalculator.DateFormat
-                    };
+                    // Setup the plot to display X axis tick labels using date time format.
+                    xAxis = plotModel.Plot.Axes.DateTimeTicksBottom();
                 }
 
-                return new LinearAxis
-                {
-                    Position = AxisPosition.Bottom,
-                    Minimum = minValue,
-                    Maximum = maxValue,
-                    Title = Resource.ProjectPlan.Labels.Label_TimeAxisTitle
-                };
+                xAxis.Min = minValue;
+                xAxis.Max = maxValue;
+                xAxis.Label.Text = Resource.ProjectPlan.Labels.Label_TimeAxisTitle;
+                xAxis.Label.FontSize = PlotHelper.FontSize;
+                xAxis.Label.Bold = false;
             }
-            return new LinearAxis();
+
+            return xAxis;
         }
 
-        private static LinearAxis BuildResourceChartYAxis()
+        private static IYAxis BuildResourceChartYAxis(AvaPlot plotModel)
         {
-            return new LinearAxis
-            {
-                Position = AxisPosition.Left,
-                Title = Resource.ProjectPlan.Labels.Label_ResourcesAxisTitle,
-                MinorStep = 1
-            };
+            ArgumentNullException.ThrowIfNull(plotModel);
+            IYAxis yAxis = plotModel.Plot.Axes.Left;
+
+            yAxis.Min = 0.0;
+            yAxis.Label.Text = Resource.ProjectPlan.Labels.Label_ResourcesAxisTitle;
+            yAxis.Label.FontSize = PlotHelper.FontSize;
+            yAxis.Label.Bold = false;
+            return yAxis;
         }
 
         private async Task SaveResourceChartImageFileAsync()
@@ -538,32 +552,32 @@ namespace Zametek.ViewModel.ProjectPlan
                     fileExtension.ValueSwitchOn()
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
                         {
-                            using var stream = File.OpenWrite(filename);
-                            OxyPlot.SkiaSharp.JpegExporter.Export(
-                                ResourceChartPlotModel,
-                                stream,
-                                width,
-                                height,
-                                100);
+                            ResourceChartPlotModel.Plot.Save(
+                                filename, width, height, ImageFormats.FromFilename(filename), 100);
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
                         {
-                            using var stream = File.OpenWrite(filename);
-                            OxyPlot.SkiaSharp.PngExporter.Export(
-                                ResourceChartPlotModel,
-                                stream,
-                                width,
-                                height);
+                            ResourceChartPlotModel.Plot.Save(
+                                filename, width, height, ImageFormats.FromFilename(filename), 100);
                         })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageBmpFileExtension}", _ =>
                         {
-                            using var stream = File.OpenWrite(filename);
-                            OxyPlot.SkiaSharp.PdfExporter.Export(
-                                ResourceChartPlotModel,
-                                stream,
-                                width,
-                                height);
+                            ResourceChartPlotModel.Plot.Save(
+                                filename, width, height, ImageFormats.FromFilename(filename), 100);
                         })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageWebpFileExtension}", _ =>
+                        {
+                            ResourceChartPlotModel.Plot.Save(
+                                filename, width, height, ImageFormats.FromFilename(filename), 100);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ =>
+                        {
+                            ResourceChartPlotModel.Plot.Save(
+                                filename, width, height, ImageFormats.FromFilename(filename), 100);
+                        })
+                        //.Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
+                        //{
+                        //})
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
                 }
                 catch (Exception ex)
@@ -578,7 +592,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildResourceChartPlotModel()
         {
-            PlotModel? plotModel = null;
+            AvaPlot? plotModel = null;
 
             lock (m_Lock)
             {
@@ -598,7 +612,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            ResourceChartPlotModel = plotModel ?? new PlotModel();
+            plotModel ??= new AvaPlot();
+
+            // Clear existing menu items.
+            plotModel.Menu?.Clear();
+
+            // Add menu items with custom actions.
+            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
+            {
+                SaveResourceChartImageFileCommand.Execute(null);
+            });
+
+            //plotModel.Plot.Axes.AutoScale();
+            ResourceChartPlotModel = plotModel;
         }
 
         #endregion

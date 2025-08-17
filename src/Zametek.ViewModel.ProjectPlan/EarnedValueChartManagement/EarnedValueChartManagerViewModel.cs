@@ -545,12 +545,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         })
                         //.Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
                         //{
-                        //    //using var stream = File.OpenWrite(filename);
-                        //    //OxyPlot.SkiaSharp.PdfExporter.Export(
-                        //    //    EarnedValueChartPlotModel,
-                        //    //    stream,
-                        //    //    width,
-                        //    //    height);
                         //})
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
                 }
