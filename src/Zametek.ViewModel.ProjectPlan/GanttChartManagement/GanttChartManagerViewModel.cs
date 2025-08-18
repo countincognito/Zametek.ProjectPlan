@@ -315,7 +315,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 finishTime = duration.GetValueOrDefault();
             }
 
-            var xAxis = BuildResourceChartXAxis(plotModel, dateTimeCalculator, startTime, finishTime, showDates, projectStart);
+            IXAxis xAxis = BuildResourceChartXAxis(plotModel, dateTimeCalculator, startTime, finishTime, showDates, projectStart);
             double minXValue = xAxis.Min;
 
             var colorFormatLookup = new SlackColorFormatLookup(arrowGraphSettings.ActivitySeverities);
@@ -343,7 +343,6 @@ namespace Zametek.ViewModel.ProjectPlan
                                 projectStart,
                                 showDates,
                                 showTracking,
-                                plotModel,
                                 colorFormatLookup,
                                 bars,
                                 labels,
@@ -415,7 +414,6 @@ namespace Zametek.ViewModel.ProjectPlan
                                         projectStart,
                                         showDates,
                                         showTracking,
-                                        plotModel,
                                         colorFormatLookup,
                                         bars,
                                         labels,
@@ -618,7 +616,6 @@ namespace Zametek.ViewModel.ProjectPlan
                                         projectStart,
                                         showDates,
                                         showTracking,
-                                        plotModel,
                                         colorFormatLookup,
                                         bars,
                                         labels,
@@ -853,7 +850,6 @@ namespace Zametek.ViewModel.ProjectPlan
             DateTimeOffset projectStart,
             bool showDates,
             bool showTracking,
-            AvaPlot plotModel,
             SlackColorFormatLookup colorFormatLookup,
             List<Bar> series,
             List<string> labels,
