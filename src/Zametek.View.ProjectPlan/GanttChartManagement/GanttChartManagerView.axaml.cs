@@ -49,12 +49,21 @@ namespace Zametek.View.ProjectPlan
                 if (bar is AnnotatedBar annotatedBar)
                 {
                     scottplot.SetValue(ToolTip.TipProperty, annotatedBar.Annotation);
-                }
-                else
-                {
-                    ClearToolTip();
+                    return;
                 }
             }
+
+            AnnotatedRectangle? annotatedRectangle = plotModel.Plot.GetPlottables<AnnotatedRectangle>()
+                .FirstOrDefault(rect => rect.CoordinateRect.Contains(mouseLocation));
+
+            if (annotatedRectangle is not null)
+            {
+                scottplot.SetValue(ToolTip.TipProperty, annotatedRectangle.Annotation);
+                return;
+            }
+
+            // If no bar or rectangle was found, clear the tooltip.
+            ClearToolTip();
         }
 
         private void ClearToolTip()

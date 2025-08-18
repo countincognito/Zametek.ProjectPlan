@@ -821,17 +821,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectStart,
                 dateTimeCalculator);
 
-            var coords = new CoordinateRect(
-                left: minimumX,
-                right: maximumX,
-                bottom: minimumY,
-                top: maximumY);
+            AnnotatedRectangle rp = new()
+            {
+                Annotation = itemName,
+                X1 = minimumX,
+                X2 = maximumX,
+                Y1 = minimumY,
+                Y2 = maximumY,
+                LineColor = strokeColor,
+                FillColor = fillColor,
+                LineWidth = 1,
+            };
 
-            Rectangle rect = plotModel.Plot.Add.Rectangle(coords);
-
-            rect.FillColor = fillColor;
-            rect.LineColor = strokeColor;
-            rect.LineWidth = 1;
+            plotModel.Plot.PlottableList.Add(rp);
 
             if (labelGroups)
             {
