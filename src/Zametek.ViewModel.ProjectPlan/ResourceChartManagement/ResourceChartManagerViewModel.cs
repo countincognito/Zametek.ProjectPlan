@@ -82,6 +82,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private const float c_ScatterLineWidth = 5.0f;
 
+        private const float c_VerticalLineWidth = 2.0f;
+
         #endregion
 
         #region Ctors
@@ -384,7 +386,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         plotModel.Plot.Add.VerticalLine(
                             todayTimeX,
-                            width: 2,
+                            width: c_VerticalLineWidth,
                             pattern: LinePattern.Dotted);
                     }
                 }

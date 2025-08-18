@@ -543,4 +543,7 @@
   <data name="Label_DirectMargin" xml:space="preserve">
     <value>Direct Margin:</value>
   </data>
+  <data name="Label_ShowMilestones" xml:space="preserve">
+    <value>Show Milestones</value>
+  </data>
 </root>

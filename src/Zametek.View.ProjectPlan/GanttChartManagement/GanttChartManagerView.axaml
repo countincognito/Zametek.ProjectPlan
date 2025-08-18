@@ -154,6 +154,27 @@
 						   DockPanel.Dock="Top"
 						   IsTabStop="False"
 						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_ShowMilestones}"/>
+
+					<ToggleSwitch DockPanel.Dock="Top"
+								  IsTabStop="False"
+								  Margin="0,0,0,11"
+								  VerticalAlignment="Center"
+								  VerticalContentAlignment="Center"
+								  HorizontalAlignment="Center"
+								  HorizontalContentAlignment="Center"
+								  OffContent="{x:Static resources:Labels.Label_No}"
+								  OnContent="{x:Static resources:Labels.Label_Yes}"
+								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"/>
+				</DockPanel>
+
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
 						   Content="{x:Static resources:Labels.Label_ShowConnections}"/>
 
 					<u:MultiComboBox MaxHeight="200"

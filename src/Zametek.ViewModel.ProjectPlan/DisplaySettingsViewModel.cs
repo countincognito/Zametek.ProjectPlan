@@ -253,6 +253,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_GanttChartShowMilestones;
+        public bool GanttChartShowMilestones
+        {
+            get => m_GanttChartShowMilestones;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true, trackStaleOutputs: false);
+                    this.RaiseAndSetIfChanged(ref m_GanttChartShowMilestones, value);
+                }
+            }
+        }
+
 
 
         private AllocationMode m_ResourceChartAllocationMode;
@@ -399,6 +413,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     GanttChartShowToday = model.GanttChartShowToday;
                 }
+                if (GanttChartShowMilestones != model.GanttChartShowMilestones)
+                {
+                    GanttChartShowMilestones = model.GanttChartShowMilestones;
+                }
 
 
                 if (ResourceChartAllocationMode != model.ResourceChartAllocationMode)
@@ -450,12 +468,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     GanttChartShowProjectFinish = GanttChartShowProjectFinish,
                     GanttChartShowTracking = GanttChartShowTracking,
                     GanttChartShowToday = GanttChartShowToday,
+                    GanttChartShowMilestones = GanttChartShowMilestones,
 
                     ResourceChartAllocationMode = ResourceChartAllocationMode,
                     ResourceChartScheduleMode = ResourceChartScheduleMode,
                     ResourceChartDisplayStyle = ResourceChartDisplayStyle,
                     ResourceChartShowToday = ResourceChartShowToday,
-
+ 
                     EarnedValueShowProjections = EarnedValueShowProjections,
                     EarnedValueShowToday = EarnedValueShowToday,
                 };

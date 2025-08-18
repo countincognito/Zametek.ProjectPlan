@@ -33,6 +33,8 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
 
         public bool GanttChartShowToday { get; init; }
 
+        public bool GanttChartShowMilestones { get; init; }
+
 
 
         public AllocationMode ResourceChartAllocationMode { get; init; }

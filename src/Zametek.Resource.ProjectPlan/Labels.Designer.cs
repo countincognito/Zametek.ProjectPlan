@@ -1115,6 +1115,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Milestones.
+        /// </summary>
+        public static string Label_ShowMilestones {
+            get {
+                return ResourceManager.GetString("Label_ShowMilestones", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Names.
         /// </summary>
         public static string Label_ShowNames {

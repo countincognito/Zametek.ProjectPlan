@@ -31,6 +31,8 @@
 
         public bool GanttChartShowToday { get; init; } = default;
 
+        public bool GanttChartShowMilestones { get; init; } = default;
+
 
 
         public AllocationMode ResourceChartAllocationMode { get; init; } = default;

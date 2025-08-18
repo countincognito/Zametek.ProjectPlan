@@ -88,8 +88,10 @@ namespace Zametek.ViewModel.ProjectPlan
         private const double c_TrackerCorrection = c_BarSize / 2.0;
 
         private const double c_ArrowHeadDelta = 0.03;
-        private const float c_ArrowHeadWidth = 6;
-        private const float c_ArrowHeadLength = 14;
+        private const float c_ArrowHeadWidth = 6.0f;
+        private const float c_ArrowHeadLength = 14.0f;
+
+        private const float c_VerticalLineWidth = 2.0f;
 
         #endregion
 
@@ -155,6 +157,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowToday)
                 .ToProperty(this, rcm => rcm.ShowToday);
 
+            m_ShowMilestones = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowMilestones)
+                .ToProperty(this, rcm => rcm.ShowMilestones);
+
             m_IsGrouped = this
                 .WhenAnyValue(
                     rcm => rcm.GroupByMode,
@@ -178,7 +184,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.ShowProjectFinish,
                     rcm => rcm.ShowTracking,
                     rcm => rcm.ShowToday,
-                    (a, b, c, d, e, f) =>
+                    rcm => rcm.ShowMilestones,
+                    (a, b, c, d, e, f, g) =>
                     {
                         if (m_BoolAccumulator is null
                             || m_BoolAccumulator.Value == BoolToggle.Up)
@@ -272,6 +279,7 @@ namespace Zametek.ViewModel.ProjectPlan
             int? duration,
             DateTimeOffset today,
             bool showToday,
+            bool showMilestones,
             bool showDates,
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
             GroupByMode groupByMode,
@@ -751,7 +759,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     plotModel.Plot.Add.VerticalLine(
                         todayTimeX,
-                        width: 2,
+                        width: c_VerticalLineWidth,
                         pattern: LinePattern.Dotted);
                 }
             }
@@ -768,6 +776,38 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Highlights (above the bar plot).
             plotModel.Plot.PlottableList.AddRange(highlights);
+
+            if (showMilestones)
+            {
+                List<IDependentActivity> milestones = [.. graphCompilation
+                    .DependentActivities
+                    .OrderBy(x => x.EarliestStartTime)
+                    .Where(x => x.Duration == 0)];
+
+                var milestoneLines = new List<AnnotatedVerticalLine>();
+
+                foreach (IDependentActivity milestone in milestones)
+                {
+                    string id = milestone.Id.ToString(CultureInfo.InvariantCulture);
+                    string label = string.IsNullOrWhiteSpace(milestone.Name) ? id : $"{milestone.Name} ({id})";
+
+                    double milestoneTimeX = ChartHelper.CalculateChartStartTimeXValue(
+                        milestone.EarliestStartTime.GetValueOrDefault(),
+                        showDates,
+                        projectStart,
+                        dateTimeCalculator);
+
+                    AnnotatedVerticalLine milestoneLine = MilestoneAnnotation(
+                        milestoneTimeX,
+                        c_VerticalLineWidth,
+                        label,
+                        Colors.White);
+
+                    milestoneLines.Add(milestoneLine);
+                }
+
+                plotModel.Plot.PlottableList.AddRange(milestoneLines);
+            }
 
             // Style the plot so the bars start on the left edge.
             plotModel.Plot.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
@@ -1049,6 +1089,46 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
+        private static AnnotatedVerticalLine MilestoneAnnotation(
+            double start,
+            float width,
+            string label,
+            Color color)
+        {
+            return new AnnotatedVerticalLine
+            {
+                Annotation = label,
+                LineWidth = width,
+                LineColor = color,
+                LabelBackgroundColor = color,
+                LinePattern = LinePattern.Dashed,
+                X = start,
+            };
+        }
+
+        private static AnnotatedArrow MilestoneAnnotation(
+            double start,
+            int startDelta,
+            string label,
+            Color color)
+        {
+            double Y = 0.0;
+            var startPoint = new Coordinates(start, Y);
+            var endPoint = new Coordinates(start, Y + startDelta);
+
+            return new AnnotatedArrow
+            {
+                Annotation = label,
+                Base = endPoint,
+                Tip = startPoint,
+                ArrowLineColor = color,
+                ArrowFillColor = color,
+                ArrowShape = ArrowShape.Arrowhead.GetShape(),
+                ArrowheadWidth = c_ArrowHeadWidth,
+                ArrowLineWidth = 1.0f,
+            };
+        }
+
         private static Rectangle? TrackerAnnotation(
             double start,
             double end,
@@ -1238,6 +1318,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_ShowMilestones;
+        public bool ShowMilestones
+        {
+            get => m_ShowMilestones.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowMilestones = value;
+            }
+        }
+
         public IActivitySelectorViewModel ActivitySelector { get; }
 
         public ICommand SaveGanttChartImageFileCommand { get; }
@@ -1329,6 +1419,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.Duration,
                     m_CoreViewModel.Today,
                     ShowToday,
+                    ShowMilestones,
                     m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                     m_CoreViewModel.GraphCompilation,
                     GroupByMode,

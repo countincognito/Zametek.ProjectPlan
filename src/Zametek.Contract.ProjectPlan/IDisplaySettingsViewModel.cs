@@ -21,6 +21,7 @@ namespace Zametek.Contract.ProjectPlan
         bool GanttChartShowProjectFinish { get; set; }
         bool GanttChartShowTracking { get; set; }
         bool GanttChartShowToday { get; set; }
+        bool GanttChartShowMilestones { get; set; }
 
 
         AllocationMode ResourceChartAllocationMode { get; set; }
@@ -29,11 +30,11 @@ namespace Zametek.Contract.ProjectPlan
         bool ResourceChartShowToday { get; set; }
 
 
-        public bool EarnedValueShowProjections { get; set; }
-        public bool EarnedValueShowToday { get; set; }
+        bool EarnedValueShowProjections { get; set; }
+        bool EarnedValueShowToday { get; set; }
 
 
-        public void SetValues(DisplaySettingsModel model);
-        public DisplaySettingsModel GetValues();
+        void SetValues(DisplaySettingsModel model);
+        DisplaySettingsModel GetValues();
     }
 }

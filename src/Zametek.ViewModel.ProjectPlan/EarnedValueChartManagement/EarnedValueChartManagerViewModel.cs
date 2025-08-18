@@ -78,6 +78,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly IDisposable? m_BuildEarnedValueChartPlotModelSub;
 
+        private const float c_VerticalLineWidth = 2.0f;
+
         #endregion
 
         #region Ctors
@@ -335,7 +337,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     plotModel.Plot.Add.VerticalLine(
                         todayTimeX,
-                        width: 2,
+                        width: c_VerticalLineWidth,
                         pattern: LinePattern.Dotted);
                 }
             }
@@ -346,6 +348,23 @@ namespace Zametek.ViewModel.ProjectPlan
             plotModel.Plot.Axes.AutoScale();
 
             return plotModel.SetBaseTheme(baseTheme);
+        }
+
+        private static AnnotatedVerticalLine MilestoneAnnotation(
+            double start,
+            float width,
+            string label,
+            Color color)
+        {
+            return new AnnotatedVerticalLine
+            {
+                Annotation = label,
+                LineWidth = width,
+                LineColor = color,
+                LabelBackgroundColor = color,
+                LinePattern = LinePattern.Dashed,
+                X = start,
+            };
         }
 
         private static IXAxis BuildEarnedValueChartXAxis(

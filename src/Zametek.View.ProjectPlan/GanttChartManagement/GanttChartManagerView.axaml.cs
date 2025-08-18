@@ -42,6 +42,19 @@ namespace Zametek.View.ProjectPlan
             Pixel mousePixel = new(pos.X, pos.Y);
             Coordinates mouseLocation = plotModel.Plot.GetCoordinates(mousePixel);
 
+            // Milestones.
+
+            AnnotatedVerticalLine? annotatedVerticalLine = plotModel.Plot.GetPlottables<AnnotatedVerticalLine>()
+                .FirstOrDefault(arrow => arrow.CoordinateRect.Contains(mouseLocation));
+
+            if (annotatedVerticalLine is not null)
+            {
+                scottplot.SetValue(ToolTip.TipProperty, annotatedVerticalLine.Annotation);
+                return;
+            }
+
+            // Activity bars.
+
             if (plotModel.Plot.GetPlottables<BarPlot>().FirstOrDefault() is BarPlot barPlot)
             {
                 Bar? bar = barPlot.Bars.FirstOrDefault(bar => bar.Rect.Contains(mouseLocation));
@@ -52,6 +65,8 @@ namespace Zametek.View.ProjectPlan
                     return;
                 }
             }
+
+            // Annotations.
 
             AnnotatedRectangle? annotatedRectangle = plotModel.Plot.GetPlottables<AnnotatedRectangle>()
                 .FirstOrDefault(rect => rect.CoordinateRect.Contains(mouseLocation));
