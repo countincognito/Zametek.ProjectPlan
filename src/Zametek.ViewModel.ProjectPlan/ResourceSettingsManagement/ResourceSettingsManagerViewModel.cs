@@ -64,27 +64,27 @@ namespace Zametek.ViewModel.ProjectPlan
                .Subscribe();
 
             m_IsBusy = this
-                .WhenAnyValue(rm => rm.m_CoreViewModel.IsBusy)
-                .ToProperty(this, rm => rm.IsBusy);
+                .WhenAnyValue(rsm => rsm.m_CoreViewModel.IsBusy)
+                .ToProperty(this, rsm => rsm.IsBusy);
 
             m_HasStaleOutputs = this
-                .WhenAnyValue(rm => rm.m_CoreViewModel.HasStaleOutputs)
-                .ToProperty(this, rm => rm.HasStaleOutputs);
+                .WhenAnyValue(rsm => rsm.m_CoreViewModel.HasStaleOutputs)
+                .ToProperty(this, rsm => rsm.HasStaleOutputs);
 
             m_HasCompilationErrors = this
-                .WhenAnyValue(rm => rm.m_CoreViewModel.HasCompilationErrors)
-                .ToProperty(this, rm => rm.HasCompilationErrors);
+                .WhenAnyValue(rsm => rsm.m_CoreViewModel.HasCompilationErrors)
+                .ToProperty(this, rsm => rsm.HasCompilationErrors);
 
             m_HideCost = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.DisplaySettingsViewModel.HideCost)
-                .ToProperty(this, mm => mm.HideCost);
+                .WhenAnyValue(rsm => rsm.m_CoreViewModel.DisplaySettingsViewModel.HideCost)
+                .ToProperty(this, rsm => rsm.HideCost);
 
             m_HideBilling = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.DisplaySettingsViewModel.HideBilling)
-                .ToProperty(this, mm => mm.HideBilling);
+                .WhenAnyValue(rsm => rsm.m_CoreViewModel.DisplaySettingsViewModel.HideBilling)
+                .ToProperty(this, rsm => rsm.HideBilling);
 
             m_ProcessResourceSettingsSub = this
-                .WhenAnyValue(rm => rm.m_CoreViewModel.ResourceSettings)
+                .WhenAnyValue(rsm => rsm.m_CoreViewModel.ResourceSettings)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(rs =>
                 {
@@ -95,7 +95,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
 
             m_UpdateResourceSettingsSub = this
-                .WhenAnyValue(rm => rm.AreSettingsUpdated)
+                .WhenAnyValue(rsm => rsm.AreSettingsUpdated)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(areUpdated =>
                 {
@@ -106,7 +106,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
 
             m_ReviseSettingsSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.IsReadyToReviseSettings)
+                .WhenAnyValue(rsm => rsm.m_CoreViewModel.IsReadyToReviseSettings)
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(isReadyToRevise =>
                 {

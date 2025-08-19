@@ -52,7 +52,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             SetSelectedManagedActivitySeveritiesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedActivitySeverities);
             AddManagedActivitySeverityCommand = ReactiveCommand.CreateFromTask(AddManagedActivitySeverityAsync);
-            RemoveManagedActivitySeveritiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitySeveritiesAsync, this.WhenAnyValue(rm => rm.HasActivitySeverities));
+            RemoveManagedActivitySeveritiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitySeveritiesAsync, this.WhenAnyValue(agsm => agsm.HasActivitySeverities));
 
             // Create read-only view to the source list.
             m_ActivitySeverities.Connect()
@@ -61,19 +61,19 @@ namespace Zametek.ViewModel.ProjectPlan
                .Subscribe();
 
             m_IsBusy = this
-                .WhenAnyValue(rm => rm.m_CoreViewModel.IsBusy)
-                .ToProperty(this, rm => rm.IsBusy);
+                .WhenAnyValue(agsm => agsm.m_CoreViewModel.IsBusy)
+                .ToProperty(this, agsm => agsm.IsBusy);
 
             m_HasStaleOutputs = this
-                .WhenAnyValue(rm => rm.m_CoreViewModel.HasStaleOutputs)
-                .ToProperty(this, rm => rm.HasStaleOutputs);
+                .WhenAnyValue(agsm => agsm.m_CoreViewModel.HasStaleOutputs)
+                .ToProperty(this, agsm => agsm.HasStaleOutputs);
 
             m_HasCompilationErrors = this
-                .WhenAnyValue(rm => rm.m_CoreViewModel.HasCompilationErrors)
-                .ToProperty(this, rm => rm.HasCompilationErrors);
+                .WhenAnyValue(agsm => agsm.m_CoreViewModel.HasCompilationErrors)
+                .ToProperty(this, agsm => agsm.HasCompilationErrors);
 
             m_ProcessArrowGraphSettingsSub = this
-                .WhenAnyValue(rm => rm.m_CoreViewModel.ArrowGraphSettings)
+                .WhenAnyValue(agsm => agsm.m_CoreViewModel.ArrowGraphSettings)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(rs =>
                 {
@@ -84,7 +84,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
 
             m_UpdateArrowGraphSettingsSub = this
-                .WhenAnyValue(rm => rm.AreSettingsUpdated)
+                .WhenAnyValue(agsm => agsm.AreSettingsUpdated)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(areUpdated =>
                 {

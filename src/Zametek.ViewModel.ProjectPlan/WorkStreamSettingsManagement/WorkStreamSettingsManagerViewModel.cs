@@ -54,7 +54,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             SetSelectedManagedWorkStreamsCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedWorkStreams);
             AddManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(AddManagedWorkStreamAsync);
-            RemoveManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(RemoveManagedWorkStreamsAsync, this.WhenAnyValue(rm => rm.HasSelectedWorkStreams));
+            RemoveManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(RemoveManagedWorkStreamsAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
 
             // Create read-only view to the source list.
             m_WorkStreams.Connect()
@@ -63,19 +63,19 @@ namespace Zametek.ViewModel.ProjectPlan
                .Subscribe();
 
             m_IsBusy = this
-                .WhenAnyValue(rm => rm.m_CoreViewModel.IsBusy)
-                .ToProperty(this, rm => rm.IsBusy);
+                .WhenAnyValue(wssm => wssm.m_CoreViewModel.IsBusy)
+                .ToProperty(this, wssm => wssm.IsBusy);
 
             m_HasStaleOutputs = this
-                .WhenAnyValue(rm => rm.m_CoreViewModel.HasStaleOutputs)
-                .ToProperty(this, rm => rm.HasStaleOutputs);
+                .WhenAnyValue(wssm => wssm.m_CoreViewModel.HasStaleOutputs)
+                .ToProperty(this, wssm => wssm.HasStaleOutputs);
 
             m_HasCompilationErrors = this
-                .WhenAnyValue(rm => rm.m_CoreViewModel.HasCompilationErrors)
-                .ToProperty(this, rm => rm.HasCompilationErrors);
+                .WhenAnyValue(wssm => wssm.m_CoreViewModel.HasCompilationErrors)
+                .ToProperty(this, wssm => wssm.HasCompilationErrors);
 
             m_ProcessWorkStreamSettingsSub = this
-                .WhenAnyValue(rm => rm.m_CoreViewModel.WorkStreamSettings)
+                .WhenAnyValue(wssm => wssm.m_CoreViewModel.WorkStreamSettings)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(rs =>
                 {
@@ -86,7 +86,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
 
             m_UpdateWorkStreamSettingsSub = this
-                .WhenAnyValue(rm => rm.AreSettingsUpdated)
+                .WhenAnyValue(wssm => wssm.AreSettingsUpdated)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(areUpdated =>
                 {

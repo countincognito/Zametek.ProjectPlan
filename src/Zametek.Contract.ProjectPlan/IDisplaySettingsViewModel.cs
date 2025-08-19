@@ -28,10 +28,12 @@ namespace Zametek.Contract.ProjectPlan
         ScheduleMode ResourceChartScheduleMode { get; set; }
         DisplayStyle ResourceChartDisplayStyle { get; set; }
         bool ResourceChartShowToday { get; set; }
+        bool ResourceChartShowMilestones { get; set; }
 
 
         bool EarnedValueShowProjections { get; set; }
         bool EarnedValueShowToday { get; set; }
+        bool EarnedValueShowMilestones { get; set; }
 
 
         void SetValues(DisplaySettingsModel model);

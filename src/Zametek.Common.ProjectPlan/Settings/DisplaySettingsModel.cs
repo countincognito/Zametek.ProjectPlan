@@ -43,10 +43,14 @@
 
         public bool ResourceChartShowToday { get; init; } = default;
 
+        public bool ResourceChartShowMilestones { get; init; } = default;
+
 
 
         public bool EarnedValueShowProjections { get; init; } = default;
 
         public bool EarnedValueShowToday { get; init; } = default;
+
+        public bool EarnedValueShowMilestones { get; init; } = default;
     }
 }

@@ -45,10 +45,14 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
 
         public bool ResourceChartShowToday { get; init; }
 
+        public bool ResourceChartShowMilestones { get; init; }
+
 
 
         public bool EarnedValueShowProjections { get; init; }
 
         public bool EarnedValueShowToday { get; init; }
+
+        public bool EarnedValueShowMilestones { get; init; }
     }
 }

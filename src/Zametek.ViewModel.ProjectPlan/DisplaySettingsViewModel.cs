@@ -325,6 +325,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_ResourceChartShowMilestones;
+        public bool ResourceChartShowMilestones
+        {
+            get => m_ResourceChartShowMilestones;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true, trackStaleOutputs: false);
+                    this.RaiseAndSetIfChanged(ref m_ResourceChartShowMilestones, value);
+                }
+            }
+        }
+
 
 
         private bool m_EarnedValueShowProjections;
@@ -351,6 +365,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     SetIsProjectUpdated(isProjectUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_EarnedValueShowToday, value);
+                }
+            }
+        }
+
+        private bool m_EarnedValueShowMilestones;
+        public bool EarnedValueShowMilestones
+        {
+            get => m_EarnedValueShowMilestones;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true, trackStaleOutputs: false);
+                    this.RaiseAndSetIfChanged(ref m_EarnedValueShowMilestones, value);
                 }
             }
         }
@@ -435,6 +463,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ResourceChartShowToday = model.ResourceChartShowToday;
                 }
+                if (ResourceChartShowMilestones != model.ResourceChartShowMilestones)
+                {
+                    ResourceChartShowMilestones = model.ResourceChartShowMilestones;
+                }
 
 
                 if (EarnedValueShowProjections != model.EarnedValueShowProjections)
@@ -444,6 +476,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (EarnedValueShowToday != model.EarnedValueShowToday)
                 {
                     EarnedValueShowToday = model.EarnedValueShowToday;
+                }
+                if (EarnedValueShowMilestones != model.EarnedValueShowMilestones)
+                {
+                    EarnedValueShowMilestones = model.EarnedValueShowMilestones;
                 }
             }
         }
@@ -474,9 +510,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResourceChartScheduleMode = ResourceChartScheduleMode,
                     ResourceChartDisplayStyle = ResourceChartDisplayStyle,
                     ResourceChartShowToday = ResourceChartShowToday,
- 
+                    ResourceChartShowMilestones = ResourceChartShowMilestones,
+
                     EarnedValueShowProjections = EarnedValueShowProjections,
                     EarnedValueShowToday = EarnedValueShowToday,
+                    EarnedValueShowMilestones = EarnedValueShowMilestones,
                 };
             }
         }

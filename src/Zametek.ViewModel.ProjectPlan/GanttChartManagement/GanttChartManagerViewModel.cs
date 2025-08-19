@@ -201,11 +201,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
                     rcm => rcm.m_CoreViewModel.ResourceSettings,
                     rcm => rcm.m_CoreViewModel.ArrowGraphSettings,
-                    //rcm => rcm.m_CoreViewModel.WorkStreamSettings,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
                     rcm => rcm.m_CoreViewModel.Duration,
                     rcm => rcm.m_CoreViewModel.Today,
-                    //rcm => rcm.m_CoreViewModel.GraphCompilation,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
                     rcm => rcm.GroupByMode,
                     rcm => rcm.AnnotationStyle,
@@ -1484,6 +1482,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ShowProjectFinish?.Dispose();
                 m_ShowTracking?.Dispose();
                 m_ShowToday?.Dispose();
+                m_ShowMilestones?.Dispose();
                 m_IsGrouped?.Dispose();
                 m_IsAnnotated?.Dispose();
                 m_BoolAccumulator?.Dispose();

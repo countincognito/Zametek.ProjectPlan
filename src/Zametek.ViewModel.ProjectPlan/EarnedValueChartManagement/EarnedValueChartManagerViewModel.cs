@@ -3,11 +3,13 @@ using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
+using System.Globalization;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -107,37 +109,42 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             m_IsBusy = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBusy)
-                .ToProperty(this, rcm => rcm.IsBusy);
+                .WhenAnyValue(evc => evc.m_CoreViewModel.IsBusy)
+                .ToProperty(this, evc => evc.IsBusy);
 
             m_HasStaleOutputs = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.HasStaleOutputs)
-                .ToProperty(this, rcm => rcm.HasStaleOutputs);
+                .WhenAnyValue(evc => evc.m_CoreViewModel.HasStaleOutputs)
+                .ToProperty(this, evc => evc.HasStaleOutputs);
 
             m_HasCompilationErrors = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.HasCompilationErrors)
-                .ToProperty(this, rcm => rcm.HasCompilationErrors);
+                .WhenAnyValue(evc => evc.m_CoreViewModel.HasCompilationErrors)
+                .ToProperty(this, evc => evc.HasCompilationErrors);
 
             m_ShowProjections = this
                 .WhenAnyValue(main => main.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections)
                 .ToProperty(this, main => main.ShowProjections);
 
             m_ShowToday = this
-                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowToday)
-                .ToProperty(this, rcm => rcm.ShowToday);
+                .WhenAnyValue(evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowToday)
+                .ToProperty(this, evc => evc.ShowToday);
+
+            m_ShowMilestones = this
+                .WhenAnyValue(evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowMilestones)
+                .ToProperty(this, evc => evc.ShowMilestones);
 
             m_BuildEarnedValueChartPlotModelSub = this
                 .WhenAnyValue(
-                    rcm => rcm.m_CoreViewModel.TrackingSeriesSet,
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
-                    rcm => rcm.ShowToday,
-                    rcm => rcm.m_CoreViewModel.ProjectStart,
-                    rcm => rcm.m_CoreViewModel.Today,
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections,
-                    rcm => rcm.m_CoreViewModel.BaseTheme,
-                    (a, b, c, d, e, f, g, h, i) => (a, b, c, d, e, f, g, h, i))
+                    evc => evc.m_CoreViewModel.TrackingSeriesSet,
+                    evc => evc.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    evc => evc.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
+                    evc => evc.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
+                    evc => evc.ShowToday,
+                    evc => evc.ShowMilestones,
+                    evc => evc.m_CoreViewModel.ProjectStart,
+                    evc => evc.m_CoreViewModel.Today,
+                    evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections,
+                    evc => evc.m_CoreViewModel.BaseTheme,
+                    (a, b, c, d, e, f, g, h, i, j) => (a, b, c, d, e, f, g, h, i, j))
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(async _ => await BuildEarnedValueChartPlotModelAsync());
 
@@ -190,9 +197,11 @@ namespace Zametek.ViewModel.ProjectPlan
             IDateTimeCalculator dateTimeCalculator,
             TrackingSeriesSetModel trackingSeriesSet,
             bool showToday,
+            bool showMilestones,
             bool showDates,
             DateTimeOffset projectStart,
             DateTimeOffset today,
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
             bool showProjections,
             BaseTheme baseTheme)
         {
@@ -340,6 +349,38 @@ namespace Zametek.ViewModel.ProjectPlan
                         width: c_VerticalLineWidth,
                         pattern: LinePattern.Dotted);
                 }
+            }
+
+            if (showMilestones)
+            {
+                List<IDependentActivity> milestones = [.. graphCompilation
+                    .DependentActivities
+                    .OrderBy(x => x.EarliestStartTime)
+                    .Where(x => x.Duration == 0)];
+
+                var milestoneLines = new List<AnnotatedVerticalLine>();
+
+                foreach (IDependentActivity milestone in milestones)
+                {
+                    string id = milestone.Id.ToString(CultureInfo.InvariantCulture);
+                    string label = string.IsNullOrWhiteSpace(milestone.Name) ? id : $"{milestone.Name} ({id})";
+
+                    double milestoneTimeX = ChartHelper.CalculateChartStartTimeXValue(
+                        milestone.EarliestStartTime.GetValueOrDefault(),
+                        showDates,
+                        projectStart,
+                        dateTimeCalculator);
+
+                    AnnotatedVerticalLine milestoneLine = MilestoneAnnotation(
+                        milestoneTimeX,
+                        c_VerticalLineWidth,
+                        label,
+                        Colors.White);
+
+                    milestoneLines.Add(milestoneLine);
+                }
+
+                plotModel.Plot.PlottableList.AddRange(milestoneLines);
             }
 
             // Style the plot so the bars start on the left edge.
@@ -521,6 +562,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_ShowMilestones;
+        public bool ShowMilestones
+        {
+            get => m_ShowMilestones.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowMilestones = value;
+            }
+        }
+
         public ICommand SaveEarnedValueChartImageFileCommand { get; }
 
         public async Task SaveEarnedValueChartImageFileAsync(
@@ -594,9 +645,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         m_DateTimeCalculator,
                         m_CoreViewModel.TrackingSeriesSet,
                         ShowToday,
+                        ShowMilestones,
                         m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                         m_CoreViewModel.ProjectStart,
                         m_CoreViewModel.Today,
+                        m_CoreViewModel.GraphCompilation,
                         m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections,
                         m_CoreViewModel.BaseTheme);
                 }
@@ -652,6 +705,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_ShowProjections?.Dispose();
                 m_ShowToday?.Dispose();
+                m_ShowMilestones?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

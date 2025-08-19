@@ -5,11 +5,13 @@ using ScottPlot.Avalonia;
 using ScottPlot.DataSources;
 using ScottPlot.Plottables;
 using System.Data;
+using System.Globalization;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -138,6 +140,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ResourceChartShowToday)
                 .ToProperty(this, rcm => rcm.ShowToday);
 
+            m_ShowMilestones = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ResourceChartShowMilestones)
+                .ToProperty(this, rcm => rcm.ShowMilestones);
+
             m_BuildResourceChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
@@ -150,8 +156,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.ScheduleMode,
                     rcm => rcm.DisplayStyle,
                     rcm => rcm.ShowToday,
+                    rcm => rcm.ShowMilestones,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
-                    (a, b, c, d, e, f, g, h, i, j, k) => (a, b, c, d, e, f, g, h, i, j, k)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                    (a, b, c, d, e, f, g, h, i, j, k, l) => (a, b, c, d, e, f, g, h, i, j, k, l)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
 
@@ -206,14 +213,17 @@ namespace Zametek.ViewModel.ProjectPlan
             bool showDates,
             DateTimeOffset projectStart,
             DateTimeOffset today,
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
             AllocationMode allocationMode,
             ScheduleMode scheduleMode,
             DisplayStyle displayStyle,
             bool showToday,
+            bool showMilestones,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
+            ArgumentNullException.ThrowIfNull(graphCompilation);
             var plotModel = new AvaPlot();
             plotModel.Plot.HideGrid();
 
@@ -395,6 +405,38 @@ namespace Zametek.ViewModel.ProjectPlan
             scatters.Reverse();
             plotModel.Plot.PlottableList.AddRange(scatters);
 
+            if (showMilestones)
+            {
+                List<IDependentActivity> milestones = [.. graphCompilation
+                    .DependentActivities
+                    .OrderBy(x => x.EarliestStartTime)
+                    .Where(x => x.Duration == 0)];
+
+                var milestoneLines = new List<AnnotatedVerticalLine>();
+
+                foreach (IDependentActivity milestone in milestones)
+                {
+                    string id = milestone.Id.ToString(CultureInfo.InvariantCulture);
+                    string label = string.IsNullOrWhiteSpace(milestone.Name) ? id : $"{milestone.Name} ({id})";
+
+                    double milestoneTimeX = ChartHelper.CalculateChartStartTimeXValue(
+                        milestone.EarliestStartTime.GetValueOrDefault(),
+                        showDates,
+                        projectStart,
+                        dateTimeCalculator);
+
+                    AnnotatedVerticalLine milestoneLine = MilestoneAnnotation(
+                        milestoneTimeX,
+                        c_VerticalLineWidth,
+                        label,
+                        Colors.White);
+
+                    milestoneLines.Add(milestoneLine);
+                }
+
+                plotModel.Plot.PlottableList.AddRange(milestoneLines);
+            }
+
             // Style the plot so the bars start on the left edge.
             plotModel.Plot.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
 
@@ -407,6 +449,22 @@ namespace Zametek.ViewModel.ProjectPlan
             plotModel.Plot.Axes.AutoScale();
 
             return plotModel.SetBaseTheme(baseTheme);
+        }
+        private static AnnotatedVerticalLine MilestoneAnnotation(
+            double start,
+            float width,
+            string label,
+            Color color)
+        {
+            return new AnnotatedVerticalLine
+            {
+                Annotation = label,
+                LineWidth = width,
+                LineColor = color,
+                LabelBackgroundColor = color,
+                LinePattern = LinePattern.Dashed,
+                X = start,
+            };
         }
 
         private static IXAxis BuildResourceChartXAxis(
@@ -534,6 +592,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_ShowMilestones;
+        public bool ShowMilestones
+        {
+            get => m_ShowMilestones.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.ResourceChartShowMilestones = value;
+            }
+        }
+
         public ICommand SaveResourceChartImageFileCommand { get; }
 
         public async Task SaveResourceChartImageFileAsync(
@@ -609,10 +677,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                         m_CoreViewModel.ProjectStart,
                         m_CoreViewModel.Today,
+                        m_CoreViewModel.GraphCompilation,
                         AllocationMode,
                         ScheduleMode,
                         DisplayStyle,
                         ShowToday,
+                        ShowMilestones,
                         m_CoreViewModel.BaseTheme);
                 }
             }
@@ -669,6 +739,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ScheduleMode?.Dispose();
                 m_DisplayStyle?.Dispose();
                 m_ShowToday?.Dispose();
+                m_ShowMilestones?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

@@ -108,24 +108,24 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             m_IsBusy = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.IsBusy)
-                .ToProperty(this, mm => mm.IsBusy);
+                .WhenAnyValue(agm => agm.m_CoreViewModel.IsBusy)
+                .ToProperty(this, agm => agm.IsBusy);
 
             m_HasStaleOutputs = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.HasStaleOutputs)
-                .ToProperty(this, mm => mm.HasStaleOutputs);
+                .WhenAnyValue(agm => agm.m_CoreViewModel.HasStaleOutputs)
+                .ToProperty(this, agm => agm.HasStaleOutputs);
 
             m_HasCompilationErrors = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.HasCompilationErrors)
-                .ToProperty(this, mm => mm.HasCompilationErrors);
+                .WhenAnyValue(agm => agm.m_CoreViewModel.HasCompilationErrors)
+                .ToProperty(this, agm => agm.HasCompilationErrors);
 
             m_ShowNames = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames)
-                .ToProperty(this, mm => mm.ShowNames);
+                .WhenAnyValue(agm => agm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames)
+                .ToProperty(this, agm => agm.ShowNames);
 
             m_BaseTheme = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.BaseTheme)
-                .ToProperty(this, mm => mm.BaseTheme);
+                .WhenAnyValue(agm => agm.m_CoreViewModel.BaseTheme)
+                .ToProperty(this, agm => agm.BaseTheme);
 
             m_BuildArrowGraphDataSub = this
                 .WhenAnyValue(
