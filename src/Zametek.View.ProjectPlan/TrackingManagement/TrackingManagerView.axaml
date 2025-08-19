@@ -87,7 +87,7 @@
 				</DataGrid.Styles>
 				
 				<i:Interaction.Behaviors>
-					<local:DataGridCacheScrollBehavior />
+					<!--<local:DataGridCacheScrollBehavior />-->
 				</i:Interaction.Behaviors>
 				
 				<DataGrid.Columns>
@@ -223,7 +223,7 @@
 				</DataGrid.Styles>
 				
 				<i:Interaction.Behaviors>
-					<local:DataGridCacheScrollBehavior />
+					<!--<local:DataGridCacheScrollBehavior />-->
 				</i:Interaction.Behaviors>
 				
 				<DataGrid.Columns>

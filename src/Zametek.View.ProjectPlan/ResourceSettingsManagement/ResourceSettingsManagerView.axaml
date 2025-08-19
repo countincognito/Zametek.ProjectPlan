@@ -168,7 +168,7 @@
 											PassEventArgsToCommand="True" />
 				</ia:EventTriggerBehavior>
 
-				<local:DataGridCacheScrollBehavior />
+				<!--<local:DataGridCacheScrollBehavior />-->
 			</i:Interaction.Behaviors>
 
 			<DataGrid.Columns>
