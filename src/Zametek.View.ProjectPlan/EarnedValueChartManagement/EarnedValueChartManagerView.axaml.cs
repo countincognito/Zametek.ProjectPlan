@@ -52,6 +52,15 @@ namespace Zametek.View.ProjectPlan
                 return;
             }
 
+            AnnotatedArrow? annotatedArrow = plotModel.Plot.GetPlottables<AnnotatedArrow>()
+                .FirstOrDefault(rect => rect.CoordinateRect.Contains(mouseLocation));
+
+            if (annotatedArrow is not null)
+            {
+                scottplot.SetValue(ToolTip.TipProperty, annotatedArrow.Annotation);
+                return;
+            }
+
             // Annotations.
 
             AnnotatedRectangle? annotatedRectangle = plotModel.Plot.GetPlottables<AnnotatedRectangle>()

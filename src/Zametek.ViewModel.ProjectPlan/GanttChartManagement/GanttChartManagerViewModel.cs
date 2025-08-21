@@ -324,6 +324,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             IXAxis xAxis = BuildResourceChartXAxis(plotModel, dateTimeCalculator, startTime, finishTime, showDates, projectStart);
             double minXValue = xAxis.Min;
+            double maxXValue = xAxis.Max;
 
             var colorFormatLookup = new SlackColorFormatLookup(arrowGraphSettings.ActivitySeverities);
             string startEndFormat = showDates ? DateTimeCalculator.DateFormat : "0";
@@ -712,6 +713,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 default:
                     throw new ArgumentOutOfRangeException(nameof(groupByMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownGroupByMode} {groupByMode}");
             }
+
+            // Add an extra row for to ensure the graph has a right edge near the project finish time.
+            bars.Add(BuildEmptyBar(maxXValue));
 
             if (showProjectFinish)
             {

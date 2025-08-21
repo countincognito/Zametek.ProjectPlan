@@ -80,6 +80,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly IDisposable? m_BuildEarnedValueChartPlotModelSub;
 
+        private const float c_ArrowHeadWidth = 6.0f;
+        private const float c_ArrowHeadLength = 14.0f;
+        private const float c_ArrowHeadHeight = 8.0f;
+
         private const float c_VerticalLineWidth = 2.0f;
 
         #endregion
@@ -358,29 +362,46 @@ namespace Zametek.ViewModel.ProjectPlan
                     .OrderBy(x => x.EarliestStartTime)
                     .Where(x => x.Duration == 0)];
 
-                var milestoneLines = new List<AnnotatedVerticalLine>();
+                var milestoneParameters = new List<(string label, int startTime, double peakPercentage)>();
 
                 foreach (IDependentActivity milestone in milestones)
                 {
+                    // Here we need to find the highest peak along the plan
+                    // line where the milestone needs to be positioned on the
+                    // Y axis.
                     string id = milestone.Id.ToString(CultureInfo.InvariantCulture);
                     string label = string.IsNullOrWhiteSpace(milestone.Name) ? id : $"{milestone.Name} ({id})";
+                    int startTime = milestone.EarliestStartTime.GetValueOrDefault();
 
+                    double peakPercentage = trackingSeriesSet.Plan
+                        .Where(x => x.Time == startTime)
+                        .DefaultIfEmpty()
+                        .Max(x => x?.ValuePercentage ?? 0);
+
+                    milestoneParameters.Add((label, startTime, peakPercentage));
+                }
+
+                var milestoneArrows = new List<AnnotatedArrow>();
+
+                foreach (var (label, startTime, peakPercentage) in milestoneParameters)
+                {
                     double milestoneTimeX = ChartHelper.CalculateChartStartTimeXValue(
-                        milestone.EarliestStartTime.GetValueOrDefault(),
+                        startTime,
                         showDates,
                         projectStart,
                         dateTimeCalculator);
 
-                    AnnotatedVerticalLine milestoneLine = MilestoneAnnotation(
+                    AnnotatedArrow milestoneArrow = MilestoneAnnotation(
                         milestoneTimeX,
-                        c_VerticalLineWidth,
+                        c_ArrowHeadHeight,
+                        peakPercentage,
                         label,
-                        Colors.White);
+                        Colors.Yellow);
 
-                    milestoneLines.Add(milestoneLine);
+                    milestoneArrows.Add(milestoneArrow);
                 }
 
-                plotModel.Plot.PlottableList.AddRange(milestoneLines);
+                plotModel.Plot.PlottableList.AddRange(milestoneArrows);
             }
 
             // Style the plot so the bars start on the left edge.
@@ -391,20 +412,28 @@ namespace Zametek.ViewModel.ProjectPlan
             return plotModel.SetBaseTheme(baseTheme);
         }
 
-        private static AnnotatedVerticalLine MilestoneAnnotation(
+        private static AnnotatedArrow MilestoneAnnotation(
             double start,
-            float width,
+            float startDelta,
+            double peakPercentage,
             string label,
             Color color)
         {
-            return new AnnotatedVerticalLine
+            double Y = peakPercentage;
+            var startPoint = new Coordinates(start, Y);
+            var endPoint = new Coordinates(start, Y + startDelta);
+
+            return new AnnotatedArrow
             {
                 Annotation = label,
-                LineWidth = width,
-                LineColor = color,
-                LabelBackgroundColor = color,
-                LinePattern = LinePattern.Dashed,
-                X = start,
+                Base = endPoint,
+                Tip = startPoint,
+                ArrowLineColor = color,
+                ArrowFillColor = color,
+                ArrowShape = ArrowShape.Arrowhead.GetShape(),
+                ArrowheadWidth = c_ArrowHeadWidth,
+                ArrowheadLength = c_ArrowHeadLength,
+                ArrowLineWidth = 1.0f,
             };
         }
 
