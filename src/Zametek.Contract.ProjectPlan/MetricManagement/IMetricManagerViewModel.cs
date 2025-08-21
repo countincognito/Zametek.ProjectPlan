@@ -61,6 +61,14 @@
 
         double? TotalMargin { get; }
 
+        double? DirectMarginAbsolute { get; }
+
+        double? IndirectMarginAbsolute { get; }
+
+        double? OtherMarginAbsolute { get; }
+
+        double? TotalMarginAbsolute { get; }
+
         double? DirectEffort { get; }
 
         double? IndirectEffort { get; }

@@ -92,7 +92,7 @@
 		</ScrollViewer>
 
 		<DataGrid Name="activitiesGrid"
-				  FrozenColumnCount="1"
+				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
 				  ItemsSource="{Binding Path=Activities, Mode=OneWay}"
@@ -174,6 +174,43 @@
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
+										CustomSortComparer="{StaticResource nameSortComparer}"
+										Width="120">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_ActivityName}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ActivityName}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=Name, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<TextBox Text="{Binding Path=Name, Mode=TwoWay}"
+									 VerticalAlignment="Center"
+									 Focusable="True"
+									 Margin="0"
+									 Padding="3"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
 										CustomSortComparer="{StaticResource durationSortComparer}"
 										Width="90">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -206,43 +243,6 @@
 												Margin="0"
 												Padding="0"
 												Minimum="0"/>
-						</DataTemplate>
-					</DataGridTemplateColumn.CellEditingTemplate>
-				</DataGridTemplateColumn>
-
-				<DataGridTemplateColumn CanUserResize="True"
-										CanUserReorder="True"
-										CanUserSort="True"
-										CustomSortComparer="{StaticResource nameSortComparer}"
-										Width="120">
-					<DataGridTemplateColumn.HeaderTemplate>
-						<DataTemplate>
-							<TextBlock VerticalAlignment="Center"
-									   Margin="0"
-									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_ActivityName}"
-									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ActivityName}"/>
-						</DataTemplate>
-					</DataGridTemplateColumn.HeaderTemplate>
-					<DataGridTemplateColumn.CellTemplate>
-						<DataTemplate>
-							<Grid VerticalAlignment="Stretch"
-								  Classes="editable">
-								<TextBox VerticalAlignment="Center"
-										 Margin="0"
-										 Padding="3"
-										 Classes="displayOnly"
-										 Text="{Binding Path=Name, Mode=OneWay}"/>
-							</Grid>
-						</DataTemplate>
-					</DataGridTemplateColumn.CellTemplate>
-					<DataGridTemplateColumn.CellEditingTemplate>
-						<DataTemplate>
-							<TextBox Text="{Binding Path=Name, Mode=TwoWay}"
-									 VerticalAlignment="Center"
-									 Focusable="True"
-									 Margin="0"
-									 Padding="3"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>

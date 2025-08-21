@@ -90,6 +90,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private const double c_ArrowHeadDelta = 0.03;
         private const float c_ArrowHeadWidth = 6.0f;
         private const float c_ArrowHeadLength = 14.0f;
+        private const float c_ArrowHeadHeight = 8.0f;
 
         private const float c_VerticalLineWidth = 2.0f;
 
@@ -782,12 +783,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     .OrderBy(x => x.EarliestStartTime)
                     .Where(x => x.Duration == 0)];
 
-                var milestoneLines = new List<AnnotatedVerticalLine>();
+                var milestoneArrows = new List<AnnotatedArrow>();
 
                 foreach (IDependentActivity milestone in milestones)
                 {
-                    string id = milestone.Id.ToString(CultureInfo.InvariantCulture);
-                    string label = string.IsNullOrWhiteSpace(milestone.Name) ? id : $"{milestone.Name} ({id})";
+                    int id = milestone.Id;
+                    string formattedId = id.ToString(CultureInfo.InvariantCulture);
+                    string label = string.IsNullOrWhiteSpace(milestone.Name) ? formattedId : $"{milestone.Name} ({formattedId})";
 
                     double milestoneTimeX = ChartHelper.CalculateChartStartTimeXValue(
                         milestone.EarliestStartTime.GetValueOrDefault(),
@@ -795,16 +797,22 @@ namespace Zametek.ViewModel.ProjectPlan
                         projectStart,
                         dateTimeCalculator);
 
-                    AnnotatedVerticalLine milestoneLine = MilestoneAnnotation(
-                        milestoneTimeX,
-                        c_VerticalLineWidth,
-                        label,
-                        Colors.White);
+                    // When no activity connections are selected.
+                    bool hasNoHighlightActivityConnections = !highlightActivityConnections.Any();
 
-                    milestoneLines.Add(milestoneLine);
+                    // When the activity is highlighted as a connection.
+                    bool highlightAsActivity = highlightActivityConnections.Contains(id);
+
+                    AnnotatedArrow milestoneArrow = MilestoneAnnotation(
+                        milestoneTimeX,
+                        c_ArrowHeadHeight,
+                        label,
+                        hasNoHighlightActivityConnections || highlightAsActivity ? Colors.Yellow : Colors.White);
+
+                    milestoneArrows.Add(milestoneArrow);
                 }
 
-                plotModel.Plot.PlottableList.AddRange(milestoneLines);
+                plotModel.Plot.PlottableList.AddRange(milestoneArrows);
             }
 
             // Style the plot so the bars start on the left edge.
@@ -1087,26 +1095,9 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private static AnnotatedVerticalLine MilestoneAnnotation(
-            double start,
-            float width,
-            string label,
-            Color color)
-        {
-            return new AnnotatedVerticalLine
-            {
-                Annotation = label,
-                LineWidth = width,
-                LineColor = color,
-                LabelBackgroundColor = color,
-                LinePattern = LinePattern.Dashed,
-                X = start,
-            };
-        }
-
         private static AnnotatedArrow MilestoneAnnotation(
             double start,
-            int startDelta,
+            float startDelta,
             string label,
             Color color)
         {
@@ -1123,6 +1114,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ArrowFillColor = color,
                 ArrowShape = ArrowShape.Arrowhead.GetShape(),
                 ArrowheadWidth = c_ArrowHeadWidth,
+                ArrowheadLength = c_ArrowHeadLength,
                 ArrowLineWidth = 1.0f,
             };
         }

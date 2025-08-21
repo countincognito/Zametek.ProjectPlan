@@ -357,8 +357,14 @@
 				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
-						             FontWeight="Bold"
-						             Text="{Binding Path=DirectMargin, Mode=OneWay, StringFormat=\{0:P2\}}"/>
+						             FontWeight="Bold">
+					<SelectableTextBlock.Text>
+						<MultiBinding StringFormat="{}{0:N2} ({1:P1})">
+							<Binding Path="DirectMarginAbsolute" Mode="OneWay" />
+							<Binding Path="DirectMargin" Mode="OneWay" />
+						</MultiBinding>
+					</SelectableTextBlock.Text>
+				</SelectableTextBlock>
 
 				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
 					                 VerticalAlignment="Center"
@@ -367,8 +373,14 @@
 				<SelectableTextBlock Grid.Column="1" Grid.Row="1"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
-						             FontWeight="Bold"
-						             Text="{Binding Path=IndirectMargin, Mode=OneWay, StringFormat=\{0:P2\}}"/>
+						             FontWeight="Bold">
+					<SelectableTextBlock.Text>
+						<MultiBinding StringFormat="{}{0:N2} ({1:P1})">
+							<Binding Path="IndirectMarginAbsolute" Mode="OneWay" />
+							<Binding Path="IndirectMargin" Mode="OneWay" />
+						</MultiBinding>
+					</SelectableTextBlock.Text>
+				</SelectableTextBlock>
 
 				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
 					                 VerticalAlignment="Center"
@@ -377,8 +389,14 @@
 				<SelectableTextBlock Grid.Column="1" Grid.Row="2"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
-						             FontWeight="Bold"
-						             Text="{Binding Path=OtherMargin, Mode=OneWay, StringFormat=\{0:P2\}}"/>
+						             FontWeight="Bold">
+					<SelectableTextBlock.Text>
+						<MultiBinding StringFormat="{}{0:N2} ({1:P1})">
+							<Binding Path="OtherMarginAbsolute" Mode="OneWay" />
+							<Binding Path="OtherMargin" Mode="OneWay" />
+						</MultiBinding>
+					</SelectableTextBlock.Text>
+				</SelectableTextBlock>
 
 				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
 					                 VerticalAlignment="Center"
@@ -387,8 +405,14 @@
 				<SelectableTextBlock Grid.Column="1" Grid.Row="3"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
-						             FontWeight="Bold"
-						             Text="{Binding Path=TotalMargin, Mode=OneWay, StringFormat=\{0:P2\}}"/>
+						             FontWeight="Bold">
+					<SelectableTextBlock.Text>
+						<MultiBinding StringFormat="{}{0:N2} ({1:P1})">
+							<Binding Path="TotalMarginAbsolute" Mode="OneWay" />
+							<Binding Path="TotalMargin" Mode="OneWay" />
+						</MultiBinding>
+					</SelectableTextBlock.Text>
+				</SelectableTextBlock>
 			</Grid>
 		</WrapPanel>
 	</ScrollViewer>

@@ -199,10 +199,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
             static double? CalculateMargin(double? cost, double? billing)
             {
-                if (cost is not null
-                    && billing is not null)
+                double? abs = CalculateMarginAbsolute(cost, billing);
+
+                if (abs is not null
+                    && billing is not null
+                    && billing != 0)
                 {
-                    return (billing - cost) / billing;
+                    return abs / billing;
                 }
                 return null;
             }
@@ -234,6 +237,44 @@ namespace Zametek.ViewModel.ProjectPlan
                     mm => mm.TotalBilling,
                     CalculateMargin)
                  .ToProperty(this, mm => mm.TotalMargin);
+
+            static double? CalculateMarginAbsolute(double? cost, double? billing)
+            {
+                if (cost is not null
+                    && billing is not null)
+                {
+                    return billing - cost;
+                }
+                return null;
+            }
+
+            m_DirectMarginAbsolute = this
+                 .WhenAnyValue(
+                    mm => mm.DirectCost,
+                    mm => mm.DirectBilling,
+                    CalculateMarginAbsolute)
+                 .ToProperty(this, mm => mm.DirectMarginAbsolute);
+
+            m_IndirectMarginAbsolute = this
+                 .WhenAnyValue(
+                    mm => mm.IndirectCost,
+                    mm => mm.IndirectBilling,
+                    CalculateMarginAbsolute)
+                 .ToProperty(this, mm => mm.IndirectMarginAbsolute);
+
+            m_OtherMarginAbsolute = this
+                 .WhenAnyValue(
+                    mm => mm.OtherCost,
+                    mm => mm.OtherBilling,
+                    CalculateMarginAbsolute)
+                 .ToProperty(this, mm => mm.OtherMarginAbsolute);
+
+            m_TotalMarginAbsolute = this
+                 .WhenAnyValue(
+                    mm => mm.TotalCost,
+                    mm => mm.TotalBilling,
+                    CalculateMarginAbsolute)
+                 .ToProperty(this, mm => mm.TotalMarginAbsolute);
 
             m_DirectEffort = this
                  .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Direct)
@@ -671,6 +712,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<double?> m_TotalMargin;
         public double? TotalMargin => m_TotalMargin.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_DirectMarginAbsolute;
+        public double? DirectMarginAbsolute => m_DirectMarginAbsolute.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_IndirectMarginAbsolute;
+        public double? IndirectMarginAbsolute => m_IndirectMarginAbsolute.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_OtherMarginAbsolute;
+        public double? OtherMarginAbsolute => m_OtherMarginAbsolute.Value;
+
+        private readonly ObservableAsPropertyHelper<double?> m_TotalMarginAbsolute;
+        public double? TotalMarginAbsolute => m_TotalMarginAbsolute.Value;
 
         private readonly ObservableAsPropertyHelper<double?> m_DirectEffort;
         public double? DirectEffort => m_DirectEffort.Value;
