@@ -248,7 +248,7 @@
 								<TextBlock VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Text="{Binding Path=CriticalityWeight, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+										   Text="{Binding Path=CriticalityWeight, Mode=OneWay, StringFormat=\{0:N2\}}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -286,7 +286,7 @@
 								<TextBlock VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Text="{Binding Path=FibonacciWeight, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+										   Text="{Binding Path=FibonacciWeight, Mode=OneWay, StringFormat=\{0:N2\}}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>

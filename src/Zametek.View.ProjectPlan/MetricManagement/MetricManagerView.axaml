@@ -37,7 +37,7 @@
 									 VerticalAlignment="Center"
 									 Margin="7,0,0,0"
 									 FontWeight="Bold"
-									 Text="{Binding Path=ActivityRisk, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+									 Text="{Binding Path=ActivityRisk, Mode=OneWay, StringFormat=\{0:N2\}}"/>
 
 				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
 					                 VerticalAlignment="Center"
@@ -47,7 +47,7 @@
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
-						             Text="{Binding Path=ActivityRiskWithStdDevCorrection, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+						             Text="{Binding Path=ActivityRiskWithStdDevCorrection, Mode=OneWay, StringFormat=\{0:N2\}}"/>
 
 				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
 					                 VerticalAlignment="Center"
@@ -57,7 +57,7 @@
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
-						             Text="{Binding Path=CriticalityRisk, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+						             Text="{Binding Path=CriticalityRisk, Mode=OneWay, StringFormat=\{0:N2\}}"/>
 
 				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
 					                 VerticalAlignment="Center"
@@ -67,7 +67,7 @@
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
-						             Text="{Binding Path=FibonacciRisk, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+						             Text="{Binding Path=FibonacciRisk, Mode=OneWay, StringFormat=\{0:N2\}}"/>
 			</Grid>
 
 			<Grid Margin="7">
@@ -100,7 +100,7 @@
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
-						             Text="{Binding Path=GeometricActivityRisk, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+						             Text="{Binding Path=GeometricActivityRisk, Mode=OneWay, StringFormat=\{0:N2\}}"/>
 
 				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
 					                 VerticalAlignment="Center"
@@ -110,7 +110,7 @@
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
-						             Text="{Binding Path=GeometricCriticalityRisk, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+						             Text="{Binding Path=GeometricCriticalityRisk, Mode=OneWay, StringFormat=\{0:N2\}}"/>
 
 				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
 					                 VerticalAlignment="Center"
@@ -120,7 +120,7 @@
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
-						             Text="{Binding Path=GeometricFibonacciRisk, Mode=OneWay, StringFormat=\{0:N3\}}"/>
+						             Text="{Binding Path=GeometricFibonacciRisk, Mode=OneWay, StringFormat=\{0:N2\}}"/>
 			</Grid>
 
 			<Grid Margin="7">
