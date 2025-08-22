@@ -530,6 +530,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
+                m_HideCost?.Dispose();
+                m_HideBilling?.Dispose();
                 m_ProcessResourceSettingsSub?.Dispose();
                 m_UpdateResourceSettingsSub?.Dispose();
                 m_ReviseSettingsSub?.Dispose();

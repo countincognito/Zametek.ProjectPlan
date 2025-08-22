@@ -57,6 +57,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .ToProperty(this, am => am.HasCompilationErrors);
 
+            m_HideCost = this
+                .WhenAnyValue(am => am.m_CoreViewModel.DisplaySettingsViewModel.HideCost)
+                .ToProperty(this, am => am.HideCost);
+
+            m_HideBilling = this
+                .WhenAnyValue(am => am.m_CoreViewModel.DisplaySettingsViewModel.HideBilling)
+                .ToProperty(this, am => am.HideBilling);
+
             AddMilestoneCommand = ReactiveCommand.CreateFromTask(
                 AddMilestoneAsync,
                 this.WhenAnyValue(
@@ -239,6 +247,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
+        private readonly ObservableAsPropertyHelper<bool> m_HideCost;
+        public bool HideCost => m_HideCost.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HideBilling;
+        public bool HideBilling => m_HideBilling.Value;
+
         private bool m_HasActivities;
         public bool HasActivities
         {
@@ -285,6 +299,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasStaleOutputs?.Dispose();
                 m_ShowDates?.Dispose();
                 m_HasCompilationErrors?.Dispose();
+                m_HideCost?.Dispose();
+                m_HideBilling?.Dispose();
             }
 
             // Free unmanaged resources (unmanaged objects) and override a finalizer below.

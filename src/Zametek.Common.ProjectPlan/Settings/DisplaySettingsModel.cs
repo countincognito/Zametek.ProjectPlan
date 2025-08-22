@@ -33,6 +33,8 @@
 
         public bool GanttChartShowMilestones { get; init; } = default;
 
+        public bool GanttChartShowSlack { get; init; } = default;
+
 
 
         public AllocationMode ResourceChartAllocationMode { get; init; } = default;

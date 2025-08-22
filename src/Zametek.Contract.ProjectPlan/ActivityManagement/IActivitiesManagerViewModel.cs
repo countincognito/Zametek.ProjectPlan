@@ -16,6 +16,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasActivities { get; }
 
+        bool HideCost { get; }
+
+        bool HideBilling { get; }
+
         ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
 
         ICommand SetSelectedManagedActivitiesCommand { get; }

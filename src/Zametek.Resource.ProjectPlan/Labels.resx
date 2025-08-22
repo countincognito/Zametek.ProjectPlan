@@ -546,4 +546,7 @@
   <data name="Label_ShowMilestones" xml:space="preserve">
     <value>Show Milestones</value>
   </data>
+  <data name="Label_ShowSlack" xml:space="preserve">
+    <value>Show Slack</value>
+  </data>
 </root>

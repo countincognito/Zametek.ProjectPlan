@@ -267,6 +267,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_GanttChartShowSlack;
+        public bool GanttChartShowSlack
+        {
+            get => m_GanttChartShowSlack;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true, trackStaleOutputs: false);
+                    this.RaiseAndSetIfChanged(ref m_GanttChartShowSlack, value);
+                }
+            }
+        }
+
 
 
         private AllocationMode m_ResourceChartAllocationMode;
@@ -445,6 +459,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     GanttChartShowMilestones = model.GanttChartShowMilestones;
                 }
+                if (GanttChartShowSlack != model.GanttChartShowSlack)
+                {
+                    GanttChartShowSlack = model.GanttChartShowSlack;
+                }
 
 
                 if (ResourceChartAllocationMode != model.ResourceChartAllocationMode)
@@ -505,6 +523,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     GanttChartShowTracking = GanttChartShowTracking,
                     GanttChartShowToday = GanttChartShowToday,
                     GanttChartShowMilestones = GanttChartShowMilestones,
+                    GanttChartShowSlack = GanttChartShowSlack,
 
                     ResourceChartAllocationMode = ResourceChartAllocationMode,
                     ResourceChartScheduleMode = ResourceChartScheduleMode,

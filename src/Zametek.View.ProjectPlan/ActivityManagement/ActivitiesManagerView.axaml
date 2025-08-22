@@ -956,6 +956,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource hasNoCostSortComparer}"
+										IsVisible="{Binding Path=!HideCost, Mode=OneWay}"
 										Width="110">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
@@ -987,6 +988,7 @@
 										CanUserSort="True"
 										IsReadOnly="True"
 										CustomSortComparer="{StaticResource hasNoBillingSortComparer}"
+										IsVisible="{Binding Path=!HideBilling, Mode=OneWay}"
 										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>

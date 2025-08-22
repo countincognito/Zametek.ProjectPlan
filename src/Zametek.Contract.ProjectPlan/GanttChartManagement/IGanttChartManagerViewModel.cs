@@ -26,6 +26,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowMilestones { get; set; }
 
+        bool ShowSlack { get; set; }
+
         IActivitySelectorViewModel ActivitySelector { get; }
 
         ICommand SaveGanttChartImageFileCommand { get; }

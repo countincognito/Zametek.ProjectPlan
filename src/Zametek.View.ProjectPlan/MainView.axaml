@@ -29,6 +29,12 @@
 		<KeyBinding x:DataType="vm:MainViewModel"
 					Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}"
 					Gesture="Ctrl+B" />
+		<KeyBinding x:DataType="vm:MainViewModel"
+					Command="{Binding Path=ToggleHideCostCommand, Mode=OneWay}"
+					Gesture="Ctrl+W" />
+		<KeyBinding x:DataType="vm:MainViewModel"
+					Command="{Binding Path=ToggleHideBillingCommand, Mode=OneWay}"
+					Gesture="Ctrl+E" />
 	</Window.KeyBindings>
 
 	<Window.Styles>
@@ -120,7 +126,8 @@
 							</MenuItem.Icon>
 						</MenuItem>
 						<MenuItem Header="{x:Static resources:Menus.Menu_HideCost}"
-								  Command="{Binding Path=ToggleHideCostCommand, Mode=OneWay}">
+								  Command="{Binding Path=ToggleHideCostCommand, Mode=OneWay}"
+								  InputGesture="Ctrl+W">
 							<MenuItem.Icon>
 								<CheckBox BorderThickness="0"
 										  Theme="{StaticResource SimpleCheckBox}"
@@ -129,7 +136,8 @@
 							</MenuItem.Icon>
 						</MenuItem>
 						<MenuItem Header="{x:Static resources:Menus.Menu_HideBilling}"
-								  Command="{Binding Path=ToggleHideBillingCommand, Mode=OneWay}">
+								  Command="{Binding Path=ToggleHideBillingCommand, Mode=OneWay}"
+								  InputGesture="Ctrl+E">
 							<MenuItem.Icon>
 								<CheckBox BorderThickness="0"
 										  Theme="{StaticResource SimpleCheckBox}"

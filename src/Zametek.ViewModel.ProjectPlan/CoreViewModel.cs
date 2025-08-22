@@ -2,7 +2,6 @@
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
-using sun.nio.cs;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive.Concurrency;
@@ -216,16 +215,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 //var resourceScheduleLookup = resourceSchedules.ToDictionary(x => x.Resource.Id);
 
                 // Scheduled resource series.
-                // These are the series that apply to None and Direct resources.
+
+                // These are the series that apply to None and Direct resources only.
                 var scheduledSeriesSet = new List<ResourceSeriesModel>();
 
-                IEnumerable<ResourceScheduleModel> scheduledResourceSchedules = resourceSchedules
+                IEnumerable<ResourceScheduleModel> noneAndDirectResourceSchedules = resourceSchedules
                     .Where(x => x.Resource.InterActivityAllocationType == InterActivityAllocationType.None || x.Resource.InterActivityAllocationType == InterActivityAllocationType.Direct);
 
                 // Make 'random' colors seem consistent.
                 ColorHelper.PresetReset();
 
-                foreach (ResourceScheduleModel scheduledResourceSchedule in scheduledResourceSchedules)
+                foreach (ResourceScheduleModel scheduledResourceSchedule in noneAndDirectResourceSchedules)
                 {
                     if (scheduledResourceSchedule.ScheduledActivities.Count > 0)
                     {
@@ -282,14 +282,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
                 // Unscheduled resource series.
-                // These are series the that apply to Indirect resources.
+
+                // These are series the that apply to Indirect resources, and also
+                // None and Direct resources that have roll-off periods.
                 var unscheduledSeriesSet = new List<ResourceSeriesModel>();
                 var unscheduledResourceSeriesLookup = new Dictionary<int, ResourceSeriesModel>();
 
-                IEnumerable<ResourceScheduleModel> unscheduledResourceSchedules = resourceSchedules
+                IEnumerable<ResourceScheduleModel> indirectResourceSchedules = resourceSchedules
                     .Where(x => x.Resource.InterActivityAllocationType == InterActivityAllocationType.Indirect);
 
-                foreach (ResourceScheduleModel resourceSchedule in unscheduledResourceSchedules)
+                foreach (ResourceScheduleModel resourceSchedule in indirectResourceSchedules)
                 {
                     if (resourceLookup.TryGetValue(resourceSchedule.Resource.Id, out ResourceModel? resource))
                     {

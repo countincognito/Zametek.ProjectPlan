@@ -22,6 +22,7 @@ namespace Zametek.Contract.ProjectPlan
         bool GanttChartShowTracking { get; set; }
         bool GanttChartShowToday { get; set; }
         bool GanttChartShowMilestones { get; set; }
+        bool GanttChartShowSlack { get; set; }
 
 
         AllocationMode ResourceChartAllocationMode { get; set; }

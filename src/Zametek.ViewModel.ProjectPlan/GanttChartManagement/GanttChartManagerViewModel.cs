@@ -162,6 +162,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowMilestones)
                 .ToProperty(this, rcm => rcm.ShowMilestones);
 
+            m_ShowSlack = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowSlack)
+                .ToProperty(this, rcm => rcm.ShowSlack);
+
             m_IsGrouped = this
                 .WhenAnyValue(
                     rcm => rcm.GroupByMode,
@@ -186,7 +190,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.ShowTracking,
                     rcm => rcm.ShowToday,
                     rcm => rcm.ShowMilestones,
-                    (a, b, c, d, e, f, g) =>
+                    rcm => rcm.ShowSlack,
+                    (a, b, c, d, e, f, g, h) =>
                     {
                         if (m_BoolAccumulator is null
                             || m_BoolAccumulator.Value == BoolToggle.Up)
@@ -279,6 +284,7 @@ namespace Zametek.ViewModel.ProjectPlan
             DateTimeOffset today,
             bool showToday,
             bool showMilestones,
+            bool showSlack,
             bool showDates,
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
             GroupByMode groupByMode,
@@ -408,6 +414,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             int resourceStartTime = firstItem?.StartTime ?? 0;
                             int resourceFinishTime = lastItem?.FinishTime ?? 0;
+
+                            if (showSlack)
+                            {
+                                // Extend the annotation to the latest finish time of the last activity, if it has one.
+                                if (lastItem is not null)
+                                {
+                                    if (activityLookup.TryGetValue(lastItem.Id, out IDependentActivity? activity)
+                                        && activity.LatestFinishTime.HasValue
+                                        && resourceFinishTime < activity.LatestFinishTime)
+                                    {
+                                        resourceFinishTime = activity.LatestFinishTime.GetValueOrDefault();
+                                    }
+                                }
+                            }
 
                             int minimumY = labels.Count;
 
@@ -610,6 +630,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             int workStreamStartTime = firstItem?.StartTime ?? 0;
                             int workStreamFinishTime = lastItem?.FinishTime ?? 0;
+
+                            if (showSlack)
+                            {
+                                // Extend the annotation to the latest finish time of the last activity, if it has one.
+                                if (lastItem is not null)
+                                {
+                                    if (activityLookup.TryGetValue(lastItem.Id, out IDependentActivity? activity)
+                                        && activity.LatestFinishTime.HasValue
+                                        && workStreamFinishTime < activity.LatestFinishTime)
+                                    {
+                                        workStreamFinishTime = activity.LatestFinishTime.GetValueOrDefault();
+                                    }
+                                }
+                            }
 
                             int minimumY = labels.Count;
 
@@ -1322,6 +1356,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_ShowSlack;
+        public bool ShowSlack
+        {
+            get => m_ShowSlack.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowSlack = value;
+            }
+        }
+
         public IActivitySelectorViewModel ActivitySelector { get; }
 
         public ICommand SaveGanttChartImageFileCommand { get; }
@@ -1414,6 +1458,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.Today,
                     ShowToday,
                     ShowMilestones,
+                    ShowSlack,
                     m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                     m_CoreViewModel.GraphCompilation,
                     GroupByMode,
@@ -1479,6 +1524,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ShowTracking?.Dispose();
                 m_ShowToday?.Dispose();
                 m_ShowMilestones?.Dispose();
+                m_ShowSlack?.Dispose();
                 m_IsGrouped?.Dispose();
                 m_IsAnnotated?.Dispose();
                 m_BoolAccumulator?.Dispose();
