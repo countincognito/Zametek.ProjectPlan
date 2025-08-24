@@ -107,7 +107,17 @@
 				  VerticalContentAlignment="Center"
 				  HorizontalAlignment="Stretch"
 				  HorizontalContentAlignment="Center"
-				  IsEnabled="{Binding Path=IsInterActivityAllocationTypeActive, Mode=OneWay}"/>
+				  IsEnabled="{Binding Path=IsInterActivityAllocationTypeActive, Mode=OneWay}">
+			<ComboBox.ItemTemplate>
+				<DataTemplate>
+					<TextBlock VerticalAlignment="Center"
+							   TextAlignment="Left"
+							   Margin="0"
+							   Padding="3"
+							   Text="{Binding Converter={x:Static local:StringConverters.InterActivityAllocationTypeValue}, Mode=OneWay}"/>
+				</DataTemplate>
+			</ComboBox.ItemTemplate>
+		</ComboBox>
 
 
 

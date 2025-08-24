@@ -283,7 +283,7 @@
 										   TextAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Text="{Binding Path=InterActivityAllocationType, Mode=OneWay}"/>
+										   Text="{Binding Path=InterActivityAllocationType, Converter={x:Static local:StringConverters.InterActivityAllocationTypeValue}, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -291,7 +291,17 @@
 						<DataTemplate>
 							<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:InterActivityAllocationType}}}"
 									  SelectedItem="{Binding Path=InterActivityAllocationType, Mode=TwoWay}"
-									  Focusable="True"/>
+									  Focusable="True">
+								<ComboBox.ItemTemplate>
+									<DataTemplate>
+										<TextBlock VerticalAlignment="Center"
+												   TextAlignment="Left"
+												   Margin="0"
+												   Padding="3"
+												   Text="{Binding Converter={x:Static local:StringConverters.InterActivityAllocationTypeValue}, Mode=OneWay}"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>

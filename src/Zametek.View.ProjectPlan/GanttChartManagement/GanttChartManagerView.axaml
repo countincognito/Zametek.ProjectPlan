@@ -39,11 +39,20 @@
 							  DockPanel.Dock="Top"
 							  IsTabStop="False"
 							  Margin="0,0,0,11"
-							  Height="25"/>
+							  Height="25">
+						<ComboBox.ItemTemplate>
+							<DataTemplate>
+								<TextBlock VerticalAlignment="Center"
+										   TextAlignment="Left"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Converter={x:Static local:StringConverters.GroupByModeValue}, Mode=OneWay}"/>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
 				</DockPanel>
 
 				<DockPanel DockPanel.Dock="Top">
-					<!--IsEnabled="{Binding Path=IsGrouped, Mode=OneWay}">-->
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
 						   Height="25"
@@ -59,7 +68,17 @@
 							  DockPanel.Dock="Top"
 							  IsTabStop="False"
 							  Margin="0,0,0,11"
-							  Height="25"/>
+							  Height="25">
+						<ComboBox.ItemTemplate>
+							<DataTemplate>
+								<TextBlock VerticalAlignment="Center"
+										   TextAlignment="Left"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Converter={x:Static local:StringConverters.AnnotationStyleValue}, Mode=OneWay}"/>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
 				</DockPanel>
 
 				<DockPanel DockPanel.Dock="Top"

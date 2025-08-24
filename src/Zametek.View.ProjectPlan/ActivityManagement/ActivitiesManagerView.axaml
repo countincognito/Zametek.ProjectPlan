@@ -1064,12 +1064,12 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-								<TextBox VerticalAlignment="Center"
-										 TextAlignment="Center"
-										 Margin="0"
-										 Padding="3"
-										 Classes="displayOnly"
-										 Text="{Binding Path=TargetResourceOperator, Mode=OneWay}"/>
+								<TextBlock VerticalAlignment="Center"
+										   TextAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Classes="displayOnly"
+										   Text="{Binding Path=TargetResourceOperator, Converter={x:Static local:StringConverters.LogicalOperatorValue}, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -1081,7 +1081,18 @@
 									  VerticalAlignment="Center"
 									  VerticalContentAlignment="Center"
 									  HorizontalAlignment="Stretch"
-									  HorizontalContentAlignment="Center"/>
+									  HorizontalContentAlignment="Center">
+								<ComboBox.ItemTemplate>
+									<DataTemplate>
+										<TextBlock VerticalAlignment="Center"
+												   TextAlignment="Left"
+												   Margin="0"
+												   Padding="3"
+												   Classes="displayOnly"
+												   Text="{Binding Converter={x:Static local:StringConverters.LogicalOperatorValue}, Mode=OneWay}"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
