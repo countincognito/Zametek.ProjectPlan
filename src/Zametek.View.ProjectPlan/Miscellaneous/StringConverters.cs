@@ -2,6 +2,7 @@
 using System;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
+using Zametek.Resource.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -15,9 +16,9 @@ namespace Zametek.View.ProjectPlan
             new FuncValueConverter<LogicalOperator, string>(
                 x => x switch
                 {
-                    LogicalOperator.AND => "AND",
-                    LogicalOperator.OR => "OR",
-                    LogicalOperator.ACTIVE_AND => "AND (Enabled)",
+                    LogicalOperator.AND => Enums.Enum_LogicalOperator_AND,
+                    LogicalOperator.OR => Enums.Enum_LogicalOperator_OR,
+                    LogicalOperator.ACTIVE_AND => Enums.Enum_LogicalOperator_ACTIVE_AND,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
 
@@ -25,9 +26,9 @@ namespace Zametek.View.ProjectPlan
             new FuncValueConverter<InterActivityAllocationType, string>(
                 x => x switch
                 {
-                    InterActivityAllocationType.None => "None",
-                    InterActivityAllocationType.Direct => "Direct",
-                    InterActivityAllocationType.Indirect => "Indirect",
+                    InterActivityAllocationType.None => Enums.Enum_InterActivityAllocationType_None,
+                    InterActivityAllocationType.Direct => Enums.Enum_InterActivityAllocationType_Direct,
+                    InterActivityAllocationType.Indirect => Enums.Enum_InterActivityAllocationType_Indirect,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
 
@@ -35,9 +36,9 @@ namespace Zametek.View.ProjectPlan
             new FuncValueConverter<GroupByMode, string>(
                 x => x switch
                 {
-                    GroupByMode.None => "None",
-                    GroupByMode.Resource => "Resource",
-                    GroupByMode.WorkStream => "Work Stream",
+                    GroupByMode.None => Enums.Enum_GroupByMode_None,
+                    GroupByMode.Resource => Enums.Enum_GroupByMode_Resource,
+                    GroupByMode.WorkStream => Enums.Enum_GroupByMode_WorkStream,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
 
@@ -45,9 +46,9 @@ namespace Zametek.View.ProjectPlan
             new FuncValueConverter<AnnotationStyle, string>(
                 x => x switch
                 {
-                    AnnotationStyle.None => "None",
-                    AnnotationStyle.Plain => "Plain",
-                    AnnotationStyle.Color => "Color",
+                    AnnotationStyle.None => Enums.Enum_AnnotationStyle_None,
+                    AnnotationStyle.Plain => Enums.Enum_AnnotationStyle_Plain,
+                    AnnotationStyle.Color => Enums.Enum_AnnotationStyle_Color,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
 
@@ -55,10 +56,10 @@ namespace Zametek.View.ProjectPlan
             new FuncValueConverter<AllocationMode, string>(
                 x => x switch
                 {
-                    AllocationMode.Activity => "Activity",
-                    AllocationMode.Cost => "Cost",
-                    AllocationMode.Billing => "Billing",
-                    AllocationMode.Effort => "Effort",
+                    AllocationMode.Activity => Enums.Enum_AllocationMode_Activity,
+                    AllocationMode.Cost => Enums.Enum_AllocationMode_Cost,
+                    AllocationMode.Billing => Enums.Enum_AllocationMode_Billing,
+                    AllocationMode.Effort => Enums.Enum_AllocationMode_Effort,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
 
@@ -66,9 +67,9 @@ namespace Zametek.View.ProjectPlan
             new FuncValueConverter<ScheduleMode, string>(
                 x => x switch
                 {
-                    ScheduleMode.Combined => "Combined",
-                    ScheduleMode.Scheduled => "Scheduled",
-                    ScheduleMode.Unscheduled => "Unscheduled",
+                    ScheduleMode.Combined => Enums.Enum_ScheduleMode_Combined,
+                    ScheduleMode.Scheduled => Enums.Enum_ScheduleMode_Scheduled,
+                    ScheduleMode.Unscheduled => Enums.Enum_ScheduleMode_Unscheduled,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
 
@@ -76,8 +77,8 @@ namespace Zametek.View.ProjectPlan
             new FuncValueConverter<DisplayStyle, string>(
                 x => x switch
                 {
-                    DisplayStyle.Slanted => "Slanted",
-                    DisplayStyle.Block => "Block",
+                    DisplayStyle.Slanted => Enums.Enum_DisplayStyle_Slanted,
+                    DisplayStyle.Block => Enums.Enum_DisplayStyle_Block,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
     }
