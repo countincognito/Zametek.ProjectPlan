@@ -25,6 +25,12 @@ namespace Zametek.Common.ProjectPlan
         public double UnitBilling { get; init; }
         public bool IsUnitBillingEdited { get; init; } = false;
 
+        public double FixedCost { get; init; }
+        public bool IsFixedCostEdited { get; init; } = false;
+
+        public double FixedBilling { get; init; }
+        public bool IsFixedBillingEdited { get; init; } = false;
+
         public List<int> InterActivityPhases { get; init; } = [];
         public bool IsInterActivityPhasesEdited { get; init; } = false;
     }

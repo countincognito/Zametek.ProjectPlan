@@ -225,6 +225,9 @@
   <data name="ToolTip_UnitCost" xml:space="preserve">
     <value>Unit Cost</value>
   </data>
+  <data name="ToolTip_FixedCost" xml:space="preserve">
+    <value>Fixed Cost</value>
+  </data>
   <data name="ToolTip_WorkStreamName" xml:space="preserve">
     <value>Work Stream Name</value>
   </data>
@@ -245,6 +248,9 @@
   </data>
   <data name="ToolTip_UnitBilling" xml:space="preserve">
     <value>Unit Billing</value>
+  </data>
+  <data name="ToolTip_FixedBilling" xml:space="preserve">
+    <value>Fixed Billing</value>
   </data>
   <data name="ToolTip_HasNoBilling" xml:space="preserve">
     <value>Ignore Billing</value>

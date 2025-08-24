@@ -420,6 +420,9 @@
   <data name="Label_UnitCost" xml:space="preserve">
     <value>Unit Cost</value>
   </data>
+  <data name="Label_FixedCost" xml:space="preserve">
+    <value>Fixed Cost</value>
+  </data>
   <data name="Label_ShowProjections" xml:space="preserve">
     <value>Show Projections</value>
   </data>
@@ -515,6 +518,9 @@
   </data>
   <data name="Label_UnitBilling" xml:space="preserve">
     <value>Unit Billing</value>
+  </data>
+  <data name="Label_FixedBilling" xml:space="preserve">
+    <value>Fixed Billing</value>
   </data>
   <data name="Label_HasNoBilling" xml:space="preserve">
     <value>Ignore Billing</value>

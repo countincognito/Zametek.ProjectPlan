@@ -183,6 +183,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                     IsInactive = false,
                                     UnitCost = DefaultUnitCost,
                                     UnitBilling = DefaultUnitBilling,
+                                    FixedCost = 0.0,
+                                    FixedBilling = 0.0,
                                     ColorFormat = ColorHelper.Random(),
                                     Trackers = []
                                 }));
@@ -314,6 +316,14 @@ namespace Zametek.ViewModel.ProjectPlan
                             {
                                 resource.UnitBilling = updateModel.UnitBilling;
                             }
+                            if (updateModel.IsFixedCostEdited)
+                            {
+                                resource.FixedCost = updateModel.FixedCost;
+                            }
+                            if (updateModel.IsFixedBillingEdited)
+                            {
+                                resource.FixedBilling = updateModel.FixedBilling;
+                            }
                             if (updateModel.IsInterActivityPhasesEdited)
                             {
                                 resource.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateModel.InterActivityPhases]);
@@ -343,6 +353,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         InterActivityPhases = [.. x.InterActivityPhases],
                         UnitCost = x.UnitCost,
                         UnitBilling = x.UnitBilling,
+                        FixedCost = x.FixedCost,
+                        FixedBilling = x.FixedBilling,
                         DisplayOrder = x.DisplayOrder,
                         ColorFormat = x.ColorFormat,
                         Trackers = x.TrackerSet.Trackers,

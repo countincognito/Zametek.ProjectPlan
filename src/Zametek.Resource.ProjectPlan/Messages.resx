@@ -183,6 +183,9 @@
   <data name="Message_UnitCostMustBeZeroOrGreater" xml:space="preserve">
     <value>Unit Cost must be equal to or greater than 0</value>
   </data>
+  <data name="Message_FixedCostMustBeZeroOrGreater" xml:space="preserve">
+    <value>Fixed Cost must be equal to or greater than 0</value>
+  </data>
   <data name="Message_UnknownDateTimeCalculatorMode" xml:space="preserve">
     <value>Unknown DateTimeCalculatorMode value:</value>
   </data>
@@ -227,5 +230,8 @@
   </data>
   <data name="Message_UnitBillingMustBeZeroOrGreater" xml:space="preserve">
     <value>Unit Billing must be equal to or greater than 0 </value>
+  </data>
+  <data name="Message_FixedBillingMustBeZeroOrGreater" xml:space="preserve">
+    <value>Fixed Billing must be equal to or greater than 0 </value>
   </data>
 </root>

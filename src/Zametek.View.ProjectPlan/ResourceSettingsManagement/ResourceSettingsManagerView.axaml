@@ -24,6 +24,8 @@
 		<local:ManagedResourceSortComparer x:Key="workStreamSelectorTargetWorkStreamsStringSortComparer" SortMemberPath="WorkStreamSelector.TargetWorkStreamsString"/>
 		<local:ManagedResourceSortComparer x:Key="unitCostSortComparer" SortMemberPath="UnitCost"/>
 		<local:ManagedResourceSortComparer x:Key="unitBillingSortComparer" SortMemberPath="UnitBilling"/>
+		<local:ManagedResourceSortComparer x:Key="fixedCostSortComparer" SortMemberPath="FixedCost"/>
+		<local:ManagedResourceSortComparer x:Key="fixedBillingSortComparer" SortMemberPath="FixedBilling"/>
 		<local:ManagedResourceSortComparer x:Key="displayOrderSortComparer" SortMemberPath="DisplayOrder"/>
 		<local:ManagedResourceSortComparer x:Key="colorFormatSortComparer" SortMemberPath="ColorFormat"/>
 		<local:ManagedResourceSortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
@@ -427,6 +429,84 @@
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
 							<u:NumericDoubleUpDown Value="{Binding Path=UnitBilling, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												   VerticalAlignment="Center"
+												   ShowButtonSpinner="False"
+												   Focusable="True"
+												   Margin="0"
+												   Padding="0"
+												   Minimum="0"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										CustomSortComparer="{StaticResource fixedCostSortComparer}"
+										IsVisible="{Binding Path=!HideCost, Mode=OneWay}"
+										Width="100">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_FixedCost}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_FixedCost}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=FixedCost, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<u:NumericDoubleUpDown Value="{Binding Path=FixedCost, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												   VerticalAlignment="Center"
+												   ShowButtonSpinner="False"
+												   Focusable="True"
+												   Margin="0"
+												   Padding="0"
+												   Minimum="0"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+									    CustomSortComparer="{StaticResource fixedBillingSortComparer}"
+									    IsVisible="{Binding Path=!HideBilling, Mode=OneWay}"
+										Width="110">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_FixedBilling}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_FixedBilling}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=FixedBilling, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<u:NumericDoubleUpDown Value="{Binding Path=FixedBilling, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 												   VerticalAlignment="Center"
 												   ShowButtonSpinner="False"
 												   Focusable="True"

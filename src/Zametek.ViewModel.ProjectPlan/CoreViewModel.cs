@@ -234,6 +234,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         ColorFormatModel color = ColorHelper.Preset();
                         double unitCost = defaultUnitCost;
                         double unitBilling = defaultUnitBilling;
+                        double fixedCost = 0.0;
+                        double fixedBilling = 0.0;
                         int displayOrder = 0;
 
                         if (scheduledResourceSchedule.Resource.Id != default
@@ -257,6 +259,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             unitCost = resource.UnitCost;
                             unitBilling = resource.UnitBilling;
+                            fixedCost = resource.FixedCost;
+                            fixedBilling = resource.FixedBilling;
                             displayOrder = resource.DisplayOrder;
                         }
                         else
@@ -271,6 +275,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             ColorFormat = color,
                             UnitCost = unitCost,
                             UnitBilling = unitBilling,
+                            FixedCost = fixedCost,
+                            FixedBilling = fixedBilling,
                             DisplayOrder = displayOrder,
                             ResourceSchedule = scheduledResourceSchedule,
                             InterActivityAllocationType = interActivityAllocationType,
@@ -317,6 +323,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             ColorFormat = resource.ColorFormat != null ? resource.ColorFormat.CloneObject() : ColorHelper.Preset(),
                             UnitCost = resource.UnitCost,
                             UnitBilling = resource.UnitBilling,
+                            FixedCost = resource.FixedCost,
+                            FixedBilling = resource.FixedBilling,
                             DisplayOrder = resource.DisplayOrder,
                         };
 
@@ -1991,8 +1999,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 //if (!HasCompilationErrors)
                 //{
+
                 IList<ResourceScheduleModel> resourceScheduleModels =
-                m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity>, IList<ResourceScheduleModel>>(GraphCompilation);
+                    m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity>, IList<ResourceScheduleModel>>(GraphCompilation);
 
                 resourceSeriesSet = CalculateResourceSeriesSet(
                     resourceScheduleModels,

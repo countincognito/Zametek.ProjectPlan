@@ -606,21 +606,21 @@ namespace Zametek.ViewModel.ProjectPlan
                     .Sum(static x =>
                     {
                         double accumulator(bool y) => y ? x.UnitCost : 0.0;
-                        return x.ResourceSchedule.CostAllocation.Sum(accumulator);
+                        return x.ResourceSchedule.CostAllocation.Sum(accumulator) + x.FixedCost;
                     }),
                 Indirect = resourceSeriesModels
                     .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
                     .Sum(static x =>
                     {
                         double accumulator(bool y) => y ? x.UnitCost : 0.0;
-                        return x.ResourceSchedule.CostAllocation.Sum(accumulator);
+                        return x.ResourceSchedule.CostAllocation.Sum(accumulator) + x.FixedCost;
                     }),
                 Other = resourceSeriesModels
                     .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
                     .Sum(static x =>
                     {
                         double accumulator(bool y) => y ? x.UnitCost : 0.0;
-                        return x.ResourceSchedule.CostAllocation.Sum(accumulator);
+                        return x.ResourceSchedule.CostAllocation.Sum(accumulator) + x.FixedCost;
                     })
             };
         }
@@ -636,21 +636,21 @@ namespace Zametek.ViewModel.ProjectPlan
                     .Sum(static x =>
                     {
                         double accumulator(bool y) => y ? x.UnitBilling : 0.0;
-                        return x.ResourceSchedule.BillingAllocation.Sum(accumulator);
+                        return x.ResourceSchedule.BillingAllocation.Sum(accumulator) + x.FixedBilling;
                     }),
                 Indirect = resourceSeriesModels
                     .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
                     .Sum(static x =>
                     {
                         double accumulator(bool y) => y ? x.UnitBilling : 0.0;
-                        return x.ResourceSchedule.BillingAllocation.Sum(accumulator);
+                        return x.ResourceSchedule.BillingAllocation.Sum(accumulator) + x.FixedBilling;
                     }),
                 Other = resourceSeriesModels
                     .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
                     .Sum(static x =>
                     {
                         double accumulator(bool y) => y ? x.UnitBilling : 0.0;
-                        return x.ResourceSchedule.BillingAllocation.Sum(accumulator);
+                        return x.ResourceSchedule.BillingAllocation.Sum(accumulator) + x.FixedBilling;
                     })
             };
         }

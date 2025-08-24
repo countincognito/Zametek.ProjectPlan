@@ -142,6 +142,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fixed Billing must be equal to or greater than 0 .
+        /// </summary>
+        public static string Message_FixedBillingMustBeZeroOrGreater {
+            get {
+                return ResourceManager.GetString("Message_FixedBillingMustBeZeroOrGreater", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fixed Cost must be equal to or greater than 0.
+        /// </summary>
+        public static string Message_FixedCostMustBeZeroOrGreater {
+            get {
+                return ResourceManager.GetString("Message_FixedCostMustBeZeroOrGreater", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to List of Edge IDs and Edges referenced by head Nodes do not match when building Arrow Graph.
         /// </summary>
         public static string Message_MismatchedEdgeIdsForHeadNodes {

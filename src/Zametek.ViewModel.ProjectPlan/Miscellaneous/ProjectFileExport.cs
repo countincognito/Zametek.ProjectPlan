@@ -81,6 +81,8 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ResourceModel.InterActivityPhases),
             nameof(ResourceModel.UnitCost),
             nameof(ResourceModel.UnitBilling),
+            nameof(ResourceModel.FixedCost),
+            nameof(ResourceModel.FixedBilling),
             nameof(ResourceModel.DisplayOrder),
             nameof(ResourceModel.AllocationOrder),
             nameof(ResourceModel.ColorFormat)

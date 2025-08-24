@@ -76,6 +76,8 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ResourceModel.InterActivityPhases),
             nameof(ResourceModel.UnitCost),
             nameof(ResourceModel.UnitBilling),
+            nameof(ResourceModel.FixedCost),
+            nameof(ResourceModel.FixedBilling),
             nameof(ResourceModel.DisplayOrder),
             nameof(ResourceModel.AllocationOrder),
             nameof(ResourceModel.ColorFormat)
@@ -876,6 +878,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
                     double unitCost = 0.0;
                     double unitBilling = 0.0;
+                    double fixedCost = 0.0;
+                    double fixedBilling = 0.0;
                     int displayOrder = 0;
                     int allocationOrder = 0;
                     ColorFormatModel colorFormat = ColorHelper.None();
@@ -939,6 +943,22 @@ namespace Zametek.ViewModel.ProjectPlan
                                         unitBilling = output;
                                     }
                                 })
+                            .Case(nameof(ResourceModel.FixedCost),
+                                colName =>
+                                {
+                                    if (double.TryParse(row[colName]?.ToString(), out double output))
+                                    {
+                                        fixedCost = output;
+                                    }
+                                })
+                            .Case(nameof(ResourceModel.FixedBilling),
+                                colName =>
+                                {
+                                    if (double.TryParse(row[colName]?.ToString(), out double output))
+                                    {
+                                        fixedBilling = output;
+                                    }
+                                })
                             .Case(nameof(ResourceModel.DisplayOrder),
                                 colName =>
                                 {
@@ -979,6 +999,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             InterActivityPhases = interActivityPhases,
                             UnitCost = unitCost,
                             UnitBilling = unitBilling,
+                            FixedCost = fixedCost,
+                            FixedBilling = fixedBilling,
                             DisplayOrder = displayOrder,
                             AllocationOrder = allocationOrder,
                             ColorFormat = colorFormat

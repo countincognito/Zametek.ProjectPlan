@@ -160,6 +160,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fixed Billing.
+        /// </summary>
+        public static string ToolTip_FixedBilling {
+            get {
+                return ResourceManager.GetString("ToolTip_FixedBilling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fixed Cost.
+        /// </summary>
+        public static string ToolTip_FixedCost {
+            get {
+                return ResourceManager.GetString("ToolTip_FixedCost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Free Slack.
         /// </summary>
         public static string ToolTip_FreeSlack {

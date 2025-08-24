@@ -583,6 +583,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fixed Billing.
+        /// </summary>
+        public static string Label_FixedBilling {
+            get {
+                return ResourceManager.GetString("Label_FixedBilling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fixed Cost.
+        /// </summary>
+        public static string Label_FixedCost {
+            get {
+                return ResourceManager.GetString("Label_FixedCost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to FS.
         /// </summary>
         public static string Label_FreeSlack {

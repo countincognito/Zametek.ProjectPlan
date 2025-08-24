@@ -39,6 +39,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_InterActivityAllocationType = resource.InterActivityAllocationType;
             m_UnitCost = resource.UnitCost;
             m_UnitBilling = resource.UnitBilling;
+            m_FixedCost = resource.FixedCost;
+            m_FixedBilling = resource.FixedBilling;
             m_AllocationOrder = resource.AllocationOrder;
             m_DisplayOrder = resource.DisplayOrder;
             m_ColorFormat = resource.ColorFormat;
@@ -202,6 +204,34 @@ namespace Zametek.ViewModel.ProjectPlan
                     throw new DataValidationException(Resource.ProjectPlan.Messages.Message_UnitBillingMustBeZeroOrGreater);
                 }
                 this.RaiseAndSetIfChanged(ref m_UnitBilling, value);
+            }
+        }
+
+        private double m_FixedCost;
+        public double FixedCost
+        {
+            get => m_FixedCost;
+            set
+            {
+                if (value < 0)
+                {
+                    throw new DataValidationException(Resource.ProjectPlan.Messages.Message_FixedCostMustBeZeroOrGreater);
+                }
+                this.RaiseAndSetIfChanged(ref m_FixedCost, value);
+            }
+        }
+
+        private double m_FixedBilling;
+        public double FixedBilling
+        {
+            get => m_FixedBilling;
+            set
+            {
+                if (value < 0)
+                {
+                    throw new DataValidationException(Resource.ProjectPlan.Messages.Message_FixedBillingMustBeZeroOrGreater);
+                }
+                this.RaiseAndSetIfChanged(ref m_FixedBilling, value);
             }
         }
 

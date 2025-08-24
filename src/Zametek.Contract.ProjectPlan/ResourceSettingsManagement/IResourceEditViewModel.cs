@@ -21,6 +21,12 @@ namespace Zametek.Contract.ProjectPlan
         double UnitBilling { get; set; }
         bool IsUnitBillingActive { get; set; }
 
+        public double FixedCost { get; set; }
+        bool IsFixedCostActive { get; set; }
+
+        public double FixedBilling { get; set; }
+        bool IsFixedBillingActive { get; set; }
+
         IWorkStreamSelectorViewModel WorkStreamSelector { get; }
         bool IsWorkStreamSelectorActive { get; set; }
 

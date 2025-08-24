@@ -142,6 +142,50 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private double m_FixedCost;
+        public double FixedCost
+        {
+            get => m_FixedCost;
+            set
+            {
+                m_FixedCost = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsFixedCostActive;
+        public bool IsFixedCostActive
+        {
+            get => m_IsFixedCostActive;
+            set
+            {
+                m_IsFixedCostActive = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private double m_FixedBilling;
+        public double FixedBilling
+        {
+            get => m_FixedBilling;
+            set
+            {
+                m_FixedBilling = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsFixedBillingActive;
+        public bool IsFixedBillingActive
+        {
+            get => m_IsFixedBillingActive;
+            set
+            {
+                m_IsFixedBillingActive = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         public IWorkStreamSelectorViewModel WorkStreamSelector { get; }
 
         private bool m_IsWorkStreamSelectorActive;
@@ -176,6 +220,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 UnitBilling = UnitBilling,
                 IsUnitBillingEdited = IsUnitBillingActive,
+
+                FixedCost = FixedCost,
+                IsFixedCostEdited = IsFixedCostActive,
+
+                FixedBilling = FixedBilling,
+                IsFixedBillingEdited = IsFixedBillingActive,
 
                 IsInterActivityPhasesEdited = IsWorkStreamSelectorActive,
             };

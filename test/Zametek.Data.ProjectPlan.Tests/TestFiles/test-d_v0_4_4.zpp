@@ -1847,6 +1847,8 @@
         "InterActivityPhases": [],
         "UnitCost": 2.0,
         "UnitBilling": 2.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 2,
         "ColorFormat": {
           "A": 255,
@@ -2382,6 +2384,8 @@
         "InterActivityPhases": [],
         "UnitCost": 2.0,
         "UnitBilling": 2.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 0,
         "ColorFormat": {
           "A": 255,
@@ -2917,6 +2921,8 @@
         "InterActivityPhases": [],
         "UnitCost": 2.0,
         "UnitBilling": 2.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 1,
         "ColorFormat": {
           "A": 255,
@@ -3248,6 +3254,8 @@
         "InterActivityPhases": [],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 20,
         "ColorFormat": {
           "A": 255,
@@ -3266,6 +3274,8 @@
         "InterActivityPhases": [],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 6,
         "ColorFormat": {
           "A": 255,
@@ -3284,6 +3294,8 @@
         "InterActivityPhases": [],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 7,
         "ColorFormat": {
           "A": 255,
@@ -3302,6 +3314,8 @@
         "InterActivityPhases": [],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 8,
         "ColorFormat": {
           "A": 255,
@@ -3320,6 +3334,8 @@
         "InterActivityPhases": [],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 9,
         "ColorFormat": {
           "A": 255,
@@ -3338,6 +3354,8 @@
         "InterActivityPhases": [],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 10,
         "ColorFormat": {
           "A": 255,
@@ -3356,6 +3374,8 @@
         "InterActivityPhases": [],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 11,
         "ColorFormat": {
           "A": 255,
@@ -3374,6 +3394,8 @@
         "InterActivityPhases": [],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 4,
         "ColorFormat": {
           "A": 255,
@@ -3392,6 +3414,8 @@
         "InterActivityPhases": [],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 5,
         "ColorFormat": {
           "A": 255,
@@ -3410,6 +3434,8 @@
         "InterActivityPhases": [],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 19,
         "ColorFormat": {
           "A": 255,
@@ -3430,6 +3456,8 @@
         ],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 3,
         "ColorFormat": {
           "A": 255,
@@ -3448,6 +3476,8 @@
         "InterActivityPhases": [],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 25,
         "ColorFormat": {
           "A": 255,
@@ -3466,6 +3496,8 @@
         "InterActivityPhases": [],
         "UnitCost": 1.0,
         "UnitBilling": 1.0,
+        "FixedCost": 0.0,
+        "FixedBilling": 0.0,
         "DisplayOrder": 18,
         "ColorFormat": {
           "A": 255,
@@ -5132,6 +5164,8 @@
           "InterActivityPhases": [],
           "UnitCost": 2.0,
           "UnitBilling": 2.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
@@ -5970,6 +6004,8 @@
           "InterActivityPhases": [],
           "UnitCost": 2.0,
           "UnitBilling": 2.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
@@ -6819,6 +6855,8 @@
           "InterActivityPhases": [],
           "UnitCost": 2.0,
           "UnitBilling": 2.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
@@ -7624,6 +7662,8 @@
           "InterActivityPhases": [],
           "UnitCost": 1.0,
           "UnitBilling": 1.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
@@ -8418,6 +8458,8 @@
           "InterActivityPhases": [],
           "UnitCost": 1.0,
           "UnitBilling": 1.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
@@ -9256,6 +9298,8 @@
           "InterActivityPhases": [],
           "UnitCost": 1.0,
           "UnitBilling": 1.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
@@ -10083,6 +10127,8 @@
           "InterActivityPhases": [],
           "UnitCost": 1.0,
           "UnitBilling": 1.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
@@ -10910,6 +10956,8 @@
           "InterActivityPhases": [],
           "UnitCost": 1.0,
           "UnitBilling": 1.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
@@ -11704,6 +11752,8 @@
           "InterActivityPhases": [],
           "UnitCost": 1.0,
           "UnitBilling": 1.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
@@ -12498,6 +12548,8 @@
           "InterActivityPhases": [],
           "UnitCost": 1.0,
           "UnitBilling": 1.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
@@ -13281,6 +13333,8 @@
           "InterActivityPhases": [],
           "UnitCost": 1.0,
           "UnitBilling": 1.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
@@ -14077,6 +14131,8 @@
           ],
           "UnitCost": 1.0,
           "UnitBilling": 1.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
@@ -14860,6 +14916,8 @@
           "InterActivityPhases": [],
           "UnitCost": 1.0,
           "UnitBilling": 1.0,
+          "FixedCost": 0.0,
+          "FixedBilling": 0.0,
           "DisplayOrder": 0,
           "ColorFormat": {
             "A": 0,
