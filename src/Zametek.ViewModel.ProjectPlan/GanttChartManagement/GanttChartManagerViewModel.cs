@@ -174,9 +174,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_IsAnnotated = this
                 .WhenAnyValue(
-                    rcm => rcm.IsGrouped,
                     rcm => rcm.AnnotationStyle,
-                    (isGrouped, annotationStyle) => isGrouped && annotationStyle != AnnotationStyle.None)
+                    (annotationStyle) => annotationStyle != AnnotationStyle.None)
                 .ToProperty(this, rcm => rcm.IsAnnotated);
 
             // We need to use an enum because raised changes on bools aren't always captured.
@@ -347,11 +346,27 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         IOrderedEnumerable<IDependentActivity> orderedActivities = graphCompilation
                             .DependentActivities
+                            .Where(x => !x.IsDummy)
                             .OrderByDescending(x => x.EarliestStartTime)
                             .ThenByDescending(x => x.TotalSlack);
 
                         foreach (IDependentActivity activity in orderedActivities)
                         {
+                            int activityStartTime = activity.EarliestStartTime ?? 0;
+                            int activityFinishTime = activity.EarliestFinishTime ?? 0;
+
+                            if (showSlack)
+                            {
+                                // Extend the annotation to the latest finish time of the last activity, if it has one.
+                                if (activity.LatestFinishTime.HasValue
+                                    && activityFinishTime < activity.LatestFinishTime)
+                                {
+                                    activityFinishTime = activity.LatestFinishTime.GetValueOrDefault();
+                                }
+                            }
+
+                            int minimumY = labels.Count;
+
                             AddBarItemToSeries(
                                 dateTimeCalculator,
                                 projectStart,
@@ -363,6 +378,83 @@ namespace Zametek.ViewModel.ProjectPlan
                                 highlights,
                                 activity,
                                 highlightActivityConnections);
+
+                            switch (annotationStyle)
+                            {
+                                case AnnotationStyle.None:
+                                    break;
+                                case AnnotationStyle.Plain:
+                                    {
+                                        Color resourceColor = Colors.Blue;
+                                        Color fillColor = resourceColor.WithAlpha(ColorHelper.AnnotationATransparent);
+
+                                        // Add an extra row for padding.
+                                        // IntervalBarItems are added in reverse order to how they will be displayed.
+                                        // So, this item will appear at the bottom of the grouping.
+
+                                        bars.Add(BuildEmptyBar(minXValue));
+                                        labels.Add(string.Empty);
+
+                                        int maximumY = labels.Count;
+
+                                        AddAnnotationToPlot(
+                                            dateTimeCalculator,
+                                            projectStart,
+                                            showDates,
+                                            labelGroups,
+                                            plotModel,
+                                            bars,
+                                            labels,
+                                            activity.Name,
+                                            activityStartTime,
+                                            activityFinishTime,
+                                            minimumY,
+                                            maximumY,
+                                            resourceColor,
+                                            fillColor);
+                                    }
+                                    break;
+                                case AnnotationStyle.Color:
+                                    {
+                                        Avalonia.Media.Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
+
+                                        Color resourceColor = new(
+                                            slackColor.R,
+                                            slackColor.G,
+                                            slackColor.B,
+                                            slackColor.A);
+
+                                        Color fillColor = resourceColor.WithAlpha(ColorHelper.AnnotationALight);
+
+                                        // Add an extra row for padding.
+                                        // IntervalBarItems are added in reverse order to how they will be displayed.
+                                        // So, this item will appear at the bottom of the grouping.
+
+                                        bars.Add(BuildEmptyBar(minXValue));
+                                        labels.Add(string.Empty);
+
+                                        int maximumY = labels.Count;
+
+                                        AddAnnotationToPlot(
+                                            dateTimeCalculator,
+                                            projectStart,
+                                            showDates,
+                                            labelGroups,
+                                            plotModel,
+                                            bars,
+                                            labels,
+                                            activity.Name,
+                                            activityStartTime,
+                                            activityFinishTime,
+                                            minimumY,
+                                            maximumY,
+                                            resourceColor,
+                                            fillColor);
+                                    }
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException(nameof(annotationStyle));
+                            }
                         }
 
                         // Add an extra row for padding.
@@ -451,15 +543,6 @@ namespace Zametek.ViewModel.ProjectPlan
                                 }
                             }
 
-                            // Add an extra row for padding.
-                            // IntervalBarItems are added in reverse order to how they will be displayed.
-                            // So, this item will appear at the bottom of the grouping.
-
-                            bars.Add(BuildEmptyBar(minXValue));
-                            labels.Add(string.Empty);
-
-                            int maximumY = labels.Count;
-
                             switch (annotationStyle)
                             {
                                 case AnnotationStyle.None:
@@ -468,6 +551,15 @@ namespace Zametek.ViewModel.ProjectPlan
                                     {
                                         Color resourceColor = Colors.Blue;
                                         Color fillColor = resourceColor.WithAlpha(ColorHelper.AnnotationATransparent);
+
+                                        // Add an extra row for padding.
+                                        // IntervalBarItems are added in reverse order to how they will be displayed.
+                                        // So, this item will appear at the bottom of the grouping.
+
+                                        bars.Add(BuildEmptyBar(minXValue));
+                                        labels.Add(string.Empty);
+
+                                        int maximumY = labels.Count;
 
                                         AddAnnotationToPlot(
                                             dateTimeCalculator,
@@ -495,6 +587,15 @@ namespace Zametek.ViewModel.ProjectPlan
                                             colorFormat.A);
 
                                         Color fillColor = resourceColor.WithAlpha(ColorHelper.AnnotationALight);
+
+                                        // Add an extra row for padding.
+                                        // IntervalBarItems are added in reverse order to how they will be displayed.
+                                        // So, this item will appear at the bottom of the grouping.
+
+                                        bars.Add(BuildEmptyBar(minXValue));
+                                        labels.Add(string.Empty);
+
+                                        int maximumY = labels.Count;
 
                                         AddAnnotationToPlot(
                                             dateTimeCalculator,
@@ -667,15 +768,6 @@ namespace Zametek.ViewModel.ProjectPlan
                                 }
                             }
 
-                            // Add an extra row for padding.
-                            // IntervalBarItems are added in reverse order to how they will be displayed.
-                            // So, this item will appear at the bottom of the grouping.
-
-                            bars.Add(BuildEmptyBar(minXValue));
-                            labels.Add(string.Empty);
-
-                            int maximumY = labels.Count;
-
                             switch (annotationStyle)
                             {
                                 case AnnotationStyle.None:
@@ -685,6 +777,15 @@ namespace Zametek.ViewModel.ProjectPlan
                                         WorkStreamModel workStreamModel = workStreamLookup[workStreamId];
                                         Color workStreamColor = Colors.Blue;
                                         Color fillColor = workStreamColor.WithAlpha(ColorHelper.AnnotationATransparent);
+
+                                        // Add an extra row for padding.
+                                        // IntervalBarItems are added in reverse order to how they will be displayed.
+                                        // So, this item will appear at the bottom of the grouping.
+
+                                        bars.Add(BuildEmptyBar(minXValue));
+                                        labels.Add(string.Empty);
+
+                                        int maximumY = labels.Count;
 
                                         AddAnnotationToPlot(
                                             dateTimeCalculator,
@@ -713,6 +814,15 @@ namespace Zametek.ViewModel.ProjectPlan
                                             workStreamModel.ColorFormat.A);
 
                                         Color fillColor = workStreamColor.WithAlpha(ColorHelper.AnnotationALight);
+
+                                        // Add an extra row for padding.
+                                        // IntervalBarItems are added in reverse order to how they will be displayed.
+                                        // So, this item will appear at the bottom of the grouping.
+
+                                        bars.Add(BuildEmptyBar(minXValue));
+                                        labels.Add(string.Empty);
+
+                                        int maximumY = labels.Count;
 
                                         AddAnnotationToPlot(
                                             dateTimeCalculator,

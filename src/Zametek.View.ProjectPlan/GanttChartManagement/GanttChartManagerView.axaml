@@ -42,8 +42,8 @@
 							  Height="25"/>
 				</DockPanel>
 
-				<DockPanel DockPanel.Dock="Top"
-						   IsEnabled="{Binding Path=IsGrouped, Mode=OneWay}">
+				<DockPanel DockPanel.Dock="Top">
+					<!--IsEnabled="{Binding Path=IsGrouped, Mode=OneWay}">-->
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
 						   Height="25"
