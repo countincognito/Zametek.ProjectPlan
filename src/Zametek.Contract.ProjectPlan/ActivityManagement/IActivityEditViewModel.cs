@@ -21,6 +21,9 @@ namespace Zametek.Contract.ProjectPlan
         bool HasNoEffort { get; set; }
         bool IsHasNoEffortActive { get; set; }
 
+        bool HasNoRisk { get; set; }
+        bool IsHasNoRiskActive { get; set; }
+
         LogicalOperator TargetResourceOperator { get; set; }
         bool IsTargetResourceOperatorActive { get; set; }
 

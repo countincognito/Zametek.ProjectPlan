@@ -27,6 +27,8 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
 
         public bool HasNoEffort { get; init; }
 
+        public bool HasNoRisk { get; init; }
+
         public int Duration { get; init; }
 
         public int? FreeSlack { get; init; }

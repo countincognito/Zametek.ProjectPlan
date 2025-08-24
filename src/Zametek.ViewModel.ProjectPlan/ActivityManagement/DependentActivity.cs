@@ -31,25 +31,29 @@ namespace Zametek.ViewModel.ProjectPlan
             Trackers = [];
         }
 
-        public DependentActivity(int id, string name, string notes, IEnumerable<int> targetWorkStreams, IEnumerable<int> targetResources, IEnumerable<int> dependencies, IEnumerable<int> planningDependencies, IEnumerable<int> resourceDependencies, IEnumerable<int> successors, LogicalOperator targetLogicalOperator, IEnumerable<int> allocatedToResources, bool canBeRemoved, bool hasNoCost, bool hasNoBilling, bool hasNoEffort, int duration, int? freeSlack, int? earliestStartTime, int? latestFinishTime, int? minimumFreeSlack, int? minimumEarliestStartTime, int? maximumLatestFinishTime)
+        public DependentActivity(int id, string name, string notes, IEnumerable<int> targetWorkStreams, IEnumerable<int> targetResources, IEnumerable<int> dependencies, IEnumerable<int> planningDependencies, IEnumerable<int> resourceDependencies, IEnumerable<int> successors, LogicalOperator targetLogicalOperator, IEnumerable<int> allocatedToResources, bool canBeRemoved, bool hasNoCost, bool hasNoBilling, bool hasNoEffort, bool hasNoRisk, int duration, int? freeSlack, int? earliestStartTime, int? latestFinishTime, int? minimumFreeSlack, int? minimumEarliestStartTime, int? maximumLatestFinishTime)
             : base(id, name, notes, targetWorkStreams, targetResources, dependencies, planningDependencies, resourceDependencies, successors, targetLogicalOperator, allocatedToResources, canBeRemoved, hasNoCost, hasNoBilling, hasNoEffort, duration, freeSlack, earliestStartTime, latestFinishTime, minimumFreeSlack, minimumEarliestStartTime, maximumLatestFinishTime)
         {
+            HasNoRisk = hasNoRisk;
             Trackers = [];
         }
 
 
-        public DependentActivity(int id, string name, string notes, IEnumerable<int> targetWorkStreams, IEnumerable<int> targetResources, IEnumerable<int> dependencies, IEnumerable<int> planningDependencies, IEnumerable<int> resourceDependencies, IEnumerable<int> successors, LogicalOperator targetLogicalOperator, IEnumerable<int> allocatedToResources, bool canBeRemoved, bool hasNoCost, bool hasNoBilling, bool hasNoEffort, int duration, int? freeSlack, int? earliestStartTime, int? latestFinishTime, int? minimumFreeSlack, int? minimumEarliestStartTime, int? maximumLatestFinishTime, IEnumerable<ActivityTrackerModel> trackers)
+        public DependentActivity(int id, string name, string notes, IEnumerable<int> targetWorkStreams, IEnumerable<int> targetResources, IEnumerable<int> dependencies, IEnumerable<int> planningDependencies, IEnumerable<int> resourceDependencies, IEnumerable<int> successors, LogicalOperator targetLogicalOperator, IEnumerable<int> allocatedToResources, bool canBeRemoved, bool hasNoCost, bool hasNoBilling, bool hasNoEffort, bool hasNoRisk, int duration, int? freeSlack, int? earliestStartTime, int? latestFinishTime, int? minimumFreeSlack, int? minimumEarliestStartTime, int? maximumLatestFinishTime, IEnumerable<ActivityTrackerModel> trackers)
             : base(id, name, notes, targetWorkStreams, targetResources, dependencies, planningDependencies, resourceDependencies, successors, targetLogicalOperator, allocatedToResources, canBeRemoved, hasNoCost, hasNoBilling, hasNoEffort, duration, freeSlack, earliestStartTime, latestFinishTime, minimumFreeSlack, minimumEarliestStartTime, maximumLatestFinishTime)
         {
             ArgumentNullException.ThrowIfNull(nameof(trackers));
+            HasNoRisk = hasNoRisk;
             Trackers = [.. trackers];
         }
+
+        public bool HasNoRisk { get; set; }
 
         public List<ActivityTrackerModel> Trackers { get; init; }
 
         public override object CloneObject()
         {
-            return new DependentActivity(Id, Name, Notes, TargetWorkStreams, TargetResources, Dependencies, PlanningDependencies, ResourceDependencies, Successors, TargetResourceOperator, AllocatedToResources, CanBeRemoved, HasNoCost, HasNoBilling, HasNoEffort, Duration, FreeSlack, EarliestStartTime, LatestFinishTime, MinimumFreeSlack, MinimumEarliestStartTime, MaximumLatestFinishTime, Trackers);
+            return new DependentActivity(Id, Name, Notes, TargetWorkStreams, TargetResources, Dependencies, PlanningDependencies, ResourceDependencies, Successors, TargetResourceOperator, AllocatedToResources, CanBeRemoved, HasNoCost, HasNoBilling, HasNoEffort, HasNoRisk, Duration, FreeSlack, EarliestStartTime, LatestFinishTime, MinimumFreeSlack, MinimumEarliestStartTime, MaximumLatestFinishTime, Trackers);
         }
     }
 }

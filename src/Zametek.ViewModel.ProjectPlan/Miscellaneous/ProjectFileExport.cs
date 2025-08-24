@@ -47,6 +47,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivityModel.HasNoCost),
             nameof(ActivityModel.HasNoBilling),
             nameof(ActivityModel.HasNoEffort),
+            nameof(ActivityModel.HasNoRisk),
             nameof(ActivityModel.Duration),
             nameof(ActivityModel.FreeSlack),
             nameof(ActivityModel.TotalSlack),

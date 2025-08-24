@@ -249,4 +249,7 @@
   <data name="ToolTip_HasNoBilling" xml:space="preserve">
     <value>Ignore Billing</value>
   </data>
+  <data name="ToolTip_HasNoRisk" xml:space="preserve">
+    <value>Ignore Risk</value>
+  </data>
 </root>

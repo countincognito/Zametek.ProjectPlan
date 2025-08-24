@@ -673,6 +673,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ignore Risk.
+        /// </summary>
+        public static string Label_HasNoRisk {
+            get {
+                return ResourceManager.GetString("Label_HasNoRisk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ID.
         /// </summary>
         public static string Label_Id {

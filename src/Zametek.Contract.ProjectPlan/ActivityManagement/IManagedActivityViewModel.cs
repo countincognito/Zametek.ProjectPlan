@@ -27,6 +27,8 @@ namespace Zametek.Contract.ProjectPlan
 
         public string AllocatedToResourcesString { get; }
 
+        bool HasNoRisk { get; set; }
+
         DateTimeOffset? EarliestStartDateTimeOffset { get; }
 
         DateTimeOffset? LatestStartDateTimeOffset { get; }

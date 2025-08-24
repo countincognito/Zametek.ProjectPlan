@@ -356,7 +356,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private static double CalculateCriticalityRisk(
+        private static double? CalculateCriticalityRisk(
             IEnumerable<ActivityModel> activities,
             ActivitySeverityLookup activitySeverityLookup)
         {
@@ -364,10 +364,20 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(activitySeverityLookup);
             double numerator = activities.Sum(activity => activitySeverityLookup.FindSlackCriticalityWeight(activity.TotalSlack));
             double denominator = activitySeverityLookup.CriticalCriticalityWeight() * activities.Count();
-            return denominator == 0 ? 1.0 : numerator / denominator;
+
+            if (denominator == 0)
+            {
+                if (numerator == 0)
+                {
+                    return 1.0;
+                }
+                return null;
+            }
+
+            return numerator / denominator;
         }
 
-        private static double CalculateFibonacciRisk(
+        private static double? CalculateFibonacciRisk(
             IEnumerable<ActivityModel> activities,
             ActivitySeverityLookup activitySeverityLookup)
         {
@@ -375,10 +385,20 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(activitySeverityLookup);
             double numerator = activities.Sum(activity => activitySeverityLookup.FindSlackFibonacciWeight(activity.TotalSlack));
             double denominator = activitySeverityLookup.CriticalFibonacciWeight() * activities.Count();
-            return denominator == 0 ? 1.0 : numerator / denominator;
+
+            if (denominator == 0)
+            {
+                if (numerator == 0)
+                {
+                    return 1.0;
+                }
+                return null;
+            }
+
+            return numerator / denominator;
         }
 
-        private static double CalculateActivityRisk(IEnumerable<ActivityModel> activities)
+        private static double? CalculateActivityRisk(IEnumerable<ActivityModel> activities)
         {
             ArgumentNullException.ThrowIfNull(activities);
             double numerator = 0.0;
@@ -393,10 +413,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 numerator += totalSlack;
             }
             double denominator = maxTotalSlack * activities.Count();
-            return denominator == 0 ? 1.0 : 1.0 - (numerator / denominator);
+
+            if (denominator == 0)
+            {
+                if (numerator == 0)
+                {
+                    return 1.0;
+                }
+                return null;
+            }
+
+            return 1.0 - (numerator / denominator);
         }
 
-        private static double CalculateActivityRiskWithStdDevCorrection(IEnumerable<ActivityModel> activities)
+        private static double? CalculateActivityRiskWithStdDevCorrection(IEnumerable<ActivityModel> activities)
         {
             ArgumentNullException.ThrowIfNull(activities);
             double numerator = 0.0;
@@ -430,10 +460,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 numerator += localTotalSlack;
             }
             double denominator = maxTotalSlack * activities.Count();
-            return denominator == 0 ? 1.0 : 1.0 - (numerator / denominator);
+
+            if (denominator == 0)
+            {
+                if (numerator == 0)
+                {
+                    return 1.0;
+                }
+                return null;
+            }
+
+            return 1.0 - (numerator / denominator);
         }
 
-        private static double CalculateGeometricCriticalityRisk(
+        private static double? CalculateGeometricCriticalityRisk(
             IEnumerable<ActivityModel> activities,
             ActivitySeverityLookup activitySeverityLookup)
         {
@@ -446,10 +486,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             numerator = Math.Pow(numerator, 1.0 / activities.Count());
             double denominator = activitySeverityLookup.CriticalCriticalityWeight();
-            return denominator == 0 ? 1.0 : numerator / denominator;
+
+            if (denominator == 0)
+            {
+                if (numerator == 0)
+                {
+                    return 1.0;
+                }
+                return null;
+            }
+
+            return numerator / denominator;
         }
 
-        private static double CalculateGeometricFibonacciRisk(
+        private static double? CalculateGeometricFibonacciRisk(
             IEnumerable<ActivityModel> activities,
             ActivitySeverityLookup activitySeverityLookup)
         {
@@ -462,10 +512,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             numerator = Math.Pow(numerator, 1.0 / activities.Count());
             double denominator = activitySeverityLookup.CriticalFibonacciWeight();
-            return denominator == 0 ? 1.0 : numerator / denominator;
+
+            if (denominator == 0)
+            {
+                if (numerator == 0)
+                {
+                    return 1.0;
+                }
+                return null;
+            }
+
+            return numerator / denominator;
         }
 
-        private static double CalculateGeometricActivityRisk(IEnumerable<ActivityModel> activities)
+        private static double? CalculateGeometricActivityRisk(IEnumerable<ActivityModel> activities)
         {
             ArgumentNullException.ThrowIfNull(activities);
             double numerator = 1.0;
@@ -482,7 +542,17 @@ namespace Zametek.ViewModel.ProjectPlan
             numerator = Math.Pow(numerator, 1.0 / activities.Count());
             numerator -= 1.0;
             double denominator = maxTotalSlack;
-            return denominator == 0 ? 1.0 : 1.0 - (numerator / denominator);
+
+            if (denominator == 0)
+            {
+                if (numerator == 0)
+                {
+                    return 1.0;
+                }
+                return null;
+            }
+
+            return 1.0 - (numerator / denominator);
         }
 
         private static MetricsModel CalculateProjectMetrics(
@@ -492,15 +562,18 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(activities);
             ArgumentNullException.ThrowIfNull(activitySeverities);
             var activitySeverityLookup = new ActivitySeverityLookup(activitySeverities);
+
+            List<ActivityModel> activitesWithRisk = [.. activities.Where(x => !x.HasNoRisk)];
+
             return new MetricsModel
             {
-                Criticality = CalculateCriticalityRisk(activities, activitySeverityLookup),
-                Fibonacci = CalculateFibonacciRisk(activities, activitySeverityLookup),
-                Activity = CalculateActivityRisk(activities),
-                ActivityStdDevCorrection = CalculateActivityRiskWithStdDevCorrection(activities),
-                GeometricCriticality = CalculateGeometricCriticalityRisk(activities, activitySeverityLookup),
-                GeometricFibonacci = CalculateGeometricFibonacciRisk(activities, activitySeverityLookup),
-                GeometricActivity = CalculateGeometricActivityRisk(activities),
+                Criticality = CalculateCriticalityRisk(activitesWithRisk, activitySeverityLookup),
+                Fibonacci = CalculateFibonacciRisk(activitesWithRisk, activitySeverityLookup),
+                Activity = CalculateActivityRisk(activitesWithRisk),
+                ActivityStdDevCorrection = CalculateActivityRiskWithStdDevCorrection(activitesWithRisk),
+                GeometricCriticality = CalculateGeometricCriticalityRisk(activitesWithRisk, activitySeverityLookup),
+                GeometricFibonacci = CalculateGeometricFibonacciRisk(activitesWithRisk, activitySeverityLookup),
+                GeometricActivity = CalculateGeometricActivityRisk(activitesWithRisk),
             };
         }
 

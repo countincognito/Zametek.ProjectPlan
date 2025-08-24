@@ -50,6 +50,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivityModel.HasNoCost),
             nameof(ActivityModel.HasNoBilling),
             nameof(ActivityModel.HasNoEffort),
+            nameof(ActivityModel.HasNoRisk),
             nameof(ActivityModel.Duration),
             nameof(ActivityModel.MinimumFreeSlack),
             nameof(ActivityModel.MinimumEarliestStartTime),
@@ -650,6 +651,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     bool hasNoCost = false;
                     bool hasNoBilling = false;
                     bool hasNoEffort = false;
+                    bool hasNoRisk = false;
                     int duration = 0;
                     int? minimumFreeSlack = null;
                     int? minimumEarliestStartTime = null;
@@ -721,6 +723,14 @@ namespace Zametek.ViewModel.ProjectPlan
                                     if (bool.TryParse(row[colName]?.ToString(), out bool output))
                                     {
                                         hasNoEffort = output;
+                                    }
+                                })
+                            .Case(nameof(ActivityModel.HasNoRisk),
+                                colName =>
+                                {
+                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
+                                    {
+                                        hasNoRisk = output;
                                     }
                                 })
                             .Case(nameof(ActivityModel.Duration),
@@ -818,6 +828,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 HasNoCost = hasNoCost,
                                 HasNoBilling = hasNoBilling,
                                 HasNoEffort = hasNoEffort,
+                                HasNoRisk = hasNoRisk,
                                 Duration = duration,
                                 MinimumFreeSlack = minimumFreeSlack,
                                 MinimumEarliestStartTime = minimumEarliestStartTime,

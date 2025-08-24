@@ -1746,6 +1746,10 @@ namespace Zametek.ViewModel.ProjectPlan
                                     {
                                         activity.HasNoEffort = updateModel.HasNoEffort;
                                     }
+                                    if (updateModel.IsHasNoRiskEdited)
+                                    {
+                                        activity.HasNoRisk = updateModel.HasNoRisk;
+                                    }
 
                                     editable.EndEdit();
                                 }

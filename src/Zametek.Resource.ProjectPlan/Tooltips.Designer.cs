@@ -196,6 +196,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ignore Risk.
+        /// </summary>
+        public static string ToolTip_HasNoRisk {
+            get {
+                return ResourceManager.GetString("ToolTip_HasNoRisk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Identifier.
         /// </summary>
         public static string ToolTip_Id {

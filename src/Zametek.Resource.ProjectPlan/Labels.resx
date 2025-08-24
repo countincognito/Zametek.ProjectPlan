@@ -519,6 +519,9 @@
   <data name="Label_HasNoBilling" xml:space="preserve">
     <value>Ignore Billing</value>
   </data>
+  <data name="Label_HasNoRisk" xml:space="preserve">
+    <value>Ignore Risk</value>
+  </data>
   <data name="Label_DirectBilling" xml:space="preserve">
     <value>Direct Billing:</value>
   </data>

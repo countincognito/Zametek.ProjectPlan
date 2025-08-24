@@ -615,6 +615,21 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public bool HasNoRisk
+        {
+            get => DependentActivity.HasNoRisk;
+            set
+            {
+                if (DependentActivity.HasNoRisk != value)
+                {
+                    BeginEdit();
+                    DependentActivity.HasNoRisk = value;
+                    EndEdit();
+                }
+                this.RaisePropertyChanged();
+            }
+        }
+
         public int Duration
         {
             get => DependentActivity.Duration;

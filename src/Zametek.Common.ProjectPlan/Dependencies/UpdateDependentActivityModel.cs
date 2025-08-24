@@ -35,5 +35,8 @@ namespace Zametek.Common.ProjectPlan
 
         public bool HasNoEffort { get; init; } = default;
         public bool IsHasNoEffortEdited { get; init; } = false;
+
+        public bool HasNoRisk { get; init; } = default;
+        public bool IsHasNoRiskEdited { get; init; } = false;
     }
 }
