@@ -31,7 +31,7 @@
 		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
 		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Simple.xaml"/>-->
 
-		<StyleInclude Source="avares://Dock.Avalonia/Themes/DockSimpleTheme.axaml" />
+		<DockSimpleTheme />
 
 		<StyleInclude Source="avares://Semi.Avalonia.ColorPicker/Index.axaml" />
 		<StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml" />

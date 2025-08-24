@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.2" />
+    <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="11.3.2.2" />
     <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.12.0" />
     <PackageReference Include="Splat.DependencyInjection.SourceGenerator" Version="1.2.3">
       <PrivateAssets>all</PrivateAssets>
