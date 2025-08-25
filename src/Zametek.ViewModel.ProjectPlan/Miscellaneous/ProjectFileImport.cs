@@ -70,6 +70,7 @@ namespace Zametek.ViewModel.ProjectPlan
         [
             nameof(ResourceModel.Id),
             nameof(ResourceModel.Name),
+            nameof(ResourceModel.Notes),
             nameof(ResourceModel.IsExplicitTarget),
             nameof(ResourceModel.IsInactive),
             nameof(ResourceModel.InterActivityAllocationType),
@@ -872,6 +873,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int? id = 0;
                     string name = string.Empty;
+                    string notes = string.Empty;
                     bool isExplicitTarget = false;
                     bool isInactive = false;
                     List<int> interActivityPhases = [];
@@ -897,6 +899,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                 })
                             .Case(nameof(ResourceModel.Name),
                                 colName => name = row[colName]?.ToString() ?? string.Empty)
+                            .Case(nameof(ResourceModel.Notes),
+                                colName => notes = row[colName]?.ToString() ?? string.Empty)
                             .Case(nameof(ResourceModel.IsExplicitTarget),
                                 colName =>
                                 {
@@ -993,6 +997,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             Id = idVal,
                             Name = name,
+                            Notes = notes,
                             IsExplicitTarget = isExplicitTarget,
                             IsInactive = isInactive,
                             InterActivityAllocationType = interActivityAllocationType,

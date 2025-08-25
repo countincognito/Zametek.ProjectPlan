@@ -88,6 +88,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Notes.
+        /// </summary>
+        public static string Label_ActivityNotes {
+            get {
+                return ResourceManager.GetString("Label_ActivityNotes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Activity Risk:.
         /// </summary>
         public static string Label_ActivityRisk {
@@ -908,15 +917,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Notes.
-        /// </summary>
-        public static string Label_Notes {
-            get {
-                return ResourceManager.GetString("Label_Notes", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Off.
         /// </summary>
         public static string Label_Off {
@@ -1093,6 +1093,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_ResourceName {
             get {
                 return ResourceManager.GetString("Label_ResourceName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notes.
+        /// </summary>
+        public static string Label_ResourceNotes {
+            get {
+                return ResourceManager.GetString("Label_ResourceNotes", resourceCulture);
             }
         }
         

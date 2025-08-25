@@ -18,6 +18,7 @@
 		<local:ColorFormatToColorConverter x:Key="colorFormatToColorConverter"/>
 
 		<local:ManagedResourceSortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
+		<local:ManagedResourceSortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
 		<local:ManagedResourceSortComparer x:Key="isExplicitTargetSortComparer" SortMemberPath="IsExplicitTarget"/>
 		<local:ManagedResourceSortComparer x:Key="isInactiveSortComparer" SortMemberPath="IsInactive"/>
 		<local:ManagedResourceSortComparer x:Key="interActivityAllocationTypeSortComparer" SortMemberPath="InterActivityAllocationType"/>
@@ -28,7 +29,7 @@
 		<local:ManagedResourceSortComparer x:Key="fixedBillingSortComparer" SortMemberPath="FixedBilling"/>
 		<local:ManagedResourceSortComparer x:Key="displayOrderSortComparer" SortMemberPath="DisplayOrder"/>
 		<local:ManagedResourceSortComparer x:Key="colorFormatSortComparer" SortMemberPath="ColorFormat"/>
-		<local:ManagedResourceSortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
+		<local:ManagedActivitySortComparer x:Key="notesSortComparer" SortMemberPath="Notes"/>
 	</UserControl.Resources>
 
 
@@ -126,7 +127,7 @@
 
 		<DataGrid Name="resourcesGrid"
 				  IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
-				  FrozenColumnCount="1"
+				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
 				  ItemsSource="{Binding Path=Resources, Mode=OneWay}"
@@ -199,6 +200,42 @@
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										CustomSortComparer="{StaticResource nameSortComparer}"
+										Width="130">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_ResourceName}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ResourceName}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Name, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<TextBox Text="{Binding Path=Name, Mode=TwoWay}"
+									 VerticalAlignment="Center"
+									 Focusable="True"
+									 Margin="0"
+									 Padding="3"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
 				<DataGridTemplateColumn CanUserResize="True"
@@ -581,18 +618,23 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
+
+
+
+
+
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
-										CustomSortComparer="{StaticResource nameSortComparer}"
-										Width="250">
+										CustomSortComparer="{StaticResource notesSortComparer}"
+										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_ResourceName}"
-									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ResourceName}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceNotes}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ResourceNotes}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -602,13 +644,13 @@
 								<TextBlock VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
-										   Text="{Binding Path=Name, Mode=OneWay}"/>
+										   Text="{Binding Path=Notes, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
 					<DataGridTemplateColumn.CellEditingTemplate>
 						<DataTemplate>
-							<TextBox Text="{Binding Path=Name, Mode=TwoWay}"
+							<TextBox Text="{Binding Path=Notes, Mode=TwoWay}"
 									 VerticalAlignment="Center"
 									 Focusable="True"
 									 Margin="0"

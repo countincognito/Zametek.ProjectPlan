@@ -75,6 +75,7 @@ namespace Zametek.ViewModel.ProjectPlan
         [
             nameof(ResourceModel.Id),
             nameof(ResourceModel.Name),
+            nameof(ResourceModel.Notes),
             nameof(ResourceModel.IsExplicitTarget),
             nameof(ResourceModel.IsInactive),
             nameof(ResourceModel.InterActivityAllocationType),

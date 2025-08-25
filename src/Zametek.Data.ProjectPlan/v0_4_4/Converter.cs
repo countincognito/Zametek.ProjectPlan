@@ -20,7 +20,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
             {
                 ResourceScheduleModel resourceSchedule = graphCompilation.ResourceSchedules[i];
                 ResourceModel resource = resourceSchedule.Resource ?? new ResourceModel();
-                resource = resource with { UnitBilling = resource.UnitCost };
+                resource = resource with { UnitBilling = resource.UnitCost, Notes = string.Empty };
                 resourceSchedule = resourceSchedule with { Resource = resource };
                 resourceSchedule.BillingAllocation.Clear();
                 resourceSchedule.BillingAllocation.AddRange(resourceSchedule.CostAllocation);
@@ -36,7 +36,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
             for (int i = 0; i < resourceSettings.Resources.Count; i++)
             {
                 ResourceModel resource = resourceSettings.Resources[i];
-                resource = resource with { UnitBilling = resource.UnitCost };
+                resource = resource with { UnitBilling = resource.UnitCost, Notes = string.Empty };
                 resources.Add(resource);
             }
 

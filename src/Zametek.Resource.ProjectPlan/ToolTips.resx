@@ -198,7 +198,10 @@
   <data name="ToolTip_MinimumFreeSlack" xml:space="preserve">
     <value>Minimum Free Slack</value>
   </data>
-  <data name="ToolTip_Notes" xml:space="preserve">
+  <data name="ToolTip_ActivityNotes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="ToolTip_ResourceNotes" xml:space="preserve">
     <value>Notes</value>
   </data>
   <data name="ToolTip_ResourceDependencies" xml:space="preserve">

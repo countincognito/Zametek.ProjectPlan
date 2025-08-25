@@ -342,7 +342,10 @@
   <data name="Label_No" xml:space="preserve">
     <value>No</value>
   </data>
-  <data name="Label_Notes" xml:space="preserve">
+  <data name="Label_ActivityNotes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Label_ResourceNotes" xml:space="preserve">
     <value>Notes</value>
   </data>
   <data name="Label_OtherCost" xml:space="preserve">

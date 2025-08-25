@@ -11,6 +11,8 @@ namespace Zametek.Contract.ProjectPlan
 
         string Name { get; set; }
 
+        string Notes { get; set; }
+
         bool IsExplicitTarget { get; set; }
 
         bool IsInactive { get; set; }

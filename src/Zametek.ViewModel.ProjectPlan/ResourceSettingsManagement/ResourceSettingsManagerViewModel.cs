@@ -347,6 +347,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         Id = x.Id,
                         Name = x.Name,
+                        Notes = x.Notes,
                         IsExplicitTarget = x.IsExplicitTarget,
                         IsInactive = x.IsInactive,
                         InterActivityAllocationType = x.InterActivityAllocationType,

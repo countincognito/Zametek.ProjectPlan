@@ -1194,8 +1194,8 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_Notes}"
-									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Notes}"/>
+									   Text="{x:Static resources:Labels.Label_ActivityNotes}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ActivityNotes}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>

@@ -34,6 +34,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;
             Id = resource.Id;
             m_Name = resource.Name;
+            m_Notes = resource.Notes;
             m_IsExplicitTarget = resource.IsExplicitTarget;
             m_IsInactive = resource.IsInactive;
             m_InterActivityAllocationType = resource.InterActivityAllocationType;
@@ -135,6 +136,13 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get => m_Name;
             set => this.RaiseAndSetIfChanged(ref m_Name, value);
+        }
+
+        private string m_Notes;
+        public string Notes
+        {
+            get => m_Notes;
+            set => this.RaiseAndSetIfChanged(ref m_Notes, value);
         }
 
         private bool m_IsExplicitTarget;

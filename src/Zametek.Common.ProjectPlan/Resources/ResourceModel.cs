@@ -9,6 +9,8 @@ namespace Zametek.Common.ProjectPlan
 
         public string Name { get; init; } = string.Empty;
 
+        public string Notes { get; init; } = string.Empty;
+
         public bool IsExplicitTarget { get; init; }
 
         public bool IsInactive { get; init; }

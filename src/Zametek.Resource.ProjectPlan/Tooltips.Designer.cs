@@ -70,6 +70,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Notes.
+        /// </summary>
+        public static string ToolTip_ActivityNotes {
+            get {
+                return ResourceManager.GetString("ToolTip_ActivityNotes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Allocated to Resources.
         /// </summary>
         public static string ToolTip_AllocatedToResources {
@@ -358,15 +367,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Notes.
-        /// </summary>
-        public static string ToolTip_Notes {
-            get {
-                return ResourceManager.GetString("ToolTip_Notes", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Percentage Completed.
         /// </summary>
         public static string ToolTip_PercentageCompleted {
@@ -399,6 +399,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string ToolTip_ResourceName {
             get {
                 return ResourceManager.GetString("ToolTip_ResourceName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notes.
+        /// </summary>
+        public static string ToolTip_ResourceNotes {
+            get {
+                return ResourceManager.GetString("ToolTip_ResourceNotes", resourceCulture);
             }
         }
         
