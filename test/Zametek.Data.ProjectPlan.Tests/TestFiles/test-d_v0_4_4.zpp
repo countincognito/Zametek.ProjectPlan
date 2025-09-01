@@ -1841,6 +1841,7 @@
       {
         "Id": 1,
         "Name": "PO",
+        "Notes": "",
         "IsExplicitTarget": true,
         "IsInactive": false,
         "InterActivityAllocationType": 2,
@@ -2378,6 +2379,7 @@
       {
         "Id": 2,
         "Name": "ARC",
+        "Notes": "",
         "IsExplicitTarget": true,
         "IsInactive": false,
         "InterActivityAllocationType": 2,
@@ -2915,6 +2917,7 @@
       {
         "Id": 3,
         "Name": "PM",
+        "Notes": "",
         "IsExplicitTarget": true,
         "IsInactive": false,
         "InterActivityAllocationType": 2,
@@ -3248,6 +3251,7 @@
       {
         "Id": 4,
         "Name": "UX",
+        "Notes": "",
         "IsExplicitTarget": true,
         "IsInactive": false,
         "InterActivityAllocationType": 0,
@@ -3268,6 +3272,7 @@
       {
         "Id": 5,
         "Name": "DEV1",
+        "Notes": "",
         "IsExplicitTarget": false,
         "IsInactive": false,
         "InterActivityAllocationType": 1,
@@ -3288,6 +3293,7 @@
       {
         "Id": 6,
         "Name": "DEV2",
+        "Notes": "",
         "IsExplicitTarget": false,
         "IsInactive": false,
         "InterActivityAllocationType": 1,
@@ -3308,6 +3314,7 @@
       {
         "Id": 7,
         "Name": "DEV3",
+        "Notes": "",
         "IsExplicitTarget": false,
         "IsInactive": false,
         "InterActivityAllocationType": 1,
@@ -3328,6 +3335,7 @@
       {
         "Id": 8,
         "Name": "DEV4",
+        "Notes": "",
         "IsExplicitTarget": false,
         "IsInactive": false,
         "InterActivityAllocationType": 1,
@@ -3348,6 +3356,7 @@
       {
         "Id": 9,
         "Name": "DEV5",
+        "Notes": "",
         "IsExplicitTarget": true,
         "IsInactive": false,
         "InterActivityAllocationType": 1,
@@ -3368,6 +3377,7 @@
       {
         "Id": 10,
         "Name": "DEV6",
+        "Notes": "",
         "IsExplicitTarget": true,
         "IsInactive": false,
         "InterActivityAllocationType": 1,
@@ -3388,6 +3398,7 @@
       {
         "Id": 11,
         "Name": "QA1",
+        "Notes": "",
         "IsExplicitTarget": true,
         "IsInactive": false,
         "InterActivityAllocationType": 1,
@@ -3408,6 +3419,7 @@
       {
         "Id": 12,
         "Name": "QA2",
+        "Notes": "",
         "IsExplicitTarget": true,
         "IsInactive": false,
         "InterActivityAllocationType": 0,
@@ -3428,6 +3440,7 @@
       {
         "Id": 13,
         "Name": "TE",
+        "Notes": "",
         "IsExplicitTarget": true,
         "IsInactive": false,
         "InterActivityAllocationType": 0,
@@ -3448,6 +3461,7 @@
       {
         "Id": 14,
         "Name": "CM",
+        "Notes": "",
         "IsExplicitTarget": true,
         "IsInactive": false,
         "InterActivityAllocationType": 2,
@@ -3470,6 +3484,7 @@
       {
         "Id": 16,
         "Name": "DBA",
+        "Notes": "",
         "IsExplicitTarget": true,
         "IsInactive": false,
         "InterActivityAllocationType": 1,
@@ -3490,6 +3505,7 @@
       {
         "Id": 18,
         "Name": "DEV7",
+        "Notes": "",
         "IsExplicitTarget": true,
         "IsInactive": false,
         "InterActivityAllocationType": 1,
@@ -5158,6 +5174,7 @@
         "Resource": {
           "Id": 1,
           "Name": "PO",
+          "Notes": "",
           "IsExplicitTarget": true,
           "IsInactive": false,
           "InterActivityAllocationType": 2,
@@ -5998,6 +6015,7 @@
         "Resource": {
           "Id": 2,
           "Name": "ARC",
+          "Notes": "",
           "IsExplicitTarget": true,
           "IsInactive": false,
           "InterActivityAllocationType": 2,
@@ -6849,6 +6867,7 @@
         "Resource": {
           "Id": 3,
           "Name": "PM",
+          "Notes": "",
           "IsExplicitTarget": true,
           "IsInactive": false,
           "InterActivityAllocationType": 2,
@@ -7656,6 +7675,7 @@
         "Resource": {
           "Id": 4,
           "Name": "UX",
+          "Notes": "",
           "IsExplicitTarget": true,
           "IsInactive": false,
           "InterActivityAllocationType": 0,
@@ -8452,6 +8472,7 @@
         "Resource": {
           "Id": 5,
           "Name": "DEV1",
+          "Notes": "",
           "IsExplicitTarget": false,
           "IsInactive": false,
           "InterActivityAllocationType": 1,
@@ -9292,6 +9313,7 @@
         "Resource": {
           "Id": 6,
           "Name": "DEV2",
+          "Notes": "",
           "IsExplicitTarget": false,
           "IsInactive": false,
           "InterActivityAllocationType": 1,
@@ -10121,6 +10143,7 @@
         "Resource": {
           "Id": 7,
           "Name": "DEV3",
+          "Notes": "",
           "IsExplicitTarget": false,
           "IsInactive": false,
           "InterActivityAllocationType": 1,
@@ -10950,6 +10973,7 @@
         "Resource": {
           "Id": 8,
           "Name": "DEV4",
+          "Notes": "",
           "IsExplicitTarget": false,
           "IsInactive": false,
           "InterActivityAllocationType": 1,
@@ -11746,6 +11770,7 @@
         "Resource": {
           "Id": 11,
           "Name": "QA1",
+          "Notes": "",
           "IsExplicitTarget": true,
           "IsInactive": false,
           "InterActivityAllocationType": 1,
@@ -12542,6 +12567,7 @@
         "Resource": {
           "Id": 12,
           "Name": "QA2",
+          "Notes": "",
           "IsExplicitTarget": true,
           "IsInactive": false,
           "InterActivityAllocationType": 0,
@@ -13327,6 +13353,7 @@
         "Resource": {
           "Id": 13,
           "Name": "TE",
+          "Notes": "",
           "IsExplicitTarget": true,
           "IsInactive": false,
           "InterActivityAllocationType": 0,
@@ -14123,6 +14150,7 @@
         "Resource": {
           "Id": 14,
           "Name": "CM",
+          "Notes": "",
           "IsExplicitTarget": true,
           "IsInactive": false,
           "InterActivityAllocationType": 2,
@@ -14910,6 +14938,7 @@
         "Resource": {
           "Id": 16,
           "Name": "DBA",
+          "Notes": "",
           "IsExplicitTarget": true,
           "IsInactive": false,
           "InterActivityAllocationType": 1,
