@@ -837,6 +837,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 annotation.LabelShadowColor = Colors.Transparent;
             }
 
+            // Enumerate the bar series and set the position of each bar.
+            for (int i = 0; i < bars.Count; i++)
+            {
+                var bar = bars[i];
+                bar.Position = i + 1;
+            }
+
+            BarPlot barPlot = plotModel.Plot.Add.Bars(bars);
+            barPlot.Horizontal = true;
+
+            // Highlights (above the bar plot).
+            plotModel.Plot.PlottableList.AddRange(highlights);
+
             if (showToday)
             {
                 (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
@@ -855,19 +868,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         pattern: LinePattern.Dotted);
                 }
             }
-
-            // Enumerate the bar series and set the position of each bar.
-            for (int i = 0; i < bars.Count; i++)
-            {
-                var bar = bars[i];
-                bar.Position = i + 1;
-            }
-
-            BarPlot barPlot = plotModel.Plot.Add.Bars(bars);
-            barPlot.Horizontal = true;
-
-            // Highlights (above the bar plot).
-            plotModel.Plot.PlottableList.AddRange(highlights);
 
             if (showMilestones)
             {

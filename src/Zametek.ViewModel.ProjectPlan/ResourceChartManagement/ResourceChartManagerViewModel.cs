@@ -381,29 +381,29 @@ namespace Zametek.ViewModel.ProjectPlan
                         labels.Add(series.Title);
                     }
                 }
-
-                if (showToday)
-                {
-                    (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
-
-                    if (intValue is not null)
-                    {
-                        double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(
-                            intValue.GetValueOrDefault(),
-                            showDates,
-                            projectStart,
-                            dateTimeCalculator);
-
-                        plotModel.Plot.Add.VerticalLine(
-                            todayTimeX,
-                            width: c_VerticalLineWidth,
-                            pattern: LinePattern.Dotted);
-                    }
-                }
             }
 
             scatters.Reverse();
             plotModel.Plot.PlottableList.AddRange(scatters);
+
+            if (showToday)
+            {
+                (int? intValue, _) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, today);
+
+                if (intValue is not null)
+                {
+                    double todayTimeX = ChartHelper.CalculateChartStartTimeXValue(
+                        intValue.GetValueOrDefault(),
+                        showDates,
+                        projectStart,
+                        dateTimeCalculator);
+
+                    plotModel.Plot.Add.VerticalLine(
+                        todayTimeX,
+                        width: c_VerticalLineWidth,
+                        pattern: LinePattern.Dotted);
+                }
+            }
 
             if (showMilestones)
             {
