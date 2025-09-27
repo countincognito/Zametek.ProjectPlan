@@ -1532,9 +1532,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Arrow Graph Settings.
                     ArrowGraphSettings = projectPlanModel.ArrowGraphSettings;
 
-                    // Compilation.
-                    GraphCompilation = m_Mapper.Map<GraphCompilation<int, int, int, DependentActivity>>(projectPlanModel.GraphCompilation);
-
                     // Activities.
                     AddManagedActivities(projectPlanModel.DependentActivities);
 
@@ -1544,12 +1541,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Now update Settings to the core model.
                     IsReadyToReviseSettings = ReadyToRevise.Yes;
-
-                    // Arrow Graph.
-                    ArrowGraph = projectPlanModel.ArrowGraph;
-
-                    // Vertex Graph.
-                    VertexGraph = new VertexGraphModel();
 
                     // Display settings (the rest of the settings).
                     displaySettings = projectPlanModel.DisplaySettings with
@@ -1565,7 +1556,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsProjectUpdated = false;
 
                     m_TrackHasStaleOutputs = true;
-                    HasStaleOutputs = projectPlanModel.HasStaleOutputs;
                 }
             }
             finally
@@ -1599,9 +1589,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         ArrowGraphSettings = ArrowGraphSettings.CloneObject(),
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),
                         DisplaySettings = DisplaySettingsViewModel.GetValues(),
-                        GraphCompilation = graphCompilation,
-                        ArrowGraph = ArrowGraph.CloneObject(),
-                        HasStaleOutputs = HasStaleOutputs
                     };
 
                     // Reorder activity dependencies so they are more readable.

@@ -88,8 +88,8 @@ namespace Zametek.Data.ProjectPlan.Tests
         [Fact]
         public void Converter_Given_v0_3_2_Input_ThenConvertsTo_v0_4_0()
         {
-            v0_3_2.ProjectPlanModel? projectPlan_v0_3_2 = JsonConvert.DeserializeObject<v0_3_2.ProjectPlanModel>(m_Fixture.Va_0_3_2_JsonString);
-            v0_4_0.ProjectPlanModel? projectPlan_v0_4_0 = JsonConvert.DeserializeObject<v0_4_0.ProjectPlanModel>(m_Fixture.Va_0_4_0_JsonString);
+            v0_3_2.ProjectPlanModel? projectPlan_v0_3_2 = JsonConvert.DeserializeObject<v0_3_2.ProjectPlanModel>(m_Fixture.V0_3_2a_JsonString);
+            v0_4_0.ProjectPlanModel? projectPlan_v0_4_0 = JsonConvert.DeserializeObject<v0_4_0.ProjectPlanModel>(m_Fixture.V0_4_0a_JsonString);
             IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
             v0_4_0.ProjectPlanModel projectPlan_v0_3_2_upgraded = v0_4_0.Converter.Upgrade(mapper, projectPlan_v0_3_2!);
             projectPlan_v0_3_2_upgraded.ShouldBeEquivalentTo(projectPlan_v0_4_0);
@@ -102,8 +102,8 @@ namespace Zametek.Data.ProjectPlan.Tests
         [Fact]
         public void Converter_Given_v0_4_0_Input_ThenConvertsTo_v0_4_1()
         {
-            v0_4_0.ProjectPlanModel? projectPlan_v0_4_0 = JsonConvert.DeserializeObject<v0_4_0.ProjectPlanModel>(m_Fixture.Vb_0_4_0_JsonString);
-            v0_4_1.ProjectPlanModel? projectPlan_v0_4_1 = JsonConvert.DeserializeObject<v0_4_1.ProjectPlanModel>(m_Fixture.Vb_0_4_1_JsonString);
+            v0_4_0.ProjectPlanModel? projectPlan_v0_4_0 = JsonConvert.DeserializeObject<v0_4_0.ProjectPlanModel>(m_Fixture.V0_4_0b_JsonString);
+            v0_4_1.ProjectPlanModel? projectPlan_v0_4_1 = JsonConvert.DeserializeObject<v0_4_1.ProjectPlanModel>(m_Fixture.V0_4_1b_JsonString);
             IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
             v0_4_1.ProjectPlanModel projectPlan_v0_4_0_upgraded = v0_4_1.Converter.Upgrade(mapper, projectPlan_v0_4_0!);
             projectPlan_v0_4_0_upgraded.ShouldBeEquivalentTo(projectPlan_v0_4_1);
@@ -116,8 +116,8 @@ namespace Zametek.Data.ProjectPlan.Tests
         [Fact]
         public void Converter_Given_v0_4_1_Input_ThenConvertsTo_v0_4_2()
         {
-            v0_4_1.ProjectPlanModel? projectPlan_v0_4_1 = JsonConvert.DeserializeObject<v0_4_1.ProjectPlanModel>(m_Fixture.Vc_0_4_1_JsonString);
-            v0_4_2.ProjectPlanModel? projectPlan_v0_4_2 = JsonConvert.DeserializeObject<v0_4_2.ProjectPlanModel>(m_Fixture.Vc_0_4_2_JsonString);
+            v0_4_1.ProjectPlanModel? projectPlan_v0_4_1 = JsonConvert.DeserializeObject<v0_4_1.ProjectPlanModel>(m_Fixture.V0_4_1c_JsonString);
+            v0_4_2.ProjectPlanModel? projectPlan_v0_4_2 = JsonConvert.DeserializeObject<v0_4_2.ProjectPlanModel>(m_Fixture.V0_4_2c_JsonString);
             IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
             v0_4_2.ProjectPlanModel projectPlan_v0_4_1_upgraded = v0_4_2.Converter.Upgrade(mapper, projectPlan_v0_4_1!);
             projectPlan_v0_4_1_upgraded.ShouldBeEquivalentTo(projectPlan_v0_4_2);
@@ -130,8 +130,8 @@ namespace Zametek.Data.ProjectPlan.Tests
         [Fact]
         public void Converter_Given_v0_4_2_Input_ThenConvertsTo_v0_4_3()
         {
-            v0_4_2.ProjectPlanModel? projectPlan_v0_4_2 = JsonConvert.DeserializeObject<v0_4_2.ProjectPlanModel>(m_Fixture.Vd_0_4_2_JsonString);
-            v0_4_3.ProjectPlanModel? projectPlan_v0_4_3 = JsonConvert.DeserializeObject<v0_4_3.ProjectPlanModel>(m_Fixture.Vd_0_4_3_JsonString);
+            v0_4_2.ProjectPlanModel? projectPlan_v0_4_2 = JsonConvert.DeserializeObject<v0_4_2.ProjectPlanModel>(m_Fixture.V0_4_2d_JsonString);
+            v0_4_3.ProjectPlanModel? projectPlan_v0_4_3 = JsonConvert.DeserializeObject<v0_4_3.ProjectPlanModel>(m_Fixture.V0_4_3d_JsonString);
             IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
             v0_4_3.ProjectPlanModel projectPlan_v0_4_2_upgraded = v0_4_3.Converter.Upgrade(mapper, projectPlan_v0_4_2!);
             projectPlan_v0_4_2_upgraded.ShouldBeEquivalentTo(projectPlan_v0_4_3);
@@ -144,14 +144,28 @@ namespace Zametek.Data.ProjectPlan.Tests
         [Fact]
         public void Converter_Given_v0_4_3_Input_ThenConvertsTo_v0_4_4()
         {
-            v0_4_3.ProjectPlanModel? projectPlan_v0_4_3 = JsonConvert.DeserializeObject<v0_4_3.ProjectPlanModel>(m_Fixture.Vd_0_4_3_JsonString);
-            v0_4_4.ProjectPlanModel? projectPlan_v0_4_4 = JsonConvert.DeserializeObject<v0_4_4.ProjectPlanModel>(m_Fixture.Vd_0_4_4_JsonString);
+            v0_4_3.ProjectPlanModel? projectPlan_v0_4_3 = JsonConvert.DeserializeObject<v0_4_3.ProjectPlanModel>(m_Fixture.V0_4_3d_JsonString);
+            v0_4_4.ProjectPlanModel? projectPlan_v0_4_4 = JsonConvert.DeserializeObject<v0_4_4.ProjectPlanModel>(m_Fixture.V0_4_4d_JsonString);
             IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
             v0_4_4.ProjectPlanModel projectPlan_v0_4_3_upgraded = v0_4_4.Converter.Upgrade(mapper, projectPlan_v0_4_3!);
             projectPlan_v0_4_3_upgraded.ShouldBeEquivalentTo(projectPlan_v0_4_4);
 
             ProjectPlanModel model1 = Converter.Upgrade(projectPlan_v0_4_3!);
             ProjectPlanModel model2 = Converter.Upgrade(projectPlan_v0_4_4!);
+            model1.ShouldBeEquivalentTo(model2);
+        }
+
+        [Fact]
+        public void Converter_Given_v0_4_4_Input_ThenConvertsTo_v0_5_0()
+        {
+            v0_4_4.ProjectPlanModel? projectPlan_v0_4_4 = JsonConvert.DeserializeObject<v0_4_4.ProjectPlanModel>(m_Fixture.V0_4_4d_JsonString);
+            v0_5_0.ProjectPlanModel? projectPlan_v0_5_0 = JsonConvert.DeserializeObject<v0_5_0.ProjectPlanModel>(m_Fixture.V0_5_0_JsonString);
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            v0_5_0.ProjectPlanModel projectPlan_v0_4_4_upgraded = v0_5_0.Converter.Upgrade(mapper, projectPlan_v0_4_4!);
+            projectPlan_v0_4_4_upgraded.ShouldBeEquivalentTo(projectPlan_v0_5_0);
+
+            ProjectPlanModel model1 = Converter.Upgrade(projectPlan_v0_4_4!);
+            ProjectPlanModel model2 = Converter.Upgrade(projectPlan_v0_5_0!);
             model1.ShouldBeEquivalentTo(model2);
         }
     }

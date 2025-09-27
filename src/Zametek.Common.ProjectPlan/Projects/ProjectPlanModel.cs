@@ -18,11 +18,5 @@
         public WorkStreamSettingsModel WorkStreamSettings { get; init; } = new WorkStreamSettingsModel();
 
         public DisplaySettingsModel DisplaySettings { get; init; } = new DisplaySettingsModel();
-
-        public GraphCompilationModel GraphCompilation { get; init; } = new GraphCompilationModel();
-
-        public ArrowGraphModel ArrowGraph { get; init; } = new ArrowGraphModel();
-
-        public bool HasStaleOutputs { get; init; }
     }
 }
