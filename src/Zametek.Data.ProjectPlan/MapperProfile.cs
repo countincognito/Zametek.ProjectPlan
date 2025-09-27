@@ -20,6 +20,7 @@ namespace Zametek.Data.ProjectPlan
 
             CreateMap<ColorFormatModel, v0_1_0.ColorFormatModel>().ReverseMap();
             CreateMap<EdgeDashStyle, v0_1_0.EdgeDashStyle>().ReverseMap();
+            CreateMap<Common.ProjectPlan.EdgeType, v0_1_0.EdgeType>().ReverseMap();
             CreateMap<EdgeTypeFormatModel, v0_1_0.EdgeTypeFormatModel>().ReverseMap();
             CreateMap<EdgeWeightStyle, v0_1_0.EdgeWeightStyle>().ReverseMap();
 
@@ -287,6 +288,11 @@ namespace Zametek.Data.ProjectPlan
             #endregion
 
             #region v0.5.0
+
+            CreateMap<NodeBorderDashStyle, v0_5_0.NodeBorderDashStyle>().ReverseMap();
+            CreateMap<Common.ProjectPlan.NodeType, v0_5_0.NodeType>().ReverseMap();
+            CreateMap<NodeTypeFormatModel, v0_5_0.NodeTypeFormatModel>().ReverseMap();
+            CreateMap<NodeBorderWeightStyle, v0_5_0.NodeBorderWeightStyle>().ReverseMap();
 
             CreateMap<GraphSettingsModel, v0_5_0.GraphSettingsModel>().ReverseMap();
 

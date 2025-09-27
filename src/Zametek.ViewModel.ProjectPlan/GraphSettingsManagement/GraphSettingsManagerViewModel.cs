@@ -18,6 +18,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly object m_Lock;
         private GraphSettingsModel m_Current;
         private readonly IList<EdgeTypeFormatModel> m_EdgeTypeFormats;
+        private readonly IList<NodeTypeFormatModel> m_NodeTypeFormats;
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
@@ -41,6 +42,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new object();
             m_Current = new GraphSettingsModel();
             m_EdgeTypeFormats = [];
+            m_NodeTypeFormats = [];
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
@@ -206,19 +208,25 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var graphSettings = new GraphSettingsModel
                 {
-                    ActivitySeverities = ActivitySeverities.Select(x => new ActivitySeverityModel
+                    ActivitySeverities = [.. ActivitySeverities.Select(x => new ActivitySeverityModel
                     {
                         SlackLimit = x.SlackLimit,
                         CriticalityWeight = x.CriticalityWeight,
                         FibonacciWeight = x.FibonacciWeight,
                         ColorFormat = x.ColorFormat
-                    }).ToList(),
-                    EdgeTypeFormats = m_EdgeTypeFormats.Select(x => new EdgeTypeFormatModel
+                    })],
+                    EdgeTypeFormats = [.. m_EdgeTypeFormats.Select(x => new EdgeTypeFormatModel
                     {
                         EdgeType = x.EdgeType,
                         EdgeDashStyle = x.EdgeDashStyle,
                         EdgeWeightStyle = x.EdgeWeightStyle
-                    }).ToList()
+                    })],
+                    NodeTypeFormats = [.. m_NodeTypeFormats.Select(x => new NodeTypeFormatModel
+                    {
+                        NodeType = x.NodeType,
+                        NodeBorderDashStyle = x.NodeBorderDashStyle,
+                        NodeBorderWeightStyle = x.NodeBorderWeightStyle
+                    })]
                 };
 
                 if (m_Current != graphSettings)
@@ -235,7 +243,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(graphSettings);
             lock (m_Lock)
             {
-                m_EdgeTypeFormats.Clear();
+                m_NodeTypeFormats.Clear();
                 foreach (EdgeTypeFormatModel edgeTypeFormat in graphSettings.EdgeTypeFormats)
                 {
                     m_EdgeTypeFormats.Add(new EdgeTypeFormatModel
@@ -243,6 +251,16 @@ namespace Zametek.ViewModel.ProjectPlan
                         EdgeType = edgeTypeFormat.EdgeType,
                         EdgeDashStyle = edgeTypeFormat.EdgeDashStyle,
                         EdgeWeightStyle = edgeTypeFormat.EdgeWeightStyle
+                    });
+                }
+                m_NodeTypeFormats.Clear();
+                foreach (NodeTypeFormatModel nodeTypeFormat in graphSettings.NodeTypeFormats)
+                {
+                    m_NodeTypeFormats.Add(new NodeTypeFormatModel
+                    {
+                        NodeType = nodeTypeFormat.NodeType,
+                        NodeBorderDashStyle = nodeTypeFormat.NodeBorderDashStyle,
+                        NodeBorderWeightStyle = nodeTypeFormat.NodeBorderWeightStyle
                     });
                 }
 

@@ -1834,6 +1834,28 @@
         "EdgeDashStyle": 1,
         "EdgeWeightStyle": 1
       }
+    ],
+    "NodeTypeFormats": [
+      {
+        "NodeType": 0,
+        "NodeBorderDashStyle": 0,
+        "NodeBorderWeightStyle": 0
+      },
+      {
+        "NodeType": 1,
+        "NodeBorderDashStyle": 0,
+        "NodeBorderWeightStyle": 1
+      },
+      {
+        "NodeType": 2,
+        "NodeBorderDashStyle": 1,
+        "NodeBorderWeightStyle": 0
+      },
+      {
+        "NodeType": 3,
+        "NodeBorderDashStyle": 1,
+        "NodeBorderWeightStyle": 1
+      }
     ]
   },
   "ResourceSettings": {

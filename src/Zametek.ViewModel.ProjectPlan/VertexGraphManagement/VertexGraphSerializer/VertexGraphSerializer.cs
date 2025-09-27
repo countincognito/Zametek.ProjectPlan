@@ -1,11 +1,8 @@
 ﻿using Avalonia.Media;
-using System.Linq;
 using System.Text;
 using System.Xml;
-using System.Xml.Serialization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Maths.Graphs;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -15,11 +12,17 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private static readonly IDictionary<EdgeDashStyle, Microsoft.Msagl.Drawing.Style> s_EdgeDashMsaglLookup =
-             new Dictionary<EdgeDashStyle, Microsoft.Msagl.Drawing.Style>
+        private static readonly Dictionary<EdgeDashStyle, Microsoft.Msagl.Drawing.Style> s_EdgeDashMsaglLookup =
+             new()
              {
                 {EdgeDashStyle.Normal, Microsoft.Msagl.Drawing.Style.Solid},
                 {EdgeDashStyle.Dashed, Microsoft.Msagl.Drawing.Style.Dashed}
+             };
+        private static readonly Dictionary<NodeBorderDashStyle, Microsoft.Msagl.Drawing.Style> s_NodeBorderDashMsaglLookup =
+             new()
+             {
+                {NodeBorderDashStyle.Normal, Microsoft.Msagl.Drawing.Style.Solid},
+                {NodeBorderDashStyle.Dashed, Microsoft.Msagl.Drawing.Style.Dashed}
              };
 
         private static readonly double s_SvgNodeWidth = 38.0;
@@ -35,7 +38,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly double s_DiagramNodeModelHeight = 26.0;
         private static readonly double s_DiagramNodeModelWidth = 62.0;
-        private static readonly double s_DiagramNodeLineWidth = 2.0;
         private static readonly Microsoft.Msagl.Drawing.FontStyle s_DiagramNodeFontStyle = Microsoft.Msagl.Drawing.FontStyle.Bold;
 
         // These need to be worked out through trial and error
@@ -93,11 +95,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static DiagramNodeModel BuildDiagramNode(
             ActivityNodeModel activityNode,
+            GraphNodeBorderFormatLookup nodeFormatLookup,
             SlackColorFormatLookup colorFormatLookup)
         {
             ArgumentNullException.ThrowIfNull(activityNode);
+            ArgumentNullException.ThrowIfNull(nodeFormatLookup);
             ArgumentNullException.ThrowIfNull(colorFormatLookup);
             ActivityModel activityModel = activityNode.Content;
+
+            bool isDummy = activityModel.IsDummy();
 
             return new DiagramNodeModel
             {
@@ -106,6 +112,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 Width = s_DiagramNodeModelWidth,
                 FillColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeFillColor),
                 BorderColorHexCode = ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(activityModel.TotalSlack)),
+                BorderDashStyle = nodeFormatLookup.FindGraphNodeBorderDashStyle(true, isDummy),
+                BorderThickness = nodeFormatLookup.FindBorderThickness(true, isDummy),
                 Text = BuildNodeLabel(activityModel)
             };
         }
@@ -262,32 +270,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 throw new ArgumentException(Resource.ProjectPlan.Messages.Message_MismatchedNodeIdsAssociatedWithEdgesInVertexGraph);
             }
 
-            // Check Start and End nodes.
-            //IEnumerable<ActivityNodeModel> startNodes = nodeModels.Where(x => x.NodeType == NodeType.Start);
-            //if (!startNodes.Any())
-            //{
-            //    throw new ArgumentException(Resource.ProjectPlan.Messages.Message_VertexGraphDataContainsNoStartNodes);
-            //}
-
-            //IEnumerable<ActivityNodeModel> endNodes = nodeModels.Where(x => x.NodeType == NodeType.End);
-            //if (!endNodes.Any())
-            //{
-            //    throw new ArgumentException(Resource.ProjectPlan.Messages.Message_VertexGraphDataContainsNoEndNodes);
-            //}
-
+            var nodeFormatLookup = new GraphNodeBorderFormatLookup(graphSettingsModel.NodeTypeFormats);
             var edgeFormatLookup = new GraphEdgeFormatLookup(graphSettingsModel.EdgeTypeFormats);
             var colorFormatLookup = new SlackColorFormatLookup(graphSettingsModel.ActivitySeverities);
 
             // Fill the graph.
-            List<DiagramNodeModel> diagramNodeModels = nodeModels.Select(x => BuildDiagramNode(x, colorFormatLookup)).ToList();
+            List<DiagramNodeModel> diagramNodeModels = nodeModels.Select(x => BuildDiagramNode(x, nodeFormatLookup, colorFormatLookup)).ToList();
             List<DiagramEdgeModel> diagramEdgeModels = [];
 
             foreach (EventEdgeModel eventEdge in edgeModels)
             {
                 EventModel eventModel = eventEdge.Content;
                 int eventId = eventModel.Id;
-                //bool isCritical = eventModel.IsCritical();
-                //bool isDummy = eventModel.IsDummy();
                 bool showLabel = false;
                 string labelText = string.Empty;
 
@@ -308,9 +302,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     //Name = eventModel.Name,
                     SourceId = edgeTailNodeLookup[eventId],
                     TargetId = edgeHeadNodeLookup[eventId],
-                    //DashStyle = edgeFormatLookup.FindGraphEdgeDashStyle(isCritical, isDummy),
+                    DashStyle = edgeFormatLookup.FindGraphEdgeDashStyle(false, false),
                     //ForegroundColorHexCode = ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(eventModel.TotalSlack)),
-                    //StrokeThickness = edgeFormatLookup.FindStrokeThickness(isCritical, isDummy),
+                    StrokeThickness = edgeFormatLookup.FindStrokeThickness(false, false),
                     Label = labelText,
                     ShowLabel = showLabel
                 };
@@ -496,9 +490,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 drawingGraphNode.Label.FontStyle = s_DiagramNodeFontStyle ;
 
                 drawingGraphNode.Label.FontName = c_FontName;
+                drawingGraphNode.Attr.AddStyle(s_NodeBorderDashMsaglLookup[diagramNode.BorderDashStyle]);
                 drawingGraphNode.Attr.FillColor = HtmlHexCodeToMsaglColor(diagramNode.FillColorHexCode) ?? Microsoft.Msagl.Drawing.Color.LightGray;
                 drawingGraphNode.Attr.Color = HtmlHexCodeToMsaglColor(diagramNode.BorderColorHexCode) ?? Microsoft.Msagl.Drawing.Color.Black;
-                drawingGraphNode.Attr.LineWidth = s_DiagramNodeLineWidth;
+                drawingGraphNode.Attr.LineWidth = diagramNode.BorderThickness;
             }
 
             // Initialise geometry labels as well.
@@ -524,7 +519,7 @@ namespace Zametek.ViewModel.ProjectPlan
             GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            //DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            //DiagramVertexGraphModel diagramVertexGraph = BuildVertexGraphDiagram(vertexGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
             //graphml graphML = GraphMLBuilder.ToGraphML(diagramArrowGraph);
             //using var ms = new MemoryStream();
             //var xmlSerializer = new XmlSerializer(typeof(graphml));

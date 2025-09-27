@@ -123,6 +123,33 @@ namespace Zametek.ViewModel.ProjectPlan
         public GraphSettingsModel DefaultGraphSettings =>
             new()
             {
+                NodeTypeFormats = new List<NodeTypeFormatModel>(
+                    [
+                        new()
+                        {
+                            NodeType = NodeType.Activity,
+                            NodeBorderDashStyle = NodeBorderDashStyle.Normal,
+                            NodeBorderWeightStyle = NodeBorderWeightStyle.Normal
+                        },
+                        new()
+                        {
+                            NodeType = NodeType.CriticalActivity,
+                            NodeBorderDashStyle = NodeBorderDashStyle.Normal,
+                            NodeBorderWeightStyle = NodeBorderWeightStyle.Bold
+                        },
+                        new()
+                        {
+                            NodeType = NodeType.Dummy,
+                            NodeBorderDashStyle = NodeBorderDashStyle.Dashed,
+                            NodeBorderWeightStyle = NodeBorderWeightStyle.Normal
+                        },
+                        new()
+                        {
+                            NodeType = NodeType.CriticalDummy,
+                            NodeBorderDashStyle = NodeBorderDashStyle.Dashed,
+                            NodeBorderWeightStyle = NodeBorderWeightStyle.Bold
+                        }
+                    ]),
                 EdgeTypeFormats = new List<EdgeTypeFormatModel>(
                     [
                         new()

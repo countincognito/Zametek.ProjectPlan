@@ -6,5 +6,7 @@
         public List<v0_3_0.ActivitySeverityModel> ActivitySeverities { get; init; } = [];
 
         public List<v0_1_0.EdgeTypeFormatModel> EdgeTypeFormats { get; init; } = [];
+
+        public List<NodeTypeFormatModel> NodeTypeFormats { get; init; } = [];
     }
 }

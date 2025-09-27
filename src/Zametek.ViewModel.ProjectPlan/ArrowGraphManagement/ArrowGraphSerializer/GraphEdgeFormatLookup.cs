@@ -6,17 +6,17 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private static readonly IDictionary<EdgeWeightStyle, int> s_EdgeWeightLookup =
-            new Dictionary<EdgeWeightStyle, int>
+        private static readonly Dictionary<EdgeWeightStyle, double> s_EdgeWeightLookup =
+            new()
             {
                 {EdgeWeightStyle.Normal, c_NormalStrokeWeight},
                 {EdgeWeightStyle.Bold, c_BoldStrokeWeight}
             };
-        private const int c_NormalStrokeWeight = 2;
-        private const int c_BoldStrokeWeight = 5;
+        private const double c_NormalStrokeWeight = 2.0;
+        private const double c_BoldStrokeWeight = 5.0;
 
         private readonly Dictionary<EdgeType, EdgeDashStyle> m_EdgeTypeDashLookup;
-        private readonly Dictionary<EdgeType, int> m_EdgeTypeWeightLookup;
+        private readonly Dictionary<EdgeType, double> m_EdgeTypeWeightLookup;
 
         #endregion
 
@@ -65,7 +65,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public int FindStrokeThickness(bool isCritical, bool isDummy)
+        public double FindStrokeThickness(bool isCritical, bool isDummy)
         {
             if (isCritical)
             {

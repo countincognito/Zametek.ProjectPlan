@@ -1,11 +1,9 @@
-﻿using Zametek.Maths.Graphs;
-
-namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
     public record ActivityNodeModel
     {
-        public NodeType NodeType { get; init; }
+        public Maths.Graphs.NodeType NodeType { get; init; }
 
         public ActivityModel Content { get; init; } = new ActivityModel();
 

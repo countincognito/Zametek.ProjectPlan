@@ -207,6 +207,9 @@
   <data name="Message_UnknownEdgeDashStyleValue" xml:space="preserve">
     <value>Unknown EdgeDashStyle value</value>
   </data>
+  <data name="Message_UnknownNodeBorderDashStyleValue" xml:space="preserve">
+    <value>Unknown NodeBorderDashStyle value</value>
+  </data>
   <data name="Message_UnsavedChanges" xml:space="preserve">
     <value>Project has unsaved changes. Do you wish to continue?</value>
   </data>

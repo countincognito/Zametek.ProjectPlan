@@ -282,14 +282,14 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             using var stream = File.OpenWrite(filename);
                             VertexGraphImage.Source?.Picture?.ToImage(
-                                stream, SKColors.White, SKEncodedImageFormat.Jpeg, quality: 100, scaleX: 2, scaleY: 2,
+                                stream, SKColors.White, SKEncodedImageFormat.Jpeg, quality: 100, scaleX: 4, scaleY: 4,
                                 skColorType: SKColorType.Argb4444, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb());
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
                         {
                             using var stream = File.OpenWrite(filename);
                             VertexGraphImage.Source?.Picture?.ToImage(
-                                stream, SKColors.White, SKEncodedImageFormat.Png, quality: 100, scaleX: 2, scaleY: 2,
+                                stream, SKColors.White, SKEncodedImageFormat.Png, quality: 100, scaleX: 4, scaleY: 4,
                                 skColorType: SKColorType.Argb4444, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb());
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>

@@ -403,6 +403,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown NodeBorderDashStyle value.
+        /// </summary>
+        public static string Message_UnknownNodeBorderDashStyleValue {
+            get {
+                return ResourceManager.GetString("Message_UnknownNodeBorderDashStyleValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown ScheduleMode value:.
         /// </summary>
         public static string Message_UnknownScheduleMode {

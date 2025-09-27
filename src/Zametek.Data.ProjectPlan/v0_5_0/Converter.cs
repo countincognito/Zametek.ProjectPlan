@@ -24,8 +24,37 @@ namespace Zametek.Data.ProjectPlan.v0_5_0
                 });
             }
 
+            var nodeTypeFormats = new List<NodeTypeFormatModel>
+            {
+                new()
+                {
+                    NodeType = NodeType.Activity,
+                    NodeBorderDashStyle = NodeBorderDashStyle.Normal,
+                    NodeBorderWeightStyle = NodeBorderWeightStyle.Normal
+                },
+                new()
+                {
+                    NodeType = NodeType.CriticalActivity,
+                    NodeBorderDashStyle = NodeBorderDashStyle.Normal,
+                    NodeBorderWeightStyle = NodeBorderWeightStyle.Bold
+                },
+                new()
+                {
+                    NodeType = NodeType.Dummy,
+                    NodeBorderDashStyle = NodeBorderDashStyle.Dashed,
+                    NodeBorderWeightStyle = NodeBorderWeightStyle.Normal
+                },
+                new()
+                {
+                    NodeType = NodeType.CriticalDummy,
+                    NodeBorderDashStyle = NodeBorderDashStyle.Dashed,
+                    NodeBorderWeightStyle = NodeBorderWeightStyle.Bold
+                }
+            };
+
             GraphSettingsModel graphSettings = new()
             {
+                NodeTypeFormats = nodeTypeFormats,
                 EdgeTypeFormats = projectPlan.ArrowGraphSettings.EdgeTypeFormats,
                 ActivitySeverities = activitySeverities,
             };

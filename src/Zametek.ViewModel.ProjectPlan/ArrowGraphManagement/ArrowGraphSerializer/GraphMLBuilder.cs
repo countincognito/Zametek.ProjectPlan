@@ -36,6 +36,14 @@ namespace Zametek.ViewModel.ProjectPlan
         private static graphmlGraphNode BuildArrowGraphNode(DiagramNodeModel diagramNode)
         {
             ArgumentNullException.ThrowIfNull(diagramNode);
+
+            string borderDashStyle = diagramNode.BorderDashStyle switch
+            {
+                NodeBorderDashStyle.Normal => @"line",
+                NodeBorderDashStyle.Dashed => @"dashed",
+                _ => throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_UnknownNodeBorderDashStyleValue} ""{diagramNode.BorderDashStyle}"""),
+            };
+
             var outputNode = new graphmlGraphNode
             {
                 id = FormatArrowGraphNodeId(diagramNode.Id),
@@ -60,8 +68,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         BorderStyle = new ShapeNodeBorderStyle
                         {
                             color = diagramNode.BorderColorHexCode,
-                            type = @"line",
-                            width = @"1.0"
+                            type = borderDashStyle,
+                            width = $@"{diagramNode.BorderThickness}"
                         },
                         Shape = new ShapeNodeShape
                         {

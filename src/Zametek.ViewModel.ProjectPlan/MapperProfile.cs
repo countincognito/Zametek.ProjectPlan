@@ -345,7 +345,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ConstructUsing((src, ctx) => new Node<int, IEvent<int>>(src.NodeType, ctx.Mapper.Map<EventModel, Event<int>>(src.Content)))
                 .BeforeMap((src, dest) =>
                 {
-                    if (src.NodeType != NodeType.Start && src.NodeType != NodeType.Isolated)
+                    if (src.NodeType != Maths.Graphs.NodeType.Start && src.NodeType != Maths.Graphs.NodeType.Isolated)
                     {
                         dest.IncomingEdges.Clear();
                         foreach (int incomingEdgeId in src.IncomingEdges)
@@ -354,7 +354,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     }
 
-                    if (src.NodeType != NodeType.End && src.NodeType != NodeType.Isolated)
+                    if (src.NodeType != Maths.Graphs.NodeType.End && src.NodeType != Maths.Graphs.NodeType.Isolated)
                     {
                         dest.OutgoingEdges.Clear();
                         foreach (int outgoingEdgeId in src.OutgoingEdges)
@@ -369,7 +369,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .BeforeMap((src, dest) =>
                 {
                     dest.IncomingEdges.Clear();
-                    if (src.NodeType != NodeType.Start && src.NodeType != NodeType.Isolated)
+                    if (src.NodeType != Maths.Graphs.NodeType.Start && src.NodeType != Maths.Graphs.NodeType.Isolated)
                     {
                         foreach (int incomingEdgeId in src.IncomingEdges)
                         {
@@ -378,7 +378,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     dest.OutgoingEdges.Clear();
-                    if (src.NodeType != NodeType.End && src.NodeType != NodeType.Isolated)
+                    if (src.NodeType != Maths.Graphs.NodeType.End && src.NodeType != Maths.Graphs.NodeType.Isolated)
                     {
                         foreach (int outgoingEdgeId in src.OutgoingEdges)
                         {
@@ -400,7 +400,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ConstructUsing((src, ctx) => new Node<int, IDependentActivity>(src.NodeType, ctx.Mapper.Map<ActivityModel, DependentActivity>(src.Content)))
                 .BeforeMap((src, dest) =>
                 {
-                    if (src.NodeType != NodeType.Start && src.NodeType != NodeType.Isolated)
+                    if (src.NodeType != Maths.Graphs.NodeType.Start && src.NodeType != Maths.Graphs.NodeType.Isolated)
                     {
                         dest.IncomingEdges.Clear();
                         foreach (int incomingEdgeId in src.IncomingEdges)
@@ -409,7 +409,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     }
 
-                    if (src.NodeType != NodeType.End && src.NodeType != NodeType.Isolated)
+                    if (src.NodeType != Maths.Graphs.NodeType.End && src.NodeType != Maths.Graphs.NodeType.Isolated)
                     {
                         dest.OutgoingEdges.Clear();
                         foreach (int outgoingEdgeId in src.OutgoingEdges)
@@ -424,7 +424,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .BeforeMap((src, dest) =>
                 {
                     dest.IncomingEdges.Clear();
-                    if (src.NodeType != NodeType.Start && src.NodeType != NodeType.Isolated)
+                    if (src.NodeType != Maths.Graphs.NodeType.Start && src.NodeType != Maths.Graphs.NodeType.Isolated)
                     {
                         foreach (int incomingEdgeId in src.IncomingEdges)
                         {
@@ -433,7 +433,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     dest.OutgoingEdges.Clear();
-                    if (src.NodeType != NodeType.End && src.NodeType != NodeType.Isolated)
+                    if (src.NodeType != Maths.Graphs.NodeType.End && src.NodeType != Maths.Graphs.NodeType.Isolated)
                     {
                         foreach (int outgoingEdgeId in src.OutgoingEdges)
                         {
