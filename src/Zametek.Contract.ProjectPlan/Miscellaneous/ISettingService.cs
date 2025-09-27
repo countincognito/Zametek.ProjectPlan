@@ -30,7 +30,7 @@ namespace Zametek.Contract.ProjectPlan
 
         void SetProjectDirectory(string filename);
 
-        ArrowGraphSettingsModel DefaultArrowGraphSettings { get; }
+        GraphSettingsModel DefaultGraphSettings { get; }
 
         ResourceSettingsModel DefaultResourceSettings { get; }
 

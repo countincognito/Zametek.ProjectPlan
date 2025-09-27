@@ -130,7 +130,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_BuildVertexGraphDataSub = this
                 .WhenAnyValue(
                     agm => agm.m_CoreViewModel.VertexGraph,
-                    //agm => agm.m_CoreViewModel.ArrowGraphSettings,
+                    agm => agm.m_CoreViewModel.GraphSettings,
                     agm => agm.m_CoreViewModel.BaseTheme,
                     agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames)
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -302,11 +302,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         })
                         //.Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
                         //{
-                        //    data = m_VertexGraphExport.BuildVertexGraphMLData(m_CoreViewModel.VertexGraph, m_CoreViewModel.ArrowGraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
+                        //    data = m_VertexGraphExport.BuildVertexGraphMLData(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
                         //})
                         //.Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
                         //{
-                        //    data = m_VertexGraphExport.BuildVertexGraphVizData(m_CoreViewModel.VertexGraph, m_CoreViewModel.ArrowGraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
+                        //    data = m_VertexGraphExport.BuildVertexGraphVizData(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
                         //})
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
 
@@ -336,7 +336,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     data = m_VertexGraphExport.BuildVertexGraphSvgData(
                         m_CoreViewModel.VertexGraph,
-                        m_CoreViewModel.ArrowGraphSettings,
+                        m_CoreViewModel.GraphSettings,
                         m_CoreViewModel.BaseTheme,
                         m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
                 }

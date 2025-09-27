@@ -183,12 +183,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static DiagramArrowGraphModel BuildArrowGraphDiagram(
             ArrowGraphModel arrowGraphModel,
-            ArrowGraphSettingsModel arrowGraphSettingsModel,
+            GraphSettingsModel graphSettingsModel,
             bool multiLineEdgeLabels = false,
             bool viewNames = false)
         {
             ArgumentNullException.ThrowIfNull(arrowGraphModel);
-            ArgumentNullException.ThrowIfNull(arrowGraphSettingsModel);
+            ArgumentNullException.ThrowIfNull(graphSettingsModel);
             // Perform validity check.
             IList<EventNodeModel> nodeModels = arrowGraphModel.Nodes;
             IDictionary<int, EventNodeModel> nodeModelLookup = nodeModels.ToDictionary(x => x.Content.Id);
@@ -247,8 +247,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 throw new ArgumentException(Resource.ProjectPlan.Messages.Message_ArrowGraphDataContainMultipleEndNodes);
             }
 
-            var edgeFormatLookup = new GraphEdgeFormatLookup(arrowGraphSettingsModel.EdgeTypeFormats);
-            var colorFormatLookup = new SlackColorFormatLookup(arrowGraphSettingsModel.ActivitySeverities);
+            var edgeFormatLookup = new GraphEdgeFormatLookup(graphSettingsModel.EdgeTypeFormats);
+            var colorFormatLookup = new SlackColorFormatLookup(graphSettingsModel.ActivitySeverities);
 
             // Fill the graph.
             List<DiagramNodeModel> diagramNodeModels = nodeModels.Select(BuildDiagramNode).ToList();
@@ -391,13 +391,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public byte[] BuildArrowGraphSvgData(
             ArrowGraphModel arrowGraph,
-            ArrowGraphSettingsModel arrowGraphSettings,
+            GraphSettingsModel graphSettings,
             BaseTheme baseTheme,
             bool viewNames)
         {
             ArgumentNullException.ThrowIfNull(arrowGraph);
-            ArgumentNullException.ThrowIfNull(arrowGraphSettings);
-            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, arrowGraphSettings, viewNames: viewNames);
+            ArgumentNullException.ThrowIfNull(graphSettings);
+            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, graphSettings, viewNames: viewNames);
 
             // Fill the graph.
             var drawingGraph = new Microsoft.Msagl.Drawing.Graph();
@@ -490,10 +490,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public byte[] BuildArrowGraphMLData(
             ArrowGraphModel arrowGraph,
-            ArrowGraphSettingsModel arrowGraphSettings,
+            GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, arrowGraphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
             graphml graphML = GraphMLBuilder.ToGraphML(diagramArrowGraph);
             using var ms = new MemoryStream();
             var xmlSerializer = new XmlSerializer(typeof(graphml));
@@ -506,10 +506,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public byte[] BuildArrowGraphVizData(
             ArrowGraphModel arrowGraph,
-            ArrowGraphSettingsModel arrowGraphSettings,
+            GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, arrowGraphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
             string graphviz = GraphVizBuilder.ToGraphViz(diagramArrowGraph);
             return graphviz.StringToByteArray();
         }

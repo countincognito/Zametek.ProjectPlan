@@ -188,7 +188,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static DiagramVertexGraphModel BuildVertexGraphDiagram(
             VertexGraphModel vertexGraphModel,
-            ArrowGraphSettingsModel graphSettingsModel,
+            GraphSettingsModel graphSettingsModel,
             bool multiLineEdgeLabels = false,
             bool viewNames = false)
         {
@@ -397,7 +397,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public byte[] BuildVertexGraphSvgData(
             VertexGraphModel vertexGraph,
-            ArrowGraphSettingsModel graphSettings,
+            GraphSettingsModel graphSettings,
             BaseTheme baseTheme,
             bool viewNames)
         {
@@ -496,10 +496,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public byte[] BuildVertexGraphMLData(
             VertexGraphModel vertexGraph,
-            ArrowGraphSettingsModel graphSettings,
+            GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            //DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, arrowGraphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            //DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
             //graphml graphML = GraphMLBuilder.ToGraphML(diagramArrowGraph);
             //using var ms = new MemoryStream();
             //var xmlSerializer = new XmlSerializer(typeof(graphml));
@@ -513,10 +513,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public byte[] BuildVertexGraphVizData(
             VertexGraphModel vertexGraph,
-            ArrowGraphSettingsModel graphSettings,
+            GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            //DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, arrowGraphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            //DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
             //string graphviz = GraphVizBuilder.ToGraphViz(diagramArrowGraph);
             //return graphviz.StringToByteArray();
             throw new NotImplementedException();

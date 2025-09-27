@@ -11,7 +11,7 @@
 
         public List<v0_4_4.DependentActivityModel> DependentActivities { get; init; } = [];
 
-        public v0_1_0.ArrowGraphSettingsModel ArrowGraphSettings { get; init; } = new();
+        public GraphSettingsModel GraphSettings { get; init; } = new();
 
         public v0_4_4.ResourceSettingsModel ResourceSettings { get; init; } = new();
 

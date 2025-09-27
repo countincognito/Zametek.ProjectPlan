@@ -1766,7 +1766,7 @@
       "Successors": []
     }
   ],
-  "ArrowGraphSettings": {
+  "GraphSettings": {
     "ActivitySeverities": [
       {
         "SlackLimit": 1,

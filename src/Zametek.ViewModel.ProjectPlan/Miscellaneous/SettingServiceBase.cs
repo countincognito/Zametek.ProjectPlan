@@ -121,7 +121,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ProjectDirectory = Path.GetDirectoryName(filename) ?? string.Empty;
         }
 
-        public ArrowGraphSettingsModel DefaultArrowGraphSettings =>
+        public GraphSettingsModel DefaultGraphSettings =>
             new()
             {
                 EdgeTypeFormats = new List<EdgeTypeFormatModel>(

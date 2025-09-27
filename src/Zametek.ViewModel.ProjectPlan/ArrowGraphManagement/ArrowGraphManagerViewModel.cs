@@ -130,7 +130,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_BuildArrowGraphDataSub = this
                 .WhenAnyValue(
                     agm => agm.m_CoreViewModel.ArrowGraph,
-                    agm => agm.m_CoreViewModel.ArrowGraphSettings,
+                    agm => agm.m_CoreViewModel.GraphSettings,
                     agm => agm.m_CoreViewModel.BaseTheme,
                     agm => agm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames)
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -302,11 +302,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
                         {
-                            data = m_ArrowGraphExport.BuildArrowGraphMLData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.ArrowGraphSettings, m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
+                            data = m_ArrowGraphExport.BuildArrowGraphMLData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
                         {
-                            data = m_ArrowGraphExport.BuildArrowGraphVizData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.ArrowGraphSettings, m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
+                            data = m_ArrowGraphExport.BuildArrowGraphVizData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
                         })
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
 
@@ -336,7 +336,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     data = m_ArrowGraphExport.BuildArrowGraphSvgData(
                         m_CoreViewModel.ArrowGraph,
-                        m_CoreViewModel.ArrowGraphSettings,
+                        m_CoreViewModel.GraphSettings,
                         m_CoreViewModel.BaseTheme,
                         m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
                 }

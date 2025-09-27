@@ -205,7 +205,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
                     rcm => rcm.m_CoreViewModel.ResourceSettings,
-                    rcm => rcm.m_CoreViewModel.ArrowGraphSettings,
+                    rcm => rcm.m_CoreViewModel.GraphSettings,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
                     rcm => rcm.m_CoreViewModel.Duration,
                     rcm => rcm.m_CoreViewModel.Today,
@@ -276,7 +276,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IDateTimeCalculator dateTimeCalculator,
             ResourceSeriesSetModel resourceSeriesSet,
             ResourceSettingsModel resourceSettingsSettings,
-            ArrowGraphSettingsModel arrowGraphSettings,
+            GraphSettingsModel graphSettings,
             WorkStreamSettingsModel workStreamSettings,
             DateTimeOffset projectStart,
             int? duration,
@@ -297,7 +297,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
             ArgumentNullException.ThrowIfNull(resourceSettingsSettings);
-            ArgumentNullException.ThrowIfNull(arrowGraphSettings);
+            ArgumentNullException.ThrowIfNull(graphSettings);
             ArgumentNullException.ThrowIfNull(workStreamSettings);
             ArgumentNullException.ThrowIfNull(graphCompilation);
 
@@ -331,7 +331,7 @@ namespace Zametek.ViewModel.ProjectPlan
             double minXValue = xAxis.Min;
             double maxXValue = xAxis.Max;
 
-            var colorFormatLookup = new SlackColorFormatLookup(arrowGraphSettings.ActivitySeverities);
+            var colorFormatLookup = new SlackColorFormatLookup(graphSettings.ActivitySeverities);
             string startEndFormat = showDates ? DateTimeCalculator.DateFormat : "0";
 
             var bars = new List<Bar>();
@@ -1548,7 +1548,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_DateTimeCalculator,
                     m_CoreViewModel.ResourceSeriesSet,
                     m_CoreViewModel.ResourceSettings,
-                    m_CoreViewModel.ArrowGraphSettings,
+                    m_CoreViewModel.GraphSettings,
                     m_CoreViewModel.WorkStreamSettings,
                     m_CoreViewModel.ProjectStart,
                     m_CoreViewModel.Duration,

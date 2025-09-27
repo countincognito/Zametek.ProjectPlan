@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Zametek.Common.ProjectPlan;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.Data.ProjectPlan
 {
@@ -33,7 +34,7 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<ResourceScheduleModel, v0_1_0.ResourceScheduleModel>().ReverseMap();
 
             CreateMap<ActivitySeverityModel, v0_1_0.ActivitySeverityModel>().ReverseMap();
-            CreateMap<ArrowGraphSettingsModel, v0_1_0.ArrowGraphSettingsModel>().ReverseMap();
+            CreateMap<GraphSettingsModel, v0_1_0.ArrowGraphSettingsModel>().ReverseMap();
             CreateMap<ResourceSettingsModel, v0_1_0.ResourceSettingsModel>().ReverseMap();
 
             #endregion
@@ -70,6 +71,9 @@ namespace Zametek.Data.ProjectPlan
             #endregion
 
             #region v0.3.0
+
+
+            CreateMap<ActivitySeverityModel, v0_3_0.ActivitySeverityModel>().ReverseMap();
 
             CreateMap<ActivityEdgeModel, v0_3_0.ActivityEdgeModel>().ReverseMap();
             CreateMap<v0_2_1.ActivityEdgeModel, v0_3_0.ActivityEdgeModel>().ReverseMap();
@@ -283,6 +287,8 @@ namespace Zametek.Data.ProjectPlan
             #endregion
 
             #region v0.5.0
+
+            CreateMap<GraphSettingsModel, v0_5_0.GraphSettingsModel>().ReverseMap();
 
             CreateMap<DisplaySettingsModel, v0_5_0.DisplaySettingsModel>().ReverseMap();
             CreateMap<v0_4_4.DisplaySettingsModel, v0_5_0.DisplaySettingsModel>().ReverseMap();

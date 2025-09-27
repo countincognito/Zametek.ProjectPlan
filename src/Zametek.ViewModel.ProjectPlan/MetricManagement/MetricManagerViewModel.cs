@@ -81,7 +81,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_BuildMetricsSub = this
                 .WhenAnyValue(
                     mm => mm.m_CoreViewModel.GraphCompilation,
-                    mm => mm.m_CoreViewModel.ArrowGraphSettings,
+                    mm => mm.m_CoreViewModel.GraphSettings,
                     mm => mm.HasCompilationErrors)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildMetricsAsync());
@@ -833,7 +833,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             m_Mapper.Map<IEnumerable<IActivity<int, int, int>>, IList<ActivityModel>>(
                                 dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int, int, int>)x));
 
-                        IEnumerable<ActivitySeverityModel> activitySeverities = m_CoreViewModel.ArrowGraphSettings.ActivitySeverities;
+                        IEnumerable<ActivitySeverityModel> activitySeverities = m_CoreViewModel.GraphSettings.ActivitySeverities;
 
                         metricsModel = CalculateProjectMetrics(activities, activitySeverities);
                     }

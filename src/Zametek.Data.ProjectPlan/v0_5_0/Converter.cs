@@ -11,6 +11,25 @@ namespace Zametek.Data.ProjectPlan.v0_5_0
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(projectPlan);
 
+            List<v0_3_0.ActivitySeverityModel> activitySeverities = [];
+
+            foreach (v0_1_0.ActivitySeverityModel activitySeverityModel in projectPlan.ArrowGraphSettings.ActivitySeverities)
+            {
+                activitySeverities.Add(new v0_3_0.ActivitySeverityModel
+                {
+                    SlackLimit = activitySeverityModel.SlackLimit,
+                    CriticalityWeight = activitySeverityModel.CriticalityWeight,
+                    FibonacciWeight = activitySeverityModel.FibonacciWeight,
+                    ColorFormat = activitySeverityModel.ColorFormat ?? new(),
+                });
+            }
+
+            GraphSettingsModel graphSettings = new()
+            {
+                EdgeTypeFormats = projectPlan.ArrowGraphSettings.EdgeTypeFormats,
+                ActivitySeverities = activitySeverities,
+            };
+
             DisplaySettingsModel displaySettings = mapper.Map<v0_4_4.DisplaySettingsModel, DisplaySettingsModel>(projectPlan.DisplaySettings ?? new());
 
             var plan = new ProjectPlanModel
@@ -18,7 +37,7 @@ namespace Zametek.Data.ProjectPlan.v0_5_0
                 ProjectStart = projectPlan.ProjectStart,
                 Today = projectPlan.ProjectStart,
                 DependentActivities = projectPlan.DependentActivities,
-                ArrowGraphSettings = projectPlan.ArrowGraphSettings ?? new(),
+                GraphSettings = graphSettings,
                 ResourceSettings = projectPlan.ResourceSettings,
                 WorkStreamSettings = projectPlan.WorkStreamSettings ?? new(),
                 DisplaySettings = displaySettings,

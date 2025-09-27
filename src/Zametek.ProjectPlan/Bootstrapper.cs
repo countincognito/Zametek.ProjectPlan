@@ -39,7 +39,7 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<IEarnedValueChartManagerViewModel, EarnedValueChartManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IMetricManagerViewModel, MetricManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IOutputManagerViewModel, OutputManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IArrowGraphSettingsManagerViewModel, ArrowGraphSettingsManagerViewModel>();
+            SplatRegistrations.RegisterLazySingleton<IGraphSettingsManagerViewModel, GraphSettingsManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IResourceSettingsManagerViewModel, ResourceSettingsManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IWorkStreamSettingsManagerViewModel, WorkStreamSettingsManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IMainViewModel, MainViewModel>();
@@ -55,7 +55,7 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<EarnedValueChartManagerView>();
             SplatRegistrations.RegisterLazySingleton<MetricManagerView>();
             SplatRegistrations.RegisterLazySingleton<OutputManagerView>();
-            SplatRegistrations.RegisterLazySingleton<ArrowGraphSettingsManagerView>();
+            SplatRegistrations.RegisterLazySingleton<GraphSettingsManagerView>();
             SplatRegistrations.RegisterLazySingleton<ResourceSettingsManagerView>();
             SplatRegistrations.RegisterLazySingleton<MainView>();
 

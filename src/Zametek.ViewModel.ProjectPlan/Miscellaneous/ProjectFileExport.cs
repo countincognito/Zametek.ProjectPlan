@@ -1092,7 +1092,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 titleStyle);
 
             WriteItemsToWorkbook(
-                projectPlan.ArrowGraphSettings.ActivitySeverities,
+                projectPlan.GraphSettings.ActivitySeverities,
                 s_ActivitySeverityColumnTitles,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetActivitySeverities,
                 workbook,

@@ -68,7 +68,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Today = new(DateTime.Today);
             m_ResourceSettings = new ResourceSettingsModel();
             m_Activities = new();
-            m_ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
+            m_GraphSettings = m_SettingService.DefaultGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
 
@@ -1153,15 +1153,15 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ReadOnlyObservableCollection<IManagedActivityViewModel> m_ReadOnlyActivities;
         public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_ReadOnlyActivities;
 
-        private ArrowGraphSettingsModel m_ArrowGraphSettings;
-        public ArrowGraphSettingsModel ArrowGraphSettings
+        private GraphSettingsModel m_GraphSettings;
+        public GraphSettingsModel GraphSettings
         {
-            get => m_ArrowGraphSettings;
+            get => m_GraphSettings;
             set
             {
                 lock (m_Lock)
                 {
-                    m_ArrowGraphSettings = value;
+                    m_GraphSettings = value;
                     IsProjectUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
@@ -1336,7 +1336,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     ProjectStart = new(DateTime.Today);
                     Today = new(DateTime.Today);
-                    ArrowGraphSettings = m_SettingService.DefaultArrowGraphSettings;
+                    GraphSettings = m_SettingService.DefaultGraphSettings;
                     ResourceSettings = m_SettingService.DefaultResourceSettings;
                     WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
 
@@ -1455,20 +1455,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ResourceSettings = resourceSettings;
 
-                    // Arrow graph settings.
-                    ArrowGraphSettingsModel arrowGraphSettings = m_SettingService.DefaultArrowGraphSettings.CloneObject();
+                    // Graph settings.
+                    GraphSettingsModel graphSettings = m_SettingService.DefaultGraphSettings.CloneObject();
 
                     if (projectImportModel.ActivitySeverities.Count != 0)
                     {
-                        arrowGraphSettings.ActivitySeverities.Clear();
+                        graphSettings.ActivitySeverities.Clear();
 
                         foreach (ActivitySeverityModel activitySeverity in projectImportModel.ActivitySeverities)
                         {
-                            arrowGraphSettings.ActivitySeverities.Add(activitySeverity);
+                            graphSettings.ActivitySeverities.Add(activitySeverity);
                         }
                     }
 
-                    ArrowGraphSettings = arrowGraphSettings;
+                    GraphSettings = graphSettings;
 
                     // Activities.
                     // Be sure to set the ResourceSettings first, so that the activities know
@@ -1529,8 +1529,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Resource Settings.
                     ResourceSettings = projectPlanModel.ResourceSettings;
 
-                    // Arrow Graph Settings.
-                    ArrowGraphSettings = projectPlanModel.ArrowGraphSettings;
+                    // Graph Settings.
+                    GraphSettings = projectPlanModel.GraphSettings;
 
                     // Activities.
                     AddManagedActivities(projectPlanModel.DependentActivities);
@@ -1586,7 +1586,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Today = Today,
                         DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(Activities),
                         ResourceSettings = ResourceSettings.CloneObject(),
-                        ArrowGraphSettings = ArrowGraphSettings.CloneObject(),
+                        GraphSettings = GraphSettings.CloneObject(),
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),
                         DisplaySettings = DisplaySettingsViewModel.GetValues(),
                     };

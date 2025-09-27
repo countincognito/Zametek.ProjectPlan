@@ -120,8 +120,8 @@
   <data name="Title_ActivitiesView" xml:space="preserve">
     <value>Activities</value>
   </data>
-  <data name="Title_ArrowGraphSettingsView" xml:space="preserve">
-    <value>Arrow Graph Settings</value>
+  <data name="Title_GraphSettingsView" xml:space="preserve">
+    <value>Graph Settings</value>
   </data>
   <data name="Title_ArrowGraphView" xml:space="preserve">
     <value>Arrow Graph</value>

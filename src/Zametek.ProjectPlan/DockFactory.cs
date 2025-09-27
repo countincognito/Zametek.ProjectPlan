@@ -23,7 +23,7 @@ namespace Zametek.ProjectPlan
         private readonly IDockable m_ResourceChartManagerViewModel;
         private readonly IDockable m_GanttChartManagerViewModel;
         private readonly IDockable m_EarnedValueChartManagerViewModel;
-        private readonly IDockable m_ArrowGraphSettingsManagerViewModel;
+        private readonly IDockable m_GraphSettingsManagerViewModel;
         private readonly IDockable m_ResourceSettingsManagerViewModel;
         private readonly IDockable m_WorkStreamSettingsManagerViewModel;
 
@@ -37,7 +37,7 @@ namespace Zametek.ProjectPlan
             IResourceChartManagerViewModel resourceChartManagerViewModel,
             IGanttChartManagerViewModel ganttChartManagerViewModel,
             IEarnedValueChartManagerViewModel earnedValueChartManagerViewModel,
-            IArrowGraphSettingsManagerViewModel arrowGraphSettingsManagerViewModel,
+            IGraphSettingsManagerViewModel graphSettingsManagerViewModel,
             IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
             IWorkStreamSettingsManagerViewModel workStreamSettingsManagerViewModel)
         {
@@ -50,7 +50,7 @@ namespace Zametek.ProjectPlan
             m_ResourceChartManagerViewModel = resourceChartManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(resourceChartManagerViewModel));
             m_GanttChartManagerViewModel = ganttChartManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(ganttChartManagerViewModel));
             m_EarnedValueChartManagerViewModel = earnedValueChartManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(earnedValueChartManagerViewModel));
-            m_ArrowGraphSettingsManagerViewModel = arrowGraphSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(arrowGraphSettingsManagerViewModel));
+            m_GraphSettingsManagerViewModel = graphSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(graphSettingsManagerViewModel));
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(resourceSettingsManagerViewModel));
             m_WorkStreamSettingsManagerViewModel = workStreamSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(workStreamSettingsManagerViewModel));
         }
@@ -103,9 +103,9 @@ namespace Zametek.ProjectPlan
                 m_EarnedValueChartManagerViewModel.CanPin = true;
             }
             {
-                m_ArrowGraphSettingsManagerViewModel.CanClose = false;
-                m_ArrowGraphSettingsManagerViewModel.CanFloat = true;
-                m_ArrowGraphSettingsManagerViewModel.CanPin = true;
+                m_GraphSettingsManagerViewModel.CanClose = false;
+                m_GraphSettingsManagerViewModel.CanFloat = true;
+                m_GraphSettingsManagerViewModel.CanPin = true;
             }
             {
                 m_ResourceSettingsManagerViewModel.CanClose = false;
@@ -193,7 +193,7 @@ namespace Zametek.ProjectPlan
                                 IsCollapsable = false,
                                 VisibleDockables = CreateList(
                                     m_ResourceSettingsManagerViewModel,
-                                    m_ArrowGraphSettingsManagerViewModel,
+                                    m_GraphSettingsManagerViewModel,
                                     m_WorkStreamSettingsManagerViewModel),
                                 Alignment = Alignment.Bottom,
                                 GripMode = GripMode.Visible
