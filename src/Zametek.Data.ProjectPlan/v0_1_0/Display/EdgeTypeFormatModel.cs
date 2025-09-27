@@ -1,6 +1,4 @@
-﻿using Zametek.Maths.Graphs;
-
-namespace Zametek.Data.ProjectPlan.v0_1_0
+﻿namespace Zametek.Data.ProjectPlan.v0_1_0
 {
     [Serializable]
     public record EdgeTypeFormatModel
