@@ -23,6 +23,7 @@ namespace Zametek.ProjectPlan
             // ViewModels.
             SplatRegistrations.RegisterLazySingleton<IDateTimeCalculator, DateTimeCalculator>();
             SplatRegistrations.RegisterLazySingleton<IArrowGraphSerializer, ArrowGraphSerializer>();
+            SplatRegistrations.RegisterLazySingleton<IVertexGraphSerializer, VertexGraphSerializer>();
             SplatRegistrations.RegisterLazySingleton<IProjectFileImport, ProjectFileImport>();
             SplatRegistrations.RegisterLazySingleton<IProjectFileExport, ProjectFileExport>();
             SplatRegistrations.RegisterLazySingleton<IProjectFileOpen, ProjectFileOpen>();
@@ -32,6 +33,7 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<IActivitiesManagerViewModel, ActivitiesManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<ITrackingManagerViewModel, TrackingManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IArrowGraphManagerViewModel, ArrowGraphManagerViewModel>();
+            SplatRegistrations.RegisterLazySingleton<IVertexGraphManagerViewModel, VertexGraphManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IResourceChartManagerViewModel, ResourceChartManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IGanttChartManagerViewModel, GanttChartManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IEarnedValueChartManagerViewModel, EarnedValueChartManagerViewModel>();
@@ -47,6 +49,7 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<ActivitiesManagerView>();
             SplatRegistrations.RegisterLazySingleton<TrackingManagerView>();
             SplatRegistrations.RegisterLazySingleton<ArrowGraphManagerView>();
+            SplatRegistrations.RegisterLazySingleton<VertexGraphManagerView>();
             SplatRegistrations.RegisterLazySingleton<ResourceChartManagerView>();
             SplatRegistrations.RegisterLazySingleton<GanttChartManagerView>();
             SplatRegistrations.RegisterLazySingleton<EarnedValueChartManagerView>();

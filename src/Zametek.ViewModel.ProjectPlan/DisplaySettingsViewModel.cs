@@ -169,6 +169,22 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
+        private bool m_VertexGraphShowNames;
+        public bool VertexGraphShowNames
+        {
+            get => m_VertexGraphShowNames;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true, trackStaleOutputs: false);
+                    this.RaiseAndSetIfChanged(ref m_VertexGraphShowNames, value);
+                }
+            }
+        }
+
+
+
         private GroupByMode m_GanttChartGroupByMode;
         public GroupByMode GanttChartGroupByMode
         {
@@ -431,6 +447,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
 
+                if (VertexGraphShowNames != model.VertexGraphShowNames)
+                {
+                    VertexGraphShowNames = model.VertexGraphShowNames;
+                }
+
+
                 if (GanttChartGroupByMode != model.GanttChartGroupByMode)
                 {
                     GanttChartGroupByMode = model.GanttChartGroupByMode;
@@ -515,6 +537,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     HideBilling = HideBilling,
 
                     ArrowGraphShowNames = ArrowGraphShowNames,
+
+                    VertexGraphShowNames = VertexGraphShowNames,
 
                     GanttChartGroupByMode = GanttChartGroupByMode,
                     GanttChartAnnotationStyle = GanttChartAnnotationStyle,

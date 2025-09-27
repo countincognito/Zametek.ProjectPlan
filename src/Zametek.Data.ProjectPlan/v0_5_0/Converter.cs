@@ -11,6 +11,8 @@ namespace Zametek.Data.ProjectPlan.v0_5_0
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(projectPlan);
 
+            DisplaySettingsModel displaySettings = mapper.Map<v0_4_4.DisplaySettingsModel, DisplaySettingsModel>(projectPlan.DisplaySettings ?? new());
+
             var plan = new ProjectPlanModel
             {
                 ProjectStart = projectPlan.ProjectStart,
@@ -19,7 +21,7 @@ namespace Zametek.Data.ProjectPlan.v0_5_0
                 ArrowGraphSettings = projectPlan.ArrowGraphSettings ?? new(),
                 ResourceSettings = projectPlan.ResourceSettings,
                 WorkStreamSettings = projectPlan.WorkStreamSettings ?? new(),
-                DisplaySettings = projectPlan.DisplaySettings,
+                DisplaySettings = displaySettings,
             };
 
             return plan;

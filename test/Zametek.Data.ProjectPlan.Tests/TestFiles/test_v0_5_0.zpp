@@ -3561,6 +3561,7 @@
     "UseClassicDates": false,
     "UseBusinessDays": false,
     "ArrowGraphShowNames": false,
+    "VertexGraphShowNames": false,
     "GanttChartGroupByMode": 1,
     "GanttChartAnnotationStyle": 1,
     "GanttChartShowGroupLabels": true,

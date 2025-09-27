@@ -43,9 +43,11 @@ namespace Zametek.ProjectPlan.CommandLine
                         services.AddSingleton<IDialogService, DialogService>();
                         services.AddSingleton<IDateTimeCalculator, DateTimeCalculator>();
                         services.AddSingleton<IArrowGraphSerializer, ArrowGraphSerializer>();
+                        services.AddSingleton<IVertexGraphSerializer, VertexGraphSerializer>();
 
                         services.AddSingleton<IGanttChartManagerViewModel, GanttChartManagerViewModel>();
                         services.AddSingleton<IArrowGraphManagerViewModel, ArrowGraphManagerViewModel>();
+                        services.AddSingleton<IVertexGraphManagerViewModel, VertexGraphManagerViewModel>();
                         services.AddSingleton<IResourceChartManagerViewModel, ResourceChartManagerViewModel>();
                         services.AddSingleton<IEarnedValueChartManagerViewModel, EarnedValueChartManagerViewModel>();
                         services.AddSingleton<IMetricManagerViewModel, MetricManagerViewModel>();

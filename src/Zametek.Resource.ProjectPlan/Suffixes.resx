@@ -120,6 +120,9 @@
   <data name="Suffix_ArrowChart" xml:space="preserve">
     <value>-arrow</value>
   </data>
+  <data name="Suffix_VertexChart" xml:space="preserve">
+    <value>-vertex</value>
+  </data>
   <data name="Suffix_EarnedValueChart" xml:space="preserve">
     <value>-ev</value>
   </data>

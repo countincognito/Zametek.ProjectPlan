@@ -126,6 +126,9 @@
   <data name="Title_ArrowGraphView" xml:space="preserve">
     <value>Arrow Graph</value>
   </data>
+  <data name="Title_VertexGraphView" xml:space="preserve">
+    <value>Vertex Graph</value>
+  </data>
   <data name="Title_EarnedValueChartView" xml:space="preserve">
     <value>Earned-Value Chart</value>
   </data>

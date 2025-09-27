@@ -17,6 +17,6 @@
 
         public v0_3_2.WorkStreamSettingsModel WorkStreamSettings { get; init; } = new();
 
-        public v0_4_4.DisplaySettingsModel DisplaySettings { get; init; } = new();
+        public DisplaySettingsModel DisplaySettings { get; init; } = new();
     }
 }

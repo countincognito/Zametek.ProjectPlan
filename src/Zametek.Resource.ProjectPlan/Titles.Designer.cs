@@ -214,6 +214,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Vertex Graph.
+        /// </summary>
+        public static string Title_VertexGraphView {
+            get {
+                return ResourceManager.GetString("Title_VertexGraphView", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Work Stream Settings.
         /// </summary>
         public static string Title_WorkStreamSettingsView {

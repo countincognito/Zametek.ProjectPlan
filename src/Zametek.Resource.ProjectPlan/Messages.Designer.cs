@@ -162,27 +162,54 @@ namespace Zametek.Resource.ProjectPlan {
         /// <summary>
         ///   Looks up a localized string similar to List of Edge IDs and Edges referenced by head Nodes do not match when building Arrow Graph.
         /// </summary>
-        public static string Message_MismatchedEdgeIdsForHeadNodes {
+        public static string Message_MismatchedEdgeIdsForHeadNodesInArrowGraph {
             get {
-                return ResourceManager.GetString("Message_MismatchedEdgeIdsForHeadNodes", resourceCulture);
+                return ResourceManager.GetString("Message_MismatchedEdgeIdsForHeadNodesInArrowGraph", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of Edge IDs and Edges referenced by head Nodes do not match when building Vertex Graph.
+        /// </summary>
+        public static string Message_MismatchedEdgeIdsForHeadNodesInVertexGraph {
+            get {
+                return ResourceManager.GetString("Message_MismatchedEdgeIdsForHeadNodesInVertexGraph", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to List of Edge IDs and Edges referenced by tail Nodes do not match when building Arrow Graph.
         /// </summary>
-        public static string Message_MismatchedEdgeIdsForTailNodes {
+        public static string Message_MismatchedEdgeIdsForTailNodesInArrowGraph {
             get {
-                return ResourceManager.GetString("Message_MismatchedEdgeIdsForTailNodes", resourceCulture);
+                return ResourceManager.GetString("Message_MismatchedEdgeIdsForTailNodesInArrowGraph", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of Edge IDs and Edges referenced by tail Nodes do not match when building Vertex Graph.
+        /// </summary>
+        public static string Message_MismatchedEdgeIdsForTailNodesInVertexGraph {
+            get {
+                return ResourceManager.GetString("Message_MismatchedEdgeIdsForTailNodesInVertexGraph", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to List of Node IDs and Nodes associated with Edges do not match when building Arrow Graph.
         /// </summary>
-        public static string Message_MismatchedNodeIdsAssociatedWithEdges {
+        public static string Message_MismatchedNodeIdsAssociatedWithEdgesInArrowGraph {
             get {
-                return ResourceManager.GetString("Message_MismatchedNodeIdsAssociatedWithEdges", resourceCulture);
+                return ResourceManager.GetString("Message_MismatchedNodeIdsAssociatedWithEdgesInArrowGraph", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of Node IDs and Nodes associated with Edges do not match when building Vertex Graph.
+        /// </summary>
+        public static string Message_MismatchedNodeIdsAssociatedWithEdgesInVertexGraph {
+            get {
+                return ResourceManager.GetString("Message_MismatchedNodeIdsAssociatedWithEdgesInVertexGraph", resourceCulture);
             }
         }
         
@@ -408,6 +435,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_VertexGraphCannotContainNormalNodesWithoutAnyStartNodes {
             get {
                 return ResourceManager.GetString("Message_VertexGraphCannotContainNormalNodesWithoutAnyStartNodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Vertex Graph Data contains no End nodes.
+        /// </summary>
+        public static string Message_VertexGraphDataContainsNoEndNodes {
+            get {
+                return ResourceManager.GetString("Message_VertexGraphDataContainsNoEndNodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Vertex Graph Data contains no Start nodes.
+        /// </summary>
+        public static string Message_VertexGraphDataContainsNoStartNodes {
+            get {
+                return ResourceManager.GetString("Message_VertexGraphDataContainsNoStartNodes", resourceCulture);
             }
         }
     }

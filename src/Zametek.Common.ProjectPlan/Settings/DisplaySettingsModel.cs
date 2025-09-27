@@ -19,6 +19,10 @@
 
 
 
+        public bool VertexGraphShowNames { get; init; } = default;
+
+
+
         public GroupByMode GanttChartGroupByMode { get; init; } = default;
 
         public AnnotationStyle GanttChartAnnotationStyle { get; init; } = default;

@@ -47,5 +47,8 @@
       <SubType>Code</SubType>
       <DependentUpon>ResourceEditView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="VertexGraphManagement\VertexGraphManagerView.axaml.cs">
+      <DependentUpon>VertexGraphManagerView.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

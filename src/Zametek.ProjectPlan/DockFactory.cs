@@ -19,6 +19,7 @@ namespace Zametek.ProjectPlan
         private readonly IDockable m_MetricManagerViewModel;
         private readonly IDockable m_OutputManagerViewModel;
         private readonly IDockable m_ArrowGraphManagerViewModel;
+        private readonly IDockable m_VertexGraphManagerViewModel;
         private readonly IDockable m_ResourceChartManagerViewModel;
         private readonly IDockable m_GanttChartManagerViewModel;
         private readonly IDockable m_EarnedValueChartManagerViewModel;
@@ -32,6 +33,7 @@ namespace Zametek.ProjectPlan
             IMetricManagerViewModel metricManagerViewModel,
             IOutputManagerViewModel outputManagerViewModel,
             IArrowGraphManagerViewModel arrowGraphManagerViewModel,
+            IVertexGraphManagerViewModel vertexGraphManagerViewModel,
             IResourceChartManagerViewModel resourceChartManagerViewModel,
             IGanttChartManagerViewModel ganttChartManagerViewModel,
             IEarnedValueChartManagerViewModel earnedValueChartManagerViewModel,
@@ -44,6 +46,7 @@ namespace Zametek.ProjectPlan
             m_MetricManagerViewModel = metricManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(metricManagerViewModel));
             m_OutputManagerViewModel = outputManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(outputManagerViewModel));
             m_ArrowGraphManagerViewModel = arrowGraphManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(arrowGraphManagerViewModel));
+            m_VertexGraphManagerViewModel = vertexGraphManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(vertexGraphManagerViewModel));
             m_ResourceChartManagerViewModel = resourceChartManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(resourceChartManagerViewModel));
             m_GanttChartManagerViewModel = ganttChartManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(ganttChartManagerViewModel));
             m_EarnedValueChartManagerViewModel = earnedValueChartManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(earnedValueChartManagerViewModel));
@@ -78,6 +81,11 @@ namespace Zametek.ProjectPlan
                 m_ArrowGraphManagerViewModel.CanClose = false;
                 m_ArrowGraphManagerViewModel.CanFloat = true;
                 m_ArrowGraphManagerViewModel.CanPin = true;
+            }
+            {
+                m_VertexGraphManagerViewModel.CanClose = false;
+                m_VertexGraphManagerViewModel.CanFloat = true;
+                m_VertexGraphManagerViewModel.CanPin = true;
             }
             {
                 m_ResourceChartManagerViewModel.CanClose = false;
@@ -134,6 +142,7 @@ namespace Zametek.ProjectPlan
                             m_GanttChartManagerViewModel,
                             m_TrackingManagerViewModel,
                             m_ArrowGraphManagerViewModel,
+                            m_VertexGraphManagerViewModel,
                             m_ResourceChartManagerViewModel,
                             m_EarnedValueChartManagerViewModel),
                         Alignment = Alignment.Top,

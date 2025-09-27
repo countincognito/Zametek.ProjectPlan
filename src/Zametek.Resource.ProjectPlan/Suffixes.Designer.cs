@@ -95,5 +95,14 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Suffix_ResourceChart", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -vertex.
+        /// </summary>
+        public static string Suffix_VertexChart {
+            get {
+                return ResourceManager.GetString("Suffix_VertexChart", resourceCulture);
+            }
+        }
     }
 }
