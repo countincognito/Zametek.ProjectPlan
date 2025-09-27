@@ -33,6 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable? m_AreActivitiesUncompiledSub;
         private readonly IDisposable? m_CompileOnSettingsUpdateSub;
         private readonly IDisposable? m_BuildArrowGraphSub;
+        private readonly IDisposable? m_BuildVertexGraphSub;
         private readonly IDisposable? m_BuildResourceSeriesSetSub;
         private readonly IDisposable? m_BuildTrackingSeriesSetSub;
 
@@ -79,6 +80,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
             m_ArrowGraph = new ArrowGraphModel();
+            m_VertexGraph = new VertexGraphModel();
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
             m_TrackingSeriesSet = new TrackingSeriesSetModel();
 
@@ -177,6 +179,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObservableForProperty(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildArrowGraph());
+
+            m_BuildVertexGraphSub = this
+                .ObservableForProperty(core => core.GraphCompilation)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => BuildVertexGraph());
 
             m_BuildResourceSeriesSetSub = this
                 .ObservableForProperty(core => core.GraphCompilation)
@@ -1245,6 +1252,19 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private VertexGraphModel m_VertexGraph;
+        public VertexGraphModel VertexGraph
+        {
+            get => m_VertexGraph;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_VertexGraph, value);
+                }
+            }
+        }
+
         private ResourceSeriesSetModel m_ResourceSeriesSet;
         public ResourceSeriesSetModel ResourceSeriesSet
         {
@@ -1356,6 +1376,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
 
                     ArrowGraph = new ArrowGraphModel();
+                    VertexGraph = new VertexGraphModel();
 
                     IsReadyToCompile = ReadyToCompile.No;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
@@ -1526,6 +1547,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Arrow Graph.
                     ArrowGraph = projectPlanModel.ArrowGraph;
+
+                    // Vertex Graph.
+                    VertexGraph = new VertexGraphModel();
 
                     // Display settings (the rest of the settings).
                     displaySettings = projectPlanModel.DisplaySettings with
@@ -1991,6 +2015,38 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void BuildVertexGraph()
+        {
+            lock (m_Lock)
+            {
+                VertexGraph = new VertexGraphModel();
+
+                if (!HasCompilationErrors)
+                {
+                    IEnumerable<IDependentActivity> dependentActivities =
+                        GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject());
+
+                    if (dependentActivities.Any())
+                    {
+                        var vertexGraphCompiler = new VertexGraphCompiler();
+                        foreach (IDependentActivity dependentActivity in dependentActivities)
+                        {
+                            dependentActivity.Dependencies.UnionWith(dependentActivity.ResourceDependencies);
+                            dependentActivity.ResourceDependencies.Clear();
+                            vertexGraphCompiler.AddActivity(dependentActivity);
+                        }
+
+                        vertexGraphCompiler.TransitiveReduction();
+                        vertexGraphCompiler.Compile();
+
+                        Graph<int, IEvent<int>, IDependentActivity>? vertexGraph =
+                            vertexGraphCompiler.ToGraph() ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotBuildArrowGraph);
+                        VertexGraph = m_Mapper.Map<Graph<int, IEvent<int>, IDependentActivity>, VertexGraphModel>(vertexGraph);
+                    }
+                }
+            }
+        }
+
         public void BuildResourceSeriesSet()
         {
             lock (m_Lock)
@@ -2039,6 +2095,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_AreActivitiesUncompiledSub?.Dispose();
             m_CompileOnSettingsUpdateSub?.Dispose();
             m_BuildArrowGraphSub?.Dispose();
+            m_BuildVertexGraphSub?.Dispose();
             m_BuildResourceSeriesSetSub?.Dispose();
             m_BuildTrackingSeriesSetSub?.Dispose();
         }

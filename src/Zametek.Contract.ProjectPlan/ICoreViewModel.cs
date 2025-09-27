@@ -61,6 +61,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ArrowGraphModel ArrowGraph { get; }
 
+        VertexGraphModel VertexGraph { get; }
+
         ResourceSeriesSetModel ResourceSeriesSet { get; }
 
         TrackingSeriesSetModel TrackingSeriesSet { get; }
@@ -106,6 +108,8 @@ namespace Zametek.Contract.ProjectPlan
         void BuildCyclomaticComplexity();
 
         void BuildArrowGraph();
+
+        void BuildVertexGraph();
 
         void BuildResourceSeriesSet();
 

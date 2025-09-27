@@ -391,6 +391,61 @@ namespace Zametek.ViewModel.ProjectPlan
 
             CreateMap<ArrowGraphModel, Graph<int, IDependentActivity, IEvent<int>>>()
                 .ReverseMap();
+
+            CreateMap<EventEdgeModel, Edge<int, IEvent<int>>>()
+                .ConstructUsing((src, ctx) => new Edge<int, IEvent<int>>(ctx.Mapper.Map<EventModel, Event<int>>(src.Content)))
+                .ReverseMap();
+
+            CreateMap<ActivityNodeModel, Node<int, IDependentActivity>>()
+                .ConstructUsing((src, ctx) => new Node<int, IDependentActivity>(src.NodeType, ctx.Mapper.Map<ActivityModel, DependentActivity>(src.Content)))
+                .BeforeMap((src, dest) =>
+                {
+                    if (src.NodeType != NodeType.Start && src.NodeType != NodeType.Isolated)
+                    {
+                        dest.IncomingEdges.Clear();
+                        foreach (int incomingEdgeId in src.IncomingEdges)
+                        {
+                            dest.IncomingEdges.Add(incomingEdgeId);
+                        }
+                    }
+
+                    if (src.NodeType != NodeType.End && src.NodeType != NodeType.Isolated)
+                    {
+                        dest.OutgoingEdges.Clear();
+                        foreach (int outgoingEdgeId in src.OutgoingEdges)
+                        {
+                            dest.OutgoingEdges.Add(outgoingEdgeId);
+                        }
+                    }
+                })
+                .ForMember(src => src.IncomingEdges, opt => opt.Ignore())
+                .ForMember(src => src.OutgoingEdges, opt => opt.Ignore())
+                .ReverseMap()
+                .BeforeMap((src, dest) =>
+                {
+                    dest.IncomingEdges.Clear();
+                    if (src.NodeType != NodeType.Start && src.NodeType != NodeType.Isolated)
+                    {
+                        foreach (int incomingEdgeId in src.IncomingEdges)
+                        {
+                            dest.IncomingEdges.Add(incomingEdgeId);
+                        }
+                    }
+
+                    dest.OutgoingEdges.Clear();
+                    if (src.NodeType != NodeType.End && src.NodeType != NodeType.Isolated)
+                    {
+                        foreach (int outgoingEdgeId in src.OutgoingEdges)
+                        {
+                            dest.OutgoingEdges.Add(outgoingEdgeId);
+                        }
+                    }
+                })
+                .ForMember(src => src.IncomingEdges, opt => opt.Ignore())
+                .ForMember(src => src.OutgoingEdges, opt => opt.Ignore());
+
+            CreateMap<VertexGraphModel, Graph<int, IEvent<int>, IDependentActivity>>()
+                .ReverseMap();
         }
     }
 }
