@@ -22,9 +22,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {EdgeDashStyle.Dashed, Microsoft.Msagl.Drawing.Style.Dashed}
              };
 
-        private static readonly double s_SvgNodeWidth = 40.0;
-        private static readonly double s_SvgNodeHeight = 34.0;
-        private static readonly double s_SvgNodeLabelWidth = 34.0;
+        private static readonly double s_SvgNodeWidth = 38.0;
+        private static readonly double s_SvgNodeHeight = 30.0;
+        private static readonly double s_SvgNodeLabelWidth = 30.0;
+        private static readonly double s_SvgNodeLabelLines = 3.0;
         private static readonly double s_SvgRadiusInXDirection = 3.0;
         private static readonly double s_SvgRadiusInYDirection = 2.0;
 
@@ -34,11 +35,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly double s_DiagramNodeModelHeight = 26.0;
         private static readonly double s_DiagramNodeModelWidth = 62.0;
+        private static readonly double s_DiagramNodeLineWidth = 2.0;
+        private static readonly Microsoft.Msagl.Drawing.FontStyle s_DiagramNodeFontStyle = Microsoft.Msagl.Drawing.FontStyle.Bold;
 
         // These need to be worked out through trial and error
         // whenever s_SvgNodeLabelWidth is changed.
-        private static readonly double s_SvgConsolasLabelWidthCorrectionFactor = s_SvgNodeLabelWidth / 14;
-        private static readonly double s_SvgConsolasLabelHeightCorrectionFactor = 0.7;
+        private static readonly double s_SvgConsolasLabelWidthCorrectionFactor = s_SvgNodeLabelLines * s_SvgNodeLabelWidth / 11.5;
+        private static readonly double s_SvgConsolasLabelHeightCorrectionFactor = 3;
 
         private static readonly Color s_NodeFillColor = Colors.LightGray;
         private static readonly Color s_NodeBorderColor = Colors.Black;
@@ -61,15 +64,39 @@ namespace Zametek.ViewModel.ProjectPlan
                 && activityModel.LatestStartTime is not null
                 && activityModel.LatestFinishTime is not null)
             {
-                labelText = $"{activityModel.EarliestStartTime}|{activityModel.Id}|{activityModel.EarliestFinishTime}\n{activityModel.LatestStartTime}|{activityModel.Duration}|{activityModel.LatestFinishTime}";
+                string est = $@"{activityModel.EarliestStartTime}";
+                string id = $@"{activityModel.Id}";
+                string eft = $@"{activityModel.EarliestFinishTime}";
+
+                string lst = $@"{activityModel.LatestStartTime}";
+                string duration = $@"{activityModel.Duration}";
+                string lft = $@"{activityModel.LatestFinishTime}";
+
+                int leftColumnWidth = Math.Max(est.Length, lst.Length);
+                int middleColumnWidth = Math.Max(id.Length, duration.Length);
+                int rightColumnWidth = Math.Max(eft.Length, lft.Length);
+
+                leftColumnWidth = Math.Max(leftColumnWidth, rightColumnWidth);
+                rightColumnWidth = leftColumnWidth;
+
+                var label = new StringBuilder();
+
+                label.Append($"|{est.PadLeft(leftColumnWidth)}|{id.PadLeft(middleColumnWidth)}|{eft.PadLeft(rightColumnWidth)}|\n");
+                label.Append($"+{new string('-', leftColumnWidth)}+{new string('-', middleColumnWidth)}+{new string('-', rightColumnWidth)}+\n");
+                label.Append($"|{lst.PadLeft(leftColumnWidth)}|{duration.PadLeft(middleColumnWidth)}|{lft.PadLeft(rightColumnWidth)}|");
+
+                labelText = label.ToString();
             }
 
             return labelText;
         }
 
-        private static DiagramNodeModel BuildDiagramNode(ActivityNodeModel activityNode)
+        private static DiagramNodeModel BuildDiagramNode(
+            ActivityNodeModel activityNode,
+            SlackColorFormatLookup colorFormatLookup)
         {
             ArgumentNullException.ThrowIfNull(activityNode);
+            ArgumentNullException.ThrowIfNull(colorFormatLookup);
             ActivityModel activityModel = activityNode.Content;
 
             return new DiagramNodeModel
@@ -78,14 +105,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 Height = s_DiagramNodeModelHeight,
                 Width = s_DiagramNodeModelWidth,
                 FillColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeFillColor),
-                BorderColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeBorderColor),
+                BorderColorHexCode = ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(activityModel.TotalSlack)),
                 Text = BuildNodeLabel(activityModel)
             };
-
-            //Point point = vertexControl.GetPosition();
-            //outputNode.X = point.X;
-            //outputNode.Y = point.Y;
-
         }
 
         private static (bool isVisible, string labelText) BuildSingleLineEdgeLabel(EventModel eventModel, bool viewNames)
@@ -257,7 +279,7 @@ namespace Zametek.ViewModel.ProjectPlan
             var colorFormatLookup = new SlackColorFormatLookup(graphSettingsModel.ActivitySeverities);
 
             // Fill the graph.
-            List<DiagramNodeModel> diagramNodeModels = nodeModels.Select(BuildDiagramNode).ToList();
+            List<DiagramNodeModel> diagramNodeModels = nodeModels.Select(x => BuildDiagramNode(x, colorFormatLookup)).ToList();
             List<DiagramEdgeModel> diagramEdgeModels = [];
 
             foreach (EventEdgeModel eventEdge in edgeModels)
@@ -436,7 +458,7 @@ namespace Zametek.ViewModel.ProjectPlan
             drawingGraph.LayoutAlgorithmSettings = drawingGraph.CreateLayoutSettings();
 
             drawingGraph.LayoutAlgorithmSettings.EdgeRoutingSettings.UseObstacleRectangles = true;
-            drawingGraph.LayoutAlgorithmSettings.EdgeRoutingSettings.EdgeRoutingMode = Microsoft.Msagl.Core.Routing.EdgeRoutingMode.SugiyamaSplines;
+            drawingGraph.LayoutAlgorithmSettings.EdgeRoutingSettings.EdgeRoutingMode = Microsoft.Msagl.Core.Routing.EdgeRoutingMode.Rectilinear;
 
             drawingGraph.Attr.LayerDirection = Microsoft.Msagl.Drawing.LayerDirection.LR;
 
@@ -471,9 +493,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 drawingGraphNode.Label.Height = nodeLabelHeight;
                 drawingGraphNode.Label.Width = s_SvgNodeLabelWidth;
                 drawingGraphNode.Label.FontSize = nodeLabelFontSize;
+                drawingGraphNode.Label.FontStyle = s_DiagramNodeFontStyle ;
 
                 drawingGraphNode.Label.FontName = c_FontName;
                 drawingGraphNode.Attr.FillColor = HtmlHexCodeToMsaglColor(diagramNode.FillColorHexCode) ?? Microsoft.Msagl.Drawing.Color.LightGray;
+                drawingGraphNode.Attr.Color = HtmlHexCodeToMsaglColor(diagramNode.BorderColorHexCode) ?? Microsoft.Msagl.Drawing.Color.Black;
+                drawingGraphNode.Attr.LineWidth = s_DiagramNodeLineWidth;
             }
 
             // Initialise geometry labels as well.

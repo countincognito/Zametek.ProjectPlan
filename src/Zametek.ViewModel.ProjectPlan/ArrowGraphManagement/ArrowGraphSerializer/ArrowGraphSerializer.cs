@@ -24,6 +24,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly double s_SvgNodeWidth = 40.0;
         private static readonly double s_SvgNodeHeight = 34.0;
         private static readonly double s_SvgNodeLabelWidth = 34.0;
+        private static readonly double s_SvgNodeLabelLines = 1.0;
         private static readonly double s_SvgRadiusInXDirection = 3.0;
         private static readonly double s_SvgRadiusInYDirection = 2.0;
 
@@ -33,10 +34,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly double s_DiagramNodeModelHeight = 26.0;
         private static readonly double s_DiagramNodeModelWidth = 62.0;
+        private static readonly double s_DiagramNodeLineWidth = 1.0;
+        private static readonly Microsoft.Msagl.Drawing.FontStyle s_DiagramNodeFontStyle = Microsoft.Msagl.Drawing.FontStyle.Regular;
+
 
         // These need to be worked out through trial and error
         // whenever s_SvgNodeLabelWidth is changed.
-        private static readonly double s_SvgConsolasLabelWidthCorrectionFactor = s_SvgNodeLabelWidth / 14;
+        private static readonly double s_SvgConsolasLabelWidthCorrectionFactor = s_SvgNodeLabelLines * s_SvgNodeLabelWidth / 14;
         private static readonly double s_SvgConsolasLabelHeightCorrectionFactor = 0.7;
 
         private static readonly Color s_NodeFillColor = Colors.LightGray;
@@ -465,9 +469,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 drawingGraphNode.Label.Height = nodeLabelHeight;
                 drawingGraphNode.Label.Width = s_SvgNodeLabelWidth;
                 drawingGraphNode.Label.FontSize = nodeLabelFontSize;
+                drawingGraphNode.Label.FontStyle = s_DiagramNodeFontStyle;
 
                 drawingGraphNode.Label.FontName = c_FontName;
                 drawingGraphNode.Attr.FillColor = HtmlHexCodeToMsaglColor(diagramNode.FillColorHexCode) ?? Microsoft.Msagl.Drawing.Color.LightGray;
+                drawingGraphNode.Attr.Color = HtmlHexCodeToMsaglColor(diagramNode.BorderColorHexCode) ?? Microsoft.Msagl.Drawing.Color.Black;
+                drawingGraphNode.Attr.LineWidth = s_DiagramNodeLineWidth;
             }
 
             // Initialise geometry labels as well.
