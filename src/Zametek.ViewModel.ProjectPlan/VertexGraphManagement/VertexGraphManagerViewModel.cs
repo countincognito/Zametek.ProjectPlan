@@ -300,14 +300,14 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             VertexGraphImage.Source?.Picture?.ToSvg(filename, SKColors.White, scaleX: 2, scaleY: 2);
                         })
-                        //.Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
-                        //{
-                        //    data = m_VertexGraphExport.BuildVertexGraphMLData(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
-                        //})
-                        //.Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
-                        //{
-                        //    data = m_VertexGraphExport.BuildVertexGraphVizData(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
-                        //})
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
+                        {
+                            data = m_VertexGraphExport.BuildVertexGraphMLData(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
+                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
+                        {
+                            data = m_VertexGraphExport.BuildVertexGraphVizData(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
+                        })
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
 
                     if (data is not null)

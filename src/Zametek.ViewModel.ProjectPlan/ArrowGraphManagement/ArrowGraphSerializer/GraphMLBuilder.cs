@@ -6,17 +6,17 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Public Methods
 
-        public static graphml ToGraphML(DiagramArrowGraphModel diagramArrowGraph)
+        public static graphml ToGraphML(DiagramGraphModel diagramGraph)
         {
-            ArgumentNullException.ThrowIfNull(diagramArrowGraph);
-            IList<DiagramNodeModel> diagramNodes = [.. diagramArrowGraph.Nodes];
-            IList<DiagramEdgeModel> diagramEdges = [.. diagramArrowGraph.Edges];
+            ArgumentNullException.ThrowIfNull(diagramGraph);
+            IList<DiagramNodeModel> diagramNodes = [.. diagramGraph.Nodes];
+            IList<DiagramEdgeModel> diagramEdges = [.. diagramGraph.Edges];
             var graph = new graphmlGraph
             {
                 id = @"G",
                 edgedefault = @"directed",
-                node = diagramNodes.Select(BuildArrowGraphNode).ToArray(),
-                edge = diagramEdges.Select(BuildArrowGraphEdge).ToArray()
+                node = [.. diagramNodes.Select(BuildArrowGraphNode)],
+                edge = [.. diagramEdges.Select(BuildArrowGraphEdge)]
             };
             return new graphml
             {
@@ -79,7 +79,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             alignment = @"center",
                             autoSizePolicy = @"content",
-                            fontFamily = @"Dialog",
+                            fontFamily = @"Consolas",
                             fontSize = @"12",
                             fontStyle = @"plain",
                             hasBackgroundColor = @"false",
@@ -166,7 +166,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         backgroundColor = @"#FFFFFF",
                         configuration = @"AutoFlippingLabel",
                         distance = @"2.0",
-                        fontFamily = @"Dialog",
+                        fontFamily = @"Consolas",
                         fontSize = @"12",
                         fontStyle = @"plain",
                         hasLineColor = @"false",

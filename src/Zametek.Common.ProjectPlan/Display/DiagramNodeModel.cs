@@ -22,5 +22,7 @@
         public double BorderThickness { get; init; }
 
         public string? Text { get; init; }
+
+        public string? Name { get; init; }
     }
 }

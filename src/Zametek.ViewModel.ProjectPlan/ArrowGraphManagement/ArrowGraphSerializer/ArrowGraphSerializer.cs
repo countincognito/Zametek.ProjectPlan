@@ -1,5 +1,4 @@
 ﻿using Avalonia.Media;
-using sun.nio.cs;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -82,6 +81,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(nodeFormatLookup);
             EventModel eventModel = eventNode.Content;
 
+            string text = BuildNodeLabel(eventModel);
+
             return new DiagramNodeModel
             {
                 Id = eventModel.Id,
@@ -91,7 +92,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 BorderColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeBorderColor),
                 BorderDashStyle = nodeFormatLookup.FindGraphNodeBorderDashStyle(false, false),
                 BorderThickness = nodeFormatLookup.FindBorderThickness(false, false) * s_SvgNodeLineThicknessCorrectionFactor,
-                Text = BuildNodeLabel(eventModel)
+                Text = text,
+                Name = text,
             };
 
             //Point point = vertexControl.GetPosition();
@@ -196,7 +198,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return (isVisible, labelText.ToString());
         }
 
-        private static DiagramArrowGraphModel BuildArrowGraphDiagram(
+        private static DiagramGraphModel BuildGraphDiagram(
             ArrowGraphModel arrowGraphModel,
             GraphSettingsModel graphSettingsModel,
             bool multiLineEdgeLabels = false,
@@ -300,13 +302,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     ForegroundColorHexCode = ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(activityModel.TotalSlack)),
                     StrokeThickness = edgeFormatLookup.FindStrokeThickness(isCritical, isDummy),
                     Label = labelText,
-                    ShowLabel = showLabel
+                    ShowLabel = showLabel,
                 };
 
                 diagramEdgeModels.Add(diagramEdgeModel);
             }
 
-            return new DiagramArrowGraphModel
+            return new DiagramGraphModel
             {
                 Nodes = diagramNodeModels,
                 Edges = diagramEdgeModels
@@ -413,12 +415,12 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(arrowGraph);
             ArgumentNullException.ThrowIfNull(graphSettings);
-            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, graphSettings, viewNames: viewNames);
+            DiagramGraphModel diagramGraph = BuildGraphDiagram(arrowGraph, graphSettings, viewNames: viewNames);
 
             // Fill the graph.
             var drawingGraph = new Microsoft.Msagl.Drawing.Graph();
 
-            foreach (DiagramNodeModel diagramNode in diagramArrowGraph.Nodes)
+            foreach (DiagramNodeModel diagramNode in diagramGraph.Nodes)
             {
                 var drawingGraphNode = new Microsoft.Msagl.Drawing.Node($@"{diagramNode.Id}");
                 drawingGraph.AddNode(drawingGraphNode);
@@ -426,7 +428,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             Dictionary<string, Microsoft.Msagl.Drawing.Node> drawingNodeLookup = drawingGraph.Nodes.ToDictionary(x => x.Id);
 
-            foreach (DiagramEdgeModel diagramEdge in diagramArrowGraph.Edges)
+            foreach (DiagramEdgeModel diagramEdge in diagramGraph.Edges)
             {
                 var edge = new Microsoft.Msagl.Drawing.Edge(
                     drawingNodeLookup[$@"{diagramEdge.SourceId}"],
@@ -454,7 +456,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // Draw the graph.
             drawingGraph.CreateGeometryGraph();
 
-            Dictionary<string, DiagramNodeModel> diagramNodeLookup = diagramArrowGraph.Nodes.ToDictionary(x => $@"{x.Id}");
+            Dictionary<string, DiagramNodeModel> diagramNodeLookup = diagramGraph.Nodes.ToDictionary(x => $@"{x.Id}");
 
             // Fill the nodes.
             foreach (Microsoft.Msagl.Drawing.Node drawingGraphNode in drawingGraph.Nodes)
@@ -514,8 +516,8 @@ namespace Zametek.ViewModel.ProjectPlan
             GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
-            graphml graphML = GraphMLBuilder.ToGraphML(diagramArrowGraph);
+            DiagramGraphModel diagramGraph = BuildGraphDiagram(arrowGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            graphml graphML = GraphMLBuilder.ToGraphML(diagramGraph);
             using var ms = new MemoryStream();
             var xmlSerializer = new XmlSerializer(typeof(graphml));
             xmlSerializer.Serialize(ms, graphML);
@@ -530,8 +532,8 @@ namespace Zametek.ViewModel.ProjectPlan
             GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
-            string graphviz = GraphVizBuilder.ToGraphViz(diagramArrowGraph);
+            DiagramGraphModel diagramGraph = BuildGraphDiagram(arrowGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            string graphviz = GraphVizBuilder.ToGraphViz(diagramGraph);
             return graphviz.StringToByteArray();
         }
     }

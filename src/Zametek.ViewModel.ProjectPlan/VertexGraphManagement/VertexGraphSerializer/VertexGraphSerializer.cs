@@ -1,6 +1,7 @@
 ﻿using Avalonia.Media;
 using System.Text;
 using System.Xml;
+using System.Xml.Serialization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
@@ -116,11 +117,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 BorderColorHexCode = ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(activityModel.TotalSlack)),
                 BorderDashStyle = nodeFormatLookup.FindGraphNodeBorderDashStyle(isCritical, isDummy),
                 BorderThickness = nodeFormatLookup.FindBorderThickness(isCritical, isDummy) * s_SvgNodeLineThicknessCorrectionFactor,
-                Text = BuildNodeLabel(activityModel)
+                Text = BuildNodeLabel(activityModel),
+                Name = activityModel.Name,
             };
         }
 
-        private static DiagramVertexGraphModel BuildVertexGraphDiagram(
+        private static DiagramGraphModel BuildGraphDiagram(
             VertexGraphModel vertexGraphModel,
             GraphSettingsModel graphSettingsModel,
             bool multiLineEdgeLabels = false,
@@ -204,7 +206,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 diagramEdgeModels.Add(diagramEdgeModel);
             }
 
-            return new DiagramVertexGraphModel
+            return new DiagramGraphModel
             {
                 Nodes = diagramNodeModels,
                 Edges = diagramEdgeModels
@@ -311,12 +313,12 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(vertexGraph);
             ArgumentNullException.ThrowIfNull(graphSettings);
-            DiagramVertexGraphModel diagramVertexGraph = BuildVertexGraphDiagram(vertexGraph, graphSettings, viewNames: viewNames);
+            DiagramGraphModel diagramGraph = BuildGraphDiagram(vertexGraph, graphSettings, viewNames: viewNames);
 
             // Fill the graph.
             var drawingGraph = new Microsoft.Msagl.Drawing.Graph();
 
-            foreach (DiagramNodeModel diagramNode in diagramVertexGraph.Nodes)
+            foreach (DiagramNodeModel diagramNode in diagramGraph.Nodes)
             {
                 var drawingGraphNode = new Microsoft.Msagl.Drawing.Node($@"{diagramNode.Id}");
                 drawingGraph.AddNode(drawingGraphNode);
@@ -324,7 +326,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             Dictionary<string, Microsoft.Msagl.Drawing.Node> drawingNodeLookup = drawingGraph.Nodes.ToDictionary(x => x.Id);
 
-            foreach (DiagramEdgeModel diagramEdge in diagramVertexGraph.Edges)
+            foreach (DiagramEdgeModel diagramEdge in diagramGraph.Edges)
             {
                 var edge = new Microsoft.Msagl.Drawing.Edge(
                     drawingNodeLookup[$@"{diagramEdge.SourceId}"],
@@ -345,14 +347,14 @@ namespace Zametek.ViewModel.ProjectPlan
             drawingGraph.LayoutAlgorithmSettings = drawingGraph.CreateLayoutSettings();
 
             drawingGraph.LayoutAlgorithmSettings.EdgeRoutingSettings.UseObstacleRectangles = true;
-            drawingGraph.LayoutAlgorithmSettings.EdgeRoutingSettings.EdgeRoutingMode = Microsoft.Msagl.Core.Routing.EdgeRoutingMode.Rectilinear;
+            drawingGraph.LayoutAlgorithmSettings.EdgeRoutingSettings.EdgeRoutingMode = Microsoft.Msagl.Core.Routing.EdgeRoutingMode.SugiyamaSplines;
 
             drawingGraph.Attr.LayerDirection = Microsoft.Msagl.Drawing.LayerDirection.LR;
 
             // Draw the graph.
             drawingGraph.CreateGeometryGraph();
 
-            Dictionary<string, DiagramNodeModel> diagramNodeLookup = diagramVertexGraph.Nodes.ToDictionary(x => $@"{x.Id}");
+            Dictionary<string, DiagramNodeModel> diagramNodeLookup = diagramGraph.Nodes.ToDictionary(x => $@"{x.Id}");
 
             // Fill the nodes.
             foreach (Microsoft.Msagl.Drawing.Node drawingGraphNode in drawingGraph.Nodes)
@@ -380,7 +382,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 drawingGraphNode.Label.Height = nodeLabelHeight;
                 drawingGraphNode.Label.Width = s_SvgNodeLabelWidth;
                 drawingGraphNode.Label.FontSize = nodeLabelFontSize;
-                drawingGraphNode.Label.FontStyle = s_DiagramNodeFontStyle ;
+                drawingGraphNode.Label.FontStyle = s_DiagramNodeFontStyle;
 
                 drawingGraphNode.Label.FontName = c_FontName;
                 drawingGraphNode.Attr.AddStyle(s_NodeBorderDashMsaglLookup[diagramNode.BorderDashStyle]);
@@ -412,16 +414,15 @@ namespace Zametek.ViewModel.ProjectPlan
             GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            //DiagramVertexGraphModel diagramVertexGraph = BuildVertexGraphDiagram(vertexGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
-            //graphml graphML = GraphMLBuilder.ToGraphML(diagramArrowGraph);
-            //using var ms = new MemoryStream();
-            //var xmlSerializer = new XmlSerializer(typeof(graphml));
-            //xmlSerializer.Serialize(ms, graphML);
-            //ms.Position = 0;
-            //using var sr = new StreamReader(ms);
-            //string content = sr.ReadToEnd();
-            //return content.StringToByteArray();
-            throw new NotImplementedException();
+            DiagramGraphModel diagramGraph = BuildGraphDiagram(vertexGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            graphml graphML = GraphMLBuilder.ToGraphML(diagramGraph);
+            using var ms = new MemoryStream();
+            var xmlSerializer = new XmlSerializer(typeof(graphml));
+            xmlSerializer.Serialize(ms, graphML);
+            ms.Position = 0;
+            using var sr = new StreamReader(ms);
+            string content = sr.ReadToEnd();
+            return content.StringToByteArray();
         }
 
         public byte[] BuildVertexGraphVizData(
@@ -429,10 +430,9 @@ namespace Zametek.ViewModel.ProjectPlan
             GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            //DiagramArrowGraphModel diagramArrowGraph = BuildArrowGraphDiagram(arrowGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
-            //string graphviz = GraphVizBuilder.ToGraphViz(diagramArrowGraph);
-            //return graphviz.StringToByteArray();
-            throw new NotImplementedException();
+            DiagramGraphModel diagramGraph = BuildGraphDiagram(vertexGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            string graphviz = GraphVizBuilder.ToGraphViz(diagramGraph);
+            return graphviz.StringToByteArray();
         }
     }
 }

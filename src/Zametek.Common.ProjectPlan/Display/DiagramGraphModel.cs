@@ -1,7 +1,7 @@
 ﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public record DiagramVertexGraphModel
+    public record DiagramGraphModel
     {
         public List<DiagramEdgeModel> Edges { get; init; } = [];
 
