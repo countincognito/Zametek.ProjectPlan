@@ -36,12 +36,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly double s_SvgEdgeLabelFontSize = 12.0;
         private static readonly double s_SvgEdgeLabelHeight = 12.0;
-
+        private static readonly Microsoft.Msagl.Drawing.FontStyle s_SvgNodeFontStyle = Microsoft.Msagl.Drawing.FontStyle.Regular;
 
         private static readonly double s_DiagramNodeModelHeight = 26.0;
         private static readonly double s_DiagramNodeModelWidth = 62.0;
-        private static readonly Microsoft.Msagl.Drawing.FontStyle s_DiagramNodeFontStyle = Microsoft.Msagl.Drawing.FontStyle.Regular;
-
 
         // These need to be worked out through trial and error
         // whenever s_SvgNodeLabelWidth is changed.
@@ -484,7 +482,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 drawingGraphNode.Label.Height = nodeLabelHeight;
                 drawingGraphNode.Label.Width = s_SvgNodeLabelWidth;
                 drawingGraphNode.Label.FontSize = nodeLabelFontSize;
-                drawingGraphNode.Label.FontStyle = s_DiagramNodeFontStyle;
+                drawingGraphNode.Label.FontStyle = s_SvgNodeFontStyle;
 
                 drawingGraphNode.Label.FontName = c_FontName;
                 drawingGraphNode.Attr.AddStyle(s_NodeBorderDashMsaglLookup[diagramNode.BorderDashStyle]);

@@ -15,8 +15,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 id = @"G",
                 edgedefault = @"directed",
-                node = [.. diagramNodes.Select(BuildArrowGraphNode)],
-                edge = [.. diagramEdges.Select(BuildArrowGraphEdge)]
+                node = [.. diagramNodes.Select(BuildGraphNode)],
+                edge = [.. diagramEdges.Select(BuildGraphEdge)]
             };
             return new graphml
             {
@@ -33,7 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private static graphmlGraphNode BuildArrowGraphNode(DiagramNodeModel diagramNode)
+        private static graphmlGraphNode BuildGraphNode(DiagramNodeModel diagramNode)
         {
             ArgumentNullException.ThrowIfNull(diagramNode);
 
@@ -46,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             var outputNode = new graphmlGraphNode
             {
-                id = FormatArrowGraphNodeId(diagramNode.Id),
+                id = FormatGraphNodeId(diagramNode.Id),
                 data = new data
                 {
                     key = @"d6",
@@ -122,14 +122,14 @@ namespace Zametek.ViewModel.ProjectPlan
             return outputNode;
         }
 
-        private static graphmlGraphEdge BuildArrowGraphEdge(DiagramEdgeModel diagramEdge)
+        private static graphmlGraphEdge BuildGraphEdge(DiagramEdgeModel diagramEdge)
         {
             ArgumentNullException.ThrowIfNull(diagramEdge);
             var outputEdge = new graphmlGraphEdge
             {
-                id = FormatArrowGraphEdgeId(diagramEdge.Id),
-                source = FormatArrowGraphNodeId(diagramEdge.SourceId),
-                target = FormatArrowGraphNodeId(diagramEdge.TargetId)
+                id = FormatGraphEdgeId(diagramEdge.Id),
+                source = FormatGraphNodeId(diagramEdge.SourceId),
+                target = FormatGraphNodeId(diagramEdge.TargetId)
             };
             string dashStyle = diagramEdge.DashStyle switch
             {
@@ -203,12 +203,12 @@ namespace Zametek.ViewModel.ProjectPlan
             return outputEdge;
         }
 
-        private static string FormatArrowGraphNodeId(int id)
+        private static string FormatGraphNodeId(int id)
         {
             return $@"n{id}";
         }
 
-        private static string FormatArrowGraphEdgeId(int id)
+        private static string FormatGraphEdgeId(int id)
         {
             return $@"e{id}";
         }
