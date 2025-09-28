@@ -28,6 +28,20 @@ namespace Zametek.ViewModel.ProjectPlan
             m_NodeTypeDashLookup = [];
             m_NodeTypeWeightLookup = [];
 
+
+            // Check the input collection contains exactly one entry for each NodeType.
+            HashSet<NodeType> uniqueNodeTypes = [.. nodeTypeFormats.Select(x => x.NodeType)];
+            HashSet<NodeType> allNodeTypes = [.. Enum.GetValues<NodeType>()];
+
+            if (uniqueNodeTypes.Count != allNodeTypes.Count
+                || !uniqueNodeTypes.SetEquals(allNodeTypes))
+            {
+                throw new ArgumentException("The node type formats collection must contain exactly one entry for each NodeType.", nameof(nodeTypeFormats));
+            }
+
+
+
+
             foreach (NodeTypeFormatModel nodeTypeFormat in nodeTypeFormats)
             {
                 m_NodeTypeDashLookup.Add(nodeTypeFormat.NodeType, nodeTypeFormat.NodeBorderDashStyle);

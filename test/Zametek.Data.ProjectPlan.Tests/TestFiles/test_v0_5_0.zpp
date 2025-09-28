@@ -1854,7 +1854,7 @@
       {
         "NodeType": 3,
         "NodeBorderDashStyle": 1,
-        "NodeBorderWeightStyle": 1
+        "NodeBorderWeightStyle": 0
       }
     ]
   },

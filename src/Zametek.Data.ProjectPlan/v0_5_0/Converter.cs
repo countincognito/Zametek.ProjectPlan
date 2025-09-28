@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Data.ProjectPlan.v0_5_0
 {
@@ -24,33 +25,7 @@ namespace Zametek.Data.ProjectPlan.v0_5_0
                 });
             }
 
-            var nodeTypeFormats = new List<NodeTypeFormatModel>
-            {
-                new()
-                {
-                    NodeType = NodeType.Activity,
-                    NodeBorderDashStyle = NodeBorderDashStyle.Normal,
-                    NodeBorderWeightStyle = NodeBorderWeightStyle.Normal
-                },
-                new()
-                {
-                    NodeType = NodeType.CriticalActivity,
-                    NodeBorderDashStyle = NodeBorderDashStyle.Normal,
-                    NodeBorderWeightStyle = NodeBorderWeightStyle.Bold
-                },
-                new()
-                {
-                    NodeType = NodeType.Dummy,
-                    NodeBorderDashStyle = NodeBorderDashStyle.Dashed,
-                    NodeBorderWeightStyle = NodeBorderWeightStyle.Normal
-                },
-                new()
-                {
-                    NodeType = NodeType.CriticalDummy,
-                    NodeBorderDashStyle = NodeBorderDashStyle.Dashed,
-                    NodeBorderWeightStyle = NodeBorderWeightStyle.Bold
-                }
-            };
+            var nodeTypeFormats = mapper.Map<List<Common.ProjectPlan.NodeTypeFormatModel>, List<NodeTypeFormatModel>>(DefaultFormatCollections.NodeTypeFormats);
 
             GraphSettingsModel graphSettings = new()
             {

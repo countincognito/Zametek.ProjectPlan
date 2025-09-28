@@ -31,6 +31,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly double s_SvgNodeLabelLines = 3.0;
         private static readonly double s_SvgRadiusInXDirection = 3.0;
         private static readonly double s_SvgRadiusInYDirection = 2.0;
+        private static readonly double s_SvgNodeLineThicknessCorrectionFactor = 1.5;
 
         private static readonly double s_SvgEdgeLabelFontSize = 12.0;
         private static readonly double s_SvgEdgeLabelHeight = 12.0;
@@ -104,6 +105,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ActivityModel activityModel = activityNode.Content;
 
             bool isDummy = activityModel.IsDummy();
+            bool isCritical = activityModel.IsCritical();
 
             return new DiagramNodeModel
             {
@@ -112,108 +114,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 Width = s_DiagramNodeModelWidth,
                 FillColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeFillColor),
                 BorderColorHexCode = ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(activityModel.TotalSlack)),
-                BorderDashStyle = nodeFormatLookup.FindGraphNodeBorderDashStyle(true, isDummy),
-                BorderThickness = nodeFormatLookup.FindBorderThickness(true, isDummy),
+                BorderDashStyle = nodeFormatLookup.FindGraphNodeBorderDashStyle(isCritical, isDummy),
+                BorderThickness = nodeFormatLookup.FindBorderThickness(isCritical, isDummy) * s_SvgNodeLineThicknessCorrectionFactor,
                 Text = BuildNodeLabel(activityModel)
             };
-        }
-
-        private static (bool isVisible, string labelText) BuildSingleLineEdgeLabel(EventModel eventModel, bool viewNames)
-        {
-            return (true, "");
-            //ArgumentNullException.ThrowIfNull(eventModel);
-            //var labelText = new StringBuilder();
-            //bool isVisible = false;
-
-            //if (eventModel.IsDummy())
-            //{
-            //    if (!eventModel.CanBeRemoved)
-            //    {
-            //        labelText.Append(@$"{eventModel.Id}");
-            //        if (viewNames)
-            //        {
-            //            labelText.Append(@$" {eventModel.Name}");
-            //        }
-            //        if (!eventModel.IsCritical())
-            //        {
-            //            labelText.Append(@$" [{eventModel.FreeSlack}|{eventModel.TotalSlack}]");
-            //        }
-            //        isVisible = true;
-            //    }
-            //    else
-            //    {
-            //        if (!eventModel.IsCritical())
-            //        {
-            //            labelText.Append(@$"[{eventModel.FreeSlack}|{eventModel.TotalSlack}]");
-            //            isVisible = true;
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    labelText.Append(@$"{eventModel.Id}");
-            //    if (viewNames)
-            //    {
-            //        labelText.Append(@$" {eventModel.Name}");
-            //    }
-            //    labelText.Append(@$" ({eventModel.Duration})");
-            //    if (!eventModel.IsCritical())
-            //    {
-            //        labelText.Append(@$" [{eventModel.FreeSlack}|{eventModel.TotalSlack}]");
-            //    }
-            //    isVisible = true;
-            //}
-            //return (isVisible, labelText.ToString());
-        }
-
-        private static (bool isVisible, string labelText) BuildMultiLineEdgeLabel(EventModel eventModel, bool viewNames)
-        {
-            return (true, "");
-            //ArgumentNullException.ThrowIfNull(activityModel);
-            //var labelText = new StringBuilder();
-            //bool isVisible = false;
-
-            //if (activityModel.IsDummy())
-            //{
-            //    if (!activityModel.CanBeRemoved)
-            //    {
-            //        labelText.AppendFormat($@"{activityModel.Id}");
-            //        if (viewNames)
-            //        {
-            //            labelText.AppendFormat(@$" {activityModel.Name}");
-            //        }
-            //        if (!activityModel.IsCritical())
-            //        {
-            //            labelText.AppendLine();
-            //            labelText.AppendFormat($@"{activityModel.FreeSlack}|{activityModel.TotalSlack}");
-            //        }
-            //        isVisible = true;
-            //    }
-            //    else
-            //    {
-            //        if (!activityModel.IsCritical())
-            //        {
-            //            labelText.AppendFormat($@"{activityModel.FreeSlack}|{activityModel.TotalSlack}");
-            //            isVisible = true;
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    labelText.AppendFormat($@"{activityModel.Id}");
-            //    if (viewNames)
-            //    {
-            //        labelText.AppendFormat(@$" {activityModel.Name}");
-            //    }
-            //    labelText.AppendFormat($@" ({activityModel.Duration})");
-            //    if (!activityModel.IsCritical())
-            //    {
-            //        labelText.AppendLine();
-            //        labelText.AppendFormat($@"{activityModel.FreeSlack}|{activityModel.TotalSlack}");
-            //    }
-            //    isVisible = true;
-            //}
-            //return (isVisible, labelText.ToString());
         }
 
         private static DiagramVertexGraphModel BuildVertexGraphDiagram(
@@ -282,31 +186,19 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 EventModel eventModel = eventEdge.Content;
                 int eventId = eventModel.Id;
-                bool showLabel = false;
-                string labelText = string.Empty;
-
-                if (multiLineEdgeLabels)
-                {
-                    (showLabel, labelText) = BuildMultiLineEdgeLabel(eventModel, viewNames);
-                }
-                else
-                {
-                    (showLabel, labelText) = BuildSingleLineEdgeLabel(eventModel, viewNames);
-                }
 
                 // Source == tail
                 // Target == head
                 var diagramEdgeModel = new DiagramEdgeModel
                 {
                     Id = eventId,
-                    //Name = eventModel.Name,
                     SourceId = edgeTailNodeLookup[eventId],
                     TargetId = edgeHeadNodeLookup[eventId],
                     DashStyle = edgeFormatLookup.FindGraphEdgeDashStyle(false, false),
                     //ForegroundColorHexCode = ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(eventModel.TotalSlack)),
                     StrokeThickness = edgeFormatLookup.FindStrokeThickness(false, false),
-                    Label = labelText,
-                    ShowLabel = showLabel
+                    Label = string.Empty,
+                    ShowLabel = false
                 };
 
                 diagramEdgeModels.Add(diagramEdgeModel);
@@ -442,6 +334,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 edge.Attr.ClearStyles();
                 edge.Attr.AddStyle(s_EdgeDashMsaglLookup[diagramEdge.DashStyle]);
                 edge.Attr.Color = HtmlHexCodeToMsaglColor(diagramEdge.ForegroundColorHexCode) ?? Microsoft.Msagl.Drawing.Color.Black;
+                edge.Attr.LineWidth = diagramEdge.StrokeThickness;
                 edge.LabelText = diagramEdge.Label;
                 edge.Label.IsVisible = diagramEdge.ShowLabel;
                 edge.Label.FontColor = EdgeFontColor(baseTheme);
@@ -474,7 +367,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 // based off of the pt->px conversion, with Consolas correction factors.
                 double nodeLabelFontSize = s_SvgConsolasLabelWidthCorrectionFactor * s_SvgNodeLabelWidth * c_PtPerInch / (drawingGraphNode.LabelText.Length * c_PxPerInch);
                 double nodeLabelHeight = s_SvgConsolasLabelHeightCorrectionFactor * nodeLabelFontSize * c_PxPerInch / c_PtPerInch;
-                double nodeHeight = s_SvgNodeHeight;// nodeLabelHeight / s_ConsolasLabelHeightCorrectionFactor;
+                double nodeHeight = s_SvgNodeHeight;
 
                 drawingGraphNode.GeometryNode.BoundaryCurve =
                     Microsoft.Msagl.Core.Geometry.Curves.CurveFactory.CreateRectangleWithRoundedCorners(

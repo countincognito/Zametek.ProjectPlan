@@ -12,8 +12,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {EdgeWeightStyle.Normal, c_NormalStrokeWeight},
                 {EdgeWeightStyle.Bold, c_BoldStrokeWeight}
             };
-        private const double c_NormalStrokeWeight = 2.0;
-        private const double c_BoldStrokeWeight = 5.0;
+        private const double c_NormalStrokeWeight = 1.0;
+        private const double c_BoldStrokeWeight = 2.0;
 
         private readonly Dictionary<EdgeType, EdgeDashStyle> m_EdgeTypeDashLookup;
         private readonly Dictionary<EdgeType, double> m_EdgeTypeWeightLookup;
@@ -27,6 +27,16 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(edgeTypeFormats);
             m_EdgeTypeDashLookup = [];
             m_EdgeTypeWeightLookup = [];
+
+            // Check the input collection contains exactly one entry for each EdgeType.
+            HashSet<EdgeType> uniqueEdgeTypes = [.. edgeTypeFormats.Select(x => x.EdgeType)];
+            HashSet<EdgeType> allEdgeTypes = [.. Enum.GetValues<EdgeType>()];
+
+            if (uniqueEdgeTypes.Count != allEdgeTypes.Count
+                || !uniqueEdgeTypes.SetEquals(allEdgeTypes))
+            {
+                throw new ArgumentException("The edge type formats collection must contain exactly one entry for each EdgeType.", nameof(edgeTypeFormats));
+            }
 
             foreach (EdgeTypeFormatModel edgeTypeFormat in edgeTypeFormats)
             {

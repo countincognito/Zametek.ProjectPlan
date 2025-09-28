@@ -33,6 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly double s_SvgNodeLabelLines = 1.0;
         private static readonly double s_SvgRadiusInXDirection = 3.0;
         private static readonly double s_SvgRadiusInYDirection = 2.0;
+        private static readonly double s_SvgNodeLineThicknessCorrectionFactor = 1.0;
 
         private static readonly double s_SvgEdgeLabelFontSize = 12.0;
         private static readonly double s_SvgEdgeLabelHeight = 12.0;
@@ -89,7 +90,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 FillColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeFillColor),
                 BorderColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeBorderColor),
                 BorderDashStyle = nodeFormatLookup.FindGraphNodeBorderDashStyle(false, false),
-                BorderThickness = nodeFormatLookup.FindBorderThickness(false, false),
+                BorderThickness = nodeFormatLookup.FindBorderThickness(false, false) * s_SvgNodeLineThicknessCorrectionFactor,
                 Text = BuildNodeLabel(eventModel)
             };
 
@@ -435,6 +436,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 edge.Attr.ClearStyles();
                 edge.Attr.AddStyle(s_EdgeDashMsaglLookup[diagramEdge.DashStyle]);
                 edge.Attr.Color = HtmlHexCodeToMsaglColor(diagramEdge.ForegroundColorHexCode) ?? Microsoft.Msagl.Drawing.Color.Black;
+                edge.Attr.LineWidth = diagramEdge.StrokeThickness;
                 edge.LabelText = diagramEdge.Label;
                 edge.Label.IsVisible = diagramEdge.ShowLabel;
                 edge.Label.FontColor = EdgeFontColor(baseTheme);
@@ -467,7 +469,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 // based off of the pt->px conversion, with Consolas correction factors.
                 double nodeLabelFontSize = s_SvgConsolasLabelWidthCorrectionFactor * s_SvgNodeLabelWidth * c_PtPerInch / (drawingGraphNode.LabelText.Length * c_PxPerInch);
                 double nodeLabelHeight = s_SvgConsolasLabelHeightCorrectionFactor * nodeLabelFontSize * c_PxPerInch / c_PtPerInch;
-                double nodeHeight = s_SvgNodeHeight;// nodeLabelHeight / s_ConsolasLabelHeightCorrectionFactor;
+                double nodeHeight = s_SvgNodeHeight;
 
                 drawingGraphNode.GeometryNode.BoundaryCurve =
                     Microsoft.Msagl.Core.Geometry.Curves.CurveFactory.CreateRectangleWithRoundedCorners(
