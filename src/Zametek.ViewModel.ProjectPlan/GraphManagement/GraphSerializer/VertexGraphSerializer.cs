@@ -166,11 +166,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 throw new ArgumentException(Resource.ProjectPlan.Messages.Message_MismatchedEdgeIdsForTailNodesInVertexGraph);
             }
 
-            // Check all activities are used.
-            IEnumerable<int> edgeNodeLookupIds = edgeHeadNodeLookup.Values.Union(edgeTailNodeLookup.Values);
+            // Check that the nodes referenced by edges are a subset of the drawn nodes.
+            HashSet<int> edgeNodeLookupIds = [.. edgeHeadNodeLookup.Values.Union(edgeTailNodeLookup.Values)];
 
-            if (edgeNodeLookupIds.Any()
-                && !drawingGraphNodeIds.OrderBy(x => x).SequenceEqual(edgeNodeLookupIds.OrderBy(x => x)))
+            if (edgeNodeLookupIds.Count != 0
+                && !edgeNodeLookupIds.IsSubsetOf(drawingGraphNodeIds))
             {
                 throw new ArgumentException(Resource.ProjectPlan.Messages.Message_MismatchedNodeIdsAssociatedWithEdgesInVertexGraph);
             }
@@ -346,7 +346,7 @@ namespace Zametek.ViewModel.ProjectPlan
             drawingGraph.LayoutAlgorithmSettings = drawingGraph.CreateLayoutSettings();
 
             drawingGraph.LayoutAlgorithmSettings.EdgeRoutingSettings.UseObstacleRectangles = true;
-            drawingGraph.LayoutAlgorithmSettings.EdgeRoutingSettings.EdgeRoutingMode = Microsoft.Msagl.Core.Routing.EdgeRoutingMode.SugiyamaSplines;
+            drawingGraph.LayoutAlgorithmSettings.EdgeRoutingSettings.EdgeRoutingMode = Microsoft.Msagl.Core.Routing.EdgeRoutingMode.Spline;
 
             drawingGraph.Attr.LayerDirection = Microsoft.Msagl.Drawing.LayerDirection.LR;
 

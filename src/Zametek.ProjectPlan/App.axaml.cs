@@ -147,6 +147,10 @@ namespace Zametek.ProjectPlan
             //    singleViewLifetime.MainView = mainView;
             //}
             base.OnFrameworkInitializationCompleted();
+
+#if DEBUG
+            this.AttachDevTools();
+#endif
         }
     }
 }
