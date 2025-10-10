@@ -161,7 +161,11 @@ namespace Zametek.ViewModel.ProjectPlan
             ToggleAutoCompileCommand = ReactiveCommand.Create(ToggleAutoCompile);
             TransitiveReductionCommand = ReactiveCommand.Create(RunTransitiveReductionAsync);
 
-            OpenHyperLinkCommand = ReactiveCommand.CreateFromTask<string>(OpenHyperLinkAsync);
+            OpenDocumentationCommand = ReactiveCommand.CreateFromTask(OpenDocumentationAsync);
+            OpenDonateCommand = ReactiveCommand.CreateFromTask(OpenDonateAsync);
+            OpenMainPageCommand = ReactiveCommand.CreateFromTask(OpenMainPageAsync);
+            OpenReportIssueCommand = ReactiveCommand.CreateFromTask(OpenReportIssueAsync);
+            OpenViewLicenseCommand = ReactiveCommand.CreateFromTask(OpenViewLicenseAsync);
             OpenAboutCommand = ReactiveCommand.Create(OpenAboutAsync);
 
             m_ProjectTitle = this
@@ -700,7 +704,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand TransitiveReductionCommand { get; }
 
-        public ICommand OpenHyperLinkCommand { get; }
+        public ICommand OpenDocumentationCommand { get; }
+
+        public ICommand OpenDonateCommand { get; }
+
+        public ICommand OpenMainPageCommand { get; }
+
+        public ICommand OpenReportIssueCommand { get; }
+
+        public ICommand OpenViewLicenseCommand { get; }
 
         public ICommand OpenAboutCommand { get; }
 
@@ -936,12 +948,72 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public async Task OpenHyperLinkAsync(string hyperlink)
+        public async Task OpenDocumentationAsync()
         {
             try
             {
-                var uri = new Uri(hyperlink);
-                UriHelper.Open(uri);
+                UriHelper.OpenDocumentation();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        public async Task OpenDonateAsync()
+        {
+            try
+            {
+                UriHelper.OpenDonate();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        public async Task OpenMainPageAsync()
+        {
+            try
+            {
+                UriHelper.OpenMainPage();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+
+        public async Task OpenReportIssueAsync()
+        {
+            try
+            {
+                UriHelper.OpenReportIssue();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        public async Task OpenViewLicenseAsync()
+        {
+            try
+            {
+                UriHelper.OpenViewLicense();
             }
             catch (Exception ex)
             {
@@ -965,7 +1037,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_ProjectPlan,
                     Resource.ProjectPlan.Titles.Title_ProjectPlan,
                     about.ToString(),
-                    link: new Uri(Resource.ProjectPlan.Links.Link_MainPage));
+                    showMainPageLink: true);
             }
             catch (Exception ex)
             {

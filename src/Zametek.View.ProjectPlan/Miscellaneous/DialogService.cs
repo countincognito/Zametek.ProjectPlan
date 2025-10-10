@@ -129,7 +129,7 @@ namespace Zametek.View.ProjectPlan
             string header,
             string message,
             bool markdown = false,
-            Uri? link = null)
+            bool showMainPageLink = false)
         {
             var @params = new MessageBoxStandardParams
             {
@@ -142,12 +142,12 @@ namespace Zametek.View.ProjectPlan
                 Markdown = markdown
             };
 
-            if (link is not null)
+            if (showMainPageLink)
             {
                 @params.HyperLinkParams = new HyperLinkParams
                 {
-                    Text = link.AbsoluteUri,
-                    Action = () => UriHelper.Open(link),
+                    Text = UriHelper.LinkMainPage.AbsoluteUri,
+                    Action = UriHelper.OpenMainPage,
                 };
             }
 
@@ -161,7 +161,7 @@ namespace Zametek.View.ProjectPlan
             double height,
             double width,
             bool markdown = false,
-            Uri? link = null)
+            bool showMainPageLink = false)
         {
             var @params = new MessageBoxStandardParams
             {
@@ -176,12 +176,12 @@ namespace Zametek.View.ProjectPlan
                 Markdown = markdown
             };
 
-            if (link is not null)
+            if (showMainPageLink)
             {
                 @params.HyperLinkParams = new HyperLinkParams
                 {
-                    Text = link.AbsoluteUri,
-                    Action = () => UriHelper.Open(link),
+                    Text = UriHelper.LinkMainPage.AbsoluteUri,
+                    Action = UriHelper.OpenMainPage,
                 };
             }
 

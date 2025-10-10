@@ -94,7 +94,15 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand TransitiveReductionCommand { get; }
 
-        ICommand OpenHyperLinkCommand { get; }
+        ICommand OpenDocumentationCommand { get; }
+
+        ICommand OpenDonateCommand { get; }
+
+        ICommand OpenMainPageCommand { get; }
+
+        ICommand OpenReportIssueCommand { get; }
+
+        ICommand OpenViewLicenseCommand { get; }
 
         ICommand OpenAboutCommand { get; }
 
@@ -116,7 +124,15 @@ namespace Zametek.Contract.ProjectPlan
 
         Task CloseProjectPlanAsync();
 
-        Task OpenHyperLinkAsync(string hyperlink);
+        Task OpenDocumentationAsync();
+
+        Task OpenDonateAsync();
+
+        Task OpenMainPageAsync();
+
+        Task OpenReportIssueAsync();
+
+        Task OpenViewLicenseAsync();
 
         Task OpenAboutAsync();
     }

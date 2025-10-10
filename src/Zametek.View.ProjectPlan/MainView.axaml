@@ -252,19 +252,15 @@
 					
 					<MenuItem Header="{x:Static resources:Menus.Menu_Help}">
 						<MenuItem Header="{x:Static resources:Menus.Menu_Documentation}"
-								  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-								  CommandParameter="{x:Static resources:Links.Link_Documentation}"/>
+								  Command="{Binding Path=OpenDocumentationCommand, Mode=OneWay}"/>
 						<Separator />
 						<MenuItem Header="{x:Static resources:Menus.Menu_ReportIssue}"
-								  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-								  CommandParameter="{x:Static resources:Links.Link_ReportIssue}"/>
+								  Command="{Binding Path=OpenReportIssueCommand, Mode=OneWay}"/>
 						<Separator />
 						<MenuItem Header="{x:Static resources:Menus.Menu_Donate}"
-								  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-								  CommandParameter="{x:Static resources:Links.Link_Donate}"/>
+								  Command="{Binding Path=OpenDonateCommand, Mode=OneWay}"/>
 						<MenuItem Header="{x:Static resources:Menus.Menu_ViewLicense}"
-								  Command="{Binding Path=OpenHyperLinkCommand, Mode=OneWay}"
-								  CommandParameter="{x:Static resources:Links.Link_ViewLicense}"/>
+								  Command="{Binding Path=OpenViewLicenseCommand, Mode=OneWay}"/>
 						<Separator />
 						<MenuItem Command="{Binding Path=OpenAboutCommand, Mode=OneWay}">
 							<MenuItem.Header>
