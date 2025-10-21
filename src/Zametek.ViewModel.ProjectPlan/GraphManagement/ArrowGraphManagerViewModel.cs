@@ -139,7 +139,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_BuildArrowGraphImageSub = this
                 .ObservableForProperty(agm => agm.ArrowGraphData)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildArrowGraphDiagramImageAsync());
+                .Subscribe(async _ => await BuildArrowGraphDiagramAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
             Title = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
@@ -181,13 +181,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private async Task BuildArrowGraphDiagramImageAsync()
+        private async Task BuildArrowGraphDiagramAsync()
         {
             try
             {
                 lock (m_Lock)
                 {
-                    Dispatcher.UIThread.Post(BuildArrowGraphDiagramImage);
+                    BuildArrowGraphDiagramImage();
                 }
             }
             catch (Exception ex)
@@ -347,22 +347,25 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildArrowGraphDiagramImage()
         {
-            SvgImage? image = null;
+            SvgSource? source = null;
 
             lock (m_Lock)
             {
                 string arrowGraphData = ArrowGraphData;
                 if (!string.IsNullOrWhiteSpace(arrowGraphData))
                 {
-                    SvgSource? source = SvgSource.LoadFromSvg(arrowGraphData);
-                    image = new SvgImage
-                    {
-                        Source = source
-                    };
+                    source = SvgSource.LoadFromSvg(arrowGraphData);
                 }
             }
 
-            ArrowGraphImage = image ?? new SvgImage();
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                var image = new SvgImage
+                {
+                    Source = source
+                };
+                ArrowGraphImage = image;
+            });
         }
 
         #endregion

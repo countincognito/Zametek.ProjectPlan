@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -215,7 +216,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.BoolAccumulator,
                     rcm => rcm.ActivitySelector.TargetActivitiesString,
                     (a, b, c, d, e, f, g, h, i, j, k) => (a, b, c, d, e, f, g, h, i, j, k)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_GanttChartView;
@@ -258,10 +259,13 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                lock (m_Lock)
+                await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    BuildGanttChartPlotModel();
-                }
+                    lock (m_Lock)
+                    {
+                        BuildGanttChartPlotModel();
+                    }
+                });
             }
             catch (Exception ex)
             {

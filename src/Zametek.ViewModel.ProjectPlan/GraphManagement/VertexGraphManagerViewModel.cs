@@ -187,7 +187,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    Dispatcher.UIThread.Post(BuildVertexGraphDiagramImage);
+                    BuildVertexGraphDiagramImage();
                 }
             }
             catch (Exception ex)
@@ -347,22 +347,25 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildVertexGraphDiagramImage()
         {
-            SvgImage? image = null;
+            SvgSource? source = null;
 
             lock (m_Lock)
             {
                 string vertexGraphData = VertexGraphData;
                 if (!string.IsNullOrWhiteSpace(vertexGraphData))
                 {
-                    SvgSource? source = SvgSource.LoadFromSvg(vertexGraphData);
-                    image = new SvgImage
-                    {
-                        Source = source
-                    };
+                    source = SvgSource.LoadFromSvg(vertexGraphData);
                 }
             }
 
-            VertexGraphImage = image ?? new SvgImage();
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                var image = new SvgImage
+                {
+                    Source = source
+                };
+                VertexGraphImage = image;
+            });
         }
 
         #endregion
