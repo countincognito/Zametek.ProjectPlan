@@ -185,10 +185,13 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                lock (m_Lock)
+                Dispatcher.UIThread.Invoke(() =>
                 {
-                    BuildVertexGraphDiagramImage();
-                }
+                    lock (m_Lock)
+                    {
+                        BuildVertexGraphDiagramImage();
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -356,16 +359,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     source = SvgSource.LoadFromSvg(vertexGraphData);
                 }
-            }
 
-            Dispatcher.UIThread.Invoke(() =>
-            {
                 var image = new SvgImage
                 {
                     Source = source
                 };
                 VertexGraphImage = image;
-            });
+            }
         }
 
         #endregion

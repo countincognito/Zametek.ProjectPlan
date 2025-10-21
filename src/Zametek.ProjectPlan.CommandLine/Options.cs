@@ -37,11 +37,19 @@ namespace Zametek.ProjectPlan.CommandLine
 
 
 
-        [Option("graph-directory", HelpText = "Arrow graph output file directory")]
-        public string? GraphDirectory { get; set; } = default;
+        [Option("arrow-directory", HelpText = "Arrow graph output file directory")]
+        public string? ArrowGraphDirectory { get; set; } = default;
 
-        [Option("graph-format", Default = GraphExport.Jpeg, HelpText = "Arrow graph format (Jpeg|Png|Pdf|Svg|GraphML|Dot)")]
-        public GraphExport GraphFormat { get; set; } = default;
+        [Option("arrow-format", Default = GraphExport.Jpeg, HelpText = "Arrow graph format (Jpeg|Png|Pdf|Svg|GraphML|Dot)")]
+        public GraphExport ArrowGraphFormat { get; set; } = default;
+
+
+
+        [Option("vertex-directory", HelpText = "Vertex graph output file directory")]
+        public string? VertexGraphDirectory { get; set; } = default;
+
+        [Option("vertex-format", Default = GraphExport.Jpeg, HelpText = "Vertex graph format (Jpeg|Png|Pdf|Svg|GraphML|Dot)")]
+        public GraphExport VertexGraphFormat { get; set; } = default;
 
 
 

@@ -101,8 +101,11 @@ namespace Zametek.ProjectPlan.CommandLine
                         IGanttChartManagerViewModel gantt = host.Services.GetRequiredService<IGanttChartManagerViewModel>();
                         gantt.KillSubscriptions();
 
-                        IArrowGraphManagerViewModel graph = host.Services.GetRequiredService<IArrowGraphManagerViewModel>();
-                        graph.KillSubscriptions();
+                        IArrowGraphManagerViewModel arrow = host.Services.GetRequiredService<IArrowGraphManagerViewModel>();
+                        arrow.KillSubscriptions();
+
+                        IVertexGraphManagerViewModel vertex = host.Services.GetRequiredService<IVertexGraphManagerViewModel>();
+                        vertex.KillSubscriptions();
 
                         IResourceChartManagerViewModel resources = host.Services.GetRequiredService<IResourceChartManagerViewModel>();
                         resources.KillSubscriptions();
@@ -156,6 +159,7 @@ namespace Zametek.ProjectPlan.CommandLine
 
                             core.BuildCyclomaticComplexity();
                             core.BuildArrowGraph();
+                            core.BuildVertexGraph();
                             core.BuildResourceSeriesSet();
                             core.BuildTrackingSeriesSet();
 
@@ -223,8 +227,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
                         // Arrow graph export.
                         {
-                            string? graphDirectory = options.GraphDirectory;
-                            GraphExport graphFormat = options.GraphFormat;
+                            string? graphDirectory = options.ArrowGraphDirectory;
+                            GraphExport graphFormat = options.ArrowGraphFormat;
 
                             if (graphDirectory is not null)
                             {
@@ -233,14 +237,37 @@ namespace Zametek.ProjectPlan.CommandLine
                                     throw new InvalidOperationException($@"Directory {graphDirectory} does not exist");
                                 }
 
-                                graph.BuildArrowGraphDiagramData();
-                                graph.BuildArrowGraphDiagramImage();
+                                arrow.BuildArrowGraphDiagramData();
+                                arrow.BuildArrowGraphDiagramImage();
 
                                 string graphOutputFile = Path.Combine(
                                     graphDirectory,
                                     $@"{settingService.ProjectTitle}{Resource.ProjectPlan.Suffixes.Suffix_ArrowChart}.{graphFormat.GetDescription().ToLowerInvariant()}");
 
-                                graph.SaveArrowGraphImageFileAsync(graphOutputFile).Wait();
+                                arrow.SaveArrowGraphImageFileAsync(graphOutputFile).Wait();
+                            }
+                        }
+
+                        // Vertex graph export.
+                        {
+                            string? graphDirectory = options.VertexGraphDirectory;
+                            GraphExport graphFormat = options.VertexGraphFormat;
+
+                            if (graphDirectory is not null)
+                            {
+                                if (!Directory.Exists(graphDirectory))
+                                {
+                                    throw new InvalidOperationException($@"Directory {graphDirectory} does not exist");
+                                }
+
+                                vertex.BuildVertexGraphDiagramData();
+                                vertex.BuildVertexGraphDiagramImage();
+
+                                string graphOutputFile = Path.Combine(
+                                    graphDirectory,
+                                    $@"{settingService.ProjectTitle}{Resource.ProjectPlan.Suffixes.Suffix_VertexChart}.{graphFormat.GetDescription().ToLowerInvariant()}");
+
+                                vertex.SaveVertexGraphImageFileAsync(graphOutputFile).Wait();
                             }
                         }
 
