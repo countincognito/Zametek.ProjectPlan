@@ -155,7 +155,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ArrowGraphImage;
             private set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_ArrowGraphImage, value);
+                this.RaiseAndSetIfChanged(ref m_ArrowGraphImage, value);
             }
         }
 
@@ -185,13 +185,10 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                Dispatcher.UIThread.Invoke(() =>
+                lock (m_Lock)
                 {
-                    lock (m_Lock)
-                    {
-                        BuildArrowGraphDiagramImage();
-                    }
-                });
+                    BuildArrowGraphDiagramImage();
+                }
             }
             catch (Exception ex)
             {
@@ -359,13 +356,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     source = SvgSource.LoadFromSvg(arrowGraphData);
                 }
+            }
 
+            Dispatcher.UIThread.Invoke(() =>
+            {
                 var image = new SvgImage
                 {
                     Source = source
                 };
                 ArrowGraphImage = image;
-            }
+            });
         }
 
         #endregion

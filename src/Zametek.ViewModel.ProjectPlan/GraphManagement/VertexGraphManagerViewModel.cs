@@ -155,7 +155,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_VertexGraphImage;
             private set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_VertexGraphImage, value);
+                this.RaiseAndSetIfChanged(ref m_VertexGraphImage, value);
             }
         }
 
@@ -359,13 +359,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     source = SvgSource.LoadFromSvg(vertexGraphData);
                 }
+            }
 
+            Dispatcher.UIThread.Invoke(() =>
+            {
                 var image = new SvgImage
                 {
                     Source = source
                 };
                 VertexGraphImage = image;
-            }
+            });
         }
 
         #endregion
