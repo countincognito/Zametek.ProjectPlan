@@ -2015,6 +2015,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (dependentActivities.Any())
                     {
+                        var availableResources = new List<IResource<int, int>>();
+                        if (!ResourceSettings.AreDisabled)
+                        {
+                            availableResources.AddRange(m_Mapper.Map<IEnumerable<ResourceModel>, IEnumerable<Resource<int, int>>>(ResourceSettings.Resources));
+                        }
+
+                        var workStreams = new List<IWorkStream<int>>();
+                        workStreams.AddRange(m_Mapper.Map<IEnumerable<WorkStreamModel>, IEnumerable<WorkStream<int>>>(WorkStreamSettings.WorkStreams));
+
                         var vertexGraphCompiler = new VertexGraphCompiler();
                         foreach (IDependentActivity dependentActivity in dependentActivities)
                         {
@@ -2024,7 +2033,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
 
                         vertexGraphCompiler.TransitiveReduction();
-                        vertexGraphCompiler.Compile();
+                        vertexGraphCompiler.Compile(availableResources, workStreams);
 
                         Graph<int, IEvent<int>, IDependentActivity>? vertexGraph =
                             vertexGraphCompiler.ToGraph() ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotBuildArrowGraph);
