@@ -241,8 +241,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 var editViewModel = new ResourceEditViewModel(m_CoreViewModel.WorkStreamSettings.WorkStreams);
 
                 bool result = await m_DialogService.ShowContextAsync(
-                    Resource.ProjectPlan.Titles.Title_EditResources,
-                    editViewModel);
+                    title: Resource.ProjectPlan.Titles.Title_EditResources,
+                    header: string.Empty,
+                    message: $@"**{Resource.ProjectPlan.Messages.Message_EditResources}**",
+                    context: editViewModel,
+                    markdown: true);
 
                 if (!result)
                 {

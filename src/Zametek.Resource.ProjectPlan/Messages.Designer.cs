@@ -115,6 +115,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select the properties to edit.
+        /// </summary>
+        public static string Message_EditActivities {
+            get {
+                return ResourceManager.GetString("Message_EditActivities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the properties to edit.
+        /// </summary>
+        public static string Message_EditResources {
+            get {
+                return ResourceManager.GetString("Message_EditResources", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Empty filename.
         /// </summary>
         public static string Message_EmptyFilename {

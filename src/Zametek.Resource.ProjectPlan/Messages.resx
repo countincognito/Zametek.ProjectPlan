@@ -252,4 +252,10 @@
   <data name="Message_FixedBillingMustBeZeroOrGreater" xml:space="preserve">
     <value>Fixed Billing must be equal to or greater than 0 </value>
   </data>
+  <data name="Message_EditResources" xml:space="preserve">
+    <value>Select the properties to edit</value>
+  </data>
+  <data name="Message_EditActivities" xml:space="preserve">
+    <value>Select the properties to edit</value>
+  </data>
 </root>

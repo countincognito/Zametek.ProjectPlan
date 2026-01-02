@@ -77,6 +77,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public Task<bool> ShowContextAsync(
             string title,
+            string header,
+            string message,
             object context,
             bool markdown = false)
         {
@@ -85,6 +87,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public Task<bool> ShowContextAsync(
             string title,
+            string header,
+            string message,
             object context,
             double height,
             double width,

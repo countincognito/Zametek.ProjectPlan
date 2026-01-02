@@ -43,28 +43,6 @@ namespace Zametek.View.ProjectPlan
             });
         }
 
-        private async Task<ButtonResult> ShowMessageContextBoxAsync(MessageBoxContextParams contextParams)
-        {
-            return await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                contextParams.WindowIcon = m_Parent!.Icon ?? throw new ArgumentNullException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable);
-                IMsBox<ButtonResult>? msg = GetMessageBoxContext(contextParams);
-                return msg.ShowWindowDialogAsync(m_Parent);
-            });
-        }
-
-        private static IMsBox<ButtonResult> GetMessageBoxContext(MessageBoxContextParams contextParams)
-        {
-            var msBoxContextViewModel = new MsBoxContextViewModel(contextParams);
-            var msBoxContextView = new MsBoxContextView
-            {
-                DataContext = msBoxContextViewModel
-            };
-            return new MsBox<MsBoxContextView, MsBoxContextViewModel, ButtonResult>(
-                msBoxContextView,
-                msBoxContextViewModel);
-        }
-
         #endregion
 
         #region IDialogService Members
@@ -190,15 +168,20 @@ namespace Zametek.View.ProjectPlan
 
         public async Task<bool> ShowContextAsync(
             string title,
+            string header,
+            string message,
             object context,
             bool markdown = false)
         {
-            var result = await ShowMessageContextBoxAsync(
-                 new MessageBoxContextParams(context)
+            var result = await ShowMessageBoxAsync(
+                 new MessageBoxStandardParams
                  {
                      WindowStartupLocation = WindowStartupLocation.CenterOwner,
                      SizeToContent = SizeToContent.WidthAndHeight,
                      ContentTitle = title,
+                     ContentHeader = header,
+                     ContentMessage = message,
+                     Context = context,
                      ButtonDefinitions = ButtonEnum.OkCancel,
                      Icon = Icon.None,
                      Markdown = markdown
@@ -208,17 +191,22 @@ namespace Zametek.View.ProjectPlan
 
         public async Task<bool> ShowContextAsync(
             string title,
+            string header,
+            string message,
             object context,
             double height,
             double width,
             bool markdown = false)
         {
-            var result = await ShowMessageContextBoxAsync(
-                new MessageBoxContextParams(context)
+            var result = await ShowMessageBoxAsync(
+                new MessageBoxStandardParams
                 {
                     WindowStartupLocation = WindowStartupLocation.CenterOwner,
                     SizeToContent = SizeToContent.Manual,
                     ContentTitle = title,
+                    ContentHeader = header,
+                    ContentMessage = message,
+                    Context = context,
                     Height = height,
                     Width = width,
                     ButtonDefinitions = ButtonEnum.OkCancel,
