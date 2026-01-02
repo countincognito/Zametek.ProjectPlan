@@ -81,7 +81,7 @@
 
         double? Efficiency { get; }
 
-        void BuildMetrics();
+        void BuildRisks();
 
         void BuildCostsBillingsAndEfforts();
     }

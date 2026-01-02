@@ -42,7 +42,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_Mapper = mapper;
 
-            m_Metrics = new MetricsModel();
+            m_Risks = new RisksModel();
             m_Costs = new CostsModel();
             m_Billings = new BillingsModel();
             m_Efforts = new EffortsModel();
@@ -84,7 +84,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     mm => mm.m_CoreViewModel.GraphSettings,
                     mm => mm.HasCompilationErrors)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildMetricsAsync());
+                .Subscribe(async _ => await BuildRisksAsync());
 
             m_BuildCostsAndEffortsSub = this
                 .WhenAnyValue(
@@ -94,31 +94,31 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe(async _ => await BuildCostsAndEffortsAsync());
 
             m_CriticalityRisk = this
-                .WhenAnyValue(mm => mm.Metrics, metrics => metrics.Criticality)
+                .WhenAnyValue(mm => mm.Risks, risks => risks.Criticality)
                 .ToProperty(this, mm => mm.CriticalityRisk);
 
             m_FibonacciRisk = this
-                .WhenAnyValue(mm => mm.Metrics, metrics => metrics.Fibonacci)
+                .WhenAnyValue(mm => mm.Risks, risks => risks.Fibonacci)
                 .ToProperty(this, mm => mm.FibonacciRisk);
 
             m_ActivityRisk = this
-                .WhenAnyValue(mm => mm.Metrics, metrics => metrics.Activity)
+                .WhenAnyValue(mm => mm.Risks, risks => risks.Activity)
                 .ToProperty(this, mm => mm.ActivityRisk);
 
             m_ActivityRiskWithStdDevCorrection = this
-                .WhenAnyValue(mm => mm.Metrics, metrics => metrics.ActivityStdDevCorrection)
+                .WhenAnyValue(mm => mm.Risks, risks => risks.ActivityStdDevCorrection)
                 .ToProperty(this, mm => mm.ActivityRiskWithStdDevCorrection);
 
             m_GeometricCriticalityRisk = this
-                .WhenAnyValue(mm => mm.Metrics, metrics => metrics.GeometricCriticality)
+                .WhenAnyValue(mm => mm.Risks, risks => risks.GeometricCriticality)
                 .ToProperty(this, mm => mm.GeometricCriticalityRisk);
 
             m_GeometricFibonacciRisk = this
-                .WhenAnyValue(mm => mm.Metrics, metrics => metrics.GeometricFibonacci)
+                .WhenAnyValue(mm => mm.Risks, risks => risks.GeometricFibonacci)
                 .ToProperty(this, mm => mm.GeometricFibonacciRisk);
 
             m_GeometricActivityRisk = this
-                 .WhenAnyValue(mm => mm.Metrics, metrics => metrics.GeometricActivity)
+                 .WhenAnyValue(mm => mm.Risks, risks => risks.GeometricActivity)
                  .ToProperty(this, mm => mm.GeometricActivityRisk);
 
             m_CyclomaticComplexity = this
@@ -312,13 +312,13 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
         public bool ShowDates => m_ShowDates.Value;
 
-        private MetricsModel m_Metrics;
-        public MetricsModel Metrics
+        private RisksModel m_Risks;
+        public RisksModel Risks
         {
-            get => m_Metrics;
+            get => m_Risks;
             set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_Metrics, value);
+                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_Risks, value);
             }
         }
 
@@ -555,7 +555,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return 1.0 - (numerator / denominator);
         }
 
-        private static MetricsModel CalculateProjectMetrics(
+        private static RisksModel CalculateProjectRisks(
             IEnumerable<ActivityModel> activities,
             IEnumerable<ActivitySeverityModel> activitySeverities)
         {
@@ -565,7 +565,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             List<ActivityModel> activitesWithRisk = [.. activities.Where(x => !x.HasNoRisk)];
 
-            return new MetricsModel
+            return new RisksModel
             {
                 Criticality = CalculateCriticalityRisk(activitesWithRisk, activitySeverityLookup),
                 Fibonacci = CalculateFibonacciRisk(activitesWithRisk, activitySeverityLookup),
@@ -577,13 +577,13 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private async Task BuildMetricsAsync()
+        private async Task BuildRisksAsync()
         {
             try
             {
                 lock (m_Lock)
                 {
-                    BuildMetrics();
+                    BuildRisks();
                 }
             }
             catch (Exception ex)
@@ -816,9 +816,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<double?> m_Efficiency;
         public double? Efficiency => m_Efficiency.Value;
 
-        public void BuildMetrics()
+        public void BuildRisks()
         {
-            var metricsModel = new MetricsModel();
+            var risksModel = new RisksModel();
 
             lock (m_Lock)
             {
@@ -835,12 +835,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         IEnumerable<ActivitySeverityModel> activitySeverities = m_CoreViewModel.GraphSettings.ActivitySeverities;
 
-                        metricsModel = CalculateProjectMetrics(activities, activitySeverities);
+                        risksModel = CalculateProjectRisks(activities, activitySeverities);
                     }
                 }
             }
 
-            Metrics = metricsModel;
+            Risks = risksModel;
         }
 
         public void BuildCostsBillingsAndEfforts()
