@@ -302,6 +302,14 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<ProjectPlanModel, v0_5_0.ProjectPlanModel>().ReverseMap();
             CreateMap<v0_4_4.ProjectPlanModel, v0_5_0.ProjectPlanModel>().ReverseMap();
 
+            CreateMap<MetricsModel, v0_5_0.MetricsModel>().ReverseMap();
+            CreateMap<RisksModel, v0_5_0.RisksModel>().ReverseMap();
+            CreateMap<CostsModel, v0_5_0.CostsModel>().ReverseMap();
+            CreateMap<BillingsModel, v0_5_0.BillingsModel>().ReverseMap();
+            CreateMap<MarginsModel, v0_5_0.MarginsModel>().ReverseMap();
+            CreateMap<EffortsModel, v0_5_0.EffortsModel>().ReverseMap();
+            CreateMap<NetworkModel, v0_5_0.NetworkModel>().ReverseMap();
+
             #endregion
         }
     }

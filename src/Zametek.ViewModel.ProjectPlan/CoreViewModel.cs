@@ -1399,11 +1399,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ClearSettings();
 
+                    Metrics = new();
+
                     HasCompilationErrors = false;
                     GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
 
-                    ArrowGraph = new ArrowGraphModel();
-                    VertexGraph = new VertexGraphModel();
+                    ArrowGraph = new();
+                    VertexGraph = new();
 
                     IsReadyToCompile = ReadyToCompile.No;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
@@ -1550,6 +1552,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     DisplaySettingsViewModel.SetValues(displaySettings);
 
+                    // Metrics.
+                    Metrics = projectPlanModel.Metrics;
+
                     // Work Stream Settings.
                     WorkStreamSettings = projectPlanModel.WorkStreamSettings;
 
@@ -1615,6 +1620,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         ResourceSettings = ResourceSettings.CloneObject(),
                         GraphSettings = GraphSettings.CloneObject(),
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),
+                        Metrics = Metrics.CloneObject(),
                         DisplaySettings = DisplaySettingsViewModel.GetValues(),
                     };
 

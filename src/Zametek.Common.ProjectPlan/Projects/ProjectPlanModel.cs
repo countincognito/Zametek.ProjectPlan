@@ -17,6 +17,8 @@
 
         public WorkStreamSettingsModel WorkStreamSettings { get; init; } = new WorkStreamSettingsModel();
 
+        public MetricsModel Metrics { get; init; } = new MetricsModel();
+
         public DisplaySettingsModel DisplaySettings { get; init; } = new DisplaySettingsModel();
     }
 }

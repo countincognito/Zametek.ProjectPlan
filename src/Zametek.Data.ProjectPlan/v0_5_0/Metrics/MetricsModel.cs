@@ -1,4 +1,4 @@
-﻿namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Data.ProjectPlan.v0_5_0
 {
     [Serializable]
     public record MetricsModel
