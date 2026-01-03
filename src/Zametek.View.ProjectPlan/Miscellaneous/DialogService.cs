@@ -113,7 +113,6 @@ namespace Zametek.View.ProjectPlan
             {
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 SizeToContent = SizeToContent.WidthAndHeight,
-                Width = 350.0,
                 ContentTitle = title,
                 ContentHeader = header,
                 ContentMessage = message,
