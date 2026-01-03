@@ -29,13 +29,15 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IMapper m_Mapper;
 
-        private readonly IDisposable? m_CyclomaticComplexitySub;
+        private readonly IDisposable? m_NetworkMetricsSub;
         private readonly IDisposable? m_AreActivitiesUncompiledSub;
         private readonly IDisposable? m_CompileOnSettingsUpdateSub;
         private readonly IDisposable? m_BuildArrowGraphSub;
         private readonly IDisposable? m_BuildVertexGraphSub;
         private readonly IDisposable? m_BuildResourceSeriesSetSub;
         private readonly IDisposable? m_BuildTrackingSeriesSetSub;
+        private readonly IDisposable? m_BuildRiskMetricsSub;
+        private readonly IDisposable? m_BuildFinancialMetricsSub;
 
         #endregion
 
@@ -71,6 +73,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_GraphSettings = m_SettingService.DefaultGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
+            m_Metrics = new MetricsModel();
 
             DisplaySettingsViewModel.ShowDates = m_SettingService.DefaultShowDates;
             DisplaySettingsViewModel.UseClassicDates = m_SettingService.DefaultUseClassicDates;
@@ -119,17 +122,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     settings => settings.WorkStreams.Count(x => x.IsPhase) > 0)
                 .ToProperty(this, core => core.HasPhases);
 
-            m_CyclomaticComplexitySub = this
-                .ObservableForProperty(core => core.GraphCompilation)
-                .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(_ => BuildCyclomaticComplexity());
-
-            m_Duration = this
+            m_NetworkMetricsSub = this
                 .WhenAnyValue(
-                    core => core.HasCompilationErrors,
                     core => core.GraphCompilation,
-                    (hasCompilationErrors, _) => hasCompilationErrors ? (int?)null : (m_VertexGraphCompiler.FinishTime - m_VertexGraphCompiler.StartTime))
-                .ToProperty(this, core => core.Duration);
+                    core => core.HasCompilationErrors)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => BuildNetworkMetrics());
 
             m_AreActivitiesUncompiledSub = m_ReadOnlyActivities
                 .ToObservableChangeSet()
@@ -194,6 +192,21 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObservableForProperty(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildTrackingSeriesSet());
+
+            m_BuildRiskMetricsSub = this
+                .WhenAnyValue(
+                    core => core.GraphCompilation,
+                    core => core.GraphSettings,
+                    core => core.HasCompilationErrors)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => BuildRiskMetrics());
+
+            m_BuildFinancialMetricsSub = this
+                .WhenAnyValue(
+                    core => core.ResourceSeriesSet,
+                    core => core.HasCompilationErrors)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => BuildFinancialMetrics());
         }
 
         #endregion
@@ -922,6 +935,19 @@ namespace Zametek.ViewModel.ProjectPlan
             return vertexGraphCompiler.CyclomaticComplexity;
         }
 
+        private static double? CalculateDurationManMonths(
+            int? duration,
+            int daysPerWeek)
+        {
+            if (duration is not null
+                && duration != 0
+                && daysPerWeek != 0)
+            {
+                return duration / (daysPerWeek * 52 / 12.0);
+            }
+            return null;
+        }
+
         private void SetIsProjectUpdated(bool isProjectUpdated, bool trackStaleOutputs)
         {
             try
@@ -1201,6 +1227,21 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private MetricsModel m_Metrics;
+        public MetricsModel Metrics
+        {
+            get => m_Metrics;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_Metrics = value;
+                    IsProjectUpdated = true;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         private readonly ObservableAsPropertyHelper<bool> m_HasActivities;
         public bool HasActivities => m_HasActivities.Value;
 
@@ -1284,19 +1325,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock) this.RaiseAndSetIfChanged(ref m_TrackingSeriesSet, value);
             }
         }
-
-        private int? m_CyclomaticComplexity;
-        public int? CyclomaticComplexity
-        {
-            get => m_CyclomaticComplexity;
-            private set
-            {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_CyclomaticComplexity, value);
-            }
-        }
-
-        private readonly ObservableAsPropertyHelper<int?> m_Duration;
-        public int? Duration => m_Duration.Value;
 
         private int m_TrackerIndex;
         public int TrackerIndex
@@ -1954,24 +1982,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void BuildCyclomaticComplexity()
-        {
-            lock (m_Lock)
-            {
-                CyclomaticComplexity = null;
-
-                if (!HasCompilationErrors)
-                {
-                    if (!GraphCompilation.DependentActivities.Any())
-                    {
-                        return;
-                    }
-
-                    CyclomaticComplexity = CalculateCyclomaticComplexity(GraphCompilation.DependentActivities);
-                }
-            }
-        }
-
         public void BuildArrowGraph()
         {
             lock (m_Lock)
@@ -2081,19 +2091,117 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void BuildNetworkMetrics()
+        {
+            lock (m_Lock)
+            {
+                int? cyclomaticComplexity = null;
+                int? duration = null;
+                double? durationManMonths = null;
+
+                if (!HasCompilationErrors)
+                {
+                    if (!GraphCompilation.DependentActivities.Any())
+                    {
+                        return;
+                    }
+
+                    cyclomaticComplexity = CalculateCyclomaticComplexity(GraphCompilation.DependentActivities);
+                    duration = m_VertexGraphCompiler.FinishTime - m_VertexGraphCompiler.StartTime;
+                    durationManMonths = CalculateDurationManMonths(duration, m_DateTimeCalculator.DaysPerWeek);
+                }
+
+                Metrics = Metrics with
+                {
+                    Network = new NetworkModel
+                    {
+                        CyclomaticComplexity = cyclomaticComplexity,
+                        Duration = duration,
+                        DurationManMonths = durationManMonths,
+                    },
+                };
+            }
+        }
+
+        public void BuildRiskMetrics()
+        {
+            lock (m_Lock)
+            {
+                var risksModel = new RisksModel();
+
+                IEnumerable<IDependentActivity> dependentActivities =
+                    GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject());
+
+                if (dependentActivities.Any())
+                {
+                    if (!HasCompilationErrors)
+                    {
+                        IEnumerable<ActivityModel> activities =
+                            m_Mapper.Map<IEnumerable<IActivity<int, int, int>>, IList<ActivityModel>>(
+                                dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int, int, int>)x));
+
+                        IEnumerable<ActivitySeverityModel> activitySeverities = GraphSettings.ActivitySeverities;
+
+                        risksModel = MetricsHelper.CalculateProjectRisks(activities, activitySeverities);
+                    }
+                }
+
+                Metrics = Metrics with
+                {
+                    Risks = risksModel,
+                };
+            }
+        }
+
+        public void BuildFinancialMetrics()
+        {
+
+            lock (m_Lock)
+            {
+                var costsModel = new CostsModel();
+                var billingsModel = new BillingsModel();
+                var marginsModel = new MarginsModel();
+                var effortsModel = new EffortsModel();
+
+                IList<ResourceSeriesModel> combinedResourceSeriesModels = ResourceSeriesSet.Combined;
+
+                if (combinedResourceSeriesModels.Any())
+                {
+                    if (!HasCompilationErrors)
+                    {
+                        costsModel = MetricsHelper.CalculateProjectCosts(combinedResourceSeriesModels);
+                        billingsModel = MetricsHelper.CalculateProjectBillings(combinedResourceSeriesModels);
+                        marginsModel = MetricsHelper.CalculateProjectMargins(costsModel, billingsModel);
+                        effortsModel = MetricsHelper.CalculateProjectEfforts(combinedResourceSeriesModels);
+                    }
+                }
+
+                Metrics = Metrics with
+                {
+                    Costs = costsModel,
+                    Billings = billingsModel,
+                    Margins = marginsModel,
+                    Efforts = effortsModel,
+
+                };
+            }
+        }
+
         #endregion
 
         #region IKillSubscriptions Members
 
         public void KillSubscriptions()
         {
-            m_CyclomaticComplexitySub?.Dispose();
+            m_NetworkMetricsSub?.Dispose();
             m_AreActivitiesUncompiledSub?.Dispose();
             m_CompileOnSettingsUpdateSub?.Dispose();
             m_BuildArrowGraphSub?.Dispose();
             m_BuildVertexGraphSub?.Dispose();
             m_BuildResourceSeriesSetSub?.Dispose();
             m_BuildTrackingSeriesSetSub?.Dispose();
+            m_BuildRiskMetricsSub?.Dispose();
+            m_BuildFinancialMetricsSub?.Dispose();
         }
 
         #endregion
@@ -2118,7 +2226,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasResources?.Dispose();
                 m_HasWorkStreams?.Dispose();
                 m_HasPhases?.Dispose();
-                m_Duration?.Dispose();
                 ClearManagedActivities();
                 m_Activities?.Dispose();
                 m_DisplaySettingsViewModel?.Dispose();

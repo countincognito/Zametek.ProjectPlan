@@ -1,9 +1,7 @@
 ﻿using AutoMapper;
 using ReactiveUI;
-using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -18,9 +16,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDialogService m_DialogService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IMapper m_Mapper;
-
-        private readonly IDisposable? m_BuildMetricsSub;
-        private readonly IDisposable? m_BuildCostsAndEffortsSub;
 
         #endregion
 
@@ -41,11 +36,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_Mapper = mapper;
-
-            m_Risks = new RisksModel();
-            m_Costs = new CostsModel();
-            m_Billings = new BillingsModel();
-            m_Efforts = new EffortsModel();
 
             m_IsBusy = this
                 .WhenAnyValue(mm => mm.m_CoreViewModel.IsBusy)
@@ -78,70 +68,170 @@ namespace Zametek.ViewModel.ProjectPlan
                     (hideCost, hideBilling) => hideCost || hideBilling)
                 .ToProperty(this, mm => mm.HideMargin);
 
-            m_BuildMetricsSub = this
-                .WhenAnyValue(
-                    mm => mm.m_CoreViewModel.GraphCompilation,
-                    mm => mm.m_CoreViewModel.GraphSettings,
-                    mm => mm.HasCompilationErrors)
-                .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildRisksAsync());
+            m_RisksMetrics = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.Metrics, metrics => metrics.Risks)
+                .ToProperty(this, mm => mm.RisksMetrics);
 
-            m_BuildCostsAndEffortsSub = this
-                .WhenAnyValue(
-                    mm => mm.m_CoreViewModel.ResourceSeriesSet,
-                    mm => mm.HasCompilationErrors)
-                .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildCostsAndEffortsAsync());
+            m_CostsMetrics = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.Metrics, metrics => metrics.Costs)
+                .ToProperty(this, mm => mm.CostsMetrics);
+
+            m_BillingsMetrics = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.Metrics, metrics => metrics.Billings)
+                .ToProperty(this, mm => mm.BillingsMetrics);
+
+            m_MarginsMetrics = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.Metrics, metrics => metrics.Margins)
+                .ToProperty(this, mm => mm.MarginsMetrics);
+
+            m_EffortsMetrics = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.Metrics, metrics => metrics.Efforts)
+                .ToProperty(this, mm => mm.EffortsMetrics);
+
+            m_NetworkMetrics = this
+                .WhenAnyValue(mm => mm.m_CoreViewModel.Metrics, metrics => metrics.Network)
+                .ToProperty(this, mm => mm.NetworkMetrics);
+
 
             m_CriticalityRisk = this
-                .WhenAnyValue(mm => mm.Risks, risks => risks.Criticality)
+                .WhenAnyValue(mm => mm.RisksMetrics, risks => risks.Criticality)
                 .ToProperty(this, mm => mm.CriticalityRisk);
 
             m_FibonacciRisk = this
-                .WhenAnyValue(mm => mm.Risks, risks => risks.Fibonacci)
+                .WhenAnyValue(mm => mm.RisksMetrics, risks => risks.Fibonacci)
                 .ToProperty(this, mm => mm.FibonacciRisk);
 
             m_ActivityRisk = this
-                .WhenAnyValue(mm => mm.Risks, risks => risks.Activity)
+                .WhenAnyValue(mm => mm.RisksMetrics, risks => risks.Activity)
                 .ToProperty(this, mm => mm.ActivityRisk);
 
             m_ActivityRiskWithStdDevCorrection = this
-                .WhenAnyValue(mm => mm.Risks, risks => risks.ActivityStdDevCorrection)
+                .WhenAnyValue(mm => mm.RisksMetrics, risks => risks.ActivityStdDevCorrection)
                 .ToProperty(this, mm => mm.ActivityRiskWithStdDevCorrection);
 
             m_GeometricCriticalityRisk = this
-                .WhenAnyValue(mm => mm.Risks, risks => risks.GeometricCriticality)
+                .WhenAnyValue(mm => mm.RisksMetrics, risks => risks.GeometricCriticality)
                 .ToProperty(this, mm => mm.GeometricCriticalityRisk);
 
             m_GeometricFibonacciRisk = this
-                .WhenAnyValue(mm => mm.Risks, risks => risks.GeometricFibonacci)
+                .WhenAnyValue(mm => mm.RisksMetrics, risks => risks.GeometricFibonacci)
                 .ToProperty(this, mm => mm.GeometricFibonacciRisk);
 
             m_GeometricActivityRisk = this
-                 .WhenAnyValue(mm => mm.Risks, risks => risks.GeometricActivity)
+                 .WhenAnyValue(mm => mm.RisksMetrics, risks => risks.GeometricActivity)
                  .ToProperty(this, mm => mm.GeometricActivityRisk);
 
-            m_CyclomaticComplexity = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.CyclomaticComplexity)
-                .ToProperty(this, mm => mm.CyclomaticComplexity);
 
-            m_Duration = this
-                .WhenAnyValue(mm => mm.m_CoreViewModel.Duration)
-                .ToProperty(this, mm => mm.Duration);
+            m_DirectCost = this
+                 .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Direct)
+                 .ToProperty(this, mm => mm.DirectCost);
 
-            m_DurationManMonths = this
-                .WhenAnyValue(
-                    mm => mm.m_CoreViewModel.Duration,
-                    mm => mm.m_DateTimeCalculator.DaysPerWeek,
-                    (int? duration, int daysPerWeek) =>
-                        duration is null || duration == 0 || daysPerWeek == 0 ? null : duration / (daysPerWeek * 52 / 12.0))
-                .ToProperty(this, mm => mm.DurationManMonths);
+            m_IndirectCost = this
+                 .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Indirect)
+                 .ToProperty(this, mm => mm.IndirectCost);
+
+            m_OtherCost = this
+                 .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Other)
+                 .ToProperty(this, mm => mm.OtherCost);
+
+            m_TotalCost = this
+                 .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Total)
+                 .ToProperty(this, mm => mm.TotalCost);
+
+
+            m_DirectBilling = this
+                 .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Direct)
+                 .ToProperty(this, mm => mm.DirectBilling);
+
+            m_IndirectBilling = this
+                 .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Indirect)
+                 .ToProperty(this, mm => mm.IndirectBilling);
+
+            m_OtherBilling = this
+                 .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Other)
+                 .ToProperty(this, mm => mm.OtherBilling);
+
+            m_TotalBilling = this
+                 .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Total)
+                 .ToProperty(this, mm => mm.TotalBilling);
+
+
+            m_DirectMargin = this
+                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Direct)
+                 .ToProperty(this, mm => mm.DirectMargin);
+
+            m_IndirectMargin = this
+                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Indirect)
+                 .ToProperty(this, mm => mm.IndirectMargin);
+
+            m_OtherMargin = this
+                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Other)
+                 .ToProperty(this, mm => mm.OtherMargin);
+
+            m_TotalMargin = this
+                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Total)
+                 .ToProperty(this, mm => mm.TotalMargin);
+
+            m_DirectMarginAbsolute = this
+                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.DirectAbsolute)
+                 .ToProperty(this, mm => mm.DirectMarginAbsolute);
+
+            m_IndirectMarginAbsolute = this
+                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.IndirectAbsolute)
+                 .ToProperty(this, mm => mm.IndirectMarginAbsolute);
+
+            m_OtherMarginAbsolute = this
+                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.OtherAbsolute)
+                 .ToProperty(this, mm => mm.OtherMarginAbsolute);
+
+            m_TotalMarginAbsolute = this
+                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.TotalAbsolute)
+                 .ToProperty(this, mm => mm.TotalMarginAbsolute);
+
+
+            m_DirectEffort = this
+                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Direct)
+                 .ToProperty(this, mm => mm.DirectEffort);
+
+            m_IndirectEffort = this
+                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Indirect)
+                 .ToProperty(this, mm => mm.IndirectEffort);
+
+            m_OtherEffort = this
+                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Other)
+                 .ToProperty(this, mm => mm.OtherEffort);
+
+            m_TotalEffort = this
+                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Total)
+                 .ToProperty(this, mm => mm.TotalEffort);
+
+            m_ActivityEffort = this
+                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Activity)
+                 .ToProperty(this, mm => mm.ActivityEffort);
+
+            m_EffortEfficiency = this
+                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Efficiency)
+                 .ToProperty(this, mm => mm.EffortEfficiency);
+
+
+            m_NetworkCyclomaticComplexity = this
+                .WhenAnyValue(mm => mm.NetworkMetrics, network => network.CyclomaticComplexity)
+                .ToProperty(this, mm => mm.NetworkCyclomaticComplexity);
+
+            m_NetworkDuration = this
+                .WhenAnyValue(mm => mm.NetworkMetrics, network => network.Duration)
+                .ToProperty(this, mm => mm.NetworkDuration);
+
+            m_NetworkDurationManMonths = this
+                .WhenAnyValue(mm => mm.NetworkMetrics, network => network.DurationManMonths)
+                .ToProperty(this, mm => mm.NetworkDurationManMonths);
+
 
             m_ProjectFinish = this
                 .WhenAnyValue(
                     mm => mm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                     mm => mm.m_CoreViewModel.ProjectStart,
-                    mm => mm.m_CoreViewModel.Duration,
+                    mm => mm.NetworkDuration,
                     mm => mm.m_DateTimeCalculator.DaysPerWeek,
                     mm => mm.m_DateTimeCalculator.CalculatorMode,
                     mm => mm.m_DateTimeCalculator.DisplayMode,
@@ -165,142 +255,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     })
                 .ToProperty(this, mm => mm.ProjectFinish);
 
-            m_DirectCost = this
-                 .WhenAnyValue(mm => mm.Costs, costs => costs.Direct)
-                 .ToProperty(this, mm => mm.DirectCost);
-
-            m_IndirectCost = this
-                 .WhenAnyValue(mm => mm.Costs, costs => costs.Indirect)
-                 .ToProperty(this, mm => mm.IndirectCost);
-
-            m_OtherCost = this
-                 .WhenAnyValue(mm => mm.Costs, costs => costs.Other)
-                 .ToProperty(this, mm => mm.OtherCost);
-
-            m_TotalCost = this
-                 .WhenAnyValue(mm => mm.Costs, costs => costs.Direct + costs.Indirect + costs.Other)
-                 .ToProperty(this, mm => mm.TotalCost);
-
-            m_DirectBilling = this
-                 .WhenAnyValue(mm => mm.Billings, billings => billings.Direct)
-                 .ToProperty(this, mm => mm.DirectBilling);
-
-            m_IndirectBilling = this
-                 .WhenAnyValue(mm => mm.Billings, billings => billings.Indirect)
-                 .ToProperty(this, mm => mm.IndirectBilling);
-
-            m_OtherBilling = this
-                 .WhenAnyValue(mm => mm.Billings, billings => billings.Other)
-                 .ToProperty(this, mm => mm.OtherBilling);
-
-            m_TotalBilling = this
-                 .WhenAnyValue(mm => mm.Billings, billings => billings.Direct + billings.Indirect + billings.Other)
-                 .ToProperty(this, mm => mm.TotalBilling);
-
-            static double? CalculateMargin(double? cost, double? billing)
-            {
-                double? abs = CalculateMarginAbsolute(cost, billing);
-
-                if (abs is not null
-                    && billing is not null
-                    && billing != 0)
-                {
-                    return abs / billing;
-                }
-                return null;
-            }
-
-            m_DirectMargin = this
-                 .WhenAnyValue(
-                    mm => mm.DirectCost,
-                    mm => mm.DirectBilling,
-                    CalculateMargin)
-                 .ToProperty(this, mm => mm.DirectMargin);
-
-            m_IndirectMargin = this
-                 .WhenAnyValue(
-                    mm => mm.IndirectCost,
-                    mm => mm.IndirectBilling,
-                    CalculateMargin)
-                 .ToProperty(this, mm => mm.IndirectMargin);
-
-            m_OtherMargin = this
-                 .WhenAnyValue(
-                    mm => mm.OtherCost,
-                    mm => mm.OtherBilling,
-                    CalculateMargin)
-                 .ToProperty(this, mm => mm.OtherMargin);
-
-            m_TotalMargin = this
-                 .WhenAnyValue(
-                    mm => mm.TotalCost,
-                    mm => mm.TotalBilling,
-                    CalculateMargin)
-                 .ToProperty(this, mm => mm.TotalMargin);
-
-            static double? CalculateMarginAbsolute(double? cost, double? billing)
-            {
-                if (cost is not null
-                    && billing is not null)
-                {
-                    return billing - cost;
-                }
-                return null;
-            }
-
-            m_DirectMarginAbsolute = this
-                 .WhenAnyValue(
-                    mm => mm.DirectCost,
-                    mm => mm.DirectBilling,
-                    CalculateMarginAbsolute)
-                 .ToProperty(this, mm => mm.DirectMarginAbsolute);
-
-            m_IndirectMarginAbsolute = this
-                 .WhenAnyValue(
-                    mm => mm.IndirectCost,
-                    mm => mm.IndirectBilling,
-                    CalculateMarginAbsolute)
-                 .ToProperty(this, mm => mm.IndirectMarginAbsolute);
-
-            m_OtherMarginAbsolute = this
-                 .WhenAnyValue(
-                    mm => mm.OtherCost,
-                    mm => mm.OtherBilling,
-                    CalculateMarginAbsolute)
-                 .ToProperty(this, mm => mm.OtherMarginAbsolute);
-
-            m_TotalMarginAbsolute = this
-                 .WhenAnyValue(
-                    mm => mm.TotalCost,
-                    mm => mm.TotalBilling,
-                    CalculateMarginAbsolute)
-                 .ToProperty(this, mm => mm.TotalMarginAbsolute);
-
-            m_DirectEffort = this
-                 .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Direct)
-                 .ToProperty(this, mm => mm.DirectEffort);
-
-            m_IndirectEffort = this
-                 .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Indirect)
-                 .ToProperty(this, mm => mm.IndirectEffort);
-
-            m_OtherEffort = this
-                 .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Other)
-                 .ToProperty(this, mm => mm.OtherEffort);
-
-            m_TotalEffort = this
-                 .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Direct + efforts.Indirect + efforts.Other)
-                 .ToProperty(this, mm => mm.TotalEffort);
-
-            m_ActivityEffort = this
-                 .WhenAnyValue(mm => mm.Efforts, efforts => efforts.Activity)
-                 .ToProperty(this, mm => mm.ActivityEffort);
-
-            m_Efficiency = this
-                 .WhenAnyValue(mm => mm.ActivityEffort, mm => mm.TotalEffort,
-                    (double? activityEffort, double? totalEffort) => activityEffort is null || activityEffort == 0 || totalEffort == 0 ? null : activityEffort / totalEffort)
-                 .ToProperty(this, mm => mm.Efficiency);
-
             Id = Resource.ProjectPlan.Titles.Title_Metrics;
             Title = Resource.ProjectPlan.Titles.Title_Metrics;
         }
@@ -312,388 +266,24 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
         public bool ShowDates => m_ShowDates.Value;
 
-        private RisksModel m_Risks;
-        public RisksModel Risks
-        {
-            get => m_Risks;
-            set
-            {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_Risks, value);
-            }
-        }
 
-        private CostsModel m_Costs;
-        public CostsModel Costs
-        {
-            get => m_Costs;
-            set
-            {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_Costs, value);
-            }
-        }
+        private readonly ObservableAsPropertyHelper<RisksModel> m_RisksMetrics;
+        public RisksModel RisksMetrics => m_RisksMetrics.Value;
 
-        private BillingsModel m_Billings;
-        public BillingsModel Billings
-        {
-            get => m_Billings;
-            set
-            {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_Billings, value);
-            }
-        }
+        private readonly ObservableAsPropertyHelper<CostsModel> m_CostsMetrics;
+        public CostsModel CostsMetrics => m_CostsMetrics.Value;
 
-        private EffortsModel m_Efforts;
-        public EffortsModel Efforts
-        {
-            get => m_Efforts;
-            set
-            {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_Efforts, value);
-            }
-        }
+        private readonly ObservableAsPropertyHelper<BillingsModel> m_BillingsMetrics;
+        public BillingsModel BillingsMetrics => m_BillingsMetrics.Value;
 
-        #endregion
+        private readonly ObservableAsPropertyHelper<MarginsModel> m_MarginsMetrics;
+        public MarginsModel MarginsMetrics => m_MarginsMetrics.Value;
 
-        #region Private Methods
+        private readonly ObservableAsPropertyHelper<EffortsModel> m_EffortsMetrics;
+        public EffortsModel EffortsMetrics => m_EffortsMetrics.Value;
 
-        private static double? CalculateCriticalityRisk(
-            IEnumerable<ActivityModel> activities,
-            ActivitySeverityLookup activitySeverityLookup)
-        {
-            ArgumentNullException.ThrowIfNull(activities);
-            ArgumentNullException.ThrowIfNull(activitySeverityLookup);
-            double numerator = activities.Sum(activity => activitySeverityLookup.FindSlackCriticalityWeight(activity.TotalSlack));
-            double denominator = activitySeverityLookup.CriticalCriticalityWeight() * activities.Count();
-
-            if (denominator == 0)
-            {
-                if (numerator == 0)
-                {
-                    return 1.0;
-                }
-                return null;
-            }
-
-            return numerator / denominator;
-        }
-
-        private static double? CalculateFibonacciRisk(
-            IEnumerable<ActivityModel> activities,
-            ActivitySeverityLookup activitySeverityLookup)
-        {
-            ArgumentNullException.ThrowIfNull(activities);
-            ArgumentNullException.ThrowIfNull(activitySeverityLookup);
-            double numerator = activities.Sum(activity => activitySeverityLookup.FindSlackFibonacciWeight(activity.TotalSlack));
-            double denominator = activitySeverityLookup.CriticalFibonacciWeight() * activities.Count();
-
-            if (denominator == 0)
-            {
-                if (numerator == 0)
-                {
-                    return 1.0;
-                }
-                return null;
-            }
-
-            return numerator / denominator;
-        }
-
-        private static double? CalculateActivityRisk(IEnumerable<ActivityModel> activities)
-        {
-            ArgumentNullException.ThrowIfNull(activities);
-            double numerator = 0.0;
-            double maxTotalSlack = 0.0;
-            foreach (ActivityModel activity in activities.Where(x => x.TotalSlack.HasValue))
-            {
-                double totalSlack = Convert.ToDouble(activity.TotalSlack.GetValueOrDefault());
-                if (totalSlack > maxTotalSlack)
-                {
-                    maxTotalSlack = totalSlack;
-                }
-                numerator += totalSlack;
-            }
-            double denominator = maxTotalSlack * activities.Count();
-
-            if (denominator == 0)
-            {
-                if (numerator == 0)
-                {
-                    return 1.0;
-                }
-                return null;
-            }
-
-            return 1.0 - (numerator / denominator);
-        }
-
-        private static double? CalculateActivityRiskWithStdDevCorrection(IEnumerable<ActivityModel> activities)
-        {
-            ArgumentNullException.ThrowIfNull(activities);
-            double numerator = 0.0;
-            double maxTotalSlack = 0.0;
-
-            IList<double> totalSlacks = activities
-                .Where(x => x.TotalSlack.HasValue)
-                .Select(x => Convert.ToDouble(x.TotalSlack.GetValueOrDefault()))
-                .ToList();
-
-            double correctionValue = 0;
-            if (totalSlacks.Count > 0)
-            {
-                double meanAverage = totalSlacks.Average();
-                double sumOfSquaresOfDifferences = totalSlacks.Select(val => (val - meanAverage) * (val - meanAverage)).Sum();
-                double stdDev = Math.Sqrt(sumOfSquaresOfDifferences / totalSlacks.Count);
-                correctionValue = Math.Round(meanAverage + stdDev, MidpointRounding.AwayFromZero);
-            }
-
-            foreach (double totalSlack in totalSlacks)
-            {
-                double localTotalSlack = totalSlack;
-                if (localTotalSlack > correctionValue)
-                {
-                    localTotalSlack = correctionValue;
-                }
-                if (localTotalSlack > maxTotalSlack)
-                {
-                    maxTotalSlack = localTotalSlack;
-                }
-                numerator += localTotalSlack;
-            }
-            double denominator = maxTotalSlack * activities.Count();
-
-            if (denominator == 0)
-            {
-                if (numerator == 0)
-                {
-                    return 1.0;
-                }
-                return null;
-            }
-
-            return 1.0 - (numerator / denominator);
-        }
-
-        private static double? CalculateGeometricCriticalityRisk(
-            IEnumerable<ActivityModel> activities,
-            ActivitySeverityLookup activitySeverityLookup)
-        {
-            ArgumentNullException.ThrowIfNull(activities);
-            ArgumentNullException.ThrowIfNull(activitySeverityLookup);
-            double numerator = 1.0;
-            foreach (ActivityModel activity in activities)
-            {
-                numerator *= activitySeverityLookup.FindSlackCriticalityWeight(activity.TotalSlack);
-            }
-            numerator = Math.Pow(numerator, 1.0 / activities.Count());
-            double denominator = activitySeverityLookup.CriticalCriticalityWeight();
-
-            if (denominator == 0)
-            {
-                if (numerator == 0)
-                {
-                    return 1.0;
-                }
-                return null;
-            }
-
-            return numerator / denominator;
-        }
-
-        private static double? CalculateGeometricFibonacciRisk(
-            IEnumerable<ActivityModel> activities,
-            ActivitySeverityLookup activitySeverityLookup)
-        {
-            ArgumentNullException.ThrowIfNull(activities);
-            ArgumentNullException.ThrowIfNull(activitySeverityLookup);
-            double numerator = 1.0;
-            foreach (ActivityModel activity in activities)
-            {
-                numerator *= activitySeverityLookup.FindSlackFibonacciWeight(activity.TotalSlack);
-            }
-            numerator = Math.Pow(numerator, 1.0 / activities.Count());
-            double denominator = activitySeverityLookup.CriticalFibonacciWeight();
-
-            if (denominator == 0)
-            {
-                if (numerator == 0)
-                {
-                    return 1.0;
-                }
-                return null;
-            }
-
-            return numerator / denominator;
-        }
-
-        private static double? CalculateGeometricActivityRisk(IEnumerable<ActivityModel> activities)
-        {
-            ArgumentNullException.ThrowIfNull(activities);
-            double numerator = 1.0;
-            double maxTotalSlack = 0.0;
-            foreach (ActivityModel activity in activities.Where(x => x.TotalSlack.HasValue))
-            {
-                double totalSlack = Convert.ToDouble(activity.TotalSlack.GetValueOrDefault());
-                if (totalSlack > maxTotalSlack)
-                {
-                    maxTotalSlack = totalSlack;
-                }
-                numerator *= (totalSlack + 1.0);
-            }
-            numerator = Math.Pow(numerator, 1.0 / activities.Count());
-            numerator -= 1.0;
-            double denominator = maxTotalSlack;
-
-            if (denominator == 0)
-            {
-                if (numerator == 0)
-                {
-                    return 1.0;
-                }
-                return null;
-            }
-
-            return 1.0 - (numerator / denominator);
-        }
-
-        private static RisksModel CalculateProjectRisks(
-            IEnumerable<ActivityModel> activities,
-            IEnumerable<ActivitySeverityModel> activitySeverities)
-        {
-            ArgumentNullException.ThrowIfNull(activities);
-            ArgumentNullException.ThrowIfNull(activitySeverities);
-            var activitySeverityLookup = new ActivitySeverityLookup(activitySeverities);
-
-            List<ActivityModel> activitesWithRisk = [.. activities.Where(x => !x.HasNoRisk)];
-
-            return new RisksModel
-            {
-                Criticality = CalculateCriticalityRisk(activitesWithRisk, activitySeverityLookup),
-                Fibonacci = CalculateFibonacciRisk(activitesWithRisk, activitySeverityLookup),
-                Activity = CalculateActivityRisk(activitesWithRisk),
-                ActivityStdDevCorrection = CalculateActivityRiskWithStdDevCorrection(activitesWithRisk),
-                GeometricCriticality = CalculateGeometricCriticalityRisk(activitesWithRisk, activitySeverityLookup),
-                GeometricFibonacci = CalculateGeometricFibonacciRisk(activitesWithRisk, activitySeverityLookup),
-                GeometricActivity = CalculateGeometricActivityRisk(activitesWithRisk),
-            };
-        }
-
-        private async Task BuildRisksAsync()
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    BuildRisks();
-                }
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
-            }
-        }
-
-        private static CostsModel CalculateProjectCosts(IList<ResourceSeriesModel> resourceSeriesModels)
-        {
-            ArgumentNullException.ThrowIfNull(resourceSeriesModels);
-
-            return new CostsModel
-            {
-                Direct = resourceSeriesModels
-                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
-                    .Sum(static x =>
-                    {
-                        double accumulator(bool y) => y ? x.UnitCost : 0.0;
-                        return x.ResourceSchedule.CostAllocation.Sum(accumulator) + x.FixedCost;
-                    }),
-                Indirect = resourceSeriesModels
-                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
-                    .Sum(static x =>
-                    {
-                        double accumulator(bool y) => y ? x.UnitCost : 0.0;
-                        return x.ResourceSchedule.CostAllocation.Sum(accumulator) + x.FixedCost;
-                    }),
-                Other = resourceSeriesModels
-                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
-                    .Sum(static x =>
-                    {
-                        double accumulator(bool y) => y ? x.UnitCost : 0.0;
-                        return x.ResourceSchedule.CostAllocation.Sum(accumulator) + x.FixedCost;
-                    })
-            };
-        }
-
-        private static BillingsModel CalculateProjectBillings(IList<ResourceSeriesModel> resourceSeriesModels)
-        {
-            ArgumentNullException.ThrowIfNull(resourceSeriesModels);
-
-            return new BillingsModel
-            {
-                Direct = resourceSeriesModels
-                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
-                    .Sum(static x =>
-                    {
-                        double accumulator(bool y) => y ? x.UnitBilling : 0.0;
-                        return x.ResourceSchedule.BillingAllocation.Sum(accumulator) + x.FixedBilling;
-                    }),
-                Indirect = resourceSeriesModels
-                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
-                    .Sum(static x =>
-                    {
-                        double accumulator(bool y) => y ? x.UnitBilling : 0.0;
-                        return x.ResourceSchedule.BillingAllocation.Sum(accumulator) + x.FixedBilling;
-                    }),
-                Other = resourceSeriesModels
-                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
-                    .Sum(static x =>
-                    {
-                        double accumulator(bool y) => y ? x.UnitBilling : 0.0;
-                        return x.ResourceSchedule.BillingAllocation.Sum(accumulator) + x.FixedBilling;
-                    })
-            };
-        }
-
-        private static EffortsModel CalculateProjectEfforts(IList<ResourceSeriesModel> resourceSeriesModels)
-        {
-            ArgumentNullException.ThrowIfNull(resourceSeriesModels);
-            static double allocationAccumulator(bool x) => x ? 1.0 : 0.0;
-            static int durationAccumulator(ScheduledActivityModel x) => x.HasNoEffort ? 0 : x.Duration;
-
-            return new EffortsModel
-            {
-                Direct = resourceSeriesModels
-                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
-                    .Sum(static x => x.ResourceSchedule.EffortAllocation.Sum(allocationAccumulator)),
-                Indirect = resourceSeriesModels
-                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
-                    .Sum(static x => x.ResourceSchedule.EffortAllocation.Sum(allocationAccumulator)),
-                Other = resourceSeriesModels
-                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
-                    .Sum(static x => x.ResourceSchedule.EffortAllocation.Sum(allocationAccumulator)),
-                Activity = resourceSeriesModels
-                    .Sum(static x => x.ResourceSchedule.ScheduledActivities.Sum(durationAccumulator))
-            };
-        }
-
-        private async Task BuildCostsAndEffortsAsync()
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    BuildCostsBillingsAndEfforts();
-                }
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
-            }
-        }
+        private readonly ObservableAsPropertyHelper<NetworkModel> m_NetworkMetrics;
+        public NetworkModel NetworkMetrics => m_NetworkMetrics.Value;
 
         #endregion
 
@@ -738,14 +328,14 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<double?> m_GeometricActivityRisk;
         public double? GeometricActivityRisk => m_GeometricActivityRisk.Value;
 
-        private readonly ObservableAsPropertyHelper<int?> m_CyclomaticComplexity;
-        public int? CyclomaticComplexity => m_CyclomaticComplexity.Value;
+        private readonly ObservableAsPropertyHelper<int?> m_NetworkCyclomaticComplexity;
+        public int? NetworkCyclomaticComplexity => m_NetworkCyclomaticComplexity.Value;
 
-        private readonly ObservableAsPropertyHelper<int?> m_Duration;
-        public int? Duration => m_Duration.Value;
+        private readonly ObservableAsPropertyHelper<int?> m_NetworkDuration;
+        public int? NetworkDuration => m_NetworkDuration.Value;
 
-        private readonly ObservableAsPropertyHelper<double?> m_DurationManMonths;
-        public double? DurationManMonths => m_DurationManMonths.Value;
+        private readonly ObservableAsPropertyHelper<double?> m_NetworkDurationManMonths;
+        public double? NetworkDurationManMonths => m_NetworkDurationManMonths.Value;
 
         private readonly ObservableAsPropertyHelper<string> m_ProjectFinish;
         public string ProjectFinish => m_ProjectFinish.Value;
@@ -813,61 +403,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<double?> m_ActivityEffort;
         public double? ActivityEffort => m_ActivityEffort.Value;
 
-        private readonly ObservableAsPropertyHelper<double?> m_Efficiency;
-        public double? Efficiency => m_Efficiency.Value;
-
-        public void BuildRisks()
-        {
-            var risksModel = new RisksModel();
-
-            lock (m_Lock)
-            {
-                IEnumerable<IDependentActivity> dependentActivities =
-                    m_CoreViewModel.GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject());
-
-                if (dependentActivities.Any())
-                {
-                    if (!HasCompilationErrors)
-                    {
-                        IEnumerable<ActivityModel> activities =
-                            m_Mapper.Map<IEnumerable<IActivity<int, int, int>>, IList<ActivityModel>>(
-                                dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int, int, int>)x));
-
-                        IEnumerable<ActivitySeverityModel> activitySeverities = m_CoreViewModel.GraphSettings.ActivitySeverities;
-
-                        risksModel = CalculateProjectRisks(activities, activitySeverities);
-                    }
-                }
-            }
-
-            Risks = risksModel;
-        }
-
-        public void BuildCostsBillingsAndEfforts()
-        {
-            var costsModel = new CostsModel();
-            var billingsModel = new BillingsModel();
-            var effortsModel = new EffortsModel();
-
-            lock (m_Lock)
-            {
-                IList<ResourceSeriesModel> combinedResourceSeriesModels = m_CoreViewModel.ResourceSeriesSet.Combined;
-
-                if (combinedResourceSeriesModels.Any())
-                {
-                    if (!HasCompilationErrors)
-                    {
-                        costsModel = CalculateProjectCosts(combinedResourceSeriesModels);
-                        billingsModel = CalculateProjectBillings(combinedResourceSeriesModels);
-                        effortsModel = CalculateProjectEfforts(combinedResourceSeriesModels);
-                    }
-                }
-            }
-
-            Costs = costsModel;
-            Billings = billingsModel;
-            Efforts = effortsModel;
-        }
+        private readonly ObservableAsPropertyHelper<double?> m_EffortEfficiency;
+        public double? EffortEfficiency => m_EffortEfficiency.Value;
 
         #endregion
 
@@ -875,8 +412,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
-            m_BuildMetricsSub?.Dispose();
-            m_BuildCostsAndEffortsSub?.Dispose();
         }
 
         #endregion
@@ -907,9 +442,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_GeometricCriticalityRisk?.Dispose();
                 m_GeometricFibonacciRisk?.Dispose();
                 m_GeometricActivityRisk?.Dispose();
-                m_CyclomaticComplexity?.Dispose();
-                m_Duration?.Dispose();
-                m_DurationManMonths?.Dispose();
+                m_NetworkCyclomaticComplexity?.Dispose();
+                m_NetworkDuration?.Dispose();
+                m_NetworkDurationManMonths?.Dispose();
                 m_ProjectFinish?.Dispose();
                 m_DirectCost?.Dispose();
                 m_IndirectCost?.Dispose();
@@ -920,7 +455,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_OtherEffort?.Dispose();
                 m_TotalEffort?.Dispose();
                 m_ActivityEffort?.Dispose();
-                m_Efficiency?.Dispose();
+                m_EffortEfficiency?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

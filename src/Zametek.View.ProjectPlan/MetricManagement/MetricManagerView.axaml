@@ -90,7 +90,7 @@
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
-						             Text="{Binding Path=CyclomaticComplexity, Mode=OneWay, StringFormat=\{0:N0\}}"/>
+						             Text="{Binding Path=NetworkCyclomaticComplexity, Mode=OneWay, StringFormat=\{0:N0\}}"/>
 
 				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
 					                 VerticalAlignment="Center"
@@ -153,7 +153,7 @@
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
-						             Text="{Binding Path=DurationManMonths, Mode=OneWay, StringFormat=\{0:N1\}}"/>
+						             Text="{Binding Path=NetworkDurationManMonths, Mode=OneWay, StringFormat=\{0:N1\}}"/>
 
 				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
 					                 VerticalAlignment="Center"
@@ -168,12 +168,12 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_Efficiency}"/>
+								     Text="{x:Static resources:Labels.Label_EffortEfficiency}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="3"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
 						             FontWeight="Bold"
-						             Text="{Binding Path=Efficiency, Mode=OneWay, StringFormat=\{0:P1\}}"/>
+						             Text="{Binding Path=EffortEfficiency, Mode=OneWay, StringFormat=\{0:P1\}}"/>
 			</Grid>
 
 			<Grid Margin="7">

@@ -157,14 +157,13 @@ namespace Zametek.ProjectPlan.CommandLine
                                 return;
                             }
 
-                            core.BuildCyclomaticComplexity();
+                            core.BuildNetworkMetrics();
                             core.BuildArrowGraph();
                             core.BuildVertexGraph();
                             core.BuildResourceSeriesSet();
                             core.BuildTrackingSeriesSet();
-
-                            metrics.BuildRisks();
-                            metrics.BuildCostsBillingsAndEfforts();
+                            core.BuildRiskMetrics();
+                            core.BuildFinancialMetrics();
                         }
 
                         // File out.
@@ -351,12 +350,12 @@ namespace Zametek.ProjectPlan.CommandLine
                             table.AddRow(Resource.ProjectPlan.Labels.Label_GeometricActivityRisk, $@"{metrics.GeometricActivityRisk:F2}");
                             table.AddRow(Resource.ProjectPlan.Labels.Label_GeometricCriticalityRisk, $@"{metrics.GeometricCriticalityRisk:F2}");
                             table.AddRow(Resource.ProjectPlan.Labels.Label_GeometricFibonacciRisk, $@"{metrics.GeometricFibonacciRisk:F2}");
-                            table.AddRow(Resource.ProjectPlan.Labels.Label_CyclomaticComplexity, $@"{metrics.CyclomaticComplexity}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_CyclomaticComplexity, $@"{metrics.NetworkCyclomaticComplexity}");
 
                             table.AddRow(Resource.ProjectPlan.Labels.Label_ActivityEffort, $@"{metrics.ActivityEffort:F0}");
-                            table.AddRow(Resource.ProjectPlan.Labels.Label_DurationManMonths, $@"{metrics.DurationManMonths:F1}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_DurationManMonths, $@"{metrics.NetworkDurationManMonths:F1}");
                             table.AddRow(Resource.ProjectPlan.Labels.Label_ProjectFinish, $@"{metrics.ProjectFinish}");
-                            table.AddRow(Resource.ProjectPlan.Labels.Label_Efficiency, $@"{metrics.Efficiency:F3}");
+                            table.AddRow(Resource.ProjectPlan.Labels.Label_EffortEfficiency, $@"{metrics.EffortEfficiency:F3}");
 
                             table.AddRow(Resource.ProjectPlan.Labels.Label_DirectEffort, $@"{metrics.DirectEffort:F0}");
                             table.AddRow(Resource.ProjectPlan.Labels.Label_IndirectEffort, $@"{metrics.IndirectEffort:F0}");

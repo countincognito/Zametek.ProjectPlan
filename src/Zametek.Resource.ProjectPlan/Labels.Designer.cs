@@ -529,20 +529,20 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Efficiency:.
-        /// </summary>
-        public static string Label_Efficiency {
-            get {
-                return ResourceManager.GetString("Label_Efficiency", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Effort.
         /// </summary>
         public static string Label_Effort {
             get {
                 return ResourceManager.GetString("Label_Effort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Efficiency:.
+        /// </summary>
+        public static string Label_EffortEfficiency {
+            get {
+                return ResourceManager.GetString("Label_EffortEfficiency", resourceCulture);
             }
         }
         

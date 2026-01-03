@@ -29,11 +29,11 @@
 
         double? GeometricActivityRisk { get; }
 
-        int? CyclomaticComplexity { get; }
+        int? NetworkCyclomaticComplexity { get; }
 
-        int? Duration { get; }
+        int? NetworkDuration { get; }
 
-        double? DurationManMonths { get; }
+        double? NetworkDurationManMonths { get; }
 
         string ProjectFinish { get; }
 
@@ -79,10 +79,6 @@
 
         double? ActivityEffort { get; }
 
-        double? Efficiency { get; }
-
-        void BuildRisks();
-
-        void BuildCostsBillingsAndEfforts();
+        double? EffortEfficiency { get; }
     }
 }

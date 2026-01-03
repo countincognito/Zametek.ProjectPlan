@@ -47,6 +47,8 @@ namespace Zametek.Contract.ProjectPlan
 
         WorkStreamSettingsModel WorkStreamSettings { get; set; }
 
+        MetricsModel Metrics { get; set; }
+
         bool HasActivities { get; }
 
         bool HasResources { get; }
@@ -66,10 +68,6 @@ namespace Zametek.Contract.ProjectPlan
         ResourceSeriesSetModel ResourceSeriesSet { get; }
 
         TrackingSeriesSetModel TrackingSeriesSet { get; }
-
-        int? CyclomaticComplexity { get; }
-
-        int? Duration { get; }
 
         int TrackerIndex { get; set; }
 
@@ -105,8 +103,6 @@ namespace Zametek.Contract.ProjectPlan
 
         void RunTransitiveReduction();
 
-        void BuildCyclomaticComplexity();
-
         void BuildArrowGraph();
 
         void BuildVertexGraph();
@@ -114,5 +110,11 @@ namespace Zametek.Contract.ProjectPlan
         void BuildResourceSeriesSet();
 
         void BuildTrackingSeriesSet();
+
+        void BuildNetworkMetrics();
+
+        void BuildRiskMetrics();
+
+        void BuildFinancialMetrics();
     }
 }

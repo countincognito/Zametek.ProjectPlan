@@ -240,7 +240,7 @@
   <data name="Label_EarliestStartTime" xml:space="preserve">
     <value>EST</value>
   </data>
-  <data name="Label_Efficiency" xml:space="preserve">
+  <data name="Label_EffortEfficiency" xml:space="preserve">
     <value>Efficiency:</value>
   </data>
   <data name="Label_Effort" xml:space="preserve">
