@@ -1236,7 +1236,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_Metrics = value;
-                    IsProjectUpdated = true;
                     this.RaisePropertyChanged();
                 }
             }
