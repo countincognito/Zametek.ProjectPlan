@@ -4,15 +4,15 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
 {
     public static class Converter
     {
-        public static ProjectPlanModel Upgrade(
+        public static ProjectModel Upgrade(
             IMapper mapper,
-            v0_4_3.ProjectPlanModel projectPlan)
+            v0_4_3.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(mapper);
-            ArgumentNullException.ThrowIfNull(projectPlan);
+            ArgumentNullException.ThrowIfNull(project);
 
-            List<DependentActivityModel> activities = mapper.Map<List<v0_4_3.DependentActivityModel>, List<DependentActivityModel>>(projectPlan.DependentActivities);
-            GraphCompilationModel graphCompilation = mapper.Map<v0_4_3.GraphCompilationModel, GraphCompilationModel>(projectPlan.GraphCompilation ?? new v0_4_3.GraphCompilationModel());
+            List<DependentActivityModel> activities = mapper.Map<List<v0_4_3.DependentActivityModel>, List<DependentActivityModel>>(project.DependentActivities);
+            GraphCompilationModel graphCompilation = mapper.Map<v0_4_3.GraphCompilationModel, GraphCompilationModel>(project.GraphCompilation ?? new v0_4_3.GraphCompilationModel());
 
             List<ResourceScheduleModel> resourceSchedules = [];
 
@@ -29,7 +29,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
 
             graphCompilation = graphCompilation with { ResourceSchedules = resourceSchedules };
 
-            ResourceSettingsModel resourceSettings = mapper.Map<v0_4_0.ResourceSettingsModel, ResourceSettingsModel>(projectPlan.ResourceSettings ?? new v0_4_0.ResourceSettingsModel());
+            ResourceSettingsModel resourceSettings = mapper.Map<v0_4_0.ResourceSettingsModel, ResourceSettingsModel>(project.ResourceSettings ?? new v0_4_0.ResourceSettingsModel());
 
             List<ResourceModel> resources = [];
 
@@ -46,23 +46,21 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
                 Resources = resources,
             };
 
-            DisplaySettingsModel displaySettings = mapper.Map<v0_4_1.DisplaySettingsModel, DisplaySettingsModel>(projectPlan.DisplaySettings ?? new());
+            DisplaySettingsModel displaySettings = mapper.Map<v0_4_1.DisplaySettingsModel, DisplaySettingsModel>(project.DisplaySettings ?? new());
 
-            var plan = new ProjectPlanModel
+            return new ProjectModel
             {
-                ProjectStart = projectPlan.ProjectStart,
-                Today = projectPlan.ProjectStart,
+                ProjectStart = project.ProjectStart,
+                Today = project.ProjectStart,
                 DependentActivities = activities,
-                ArrowGraphSettings = projectPlan.ArrowGraphSettings ?? new(),
+                ArrowGraphSettings = project.ArrowGraphSettings ?? new(),
                 ResourceSettings = resourceSettings,
-                WorkStreamSettings = projectPlan.WorkStreamSettings ?? new(),
+                WorkStreamSettings = project.WorkStreamSettings ?? new(),
                 DisplaySettings = displaySettings,
                 GraphCompilation = graphCompilation,
-                ArrowGraph = projectPlan.ArrowGraph ?? new(),
-                HasStaleOutputs = projectPlan.HasStaleOutputs,
+                ArrowGraph = project.ArrowGraph ?? new(),
+                HasStaleOutputs = project.HasStaleOutputs,
             };
-
-            return plan;
         }
 
         public static AppSettingsModel Upgrade(

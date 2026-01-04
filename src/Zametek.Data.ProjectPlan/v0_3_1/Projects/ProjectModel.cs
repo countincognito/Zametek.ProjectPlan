@@ -1,7 +1,7 @@
 ﻿namespace Zametek.Data.ProjectPlan.v0_3_1
 {
     [Serializable]
-    public record ProjectPlanModel
+    public record ProjectModel
     {
         public string Version { get; } = Versions.v0_3_1;
 

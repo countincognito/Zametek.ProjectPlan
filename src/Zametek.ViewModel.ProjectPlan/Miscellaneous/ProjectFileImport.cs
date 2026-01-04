@@ -32,11 +32,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly IList<string> s_DisplaySettingsColumnTitles =
         [
-            nameof(ProjectPlanModel.DisplaySettings.ShowDates),
-            nameof(ProjectPlanModel.DisplaySettings.UseClassicDates),
-            nameof(ProjectPlanModel.DisplaySettings.UseBusinessDays),
-            nameof(ProjectPlanModel.DisplaySettings.HideCost),
-            nameof(ProjectPlanModel.DisplaySettings.HideBilling),
+            nameof(ProjectModel.DisplaySettings.ShowDates),
+            nameof(ProjectModel.DisplaySettings.UseClassicDates),
+            nameof(ProjectModel.DisplaySettings.UseBusinessDays),
+            nameof(ProjectModel.DisplaySettings.HideCost),
+            nameof(ProjectModel.DisplaySettings.HideBilling),
         ];
 
         private static readonly IList<string> s_ActivityColumnTitles =

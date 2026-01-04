@@ -8,7 +8,7 @@ namespace Zametek.ViewModel.ProjectPlan
     public class ProjectFileSave
         : IProjectFileSave
     {
-        public async Task SaveProjectPlanFileAsync(ProjectPlanModel projectPlan, string filename)
+        public async Task SaveProjectFileAsync(ProjectModel project, string filename)
         {
             using StreamWriter writer = File.CreateText(filename);
             var jsonSerializer = JsonSerializer.Create(
@@ -17,7 +17,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Formatting = Formatting.Indented,
                     NullValueHandling = NullValueHandling.Ignore,
                 });
-            Data.ProjectPlan.v0_5_0.ProjectPlanModel output = Converter.Format(projectPlan);
+            Data.ProjectPlan.v0_5_0.ProjectModel output = Converter.Format(project);
             await Task.Run(() => jsonSerializer.Serialize(writer, output, output.GetType()));
         }
     }

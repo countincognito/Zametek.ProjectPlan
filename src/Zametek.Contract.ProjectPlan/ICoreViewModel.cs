@@ -81,9 +81,9 @@ namespace Zametek.Contract.ProjectPlan
 
         void ProcessProjectImport(ProjectImportModel projectImportModel);
 
-        void ProcessProjectPlan(ProjectPlanModel projectPlanModel);
+        void ProcessProject(ProjectModel projectModel);
 
-        ProjectPlanModel BuildProjectPlan();
+        ProjectModel BuildProject();
 
         int AddManagedActivity();
 

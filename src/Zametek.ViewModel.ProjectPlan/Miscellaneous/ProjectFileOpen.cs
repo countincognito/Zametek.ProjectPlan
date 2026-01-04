@@ -10,17 +10,17 @@ namespace Zametek.ViewModel.ProjectPlan
     public class ProjectFileOpen
         : IProjectFileOpen
     {
-        public async Task<ProjectPlanModel> OpenProjectPlanFileAsync(string filename)
+        public async Task<ProjectModel> OpenProjectFileAsync(string filename)
         {
             using StreamReader reader = File.OpenText(filename);
             string content = await reader.ReadToEndAsync();
             JObject json = JObject.Parse(content);
-            string version = 
-                json?.GetValue(nameof(ProjectPlanModel.Version), StringComparison.OrdinalIgnoreCase)?.ToString()
+            string version =
+                json?.GetValue(nameof(ProjectModel.Version), StringComparison.OrdinalIgnoreCase)?.ToString()
                 ?? string.Empty;
             string jsonString = json?.ToString() ?? string.Empty;
 
-            Func<string, ProjectPlanModel> func =
+            Func<string, ProjectModel> func =
                 jString => throw new ArgumentOutOfRangeException(
                     nameof(filename),
                     @$"{Resource.ProjectPlan.Messages.Message_UnableToOpenFile} {filename}");
@@ -29,80 +29,80 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Case(Versions.v0_1_0_original, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectPlanModel>(jString)
-                        ?? new Data.ProjectPlan.v0_1_0.ProjectPlanModel());
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectModel>(jString)
+                        ?? new Data.ProjectPlan.v0_1_0.ProjectModel());
                 })
                 .Case(Versions.v0_1_0, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectPlanModel>(jString)
-                        ?? new Data.ProjectPlan.v0_1_0.ProjectPlanModel());
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_1_0.ProjectModel>(jString)
+                        ?? new Data.ProjectPlan.v0_1_0.ProjectModel());
                 })
                 .Case(Versions.v0_2_0, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_0.ProjectPlanModel>(jString)
-                        ?? new Data.ProjectPlan.v0_2_0.ProjectPlanModel());
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_0.ProjectModel>(jString)
+                        ?? new Data.ProjectPlan.v0_2_0.ProjectModel());
                 })
                 .Case(Versions.v0_2_1, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_1.ProjectPlanModel>(jString)
-                        ?? new Data.ProjectPlan.v0_2_1.ProjectPlanModel());
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_2_1.ProjectModel>(jString)
+                        ?? new Data.ProjectPlan.v0_2_1.ProjectModel());
                 })
                 .Case(Versions.v0_3_0, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_0.ProjectPlanModel>(jString)
-                        ?? new Data.ProjectPlan.v0_3_0.ProjectPlanModel());
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_0.ProjectModel>(jString)
+                        ?? new Data.ProjectPlan.v0_3_0.ProjectModel());
                 })
                 .Case(Versions.v0_3_1, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_1.ProjectPlanModel>(jString)
-                        ?? new Data.ProjectPlan.v0_3_1.ProjectPlanModel());
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_1.ProjectModel>(jString)
+                        ?? new Data.ProjectPlan.v0_3_1.ProjectModel());
                 })
                 .Case(Versions.v0_3_2, x =>
                  {
                      func = jString => Converter.Upgrade(
-                         JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_2.ProjectPlanModel>(jString)
-                         ?? new Data.ProjectPlan.v0_3_2.ProjectPlanModel());
+                         JsonConvert.DeserializeObject<Data.ProjectPlan.v0_3_2.ProjectModel>(jString)
+                         ?? new Data.ProjectPlan.v0_3_2.ProjectModel());
                  })
                 .Case(Versions.v0_4_0, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_0.ProjectPlanModel>(jString)
-                        ?? new Data.ProjectPlan.v0_4_0.ProjectPlanModel());
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_0.ProjectModel>(jString)
+                        ?? new Data.ProjectPlan.v0_4_0.ProjectModel());
                 })
                 .Case(Versions.v0_4_1, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_1.ProjectPlanModel>(jString)
-                        ?? new Data.ProjectPlan.v0_4_1.ProjectPlanModel());
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_1.ProjectModel>(jString)
+                        ?? new Data.ProjectPlan.v0_4_1.ProjectModel());
                 })
                 .Case(Versions.v0_4_2, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_2.ProjectPlanModel>(jString)
-                        ?? new Data.ProjectPlan.v0_4_2.ProjectPlanModel());
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_2.ProjectModel>(jString)
+                        ?? new Data.ProjectPlan.v0_4_2.ProjectModel());
                 })
                 .Case(Versions.v0_4_3, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_3.ProjectPlanModel>(jString)
-                        ?? new Data.ProjectPlan.v0_4_3.ProjectPlanModel());
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_3.ProjectModel>(jString)
+                        ?? new Data.ProjectPlan.v0_4_3.ProjectModel());
                 })
                 .Case(Versions.v0_4_4, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_4.ProjectPlanModel>(jString)
-                        ?? new Data.ProjectPlan.v0_4_4.ProjectPlanModel());
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_4.ProjectModel>(jString)
+                        ?? new Data.ProjectPlan.v0_4_4.ProjectModel());
                 })
                 .Case(Versions.v0_5_0, x =>
                 {
                     func = jString => Converter.Upgrade(
-                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_5_0.ProjectPlanModel>(jString)
-                        ?? new Data.ProjectPlan.v0_5_0.ProjectPlanModel());
+                        JsonConvert.DeserializeObject<Data.ProjectPlan.v0_5_0.ProjectModel>(jString)
+                        ?? new Data.ProjectPlan.v0_5_0.ProjectModel());
                 });
 
             return await Task.Run(() => func(jsonString));

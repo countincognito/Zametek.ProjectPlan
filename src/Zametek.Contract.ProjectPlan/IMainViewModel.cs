@@ -54,17 +54,17 @@ namespace Zametek.Contract.ProjectPlan
 
         BaseTheme BaseTheme { get; set; }
 
-        ICommand OpenProjectPlanFileCommand { get; }
+        ICommand OpenProjectFileCommand { get; }
 
-        ICommand SaveProjectPlanFileCommand { get; }
+        ICommand SaveProjectFileCommand { get; }
 
-        ICommand SaveAsProjectPlanFileCommand { get; }
+        ICommand SaveAsProjectFileCommand { get; }
 
         ICommand ImportProjectFileCommand { get; }
 
         ICommand ExportProjectFileCommand { get; }
 
-        ICommand CloseProjectPlanCommand { get; }
+        ICommand CloseProjectCommand { get; }
 
         ICommand ToggleShowDatesCommand { get; }
 
@@ -110,19 +110,19 @@ namespace Zametek.Contract.ProjectPlan
 
         void ResetLayout();
 
-        Task OpenProjectPlanFileAsync();
+        Task OpenProjectFileAsync();
 
-        Task OpenProjectPlanFileAsync(string? filename);
+        Task OpenProjectFileAsync(string? filename);
 
-        Task SaveProjectPlanFileAsync();
+        Task SaveProjectFileAsync();
 
-        Task SaveAsProjectPlanFileAsync();
+        Task SaveAsProjectFileAsync();
 
         Task ImportProjectFileAsync();
 
         Task ExportProjectFileAsync();
 
-        Task CloseProjectPlanAsync();
+        Task CloseProjectAsync();
 
         Task OpenDocumentationAsync();
 

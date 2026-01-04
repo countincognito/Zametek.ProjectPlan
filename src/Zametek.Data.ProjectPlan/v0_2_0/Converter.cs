@@ -2,40 +2,40 @@
 {
     public static class Converter
     {
-        public static ProjectPlanModel Upgrade(v0_1_0.ProjectPlanModel projectPlan)
+        public static ProjectModel Upgrade(v0_1_0.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
+            ArgumentNullException.ThrowIfNull(project);
             GraphCompilationErrorsModel? errors = null;
-            bool errorsExist = (projectPlan.GraphCompilation?.AllResourcesExplicitTargetsButNotAllActivitiesTargeted ?? false)
-                || (projectPlan.GraphCompilation?.CircularDependencies.Any() ?? false)
-                || (projectPlan.GraphCompilation?.MissingDependencies.Any() ?? false);
+            bool errorsExist = (project.GraphCompilation?.AllResourcesExplicitTargetsButNotAllActivitiesTargeted ?? false)
+                || (project.GraphCompilation?.CircularDependencies.Any() ?? false)
+                || (project.GraphCompilation?.MissingDependencies.Any() ?? false);
 
             if (errorsExist)
             {
                 errors = new GraphCompilationErrorsModel
                 {
-                    AllResourcesExplicitTargetsButNotAllActivitiesTargeted = projectPlan.GraphCompilation?.AllResourcesExplicitTargetsButNotAllActivitiesTargeted ?? false,
-                    CircularDependencies = projectPlan.GraphCompilation?.CircularDependencies ?? [],
-                    MissingDependencies = projectPlan.GraphCompilation?.MissingDependencies ?? [],
+                    AllResourcesExplicitTargetsButNotAllActivitiesTargeted = project.GraphCompilation?.AllResourcesExplicitTargetsButNotAllActivitiesTargeted ?? false,
+                    CircularDependencies = project.GraphCompilation?.CircularDependencies ?? [],
+                    MissingDependencies = project.GraphCompilation?.MissingDependencies ?? [],
                 };
             }
 
-            return new ProjectPlanModel
+            return new ProjectModel
             {
-                ProjectStart = projectPlan.ProjectStart,
-                DependentActivities = projectPlan.DependentActivities,
-                ArrowGraphSettings = projectPlan.ArrowGraphSettings,
-                ResourceSettings = projectPlan.ResourceSettings,
+                ProjectStart = project.ProjectStart,
+                DependentActivities = project.DependentActivities,
+                ArrowGraphSettings = project.ArrowGraphSettings,
+                ResourceSettings = project.ResourceSettings,
                 GraphCompilation = new GraphCompilationModel
                 {
-                    DependentActivities = projectPlan.GraphCompilation?.DependentActivities ?? [],
-                    ResourceSchedules = projectPlan.GraphCompilation?.ResourceSchedules ?? [],
+                    DependentActivities = project.GraphCompilation?.DependentActivities ?? [],
+                    ResourceSchedules = project.GraphCompilation?.ResourceSchedules ?? [],
                     Errors = errors,
-                    CyclomaticComplexity = projectPlan.GraphCompilation?.CyclomaticComplexity ?? default,
-                    Duration = projectPlan.GraphCompilation?.Duration ?? default,
+                    CyclomaticComplexity = project.GraphCompilation?.CyclomaticComplexity ?? default,
+                    Duration = project.GraphCompilation?.Duration ?? default,
                 },
-                ArrowGraph = projectPlan.ArrowGraph,
-                HasStaleOutputs = projectPlan.HasStaleOutputs,
+                ArrowGraph = project.ArrowGraph,
+                HasStaleOutputs = project.HasStaleOutputs,
             };
         }
     }

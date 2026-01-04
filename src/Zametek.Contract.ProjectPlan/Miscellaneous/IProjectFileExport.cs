@@ -4,10 +4,10 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IProjectFileExport
     {
-        void ExportProjectFile(ProjectPlanModel projectPlan, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename);
+        void ExportProjectFile(ProjectModel project, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename);
 
-        Task ExportProjectFileAsync(ProjectPlanModel projectPlan, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename);
+        Task ExportProjectFileAsync(ProjectModel project, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename);
 
-        void ExportProjectXlsxFile(ProjectPlanModel projectPlan, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename);
+        void ExportProjectXlsxFile(ProjectModel project, ResourceSeriesSetModel resourceSeriesSet, TrackingSeriesSetModel trackingSeriesSet, bool showDates, string filename);
     }
 }

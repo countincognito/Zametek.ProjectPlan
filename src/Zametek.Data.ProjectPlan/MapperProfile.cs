@@ -105,7 +105,7 @@ namespace Zametek.Data.ProjectPlan
                 .ReverseMap();
             CreateMap<v0_2_1.ResourceScheduleModel, v0_3_0.ResourceScheduleModel>().ReverseMap();
 
-            CreateMap<ProjectPlanModel, v0_3_0.ProjectPlanModel>().ReverseMap();
+            CreateMap<ProjectModel, v0_3_0.ProjectModel>().ReverseMap();
 
             #endregion
 
@@ -123,7 +123,7 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<ResourceSettingsModel, v0_3_1.ResourceSettingsModel>().ReverseMap();
             CreateMap<v0_1_0.ResourceSettingsModel, v0_3_1.ResourceSettingsModel>().ReverseMap();
 
-            CreateMap<ProjectPlanModel, v0_3_1.ProjectPlanModel>().ReverseMap();
+            CreateMap<ProjectModel, v0_3_1.ProjectModel>().ReverseMap();
 
             #endregion
 
@@ -161,7 +161,7 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<WorkStreamSettingsModel, v0_3_2.WorkStreamSettingsModel>().ReverseMap();
             CreateMap<WorkStreamSettingsModel, v0_3_2.WorkStreamSettingsModel>().ReverseMap();
 
-            CreateMap<ProjectPlanModel, v0_3_2.ProjectPlanModel>().ReverseMap();
+            CreateMap<ProjectModel, v0_3_2.ProjectModel>().ReverseMap();
 
             #endregion
 
@@ -208,7 +208,7 @@ namespace Zametek.Data.ProjectPlan
 
             CreateMap<DisplaySettingsModel, v0_4_0.DisplaySettingsModel>().ReverseMap();
 
-            CreateMap<ProjectPlanModel, v0_4_0.ProjectPlanModel>().ReverseMap();
+            CreateMap<ProjectModel, v0_4_0.ProjectModel>().ReverseMap();
 
             #endregion
 
@@ -217,8 +217,8 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<DisplaySettingsModel, v0_4_1.DisplaySettingsModel>().ReverseMap();
             CreateMap<v0_4_0.DisplaySettingsModel, v0_4_1.DisplaySettingsModel>().ReverseMap();
 
-            CreateMap<ProjectPlanModel, v0_4_1.ProjectPlanModel>().ReverseMap();
-            CreateMap<v0_4_0.ProjectPlanModel, v0_4_1.ProjectPlanModel>().ReverseMap();
+            CreateMap<ProjectModel, v0_4_1.ProjectModel>().ReverseMap();
+            CreateMap<v0_4_0.ProjectModel, v0_4_1.ProjectModel>().ReverseMap();
 
             CreateMap<AppSettingsModel, v0_4_1.AppSettingsModel>().ReverseMap();
 
@@ -232,8 +232,8 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<GraphCompilationModel, v0_4_2.GraphCompilationModel>().ReverseMap();
             CreateMap<v0_4_0.GraphCompilationModel, v0_4_2.GraphCompilationModel>().ReverseMap();
 
-            CreateMap<ProjectPlanModel, v0_4_2.ProjectPlanModel>().ReverseMap();
-            CreateMap<v0_4_1.ProjectPlanModel, v0_4_2.ProjectPlanModel>().ReverseMap();
+            CreateMap<ProjectModel, v0_4_2.ProjectModel>().ReverseMap();
+            CreateMap<v0_4_1.ProjectModel, v0_4_2.ProjectModel>().ReverseMap();
 
             #endregion
 
@@ -248,8 +248,8 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<ResourceScheduleModel, v0_4_3.ResourceScheduleModel>().ReverseMap();
             CreateMap<v0_4_0.ResourceScheduleModel, v0_4_3.ResourceScheduleModel>().ReverseMap();
 
-            CreateMap<ProjectPlanModel, v0_4_3.ProjectPlanModel>().ReverseMap();
-            CreateMap<v0_4_2.ProjectPlanModel, v0_4_3.ProjectPlanModel>().ReverseMap();
+            CreateMap<ProjectModel, v0_4_3.ProjectModel>().ReverseMap();
+            CreateMap<v0_4_2.ProjectModel, v0_4_3.ProjectModel>().ReverseMap();
 
             #endregion
 
@@ -282,8 +282,8 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<ResourceSettingsModel, v0_4_4.ResourceSettingsModel>().ReverseMap();
             CreateMap<v0_4_0.ResourceSettingsModel, v0_4_4.ResourceSettingsModel>().ReverseMap();
 
-            CreateMap<ProjectPlanModel, v0_4_4.ProjectPlanModel>().ReverseMap();
-            CreateMap<v0_4_3.ProjectPlanModel, v0_4_4.ProjectPlanModel>().ReverseMap();
+            CreateMap<ProjectModel, v0_4_4.ProjectModel>().ReverseMap();
+            CreateMap<v0_4_3.ProjectModel, v0_4_4.ProjectModel>().ReverseMap();
 
             #endregion
 
@@ -299,8 +299,8 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<DisplaySettingsModel, v0_5_0.DisplaySettingsModel>().ReverseMap();
             CreateMap<v0_4_4.DisplaySettingsModel, v0_5_0.DisplaySettingsModel>().ReverseMap();
 
-            CreateMap<ProjectPlanModel, v0_5_0.ProjectPlanModel>().ReverseMap();
-            CreateMap<v0_4_4.ProjectPlanModel, v0_5_0.ProjectPlanModel>().ReverseMap();
+            CreateMap<ProjectModel, v0_5_0.ProjectModel>().ReverseMap();
+            CreateMap<v0_4_4.ProjectModel, v0_5_0.ProjectModel>().ReverseMap();
 
             CreateMap<MetricsModel, v0_5_0.MetricsModel>().ReverseMap();
             CreateMap<RisksModel, v0_5_0.RisksModel>().ReverseMap();
@@ -309,10 +309,6 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<MarginsModel, v0_5_0.MarginsModel>().ReverseMap();
             CreateMap<EffortsModel, v0_5_0.EffortsModel>().ReverseMap();
             CreateMap<NetworkModel, v0_5_0.NetworkModel>().ReverseMap();
-
-            CreateMap<PortfolioBranchModel, v0_5_0.PortfolioBranchModel>().ReverseMap();
-            CreateMap<PortfolioNodeModel, v0_5_0.PortfolioNodeModel>().ReverseMap();
-            CreateMap<PortfolioModel, v0_5_0.PortfolioModel>().ReverseMap();
 
             #endregion
         }

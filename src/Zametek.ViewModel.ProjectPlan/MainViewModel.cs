@@ -18,34 +18,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly object m_Lock;
 
-        private static readonly IList<IFileFilter> s_PortfolioFileFilters =
+        private static readonly IList<IFileFilter> s_ProjectFileFilters =
             [
                 new FileFilter
                 {
-                    Name = Resource.ProjectPlan.Filters.Filter_PortfolioFileType,
+                    Name = Resource.ProjectPlan.Filters.Filter_ProjectFileType,
                     Patterns =
                     [
-                        Resource.ProjectPlan.Filters.Filter_PortfolioFilePattern
-                    ]
-                },
-                new FileFilter
-                {
-                    Name = Resource.ProjectPlan.Filters.Filter_AllFileType,
-                    Patterns =
-                    [
-                        Resource.ProjectPlan.Filters.Filter_AllFilePattern
-                    ]
-                }
-            ];
-
-        private static readonly IList<IFileFilter> s_ProjectPlanFileFilters =
-            [
-                new FileFilter
-                {
-                    Name = Resource.ProjectPlan.Filters.Filter_ProjectPlanFileType,
-                    Patterns =
-                    [
-                        Resource.ProjectPlan.Filters.Filter_ProjectPlanFilePattern
+                        Resource.ProjectPlan.Filters.Filter_ProjectFilePattern
                     ]
                 },
                 new FileFilter
@@ -133,19 +113,19 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
 
             {
-                ReactiveCommand<Unit, Unit> openProjectPlanFileCommand = ReactiveCommand.CreateFromTask(OpenProjectPlanFileAsync);
-                openProjectPlanFileCommand.IsExecuting.ToProperty(this, main => main.IsOpening, out m_IsOpening);
-                OpenProjectPlanFileCommand = openProjectPlanFileCommand;
+                ReactiveCommand<Unit, Unit> openProjectFileCommand = ReactiveCommand.CreateFromTask(OpenProjectFileAsync);
+                openProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsOpening, out m_IsOpening);
+                OpenProjectFileCommand = openProjectFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> saveProjectPlanFileCommand = ReactiveCommand.CreateFromTask(SaveProjectPlanFileAsync);
-                saveProjectPlanFileCommand.IsExecuting.ToProperty(this, main => main.IsSaving, out m_IsSaving);
-                SaveProjectPlanFileCommand = saveProjectPlanFileCommand;
+                ReactiveCommand<Unit, Unit> saveProjectFileCommand = ReactiveCommand.CreateFromTask(SaveProjectFileAsync);
+                saveProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSaving, out m_IsSaving);
+                SaveProjectFileCommand = saveProjectFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> saveAsProjectPlanFileCommand = ReactiveCommand.CreateFromTask(SaveAsProjectPlanFileAsync);
-                saveAsProjectPlanFileCommand.IsExecuting.ToProperty(this, main => main.IsSavingAs, out m_IsSavingAs);
-                SaveAsProjectPlanFileCommand = saveAsProjectPlanFileCommand;
+                ReactiveCommand<Unit, Unit> saveAsProjectFileCommand = ReactiveCommand.CreateFromTask(SaveAsProjectFileAsync);
+                saveAsProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSavingAs, out m_IsSavingAs);
+                SaveAsProjectFileCommand = saveAsProjectFileCommand;
             }
             {
                 ReactiveCommand<Unit, Unit> importProjectFileCommand = ReactiveCommand.CreateFromTask(ImportProjectFileAsync);
@@ -158,9 +138,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 ExportProjectFileCommand = exportProjectFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> closeProjectPlanCommand = ReactiveCommand.CreateFromTask(CloseProjectPlanAsync);
-                closeProjectPlanCommand.IsExecuting.ToProperty(this, main => main.IsClosing, out m_IsClosing);
-                CloseProjectPlanCommand = closeProjectPlanCommand;
+                ReactiveCommand<Unit, Unit> closeProjectCommand = ReactiveCommand.CreateFromTask(CloseProjectAsync);
+                closeProjectCommand.IsExecuting.ToProperty(this, main => main.IsClosing, out m_IsClosing);
+                CloseProjectCommand = closeProjectCommand;
             }
 
             ToggleShowDatesCommand = ReactiveCommand.Create(ToggleShowDates);
@@ -432,9 +412,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ProcessProjectImport(ProjectImportModel importModel) => m_CoreViewModel.ProcessProjectImport(importModel);
 
-        private void ProcessProjectPlan(ProjectPlanModel planModel) => m_CoreViewModel.ProcessProjectPlan(planModel);
+        private void ProcessProject(ProjectModel projectModel) => m_CoreViewModel.ProcessProject(projectModel);
 
-        private async Task<ProjectPlanModel> BuildProjectPlanAsync() => await Task.Run(m_CoreViewModel.BuildProjectPlan);
+        private async Task<ProjectModel> BuildProjectAsync() => await Task.Run(m_CoreViewModel.BuildProject);
 
         private async Task ForceCompileAsync() => await Task.Run(async () =>
         {
@@ -450,18 +430,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ResetProject() => m_CoreViewModel.ResetProject();
 
-        private async Task OpenProjectPlanFileInternalAsync(string? filename)
+        private async Task OpenProjectFileInternalAsync(string? filename)
         {
             if (!string.IsNullOrWhiteSpace(filename))
             {
-                ProjectPlanModel planModel = await m_ProjectFileOpen.OpenProjectPlanFileAsync(filename);
-                ProcessProjectPlan(planModel);
+                ProjectModel projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(filename);
+                ProcessProject(projectModel);
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
                 //await RunAutoCompileAsync();
             }
         }
 
-        private async Task SaveProjectPlanFileInternalAsync(string? filename)
+        private async Task SaveProjectFileInternalAsync(string? filename)
         {
             if (string.IsNullOrWhiteSpace(filename))
             {
@@ -472,8 +452,8 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             else
             {
-                ProjectPlanModel projectPlan = await BuildProjectPlanAsync();
-                await m_ProjectFileSave.SaveProjectPlanFileAsync(projectPlan, filename);
+                ProjectModel projectModel = await BuildProjectAsync();
+                await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
                 m_CoreViewModel.IsProjectUpdated = false;
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
             }
@@ -684,17 +664,17 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public ICommand OpenProjectPlanFileCommand { get; }
+        public ICommand OpenProjectFileCommand { get; }
 
-        public ICommand SaveProjectPlanFileCommand { get; }
+        public ICommand SaveProjectFileCommand { get; }
 
-        public ICommand SaveAsProjectPlanFileCommand { get; }
+        public ICommand SaveAsProjectFileCommand { get; }
 
         public ICommand ImportProjectFileCommand { get; }
 
         public ICommand ExportProjectFileCommand { get; }
 
-        public ICommand CloseProjectPlanCommand { get; }
+        public ICommand CloseProjectCommand { get; }
 
         public ICommand ToggleShowDatesCommand { get; }
 
@@ -765,7 +745,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public async Task OpenProjectPlanFileAsync()
+        public async Task OpenProjectFileAsync()
         {
             try
             {
@@ -782,8 +762,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
                 string directory = m_SettingService.ProjectDirectory;
-                string? filename = await m_DialogService.ShowOpenFileDialogAsync(directory, s_ProjectPlanFileFilters);
-                await OpenProjectPlanFileInternalAsync(filename);
+                string? filename = await m_DialogService.ShowOpenFileDialogAsync(directory, s_ProjectFileFilters);
+                await OpenProjectFileInternalAsync(filename);
             }
             catch (Exception ex)
             {
@@ -795,7 +775,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public async Task OpenProjectPlanFileAsync(string? filename)
+        public async Task OpenProjectFileAsync(string? filename)
         {
             try
             {
@@ -812,7 +792,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
-                await OpenProjectPlanFileInternalAsync(filename);
+                await OpenProjectFileInternalAsync(filename);
             }
             catch (Exception ex)
             {
@@ -824,7 +804,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public async Task SaveProjectPlanFileAsync()
+        public async Task SaveProjectFileAsync()
         {
             try
             {
@@ -833,14 +813,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (string.IsNullOrWhiteSpace(projectTitle)
                     || !m_SettingService.IsTitleBoundToFilename)
                 {
-                    await SaveAsProjectPlanFileAsync();
+                    await SaveAsProjectFileAsync();
                     return;
                 }
 
                 string directory = m_SettingService.ProjectDirectory;
                 string filename = Path.Combine(directory, projectTitle);
-                filename = $@"{filename}.{Resource.ProjectPlan.Filters.Filter_ProjectPlanFileExtension}";
-                await SaveProjectPlanFileInternalAsync(filename);
+                filename = $@"{filename}.{Resource.ProjectPlan.Filters.Filter_ProjectFileExtension}";
+                await SaveProjectFileInternalAsync(filename);
             }
             catch (Exception ex)
             {
@@ -851,20 +831,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public async Task SaveAsProjectPlanFileAsync()
+        public async Task SaveAsProjectFileAsync()
         {
             try
             {
                 string directory = m_SettingService.ProjectDirectory;
                 string projectTitle = m_SettingService.ProjectTitle;
-                string? filename = await m_DialogService.ShowSaveFileDialogAsync(projectTitle, directory, s_ProjectPlanFileFilters);
+                string? filename = await m_DialogService.ShowSaveFileDialogAsync(projectTitle, directory, s_ProjectFileFilters);
 
                 if (string.IsNullOrWhiteSpace(filename))
                 {
                     return;
                 }
 
-                await SaveProjectPlanFileInternalAsync(filename);
+                await SaveProjectFileInternalAsync(filename);
             }
             catch (Exception ex)
             {
@@ -922,9 +902,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    ProjectPlanModel projectPlan = await BuildProjectPlanAsync();
+                    ProjectModel projectModel = await BuildProjectAsync();
                     await m_ProjectFileExport.ExportProjectFileAsync(
-                        projectPlan,
+                        projectModel,
                         m_CoreViewModel.ResourceSeriesSet,
                         m_CoreViewModel.TrackingSeriesSet,
                         ShowDates,
@@ -940,7 +920,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public async Task CloseProjectPlanAsync()
+        public async Task CloseProjectAsync()
         {
             try
             {

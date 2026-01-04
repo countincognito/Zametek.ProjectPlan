@@ -37,28 +37,28 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
                     },
                     x => x.Time.GetHashCode() + x.ResourceId.GetHashCode() + x.ActivityId.GetHashCode());
 
-        public static ProjectPlanModel Upgrade(
+        public static ProjectModel Upgrade(
             IMapper mapper,
-            v0_3_2.ProjectPlanModel projectPlan)
+            v0_3_2.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(mapper);
-            ArgumentNullException.ThrowIfNull(projectPlan);
+            ArgumentNullException.ThrowIfNull(project);
 
-            var plan = new ProjectPlanModel
+            var output = new ProjectModel
             {
-                ProjectStart = projectPlan.ProjectStart,
-                DependentActivities = mapper.Map<List<v0_3_2.DependentActivityModel>, List<DependentActivityModel>>(projectPlan.DependentActivities),
-                ArrowGraphSettings = projectPlan.ArrowGraphSettings ?? new v0_1_0.ArrowGraphSettingsModel(),
-                ResourceSettings = mapper.Map<v0_3_2.ResourceSettingsModel, ResourceSettingsModel>(projectPlan.ResourceSettings ?? new v0_3_2.ResourceSettingsModel()),
-                WorkStreamSettings = projectPlan.WorkStreamSettings ?? new v0_3_2.WorkStreamSettingsModel(),
+                ProjectStart = project.ProjectStart,
+                DependentActivities = mapper.Map<List<v0_3_2.DependentActivityModel>, List<DependentActivityModel>>(project.DependentActivities),
+                ArrowGraphSettings = project.ArrowGraphSettings ?? new v0_1_0.ArrowGraphSettingsModel(),
+                ResourceSettings = mapper.Map<v0_3_2.ResourceSettingsModel, ResourceSettingsModel>(project.ResourceSettings ?? new v0_3_2.ResourceSettingsModel()),
+                WorkStreamSettings = project.WorkStreamSettings ?? new v0_3_2.WorkStreamSettingsModel(),
                 DisplaySettings = new DisplaySettingsModel(),
-                GraphCompilation = mapper.Map<v0_3_2.GraphCompilationModel, GraphCompilationModel>(projectPlan.GraphCompilation ?? new v0_3_2.GraphCompilationModel()),
-                ArrowGraph = mapper.Map<v0_3_2.ArrowGraphModel, ArrowGraphModel>(projectPlan.ArrowGraph ?? new v0_3_2.ArrowGraphModel()),
-                HasStaleOutputs = projectPlan.HasStaleOutputs,
+                GraphCompilation = mapper.Map<v0_3_2.GraphCompilationModel, GraphCompilationModel>(project.GraphCompilation ?? new v0_3_2.GraphCompilationModel()),
+                ArrowGraph = mapper.Map<v0_3_2.ArrowGraphModel, ArrowGraphModel>(project.ArrowGraph ?? new v0_3_2.ArrowGraphModel()),
+                HasStaleOutputs = project.HasStaleOutputs,
             };
 
             // Check all old tracker models and ensure the time values are consistent.
-            List<int> trackerSizes = plan
+            List<int> trackerSizes = output
                 .DependentActivities
                 .Select(x => x.Activity.Trackers.Count)
                 .Distinct()
@@ -73,7 +73,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
             {
                 int trackerSize = trackerSizes[0];
 
-                foreach (DependentActivityModel dependentActivity in plan.DependentActivities)
+                foreach (DependentActivityModel dependentActivity in output.DependentActivities)
                 {
                     ActivityModel activity = dependentActivity.Activity;
 
@@ -88,13 +88,13 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
             }
 
             // Convert the old tracker models into the new tracker models.
-            Dictionary<int, ResourceModel> resourceLookup = plan.ResourceSettings.Resources.ToDictionary(x => x.Id);
+            Dictionary<int, ResourceModel> resourceLookup = output.ResourceSettings.Resources.ToDictionary(x => x.Id);
 
             // Capture all the activity trackers across all resources.
             List<ResourceActivityTrackerModel> resourceActivityTrackers = [];
 
             // Cycle through the old activity trackers to allocate resource usage.
-            foreach (v0_3_2.DependentActivityModel oldActivityModel in projectPlan.DependentActivities)
+            foreach (v0_3_2.DependentActivityModel oldActivityModel in project.DependentActivities)
             {
                 List<v0_3_0.TrackerModel> oldActivityTrackers = oldActivityModel.Activity.Trackers;
 
@@ -166,7 +166,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
             }
 
             // Cycle through the new activity trackers and clear out unnecessary values.
-            foreach (DependentActivityModel dependentActivityModel in plan.DependentActivities)
+            foreach (DependentActivityModel dependentActivityModel in output.DependentActivities)
             {
                 List<ActivityTrackerModel> activityTrackers = dependentActivityModel.Activity.Trackers;
 
@@ -185,13 +185,13 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
             }
 
             Dictionary<int, ActivityModel> activtyLookup =
-                plan.DependentActivities
+                output.DependentActivities
                 .Select(x => x.Activity)
                 .ToDictionary(x => x.Id);
 
             // Cycle through the new activity trackers in the graph compilation and
             // replace the old values.
-            foreach (DependentActivityModel dependentActivityModel in plan.GraphCompilation.DependentActivities)
+            foreach (DependentActivityModel dependentActivityModel in output.GraphCompilation.DependentActivities)
             {
                 dependentActivityModel.Activity.Trackers.Clear();
 
@@ -203,7 +203,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
 
             // Cycle through the new activity trackers in the arrow graph and
             // replace the old values.
-            foreach (ActivityEdgeModel edgeModel in plan.ArrowGraph.Edges)
+            foreach (ActivityEdgeModel edgeModel in output.ArrowGraph.Edges)
             {
                 edgeModel.Content.Trackers.Clear();
                 edgeModel.Content.TargetWorkStreams.Clear();
@@ -215,7 +215,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
                 }
             }
 
-            return plan;
+            return output;
         }
     }
 }

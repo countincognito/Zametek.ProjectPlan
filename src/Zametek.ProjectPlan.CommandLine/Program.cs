@@ -121,8 +121,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
                             if (inputFilename is not null)
                             {
-                                ProjectPlanModel projectPlan = projectFileOpen.OpenProjectPlanFileAsync(inputFilename).Result;
-                                core.ProcessProjectPlan(projectPlan);
+                                ProjectModel projectModel = projectFileOpen.OpenProjectFileAsync(inputFilename).Result;
+                                core.ProcessProject(projectModel);
                                 settingService.SetProjectFilePath(inputFilename, bindTitleToFilename: true);
                             }
                             else if (importFilename is not null)
@@ -173,15 +173,15 @@ namespace Zametek.ProjectPlan.CommandLine
 
                             if (outputFilename is not null)
                             {
-                                ProjectPlanModel plan = core.BuildProjectPlan();
-                                projectFileSave.SaveProjectPlanFileAsync(plan, outputFilename).Wait();
+                                ProjectModel projectModel = core.BuildProject();
+                                projectFileSave.SaveProjectFileAsync(projectModel, outputFilename).Wait();
                                 settingService.SetProjectFilePath(outputFilename, bindTitleToFilename: true);
                             }
                             if (exportFilename is not null)
                             {
-                                ProjectPlanModel plan = core.BuildProjectPlan();
+                                ProjectModel projectModel = core.BuildProject();
                                 projectFileExport.ExportProjectFile(
-                                    plan,
+                                    projectModel,
                                     core.ResourceSeriesSet,
                                     core.TrackingSeriesSet,
                                     core.DisplaySettingsViewModel.ShowDates,

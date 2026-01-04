@@ -1522,7 +1522,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void ProcessProjectPlan(ProjectPlanModel projectPlanModel)
+        public void ProcessProject(ProjectModel projectModel)
         {
             try
             {
@@ -1537,13 +1537,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
                     // Project Start Date.
-                    ProjectStart = projectPlanModel.ProjectStart;
+                    ProjectStart = projectModel.ProjectStart;
 
                     // Project Start Date.
-                    Today = projectPlanModel.Today;
+                    Today = projectModel.Today;
 
                     // Display settings.
-                    var displaySettings = projectPlanModel.DisplaySettings with
+                    var displaySettings = projectModel.DisplaySettings with
                     {
                         ShowDates = DisplaySettingsViewModel.ShowDates,
                         UseClassicDates = DisplaySettingsViewModel.UseClassicDates,
@@ -1553,19 +1553,19 @@ namespace Zametek.ViewModel.ProjectPlan
                     DisplaySettingsViewModel.SetValues(displaySettings);
 
                     // Metrics.
-                    Metrics = projectPlanModel.Metrics;
+                    Metrics = projectModel.Metrics;
 
                     // Work Stream Settings.
-                    WorkStreamSettings = projectPlanModel.WorkStreamSettings;
+                    WorkStreamSettings = projectModel.WorkStreamSettings;
 
                     // Resource Settings.
-                    ResourceSettings = projectPlanModel.ResourceSettings;
+                    ResourceSettings = projectModel.ResourceSettings;
 
                     // Graph Settings.
-                    GraphSettings = projectPlanModel.GraphSettings;
+                    GraphSettings = projectModel.GraphSettings;
 
                     // Activities.
-                    AddManagedActivities(projectPlanModel.DependentActivities);
+                    AddManagedActivities(projectModel.DependentActivities);
 
                     // Now that Resources and Activities are in place,
                     // revise all tracker values.
@@ -1575,11 +1575,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsReadyToReviseSettings = ReadyToRevise.Yes;
 
                     // Display settings (the rest of the settings).
-                    displaySettings = projectPlanModel.DisplaySettings with
+                    displaySettings = projectModel.DisplaySettings with
                     {
-                        ShowDates = projectPlanModel.DisplaySettings.ShowDates,
-                        UseClassicDates = projectPlanModel.DisplaySettings.UseClassicDates,
-                        UseBusinessDays = projectPlanModel.DisplaySettings.UseBusinessDays,
+                        ShowDates = projectModel.DisplaySettings.ShowDates,
+                        UseClassicDates = projectModel.DisplaySettings.UseClassicDates,
+                        UseBusinessDays = projectModel.DisplaySettings.UseBusinessDays,
                     };
 
                     DisplaySettingsViewModel.SetValues(displaySettings);
@@ -1598,7 +1598,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public ProjectPlanModel BuildProjectPlan()
+        public ProjectModel BuildProject()
         {
             try
             {
@@ -1611,9 +1611,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
-                    var plan = new ProjectPlanModel
+                    var plan = new ProjectModel
                     {
-                        Version = Data.ProjectPlan.Versions.ProjectPlanLatest,
+                        Version = Data.ProjectPlan.Versions.ProjectLatest,
                         ProjectStart = ProjectStart,
                         Today = Today,
                         DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(Activities),

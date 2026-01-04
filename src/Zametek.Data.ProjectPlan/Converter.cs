@@ -6,112 +6,84 @@ namespace Zametek.Data.ProjectPlan
     {
         private readonly static IMapper m_Mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
 
-        #region PortfolioModels
+        #region ProjectModels
 
-        public static v0_5_0.PortfolioModel Format(Common.ProjectPlan.PortfolioModel portfolio)
+        public static v0_5_0.ProjectModel Format(Common.ProjectPlan.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(portfolio);
-            return m_Mapper.Map<Common.ProjectPlan.PortfolioModel, v0_5_0.PortfolioModel>(portfolio);
+            ArgumentNullException.ThrowIfNull(project);
+            return m_Mapper.Map<Common.ProjectPlan.ProjectModel, v0_5_0.ProjectModel>(project);
         }
 
-        public static Common.ProjectPlan.PortfolioModel Upgrade(v0_5_0.PortfolioModel portfolio)
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_5_0.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(portfolio);
-            return m_Mapper.Map<v0_5_0.PortfolioModel, Common.ProjectPlan.PortfolioModel>(portfolio);
+            ArgumentNullException.ThrowIfNull(project);
+            return m_Mapper.Map<v0_5_0.ProjectModel, Common.ProjectPlan.ProjectModel>(project);
         }
 
-        //public static Common.ProjectPlan.PortfolioModel Upgrade(v0_5_1.PortfolioModel portfolio)
-        //{
-        //    ArgumentNullException.ThrowIfNull(portfolio);
-        //    return m_Mapper.Map<v0_5_1.PortfolioModel, Common.ProjectPlan.PortfolioModel>(portfolio);
-        //}
-
-        //public static Common.ProjectPlan.PortfolioModel Upgrade(v0_5_0.PortfolioModel portfolio)
-        //{
-        //    ArgumentNullException.ThrowIfNull(portfolio);
-        //    return Upgrade(v0_5_1.Converter.Upgrade(m_Mapper, portfolio));
-        //}
-
-        #endregion
-
-        #region ProjectPlanModels
-
-        public static v0_5_0.ProjectPlanModel Format(Common.ProjectPlan.ProjectPlanModel projectPlan)
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_4_4.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return m_Mapper.Map<Common.ProjectPlan.ProjectPlanModel, v0_5_0.ProjectPlanModel>(projectPlan);
+            ArgumentNullException.ThrowIfNull(project);
+            return Upgrade(v0_5_0.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_5_0.ProjectPlanModel projectPlan)
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_4_3.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return m_Mapper.Map<v0_5_0.ProjectPlanModel, Common.ProjectPlan.ProjectPlanModel>(projectPlan);
+            ArgumentNullException.ThrowIfNull(project);
+            return Upgrade(v0_4_4.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_4_4.ProjectPlanModel projectPlan)
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_4_2.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return Upgrade(v0_5_0.Converter.Upgrade(m_Mapper, projectPlan));
+            ArgumentNullException.ThrowIfNull(project);
+            return Upgrade(v0_4_3.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_4_3.ProjectPlanModel projectPlan)
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_4_1.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return Upgrade(v0_4_4.Converter.Upgrade(m_Mapper, projectPlan));
+            ArgumentNullException.ThrowIfNull(project);
+            return Upgrade(v0_4_2.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_4_2.ProjectPlanModel projectPlan)
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_4_0.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return Upgrade(v0_4_3.Converter.Upgrade(m_Mapper, projectPlan));
+            ArgumentNullException.ThrowIfNull(project);
+            return Upgrade(v0_4_1.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_4_1.ProjectPlanModel projectPlan)
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_3_2.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return Upgrade(v0_4_2.Converter.Upgrade(m_Mapper, projectPlan));
+            ArgumentNullException.ThrowIfNull(project);
+            return Upgrade(v0_4_0.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_4_0.ProjectPlanModel projectPlan)
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_3_1.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return Upgrade(v0_4_1.Converter.Upgrade(m_Mapper, projectPlan));
+            ArgumentNullException.ThrowIfNull(project);
+            return Upgrade(v0_3_2.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_3_2.ProjectPlanModel projectPlan)
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_3_0.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return Upgrade(v0_4_0.Converter.Upgrade(m_Mapper, projectPlan));
+            ArgumentNullException.ThrowIfNull(project);
+            return Upgrade(v0_3_1.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_3_1.ProjectPlanModel projectPlan)
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_2_1.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return Upgrade(v0_3_2.Converter.Upgrade(m_Mapper, projectPlan));
+            ArgumentNullException.ThrowIfNull(project);
+            return Upgrade(v0_3_0.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_3_0.ProjectPlanModel projectPlan)
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_2_0.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return Upgrade(v0_3_1.Converter.Upgrade(m_Mapper, projectPlan));
+            ArgumentNullException.ThrowIfNull(project);
+            return Upgrade(v0_2_1.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_2_1.ProjectPlanModel projectPlan)
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_1_0.ProjectModel project)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return Upgrade(v0_3_0.Converter.Upgrade(m_Mapper, projectPlan));
-        }
-
-        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_2_0.ProjectPlanModel projectPlan)
-        {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return Upgrade(v0_2_1.Converter.Upgrade(m_Mapper, projectPlan));
-        }
-
-        public static Common.ProjectPlan.ProjectPlanModel Upgrade(v0_1_0.ProjectPlanModel projectPlan)
-        {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            return Upgrade(v0_2_0.Converter.Upgrade(projectPlan));
+            ArgumentNullException.ThrowIfNull(project);
+            return Upgrade(v0_2_0.Converter.Upgrade(project));
         }
 
         #endregion

@@ -15,10 +15,10 @@
         Title="{Binding Path=ProjectTitle, Mode=OneWay}">
 	<Window.KeyBindings>
 		<KeyBinding x:DataType="vm:MainViewModel"
-					Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
+					Command="{Binding Path=OpenProjectFileCommand, Mode=OneWay}"
 					Gesture="Ctrl+O" />
 		<KeyBinding x:DataType="vm:MainViewModel"
-					Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"
+					Command="{Binding Path=SaveProjectFileCommand, Mode=OneWay}"
 					Gesture="Ctrl+S" />
 		<KeyBinding x:DataType="vm:MainViewModel"
 					Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}"
@@ -75,14 +75,14 @@
 					  Padding="0">
 					<MenuItem Header="{x:Static resources:Menus.Menu_File}">
 						<MenuItem Header="{x:Static resources:Menus.Menu_Open}"
-								  Command="{Binding Path=OpenProjectPlanFileCommand, Mode=OneWay}"
+								  Command="{Binding Path=OpenProjectFileCommand, Mode=OneWay}"
 								  InputGesture="Ctrl+O"/>
 						<Separator />
 						<MenuItem Header="{x:Static resources:Menus.Menu_Save}"
-								  Command="{Binding Path=SaveProjectPlanFileCommand, Mode=OneWay}"
+								  Command="{Binding Path=SaveProjectFileCommand, Mode=OneWay}"
 								  InputGesture="Ctrl+S"/>
 						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-								  Command="{Binding Path=SaveAsProjectPlanFileCommand, Mode=OneWay}"/>
+								  Command="{Binding Path=SaveAsProjectFileCommand, Mode=OneWay}"/>
 						<Separator />
 						<MenuItem Header="{x:Static resources:Menus.Menu_Import}"
 								  Command="{Binding Path=ImportProjectFileCommand, Mode=OneWay}"/>
@@ -90,7 +90,7 @@
 								  Command="{Binding Path=ExportProjectFileCommand, Mode=OneWay}"/>
 						<Separator />
 						<MenuItem Header="{x:Static resources:Menus.Menu_Close}"
-								  Command="{Binding Path=CloseProjectPlanCommand, Mode=OneWay}"/>
+								  Command="{Binding Path=CloseProjectCommand, Mode=OneWay}"/>
 					</MenuItem>
 
 					<MenuItem Header="{x:Static resources:Menus.Menu_Settings}">

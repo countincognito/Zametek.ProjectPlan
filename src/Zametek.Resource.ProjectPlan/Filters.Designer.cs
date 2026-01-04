@@ -414,27 +414,27 @@ namespace Zametek.Resource.ProjectPlan {
         /// <summary>
         ///   Looks up a localized string similar to zpp.
         /// </summary>
-        public static string Filter_ProjectPlanFileExtension {
+        public static string Filter_ProjectFileExtension {
             get {
-                return ResourceManager.GetString("Filter_ProjectPlanFileExtension", resourceCulture);
+                return ResourceManager.GetString("Filter_ProjectFileExtension", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to *.zpp.
         /// </summary>
-        public static string Filter_ProjectPlanFilePattern {
+        public static string Filter_ProjectFilePattern {
             get {
-                return ResourceManager.GetString("Filter_ProjectPlanFilePattern", resourceCulture);
+                return ResourceManager.GetString("Filter_ProjectFilePattern", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project Plan.
+        ///   Looks up a localized string similar to projectplan.net.
         /// </summary>
-        public static string Filter_ProjectPlanFileType {
+        public static string Filter_ProjectFileType {
             get {
-                return ResourceManager.GetString("Filter_ProjectPlanFileType", resourceCulture);
+                return ResourceManager.GetString("Filter_ProjectFileType", resourceCulture);
             }
         }
         

@@ -126,7 +126,7 @@ namespace Zametek.ProjectPlan
 
                     if (input is not null)
                     {
-                        await mainViewModel.OpenProjectPlanFileAsync(input);
+                        await mainViewModel.OpenProjectFileAsync(input);
                     }
 
                     splashView.Close();

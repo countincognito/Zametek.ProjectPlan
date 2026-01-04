@@ -6,45 +6,45 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
 {
     public static class Converter
     {
-        public static ProjectPlanModel Upgrade(
+        public static ProjectModel Upgrade(
             IMapper mapper,
-            v0_2_1.ProjectPlanModel projectPlan)
+            v0_2_1.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(mapper);
-            ArgumentNullException.ThrowIfNull(projectPlan);
+            ArgumentNullException.ThrowIfNull(project);
             var compilationErrors = new List<GraphCompilationErrorModel>();
 
-            if (projectPlan.GraphCompilation?.Errors != null)
+            if (project.GraphCompilation?.Errors != null)
             {
 
                 // C0010
-                if (projectPlan.GraphCompilation.Errors.MissingDependencies.Count != 0)
+                if (project.GraphCompilation.Errors.MissingDependencies.Count != 0)
                 {
                     compilationErrors.Add(
                         new GraphCompilationErrorModel
                         {
                             ErrorCode = GraphCompilationErrorCode.C0010,
                             ErrorMessage = BuildMissingDependenciesErrorMessage(
-                                projectPlan.GraphCompilation.Errors.MissingDependencies,
-                                projectPlan.GraphCompilation.DependentActivities),
+                                project.GraphCompilation.Errors.MissingDependencies,
+                                project.GraphCompilation.DependentActivities),
                         });
                 }
 
                 // C0020
-                if (projectPlan.GraphCompilation.Errors.CircularDependencies.Count != 0)
+                if (project.GraphCompilation.Errors.CircularDependencies.Count != 0)
                 {
                     compilationErrors.Add(
                         new GraphCompilationErrorModel
                         {
                             ErrorCode = GraphCompilationErrorCode.C0020,
-                            ErrorMessage = BuildCircularDependenciesErrorMessage(projectPlan.GraphCompilation.Errors.CircularDependencies),
+                            ErrorMessage = BuildCircularDependenciesErrorMessage(project.GraphCompilation.Errors.CircularDependencies),
                         });
                 }
 
                 // C0030 - invalid constraints not recorded in v0.2.1
 
                 // C0040
-                if (projectPlan.GraphCompilation.Errors.AllResourcesExplicitTargetsButNotAllActivitiesTargeted)
+                if (project.GraphCompilation.Errors.AllResourcesExplicitTargetsButNotAllActivitiesTargeted)
                 {
                     compilationErrors.Add(
                         new GraphCompilationErrorModel
@@ -55,22 +55,22 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
                 }
             }
 
-            return new ProjectPlanModel
+            return new ProjectModel
             {
-                ProjectStart = projectPlan.ProjectStart,
-                DependentActivities = mapper.Map<List<v0_2_1.DependentActivityModel>, List<DependentActivityModel>>(projectPlan.DependentActivities),
-                ArrowGraphSettings = projectPlan.ArrowGraphSettings ?? new v0_1_0.ArrowGraphSettingsModel(),
-                ResourceSettings = projectPlan.ResourceSettings ?? new v0_1_0.ResourceSettingsModel(),
+                ProjectStart = project.ProjectStart,
+                DependentActivities = mapper.Map<List<v0_2_1.DependentActivityModel>, List<DependentActivityModel>>(project.DependentActivities),
+                ArrowGraphSettings = project.ArrowGraphSettings ?? new v0_1_0.ArrowGraphSettingsModel(),
+                ResourceSettings = project.ResourceSettings ?? new v0_1_0.ResourceSettingsModel(),
                 GraphCompilation = new GraphCompilationModel
                 {
-                    DependentActivities = mapper.Map<List<v0_2_1.DependentActivityModel>, List<DependentActivityModel>>(projectPlan.GraphCompilation?.DependentActivities ?? []),
-                    ResourceSchedules = mapper.Map<List<v0_2_1.ResourceScheduleModel>, List<ResourceScheduleModel>>(projectPlan.GraphCompilation?.ResourceSchedules ?? []),
+                    DependentActivities = mapper.Map<List<v0_2_1.DependentActivityModel>, List<DependentActivityModel>>(project.GraphCompilation?.DependentActivities ?? []),
+                    ResourceSchedules = mapper.Map<List<v0_2_1.ResourceScheduleModel>, List<ResourceScheduleModel>>(project.GraphCompilation?.ResourceSchedules ?? []),
                     CompilationErrors = compilationErrors,
-                    CyclomaticComplexity = projectPlan.GraphCompilation?.CyclomaticComplexity ?? default,
-                    Duration = projectPlan.GraphCompilation?.Duration ?? default,
+                    CyclomaticComplexity = project.GraphCompilation?.CyclomaticComplexity ?? default,
+                    Duration = project.GraphCompilation?.Duration ?? default,
                 },
-                ArrowGraph = mapper.Map<v0_2_1.ArrowGraphModel, ArrowGraphModel>(projectPlan.ArrowGraph ?? new v0_2_1.ArrowGraphModel()),
-                HasStaleOutputs = projectPlan.HasStaleOutputs,
+                ArrowGraph = mapper.Map<v0_2_1.ArrowGraphModel, ArrowGraphModel>(project.ArrowGraph ?? new v0_2_1.ArrowGraphModel()),
+                HasStaleOutputs = project.HasStaleOutputs,
             };
         }
 

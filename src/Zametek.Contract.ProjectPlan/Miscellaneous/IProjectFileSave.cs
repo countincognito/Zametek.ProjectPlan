@@ -4,6 +4,6 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IProjectFileSave
     {
-        Task SaveProjectPlanFileAsync(ProjectPlanModel projectPlan, string filename);
+        Task SaveProjectFileAsync(ProjectModel project, string filename);
     }
 }
