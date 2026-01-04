@@ -6,6 +6,34 @@ namespace Zametek.Data.ProjectPlan
     {
         private readonly static IMapper m_Mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
 
+        #region PortfolioModels
+
+        public static v0_5_0.PortfolioModel Format(Common.ProjectPlan.PortfolioModel portfolio)
+        {
+            ArgumentNullException.ThrowIfNull(portfolio);
+            return m_Mapper.Map<Common.ProjectPlan.PortfolioModel, v0_5_0.PortfolioModel>(portfolio);
+        }
+
+        public static Common.ProjectPlan.PortfolioModel Upgrade(v0_5_0.PortfolioModel portfolio)
+        {
+            ArgumentNullException.ThrowIfNull(portfolio);
+            return m_Mapper.Map<v0_5_0.PortfolioModel, Common.ProjectPlan.PortfolioModel>(portfolio);
+        }
+
+        //public static Common.ProjectPlan.PortfolioModel Upgrade(v0_5_1.PortfolioModel portfolio)
+        //{
+        //    ArgumentNullException.ThrowIfNull(portfolio);
+        //    return m_Mapper.Map<v0_5_1.PortfolioModel, Common.ProjectPlan.PortfolioModel>(portfolio);
+        //}
+
+        //public static Common.ProjectPlan.PortfolioModel Upgrade(v0_5_0.PortfolioModel portfolio)
+        //{
+        //    ArgumentNullException.ThrowIfNull(portfolio);
+        //    return Upgrade(v0_5_1.Converter.Upgrade(m_Mapper, portfolio));
+        //}
+
+        #endregion
+
         #region ProjectPlanModels
 
         public static v0_5_0.ProjectPlanModel Format(Common.ProjectPlan.ProjectPlanModel projectPlan)

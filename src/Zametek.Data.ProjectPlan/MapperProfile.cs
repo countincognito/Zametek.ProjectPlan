@@ -310,6 +310,10 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<EffortsModel, v0_5_0.EffortsModel>().ReverseMap();
             CreateMap<NetworkModel, v0_5_0.NetworkModel>().ReverseMap();
 
+            CreateMap<PortfolioBranchModel, v0_5_0.PortfolioBranchModel>().ReverseMap();
+            CreateMap<PortfolioNodeModel, v0_5_0.PortfolioNodeModel>().ReverseMap();
+            CreateMap<PortfolioModel, v0_5_0.PortfolioModel>().ReverseMap();
+
             #endregion
         }
     }

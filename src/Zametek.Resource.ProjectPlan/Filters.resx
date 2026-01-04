@@ -228,11 +228,20 @@
   <data name="Filter_ProjectPlanFileExtension" xml:space="preserve">
     <value>zpp</value>
   </data>
+  <data name="Filter_PortfolioFileExtension" xml:space="preserve">
+    <value>zppx</value>
+  </data>
   <data name="Filter_ProjectPlanFilePattern" xml:space="preserve">
     <value>*.zpp</value>
   </data>
+  <data name="Filter_PortfolioFilePattern" xml:space="preserve">
+    <value>*.zppx</value>
+  </data>
   <data name="Filter_ProjectPlanFileType" xml:space="preserve">
-    <value>projectplan.net</value>
+    <value>Project Plan</value>
+  </data>
+  <data name="Filter_PortfolioFileType" xml:space="preserve">
+    <value>Portfolio</value>
   </data>
   <data name="Filter_ProjectXlsxFileExtension" xml:space="preserve">
     <value>xlsx</value>

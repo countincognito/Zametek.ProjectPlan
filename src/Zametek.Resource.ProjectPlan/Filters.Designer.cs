@@ -385,6 +385,33 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to zppx.
+        /// </summary>
+        public static string Filter_PortfolioFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_PortfolioFileExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to *.zppx.
+        /// </summary>
+        public static string Filter_PortfolioFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_PortfolioFilePattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Portfolio.
+        /// </summary>
+        public static string Filter_PortfolioFileType {
+            get {
+                return ResourceManager.GetString("Filter_PortfolioFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to zpp.
         /// </summary>
         public static string Filter_ProjectPlanFileExtension {
@@ -403,7 +430,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to projectplan.net.
+        ///   Looks up a localized string similar to Project Plan.
         /// </summary>
         public static string Filter_ProjectPlanFileType {
             get {

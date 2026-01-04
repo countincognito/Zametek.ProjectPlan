@@ -18,6 +18,26 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly object m_Lock;
 
+        private static readonly IList<IFileFilter> s_PortfolioFileFilters =
+            [
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_PortfolioFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_PortfolioFilePattern
+                    ]
+                },
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_AllFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_AllFilePattern
+                    ]
+                }
+            ];
+
         private static readonly IList<IFileFilter> s_ProjectPlanFileFilters =
             [
                 new FileFilter

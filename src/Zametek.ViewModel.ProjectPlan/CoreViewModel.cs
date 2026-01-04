@@ -1613,7 +1613,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     var plan = new ProjectPlanModel
                     {
-                        Version = Data.ProjectPlan.Versions.Latest,
+                        Version = Data.ProjectPlan.Versions.ProjectPlanLatest,
                         ProjectStart = ProjectStart,
                         Today = Today,
                         DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(Activities),
