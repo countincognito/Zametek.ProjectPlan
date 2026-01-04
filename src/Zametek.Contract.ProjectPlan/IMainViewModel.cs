@@ -16,9 +16,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsSavingAs { get; }
 
-        bool IsImporting { get; }
+        // TODO
+        //bool IsImporting { get; }
 
-        bool IsExporting { get; }
+        //bool IsExporting { get; }
 
         bool IsClosing { get; }
 
@@ -60,9 +61,9 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand SaveAsProjectFileCommand { get; }
 
-        ICommand ImportProjectFileCommand { get; }
+        //ICommand ImportProjectPlanFileCommand { get; }
 
-        ICommand ExportProjectFileCommand { get; }
+        //ICommand ExportProjectPlanFileCommand { get; }
 
         ICommand CloseProjectCommand { get; }
 
@@ -118,9 +119,9 @@ namespace Zametek.Contract.ProjectPlan
 
         Task SaveAsProjectFileAsync();
 
-        Task ImportProjectFileAsync();
+        //Task ImportProjectPlanFileAsync();
 
-        Task ExportProjectFileAsync();
+        //Task ExportProjectPlanFileAsync();
 
         Task CloseProjectAsync();
 

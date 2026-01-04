@@ -1385,7 +1385,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void ResetProject()
+        public void ResetProjectPlan()
         {
             try
             {
@@ -1428,14 +1428,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void ProcessProjectImport(ProjectImportModel projectImportModel)
+        public void ProcessProjectPlanImport(ProjectImportModel projectImportModel)
         {
             try
             {
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    ResetProject();
+                    ResetProjectPlan();
                     m_TrackIsProjectUpdated = false;
                     m_TrackHasStaleOutputs = false;
 
@@ -1522,14 +1522,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void ProcessProject(ProjectModel projectModel)
+        public void ProcessProjectPlan(ProjectPlanModel projectPlanModel)
         {
             try
             {
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    ResetProject();
+                    ResetProjectPlan();
                     m_TrackIsProjectUpdated = false;
                     m_TrackHasStaleOutputs = false;
 
@@ -1537,13 +1537,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
                     // Project Start Date.
-                    ProjectStart = projectModel.ProjectStart;
+                    ProjectStart = projectPlanModel.ProjectStart;
 
                     // Project Start Date.
-                    Today = projectModel.Today;
+                    Today = projectPlanModel.Today;
 
                     // Display settings.
-                    var displaySettings = projectModel.DisplaySettings with
+                    var displaySettings = projectPlanModel.DisplaySettings with
                     {
                         ShowDates = DisplaySettingsViewModel.ShowDates,
                         UseClassicDates = DisplaySettingsViewModel.UseClassicDates,
@@ -1553,19 +1553,19 @@ namespace Zametek.ViewModel.ProjectPlan
                     DisplaySettingsViewModel.SetValues(displaySettings);
 
                     // Metrics.
-                    Metrics = projectModel.Metrics;
+                    Metrics = projectPlanModel.Metrics;
 
                     // Work Stream Settings.
-                    WorkStreamSettings = projectModel.WorkStreamSettings;
+                    WorkStreamSettings = projectPlanModel.WorkStreamSettings;
 
                     // Resource Settings.
-                    ResourceSettings = projectModel.ResourceSettings;
+                    ResourceSettings = projectPlanModel.ResourceSettings;
 
                     // Graph Settings.
-                    GraphSettings = projectModel.GraphSettings;
+                    GraphSettings = projectPlanModel.GraphSettings;
 
                     // Activities.
-                    AddManagedActivities(projectModel.DependentActivities);
+                    AddManagedActivities(projectPlanModel.DependentActivities);
 
                     // Now that Resources and Activities are in place,
                     // revise all tracker values.
@@ -1575,11 +1575,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsReadyToReviseSettings = ReadyToRevise.Yes;
 
                     // Display settings (the rest of the settings).
-                    displaySettings = projectModel.DisplaySettings with
+                    displaySettings = projectPlanModel.DisplaySettings with
                     {
-                        ShowDates = projectModel.DisplaySettings.ShowDates,
-                        UseClassicDates = projectModel.DisplaySettings.UseClassicDates,
-                        UseBusinessDays = projectModel.DisplaySettings.UseBusinessDays,
+                        ShowDates = projectPlanModel.DisplaySettings.ShowDates,
+                        UseClassicDates = projectPlanModel.DisplaySettings.UseClassicDates,
+                        UseBusinessDays = projectPlanModel.DisplaySettings.UseBusinessDays,
                     };
 
                     DisplaySettingsViewModel.SetValues(displaySettings);
@@ -1598,7 +1598,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public ProjectModel BuildProject()
+        public ProjectPlanModel BuildProjectPlan()
         {
             try
             {
@@ -1611,9 +1611,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
-                    var plan = new ProjectModel
+                    var plan = new ProjectPlanModel
                     {
-                        Version = Data.ProjectPlan.Versions.ProjectLatest,
                         ProjectStart = ProjectStart,
                         Today = Today,
                         DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(Activities),

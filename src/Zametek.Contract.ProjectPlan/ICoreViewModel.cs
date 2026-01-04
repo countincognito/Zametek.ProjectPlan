@@ -77,13 +77,13 @@ namespace Zametek.Contract.ProjectPlan
 
         void ClearSettings();
 
-        void ResetProject();
+        void ResetProjectPlan();
 
-        void ProcessProjectImport(ProjectImportModel projectImportModel);
+        void ProcessProjectPlanImport(ProjectImportModel projectImportModel);
 
-        void ProcessProject(ProjectModel projectModel);
+        void ProcessProjectPlan(ProjectPlanModel projectPlanModel);
 
-        ProjectModel BuildProject();
+        ProjectPlanModel BuildProjectPlan();
 
         int AddManagedActivity();
 

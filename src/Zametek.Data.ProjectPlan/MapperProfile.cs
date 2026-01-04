@@ -311,6 +311,17 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<NetworkModel, v0_5_0.NetworkModel>().ReverseMap();
 
             #endregion
+
+            #region v0.6.0
+
+            CreateMap<v0_5_0.ProjectModel, v0_6_0.ProjectPlanModel>().ReverseMap();
+
+            CreateMap<ProjectModel, v0_6_0.ProjectModel>().ReverseMap();
+            CreateMap<ProjectPlanModel, v0_6_0.ProjectPlanModel>().ReverseMap();
+            CreateMap<ProjectNodeModel, v0_6_0.ProjectNodeModel>().ReverseMap();
+            CreateMap<ProjectBranchModel, v0_6_0.ProjectBranchModel>().ReverseMap();
+
+            #endregion
         }
     }
 }

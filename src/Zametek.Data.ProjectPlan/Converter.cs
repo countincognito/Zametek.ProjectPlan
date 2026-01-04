@@ -8,16 +8,22 @@ namespace Zametek.Data.ProjectPlan
 
         #region ProjectModels
 
-        public static v0_5_0.ProjectModel Format(Common.ProjectPlan.ProjectModel project)
+        public static v0_6_0.ProjectModel Format(Common.ProjectPlan.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return m_Mapper.Map<Common.ProjectPlan.ProjectModel, v0_5_0.ProjectModel>(project);
+            return m_Mapper.Map<Common.ProjectPlan.ProjectModel, v0_6_0.ProjectModel>(project);
+        }
+
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_6_0.ProjectModel project)
+        {
+            ArgumentNullException.ThrowIfNull(project);
+            return m_Mapper.Map<v0_6_0.ProjectModel, Common.ProjectPlan.ProjectModel>(project);
         }
 
         public static Common.ProjectPlan.ProjectModel Upgrade(v0_5_0.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return m_Mapper.Map<v0_5_0.ProjectModel, Common.ProjectPlan.ProjectModel>(project);
+            return Upgrade(v0_6_0.Converter.Upgrade(m_Mapper, project));
         }
 
         public static Common.ProjectPlan.ProjectModel Upgrade(v0_4_4.ProjectModel project)

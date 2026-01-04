@@ -11,4 +11,8 @@
     <PackageReference Include="Zametek.Maths.Graphs.Primitives" Version="2.4.8" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Portfolios\" />
+  </ItemGroup>
+
 </Project>
