@@ -4,8 +4,8 @@ using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class PlanManagerViewModel
-        : ToolViewModelBase, IPlanManagerViewModel, IDisposable
+    public class ProjectManagerViewModel
+        : ToolViewModelBase, IProjectManagerViewModel, IDisposable
     {
         #region Fields
 
@@ -18,7 +18,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public PlanManagerViewModel(
+        public ProjectManagerViewModel(
             ICoreViewModel coreViewModel,
             IDialogService dialogService)
         {
@@ -46,8 +46,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, pm => pm.HasStaleOutputs);
 
 
-            Id = Resource.ProjectPlan.Titles.Title_Plan;
-            Title = Resource.ProjectPlan.Titles.Title_Plan;
+            Id = Resource.ProjectPlan.Titles.Title_Project;
+            Title = Resource.ProjectPlan.Titles.Title_Project;
         }
 
         #endregion

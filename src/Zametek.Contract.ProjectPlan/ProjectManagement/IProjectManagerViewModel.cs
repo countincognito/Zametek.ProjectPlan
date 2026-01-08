@@ -2,7 +2,7 @@
 
 namespace Zametek.Contract.ProjectPlan
 {
-    public interface IPlanManagerViewModel
+    public interface IProjectManagerViewModel
         : IKillSubscriptions
     {
         string ProjectTitle { get; }

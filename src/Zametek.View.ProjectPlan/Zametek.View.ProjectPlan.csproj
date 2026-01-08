@@ -8,9 +8,6 @@
 	<Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove=".gitignore" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.8" />
     <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.8" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.8" />
@@ -35,26 +32,8 @@
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <AvaloniaXaml Update="ResourceSettingsManagement\ResourceEditView.axaml">
-      <SubType>Designer</SubType>
-    </AvaloniaXaml>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="ActivityManagement\ActivityEditView.axaml.cs">
-      <DependentUpon>ActivityEditView.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="GraphSettingsManagement\GraphSettingsManagerView.axaml.cs">
-      <DependentUpon>GraphSettingsManagerView.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="PlanManagement\PlanManagerView.axaml.cs">
-      <DependentUpon>PlanManagerView.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="ResourceSettingsManagement\ResourceEditView.axaml.cs">
-      <SubType>Code</SubType>
-      <DependentUpon>ResourceEditView.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="GraphManagement\VertexGraphManagerView.axaml.cs">
-      <DependentUpon>VertexGraphManagerView.axaml</DependentUpon>
+    <Compile Update="ProjectManagement\ProjectManagerView.axaml.cs">
+      <DependentUpon>ProjectManagerView.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

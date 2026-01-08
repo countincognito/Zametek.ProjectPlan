@@ -5,9 +5,9 @@
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
-			 x:DataType="vm:PlanManagerViewModel"
+			 x:DataType="vm:ProjectManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Zametek.View.ProjectPlan.PlanManagerView">
+             x:Class="Zametek.View.ProjectPlan.ProjectManagerView">
 	<UserControl.Resources>
 	</UserControl.Resources>
 

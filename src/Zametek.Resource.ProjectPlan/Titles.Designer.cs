@@ -151,11 +151,11 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Plans.
+        ///   Looks up a localized string similar to Project.
         /// </summary>
-        public static string Title_Plan {
+        public static string Title_Project {
             get {
-                return ResourceManager.GetString("Title_Plan", resourceCulture);
+                return ResourceManager.GetString("Title_Project", resourceCulture);
             }
         }
         

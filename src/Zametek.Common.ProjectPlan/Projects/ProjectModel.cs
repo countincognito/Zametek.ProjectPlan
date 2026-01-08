@@ -7,7 +7,7 @@
 
         public Guid Root { get; init; }
 
-        public List<ProjectNodeModel> Nodes { get; init; } = [];
+        public List<ProjectPlanNodeModel> PlanNodes { get; init; } = [];
 
         public List<ProjectBranchModel> Branches { get; init; } = [];
     }
