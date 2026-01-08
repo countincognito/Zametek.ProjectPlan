@@ -177,7 +177,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_IsBusy = this
                 .WhenAnyValue(main => main.m_CoreViewModel.IsBusy)
-                .ToProperty(this, x => x.IsBusy);
+                .ToProperty(this, main => main.IsBusy);
 
             m_IsProjectUpdated = this
                 .WhenAnyValue(main => main.m_CoreViewModel.IsProjectUpdated)
@@ -435,12 +435,25 @@ namespace Zametek.ViewModel.ProjectPlan
             if (!string.IsNullOrWhiteSpace(filename))
             {
                 ProjectModel projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(filename);
+
+
+
+
                 // TODO
                 //ProcessProject(projectModel);
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
                 //await RunAutoCompileAsync();
             }
         }
+
+
+
+
+
+
+
+
+
 
         private async Task SaveProjectFileInternalAsync(string? filename)
         {
@@ -455,11 +468,26 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO
                 //ProjectModel projectModel = await BuildProjectAsync();
+
+
+
                 //await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
+
+
+
                 //m_CoreViewModel.IsProjectUpdated = false;
                 //m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
             }
         }
+
+
+
+
+
+
+
+
+
 
         private async Task ChangeThemeAsync(string theme)
         {

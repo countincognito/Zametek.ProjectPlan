@@ -174,4 +174,7 @@
   <data name="Title_WorkStreamSettingsView" xml:space="preserve">
     <value>Work Stream Settings</value>
   </data>
+  <data name="Title_Plan" xml:space="preserve">
+    <value>Plans</value>
+  </data>
 </root>

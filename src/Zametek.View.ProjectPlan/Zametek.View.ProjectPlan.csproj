@@ -46,6 +46,9 @@
     <Compile Update="GraphSettingsManagement\GraphSettingsManagerView.axaml.cs">
       <DependentUpon>GraphSettingsManagerView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="PlanManagement\PlanManagerView.axaml.cs">
+      <DependentUpon>PlanManagerView.axaml</DependentUpon>
+    </Compile>
     <Compile Update="ResourceSettingsManagement\ResourceEditView.axaml.cs">
       <SubType>Code</SubType>
       <DependentUpon>ResourceEditView.axaml</DependentUpon>

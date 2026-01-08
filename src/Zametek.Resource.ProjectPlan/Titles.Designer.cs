@@ -151,6 +151,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Plans.
+        /// </summary>
+        public static string Title_Plan {
+            get {
+                return ResourceManager.GetString("Title_Plan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to projectplan.net.
         /// </summary>
         public static string Title_ProjectPlan {

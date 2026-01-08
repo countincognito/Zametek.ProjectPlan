@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 x:DataType="vm:PlanManagerViewModel"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Zametek.View.ProjectPlan.PlanManagerView">
+	<UserControl.Resources>
+	</UserControl.Resources>
+
+	<!--<ScrollViewer VerticalScrollBarVisibility="Auto"
+				  HorizontalScrollBarVisibility="Auto">
+		<DockPanel Margin="7">
+			<DockPanel.Styles>
+				<Style Selector="SelectableTextBlock.ok">
+					<Setter Property="Foreground" Value="{DynamicResource TextBlockDefaultForeground}"/>
+				</Style>
+				<Style Selector="SelectableTextBlock.error">
+					<Setter Property="Foreground" Value="Red"/>
+				</Style>
+			</DockPanel.Styles>
+
+			<SelectableTextBlock Text="{Binding Path=CompilationOutput, Mode=OneWay}"
+								 TextWrapping="Wrap"
+								 VerticalAlignment="Stretch">
+				<Classes.ok>
+					<MultiBinding Converter="{x:Static BoolConverters.And}">
+						<MultiBinding.Bindings>
+							<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+							<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+						</MultiBinding.Bindings>
+					</MultiBinding>
+				</Classes.ok>
+
+				<Classes.error>
+					<MultiBinding Converter="{x:Static BoolConverters.Or}">
+						<MultiBinding.Bindings>
+							<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+							<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+						</MultiBinding.Bindings>
+					</MultiBinding>
+				</Classes.error>
+			</SelectableTextBlock>
+		</DockPanel>
+	</ScrollViewer>-->
+</UserControl>

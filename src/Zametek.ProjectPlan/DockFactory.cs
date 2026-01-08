@@ -14,6 +14,7 @@ namespace Zametek.ProjectPlan
     {
         private IRootDock? m_RootDock;
 
+        private readonly IDockable m_PlanManagerViewModel;
         private readonly IDockable m_ActivitiesManagerViewModel;
         private readonly IDockable m_TrackingManagerViewModel;
         private readonly IDockable m_MetricManagerViewModel;
@@ -28,6 +29,7 @@ namespace Zametek.ProjectPlan
         private readonly IDockable m_WorkStreamSettingsManagerViewModel;
 
         public DockFactory(
+            IPlanManagerViewModel planManagerViewModel,
             IActivitiesManagerViewModel activitiesManagerViewModel,
             ITrackingManagerViewModel trackingManagerViewModel,
             IMetricManagerViewModel metricManagerViewModel,
@@ -41,6 +43,7 @@ namespace Zametek.ProjectPlan
             IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
             IWorkStreamSettingsManagerViewModel workStreamSettingsManagerViewModel)
         {
+            m_PlanManagerViewModel = planManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(planManagerViewModel));
             m_ActivitiesManagerViewModel = activitiesManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(activitiesManagerViewModel));
             m_TrackingManagerViewModel = trackingManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(trackingManagerViewModel));
             m_MetricManagerViewModel = metricManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(metricManagerViewModel));
@@ -57,6 +60,11 @@ namespace Zametek.ProjectPlan
 
         public override IRootDock CreateLayout()
         {
+            {
+                m_PlanManagerViewModel.CanClose = false;
+                m_PlanManagerViewModel.CanFloat = true;
+                m_PlanManagerViewModel.CanPin = true;
+            }
             {
                 m_ActivitiesManagerViewModel.CanClose = false;
                 m_ActivitiesManagerViewModel.CanFloat = true;
@@ -132,12 +140,13 @@ namespace Zametek.ProjectPlan
                     new ToolDock
                     {
                         Proportion = 0.6,
-                        ActiveDockable = m_ActivitiesManagerViewModel,
+                        ActiveDockable = m_PlanManagerViewModel,
                         CanClose = false,
                         CanFloat = false,
                         CanPin = false,
                         IsCollapsable = false,
                         VisibleDockables = CreateList(
+                            m_PlanManagerViewModel,
                             m_ActivitiesManagerViewModel,
                             m_GanttChartManagerViewModel,
                             m_TrackingManagerViewModel,
