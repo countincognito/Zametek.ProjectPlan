@@ -1752,7 +1752,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_Activities.Edit(list =>
+                    m_Activities.Edit(activities =>
                     {
                         IsBusy = true;
                         Dictionary<int, IManagedActivityViewModel> activityLookup = Activities.ToDictionary(x => x.Id);

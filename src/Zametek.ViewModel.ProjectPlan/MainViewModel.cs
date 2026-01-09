@@ -72,6 +72,7 @@ namespace Zametek.ViewModel.ProjectPlan
         //    ];
 
         private readonly IFactory m_DockFactory;
+        private readonly IProjectManagerViewModel m_ProjectManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
         //private readonly IProjectFileImport m_ProjectFileImport;
         //private readonly IProjectFileExport m_ProjectFileExport;
@@ -86,6 +87,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public MainViewModel(
             IFactory dockFactory,
+            IProjectManagerViewModel projectManagerViewModel,
             ICoreViewModel coreViewModel,
             //IProjectFileImport projectFileImport,
             //IProjectFileExport projectFileExport,
@@ -95,6 +97,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IDialogService dialogService)
         {
             ArgumentNullException.ThrowIfNull(dockFactory);
+            ArgumentNullException.ThrowIfNull(projectManagerViewModel);
             ArgumentNullException.ThrowIfNull(coreViewModel);
             //ArgumentNullException.ThrowIfNull(projectFileImport);
             //ArgumentNullException.ThrowIfNull(projectFileExport);
@@ -104,6 +107,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dialogService);
             m_Lock = new object();
             m_DockFactory = dockFactory;
+            m_ProjectManagerViewModel = projectManagerViewModel;
             m_CoreViewModel = coreViewModel;
             //m_ProjectFileImport = projectFileImport;
             //m_ProjectFileExport = projectFileExport;
@@ -412,7 +416,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         //private void ProcessProjectImport(ProjectImportModel importModel) => m_CoreViewModel.ProcessProjectImport(importModel);
 
-        private void ProcessProjectPlan (ProjectPlanModel projectPlanModel) => m_CoreViewModel.ProcessProjectPlan(projectPlanModel);
+        private void ProcessProjectPlan(ProjectPlanModel projectPlanModel) => m_CoreViewModel.ProcessProjectPlan(projectPlanModel);
 
         private async Task<ProjectPlanModel> BuildProjectPlanAsync() => await Task.Run(m_CoreViewModel.BuildProjectPlan);
 
@@ -436,7 +440,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ProjectModel projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(filename);
 
-
+                m_ProjectManagerViewModel.ProcessProject(projectModel);
 
 
                 // TODO

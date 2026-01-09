@@ -1,22 +1,21 @@
-﻿using Zametek.Common.ProjectPlan;
+﻿using System.Collections.ObjectModel;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IProjectManagerViewModel
         : IKillSubscriptions
     {
-        string ProjectTitle { get; }
+        IManagedPlanViewModel? Root { get; }
 
-        bool IsBusy { get; }
-
-        bool IsProjectUpdated { get; }
-
-        bool HasStaleOutputs { get; }
+        ReadOnlyObservableCollection<IManagedPlanViewModel> Plans { get; }
 
         void ResetProject();
 
         void ProcessProject(ProjectModel projectModel);
 
         ProjectModel BuildProject();
+
+        void AddManagedPlans(IEnumerable<ProjectPlanNodeModel> projectPlanNodeModels);
     }
 }

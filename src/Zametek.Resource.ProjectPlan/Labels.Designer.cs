@@ -1115,6 +1115,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Root.
+        /// </summary>
+        public static string Label_RootNode {
+            get {
+                return ResourceManager.GetString("Label_RootNode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Schedule.
         /// </summary>
         public static string Label_ScheduleMode {

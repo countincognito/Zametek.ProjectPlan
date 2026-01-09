@@ -1,12 +1,12 @@
-﻿using ReactiveUI;
+﻿using DynamicData;
+using ReactiveUI;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Maths.Graphs;
+using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -15,6 +15,9 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
+        private readonly object m_Lock;
+
+        private readonly ProjectPlanNodeModel m_ProjectPlanNodeModel;
         private static readonly string[] s_NoErrors = [];
         private readonly Dictionary<string, List<string>> m_ErrorsByPropertyName;
 
@@ -22,10 +25,34 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public ManagedPlanViewModel(ProjectPlanModel projectPlan)
+        public ManagedPlanViewModel()
+            : this(new ProjectPlanNodeModel())
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            ProjectPlan = projectPlan;
+        }
+
+        public ManagedPlanViewModel(ProjectPlanNodeModel projectPlanNode)
+        {
+            ArgumentNullException.ThrowIfNull(projectPlanNode);
+            m_Lock = new object();
+
+
+            m_Labels = new();
+
+            // Create read-only view to the source list.
+            m_Labels.Connect()
+               .ObserveOn(RxApp.MainThreadScheduler)
+               .Bind(out m_ReadOnlyLabels)
+               .Subscribe();
+
+
+            m_ProjectPlanNodeModel = projectPlanNode;
+            m_Children = new();
+
+            // Create read-only view to the source list.
+            m_Children.Connect()
+               .ObserveOn(RxApp.MainThreadScheduler)
+               .Bind(out m_ReadOnlyChildren)
+               .Subscribe();
         }
 
         #endregion
@@ -83,30 +110,290 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-        public Guid Id => throw new NotImplementedException();
+        public Guid Id => m_ProjectPlanNodeModel.Id;
 
-        public Guid ParentId => throw new NotImplementedException();
+        public Guid ParentId => m_ProjectPlanNodeModel.ParentId;
 
-        public string Comment => throw new NotImplementedException();
-
-        public ProjectPlanModel ProjectPlan { get; }
-
-        public ReadOnlyObservableCollection<IManagedPlanViewModel> Children => throw new NotImplementedException();
-
-        public bool CanBeRemoved => throw new NotImplementedException();
+        public string Comment => m_ProjectPlanNodeModel.Comment;
 
 
+        private readonly SourceList<string> m_Labels;
+        private readonly ReadOnlyObservableCollection<string> m_ReadOnlyLabels;
+        public ReadOnlyObservableCollection<string> Labels => m_ReadOnlyLabels;
 
 
-        public void SetAsReadOnly()
+        public void SetLabels(IEnumerable<string> labels)
         {
-            
+            try
+            {
+                lock (m_Lock)
+                {
+                    m_Labels.Edit(list =>
+                    {
+                        list.Clear();
+                        list.AddRange(labels);
+                    });
+
+                    this.RaisePropertyChanged(nameof(Label));
+
+                    //IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+            }
         }
 
-        public void SetAsRemovable()
+
+        public string Label
         {
-            
+            get
+            {
+                if (Labels.Count == 0)
+                {
+                    return Id.ToDashedString();
+                }
+                return $@"[{string.Join(DependenciesStringValidationRule.Separator, Labels)}] ({Id.ToDashedString()})";
+            }
         }
+
+
+        public ProjectPlanModel ProjectPlan => m_ProjectPlanNodeModel.ProjectPlan;
+
+        private readonly SourceList<IManagedPlanViewModel> m_Children;
+        private readonly ReadOnlyObservableCollection<IManagedPlanViewModel> m_ReadOnlyChildren;
+        public ReadOnlyObservableCollection<IManagedPlanViewModel> Children => m_ReadOnlyChildren;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        public void AddChildren(IEnumerable<IManagedPlanViewModel> managedPlans)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    m_Children.Edit(children =>
+                    {
+                        foreach (IManagedPlanViewModel managedPlan in managedPlans)
+                        {
+                            children.Add(managedPlan);
+                        }
+
+
+
+
+                        //foreach (DependentActivityModel dependentActivity in dependentActivityModels)
+                        //{
+                        //    var activity = new ManagedActivityViewModel(
+                        //        this,
+                        //        m_Mapper.Map<DependentActivityModel, DependentActivity>(dependentActivity),
+                        //        m_DateTimeCalculator,
+                        //        m_VertexGraphCompiler,
+                        //        ProjectStart,
+                        //        dependentActivity.Activity.Trackers,
+                        //        dependentActivity.Activity.MinimumEarliestStartDateTime,
+                        //        dependentActivity.Activity.MaximumLatestFinishDateTime);
+
+                        //    if (m_VertexGraphCompiler.AddActivity(activity))
+                        //    {
+                        //        activities.Add(activity);
+                        //    }
+                        //    else
+                        //    {
+                        //        activity.Dispose();
+                        //    }
+                        //}
+                    });
+
+                    //IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+            }
+        }
+
+
+
+        //void AddChildren(IEnumerable<ProjectPlanNodeModel> projectPlanNodeModels);
+
+        //void RemoveChildren(IEnumerable<int> managedPlans);
+
+        //void ClearChildren();
+
+
+
+        public void RemoveChildren(IEnumerable<Guid> managedPlans)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    m_Children.Edit(children =>
+                    {
+
+                        IEnumerable<IManagedPlanViewModel> projectPlans = [.. Children.Where(x => managedPlans.Contains(x.Id))];
+
+                        foreach (IManagedPlanViewModel projectPlan in projectPlans)
+                        {
+                            projectPlan.Dispose();
+                        }
+                    });
+
+                    //IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+                //IsBusy = false;
+            }
+        }
+
+        //public void UpdateManagedActivities(IEnumerable<UpdateDependentActivityModel> updateModels)
+        //{
+        //    try
+        //    {
+        //        lock (m_Lock)
+        //        {
+        //            m_Activities.Edit(activities =>
+        //            {
+        //                IsBusy = true;
+        //                Dictionary<int, IManagedActivityViewModel> activityLookup = Activities.ToDictionary(x => x.Id);
+
+        //                foreach (UpdateDependentActivityModel updateModel in updateModels)
+        //                {
+        //                    if (activityLookup.TryGetValue(updateModel.Id, out IManagedActivityViewModel? activity))
+        //                    {
+        //                        if (activity is IEditableObject editable)
+        //                        {
+        //                            editable.BeginEdit();
+
+        //                            if (updateModel.IsNameEdited)
+        //                            {
+        //                                activity.Name = updateModel.Name;
+        //                            }
+        //                            if (updateModel.IsNotesEdited)
+        //                            {
+        //                                activity.Notes = updateModel.Notes;
+        //                            }
+        //                            if (updateModel.IsTargetWorkStreamsEdited)
+        //                            {
+        //                                activity.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateModel.TargetWorkStreams]);
+        //                            }
+        //                            if (updateModel.IsTargetResourcesEdited)
+        //                            {
+        //                                activity.ResourceSelector.SetSelectedTargetResources([.. updateModel.TargetResources]);
+        //                            }
+        //                            if (updateModel.IsTargetResourceOperatorEdited)
+        //                            {
+        //                                activity.TargetResourceOperator = updateModel.TargetResourceOperator;
+        //                            }
+        //                            if (updateModel.IsHasNoCostEdited)
+        //                            {
+        //                                activity.HasNoCost = updateModel.HasNoCost;
+        //                            }
+        //                            if (updateModel.IsHasNoBillingEdited)
+        //                            {
+        //                                activity.HasNoBilling = updateModel.HasNoBilling;
+        //                            }
+        //                            if (updateModel.IsHasNoEffortEdited)
+        //                            {
+        //                                activity.HasNoEffort = updateModel.HasNoEffort;
+        //                            }
+        //                            if (updateModel.IsHasNoRiskEdited)
+        //                            {
+        //                                activity.HasNoRisk = updateModel.HasNoRisk;
+        //                            }
+
+        //                            editable.EndEdit();
+        //                        }
+        //                    }
+        //                }
+        //            });
+
+        //            IsProjectUpdated = true;
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        IsBusy = false;
+        //    }
+        //}
+
+
+
+        public void ClearChildren()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    m_Children.Edit(children =>
+                    {
+                        //IsBusy = true;
+
+                        foreach (IManagedPlanViewModel projectPlan in Children)
+                        {
+                            projectPlan.Dispose();
+                        }
+                        children.Clear();
+                    });
+                }
+            }
+            finally
+            {
+                //IsBusy = false;
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //public bool CanBeRemoved => false;
+
+
+
+
+        //public void SetAsReadOnly()
+        //{
+
+        //}
+
+        //public void SetAsRemovable()
+        //{
+
+        //}
 
         public object CloneObject()
         {
@@ -165,7 +452,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
-
+                m_Labels.Clear();
+                m_Labels.Dispose();
+                ClearChildren();
+                m_Children.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

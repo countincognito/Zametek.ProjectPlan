@@ -13,14 +13,26 @@ namespace Zametek.Contract.ProjectPlan
 
         string Comment { get; }
 
+        ReadOnlyObservableCollection<string> Labels { get; }
+
+        void SetLabels(IEnumerable<string> labels);
+
+        string Label { get; }
+
         ProjectPlanModel ProjectPlan { get; }
 
         ReadOnlyObservableCollection<IManagedPlanViewModel> Children { get; }
 
-        bool CanBeRemoved { get; }
+        void AddChildren(IEnumerable<IManagedPlanViewModel> managedPlans);
 
-        public void SetAsReadOnly();
+        void RemoveChildren(IEnumerable<Guid> managedPlans);
 
-        public void SetAsRemovable();
+        void ClearChildren();
+
+        //bool CanBeRemoved { get; }
+
+        //public void SetAsReadOnly();
+
+        //public void SetAsRemovable();
     }
 }

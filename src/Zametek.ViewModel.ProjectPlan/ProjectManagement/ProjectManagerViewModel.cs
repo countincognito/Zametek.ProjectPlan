@@ -1,4 +1,7 @@
-﻿using ReactiveUI;
+﻿using DynamicData;
+using ReactiveUI;
+using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -13,6 +16,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IDialogService m_DialogService;
+        private Dictionary<Guid, IManagedPlanViewModel> m_ManagedPlanLookup;
+        private Dictionary<Guid, List<string>> m_BranchLabelLookup;
 
         #endregion
 
@@ -27,24 +32,16 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
             m_DialogService = dialogService;
+            m_Plans = new();
+            m_ManagedPlanLookup = [];
+            m_BranchLabelLookup = [];
+            Root = null;
 
-            m_ProjectTitle = this
-                .WhenAnyValue(
-                    pm => pm.m_CoreViewModel.ProjectTitle)
-                .ToProperty(this, pm => pm.ProjectTitle);
-
-            m_IsBusy = this
-                .WhenAnyValue(pm => pm.m_CoreViewModel.IsBusy)
-                .ToProperty(this, pm => pm.IsBusy);
-
-            m_IsProjectUpdated = this
-                .WhenAnyValue(pm => pm.m_CoreViewModel.IsProjectUpdated)
-                .ToProperty(this, pm => pm.IsProjectUpdated);
-
-            m_HasStaleOutputs = this
-                .WhenAnyValue(pm => pm.m_CoreViewModel.HasStaleOutputs)
-                .ToProperty(this, pm => pm.HasStaleOutputs);
-
+            // Create read-only view to the source list.
+            m_Plans.Connect()
+               .ObserveOn(RxApp.MainThreadScheduler)
+               .Bind(out m_ReadOnlyPlans)
+               .Subscribe();
 
             Id = Resource.ProjectPlan.Titles.Title_Project;
             Title = Resource.ProjectPlan.Titles.Title_Project;
@@ -60,49 +57,235 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region IOutputManagerViewModel
+        #region IProjectManagerViewModel
 
-        private readonly ObservableAsPropertyHelper<string> m_ProjectTitle;
-        public string ProjectTitle => m_ProjectTitle.Value;
+        public IManagedPlanViewModel? Root { get; private set; }
 
-        private readonly ObservableAsPropertyHelper<bool> m_IsBusy;
-        public bool IsBusy => m_IsBusy.Value;
-
-        private readonly ObservableAsPropertyHelper<bool> m_IsProjectUpdated;
-        public bool IsProjectUpdated => m_IsProjectUpdated.Value;
-
-        private readonly ObservableAsPropertyHelper<bool> m_HasStaleOutputs;
-        public bool HasStaleOutputs => m_HasStaleOutputs.Value;
-
-
-
+        private readonly SourceList<IManagedPlanViewModel> m_Plans;
+        private readonly ReadOnlyObservableCollection<IManagedPlanViewModel> m_ReadOnlyPlans;
+        public ReadOnlyObservableCollection<IManagedPlanViewModel> Plans => m_ReadOnlyPlans;
 
         public void ResetProject()
         {
+            try
+            {
+                lock (m_Lock)
+                {
+                    //IsBusy = true;
+                    //m_TrackIsProjectUpdated = false;
+                    //m_TrackHasStaleOutputs = false;
+
+                    Root?.ClearChildren();
+                    m_ManagedPlanLookup.Clear();
+                    m_BranchLabelLookup.Clear();
+
+                    Root = null;
+
+                    m_Plans.Clear();
+
+                    //ClearSettings();
+
+                    //Metrics = new();
+
+                    //HasCompilationErrors = false;
+                    //GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
+
+                    //ArrowGraph = new();
+                    //VertexGraph = new();
+
+                    //IsReadyToCompile = ReadyToCompile.No;
+                    //IsReadyToReviseTrackers = ReadyToRevise.No;
+                    //IsReadyToReviseSettings = ReadyToRevise.No;
+
+                    //m_SettingService.Reset();
+
+                    //m_TrackIsProjectUpdated = true;
+                    //IsProjectUpdated = false;
+
+                    //m_TrackHasStaleOutputs = true;
+                    //HasStaleOutputs = false;
+                }
+            }
+            finally
+            {
+                //m_TrackIsProjectUpdated = true;
+                //m_TrackHasStaleOutputs = true;
+                //IsBusy = false;
+            }
         }
 
 
         public void ProcessProject(ProjectModel projectModel)
         {
-            //string output = string.Empty;
+            try
+            {
+                lock (m_Lock)
+                {
+                    //IsBusy = true;
+                    ResetProject();
 
-            //lock (m_Lock)
-            //{
-            //    output = BuildCompilationOutputInternal(
-            //        m_DateTimeCalculator,
-            //        m_CoreViewModel.GraphCompilation,
-            //        m_CoreViewModel.ResourceSeriesSet,
-            //        ShowDates,
-            //        ProjectStart,
-            //        HasCompilationErrors);
-            //}
+                    foreach (ProjectPlanBranchModel planBranch in projectModel.Branches)
+                    {
+                        if (!m_BranchLabelLookup.TryGetValue(planBranch.NodeId, out List<string>? labels))
+                        {
+                            labels = [];
+                            m_BranchLabelLookup.Add(planBranch.NodeId, labels);
+                        }
 
-            //CompilationOutput = output;
+                        labels.Add(planBranch.Label);
+                    }
+
+                    // Root node.
+                    Root = new ManagedPlanViewModel(
+                        new ProjectPlanNodeModel
+                        {
+                            Id = projectModel.Root,
+                        });
+
+                    if (m_BranchLabelLookup.TryGetValue(Root.Id, out List<string>? rootLabels))
+                    {
+                        Root.SetLabels(rootLabels);
+                    }
+
+
+
+                    m_Plans.Add(Root);
+
+                    // Plans.
+                    AddManagedPlans(projectModel.Nodes);
+
+                }
+            }
+            finally
+            {
+                //m_TrackIsProjectUpdated = true;
+                //m_TrackHasStaleOutputs = true;
+                //IsBusy = false;
+            }
         }
 
         public ProjectModel BuildProject()
         {
             return null;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        public void AddManagedPlans(IEnumerable<ProjectPlanNodeModel> projectPlanNodeModels)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    if (Root is not null)
+                    {
+                        foreach (ProjectPlanNodeModel projectPlanNode in projectPlanNodeModels)
+                        {
+
+
+
+
+
+
+
+                            if (!m_ManagedPlanLookup.ContainsKey(projectPlanNode.Id))
+                            {
+                                var projectPlan = new ManagedPlanViewModel(projectPlanNode);
+
+                                if (m_BranchLabelLookup.TryGetValue(projectPlan.Id, out List<string>? labels))
+                                {
+                                    projectPlan.SetLabels(labels);
+                                }
+
+                                m_ManagedPlanLookup.Add(projectPlan.Id, projectPlan);
+
+
+
+                                if (projectPlan.ParentId == Root.Id)
+                                {
+                                    // Top-level plan.
+                                    Root.AddChildren([projectPlan]);
+                                }
+                                else if (m_ManagedPlanLookup.TryGetValue(projectPlan.ParentId, out IManagedPlanViewModel? parentPlan))
+                                {
+                                    // Child plan.
+                                    parentPlan.AddChildren([projectPlan]);
+                                }
+                                else
+                                {
+                                    // Orphaned plan - treat as top-level.
+                                    //plans.Add(projectPlan);
+                                    projectPlan.Dispose();
+
+                                    throw new Exception(projectPlanNode.Id + ": Unable to add managed plan - parent plan not found." + projectPlanNode.ParentId);
+                                }
+
+
+
+
+
+
+
+
+                            }
+
+
+                        }
+
+
+
+
+                        //foreach (DependentActivityModel dependentActivity in dependentActivityModels)
+                        //{
+                        //    var activity = new ManagedActivityViewModel(
+                        //        this,
+                        //        m_Mapper.Map<DependentActivityModel, DependentActivity>(dependentActivity),
+                        //        m_DateTimeCalculator,
+                        //        m_VertexGraphCompiler,
+                        //        ProjectStart,
+                        //        dependentActivity.Activity.Trackers,
+                        //        dependentActivity.Activity.MinimumEarliestStartDateTime,
+                        //        dependentActivity.Activity.MaximumLatestFinishDateTime);
+
+                        //    if (m_VertexGraphCompiler.AddActivity(activity))
+                        //    {
+                        //        activities.Add(activity);
+                        //    }
+                        //    else
+                        //    {
+                        //        activity.Dispose();
+                        //    }
+                        //}
+
+
+                        //IsProjectUpdated = true;
+                    }
+                }
+
+            }
+            finally
+            {
+            }
         }
 
         #endregion
@@ -129,11 +312,8 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
+                ResetProject();
                 KillSubscriptions();
-                m_ProjectTitle?.Dispose();
-                m_IsBusy?.Dispose();
-                m_IsProjectUpdated?.Dispose();
-                m_HasStaleOutputs?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

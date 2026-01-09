@@ -11,23 +11,30 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(project);
 
-            Guid root = Guid.NewGuid();
+            Guid rootId = Guid.NewGuid();
             Guid planId = Guid.NewGuid();
 
             return new ProjectModel
             {
-                Root = root,
+                Root = rootId,
                 Nodes =
                 [
-                    new ProjectNodeModel
+                    new ProjectPlanNodeModel
                     {
                         Id = planId,
-                        ParentId = root,
+                        ParentId = rootId,
                         Comment = "Converted from v0.5.0",
                         ProjectPlan = mapper.Map<v0_5_0.ProjectModel, ProjectPlanModel>(project),
                     },
                 ],
-                Branches = [],
+                Branches =
+                [
+                    new ProjectPlanBranchModel
+                    {
+                        NodeId = rootId,
+                        Label = Resource.ProjectPlan.Labels.Label_RootNode,
+                    },
+                ],
             };
         }
     }
