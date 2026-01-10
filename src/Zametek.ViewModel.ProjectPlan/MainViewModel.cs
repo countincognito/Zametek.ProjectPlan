@@ -175,7 +175,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectTitle = this
                 .WhenAnyValue(
                     main => main.m_CoreViewModel.ProjectTitle,
-                    main => main.m_CoreViewModel.IsProjectUpdated,
+                    main => main.m_CoreViewModel.IsProjectPlanUpdated,
                     (title, isProjectUpdate) => $@"{(isProjectUpdate ? "*" : "")}{(string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title)} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}")
                 .ToProperty(this, main => main.ProjectTitle);
 
@@ -184,7 +184,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, main => main.IsBusy);
 
             m_IsProjectUpdated = this
-                .WhenAnyValue(main => main.m_CoreViewModel.IsProjectUpdated)
+                .WhenAnyValue(main => main.m_CoreViewModel.IsProjectPlanUpdated)
                 .ToProperty(this, main => main.IsProjectUpdated);
 
             m_ProjectStart = this
@@ -268,7 +268,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_CoreViewModel.DisplaySettingsViewModel.SetValues(displaySettings);
 
-            m_CoreViewModel.IsProjectUpdated = false;
+            m_CoreViewModel.IsProjectPlanUpdated = false;
 
 #if DEBUG
             DebugFactoryEvents(m_DockFactory);

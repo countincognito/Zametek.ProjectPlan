@@ -11,7 +11,6 @@
 	<UserControl.Resources>
 	</UserControl.Resources>
 
-
 	<DockPanel Margin="7">
 		
 		
@@ -28,46 +27,4 @@
 
 
 
-
-
-
-
-
-
-
-	<!--<ScrollViewer VerticalScrollBarVisibility="Auto"
-				  HorizontalScrollBarVisibility="Auto">
-		<DockPanel Margin="7">
-			<DockPanel.Styles>
-				<Style Selector="SelectableTextBlock.ok">
-					<Setter Property="Foreground" Value="{DynamicResource TextBlockDefaultForeground}"/>
-				</Style>
-				<Style Selector="SelectableTextBlock.error">
-					<Setter Property="Foreground" Value="Red"/>
-				</Style>
-			</DockPanel.Styles>
-
-			<SelectableTextBlock Text="{Binding Path=CompilationOutput, Mode=OneWay}"
-								 TextWrapping="Wrap"
-								 VerticalAlignment="Stretch">
-				<Classes.ok>
-					<MultiBinding Converter="{x:Static BoolConverters.And}">
-						<MultiBinding.Bindings>
-							<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
-							<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
-						</MultiBinding.Bindings>
-					</MultiBinding>
-				</Classes.ok>
-
-				<Classes.error>
-					<MultiBinding Converter="{x:Static BoolConverters.Or}">
-						<MultiBinding.Bindings>
-							<Binding Path="HasCompilationErrors" Mode="OneWay"/>
-							<Binding Path="HasStaleOutputs" Mode="OneWay"/>
-						</MultiBinding.Bindings>
-					</MultiBinding>
-				</Classes.error>
-			</SelectableTextBlock>
-		</DockPanel>
-	</ScrollViewer>-->
 </UserControl>

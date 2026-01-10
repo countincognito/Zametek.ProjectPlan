@@ -13,7 +13,7 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadyToCompile IsReadyToCompile { get; }
 
-        bool IsProjectUpdated { get; set; }
+        bool IsProjectPlanUpdated { get; set; }
 
         bool HasStaleOutputs { get; set; }
 

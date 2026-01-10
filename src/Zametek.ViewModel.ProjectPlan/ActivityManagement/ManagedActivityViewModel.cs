@@ -919,7 +919,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 UpdateActivityTargetResources();
                 UpdateActivityTargetWorkStreams();
                 TrackerSet.RefreshIndex();
-                m_CoreViewModel.IsProjectUpdated = true;
+                m_CoreViewModel.IsProjectPlanUpdated = true;
                 IsCompiled = false;
             }
         }

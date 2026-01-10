@@ -20,7 +20,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
-        private bool m_TrackIsProjectUpdated;
+        private bool m_TrackIsProjectPlanUpdated;
         private bool m_TrackHasStaleOutputs;
 
         private readonly VertexGraphCompiler m_VertexGraphCompiler;
@@ -52,14 +52,14 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(mapper);
             m_Lock = new object();
-            m_TrackIsProjectUpdated = true;
+            m_TrackIsProjectPlanUpdated = true;
             m_TrackHasStaleOutputs = true;
             m_VertexGraphCompiler = new VertexGraphCompiler();
             m_SettingService = settingService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_DisplaySettingsViewModel = new DisplaySettingsViewModel(
                 m_DateTimeCalculator,
-                SetIsProjectUpdated,
+                SetIsProjectPlanUpdated,
                 () => IsReadyToCompile = ReadyToCompile.Yes);
             m_Mapper = mapper;
 
@@ -948,14 +948,14 @@ namespace Zametek.ViewModel.ProjectPlan
             return null;
         }
 
-        private void SetIsProjectUpdated(bool isProjectUpdated, bool trackStaleOutputs)
+        private void SetIsProjectPlanUpdated(bool isProjectPlanUpdated, bool trackStaleOutputs)
         {
             try
             {
                 lock (m_Lock)
                 {
                     m_TrackHasStaleOutputs = false;
-                    IsProjectUpdated = isProjectUpdated;
+                    IsProjectPlanUpdated = isProjectPlanUpdated;
                     m_TrackHasStaleOutputs = true;
                 }
             }
@@ -999,18 +999,18 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private bool m_IsProjectUpdated;
-        public bool IsProjectUpdated
+        private bool m_IsProjectPlanUpdated;
+        public bool IsProjectPlanUpdated
         {
-            get => m_IsProjectUpdated;
+            get => m_IsProjectPlanUpdated;
             set
             {
                 lock (m_Lock)
                 {
                     HasStaleOutputs = value;
-                    if (m_TrackIsProjectUpdated)
+                    if (m_TrackIsProjectPlanUpdated)
                     {
-                        this.RaiseAndSetIfChanged(ref m_IsProjectUpdated, value);
+                        this.RaiseAndSetIfChanged(ref m_IsProjectPlanUpdated, value);
                     }
                 }
             }
@@ -1040,7 +1040,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsProjectUpdated = true;
+                    IsProjectPlanUpdated = true;
                     this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
@@ -1055,7 +1055,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectUpdated(isProjectUpdated: true, trackStaleOutputs: false);
+                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_Today, value);
                 }
             }
@@ -1188,7 +1188,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_GraphSettings = value;
-                    IsProjectUpdated = true;
+                    IsProjectPlanUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
@@ -1204,7 +1204,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_ResourceSettings = value;
-                    IsProjectUpdated = true;
+                    IsProjectPlanUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
@@ -1220,7 +1220,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_WorkStreamSettings = value;
-                    IsProjectUpdated = true;
+                    IsProjectPlanUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
@@ -1392,7 +1392,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    m_TrackIsProjectUpdated = false;
+                    m_TrackIsProjectPlanUpdated = false;
                     m_TrackHasStaleOutputs = false;
 
                     ClearManagedActivities();
@@ -1413,8 +1413,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     m_SettingService.Reset();
 
-                    m_TrackIsProjectUpdated = true;
-                    IsProjectUpdated = false;
+                    m_TrackIsProjectPlanUpdated = true;
+                    IsProjectPlanUpdated = false;
 
                     m_TrackHasStaleOutputs = true;
                     HasStaleOutputs = false;
@@ -1422,7 +1422,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                m_TrackIsProjectUpdated = true;
+                m_TrackIsProjectPlanUpdated = true;
                 m_TrackHasStaleOutputs = true;
                 IsBusy = false;
             }
@@ -1436,7 +1436,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     IsBusy = true;
                     ResetProjectPlan();
-                    m_TrackIsProjectUpdated = false;
+                    m_TrackIsProjectPlanUpdated = false;
                     m_TrackHasStaleOutputs = false;
 
                     // Default display mode is required for all file opening and closing.
@@ -1507,8 +1507,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Display settings.
                     DisplaySettingsViewModel.SetValues(projectImportModel.DisplaySettings);
 
-                    m_TrackIsProjectUpdated = true;
-                    IsProjectUpdated = true;
+                    m_TrackIsProjectPlanUpdated = true;
+                    IsProjectPlanUpdated = true;
 
                     m_TrackHasStaleOutputs = true;
                     HasStaleOutputs = true;
@@ -1516,7 +1516,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                m_TrackIsProjectUpdated = true;
+                m_TrackIsProjectPlanUpdated = true;
                 m_TrackHasStaleOutputs = true;
                 IsBusy = false;
             }
@@ -1530,7 +1530,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     IsBusy = true;
                     ResetProjectPlan();
-                    m_TrackIsProjectUpdated = false;
+                    m_TrackIsProjectPlanUpdated = false;
                     m_TrackHasStaleOutputs = false;
 
                     // Default display mode is required for all file opening and closing.
@@ -1584,15 +1584,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     DisplaySettingsViewModel.SetValues(displaySettings);
 
-                    m_TrackIsProjectUpdated = true;
-                    IsProjectUpdated = false;
+                    m_TrackIsProjectPlanUpdated = true;
+                    IsProjectPlanUpdated = false;
 
                     m_TrackHasStaleOutputs = true;
                 }
             }
             finally
             {
-                m_TrackIsProjectUpdated = true;
+                m_TrackIsProjectPlanUpdated = true;
                 m_TrackHasStaleOutputs = true;
                 IsBusy = false;
             }
@@ -1705,7 +1705,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
 
-                    IsProjectUpdated = true;
+                    IsProjectPlanUpdated = true;
                 }
             }
             finally
@@ -1737,7 +1737,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
 
-                    IsProjectUpdated = true;
+                    IsProjectPlanUpdated = true;
                 }
             }
             finally
@@ -1808,7 +1808,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
 
-                    IsProjectUpdated = true;
+                    IsProjectPlanUpdated = true;
                 }
             }
             finally
@@ -1879,7 +1879,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
                         }
 
-                        IsProjectUpdated = true;
+                        IsProjectPlanUpdated = true;
                     }
                 }
             }
@@ -1936,7 +1936,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     HasCompilationErrors = graphCompilation.CompilationErrors.Any();
                     GraphCompilation = graphCompilation;
 
-                    IsProjectUpdated = true;
+                    IsProjectPlanUpdated = true;
                     HasStaleOutputs = false;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
                     IsReadyToReviseSettings = ReadyToRevise.No;
