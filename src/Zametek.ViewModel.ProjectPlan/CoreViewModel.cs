@@ -95,10 +95,6 @@ namespace Zametek.ViewModel.ProjectPlan
                .Bind(out m_ReadOnlyActivities)
                .Subscribe();
 
-            m_ProjectTitle = this
-                .WhenAnyValue(core => core.m_SettingService.ProjectTitle)
-                .ToProperty(this, core => core.ProjectTitle);
-
             m_HasActivities = m_ReadOnlyActivities
                 .ToObservableChangeSet()
                 .Select(x => m_ReadOnlyActivities.Count > 0)
@@ -969,10 +965,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region ICoreViewModel Members
 
-        private readonly ObservableAsPropertyHelper<string> m_ProjectTitle;
-        public string ProjectTitle
+        private Guid m_ProjectPlanId;
+        public Guid ProjectPlanId
         {
-            get => m_ProjectTitle.Value;
+            get => m_ProjectPlanId;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_ProjectPlanId, value);
+                }
+            }
         }
 
         private bool m_IsBusy;
@@ -1411,10 +1414,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsReadyToReviseTrackers = ReadyToRevise.No;
                     IsReadyToReviseSettings = ReadyToRevise.No;
 
-                    m_SettingService.Reset();
+                    //m_SettingService.Reset();
 
                     m_TrackIsProjectPlanUpdated = true;
                     IsProjectPlanUpdated = false;
+                    ProjectPlanId = Guid.NewGuid();
 
                     m_TrackHasStaleOutputs = true;
                     HasStaleOutputs = false;
@@ -1428,7 +1432,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void ProcessProjectPlanImport(ProjectImportModel projectImportModel)
+        public void ProcessProjectPlanImport(
+            ProjectImportModel projectImportModel,
+            Guid projectPlanId)
         {
             try
             {
@@ -1438,6 +1444,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResetProjectPlan();
                     m_TrackIsProjectPlanUpdated = false;
                     m_TrackHasStaleOutputs = false;
+                    ProjectPlanId = projectPlanId;
 
                     // Default display mode is required for all file opening and closing.
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
@@ -1522,7 +1529,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void ProcessProjectPlan(ProjectPlanModel projectPlanModel)
+        public void ProcessProjectPlan(
+            ProjectPlanModel projectPlanModel,
+            Guid projectPlanId)
         {
             try
             {
@@ -1532,6 +1541,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResetProjectPlan();
                     m_TrackIsProjectPlanUpdated = false;
                     m_TrackHasStaleOutputs = false;
+                    ProjectPlanId = projectPlanId;
 
                     // Default display mode is required for all file opening and closing.
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
@@ -2225,7 +2235,6 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
-                m_ProjectTitle?.Dispose();
                 m_HasActivities?.Dispose();
                 m_HasResources?.Dispose();
                 m_HasWorkStreams?.Dispose();

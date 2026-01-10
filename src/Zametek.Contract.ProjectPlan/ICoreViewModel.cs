@@ -7,7 +7,7 @@ namespace Zametek.Contract.ProjectPlan
     public interface ICoreViewModel
         : IKillSubscriptions, IDisposable
     {
-        string ProjectTitle { get; }
+        Guid ProjectPlanId { get; }
 
         bool IsBusy { get; }
 
@@ -79,9 +79,9 @@ namespace Zametek.Contract.ProjectPlan
 
         void ResetProjectPlan();
 
-        void ProcessProjectPlanImport(ProjectImportModel projectImportModel);
+        void ProcessProjectPlanImport(ProjectImportModel projectImportModel, Guid projectPlanId);
 
-        void ProcessProjectPlan(ProjectPlanModel projectPlanModel);
+        void ProcessProjectPlan(ProjectPlanModel projectPlanModel, Guid projectPlanId);
 
         ProjectPlanModel BuildProjectPlan();
 

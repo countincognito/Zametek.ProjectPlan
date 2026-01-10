@@ -6,13 +6,19 @@ namespace Zametek.Contract.ProjectPlan
     public interface IProjectManagerViewModel
         : IKillSubscriptions
     {
-        IManagedPlanViewModel? Root { get; }
+        bool IsBusy { get; }
+
+        IManagedPlanViewModel Root { get; }
 
         ReadOnlyObservableCollection<IManagedPlanViewModel> Plans { get; }
 
         void ResetProject();
 
         void ProcessProject(ProjectModel projectModel);
+
+        IManagedPlanViewModel? GetProjectPlan(Guid projectPlanId);
+
+        IManagedPlanViewModel? GetProjectPlanParent(Guid projectPlanId);
 
         ProjectModel BuildProject();
 

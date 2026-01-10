@@ -3,7 +3,6 @@
     [Serializable]
     public record ProjectPlanModel
     {
-
         public DateTimeOffset ProjectStart { get; init; }
 
         public DateTimeOffset Today { get; init; }

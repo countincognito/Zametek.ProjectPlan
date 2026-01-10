@@ -1,5 +1,6 @@
 using Dock.Model.Controls;
 using Dock.Model.Core;
+using java.awt;
 using ReactiveUI;
 using System.Diagnostics;
 using System.Reactive;
@@ -174,13 +175,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ProjectTitle = this
                 .WhenAnyValue(
-                    main => main.m_CoreViewModel.ProjectTitle,
+                    main => main.m_SettingService.ProjectTitle,
                     main => main.m_CoreViewModel.IsProjectPlanUpdated,
                     (title, isProjectUpdate) => $@"{(isProjectUpdate ? "*" : "")}{(string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title)} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}")
                 .ToProperty(this, main => main.ProjectTitle);
 
             m_IsBusy = this
-                .WhenAnyValue(main => main.m_CoreViewModel.IsBusy)
+                .WhenAnyValue(
+                    main => main.m_CoreViewModel.IsBusy,
+                    main => main.m_ProjectManagerViewModel.IsBusy,
+                    (isCoreBusy, isProjectBusy) => isCoreBusy || isProjectBusy)
                 .ToProperty(this, main => main.IsBusy);
 
             m_IsProjectUpdated = this
@@ -255,20 +259,23 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.BaseTheme)
                 .ToProperty(this, main => main.BaseTheme);
 
-            m_CoreViewModel.AutoCompile = true;
+            //m_CoreViewModel.AutoCompile = true;
 
-            var displaySettings = new DisplaySettingsModel
-            {
-                ShowDates = m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-                UseClassicDates = m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
-                UseBusinessDays = m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
-                HideCost = m_CoreViewModel.DisplaySettingsViewModel.HideCost,
-                HideBilling = m_CoreViewModel.DisplaySettingsViewModel.HideBilling,
-            };
+            //var displaySettings = new DisplaySettingsModel
+            //{
+            //    ShowDates = m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+            //    UseClassicDates = m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
+            //    UseBusinessDays = m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
+            //    HideCost = m_CoreViewModel.DisplaySettingsViewModel.HideCost,
+            //    HideBilling = m_CoreViewModel.DisplaySettingsViewModel.HideBilling,
+            //};
 
-            m_CoreViewModel.DisplaySettingsViewModel.SetValues(displaySettings);
+            //m_CoreViewModel.DisplaySettingsViewModel.SetValues(displaySettings);
 
-            m_CoreViewModel.IsProjectPlanUpdated = false;
+            //m_CoreViewModel.IsProjectPlanUpdated = false;
+
+
+            ResetProject();
 
 #if DEBUG
             DebugFactoryEvents(m_DockFactory);
@@ -416,9 +423,55 @@ namespace Zametek.ViewModel.ProjectPlan
 
         //private void ProcessProjectImport(ProjectImportModel importModel) => m_CoreViewModel.ProcessProjectImport(importModel);
 
-        private void ProcessProjectPlan(ProjectPlanModel projectPlanModel) => m_CoreViewModel.ProcessProjectPlan(projectPlanModel);
+        private void ProcessProjectPlan(ProjectPlanModel projectPlanModel, Guid projectPlanId) =>
+            m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
 
-        private async Task<ProjectPlanModel> BuildProjectPlanAsync() => await Task.Run(m_CoreViewModel.BuildProjectPlan);
+
+
+
+
+        private async Task<ProjectModel> BuildProjectAsync() => await Task.Run(BuildProjectPlan);
+
+
+        private ProjectModel BuildProjectPlan()
+        {
+            lock (m_Lock)
+            {
+                Guid projectPlanId = m_CoreViewModel.ProjectPlanId;
+                ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
+
+                IManagedPlanViewModel? managedProjectPlan = m_ProjectManagerViewModel.GetProjectPlan(projectPlanId);
+
+                if (managedProjectPlan is null)
+                {
+                    // No existing managed plan, so add it to the Root.
+                    var projectPlanNode = new ProjectPlanNodeModel
+                    {
+                        Id = projectPlanId,
+                        ParentId = m_ProjectManagerViewModel.Root.Id,
+                        ProjectPlan = projectPlan,
+                    };
+                    m_ProjectManagerViewModel.AddManagedPlans([projectPlanNode]);
+                }
+                else
+                {
+                    // Update existing managed plan.
+                    managedProjectPlan.ProjectPlan = projectPlan;
+                }
+
+                ProjectModel project = m_ProjectManagerViewModel.BuildProject();
+                return project;
+            }
+        }
+
+
+
+
+
+
+
+
+
 
         private async Task ForceCompileAsync() => await Task.Run(async () =>
         {
@@ -432,7 +485,24 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task RunTransitiveReductionAsync() => await Task.Run(m_CoreViewModel.RunTransitiveReduction);
 
-        private void ResetProjectPlan() => m_CoreViewModel.ResetProjectPlan();
+        private void ResetProject()
+        {
+            m_CoreViewModel.ResetProjectPlan();
+            m_ProjectManagerViewModel.ResetProject();
+
+            // Now add the new core project plan to the project manager.
+
+            ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
+
+            var projectPlanNode = new ProjectPlanNodeModel
+            {
+                Id = m_CoreViewModel.ProjectPlanId,
+                ParentId = m_ProjectManagerViewModel.Root.Id,
+                ProjectPlan = projectPlan,
+            };
+
+            m_ProjectManagerViewModel.AddManagedPlans([projectPlanNode]);
+        }
 
         private async Task OpenProjectFileInternalAsync(string? filename)
         {
@@ -471,16 +541,16 @@ namespace Zametek.ViewModel.ProjectPlan
             else
             {
                 // TODO
-                //ProjectModel projectModel = await BuildProjectAsync();
+                ProjectModel projectModel = await BuildProjectAsync();
 
 
 
-                //await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
+                await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
 
 
 
                 //m_CoreViewModel.IsProjectUpdated = false;
-                //m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
+                m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
             }
         }
 
@@ -805,8 +875,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
                     ex.Message);
-                // TODO
-                // ResetProject();
+                ResetProject();
             }
         }
 
@@ -835,8 +904,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
                     ex.Message);
-                // TODO
-                // ResetProject();
+                ResetProject();
             }
         }
 
@@ -972,8 +1040,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                 }
-                // TODO
-                // ResetProject();
+                ResetProject();
             }
             catch (Exception ex)
             {
@@ -981,8 +1048,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
                     ex.Message);
-                // TODO
-                // ResetProject();
+                ResetProject();
             }
         }
 

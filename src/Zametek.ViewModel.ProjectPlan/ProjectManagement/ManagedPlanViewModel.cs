@@ -16,8 +16,8 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
+        private ProjectPlanNodeModel m_ProjectPlanNodeModel;
 
-        private readonly ProjectPlanNodeModel m_ProjectPlanNodeModel;
         private static readonly string[] s_NoErrors = [];
         private readonly Dictionary<string, List<string>> m_ErrorsByPropertyName;
 
@@ -34,8 +34,6 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(projectPlanNode);
             m_Lock = new object();
-
-
             m_Labels = new();
 
             // Create read-only view to the source list.
@@ -43,7 +41,6 @@ namespace Zametek.ViewModel.ProjectPlan
                .ObserveOn(RxApp.MainThreadScheduler)
                .Bind(out m_ReadOnlyLabels)
                .Subscribe();
-
 
             m_ProjectPlanNodeModel = projectPlanNode;
             m_Children = new();
@@ -53,6 +50,8 @@ namespace Zametek.ViewModel.ProjectPlan
                .ObserveOn(RxApp.MainThreadScheduler)
                .Bind(out m_ReadOnlyChildren)
                .Subscribe();
+
+            m_ErrorsByPropertyName = [];
         }
 
         #endregion
@@ -107,20 +106,39 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IManagedPlanViewModel Members
 
-
-
-
         public Guid Id => m_ProjectPlanNodeModel.Id;
 
         public Guid ParentId => m_ProjectPlanNodeModel.ParentId;
 
-        public string Comment => m_ProjectPlanNodeModel.Comment;
+        public string Comment
+        {
+            get
+            {
+                return m_ProjectPlanNodeModel.Comment;
+            }
+            set
+            {
+                m_ProjectPlanNodeModel = m_ProjectPlanNodeModel with { Comment = value };
+            }
+        }
 
+        public ProjectPlanModel ProjectPlan
+        {
+            get
+            {
+                return m_ProjectPlanNodeModel.ProjectPlan;
+            }
+            set
+            {
+                m_ProjectPlanNodeModel = m_ProjectPlanNodeModel with { ProjectPlan = value };
+            }
+        }
+
+        public ProjectPlanNodeModel Node => m_ProjectPlanNodeModel;
 
         private readonly SourceList<string> m_Labels;
         private readonly ReadOnlyObservableCollection<string> m_ReadOnlyLabels;
         public ReadOnlyObservableCollection<string> Labels => m_ReadOnlyLabels;
-
 
         public void SetLabels(IEnumerable<string> labels)
         {
@@ -144,7 +162,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
         public string Label
         {
             get
@@ -157,27 +174,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
-        public ProjectPlanModel ProjectPlan => m_ProjectPlanNodeModel.ProjectPlan;
-
         private readonly SourceList<IManagedPlanViewModel> m_Children;
         private readonly ReadOnlyObservableCollection<IManagedPlanViewModel> m_ReadOnlyChildren;
         public ReadOnlyObservableCollection<IManagedPlanViewModel> Children => m_ReadOnlyChildren;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         public void AddChildren(IEnumerable<IManagedPlanViewModel> managedPlans)
         {
@@ -395,10 +394,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         //}
 
-        public object CloneObject()
-        {
-            return null;
-        }
+        //public object CloneObject()
+        //{
+        //    return null;
+        //}
 
         #endregion
 

@@ -1,7 +1,7 @@
 ﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public class ProjectPlanNodeModel
+    public record ProjectPlanNodeModel
     {
         public Guid Id { get; init; }
 
