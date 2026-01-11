@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
@@ -8,9 +9,19 @@ namespace Zametek.Contract.ProjectPlan
     {
         bool IsBusy { get; }
 
+        bool IsLoading { get; }
+
         IManagedPlanViewModel Root { get; }
 
         ReadOnlyObservableCollection<IManagedPlanViewModel> Plans { get; }
+
+        ObservableCollection<IManagedPlanViewModel> SelectedPlans { get; }
+
+        ICommand LoadProjectPlanFileCommand { get; }
+
+        ICommand SpawnProjectPlanFileCommand { get; }
+
+        ICommand BranchProjectPlanFileCommand { get; }
 
         void ResetProject();
 
@@ -23,5 +34,11 @@ namespace Zametek.Contract.ProjectPlan
         ProjectModel BuildProject();
 
         void AddManagedPlans(IEnumerable<ProjectPlanNodeModel> projectPlanNodeModels);
+
+        Task LoadProjectPlanFileAsync();
+
+        Task SpawnProjectPlanFileAsync();
+
+        Task BranchProjectPlanFileAsync();
     }
 }

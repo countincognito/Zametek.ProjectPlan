@@ -1,7 +1,9 @@
 ﻿using DynamicData;
 using ReactiveUI;
 using System.Collections.ObjectModel;
+using System.Reactive;
 using System.Reactive.Linq;
+using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -39,8 +41,15 @@ namespace Zametek.ViewModel.ProjectPlan
             m_IsBusy = false;
             Root = new ManagedPlanViewModel(); // Placeholder until ResetRootNode is called.
             m_Plans = new();
+            SelectedPlans = [];
             m_ManagedPlanLookup = [];
             m_PlanTagLookup = [];
+
+            {
+                ReactiveCommand<Unit, Unit> loadProjectPlanFileCommand = ReactiveCommand.CreateFromTask(LoadProjectPlanFileAsync);
+                loadProjectPlanFileCommand.IsExecuting.ToProperty(this, pm => pm.IsLoading, out m_IsLoading);
+                LoadProjectPlanFileCommand = loadProjectPlanFileCommand;
+            }
 
             // Create read-only view to the source list.
             m_Plans.Connect()
@@ -108,7 +117,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         ]);
 
                     SetTagLabels(Root);
-                    m_Plans.Add(Root);
+                    m_Plans.AddRange(Root.Children);
                 }
             }
             finally
@@ -194,11 +203,32 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_IsLoading;
+        public bool IsLoading => m_IsLoading.Value;
+
         public IManagedPlanViewModel Root { get; private set; }
 
         private readonly SourceList<IManagedPlanViewModel> m_Plans;
         private readonly ReadOnlyObservableCollection<IManagedPlanViewModel> m_ReadOnlyPlans;
         public ReadOnlyObservableCollection<IManagedPlanViewModel> Plans => m_ReadOnlyPlans;
+
+
+
+        public ObservableCollection<IManagedPlanViewModel> SelectedPlans { get; }
+
+
+
+
+
+        public ICommand LoadProjectPlanFileCommand { get; }
+
+
+
+
+
+
+
+
 
         public void ResetProject()
         {
@@ -330,11 +360,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Filter out any tags that apply to the Root node.
                     List<ProjectPlanTagModel> tags = [.. m_PlanTagLookup
                         .Where(kvp => kvp.Key != rootId)
-                        .SelectMany(kvp => kvp.Value.Select(label => new ProjectPlanTagModel
-                        {
-                            NodeId = kvp.Key,
-                            Label = label,
-                        }))];
+                        .SelectMany(kvp => kvp.Value.Select(
+                            label => new ProjectPlanTagModel
+                            {
+                                NodeId = kvp.Key,
+                                Label = label,
+                            }))];
 
                     return new ProjectModel
                     {
@@ -394,6 +425,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 {
                                     // Top-level plan.
                                     Root.AddChildren([projectPlan]);
+                                    m_Plans.Add(projectPlan);
                                 }
                                 else if (m_ManagedPlanLookup.TryGetValue(projectPlan.ParentId, out IManagedPlanViewModel? parentPlan))
                                 {
@@ -457,6 +489,67 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = false;
             }
         }
+
+
+
+
+
+
+        public async Task LoadProjectPlanFileAsync()
+        {
+            try
+            {
+                IsBusy = true;
+
+
+                await Task.Run(() =>
+                {
+
+                    IManagedPlanViewModel managedPlan = SelectedPlans.First();
+
+                    ProjectPlanNodeModel latestPlanNodeModel = managedPlan.Node;
+                    Guid projectPlanId = latestPlanNodeModel.Id;
+                    ProjectPlanModel projectPlanModel = latestPlanNodeModel.ProjectPlan;
+                    m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
+                });
+
+                
+
+
+
+
+                //    if (IsProjectUpdated)
+                //    {
+                //        bool confirmation = await m_DialogService.ShowConfirmationAsync(
+                //            Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                //            string.Empty,
+                //            Resource.ProjectPlan.Messages.Message_UnsavedChanges);
+
+                //        if (!confirmation)
+                //        {
+                //            return;
+                //        }
+                //    }
+                //    string directory = m_SettingService.ProjectDirectory;
+                //    string? filename = await m_DialogService.ShowOpenFileDialogAsync(directory, s_ProjectFileFilters);
+                //    await OpenProjectFileInternalAsync(filename);
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+                //ResetProject();
+            }
+            finally
+            {
+
+                IsBusy = false;
+            }
+        }
+
+
 
 
 

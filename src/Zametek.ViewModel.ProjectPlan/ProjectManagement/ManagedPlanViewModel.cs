@@ -21,6 +21,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly string[] s_NoErrors = [];
         private readonly Dictionary<string, List<string>> m_ErrorsByPropertyName;
 
+        private const int c_IdSizeLimit = 8;
+
         #endregion
 
         #region Ctors
@@ -166,11 +168,13 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get
             {
+                string idString = Id.ToFlatString()[..c_IdSizeLimit];
+
                 if (Labels.Count == 0)
                 {
-                    return Id.ToDashedString();
+                    return idString;
                 }
-                return $@"[{string.Join(DependenciesStringValidationRule.Separator, Labels)}] ({Id.ToDashedString()})";
+                return $@"[{string.Join(DependenciesStringValidationRule.Separator, Labels)}] ({idString})";
             }
         }
 

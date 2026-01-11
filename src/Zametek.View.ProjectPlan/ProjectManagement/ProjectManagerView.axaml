@@ -24,6 +24,7 @@
 						Height="25" Width="75"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
+						Command="{Binding Path=LoadProjectPlanFileCommand, Mode=OneWay}"
 						Content="Tmp"/>
 
 				<Button DockPanel.Dock="Top"
@@ -46,7 +47,9 @@
 			</DockPanel>
 		</ScrollViewer>
 		
-		<TreeView ItemsSource="{Binding Path=Plans, Mode=OneWay}">
+		<TreeView ItemsSource="{Binding Path=Plans, Mode=OneWay}"
+				  SelectedItems="{Binding Path=SelectedPlans, Mode=OneWay}"
+				  SelectionMode="Multiple">
 			<TreeView.ItemTemplate>
 				<TreeDataTemplate ItemsSource="{Binding Path=Children, Mode=OneWay}">
 					<TextBlock Text="{Binding Path=Label, Mode=OneWay}"/>
