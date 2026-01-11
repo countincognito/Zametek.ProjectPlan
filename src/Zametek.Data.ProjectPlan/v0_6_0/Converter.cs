@@ -27,9 +27,9 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                         ProjectPlan = mapper.Map<v0_5_0.ProjectModel, ProjectPlanModel>(project),
                     },
                 ],
-                Branches =
+                Tags =
                 [
-                    new ProjectPlanBranchModel
+                    new ProjectPlanTagModel
                     {
                         NodeId = rootId,
                         Label = Resource.ProjectPlan.Labels.Label_RootNode,

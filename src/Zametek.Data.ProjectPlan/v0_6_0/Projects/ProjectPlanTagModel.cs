@@ -1,7 +1,7 @@
-﻿namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Data.ProjectPlan.v0_6_0
 {
     [Serializable]
-    public record ProjectPlanBranchModel
+    public record ProjectPlanTagModel
     {
         public Guid NodeId { get; init; }
 

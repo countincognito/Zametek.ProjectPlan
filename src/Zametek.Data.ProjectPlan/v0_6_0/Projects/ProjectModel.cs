@@ -9,6 +9,6 @@
 
         public List<ProjectPlanNodeModel> Nodes { get; init; } = [];
 
-        public List<ProjectPlanBranchModel> Branches { get; init; } = [];
+        public List<ProjectPlanTagModel> Tags { get; init; } = [];
     }
 }

@@ -1,6 +1,5 @@
 using Dock.Model.Controls;
 using Dock.Model.Core;
-using java.awt;
 using ReactiveUI;
 using System.Diagnostics;
 using System.Reactive;
@@ -274,7 +273,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             //m_CoreViewModel.IsProjectPlanUpdated = false;
 
-
             ResetProject();
 
 #if DEBUG
@@ -423,15 +421,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         //private void ProcessProjectImport(ProjectImportModel importModel) => m_CoreViewModel.ProcessProjectImport(importModel);
 
-        private void ProcessProjectPlan(ProjectPlanModel projectPlanModel, Guid projectPlanId) =>
-            m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
-
-
-
-
+        //private void ProcessProjectPlan(ProjectPlanModel projectPlanModel, Guid projectPlanId) =>
+        //    m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
 
         private async Task<ProjectModel> BuildProjectAsync() => await Task.Run(BuildProjectPlan);
-
 
         private ProjectModel BuildProjectPlan()
         {
@@ -464,15 +457,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
-
-
-
-
-
-
-
-
         private async Task ForceCompileAsync() => await Task.Run(async () =>
         {
             m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
@@ -487,6 +471,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ResetProject()
         {
+            
             m_CoreViewModel.ResetProjectPlan();
             m_ProjectManagerViewModel.ResetProject();
 
@@ -510,24 +495,40 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ProjectModel projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(filename);
 
+                // First process the project to set up the managed plans.
                 m_ProjectManagerViewModel.ProcessProject(projectModel);
 
+                // Now process the most recent project plan.
 
-                // TODO
-                //ProcessProject(projectModel);
+                // If the list is empty, then create a new blank project plan and
+                // add it to the project.
+                if (projectModel.Nodes.Count == 0)
+                {
+                    m_CoreViewModel.ResetProjectPlan();
+                    var planModel = m_CoreViewModel.BuildProjectPlan();
+
+                    var planNodeModel = new ProjectPlanNodeModel
+                    {
+                        Id = m_CoreViewModel.ProjectPlanId,
+                        ParentId = m_ProjectManagerViewModel.Root.Id,
+                        ProjectPlan = planModel,
+                    };
+
+                    m_ProjectManagerViewModel.AddManagedPlans([planNodeModel]);
+                }
+                else
+                {
+                    ProjectPlanNodeModel latestPlanNodeModel = projectModel.Nodes.Last();
+                    Guid projectPlanId = latestPlanNodeModel.Id;
+                    ProjectPlanModel projectPlanModel = latestPlanNodeModel.ProjectPlan;
+                    m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
+                }
+
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
-                //await RunAutoCompileAsync();
+
+                await RunAutoCompileAsync();
             }
         }
-
-
-
-
-
-
-
-
-
 
         private async Task SaveProjectFileInternalAsync(string? filename)
         {
@@ -540,28 +541,12 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             else
             {
-                // TODO
                 ProjectModel projectModel = await BuildProjectAsync();
-
-
-
                 await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
-
-
-
-                //m_CoreViewModel.IsProjectUpdated = false;
+                m_CoreViewModel.IsProjectPlanUpdated = false;
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
             }
         }
-
-
-
-
-
-
-
-
-
 
         private async Task ChangeThemeAsync(string theme)
         {

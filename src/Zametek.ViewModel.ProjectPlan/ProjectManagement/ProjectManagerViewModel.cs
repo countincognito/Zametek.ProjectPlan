@@ -18,7 +18,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
         private Dictionary<Guid, IManagedPlanViewModel> m_ManagedPlanLookup;
-        private Dictionary<Guid, List<string>> m_BranchLabelLookup;
+        private Dictionary<Guid, List<string>> m_PlanTagLookup;
 
         #endregion
 
@@ -40,7 +40,7 @@ namespace Zametek.ViewModel.ProjectPlan
             Root = new ManagedPlanViewModel(); // Placeholder until ResetRootNode is called.
             m_Plans = new();
             m_ManagedPlanLookup = [];
-            m_BranchLabelLookup = [];
+            m_PlanTagLookup = [];
 
             // Create read-only view to the source list.
             m_Plans.Connect()
@@ -98,16 +98,16 @@ namespace Zametek.ViewModel.ProjectPlan
                             Id = rootId,
                         });
 
-                    AddBranchLabels(
+                    AddTagLabels(
                         [
-                            new ProjectPlanBranchModel
+                            new ProjectPlanTagModel
                             {
                                 NodeId = rootId,
                                 Label = Resource.ProjectPlan.Labels.Label_RootNode,
                             }
                         ]);
 
-                    SetBranchLabels(Root);
+                    SetTagLabels(Root);
                     m_Plans.Add(Root);
                 }
             }
@@ -117,22 +117,22 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private void AddBranchLabels(IEnumerable<ProjectPlanBranchModel> projectPlanBranchModels)
+        private void AddTagLabels(IEnumerable<ProjectPlanTagModel> projectPlanTagModels)
         {
             try
             {
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    foreach (ProjectPlanBranchModel branchModel in projectPlanBranchModels)
+                    foreach (ProjectPlanTagModel tagModel in projectPlanTagModels)
                     {
-                        if (!m_BranchLabelLookup.TryGetValue(branchModel.NodeId, out List<string>? labels))
+                        if (!m_PlanTagLookup.TryGetValue(tagModel.NodeId, out List<string>? labels))
                         {
                             labels = [];
-                            m_BranchLabelLookup.Add(branchModel.NodeId, labels);
+                            m_PlanTagLookup.Add(tagModel.NodeId, labels);
                         }
 
-                        labels.Add(branchModel.Label);
+                        labels.Add(tagModel.Label);
                     }
                 }
             }
@@ -142,14 +142,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private void SetBranchLabels(IManagedPlanViewModel managedPlan)
+        private void SetTagLabels(IManagedPlanViewModel managedPlan)
         {
             try
             {
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    if (m_BranchLabelLookup.TryGetValue(managedPlan.Id, out List<string>? labels))
+                    if (m_PlanTagLookup.TryGetValue(managedPlan.Id, out List<string>? labels))
                     {
                         managedPlan.SetLabels(labels);
                     }
@@ -170,7 +170,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     Root?.ClearChildren();
                     m_ManagedPlanLookup.Clear();
-                    m_BranchLabelLookup.Clear();
+                    m_PlanTagLookup.Clear();
                     m_Plans.Clear();
                 }
             }
@@ -260,7 +260,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Root node.
                     ResetRootNode(projectModel.Root);
 
-                    AddBranchLabels(projectModel.Branches);
+                    AddTagLabels(projectModel.Tags);
 
                     AddManagedPlans(projectModel.Nodes);
                 }
@@ -327,10 +327,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     Guid rootId = Root.Id;
                     List<ProjectPlanNodeModel> nodes = [.. m_ManagedPlanLookup.Values.Select(x => x.Node)];
 
-                    // Filter out any branches that apply to the Root node.
-                    List<ProjectPlanBranchModel> branches = [.. m_BranchLabelLookup
+                    // Filter out any tags that apply to the Root node.
+                    List<ProjectPlanTagModel> tags = [.. m_PlanTagLookup
                         .Where(kvp => kvp.Key != rootId)
-                        .SelectMany(kvp => kvp.Value.Select(label => new ProjectPlanBranchModel
+                        .SelectMany(kvp => kvp.Value.Select(label => new ProjectPlanTagModel
                         {
                             NodeId = kvp.Key,
                             Label = label,
@@ -341,7 +341,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Version = Data.ProjectPlan.Versions.ProjectLatest,
                         Root = rootId,
                         Nodes = nodes,
-                        Branches = branches,
+                        Tags = tags,
                     };
                 }
             }
@@ -386,7 +386,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             {
                                 var projectPlan = new ManagedPlanViewModel(projectPlanNode);
 
-                                SetBranchLabels(projectPlan);
+                                SetTagLabels(projectPlan);
 
                                 m_ManagedPlanLookup.Add(projectPlan.Id, projectPlan);
 

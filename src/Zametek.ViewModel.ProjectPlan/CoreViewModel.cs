@@ -2143,8 +2143,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var risksModel = new RisksModel();
 
-                IEnumerable<IDependentActivity> dependentActivities =
-                    GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject());
+                List<IDependentActivity> dependentActivities =
+                    [.. GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject())];
 
                 if (dependentActivities.Any())
                 {
@@ -2196,7 +2196,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     Billings = billingsModel,
                     Margins = marginsModel,
                     Efforts = effortsModel,
-
                 };
             }
         }
