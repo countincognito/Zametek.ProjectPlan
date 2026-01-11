@@ -258,7 +258,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.BaseTheme)
                 .ToProperty(this, main => main.BaseTheme);
 
-            //m_CoreViewModel.AutoCompile = true;
+            m_CoreViewModel.AutoCompile = true;
 
             //var displaySettings = new DisplaySettingsModel
             //{
@@ -471,7 +471,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ResetProject()
         {
-            
             m_CoreViewModel.ResetProjectPlan();
             m_ProjectManagerViewModel.ResetProject();
 
@@ -526,7 +525,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
 
-                await RunAutoCompileAsync();
+                //await RunAutoCompileAsync();
             }
         }
 

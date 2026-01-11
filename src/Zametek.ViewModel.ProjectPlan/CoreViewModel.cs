@@ -1594,6 +1594,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     DisplaySettingsViewModel.SetValues(displaySettings);
 
+                    RunCompile();
+
                     m_TrackIsProjectPlanUpdated = true;
                     IsProjectPlanUpdated = false;
 
