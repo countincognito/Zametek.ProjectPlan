@@ -79,7 +79,7 @@ namespace Zametek.Contract.ProjectPlan
 
         void ResetProjectPlan();
 
-        void ProcessProjectPlanImport(ProjectImportModel projectImportModel, Guid projectPlanId);
+        void ProcessProjectPlanImport(ProjectPlanImportModel projectPlanImportModel, Guid projectPlanId);
 
         void ProcessProjectPlan(ProjectPlanModel projectPlanModel, Guid projectPlanId);
 

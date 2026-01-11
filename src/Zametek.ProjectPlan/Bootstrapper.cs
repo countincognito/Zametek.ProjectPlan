@@ -24,8 +24,8 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<IDateTimeCalculator, DateTimeCalculator>();
             SplatRegistrations.RegisterLazySingleton<IArrowGraphSerializer, ArrowGraphSerializer>();
             SplatRegistrations.RegisterLazySingleton<IVertexGraphSerializer, VertexGraphSerializer>();
-            //SplatRegistrations.RegisterLazySingleton<IProjectFileImport, ProjectFileImport>();
-            //SplatRegistrations.RegisterLazySingleton<IProjectFileExport, ProjectFileExport>();
+            SplatRegistrations.RegisterLazySingleton<IProjectPlanFileImport, ProjectPlanFileImport>();
+            SplatRegistrations.RegisterLazySingleton<IProjectPlanFileExport, ProjectPlanFileExport>();
             SplatRegistrations.RegisterLazySingleton<IProjectFileOpen, ProjectFileOpen>();
             SplatRegistrations.RegisterLazySingleton<IProjectFileSave, ProjectFileSave>();
             SplatRegistrations.RegisterLazySingleton<IDialogService, DialogService>();

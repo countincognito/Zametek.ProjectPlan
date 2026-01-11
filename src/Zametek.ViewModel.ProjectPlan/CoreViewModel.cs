@@ -1433,7 +1433,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public void ProcessProjectPlanImport(
-            ProjectImportModel projectImportModel,
+            ProjectPlanImportModel projectPlanImportModel,
             Guid projectPlanId)
         {
             try
@@ -1450,19 +1450,19 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
                     // Project Start Date.
-                    ProjectStart = projectImportModel.ProjectStart;
+                    ProjectStart = projectPlanImportModel.ProjectStart;
 
                     // Project Start Date.
-                    Today = projectImportModel.Today;
+                    Today = projectPlanImportModel.Today;
 
                     // Work Stream settings.
                     WorkStreamSettingsModel workStreamSettings = m_SettingService.DefaultWorkStreamSettings.CloneObject();
 
-                    if (projectImportModel.WorkStreams.Count != 0)
+                    if (projectPlanImportModel.WorkStreams.Count != 0)
                     {
                         workStreamSettings.WorkStreams.Clear();
 
-                        foreach (WorkStreamModel workStream in projectImportModel.WorkStreams)
+                        foreach (WorkStreamModel workStream in projectPlanImportModel.WorkStreams)
                         {
                             workStreamSettings.WorkStreams.Add(workStream);
                         }
@@ -1474,16 +1474,16 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResourceSettingsModel resourceSettings = m_SettingService.DefaultResourceSettings.CloneObject();
                     resourceSettings = resourceSettings with
                     {
-                        DefaultUnitCost = projectImportModel.ResourceSettings.DefaultUnitCost,
-                        DefaultUnitBilling = projectImportModel.ResourceSettings.DefaultUnitBilling,
-                        AreDisabled = projectImportModel.ResourceSettings.AreDisabled,
+                        DefaultUnitCost = projectPlanImportModel.ResourceSettings.DefaultUnitCost,
+                        DefaultUnitBilling = projectPlanImportModel.ResourceSettings.DefaultUnitBilling,
+                        AreDisabled = projectPlanImportModel.ResourceSettings.AreDisabled,
                     };
 
-                    if (projectImportModel.ResourceSettings.Resources.Count != 0)
+                    if (projectPlanImportModel.ResourceSettings.Resources.Count != 0)
                     {
                         resourceSettings.Resources.Clear();
 
-                        foreach (ResourceModel resource in projectImportModel.ResourceSettings.Resources)
+                        foreach (ResourceModel resource in projectPlanImportModel.ResourceSettings.Resources)
                         {
                             resourceSettings.Resources.Add(resource);
                         }
@@ -1494,11 +1494,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Graph settings.
                     GraphSettingsModel graphSettings = m_SettingService.DefaultGraphSettings.CloneObject();
 
-                    if (projectImportModel.ActivitySeverities.Count != 0)
+                    if (projectPlanImportModel.ActivitySeverities.Count != 0)
                     {
                         graphSettings.ActivitySeverities.Clear();
 
-                        foreach (ActivitySeverityModel activitySeverity in projectImportModel.ActivitySeverities)
+                        foreach (ActivitySeverityModel activitySeverity in projectPlanImportModel.ActivitySeverities)
                         {
                             graphSettings.ActivitySeverities.Add(activitySeverity);
                         }
@@ -1509,10 +1509,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Activities.
                     // Be sure to set the ResourceSettings first, so that the activities know
                     // which resources are being referred to when marking them as selected.
-                    AddManagedActivities(projectImportModel.DependentActivities);
+                    AddManagedActivities(projectPlanImportModel.DependentActivities);
 
                     // Display settings.
-                    DisplaySettingsViewModel.SetValues(projectImportModel.DisplaySettings);
+                    DisplaySettingsViewModel.SetValues(projectPlanImportModel.DisplaySettings);
 
                     m_TrackIsProjectPlanUpdated = true;
                     IsProjectPlanUpdated = true;
@@ -1593,8 +1593,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     };
 
                     DisplaySettingsViewModel.SetValues(displaySettings);
-
-                    RunCompile();
 
                     m_TrackIsProjectPlanUpdated = true;
                     IsProjectPlanUpdated = false;

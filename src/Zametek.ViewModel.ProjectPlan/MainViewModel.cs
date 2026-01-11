@@ -38,44 +38,44 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             ];
 
-        //private static readonly IList<IFileFilter> s_ImportFileFilters =
-        //    [
-        //        new FileFilter
-        //        {
-        //            Name = Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileType,
-        //            Patterns =
-        //            [
-        //                Resource.ProjectPlan.Filters.Filter_ProjectXlsxFilePattern
-        //            ]
-        //        },
-        //        new FileFilter
-        //        {
-        //            Name = Resource.ProjectPlan.Filters.Filter_MicrosoftProjectFileType,
-        //            Patterns =
-        //            [
-        //                Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFilePattern,
-        //                Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFilePattern
-        //            ]
-        //        }
-        //    ];
+        private static readonly IList<IFileFilter> s_ImportFileFilters =
+            [
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ProjectXlsxFilePattern
+                    ]
+                },
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_MicrosoftProjectFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFilePattern,
+                        Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFilePattern
+                    ]
+                }
+            ];
 
-        //private static readonly IList<IFileFilter> s_ExportFileFilters =
-        //    [
-        //        new FileFilter
-        //        {
-        //            Name = Resource.ProjectPlan.Filters.Filter_ExcelFileType,
-        //            Patterns =
-        //            [
-        //                Resource.ProjectPlan.Filters.Filter_ExcelXlsxFilePattern
-        //            ]
-        //        }
-        //    ];
+        private static readonly IList<IFileFilter> s_ExportFileFilters =
+            [
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_ExcelFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_ExcelXlsxFilePattern
+                    ]
+                }
+            ];
 
         private readonly IFactory m_DockFactory;
         private readonly IProjectManagerViewModel m_ProjectManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
-        //private readonly IProjectFileImport m_ProjectFileImport;
-        //private readonly IProjectFileExport m_ProjectFileExport;
+        private readonly IProjectPlanFileImport m_ProjectPlanFileImport;
+        private readonly IProjectPlanFileExport m_ProjectPlanFileExport;
         private readonly IProjectFileOpen m_ProjectFileOpen;
         private readonly IProjectFileSave m_ProjectFileSave;
         private readonly ISettingService m_SettingService;
@@ -89,8 +89,8 @@ namespace Zametek.ViewModel.ProjectPlan
             IFactory dockFactory,
             IProjectManagerViewModel projectManagerViewModel,
             ICoreViewModel coreViewModel,
-            //IProjectFileImport projectFileImport,
-            //IProjectFileExport projectFileExport,
+            IProjectPlanFileImport projectPlanFileImport,
+            IProjectPlanFileExport projectPlanFileExport,
             IProjectFileOpen projectFileOpen,
             IProjectFileSave projectFileSave,
             ISettingService settingService,
@@ -99,8 +99,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dockFactory);
             ArgumentNullException.ThrowIfNull(projectManagerViewModel);
             ArgumentNullException.ThrowIfNull(coreViewModel);
-            //ArgumentNullException.ThrowIfNull(projectFileImport);
-            //ArgumentNullException.ThrowIfNull(projectFileExport);
+            ArgumentNullException.ThrowIfNull(projectPlanFileImport);
+            ArgumentNullException.ThrowIfNull(projectPlanFileExport);
             ArgumentNullException.ThrowIfNull(projectFileOpen);
             ArgumentNullException.ThrowIfNull(projectFileSave);
             ArgumentNullException.ThrowIfNull(settingService);
@@ -109,8 +109,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DockFactory = dockFactory;
             m_ProjectManagerViewModel = projectManagerViewModel;
             m_CoreViewModel = coreViewModel;
-            //m_ProjectFileImport = projectFileImport;
-            //m_ProjectFileExport = projectFileExport;
+            m_ProjectPlanFileImport = projectPlanFileImport;
+            m_ProjectPlanFileExport = projectPlanFileExport;
             m_ProjectFileOpen = projectFileOpen;
             m_ProjectFileSave = projectFileSave;
             m_SettingService = settingService;
@@ -131,16 +131,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 saveAsProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSavingAs, out m_IsSavingAs);
                 SaveAsProjectFileCommand = saveAsProjectFileCommand;
             }
-            //{
-            //    ReactiveCommand<Unit, Unit> importProjectFileCommand = ReactiveCommand.CreateFromTask(ImportProjectFileAsync);
-            //    importProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsImporting, out m_IsImporting);
-            //    ImportProjectFileCommand = importProjectFileCommand;
-            //}
-            //{
-            //    ReactiveCommand<Unit, Unit> exportProjectFileCommand = ReactiveCommand.CreateFromTask(ExportProjectFileAsync);
-            //    exportProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsExporting, out m_IsExporting);
-            //    ExportProjectFileCommand = exportProjectFileCommand;
-            //}
+            {
+                ReactiveCommand<Unit, Unit> importProjectPlanFileCommand = ReactiveCommand.CreateFromTask(ImportProjectPlanFileAsync);
+                importProjectPlanFileCommand.IsExecuting.ToProperty(this, main => main.IsImporting, out m_IsImporting);
+                ImportProjectPlanFileCommand = importProjectPlanFileCommand;
+            }
+            {
+                ReactiveCommand<Unit, Unit> exportProjectPlanFileCommand = ReactiveCommand.CreateFromTask(ExportProjectPlanFileAsync);
+                exportProjectPlanFileCommand.IsExecuting.ToProperty(this, main => main.IsExporting, out m_IsExporting);
+                ExportProjectPlanFileCommand = exportProjectPlanFileCommand;
+            }
             {
                 ReactiveCommand<Unit, Unit> closeProjectCommand = ReactiveCommand.CreateFromTask(CloseProjectAsync);
                 closeProjectCommand.IsExecuting.ToProperty(this, main => main.IsClosing, out m_IsClosing);
@@ -419,7 +419,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleAutoCompile() => AutoCompile = !AutoCompile;
 
-        //private void ProcessProjectImport(ProjectImportModel importModel) => m_CoreViewModel.ProcessProjectImport(importModel);
+        //private void ProcessProjectPlanImport(ProjectPlanImportModel projectPlanImportModel, Guid projectPlanId) =>
+        //    m_CoreViewModel.ProcessProjectPlanImport(projectPlanImportModel, projectPlanId);
 
         //private void ProcessProjectPlan(ProjectPlanModel projectPlanModel, Guid projectPlanId) =>
         //    m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
@@ -524,8 +525,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
-
-                //await RunAutoCompileAsync();
             }
         }
 
@@ -584,11 +583,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_IsSavingAs;
         public bool IsSavingAs => m_IsSavingAs.Value;
 
-        //private readonly ObservableAsPropertyHelper<bool> m_IsImporting;
-        //public bool IsImporting => m_IsImporting.Value;
+        private readonly ObservableAsPropertyHelper<bool> m_IsImporting;
+        public bool IsImporting => m_IsImporting.Value;
 
-        //private readonly ObservableAsPropertyHelper<bool> m_IsExporting;
-        //public bool IsExporting => m_IsExporting.Value;
+        private readonly ObservableAsPropertyHelper<bool> m_IsExporting;
+        public bool IsExporting => m_IsExporting.Value;
 
         private readonly ObservableAsPropertyHelper<bool> m_IsClosing;
         public bool IsClosing => m_IsClosing.Value;
@@ -758,9 +757,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand SaveAsProjectFileCommand { get; }
 
-        public ICommand ImportProjectFileCommand { get; }
+        public ICommand ImportProjectPlanFileCommand { get; }
 
-        public ICommand ExportProjectFileCommand { get; }
+        public ICommand ExportProjectPlanFileCommand { get; }
 
         public ICommand CloseProjectCommand { get; }
 
@@ -943,70 +942,70 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        //public async Task ImportProjectFileAsync()
-        //{
-        //    try
-        //    {
-        //        if (IsProjectUpdated)
-        //        {
-        //            bool confirmation = await m_DialogService.ShowConfirmationAsync(
-        //                Resource.ProjectPlan.Titles.Title_UnsavedChanges,
-        //                string.Empty,
-        //                Resource.ProjectPlan.Messages.Message_UnsavedChanges);
+        public async Task ImportProjectPlanFileAsync()
+        {
+            try
+            {
+                //if (IsProjectUpdated)
+                //{
+                //    bool confirmation = await m_DialogService.ShowConfirmationAsync(
+                //        Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                //        string.Empty,
+                //        Resource.ProjectPlan.Messages.Message_UnsavedChanges);
 
-        //            if (!confirmation)
-        //            {
-        //                return;
-        //            }
-        //        }
-        //        string directory = m_SettingService.ProjectDirectory;
-        //        string? filename = await m_DialogService.ShowOpenFileDialogAsync(directory, s_ImportFileFilters);
+                //    if (!confirmation)
+                //    {
+                //        return;
+                //    }
+                //}
+                //string directory = m_SettingService.ProjectDirectory;
+                //string? filename = await m_DialogService.ShowOpenFileDialogAsync(directory, s_ImportFileFilters);
 
-        //        if (!string.IsNullOrWhiteSpace(filename))
-        //        {
-        //            ProjectImportModel importModel = await m_ProjectFileImport.ImportProjectFileAsync(filename);
-        //            ProcessProjectImport(importModel);
-        //            m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: false);
-        //            await RunAutoCompileAsync();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        await m_DialogService.ShowErrorAsync(
-        //            Resource.ProjectPlan.Titles.Title_Error,
-        //            string.Empty,
-        //            ex.Message);
-        //        ResetProject();
-        //    }
-        //}
+                //if (!string.IsNullOrWhiteSpace(filename))
+                //{
+                //    ProjectPlanImportModel importModel = await m_ProjectFileImport.ImportProjectPlanFileAsync(filename);
+                //    ProcessProjectPlanImport(importModel);
+                //    m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: false);
+                //    await RunAutoCompileAsync();
+                //}
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+                ResetProject();
+            }
+        }
 
-        //public async Task ExportProjectFileAsync()
-        //{
-        //    try
-        //    {
-        //        string projectTitle = m_SettingService.ProjectTitle;
-        //        string directory = m_SettingService.ProjectDirectory;
-        //        string? filename = await m_DialogService.ShowSaveFileDialogAsync(projectTitle, directory, s_ExportFileFilters);
+        public async Task ExportProjectPlanFileAsync()
+        {
+            try
+            {
+                string projectTitle = m_SettingService.ProjectTitle;
+                string directory = m_SettingService.ProjectDirectory;
+                string? filename = await m_DialogService.ShowSaveFileDialogAsync(projectTitle, directory, s_ExportFileFilters);
 
-        //        if (!string.IsNullOrWhiteSpace(filename))
-        //        {
-        //            ProjectModel projectModel = await BuildProjectAsync();
-        //            await m_ProjectFileExport.ExportProjectFileAsync(
-        //                projectModel,
-        //                m_CoreViewModel.ResourceSeriesSet,
-        //                m_CoreViewModel.TrackingSeriesSet,
-        //                ShowDates,
-        //                filename);
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        await m_DialogService.ShowErrorAsync(
-        //            Resource.ProjectPlan.Titles.Title_Error,
-        //            string.Empty,
-        //            ex.Message);
-        //    }
-        //}
+                if (!string.IsNullOrWhiteSpace(filename))
+                {
+                    //ProjectModel projectModel = await BuildProjectAsync();
+                    //await m_ProjectFileExport.ExportProjectFileAsync(
+                    //    projectModel,
+                    //    m_CoreViewModel.ResourceSeriesSet,
+                    //    m_CoreViewModel.TrackingSeriesSet,
+                    //    ShowDates,
+                    //    filename);
+                }
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
 
         public async Task CloseProjectAsync()
         {
