@@ -946,18 +946,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void SetIsProjectPlanUpdated(bool isProjectPlanUpdated, bool trackStaleOutputs)
         {
-            try
+            lock (m_Lock)
             {
-                lock (m_Lock)
-                {
-                    m_TrackHasStaleOutputs = false;
-                    IsProjectPlanUpdated = isProjectPlanUpdated;
-                    m_TrackHasStaleOutputs = true;
-                }
-            }
-            finally
-            {
-                m_TrackHasStaleOutputs = true;
+                bool originalTrackValue = m_TrackHasStaleOutputs;
+                m_TrackHasStaleOutputs = originalTrackValue && trackStaleOutputs;
+                IsProjectPlanUpdated = isProjectPlanUpdated;
+                m_TrackHasStaleOutputs = originalTrackValue;
             }
         }
 

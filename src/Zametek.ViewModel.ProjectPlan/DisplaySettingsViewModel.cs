@@ -413,8 +413,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
-
         public void SetValues(DisplaySettingsModel model)
         {
             lock (m_Lock)
