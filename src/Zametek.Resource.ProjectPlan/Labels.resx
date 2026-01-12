@@ -564,4 +564,13 @@
   <data name="Label_RootNode" xml:space="preserve">
     <value>Root</value>
   </data>
+  <data name="Label_SpawnManagedPlan" xml:space="preserve">
+    <value>Spawn</value>
+  </data>
+  <data name="Label_BranchManagedPlan" xml:space="preserve">
+    <value>Branch</value>
+  </data>
+  <data name="Label_LoadManagedPlan" xml:space="preserve">
+    <value>Load</value>
+  </data>
 </root>

@@ -17,6 +17,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
             return new ProjectModel
             {
                 Root = rootId,
+                Current = planId,
                 Nodes =
                 [
                     new ProjectPlanNodeModel

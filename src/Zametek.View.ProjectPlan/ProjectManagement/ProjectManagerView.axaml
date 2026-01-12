@@ -5,6 +5,8 @@
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:i="using:Avalonia.Xaml.Interactivity"
+	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
 			 x:DataType="vm:ProjectManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ProjectManagerView">
@@ -23,7 +25,7 @@
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=LoadProjectPlanFileCommand, Mode=OneWay}"
-						Content="Tmp"/>
+						Content="{x:Static resources:Labels.Label_LoadManagedPlan}"/>
 
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
@@ -32,7 +34,7 @@
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=BranchProjectPlanFileCommand, Mode=OneWay}"
-						Content="Tmp"/>
+						Content="{x:Static resources:Labels.Label_BranchManagedPlan}"/>
 
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
@@ -41,13 +43,14 @@
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=SpawnProjectPlanFileCommand, Mode=OneWay}"
-						Content="Tmp"/>
+						Content="{x:Static resources:Labels.Label_SpawnManagedPlan}"/>
 
 				<Grid/>
 			</DockPanel>
 		</ScrollViewer>
 		
-		<TreeView ItemsSource="{Binding Path=Plans, Mode=OneWay}"
+		<TreeView Name="planTree"
+				  ItemsSource="{Binding Path=Plans, Mode=OneWay}"
 				  SelectedItems="{Binding Path=SelectedPlans, Mode=OneWay}"
 				  SelectionMode="Multiple">
 			<TreeView.ItemTemplate>
@@ -55,6 +58,15 @@
 					<TextBlock Text="{Binding Path=Label, Mode=OneWay}"/>
 				</TreeDataTemplate>
 			</TreeView.ItemTemplate>
+
+			<i:Interaction.Behaviors>
+				<ia:EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #planTree}">
+					<ia:InvokeCommandAction Command="{Binding Path=SetSelectedManagedPlansCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
+				</ia:EventTriggerBehavior>
+				<ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #planTree}">
+					<ia:InvokeCommandAction Command="{Binding Path=LoadProjectPlanFileCommand, Mode=OneWay}" PassEventArgsToCommand="False" />
+				</ia:EventTriggerBehavior>
+			</i:Interaction.Behaviors>
 		</TreeView>
 	</DockPanel>
 </UserControl>

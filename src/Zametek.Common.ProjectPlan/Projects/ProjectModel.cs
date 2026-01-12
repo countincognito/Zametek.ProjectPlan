@@ -7,6 +7,8 @@
 
         public Guid Root { get; init; }
 
+        public Guid Current { get; init; }
+
         public List<ProjectPlanNodeModel> Nodes { get; init; } = [];
 
         public List<ProjectPlanTagModel> Tags { get; init; } = [];

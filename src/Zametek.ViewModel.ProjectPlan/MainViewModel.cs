@@ -175,8 +175,17 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectTitle = this
                 .WhenAnyValue(
                     main => main.m_SettingService.ProjectTitle,
-                    main => main.m_CoreViewModel.IsProjectPlanUpdated,
-                    (title, isProjectUpdate) => $@"{(isProjectUpdate ? "*" : "")}{(string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title)} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}")
+                    main => main.m_CoreViewModel.ProjectPlanId,
+                    main => main.m_ProjectManagerViewModel.ProjectHasChanges,
+                    (title, projectPlanId, projectHasChanges) =>
+                    {
+                        string label = projectPlanId.ToShortString();
+                        if (m_ProjectManagerViewModel.GetProjectPlan(projectPlanId) is IManagedPlanViewModel managedPlan)
+                        {
+                            label = managedPlan.Label;
+                        }
+                        return $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title)} - {label} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
+                    })
                 .ToProperty(this, main => main.ProjectTitle);
 
             m_IsBusy = this
@@ -431,30 +440,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                Guid projectPlanId = m_CoreViewModel.ProjectPlanId;
-                ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
-
-                IManagedPlanViewModel? managedProjectPlan = m_ProjectManagerViewModel.GetProjectPlan(projectPlanId);
-
-                if (managedProjectPlan is null)
-                {
-                    // No existing managed plan, so add it to the Root.
-                    var projectPlanNode = new ProjectPlanNodeModel
-                    {
-                        Id = projectPlanId,
-                        ParentId = m_ProjectManagerViewModel.Root.Id,
-                        ProjectPlan = projectPlan,
-                    };
-                    m_ProjectManagerViewModel.AddManagedPlans([projectPlanNode]);
-                }
-                else
-                {
-                    // Update existing managed plan.
-                    managedProjectPlan.ProjectPlan = projectPlan;
-                }
-
-                ProjectModel project = m_ProjectManagerViewModel.BuildProject();
-                return project;
+                return m_ProjectManagerViewModel.BuildProject();
             }
         }
 
@@ -472,21 +458,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ResetProject()
         {
-            m_CoreViewModel.ResetProjectPlan();
-            m_ProjectManagerViewModel.ResetProject();
-
-            // Now add the new core project plan to the project manager.
-
-            ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
-
-            var projectPlanNode = new ProjectPlanNodeModel
+            lock (m_Lock)
             {
-                Id = m_CoreViewModel.ProjectPlanId,
-                ParentId = m_ProjectManagerViewModel.Root.Id,
-                ProjectPlan = projectPlan,
-            };
-
-            m_ProjectManagerViewModel.AddManagedPlans([projectPlanNode]);
+                m_ProjectManagerViewModel.ResetProject();
+            }
         }
 
         private async Task OpenProjectFileInternalAsync(string? filename)
@@ -495,35 +470,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ProjectModel projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(filename);
 
-                // First process the project to set up the managed plans.
+                // First process the project.
                 m_ProjectManagerViewModel.ProcessProject(projectModel);
 
-                // Now process the most recent project plan.
-
-                // If the list is empty, then create a new blank project plan and
-                // add it to the project.
-                if (projectModel.Nodes.Count == 0)
-                {
-                    m_CoreViewModel.ResetProjectPlan();
-                    var planModel = m_CoreViewModel.BuildProjectPlan();
-
-                    var planNodeModel = new ProjectPlanNodeModel
-                    {
-                        Id = m_CoreViewModel.ProjectPlanId,
-                        ParentId = m_ProjectManagerViewModel.Root.Id,
-                        ProjectPlan = planModel,
-                    };
-
-                    m_ProjectManagerViewModel.AddManagedPlans([planNodeModel]);
-                }
-                else
-                {
-                    ProjectPlanNodeModel latestPlanNodeModel = projectModel.Nodes.Last();
-                    Guid projectPlanId = latestPlanNodeModel.Id;
-                    ProjectPlanModel projectPlanModel = latestPlanNodeModel.ProjectPlan;
-                    m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
-                }
-
+                // Now bind the project title to the filename.
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
             }
         }
@@ -542,6 +492,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ProjectModel projectModel = await BuildProjectAsync();
                 await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
                 m_CoreViewModel.IsProjectPlanUpdated = false;
+                m_ProjectManagerViewModel.IsProjectUpdated = false;
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
             }
         }

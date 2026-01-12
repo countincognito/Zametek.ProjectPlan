@@ -6,7 +6,6 @@ using System.ComponentModel;
 using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -20,8 +19,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly string[] s_NoErrors = [];
         private readonly Dictionary<string, List<string>> m_ErrorsByPropertyName;
-
-        private const int c_IdSizeLimit = 8;
 
         #endregion
 
@@ -144,23 +141,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void SetLabels(IEnumerable<string> labels)
         {
-            try
+            lock (m_Lock)
             {
-                lock (m_Lock)
+                m_Labels.Edit(list =>
                 {
-                    m_Labels.Edit(list =>
-                    {
-                        list.Clear();
-                        list.AddRange(labels);
-                    });
+                    list.Clear();
+                    list.AddRange(labels);
+                });
 
-                    this.RaisePropertyChanged(nameof(Label));
-
-                    //IsProjectUpdated = true;
-                }
-            }
-            finally
-            {
+                this.RaisePropertyChanged(nameof(Label));
             }
         }
 
@@ -168,7 +157,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get
             {
-                string idString = Id.ToFlatString()[..c_IdSizeLimit];
+                string idString = Id.ToShortString();
 
                 if (Labels.Count == 0)
                 {
@@ -184,224 +173,48 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void AddChildren(IEnumerable<IManagedPlanViewModel> managedPlans)
         {
-            try
+            lock (m_Lock)
             {
-                lock (m_Lock)
+                m_Children.Edit(children =>
                 {
-                    m_Children.Edit(children =>
+                    foreach (IManagedPlanViewModel managedPlan in managedPlans)
                     {
-                        foreach (IManagedPlanViewModel managedPlan in managedPlans)
-                        {
-                            children.Add(managedPlan);
-                        }
-
-
-
-
-                        //foreach (DependentActivityModel dependentActivity in dependentActivityModels)
-                        //{
-                        //    var activity = new ManagedActivityViewModel(
-                        //        this,
-                        //        m_Mapper.Map<DependentActivityModel, DependentActivity>(dependentActivity),
-                        //        m_DateTimeCalculator,
-                        //        m_VertexGraphCompiler,
-                        //        ProjectStart,
-                        //        dependentActivity.Activity.Trackers,
-                        //        dependentActivity.Activity.MinimumEarliestStartDateTime,
-                        //        dependentActivity.Activity.MaximumLatestFinishDateTime);
-
-                        //    if (m_VertexGraphCompiler.AddActivity(activity))
-                        //    {
-                        //        activities.Add(activity);
-                        //    }
-                        //    else
-                        //    {
-                        //        activity.Dispose();
-                        //    }
-                        //}
-                    });
-
-                    //IsProjectUpdated = true;
-                }
-            }
-            finally
-            {
+                        children.Add(managedPlan);
+                    }
+                });
             }
         }
-
-
-
-        //void AddChildren(IEnumerable<ProjectPlanNodeModel> projectPlanNodeModels);
-
-        //void RemoveChildren(IEnumerable<int> managedPlans);
-
-        //void ClearChildren();
-
-
 
         public void RemoveChildren(IEnumerable<Guid> managedPlans)
         {
-            try
+            lock (m_Lock)
             {
-                lock (m_Lock)
+                m_Children.Edit(children =>
                 {
-                    m_Children.Edit(children =>
+                    IList<IManagedPlanViewModel> projectPlans = [.. Children.Where(x => managedPlans.Contains(x.Id))];
+
+                    foreach (IManagedPlanViewModel projectPlan in projectPlans)
                     {
-
-                        IEnumerable<IManagedPlanViewModel> projectPlans = [.. Children.Where(x => managedPlans.Contains(x.Id))];
-
-                        foreach (IManagedPlanViewModel projectPlan in projectPlans)
-                        {
-                            projectPlan.Dispose();
-                        }
-                    });
-
-                    //IsProjectUpdated = true;
-                }
-            }
-            finally
-            {
-                //IsBusy = false;
+                        projectPlan.Dispose();
+                    }
+                });
             }
         }
-
-        //public void UpdateManagedActivities(IEnumerable<UpdateDependentActivityModel> updateModels)
-        //{
-        //    try
-        //    {
-        //        lock (m_Lock)
-        //        {
-        //            m_Activities.Edit(activities =>
-        //            {
-        //                IsBusy = true;
-        //                Dictionary<int, IManagedActivityViewModel> activityLookup = Activities.ToDictionary(x => x.Id);
-
-        //                foreach (UpdateDependentActivityModel updateModel in updateModels)
-        //                {
-        //                    if (activityLookup.TryGetValue(updateModel.Id, out IManagedActivityViewModel? activity))
-        //                    {
-        //                        if (activity is IEditableObject editable)
-        //                        {
-        //                            editable.BeginEdit();
-
-        //                            if (updateModel.IsNameEdited)
-        //                            {
-        //                                activity.Name = updateModel.Name;
-        //                            }
-        //                            if (updateModel.IsNotesEdited)
-        //                            {
-        //                                activity.Notes = updateModel.Notes;
-        //                            }
-        //                            if (updateModel.IsTargetWorkStreamsEdited)
-        //                            {
-        //                                activity.WorkStreamSelector.SetSelectedTargetWorkStreams([.. updateModel.TargetWorkStreams]);
-        //                            }
-        //                            if (updateModel.IsTargetResourcesEdited)
-        //                            {
-        //                                activity.ResourceSelector.SetSelectedTargetResources([.. updateModel.TargetResources]);
-        //                            }
-        //                            if (updateModel.IsTargetResourceOperatorEdited)
-        //                            {
-        //                                activity.TargetResourceOperator = updateModel.TargetResourceOperator;
-        //                            }
-        //                            if (updateModel.IsHasNoCostEdited)
-        //                            {
-        //                                activity.HasNoCost = updateModel.HasNoCost;
-        //                            }
-        //                            if (updateModel.IsHasNoBillingEdited)
-        //                            {
-        //                                activity.HasNoBilling = updateModel.HasNoBilling;
-        //                            }
-        //                            if (updateModel.IsHasNoEffortEdited)
-        //                            {
-        //                                activity.HasNoEffort = updateModel.HasNoEffort;
-        //                            }
-        //                            if (updateModel.IsHasNoRiskEdited)
-        //                            {
-        //                                activity.HasNoRisk = updateModel.HasNoRisk;
-        //                            }
-
-        //                            editable.EndEdit();
-        //                        }
-        //                    }
-        //                }
-        //            });
-
-        //            IsProjectUpdated = true;
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        IsBusy = false;
-        //    }
-        //}
-
-
 
         public void ClearChildren()
         {
-            try
+            lock (m_Lock)
             {
-                lock (m_Lock)
+                m_Children.Edit(children =>
                 {
-                    m_Children.Edit(children =>
+                    foreach (IManagedPlanViewModel projectPlan in Children)
                     {
-                        //IsBusy = true;
-
-                        foreach (IManagedPlanViewModel projectPlan in Children)
-                        {
-                            projectPlan.Dispose();
-                        }
-                        children.Clear();
-                    });
-                }
-            }
-            finally
-            {
-                //IsBusy = false;
+                        projectPlan.Dispose();
+                    }
+                    children.Clear();
+                });
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //public bool CanBeRemoved => false;
-
-
-
-
-        //public void SetAsReadOnly()
-        //{
-
-        //}
-
-        //public void SetAsRemovable()
-        //{
-
-        //}
-
-        //public object CloneObject()
-        //{
-        //    return null;
-        //}
 
         #endregion
 

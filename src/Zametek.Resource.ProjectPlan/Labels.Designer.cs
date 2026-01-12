@@ -232,6 +232,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Branch.
+        /// </summary>
+        public static string Label_BranchManagedPlan {
+            get {
+                return ResourceManager.GetString("Label_BranchManagedPlan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string Label_CancelSplashScreen {
@@ -862,6 +871,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Load.
+        /// </summary>
+        public static string Label_LoadManagedPlan {
+            get {
+                return ResourceManager.GetString("Label_LoadManagedPlan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Max.
         /// </summary>
         public static string Label_Max {
@@ -1228,6 +1246,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_SlackLimit {
             get {
                 return ResourceManager.GetString("Label_SlackLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spawn.
+        /// </summary>
+        public static string Label_SpawnManagedPlan {
+            get {
+                return ResourceManager.GetString("Label_SpawnManagedPlan", resourceCulture);
             }
         }
         

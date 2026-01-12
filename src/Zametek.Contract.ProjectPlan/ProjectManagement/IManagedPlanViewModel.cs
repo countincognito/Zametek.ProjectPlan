@@ -30,12 +30,5 @@ namespace Zametek.Contract.ProjectPlan
         void RemoveChildren(IEnumerable<Guid> managedPlans);
 
         void ClearChildren();
-
-
-        //bool CanBeRemoved { get; }
-
-        //public void SetAsReadOnly();
-
-        //public void SetAsRemovable();
     }
 }

@@ -9,17 +9,25 @@ namespace Zametek.Contract.ProjectPlan
     {
         bool IsBusy { get; }
 
+        bool IsProjectUpdated { get; set; }
+
         bool IsLoading { get; }
 
         bool IsBranching { get; }
 
         bool IsSpawning { get; }
 
+        bool ProjectHasChanges { get; }
+
         IManagedPlanViewModel Root { get; }
 
         ReadOnlyObservableCollection<IManagedPlanViewModel> Plans { get; }
 
         ObservableCollection<IManagedPlanViewModel> SelectedPlans { get; }
+
+        IManagedPlanViewModel? SelectedPlan { get; }
+
+        ICommand SetSelectedManagedPlansCommand { get; }
 
         ICommand LoadProjectPlanFileCommand { get; }
 
