@@ -50,6 +50,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 loadProjectPlanFileCommand.IsExecuting.ToProperty(this, pm => pm.IsLoading, out m_IsLoading);
                 LoadProjectPlanFileCommand = loadProjectPlanFileCommand;
             }
+            {
+                ReactiveCommand<Unit, Unit> branchProjectPlanFileCommand = ReactiveCommand.CreateFromTask(BranchProjectPlanFileAsync);
+                branchProjectPlanFileCommand.IsExecuting.ToProperty(this, pm => pm.IsBranching, out m_IsBranching);
+                BranchProjectPlanFileCommand = branchProjectPlanFileCommand;
+            }
+            {
+                ReactiveCommand<Unit, Unit> spawnProjectPlanFileCommand = ReactiveCommand.CreateFromTask(SpawnProjectPlanFileAsync);
+                spawnProjectPlanFileCommand.IsExecuting.ToProperty(this, pm => pm.IsSpawning, out m_IsSpawning);
+                SpawnProjectPlanFileCommand = spawnProjectPlanFileCommand;
+            }
 
             // Create read-only view to the source list.
             m_Plans.Connect()
@@ -189,6 +199,105 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private async Task LoadProjectPlanFileAsync()
+        {
+            try
+            {
+                await LoadProjectPlanFileInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task LoadProjectPlanFileInternalAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                IManagedPlanViewModel managedPlan = SelectedPlans.First();
+                ProjectPlanNodeModel latestPlanNodeModel = managedPlan.Node;
+                Guid projectPlanId = latestPlanNodeModel.Id;
+                ProjectPlanModel projectPlanModel = latestPlanNodeModel.ProjectPlan;
+                await ProcessProjectPlanAsync(projectPlanModel, projectPlanId);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private async Task ProcessProjectPlanAsync(ProjectPlanModel projectPlanModel, Guid projectPlanId) =>
+            await Task.Run(() => m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId));
+
+        private async Task BranchProjectPlanFileAsync()
+        {
+            try
+            {
+                await BranchProjectPlanFileInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task BranchProjectPlanFileInternalAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                //IManagedPlanViewModel managedPlan = SelectedPlans.First();
+                //ProjectPlanNodeModel latestPlanNodeModel = managedPlan.Node;
+                //Guid projectPlanId = latestPlanNodeModel.Id;
+                //ProjectPlanModel projectPlanModel = latestPlanNodeModel.ProjectPlan;
+                //await ProcessProjectPlanAsync(projectPlanModel, projectPlanId);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private async Task SpawnProjectPlanFileAsync()
+        {
+            try
+            {
+                await SpawnProjectPlanFileInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task SpawnProjectPlanFileInternalAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                //IManagedPlanViewModel managedPlan = SelectedPlans.First();
+                //ProjectPlanNodeModel latestPlanNodeModel = managedPlan.Node;
+                //Guid projectPlanId = latestPlanNodeModel.Id;
+                //ProjectPlanModel projectPlanModel = latestPlanNodeModel.ProjectPlan;
+                //await ProcessProjectPlanAsync(projectPlanModel, projectPlanId);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
         #endregion
 
         #region IProjectManagerViewModel
@@ -206,6 +315,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_IsLoading;
         public bool IsLoading => m_IsLoading.Value;
 
+        private readonly ObservableAsPropertyHelper<bool> m_IsBranching;
+        public bool IsBranching => m_IsBranching.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_IsSpawning;
+        public bool IsSpawning => m_IsSpawning.Value;
+
         public IManagedPlanViewModel Root { get; private set; }
 
         private readonly SourceList<IManagedPlanViewModel> m_Plans;
@@ -221,6 +336,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
         public ICommand LoadProjectPlanFileCommand { get; }
+
+        public ICommand BranchProjectPlanFileCommand { get; }
+
+        public ICommand SpawnProjectPlanFileCommand { get; }
 
 
 
@@ -489,108 +608,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = false;
             }
         }
-
-
-
-
-
-
-        public async Task LoadProjectPlanFileAsync()
-        {
-            try
-            {
-                IsBusy = true;
-
-
-                await Task.Run(() =>
-                {
-
-                    IManagedPlanViewModel managedPlan = SelectedPlans.First();
-
-                    ProjectPlanNodeModel latestPlanNodeModel = managedPlan.Node;
-                    Guid projectPlanId = latestPlanNodeModel.Id;
-                    ProjectPlanModel projectPlanModel = latestPlanNodeModel.ProjectPlan;
-                    m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
-                });
-
-                
-
-
-
-
-                //    if (IsProjectUpdated)
-                //    {
-                //        bool confirmation = await m_DialogService.ShowConfirmationAsync(
-                //            Resource.ProjectPlan.Titles.Title_UnsavedChanges,
-                //            string.Empty,
-                //            Resource.ProjectPlan.Messages.Message_UnsavedChanges);
-
-                //        if (!confirmation)
-                //        {
-                //            return;
-                //        }
-                //    }
-                //    string directory = m_SettingService.ProjectDirectory;
-                //    string? filename = await m_DialogService.ShowOpenFileDialogAsync(directory, s_ProjectFileFilters);
-                //    await OpenProjectFileInternalAsync(filename);
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
-                //ResetProject();
-            }
-            finally
-            {
-
-                IsBusy = false;
-            }
-        }
-
-
-
-
-
-
-
-
-
-        //public void UpdateManagedPlan(ProjectPlanNodeModel projectPlanNodeModel)
-        //{
-        //    try
-        //    {
-        //        lock (m_Lock)
-        //        {
-        //            IsBusy = true;
-        //            IManagedPlanViewModel? projectPlan = GetProjectPlan(projectPlanNodeModel.Id);
-
-        //            if (projectPlan is not null)
-        //            {
-        //                projectPlan.ProjectPlan = projectPlanNodeModel.ProjectPlan;
-        //            }
-
-
-
-
-
-        //        }
-        //    }
-        //    finally
-        //    {
-
-        //        IsBusy = false;
-        //    }
-        //}
-
-
-
-
-
-
-
-
 
 
 

@@ -12,8 +12,6 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-
-
 		<ScrollViewer DockPanel.Dock="Right"
 			  VerticalScrollBarVisibility="Hidden"
 			  HorizontalScrollBarVisibility="Disabled">
@@ -33,6 +31,7 @@
 						Height="25" Width="75"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
+						Command="{Binding Path=BranchProjectPlanFileCommand, Mode=OneWay}"
 						Content="Tmp"/>
 
 				<Button DockPanel.Dock="Top"
@@ -41,6 +40,7 @@
 						Height="25" Width="75"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
+						Command="{Binding Path=SpawnProjectPlanFileCommand, Mode=OneWay}"
 						Content="Tmp"/>
 
 				<Grid/>
@@ -57,7 +57,4 @@
 			</TreeView.ItemTemplate>
 		</TreeView>
 	</DockPanel>
-
-
-
 </UserControl>

@@ -11,6 +11,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsLoading { get; }
 
+        bool IsBranching { get; }
+
+        bool IsSpawning { get; }
+
         IManagedPlanViewModel Root { get; }
 
         ReadOnlyObservableCollection<IManagedPlanViewModel> Plans { get; }
@@ -19,9 +23,9 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand LoadProjectPlanFileCommand { get; }
 
-        ICommand SpawnProjectPlanFileCommand { get; }
-
         ICommand BranchProjectPlanFileCommand { get; }
+
+        ICommand SpawnProjectPlanFileCommand { get; }
 
         void ResetProject();
 
@@ -34,11 +38,5 @@ namespace Zametek.Contract.ProjectPlan
         ProjectModel BuildProject();
 
         void AddManagedPlans(IEnumerable<ProjectPlanNodeModel> projectPlanNodeModels);
-
-        Task LoadProjectPlanFileAsync();
-
-        Task SpawnProjectPlanFileAsync();
-
-        Task BranchProjectPlanFileAsync();
     }
 }
