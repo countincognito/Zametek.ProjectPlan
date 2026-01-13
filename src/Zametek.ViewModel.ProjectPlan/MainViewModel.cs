@@ -269,19 +269,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_CoreViewModel.AutoCompile = true;
 
-            //var displaySettings = new DisplaySettingsModel
-            //{
-            //    ShowDates = m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-            //    UseClassicDates = m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
-            //    UseBusinessDays = m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
-            //    HideCost = m_CoreViewModel.DisplaySettingsViewModel.HideCost,
-            //    HideBilling = m_CoreViewModel.DisplaySettingsViewModel.HideBilling,
-            //};
-
-            //m_CoreViewModel.DisplaySettingsViewModel.SetValues(displaySettings);
-
-            //m_CoreViewModel.IsProjectPlanUpdated = false;
-
             ResetProject();
 
 #if DEBUG
@@ -428,15 +415,22 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleAutoCompile() => AutoCompile = !AutoCompile;
 
-        //private void ProcessProjectPlanImport(ProjectPlanImportModel projectPlanImportModel, Guid projectPlanId) =>
-        //    m_CoreViewModel.ProcessProjectPlanImport(projectPlanImportModel, projectPlanId);
+        private async Task ProcessProjectPlanImportAsync(ProjectPlanImportModel projectPlanImportModel, Guid projectPlanId) =>
+            await Task.Run(() => ProcessProjectPlanImport(projectPlanImportModel, projectPlanId));
 
-        //private void ProcessProjectPlan(ProjectPlanModel projectPlanModel, Guid projectPlanId) =>
-        //    m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
+        private void ProcessProjectPlanImport(
+            ProjectPlanImportModel projectPlanImportModel,
+            Guid projectPlanId)
+        {
+            lock (m_Lock)
+            {
+                m_CoreViewModel.ProcessProjectPlanImport(projectPlanImportModel, projectPlanId);
+            }
+        }
 
-        private async Task<ProjectModel> BuildProjectAsync() => await Task.Run(BuildProjectPlan);
+        private async Task<ProjectModel> BuildProjectAsync() => await Task.Run(BuildProject);
 
-        private ProjectModel BuildProjectPlan()
+        private ProjectModel BuildProject()
         {
             lock (m_Lock)
             {
@@ -444,9 +438,22 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private async Task<ProjectPlanModel> BuildProjectPlanAsync() => await Task.Run(BuildProjectPlan);
+
+        private ProjectPlanModel BuildProjectPlan()
+        {
+            lock (m_Lock)
+            {
+                return m_CoreViewModel.BuildProjectPlan();
+            }
+        }
+
         private async Task ForceCompileAsync() => await Task.Run(async () =>
         {
+            // We set this flag to force revision of trackers in case there
+            // changes to activities or resources have occurred since the last compile.
             m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+
             await RunCompileAsync(); // Need to force a compilation here.
         });
 
@@ -897,28 +904,27 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                //if (IsProjectUpdated)
-                //{
-                //    bool confirmation = await m_DialogService.ShowConfirmationAsync(
-                //        Resource.ProjectPlan.Titles.Title_UnsavedChanges,
-                //        string.Empty,
-                //        Resource.ProjectPlan.Messages.Message_UnsavedChanges);
+                if (IsProjectUpdated)
+                {
+                    bool confirmation = await m_DialogService.ShowConfirmationAsync(
+                        Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                        string.Empty,
+                        Resource.ProjectPlan.Messages.Message_UnsavedChanges);
 
-                //    if (!confirmation)
-                //    {
-                //        return;
-                //    }
-                //}
-                //string directory = m_SettingService.ProjectDirectory;
-                //string? filename = await m_DialogService.ShowOpenFileDialogAsync(directory, s_ImportFileFilters);
+                    if (!confirmation)
+                    {
+                        return;
+                    }
+                }
+                string directory = m_SettingService.ProjectDirectory;
+                string? filename = await m_DialogService.ShowOpenFileDialogAsync(directory, s_ImportFileFilters);
 
-                //if (!string.IsNullOrWhiteSpace(filename))
-                //{
-                //    ProjectPlanImportModel importModel = await m_ProjectFileImport.ImportProjectPlanFileAsync(filename);
-                //    ProcessProjectPlanImport(importModel);
-                //    m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: false);
-                //    await RunAutoCompileAsync();
-                //}
+                if (!string.IsNullOrWhiteSpace(filename))
+                {
+                    ProjectPlanImportModel importModel = await m_ProjectPlanFileImport.ImportProjectPlanFileAsync(filename);
+                    await ProcessProjectPlanImportAsync(importModel, m_CoreViewModel.ProjectPlanId);
+                    await RunAutoCompileAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -934,19 +940,29 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                string projectTitle = m_SettingService.ProjectTitle;
+                string title = m_SettingService.ProjectTitle;
+                title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
+
+                Guid projectPlanId = m_CoreViewModel.ProjectPlanId;
+                IManagedPlanViewModel? managedPlan = m_ProjectManagerViewModel.GetProjectPlan(projectPlanId);
+
+                if (managedPlan is not null)
+                {
+                    title = $@"{title}-{managedPlan.Label}";
+                }
+
                 string directory = m_SettingService.ProjectDirectory;
-                string? filename = await m_DialogService.ShowSaveFileDialogAsync(projectTitle, directory, s_ExportFileFilters);
+                string? filename = await m_DialogService.ShowSaveFileDialogAsync(title, directory, s_ExportFileFilters);
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    //ProjectModel projectModel = await BuildProjectAsync();
-                    //await m_ProjectFileExport.ExportProjectFileAsync(
-                    //    projectModel,
-                    //    m_CoreViewModel.ResourceSeriesSet,
-                    //    m_CoreViewModel.TrackingSeriesSet,
-                    //    ShowDates,
-                    //    filename);
+                    ProjectPlanModel projectPlanModel = await BuildProjectPlanAsync();
+                    await m_ProjectPlanFileExport.ExportProjectPlanFileAsync(
+                        projectPlanModel,
+                        m_CoreViewModel.ResourceSeriesSet,
+                        m_CoreViewModel.TrackingSeriesSet,
+                        ShowDates,
+                        filename);
                 }
             }
             catch (Exception ex)
@@ -1030,7 +1046,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     ex.Message);
             }
         }
-
 
         public async Task OpenReportIssueAsync()
         {
