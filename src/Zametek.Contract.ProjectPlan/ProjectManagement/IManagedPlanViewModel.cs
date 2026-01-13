@@ -9,7 +9,7 @@ namespace Zametek.Contract.ProjectPlan
     {
         Guid Id { get; }
 
-        Guid ParentId { get; }
+        Guid ParentId { get; set; }
 
         DateTimeOffset CreatedOn { get; }
 

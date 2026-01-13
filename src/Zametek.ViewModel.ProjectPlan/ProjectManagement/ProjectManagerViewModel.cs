@@ -215,7 +215,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    Root?.ClearChildren();
+                    Root.ClearChildren();
                     m_ManagedPlanLookup.Clear();
                     m_PlanTagLookup.Clear();
                     m_Plans.Clear();
@@ -239,6 +239,59 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     SelectedPlan = null;
                 }
+            }
+        }
+
+        private void AddManagedPlans(IEnumerable<ProjectPlanNodeModel> projectPlanNodeModels)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+
+                    // First add all the plans to the lookup.
+                    foreach (ProjectPlanNodeModel projectPlanNode in projectPlanNodeModels)
+                    {
+                        if (!m_ManagedPlanLookup.ContainsKey(projectPlanNode.Id))
+                        {
+                            var projectPlan = new ManagedPlanViewModel(projectPlanNode);
+                            SetTagLabels(projectPlan);
+                            m_ManagedPlanLookup.TryAdd(projectPlan.Id, projectPlan);
+                        }
+                    }
+
+                    // Now build the hierarchy.
+                    // Remember that the Root node is not in the lookup and forms the top-level parent.
+                    foreach (ProjectPlanNodeModel projectPlanNode in projectPlanNodeModels)
+                    {
+                        if (m_ManagedPlanLookup.TryGetValue(projectPlanNode.Id, out IManagedPlanViewModel? projectPlan))
+                        {
+                            // Top-level plan.
+                            if (projectPlan.ParentId == Root.Id)
+                            {
+                                Root.AddChildren([projectPlan]);
+                                m_Plans.Add(projectPlan);
+                            }
+                            // Child plan.
+                            else if (m_ManagedPlanLookup.TryGetValue(projectPlan.ParentId, out IManagedPlanViewModel? parentPlan))
+                            {
+                                parentPlan.AddChildren([projectPlan]);
+                            }
+                            else
+                            // Orphaned plan - treat as top-level.
+                            {
+                                projectPlan.ParentId = Root.Id;
+                                Root.AddChildren([projectPlan]);
+                                m_Plans.Add(projectPlan);
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 
@@ -675,116 +728,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = false;
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        public void AddManagedPlans(IEnumerable<ProjectPlanNodeModel> projectPlanNodeModels)
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    IsBusy = true;
-
-                    if (Root is not null)
-                    {
-                        // First add all the plans to the lookup.
-                        foreach (ProjectPlanNodeModel projectPlanNode in projectPlanNodeModels)
-                        {
-                            if (!m_ManagedPlanLookup.ContainsKey(projectPlanNode.Id))
-                            {
-                                var projectPlan = new ManagedPlanViewModel(projectPlanNode);
-
-                                SetTagLabels(projectPlan);
-
-                                m_ManagedPlanLookup.TryAdd(projectPlan.Id, projectPlan);
-
-                            }
-
-                        }
-
-
-
-
-
-                        foreach (ProjectPlanNodeModel projectPlanNode in projectPlanNodeModels)
-                        {
-                            if (m_ManagedPlanLookup.TryGetValue(projectPlanNode.Id, out IManagedPlanViewModel? projectPlan))
-                            {
-
-                                if (projectPlan.ParentId == Root.Id)
-                                {
-                                    // Top-level plan.
-                                    Root.AddChildren([projectPlan]);
-                                    m_Plans.Add(projectPlan);
-                                }
-                                else if (m_ManagedPlanLookup.TryGetValue(projectPlan.ParentId, out IManagedPlanViewModel? parentPlan))
-                                {
-                                    // Child plan.
-                                    parentPlan.AddChildren([projectPlan]);
-                                }
-                                else
-                                {
-                                    // Orphaned plan - treat as top-level.
-                                    //plans.Add(projectPlan);
-                                    projectPlan.Dispose();
-
-                                    throw new Exception(projectPlanNode.Id + ": Unable to add managed plan - parent plan not found." + projectPlanNode.ParentId);
-                                }
-
-
-
-
-
-
-
-
-
-
-
-                            }
-
-
-                        }
-
-
-
-
-                        //IsProjectUpdated = true;
-                    }
-                }
-
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
-
-
-
-
-
-
-
-
-
 
         #endregion
 

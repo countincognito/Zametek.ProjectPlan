@@ -44,7 +44,5 @@ namespace Zametek.Contract.ProjectPlan
         IManagedPlanViewModel? GetProjectPlanParent(Guid projectPlanId);
 
         ProjectModel BuildProject();
-
-        void AddManagedPlans(IEnumerable<ProjectPlanNodeModel> projectPlanNodeModels);
     }
 }
