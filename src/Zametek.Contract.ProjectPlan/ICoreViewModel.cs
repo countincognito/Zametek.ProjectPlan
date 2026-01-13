@@ -47,7 +47,19 @@ namespace Zametek.Contract.ProjectPlan
 
         WorkStreamSettingsModel WorkStreamSettings { get; set; }
 
-        MetricsModel Metrics { get; set; }
+        MetricsModel Metrics { get; }
+
+        RisksModel RiskMetrics { get; }
+
+        CostsModel CostMetrics { get; }
+
+        BillingsModel BillingMetrics { get; }
+
+        MarginsModel MarginMetrics { get; }
+
+        EffortsModel EffortMetrics { get; }
+
+        NetworkModel NetworkMetrics { get; }
 
         bool HasActivities { get; }
 

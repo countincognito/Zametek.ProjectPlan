@@ -73,7 +73,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_GraphSettings = m_SettingService.DefaultGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
-            m_Metrics = new MetricsModel();
+            Metrics = new MetricsModel();
 
             DisplaySettingsViewModel.ShowDates = m_SettingService.DefaultShowDates;
             DisplaySettingsViewModel.UseClassicDates = m_SettingService.DefaultUseClassicDates;
@@ -118,13 +118,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     settings => settings.WorkStreams.Count(x => x.IsPhase) > 0)
                 .ToProperty(this, core => core.HasPhases);
 
-            m_NetworkMetricsSub = this
-                .WhenAnyValue(
-                    core => core.GraphCompilation,
-                    core => core.HasCompilationErrors)
-                .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(_ => BuildNetworkMetrics());
-
             m_AreActivitiesUncompiledSub = m_ReadOnlyActivities
                 .ToObservableChangeSet()
                 .AutoRefresh(activity => activity.IsCompiled) // Subscribe only to IsCompiled property changes
@@ -132,7 +125,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(changeSet =>
                 {
-                    if (!IsBusy && changeSet.TotalChanges > 0)
+                    if (!IsBusy && changeSet.Replaced > 0)
                     {
                         lock (m_Lock)
                         {
@@ -188,6 +181,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObservableForProperty(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildTrackingSeriesSet());
+
+            m_NetworkMetricsSub = this
+                .WhenAnyValue(
+                    core => core.GraphCompilation,
+                    core => core.HasCompilationErrors)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => BuildNetworkMetrics());
 
             m_BuildRiskMetricsSub = this
                 .WhenAnyValue(
@@ -992,7 +992,13 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_IsReadyToCompile;
             private set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_IsReadyToCompile, value);
+                lock (m_Lock)
+                {
+                    if (m_TrackIsProjectPlanUpdated)
+                    {
+                        this.RaiseAndSetIfChanged(ref m_IsReadyToCompile, value);
+                    }
+                }
             }
         }
 
@@ -1224,16 +1230,148 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private MetricsModel m_Metrics;
         public MetricsModel Metrics
         {
-            get => m_Metrics;
-            set
+            get
+            {
+                return new MetricsModel
+                {
+                    Risks = RiskMetrics,
+                    Costs = CostMetrics,
+                    Billings = BillingMetrics,
+                    Margins = MarginMetrics,
+                    Efforts = EffortMetrics,
+                    Network = NetworkMetrics,
+                };
+            }
+            private set
+            {
+                RiskMetrics = value.Risks;
+                CostMetrics = value.Costs;
+                BillingMetrics = value.Billings;
+                MarginMetrics = value.Margins;
+                EffortMetrics = value.Efforts;
+                NetworkMetrics = value.Network;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private RisksModel m_RiskMetrics;
+        public RisksModel RiskMetrics
+        {
+            get => m_RiskMetrics;
+            private set
             {
                 lock (m_Lock)
                 {
-                    m_Metrics = value;
+                    if (m_RiskMetrics == value)
+                    {
+                        return;
+                    }
+                    m_RiskMetrics = value;
+                    IsProjectPlanUpdated = true;
                     this.RaisePropertyChanged();
+                    this.RaisePropertyChanged(nameof(Metrics));
+                }
+            }
+        }
+
+        private CostsModel m_CostMetrics;
+        public CostsModel CostMetrics
+        {
+            get => m_CostMetrics;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    if (m_CostMetrics == value)
+                    {
+                        return;
+                    }
+                    m_CostMetrics = value;
+                    IsProjectPlanUpdated = true;
+                    this.RaisePropertyChanged();
+                    this.RaisePropertyChanged(nameof(Metrics));
+                }
+            }
+        }
+
+        private BillingsModel m_BillingMetrics;
+        public BillingsModel BillingMetrics
+        {
+            get => m_BillingMetrics;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    if (m_BillingMetrics == value)
+                    {
+                        return;
+                    }
+                    m_BillingMetrics = value;
+                    IsProjectPlanUpdated = true;
+                    this.RaisePropertyChanged();
+                    this.RaisePropertyChanged(nameof(Metrics));
+                }
+            }
+        }
+
+        private MarginsModel m_MarginMetrics;
+        public MarginsModel MarginMetrics
+        {
+            get => m_MarginMetrics;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    if (m_MarginMetrics == value)
+                    {
+                        return;
+                    }
+                    m_MarginMetrics = value;
+                    IsProjectPlanUpdated = true;
+                    this.RaisePropertyChanged();
+                    this.RaisePropertyChanged(nameof(Metrics));
+                }
+            }
+        }
+
+        private EffortsModel m_EffortMetrics;
+        public EffortsModel EffortMetrics
+        {
+            get => m_EffortMetrics;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    if (m_EffortMetrics == value)
+                    {
+                        return;
+                    }
+                    m_EffortMetrics = value;
+                    IsProjectPlanUpdated = true;
+                    this.RaisePropertyChanged();
+                    this.RaisePropertyChanged(nameof(Metrics));
+                }
+            }
+        }
+
+        private NetworkModel m_NetworkMetrics;
+        public NetworkModel NetworkMetrics
+        {
+            get => m_NetworkMetrics;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    if (m_NetworkMetrics == value)
+                    {
+                        return;
+                    }
+                    m_NetworkMetrics = value;
+                    IsProjectPlanUpdated = true;
+                    this.RaisePropertyChanged();
+                    this.RaisePropertyChanged(nameof(Metrics));
                 }
             }
         }
@@ -1556,9 +1694,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     DisplaySettingsViewModel.SetValues(displaySettings);
 
-                    // Metrics.
-                    Metrics = projectPlanModel.Metrics;
-
                     // Work Stream Settings.
                     WorkStreamSettings = projectPlanModel.WorkStreamSettings;
 
@@ -1588,9 +1723,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     DisplaySettingsViewModel.SetValues(displaySettings);
 
+                    RunCompile();
+
+                    // Metrics.
+                    // It is important to put this after the compilation, so it will only
+                    // trigger a project plan updated event if it is different from the compiled metrics.
+                    Metrics = projectPlanModel.Metrics;
+
                     m_TrackIsProjectPlanUpdated = true;
                     IsProjectPlanUpdated = false;
-
                     m_TrackHasStaleOutputs = true;
                 }
             }
@@ -1709,7 +1850,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
 
-                    IsProjectPlanUpdated = true;
+                    //IsProjectPlanUpdated = true;
                 }
             }
             finally
@@ -2119,15 +2260,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     durationManMonths = CalculateDurationManMonths(duration, m_DateTimeCalculator.DaysPerWeek);
                 }
 
-                Metrics = Metrics with
+                NetworkMetrics = new NetworkModel
                 {
-                    Network = new NetworkModel
-                    {
-                        CyclomaticComplexity = cyclomaticComplexity,
-                        Duration = duration,
-                        DurationManMonths = durationManMonths,
-                    },
+                    CyclomaticComplexity = cyclomaticComplexity,
+                    Duration = duration,
+                    DurationManMonths = durationManMonths,
                 };
+                this.RaisePropertyChanged(nameof(Metrics));
             }
         }
 
@@ -2140,7 +2279,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 List<IDependentActivity> dependentActivities =
                     [.. GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject())];
 
-                if (dependentActivities.Any())
+                if (dependentActivities.Count != 0)
                 {
                     if (!HasCompilationErrors)
                     {
@@ -2154,10 +2293,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
-                Metrics = Metrics with
-                {
-                    Risks = risksModel,
-                };
+                RiskMetrics = risksModel;
+                this.RaisePropertyChanged(nameof(Metrics));
             }
         }
 
@@ -2171,9 +2308,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 var marginsModel = new MarginsModel();
                 var effortsModel = new EffortsModel();
 
-                IList<ResourceSeriesModel> combinedResourceSeriesModels = ResourceSeriesSet.Combined;
+                List<ResourceSeriesModel> combinedResourceSeriesModels = ResourceSeriesSet.Combined;
 
-                if (combinedResourceSeriesModels.Any())
+                if (combinedResourceSeriesModels.Count != 0)
                 {
                     if (!HasCompilationErrors)
                     {
@@ -2184,13 +2321,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
-                Metrics = Metrics with
-                {
-                    Costs = costsModel,
-                    Billings = billingsModel,
-                    Margins = marginsModel,
-                    Efforts = effortsModel,
-                };
+                CostMetrics = costsModel;
+                BillingMetrics = billingsModel;
+                MarginMetrics = marginsModel;
+                EffortMetrics = effortsModel;
+                this.RaisePropertyChanged(nameof(Metrics));
             }
         }
 

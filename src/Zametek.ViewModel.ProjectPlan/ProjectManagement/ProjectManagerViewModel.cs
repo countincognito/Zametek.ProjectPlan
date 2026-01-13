@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using DynamicData;
 using ReactiveUI;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -20,8 +21,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
-        private Dictionary<Guid, IManagedPlanViewModel> m_ManagedPlanLookup;
-        private Dictionary<Guid, List<string>> m_PlanTagLookup;
+        private readonly ConcurrentDictionary<Guid, IManagedPlanViewModel> m_ManagedPlanLookup;
+        private readonly ConcurrentDictionary<Guid, List<string>> m_PlanTagLookup;
 
         #endregion
 
@@ -44,8 +45,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Plans = new();
             SelectedPlans = [];
             SelectedPlan = null;
-            m_ManagedPlanLookup = [];
-            m_PlanTagLookup = [];
+            m_ManagedPlanLookup = new();
+            m_PlanTagLookup = new();
 
             SetSelectedManagedPlansCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedPlans);
             {
@@ -173,7 +174,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         if (!m_PlanTagLookup.TryGetValue(tagModel.NodeId, out List<string>? labels))
                         {
                             labels = [];
-                            m_PlanTagLookup.Add(tagModel.NodeId, labels);
+                            m_PlanTagLookup.TryAdd(tagModel.NodeId, labels);
                         }
 
                         labels.Add(tagModel.Label);
@@ -266,32 +267,30 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private async Task LoadProjectPlanFileInternalAsync()
+        private async Task LoadProjectPlanFileInternalAsync() => await Task.Run(LoadProjectPlanFileInternal);
+
+        private void LoadProjectPlanFileInternal()
         {
             try
             {
-                IsBusy = true;
-                await Task.Run(LoadProjectPlanFileInternal);
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    IManagedPlanViewModel? managedPlan = SelectedPlan;
+
+                    if (managedPlan is not null)
+                    {
+                        ProjectPlanNodeModel selectedPlanNodeModel = managedPlan.Node;
+                        Guid projectPlanId = selectedPlanNodeModel.Id;
+                        ProjectPlanModel projectPlanModel = selectedPlanNodeModel.ProjectPlan;
+                        m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
+                        IsProjectUpdated = false;
+                    }
+                }
             }
             finally
             {
                 IsBusy = false;
-            }
-        }
-
-        private void LoadProjectPlanFileInternal()
-        {
-            lock (m_Lock)
-            {
-                IManagedPlanViewModel? managedPlan = SelectedPlan;
-
-                if (managedPlan is not null)
-                {
-                    ProjectPlanNodeModel selectedPlanNodeModel = managedPlan.Node;
-                    Guid projectPlanId = selectedPlanNodeModel.Id;
-                    ProjectPlanModel projectPlanModel = selectedPlanNodeModel.ProjectPlan;
-                    m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
-                }
             }
         }
 
@@ -322,39 +321,36 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private async Task BranchProjectPlanFileInternalAsync()
+        private async Task BranchProjectPlanFileInternalAsync() => await Task.Run(BranchProjectPlanFileInternal);
+
+        private void BranchProjectPlanFileInternal()
         {
             try
             {
-                IsBusy = true;
-                await Task.Run(BranchProjectPlanFileInternal);
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    IManagedPlanViewModel? managedPlan = SelectedPlan;
+
+                    if (managedPlan is not null)
+                    {
+                        // A branched plan shares a parent but has a new Id.
+                        ProjectPlanNodeModel selectedPlanNodeModel = managedPlan.Node with
+                        {
+                            Id = Guid.NewGuid(),
+                            Comment = string.Empty,
+                        };
+                        Guid projectPlanId = selectedPlanNodeModel.Id;
+                        ProjectPlanModel projectPlanModel = selectedPlanNodeModel.ProjectPlan;
+                        AddManagedPlans([selectedPlanNodeModel]);
+                        m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
+                        IsProjectUpdated = true;
+                    }
+                }
             }
             finally
             {
                 IsBusy = false;
-            }
-        }
-
-        private void BranchProjectPlanFileInternal()
-        {
-            lock (m_Lock)
-            {
-                IManagedPlanViewModel? managedPlan = SelectedPlan;
-
-                if (managedPlan is not null)
-                {
-                    // A branched plan shares a parent but has a new Id.
-                    ProjectPlanNodeModel selectedPlanNodeModel = managedPlan.Node with
-                    {
-                        Id = Guid.NewGuid(),
-                        Comment = string.Empty,
-                    };
-                    Guid projectPlanId = selectedPlanNodeModel.Id;
-                    ProjectPlanModel projectPlanModel = selectedPlanNodeModel.ProjectPlan;
-                    AddManagedPlans([selectedPlanNodeModel]);
-                    m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
-                    IsProjectUpdated = true;
-                }
             }
         }
 
@@ -385,40 +381,37 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private async Task SpawnProjectPlanFileInternalAsync()
+        private async Task SpawnProjectPlanFileInternalAsync() => await Task.Run(SpawnProjectPlanFileInternal);
+
+        private void SpawnProjectPlanFileInternal()
         {
             try
             {
-                IsBusy = true;
-                await Task.Run(SpawnProjectPlanFileInternal);
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    IManagedPlanViewModel? managedPlan = SelectedPlan;
+
+                    if (managedPlan is not null)
+                    {
+                        // A spawned plan makes the previous plan its parent.
+                        ProjectPlanNodeModel selectedPlanNodeModel = managedPlan.Node with
+                        {
+                            Id = Guid.NewGuid(),
+                            ParentId = managedPlan.Id,
+                            Comment = string.Empty,
+                        };
+                        Guid projectPlanId = selectedPlanNodeModel.Id;
+                        ProjectPlanModel projectPlanModel = selectedPlanNodeModel.ProjectPlan;
+                        AddManagedPlans([selectedPlanNodeModel]);
+                        m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
+                        IsProjectUpdated = true;
+                    }
+                }
             }
             finally
             {
                 IsBusy = false;
-            }
-        }
-
-        private void SpawnProjectPlanFileInternal()
-        {
-            lock (m_Lock)
-            {
-                IManagedPlanViewModel? managedPlan = SelectedPlan;
-
-                if (managedPlan is not null)
-                {
-                    // A spawned plan makes the previous plan its parent.
-                    ProjectPlanNodeModel selectedPlanNodeModel = managedPlan.Node with
-                    {
-                        Id = Guid.NewGuid(),
-                        ParentId = managedPlan.Id,
-                        Comment = string.Empty,
-                    };
-                    Guid projectPlanId = selectedPlanNodeModel.Id;
-                    ProjectPlanModel projectPlanModel = selectedPlanNodeModel.ProjectPlan;
-                    AddManagedPlans([selectedPlanNodeModel]);
-                    m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
-                    IsProjectUpdated = true;
-                }
             }
         }
 
@@ -481,19 +474,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand SpawnProjectPlanFileCommand { get; }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
         public void ResetProject()
         {
             try
@@ -501,20 +481,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    //m_TrackIsProjectUpdated = false;
-                    //m_TrackHasStaleOutputs = false;
 
                     // Reset the core project plan.
-
                     m_CoreViewModel.ResetProjectPlan();
 
                     // Reset the project manager.
-
                     ClearProject();
                     ResetRootNode();
 
                     // Now add the new core project plan to the project manager.
-
                     ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
 
                     var projectPlanNode = new ProjectPlanNodeModel
@@ -526,49 +501,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     AddManagedPlans([projectPlanNode]);
 
-
-
-
-
-
-
-
-
-
-
-
-
-                    //ClearSettings();
-
-                    //Metrics = new();
-
-                    //HasCompilationErrors = false;
-                    //GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
-
-                    //ArrowGraph = new();
-                    //VertexGraph = new();
-
-                    //IsReadyToCompile = ReadyToCompile.No;
-                    //IsReadyToReviseTrackers = ReadyToRevise.No;
-                    //IsReadyToReviseSettings = ReadyToRevise.No;
-
                     m_SettingService.Reset();
-
-                    //m_TrackIsProjectUpdated = true;
                     IsProjectUpdated = false;
-
-                    //m_TrackHasStaleOutputs = true;
-                    //HasStaleOutputs = false;
                 }
             }
             finally
             {
-                //m_TrackIsProjectUpdated = true;
-                //m_TrackHasStaleOutputs = true;
                 IsBusy = false;
             }
         }
-
 
         public void ProcessProject(ProjectModel projectModel)
         {
@@ -628,54 +569,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                //m_TrackIsProjectUpdated = true;
-                //m_TrackHasStaleOutputs = true;
                 IsBusy = false;
             }
         }
 
         public IManagedPlanViewModel? GetProjectPlan(Guid projectPlanId)
         {
-            try
+            if (m_ManagedPlanLookup.TryGetValue(projectPlanId, out IManagedPlanViewModel? projectPlan))
             {
-                lock (m_Lock)
-                {
-                    IsBusy = true;
-                    if (m_ManagedPlanLookup.TryGetValue(projectPlanId, out IManagedPlanViewModel? projectPlan))
-                    {
-                        return projectPlan;
-                    }
-                }
-            }
-            finally
-            {
-                IsBusy = false;
+                return projectPlan;
             }
             return null;
         }
 
         public IManagedPlanViewModel? GetProjectPlanParent(Guid projectPlanId)
         {
-            try
+            if (m_ManagedPlanLookup.TryGetValue(projectPlanId, out IManagedPlanViewModel? projectPlan)
+                && m_ManagedPlanLookup.TryGetValue(projectPlan.ParentId, out IManagedPlanViewModel? parentProjectPlan))
             {
-                lock (m_Lock)
-                {
-                    IsBusy = true;
-                    if (m_ManagedPlanLookup.TryGetValue(projectPlanId, out IManagedPlanViewModel? projectPlan)
-                        && m_ManagedPlanLookup.TryGetValue(projectPlan.ParentId, out IManagedPlanViewModel? parentProjectPlan))
-                    {
-                        return parentProjectPlan;
-                    }
-                }
-            }
-            finally
-            {
-                IsBusy = false;
+                return parentProjectPlan;
             }
             return null;
         }
-
-
 
         public ProjectModel BuildProject()
         {
@@ -725,7 +640,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 Label = label,
                             }))];
 
-                    return new ProjectModel
+                    var projectModel = new ProjectModel
                     {
                         Version = Data.ProjectPlan.Versions.ProjectLatest,
                         Root = rootId,
@@ -733,11 +648,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         Nodes = nodes,
                         Tags = tags,
                     };
+
+                    return projectModel;
                 }
             }
             finally
             {
-
                 IsBusy = false;
             }
         }
@@ -770,6 +686,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (Root is not null)
                     {
+                        // First add all the plans to the lookup.
                         foreach (ProjectPlanNodeModel projectPlanNode in projectPlanNodeModels)
                         {
                             if (!m_ManagedPlanLookup.ContainsKey(projectPlanNode.Id))
@@ -778,7 +695,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
                                 SetTagLabels(projectPlan);
 
-                                m_ManagedPlanLookup.Add(projectPlan.Id, projectPlan);
+                                m_ManagedPlanLookup.TryAdd(projectPlan.Id, projectPlan);
+
+                            }
+
+                        }
+
+
+
+
+
+                        foreach (ProjectPlanNodeModel projectPlanNode in projectPlanNodeModels)
+                        {
+                            if (m_ManagedPlanLookup.TryGetValue(projectPlanNode.Id, out IManagedPlanViewModel? projectPlan))
+                            {
 
                                 if (projectPlan.ParentId == Root.Id)
                                 {
@@ -807,35 +737,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
+
+
+
                             }
 
 
                         }
 
 
-
-
-                        //foreach (DependentActivityModel dependentActivity in dependentActivityModels)
-                        //{
-                        //    var activity = new ManagedActivityViewModel(
-                        //        this,
-                        //        m_Mapper.Map<DependentActivityModel, DependentActivity>(dependentActivity),
-                        //        m_DateTimeCalculator,
-                        //        m_VertexGraphCompiler,
-                        //        ProjectStart,
-                        //        dependentActivity.Activity.Trackers,
-                        //        dependentActivity.Activity.MinimumEarliestStartDateTime,
-                        //        dependentActivity.Activity.MaximumLatestFinishDateTime);
-
-                        //    if (m_VertexGraphCompiler.AddActivity(activity))
-                        //    {
-                        //        activities.Add(activity);
-                        //    }
-                        //    else
-                        //    {
-                        //        activity.Dispose();
-                        //    }
-                        //}
 
 
                         //IsProjectUpdated = true;
