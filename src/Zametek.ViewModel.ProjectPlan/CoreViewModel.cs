@@ -73,7 +73,12 @@ namespace Zametek.ViewModel.ProjectPlan
             m_GraphSettings = m_SettingService.DefaultGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
-            Metrics = new MetricsModel();
+            m_RiskMetrics = new();
+            m_CostMetrics = new();
+            m_BillingMetrics = new();
+            m_MarginMetrics = new();
+            m_EffortMetrics = new();
+            m_NetworkMetrics = new();
 
             DisplaySettingsViewModel.ShowDates = m_SettingService.DefaultShowDates;
             DisplaySettingsViewModel.UseClassicDates = m_SettingService.DefaultUseClassicDates;
@@ -115,7 +120,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasPhases = this
                 .WhenAnyValue(
                     core => core.WorkStreamSettings,
-                    settings => settings.WorkStreams.Count(x => x.IsPhase) > 0)
+                    settings => settings.WorkStreams.Any(x => x.IsPhase))
                 .ToProperty(this, core => core.HasPhases);
 
             m_AreActivitiesUncompiledSub = m_ReadOnlyActivities
@@ -367,10 +372,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         int resourceId = combinedSeries.ResourceSchedule.Resource.Id;
                         if (unscheduledResourceSeriesLookup.TryGetValue(resourceId, out ResourceSeriesModel? unscheduledResourceSeries))
                         {
-                            combinedActivityAllocations = combinedSeries.ResourceSchedule.ActivityAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.ActivityAllocation, (x, y) => x || y).ToList();
-                            combinedCostAllocations = combinedSeries.ResourceSchedule.CostAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.CostAllocation, (x, y) => x || y).ToList();
-                            combinedBillingAllocations = combinedSeries.ResourceSchedule.BillingAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.BillingAllocation, (x, y) => x || y).ToList();
-                            combinedEffortAllocations = combinedSeries.ResourceSchedule.EffortAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.EffortAllocation, (x, y) => x || y).ToList();
+                            combinedActivityAllocations = [.. combinedSeries.ResourceSchedule.ActivityAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.ActivityAllocation, (x, y) => x || y)];
+                            combinedCostAllocations = [.. combinedSeries.ResourceSchedule.CostAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.CostAllocation, (x, y) => x || y)];
+                            combinedBillingAllocations = [.. combinedSeries.ResourceSchedule.BillingAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.BillingAllocation, (x, y) => x || y)];
+                            combinedEffortAllocations = [.. combinedSeries.ResourceSchedule.EffortAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.EffortAllocation, (x, y) => x || y)];
                             unscheduledSeriesAlreadyIncluded.Add(resourceId);
                         }
                         else
@@ -403,9 +408,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 // Finally, add the unscheduled series that have not already been included above.
 
                 // Prepend so that they might be displayed first after sorting.
-                List<ResourceSeriesModel> combined = unscheduledSeriesSet
-                    .Where(x => !unscheduledSeriesAlreadyIncluded.Contains(x.ResourceSchedule.Resource.Id))
-                    .ToList();
+                List<ResourceSeriesModel> combined = [.. unscheduledSeriesSet.Where(x => !unscheduledSeriesAlreadyIncluded.Contains(x.ResourceSchedule.Resource.Id))];
 
                 combined.AddRange(combinedSeriesSet);
 
@@ -848,8 +851,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (progressPointSeries.Count > 1)
                 {
                     var projectedLinearFit = MathNet.Numerics.Fit.LineThroughOrigin(
-                        progressPointSeries.Select(p => (double)p.Time).ToArray(),
-                        progressPointSeries.Select(p => p.Value).ToArray());
+                        [.. progressPointSeries.Select(p => (double)p.Time)],
+                        [.. progressPointSeries.Select(p => p.Value)]);
 
                     var lastTrackingPoint = planPointSeries.Last();
 
@@ -881,8 +884,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     planProjectionPointSeries.Last().Time);
 
                 var projectedLinearFit = MathNet.Numerics.Fit.LineThroughOrigin(
-                    effortPointSeries.Select(p => (double)p.Time).ToArray(),
-                    effortPointSeries.Select(p => p.Value).ToArray());
+                    [.. effortPointSeries.Select(p => (double)p.Time)],
+                    [.. effortPointSeries.Select(p => p.Value)]);
 
                 var lastTrackingPoint = planPointSeries.Last();
 
@@ -1064,7 +1067,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly IDisplaySettingsViewModel m_DisplaySettingsViewModel;
+        private readonly DisplaySettingsViewModel m_DisplaySettingsViewModel;
         public IDisplaySettingsViewModel DisplaySettingsViewModel
         {
             get => m_DisplaySettingsViewModel;
@@ -1269,7 +1272,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_RiskMetrics = value;
-                    IsProjectPlanUpdated = true;
+                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(Metrics));
                 }
@@ -1289,7 +1292,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_CostMetrics = value;
-                    IsProjectPlanUpdated = true;
+                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(Metrics));
                 }
@@ -1309,7 +1312,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_BillingMetrics = value;
-                    IsProjectPlanUpdated = true;
+                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(Metrics));
                 }
@@ -1329,7 +1332,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_MarginMetrics = value;
-                    IsProjectPlanUpdated = true;
+                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(Metrics));
                 }
@@ -1349,7 +1352,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_EffortMetrics = value;
-                    IsProjectPlanUpdated = true;
+                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(Metrics));
                 }
@@ -1369,7 +1372,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_NetworkMetrics = value;
-                    IsProjectPlanUpdated = true;
+                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(Metrics));
                 }
@@ -1646,11 +1649,16 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Display settings.
                     DisplaySettingsViewModel.SetValues(projectPlanImportModel.DisplaySettings);
 
+                    RunCompile();
+
+                    //// Metrics.
+                    //// It is important to put this after the compilation, so it will only
+                    //// trigger a project plan updated event if it is different from the compiled metrics.
+                    //Metrics = projectPlanModel.Metrics;
+
                     m_TrackIsProjectPlanUpdated = true;
                     IsProjectPlanUpdated = true;
-
                     m_TrackHasStaleOutputs = true;
-                    HasStaleOutputs = true;
                 }
             }
             finally
@@ -1868,9 +1876,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_Activities.Edit(activities =>
                     {
                         IsBusy = true;
-                        IEnumerable<IManagedActivityViewModel> dependentActivities = Activities
-                            .Where(x => dependentActivityIds.Contains(x.Id))
-                            .ToList();
+                        IEnumerable<IManagedActivityViewModel> dependentActivities = [.. Activities.Where(x => dependentActivityIds.Contains(x.Id))];
 
                         foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
                         {
