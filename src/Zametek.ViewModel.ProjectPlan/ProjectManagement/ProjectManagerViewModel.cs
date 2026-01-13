@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using DynamicData;
+using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -82,6 +83,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Create read-only view to the source list.
             m_Plans.Connect()
+                .Sort(SortExpressionComparer<IManagedPlanViewModel>.Ascending(pm => pm.CreatedOn))
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Bind(out m_ReadOnlyPlans)
                 .Subscribe();
@@ -338,6 +340,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         ProjectPlanNodeModel selectedPlanNodeModel = managedPlan.Node with
                         {
                             Id = Guid.NewGuid(),
+                            CreatedOn = DateTimeOffset.UtcNow,
+                            ModifiedOn = DateTimeOffset.UtcNow,
                             Comment = string.Empty,
                         };
                         Guid projectPlanId = selectedPlanNodeModel.Id;
@@ -399,6 +403,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             Id = Guid.NewGuid(),
                             ParentId = managedPlan.Id,
+                            CreatedOn = DateTimeOffset.UtcNow,
+                            ModifiedOn = DateTimeOffset.UtcNow,
                             Comment = string.Empty,
                         };
                         Guid projectPlanId = selectedPlanNodeModel.Id;
@@ -496,6 +502,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         Id = m_CoreViewModel.ProjectPlanId,
                         ParentId = Root.Id,
+                        CreatedOn = DateTimeOffset.UtcNow,
+                        ModifiedOn = DateTimeOffset.UtcNow,
+                        Comment = string.Empty,
                         ProjectPlan = projectPlan,
                     };
 
@@ -541,6 +550,9 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             Id = m_CoreViewModel.ProjectPlanId,
                             ParentId = Root.Id,
+                            CreatedOn = DateTimeOffset.UtcNow,
+                            ModifiedOn = DateTimeOffset.UtcNow,
+                            Comment = string.Empty,
                             ProjectPlan = planModel,
                         };
 
@@ -614,6 +626,9 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             Id = projectPlanId,
                             ParentId = Root.Id,
+                            CreatedOn = DateTimeOffset.UtcNow,
+                            ModifiedOn = DateTimeOffset.UtcNow,
+                            Comment = string.Empty,
                             ProjectPlan = projectPlan,
                         };
                         AddManagedPlans([projectPlanNode]);
@@ -622,13 +637,16 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         // Update existing managed plan.
                         managedProjectPlan.ProjectPlan = projectPlan;
+                        managedProjectPlan.ModifiedOn = DateTimeOffset.UtcNow;
                     }
 
                     // Now build the ProjectModel.
 
                     Guid rootId = Root.Id;
                     Guid currentId = m_CoreViewModel.ProjectPlanId;
-                    List<ProjectPlanNodeModel> nodes = [.. m_ManagedPlanLookup.Values.Select(x => x.Node)];
+                    List<ProjectPlanNodeModel> nodes = [.. m_ManagedPlanLookup.Values
+                        .Select(x => x.Node)
+                        .OrderBy(x => x.CreatedOn)];
 
                     // Filter out any tags that apply to the Root node.
                     List<ProjectPlanTagModel> tags = [.. m_PlanTagLookup

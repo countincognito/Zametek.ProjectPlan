@@ -11,6 +11,10 @@ namespace Zametek.Contract.ProjectPlan
 
         Guid ParentId { get; }
 
+        DateTimeOffset CreatedOn { get; }
+
+        DateTimeOffset ModifiedOn { get; set; }
+
         string Comment { get; set; }
 
         ProjectPlanModel ProjectPlan { get; set; }

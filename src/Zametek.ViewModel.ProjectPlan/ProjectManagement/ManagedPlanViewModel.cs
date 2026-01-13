@@ -109,6 +109,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public Guid ParentId => m_ProjectPlanNodeModel.ParentId;
 
+        public DateTimeOffset CreatedOn => m_ProjectPlanNodeModel.CreatedOn;
+
+        public DateTimeOffset ModifiedOn
+        {
+            get
+            {
+                return m_ProjectPlanNodeModel.ModifiedOn;
+            }
+            set
+            {
+                m_ProjectPlanNodeModel = m_ProjectPlanNodeModel with { ModifiedOn = value };
+            }
+        }
+
         public string Comment
         {
             get
