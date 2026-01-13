@@ -25,6 +25,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly VertexGraphCompiler m_VertexGraphCompiler;
 
+        private readonly IProjectPlanFileImport m_ProjectPlanFileImport;
+        private readonly IProjectPlanFileExport m_ProjectPlanFileExport;
         private readonly ISettingService m_SettingService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IMapper m_Mapper;
@@ -44,10 +46,14 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public CoreViewModel(
+            IProjectPlanFileImport projectPlanFileImport,
+            IProjectPlanFileExport projectPlanFileExport,
             ISettingService settingService,
             IDateTimeCalculator dateTimeCalculator,
             IMapper mapper)
         {
+            ArgumentNullException.ThrowIfNull(projectPlanFileImport);
+            ArgumentNullException.ThrowIfNull(projectPlanFileExport);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(mapper);
@@ -55,6 +61,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TrackIsProjectPlanUpdated = true;
             m_TrackHasStaleOutputs = true;
             m_VertexGraphCompiler = new VertexGraphCompiler();
+            m_ProjectPlanFileImport = projectPlanFileImport;
+            m_ProjectPlanFileExport = projectPlanFileExport;
             m_SettingService = settingService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_DisplaySettingsViewModel = new DisplaySettingsViewModel(
@@ -1563,6 +1571,48 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_TrackIsProjectPlanUpdated = true;
                 m_TrackHasStaleOutputs = true;
+                IsBusy = false;
+            }
+        }
+
+        public ProjectPlanImportModel ImportProjectPlanFile(string filename)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    return m_ProjectPlanFileImport.ImportProjectPlanFile(filename);
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        public void ExportProjectPlanFile(
+            ProjectPlanModel projectPlanModel,
+            ResourceSeriesSetModel resourceSeriesSetModel,
+            TrackingSeriesSetModel trackingSeriesSetModel,
+            bool showDates,
+            string filename)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    m_ProjectPlanFileExport.ExportProjectPlanFile(
+                        projectPlanModel,
+                        resourceSeriesSetModel,
+                        trackingSeriesSetModel,
+                        showDates,
+                        filename);
+                }
+            }
+            finally
+            {
                 IsBusy = false;
             }
         }

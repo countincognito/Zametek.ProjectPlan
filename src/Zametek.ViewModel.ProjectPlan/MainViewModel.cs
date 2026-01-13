@@ -74,8 +74,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IFactory m_DockFactory;
         private readonly IProjectManagerViewModel m_ProjectManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
-        private readonly IProjectPlanFileImport m_ProjectPlanFileImport;
-        private readonly IProjectPlanFileExport m_ProjectPlanFileExport;
         private readonly IProjectFileOpen m_ProjectFileOpen;
         private readonly IProjectFileSave m_ProjectFileSave;
         private readonly ISettingService m_SettingService;
@@ -89,8 +87,6 @@ namespace Zametek.ViewModel.ProjectPlan
             IFactory dockFactory,
             IProjectManagerViewModel projectManagerViewModel,
             ICoreViewModel coreViewModel,
-            IProjectPlanFileImport projectPlanFileImport,
-            IProjectPlanFileExport projectPlanFileExport,
             IProjectFileOpen projectFileOpen,
             IProjectFileSave projectFileSave,
             ISettingService settingService,
@@ -99,8 +95,6 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dockFactory);
             ArgumentNullException.ThrowIfNull(projectManagerViewModel);
             ArgumentNullException.ThrowIfNull(coreViewModel);
-            ArgumentNullException.ThrowIfNull(projectPlanFileImport);
-            ArgumentNullException.ThrowIfNull(projectPlanFileExport);
             ArgumentNullException.ThrowIfNull(projectFileOpen);
             ArgumentNullException.ThrowIfNull(projectFileSave);
             ArgumentNullException.ThrowIfNull(settingService);
@@ -109,8 +103,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DockFactory = dockFactory;
             m_ProjectManagerViewModel = projectManagerViewModel;
             m_CoreViewModel = coreViewModel;
-            m_ProjectPlanFileImport = projectPlanFileImport;
-            m_ProjectPlanFileExport = projectPlanFileExport;
             m_ProjectFileOpen = projectFileOpen;
             m_ProjectFileSave = projectFileSave;
             m_SettingService = settingService;
@@ -415,16 +407,33 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleAutoCompile() => AutoCompile = !AutoCompile;
 
-        private async Task ProcessProjectPlanImportAsync(ProjectPlanImportModel projectPlanImportModel, Guid projectPlanId) =>
-            await Task.Run(() => ProcessProjectPlanImport(projectPlanImportModel, projectPlanId));
+        private async Task ProjectPlanImportAsync(string filename) =>
+            await Task.Run(() => ProjectPlanImport(filename));
 
-        private void ProcessProjectPlanImport(
-            ProjectPlanImportModel projectPlanImportModel,
-            Guid projectPlanId)
+        private void ProjectPlanImport(string filename)
         {
             lock (m_Lock)
             {
-                m_CoreViewModel.ProcessProjectPlanImport(projectPlanImportModel, projectPlanId);
+                Guid projectPlanId = m_CoreViewModel.ProjectPlanId;
+                ProjectPlanImportModel importModel = m_CoreViewModel.ImportProjectPlanFile(filename);
+                m_CoreViewModel.ProcessProjectPlanImport(importModel, projectPlanId);
+            }
+        }
+
+        private async Task ProjectPlanExportAsync(string filename) =>
+            await Task.Run(() => ProjectPlanExport(filename));
+
+        private void ProjectPlanExport(string filename)
+        {
+            lock (m_Lock)
+            {
+                ProjectPlanModel projectPlanModel = BuildProjectPlan();
+                m_CoreViewModel.ExportProjectPlanFile(
+                    projectPlanModel,
+                    m_CoreViewModel.ResourceSeriesSet,
+                    m_CoreViewModel.TrackingSeriesSet,
+                    ShowDates,
+                    filename);
             }
         }
 
@@ -921,8 +930,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    ProjectPlanImportModel importModel = await m_ProjectPlanFileImport.ImportProjectPlanFileAsync(filename);
-                    await ProcessProjectPlanImportAsync(importModel, m_CoreViewModel.ProjectPlanId);
+                    await ProjectPlanImportAsync(filename);
                     await RunAutoCompileAsync();
                 }
             }
@@ -956,13 +964,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    ProjectPlanModel projectPlanModel = await BuildProjectPlanAsync();
-                    await m_ProjectPlanFileExport.ExportProjectPlanFileAsync(
-                        projectPlanModel,
-                        m_CoreViewModel.ResourceSeriesSet,
-                        m_CoreViewModel.TrackingSeriesSet,
-                        ShowDates,
-                        filename);
+                    await ProjectPlanExportAsync(filename);
                 }
             }
             catch (Exception ex)
