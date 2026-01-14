@@ -31,9 +31,4 @@
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Update="ProjectManagement\ProjectManagerView.axaml.cs">
-      <DependentUpon>ProjectManagerView.axaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
 </Project>

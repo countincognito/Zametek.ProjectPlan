@@ -37,6 +37,11 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                         NodeId = rootId,
                         Label = Resource.ProjectPlan.Labels.Label_RootNode,
                     },
+                    new ProjectPlanTagModel
+                    {
+                        NodeId = planId,
+                        Label = Resource.ProjectPlan.Labels.Label_BaseNode,
+                    },
                 ],
             };
         }

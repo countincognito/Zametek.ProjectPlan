@@ -45,6 +45,26 @@
 						Command="{Binding Path=SpawnProjectPlanFileCommand, Mode=OneWay}"
 						Content="{x:Static resources:Labels.Label_SpawnManagedPlan}"/>
 
+
+
+
+
+
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,7"
+						Height="25" Width="75"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						Command="{Binding Path=AddProjectPlanTagCommand, Mode=OneWay}"
+						Content="TmpAdd"/>
+				
+				
+				
+				
+				
+				
+				
 				<Grid/>
 			</DockPanel>
 		</ScrollViewer>

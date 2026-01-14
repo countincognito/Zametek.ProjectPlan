@@ -81,6 +81,28 @@ namespace Zametek.ViewModel.ProjectPlan
                 SpawnProjectPlanFileCommand = spawnProjectPlanFileCommand;
             }
 
+
+
+            {
+                ReactiveCommand<Unit, Unit> addProjectPlanTagCommand = ReactiveCommand.CreateFromTask(
+                    AddProjectPlanTagAsync,
+                    this.WhenAnyValue(
+                        pm => pm.SelectedPlan,
+                        (IManagedPlanViewModel? selectedPlan) => selectedPlan is not null),
+                    RxApp.MainThreadScheduler);
+                AddProjectPlanTagCommand = addProjectPlanTagCommand;
+            }
+
+
+
+
+
+
+
+
+
+
+
             // Create read-only view to the source list.
             m_Plans.Connect()
                 .Sort(SortExpressionComparer<IManagedPlanViewModel>.Ascending(pm => pm.CreatedOn))
@@ -474,6 +496,82 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+
+
+
+
+
+
+
+
+
+        private async Task AddProjectPlanTagAsync()
+        {
+            try
+            {
+                IManagedPlanViewModel? selectedPlan = SelectedPlan;
+
+                if (selectedPlan is null)
+                {
+                    return;
+                }
+
+                var addViewModel = new AddPlanTagViewModel();
+
+
+
+                // TODO
+                bool result = await m_DialogService.ShowContextAsync(
+                    title: "Add Tag",
+                    header: string.Empty,
+                    message: $@"**Add Tag**",
+                    context: addViewModel,
+                    markdown: true);
+
+                if (!result)
+                {
+                    return;
+                }
+
+
+                string tag = addViewModel.Tag;
+
+                var tagModel = new ProjectPlanTagModel
+                {
+                    NodeId = selectedPlan.Id,
+                    Label = tag,
+                };
+
+                AddTagLabels([tagModel]);
+
+                SetTagLabels(selectedPlan);
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         #endregion
 
         #region IProjectManagerViewModel
@@ -533,6 +631,22 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand SpawnProjectPlanFileCommand { get; }
 
+
+
+
+
+
+
+        public ICommand AddProjectPlanTagCommand { get; }
+
+        public ICommand RemoveProjectPlanTagCommand { get; }
+
+
+
+
+
+
+
         public void ResetProject()
         {
             try
@@ -561,6 +675,13 @@ namespace Zametek.ViewModel.ProjectPlan
                         ProjectPlan = projectPlan,
                     };
 
+                    var projectPlanTag = new ProjectPlanTagModel
+                    {
+                        NodeId = projectPlanNode.Id,
+                        Label = Resource.ProjectPlan.Labels.Label_BaseNode,
+                    };
+
+                    AddTagLabels([projectPlanTag]);
                     AddManagedPlans([projectPlanNode]);
 
                     m_SettingService.Reset();

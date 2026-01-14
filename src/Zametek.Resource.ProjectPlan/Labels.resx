@@ -573,4 +573,7 @@
   <data name="Label_LoadManagedPlan" xml:space="preserve">
     <value>Load</value>
   </data>
+  <data name="Label_BaseNode" xml:space="preserve">
+    <value>Base</value>
+  </data>
 </root>
