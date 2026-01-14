@@ -140,7 +140,7 @@ namespace Zametek.ProjectPlan
                     new ToolDock
                     {
                         Proportion = 0.6,
-                        ActiveDockable = m_ProjectManagerViewModel,
+                        ActiveDockable = m_ActivitiesManagerViewModel,
                         CanClose = false,
                         CanFloat = false,
                         CanPin = false,
