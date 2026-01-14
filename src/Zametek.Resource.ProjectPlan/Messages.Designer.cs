@@ -61,6 +61,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add tag to plan.
+        /// </summary>
+        public static string Message_AddTag {
+            get {
+                return ResourceManager.GetString("Message_AddTag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Arrow Graph Data contain more than one End node.
         /// </summary>
         public static string Message_ArrowGraphDataContainMultipleEndNodes {
@@ -106,11 +115,29 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Converted from v0.5.0.
+        /// </summary>
+        public static string Message_ConvertedFromV0_5_0 {
+            get {
+                return ResourceManager.GetString("Message_ConvertedFromV0_5_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Criticality Weight must be equal or greater than 0.
         /// </summary>
         public static string Message_CriticalityWeightMustBeEqualOrGreaterThanZero {
             get {
                 return ResourceManager.GetString("Message_CriticalityWeightMustBeEqualOrGreaterThanZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete tag from plan.
+        /// </summary>
+        public static string Message_DeleteTag {
+            get {
+                return ResourceManager.GetString("Message_DeleteTag", resourceCulture);
             }
         }
         

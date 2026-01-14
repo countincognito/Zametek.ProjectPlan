@@ -177,17 +177,23 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public string Name
+        {
+            get
+            {
+                return Id.ToShortString();
+            }
+        }
+
         public string Label
         {
             get
             {
-                string idString = Id.ToShortString();
-
                 if (Labels.Count == 0)
                 {
-                    return idString;
+                    return Name;
                 }
-                return $@"[{string.Join(DependenciesStringValidationRule.Separator, Labels)}] ({idString})";
+                return $@"[{string.Join(DependenciesStringValidationRule.Separator, Labels)}] ({Name})";
             }
         }
 

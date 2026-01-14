@@ -8,8 +8,8 @@
 			 xmlns:u="https://irihi.tech/ursa"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 			 xmlns:sys="using:System"
-			 x:DataType="vm:AddPlanTagViewModel"
-             x:Class="Zametek.View.ProjectPlan.AddPlanTagView">
+			 x:DataType="vm:RemovePlanTagViewModel"
+             x:Class="Zametek.View.ProjectPlan.RemovePlanTagView">
 	<Grid Margin="7">
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="80"/>
@@ -24,11 +24,26 @@
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
-			   Content="{x:Static resources:Labels.Label_AddTag}"/>
-		
-		<TextBox Grid.Row="0" Grid.Column="1"
-				 Text="{Binding Path=Tag, Mode=TwoWay}"
-				 BorderBrush="Gray"
-				 BorderThickness="1"/>
+			   Content="{x:Static resources:Labels.Label_DeleteTag}"/>
+
+		<ComboBox Grid.Row="0" Grid.Column="1"
+				  ItemsSource="{Binding Path=Tags, Mode=OneWay}"
+				  SelectedItem="{Binding Path=SelectedTag, Mode=TwoWay}"
+				  Focusable="True"
+				  VerticalAlignment="Center"
+				  VerticalContentAlignment="Center"
+				  HorizontalAlignment="Stretch"
+				  HorizontalContentAlignment="Left">
+			<ComboBox.ItemTemplate>
+				<DataTemplate>
+					<TextBlock VerticalAlignment="Center"
+							   TextAlignment="Left"
+							   Margin="0"
+							   Padding="3"
+							   Classes="displayOnly"
+							   Text="{Binding Path=Label, Mode=OneWay}"/>
+				</DataTemplate>
+			</ComboBox.ItemTemplate>
+		</ComboBox>
 	</Grid>
 </UserControl>

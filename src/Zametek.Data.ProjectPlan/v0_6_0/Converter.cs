@@ -26,7 +26,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                         ParentId = rootId,
                         CreatedOn = DateTimeOffset.UtcNow,
                         ModifiedOn = DateTimeOffset.UtcNow,
-                        Comment = "Converted from v0.5.0",
+                        Comment = Resource.ProjectPlan.Messages.Message_ConvertedFromV0_5_0,
                         ProjectPlan = mapper.Map<v0_5_0.ProjectModel, ProjectPlanModel>(project),
                     },
                 ],

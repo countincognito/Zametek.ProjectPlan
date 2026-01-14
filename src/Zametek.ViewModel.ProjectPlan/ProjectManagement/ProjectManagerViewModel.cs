@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -80,9 +81,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 spawnProjectPlanFileCommand.IsExecuting.ToProperty(this, pm => pm.IsSpawning, out m_IsSpawning);
                 SpawnProjectPlanFileCommand = spawnProjectPlanFileCommand;
             }
-
-
-
             {
                 ReactiveCommand<Unit, Unit> addProjectPlanTagCommand = ReactiveCommand.CreateFromTask(
                     AddProjectPlanTagAsync,
@@ -92,16 +90,15 @@ namespace Zametek.ViewModel.ProjectPlan
                     RxApp.MainThreadScheduler);
                 AddProjectPlanTagCommand = addProjectPlanTagCommand;
             }
-
-
-
-
-
-
-
-
-
-
+            {
+                ReactiveCommand<Unit, Unit> removeProjectPlanTagCommand = ReactiveCommand.CreateFromTask(
+                    RemoveProjectPlanTagAsync,
+                    this.WhenAnyValue(
+                        pm => pm.SelectedPlan,
+                        (IManagedPlanViewModel? selectedPlan) => selectedPlan is not null),
+                    RxApp.MainThreadScheduler);
+                RemoveProjectPlanTagCommand = removeProjectPlanTagCommand;
+            }
 
             // Create read-only view to the source list.
             m_Plans.Connect()
@@ -202,6 +199,28 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
 
                         labels.Add(tagModel.Label);
+                    }
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private void RemoveTagLabels(IEnumerable<ProjectPlanTagModel> projectPlanTagModels)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    foreach (ProjectPlanTagModel tagModel in projectPlanTagModels)
+                    {
+                        if (m_PlanTagLookup.TryGetValue(tagModel.NodeId, out List<string>? labels))
+                        {
+                            labels.Remove(tagModel.Label);
+                        }
                     }
                 }
             }
@@ -496,15 +515,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
-
-
-
-
-
-
-
-
         private async Task AddProjectPlanTagAsync()
         {
             try
@@ -516,16 +526,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     return;
                 }
 
-                var addViewModel = new AddPlanTagViewModel();
+                var addTagViewModel = new AddPlanTagViewModel();
 
-
-
-                // TODO
                 bool result = await m_DialogService.ShowContextAsync(
-                    title: "Add Tag",
+                    title: Resource.ProjectPlan.Labels.Label_AddTag,
                     header: string.Empty,
-                    message: $@"**Add Tag**",
-                    context: addViewModel,
+                    message: $@"**{Resource.ProjectPlan.Messages.Message_AddTag} {selectedPlan.Name}**",
+                    context: addTagViewModel,
                     markdown: true);
 
                 if (!result)
@@ -533,22 +540,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     return;
                 }
 
-
-                string tag = addViewModel.Tag;
-
                 var tagModel = new ProjectPlanTagModel
                 {
                     NodeId = selectedPlan.Id,
-                    Label = tag,
+                    Label = addTagViewModel.Tag,
                 };
 
-                AddTagLabels([tagModel]);
-
-                SetTagLabels(selectedPlan);
-
-
-
-
+                await AddProjectPlanTagInternalAsync(tagModel, selectedPlan);
             }
             catch (Exception ex)
             {
@@ -559,18 +557,95 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private async Task AddProjectPlanTagInternalAsync(ProjectPlanTagModel tagModel, IManagedPlanViewModel managedPlanViewModel) =>
+            await Dispatcher.UIThread.InvokeAsync(() => AddProjectPlanTagInternal(tagModel, managedPlanViewModel));
 
+        private void AddProjectPlanTagInternal(
+            ProjectPlanTagModel tagModel,
+            IManagedPlanViewModel managedPlanViewModel)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    AddTagLabels([tagModel]);
+                    SetTagLabels(managedPlanViewModel);
+                    IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
 
+        private async Task RemoveProjectPlanTagAsync()
+        {
+            try
+            {
+                IManagedPlanViewModel? selectedPlan = SelectedPlan;
 
+                if (selectedPlan is null
+                    || !m_PlanTagLookup.TryGetValue(selectedPlan.Id, out List<string>? labels))
+                {
+                    return;
+                }
 
+                IList<ProjectPlanTagModel> tagModels = [.. labels
+                    .Select(label => new ProjectPlanTagModel
+                    {
+                        NodeId = selectedPlan.Id,
+                        Label = label,
+                    })];
 
+                var removeTagViewModel = new RemovePlanTagViewModel(tagModels);
 
+                bool result = await m_DialogService.ShowContextAsync(
+                    title: Resource.ProjectPlan.Labels.Label_DeleteTag,
+                    header: string.Empty,
+                    message: $@"**{Resource.ProjectPlan.Messages.Message_DeleteTag} {selectedPlan.Name}**",
+                    context: removeTagViewModel,
+                    markdown: true);
 
+                if (!result)
+                {
+                    return;
+                }
 
+                await RemoveProjectPlanTagInternalAsync(removeTagViewModel.SelectedTag, selectedPlan);
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
 
+        private async Task RemoveProjectPlanTagInternalAsync(ProjectPlanTagModel tagModel, IManagedPlanViewModel managedPlanViewModel) =>
+            await Dispatcher.UIThread.InvokeAsync(() => RemoveProjectPlanTagInternal(tagModel, managedPlanViewModel));
 
-
-
+        private void RemoveProjectPlanTagInternal(
+            ProjectPlanTagModel tagModel,
+            IManagedPlanViewModel managedPlanViewModel)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    RemoveTagLabels([tagModel]);
+                    SetTagLabels(managedPlanViewModel);
+                    IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
 
         #endregion
 
@@ -631,21 +706,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand SpawnProjectPlanFileCommand { get; }
 
-
-
-
-
-
-
         public ICommand AddProjectPlanTagCommand { get; }
 
         public ICommand RemoveProjectPlanTagCommand { get; }
-
-
-
-
-
-
 
         public void ResetProject()
         {

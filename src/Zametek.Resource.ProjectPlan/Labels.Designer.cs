@@ -169,6 +169,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add Tag.
+        /// </summary>
+        public static string Label_AddTag {
+            get {
+                return ResourceManager.GetString("Label_AddTag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Allocated to Resources.
         /// </summary>
         public static string Label_AllocatedToResources {
@@ -417,6 +426,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_DeleteManagedWorkStreams {
             get {
                 return ResourceManager.GetString("Label_DeleteManagedWorkStreams", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Tag.
+        /// </summary>
+        public static string Label_DeleteTag {
+            get {
+                return ResourceManager.GetString("Label_DeleteTag", resourceCulture);
             }
         }
         

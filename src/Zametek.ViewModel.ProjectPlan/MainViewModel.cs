@@ -956,7 +956,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (managedPlan is not null)
                 {
-                    title = $@"{title}-{managedPlan.Label}";
+                    title = $@"{title}-{managedPlan.Name}";
                 }
 
                 string directory = m_SettingService.ProjectDirectory;

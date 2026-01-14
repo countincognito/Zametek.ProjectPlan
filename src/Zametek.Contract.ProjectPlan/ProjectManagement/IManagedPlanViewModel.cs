@@ -25,6 +25,8 @@ namespace Zametek.Contract.ProjectPlan
 
         void SetLabels(IEnumerable<string> labels);
 
+        string Name { get; }
+
         string Label { get; }
 
         ReadOnlyObservableCollection<IManagedPlanViewModel> Children { get; }

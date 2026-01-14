@@ -21,7 +21,7 @@
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
 						Margin="0,0,0,7"
-						Height="25" Width="75"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=LoadProjectPlanFileCommand, Mode=OneWay}"
@@ -30,7 +30,7 @@
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
 						Margin="0,0,0,7"
-						Height="25" Width="75"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=BranchProjectPlanFileCommand, Mode=OneWay}"
@@ -39,32 +39,30 @@
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
 						Margin="0,0,0,7"
-						Height="25" Width="75"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=SpawnProjectPlanFileCommand, Mode=OneWay}"
 						Content="{x:Static resources:Labels.Label_SpawnManagedPlan}"/>
 
-
-
-
-
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,7"
+						Height="25" Width="80"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						Command="{Binding Path=AddProjectPlanTagCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_AddTag}"/>
 
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
 						Margin="0,0,0,7"
-						Height="25" Width="75"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
-						Command="{Binding Path=AddProjectPlanTagCommand, Mode=OneWay}"
-						Content="TmpAdd"/>
-				
-				
-				
-				
-				
-				
-				
+						Command="{Binding Path=RemoveProjectPlanTagCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_DeleteTag}"/>
+
 				<Grid/>
 			</DockPanel>
 		</ScrollViewer>

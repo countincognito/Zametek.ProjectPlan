@@ -35,19 +35,9 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand SpawnProjectPlanFileCommand { get; }
 
-
-
-
-
-
         ICommand AddProjectPlanTagCommand { get; }
 
         ICommand RemoveProjectPlanTagCommand { get; }
-
-
-
-
-
 
         void ResetProject();
 

@@ -576,4 +576,10 @@
   <data name="Label_BaseNode" xml:space="preserve">
     <value>Base</value>
   </data>
+  <data name="Label_AddTag" xml:space="preserve">
+    <value>Add Tag</value>
+  </data>
+  <data name="Label_DeleteTag" xml:space="preserve">
+    <value>Delete Tag</value>
+  </data>
 </root>

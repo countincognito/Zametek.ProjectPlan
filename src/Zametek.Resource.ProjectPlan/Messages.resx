@@ -258,4 +258,13 @@
   <data name="Message_EditActivities" xml:space="preserve">
     <value>Select the properties to edit</value>
   </data>
+  <data name="Message_ConvertedFromV0_5_0" xml:space="preserve">
+    <value>Converted from v0.5.0</value>
+  </data>
+  <data name="Message_AddTag" xml:space="preserve">
+    <value>Add tag to plan</value>
+  </data>
+  <data name="Message_DeleteTag" xml:space="preserve">
+    <value>Delete tag from plan</value>
+  </data>
 </root>

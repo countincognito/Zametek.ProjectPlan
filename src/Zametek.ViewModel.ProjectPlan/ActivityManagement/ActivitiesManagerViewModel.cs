@@ -70,7 +70,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.WhenAnyValue(
                     am => am.HasActivities,
                     am => am.HasCompilationErrors,
-                    (bool hasActivities, bool hasCompilationErrors) => hasActivities && !hasCompilationErrors),
+                    (hasActivities, hasCompilationErrors) => hasActivities && !hasCompilationErrors),
                 RxApp.MainThreadScheduler);
 
             Id = Resource.ProjectPlan.Titles.Title_ActivitiesView;
@@ -188,9 +188,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     UpdateDependentActivityModel updateModel = editViewModel.BuildUpdateModel();
 
-                    IEnumerable<UpdateDependentActivityModel> updateModels = activityIds
-                        .Select(x => updateModel with { Id = x })
-                        .ToList();
+                    IEnumerable<UpdateDependentActivityModel> updateModels = [.. activityIds.Select(x => updateModel with { Id = x })];
 
                     m_CoreViewModel.UpdateManagedActivities(updateModels);
                 }
