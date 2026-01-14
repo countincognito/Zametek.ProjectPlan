@@ -21,6 +21,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ProjectPlanNodeModel Node { get; }
 
+        bool IsLoaded { get; set; }
+
         ReadOnlyObservableCollection<string> Labels { get; }
 
         void SetLabels(IEnumerable<string> labels);

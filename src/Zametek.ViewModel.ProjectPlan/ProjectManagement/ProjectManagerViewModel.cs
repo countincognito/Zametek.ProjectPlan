@@ -340,6 +340,24 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private void MarkProjectPlanAsLoaded(Guid projectPlanId)
+        {
+            lock (m_Lock)
+            {
+                // Change the loaded status in the treeview.
+                IManagedPlanViewModel? currentPlan = GetProjectPlan(projectPlanId);
+
+                if (currentPlan is not null)
+                {
+                    foreach (IManagedPlanViewModel plan in m_ManagedPlanLookup.Values)
+                    {
+                        plan.IsLoaded = false;
+                    }
+                    currentPlan.IsLoaded = true;
+                }
+            }
+        }
+
         private async Task LoadProjectPlanFileAsync()
         {
             try
@@ -384,6 +402,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Guid projectPlanId = selectedPlanNodeModel.Id;
                         ProjectPlanModel projectPlanModel = selectedPlanNodeModel.ProjectPlan;
                         m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
+                        MarkProjectPlanAsLoaded(projectPlanId);
                         IsProjectUpdated = false;
                     }
                 }
@@ -446,6 +465,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         ProjectPlanModel projectPlanModel = selectedPlanNodeModel.ProjectPlan;
                         AddManagedPlans([selectedPlanNodeModel]);
                         m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
+                        MarkProjectPlanAsLoaded(projectPlanId);
                         IsProjectUpdated = true;
                     }
                 }
@@ -509,6 +529,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         ProjectPlanModel projectPlanModel = selectedPlanNodeModel.ProjectPlan;
                         AddManagedPlans([selectedPlanNodeModel]);
                         m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
+                        MarkProjectPlanAsLoaded(projectPlanId);
                         IsProjectUpdated = true;
                     }
                 }
@@ -753,6 +774,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     AddTagLabels([projectPlanTag]);
                     AddManagedPlans([projectPlanNode]);
+                    MarkProjectPlanAsLoaded(projectPlanNode.Id);
 
                     m_SettingService.Reset();
                     IsProjectUpdated = false;
@@ -810,6 +832,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Guid projectPlanId = currentPlanNodeModel.Id;
                         ProjectPlanModel projectPlanModel = currentPlanNodeModel.ProjectPlan;
                         m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
+                        MarkProjectPlanAsLoaded(projectPlanId);
                     }
                     // Otherwise, load the latest project plan.
                     else
@@ -818,6 +841,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Guid projectPlanId = latestPlanNodeModel.Id;
                         ProjectPlanModel projectPlanModel = latestPlanNodeModel.ProjectPlan;
                         m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
+                        MarkProjectPlanAsLoaded(projectPlanId);
                     }
 
                     IsProjectUpdated = false;

@@ -71,9 +71,20 @@
 				  ItemsSource="{Binding Path=Plans, Mode=OneWay}"
 				  SelectedItems="{Binding Path=SelectedPlans, Mode=OneWay}"
 				  SelectionMode="Multiple">
+			<TreeView.Styles>
+				<Style Selector="TreeViewItem" x:DataType="vm:ManagedPlanViewModel">
+					<Setter Property="IsExpanded" Value="True" />
+				</Style>
+				<Style Selector="TextBlock.isLoaded" x:DataType="vm:ManagedPlanViewModel">
+					<Setter Property="FontWeight" Value="Bold" />
+				</Style>
+			</TreeView.Styles>
+			
 			<TreeView.ItemTemplate>
 				<TreeDataTemplate ItemsSource="{Binding Path=Children, Mode=OneWay}">
-					<TextBlock Text="{Binding Path=Label, Mode=OneWay}"/>
+					<TextBlock Text="{Binding Path=Label, Mode=OneWay}"
+							   Classes.isLoaded="{Binding Path=IsLoaded, Mode=OneWay}">
+					</TextBlock>
 				</TreeDataTemplate>
 			</TreeView.ItemTemplate>
 

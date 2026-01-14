@@ -33,6 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(projectPlanNode);
             m_Lock = new object();
+            m_IsLoaded = false;
             m_Labels = new();
 
             // Create read-only view to the source list.
@@ -158,6 +159,17 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public ProjectPlanNodeModel Node => m_ProjectPlanNodeModel;
+
+        private bool m_IsLoaded;
+        public bool IsLoaded
+        {
+            get => m_IsLoaded;
+            set
+            {
+                m_IsLoaded = value;
+                this.RaisePropertyChanged();
+            }
+        }
 
         private readonly SourceList<string> m_Labels;
         private readonly ReadOnlyObservableCollection<string> m_ReadOnlyLabels;
