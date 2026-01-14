@@ -94,7 +94,7 @@ namespace Zametek.ProjectPlan
                     {
                         mainView.Closing -= CancelClose;
 
-                        if (mainViewModel.IsProjectUpdated)
+                        if (mainViewModel.ProjectHasChanges)
                         {
                             bool wishToClose = await dialogService.ShowConfirmationAsync(
                                 Resource.ProjectPlan.Titles.Title_UnsavedChanges,

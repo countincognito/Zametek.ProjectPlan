@@ -188,8 +188,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, main => main.IsBusy);
 
             m_IsProjectUpdated = this
-                .WhenAnyValue(main => main.m_CoreViewModel.IsProjectPlanUpdated)
-                .ToProperty(this, main => main.IsProjectUpdated);
+                .WhenAnyValue(pm => pm.m_ProjectManagerViewModel.IsProjectUpdated)
+                .ToProperty(this, pm => pm.IsProjectUpdated);
+
+            m_IsProjectPlanUpdated = this
+                .WhenAnyValue(pm => pm.m_CoreViewModel.IsProjectPlanUpdated)
+                .ToProperty(this, pm => pm.IsProjectPlanUpdated);
+
+            m_ProjectHasChanges = this
+                .WhenAnyValue(
+                    pm => pm.IsProjectUpdated,
+                    pm => pm.IsProjectPlanUpdated,
+                    (isProjectUpdated, isProjectPlanUpdated) => isProjectUpdated || isProjectPlanUpdated)
+                .ToProperty(this, pm => pm.ProjectHasChanges);
 
             m_ProjectStart = this
                 .WhenAnyValue(main => main.m_CoreViewModel.ProjectStart)
@@ -562,6 +573,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_IsProjectUpdated;
         public bool IsProjectUpdated => m_IsProjectUpdated.Value;
 
+        private readonly ObservableAsPropertyHelper<bool> m_IsProjectPlanUpdated;
+        public bool IsProjectPlanUpdated => m_IsProjectPlanUpdated.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_ProjectHasChanges;
+        public bool ProjectHasChanges => m_ProjectHasChanges.Value;
+
         private readonly ObservableAsPropertyHelper<DateTimeOffset> m_ProjectStart;
         public DateTimeOffset ProjectStart
         {
@@ -803,7 +820,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                if (IsProjectUpdated)
+                if (ProjectHasChanges)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
                         Resource.ProjectPlan.Titles.Title_UnsavedChanges,
@@ -833,7 +850,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                if (IsProjectUpdated)
+                if (ProjectHasChanges)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
                         Resource.ProjectPlan.Titles.Title_UnsavedChanges,
@@ -913,7 +930,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                if (IsProjectUpdated)
+                if (IsProjectPlanUpdated)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
                         Resource.ProjectPlan.Titles.Title_UnsavedChanges,
@@ -980,7 +997,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                if (IsProjectUpdated)
+                if (ProjectHasChanges)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
                         Resource.ProjectPlan.Titles.Title_UnsavedChanges,
@@ -1122,6 +1139,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ProjectTitle?.Dispose();
                 m_IsBusy?.Dispose();
                 m_IsProjectUpdated?.Dispose();
+                m_IsProjectPlanUpdated?.Dispose();
+                m_ProjectHasChanges?.Dispose();
                 m_ProjectStart?.Dispose();
                 m_Today?.Dispose();
                 m_HasStaleOutputs?.Dispose();

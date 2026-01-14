@@ -9,13 +9,15 @@ namespace Zametek.Contract.ProjectPlan
     {
         bool IsBusy { get; }
 
-        bool IsProjectUpdated { get; set; }
-
         bool IsLoading { get; }
 
         bool IsBranching { get; }
 
         bool IsSpawning { get; }
+
+        bool IsProjectUpdated { get; set; }
+
+        bool IsProjectPlanUpdated { get; }
 
         bool ProjectHasChanges { get; }
 

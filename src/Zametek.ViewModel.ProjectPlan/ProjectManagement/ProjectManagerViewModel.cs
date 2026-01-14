@@ -109,11 +109,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
             ResetRootNode();
 
+            m_IsProjectPlanUpdated = this
+                .WhenAnyValue(pm => pm.m_CoreViewModel.IsProjectPlanUpdated)
+                .ToProperty(this, pm => pm.IsProjectPlanUpdated);
+
             m_ProjectHasChanges = this
                 .WhenAnyValue(
-                    pm => pm.m_CoreViewModel.IsProjectPlanUpdated,
                     pm => pm.IsProjectUpdated,
-                    (coreIsUpdated, pmIsUpdated) => coreIsUpdated || pmIsUpdated)
+                    pm => pm.IsProjectPlanUpdated,
+                    (isProjectUpdated, isProjectPlanUpdated) => isProjectUpdated || isProjectPlanUpdated)
                 .ToProperty(this, pm => pm.ProjectHasChanges);
 
             Id = Resource.ProjectPlan.Titles.Title_Project;
@@ -340,7 +344,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                if (ProjectHasChanges)
+                if (IsProjectPlanUpdated)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
                         Resource.ProjectPlan.Titles.Title_UnsavedChanges,
@@ -394,7 +398,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                if (ProjectHasChanges)
+                if (IsProjectPlanUpdated)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
                         Resource.ProjectPlan.Titles.Title_UnsavedChanges,
@@ -456,7 +460,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                if (ProjectHasChanges)
+                if (IsProjectPlanUpdated)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
                         Resource.ProjectPlan.Titles.Title_UnsavedChanges,
@@ -661,6 +665,15 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_IsLoading;
+        public bool IsLoading => m_IsLoading.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_IsBranching;
+        public bool IsBranching => m_IsBranching.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_IsSpawning;
+        public bool IsSpawning => m_IsSpawning.Value;
+
         private bool m_IsProjectUpdated;
         public bool IsProjectUpdated
         {
@@ -671,14 +684,8 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<bool> m_IsLoading;
-        public bool IsLoading => m_IsLoading.Value;
-
-        private readonly ObservableAsPropertyHelper<bool> m_IsBranching;
-        public bool IsBranching => m_IsBranching.Value;
-
-        private readonly ObservableAsPropertyHelper<bool> m_IsSpawning;
-        public bool IsSpawning => m_IsSpawning.Value;
+        private readonly ObservableAsPropertyHelper<bool> m_IsProjectPlanUpdated;
+        public bool IsProjectPlanUpdated => m_IsProjectPlanUpdated.Value;
 
         private readonly ObservableAsPropertyHelper<bool> m_ProjectHasChanges;
         public bool ProjectHasChanges => m_ProjectHasChanges.Value;
@@ -939,6 +946,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 // TODO: dispose managed state (managed objects).
                 ResetProject();
                 KillSubscriptions();
+                m_IsProjectPlanUpdated?.Dispose();
+                m_ProjectHasChanges?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

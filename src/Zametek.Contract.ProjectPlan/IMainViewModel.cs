@@ -24,6 +24,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsProjectUpdated { get; }
 
+        bool IsProjectPlanUpdated { get; }
+
+        bool ProjectHasChanges { get; }
+
         DateTimeOffset ProjectStart { get; set; }
 
         DateTimeOffset Today { get; set; }
