@@ -84,7 +84,7 @@
 								<Path HorizontalAlignment="Center"
 									  VerticalAlignment="Center"
 									  Data="M 0 2 L 5 2"
-									  StrokeThickness="2"
+									  StrokeThickness="1"
 									  Stroke="{DynamicResource ThemeForegroundBrush}" />
 							</Border>
 						</ControlTemplate>
