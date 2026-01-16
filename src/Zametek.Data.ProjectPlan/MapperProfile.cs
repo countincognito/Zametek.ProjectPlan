@@ -319,6 +319,7 @@ namespace Zametek.Data.ProjectPlan
             CreateMap<ProjectModel, v0_6_0.ProjectModel>().ReverseMap();
             CreateMap<ProjectPlanModel, v0_6_0.ProjectPlanModel>().ReverseMap();
             CreateMap<ProjectPlanNodeModel, v0_6_0.ProjectPlanNodeModel>().ReverseMap();
+            CreateMap<ProjectPlanFileModel, v0_6_0.ProjectPlanFileModel>().ReverseMap();
             CreateMap<ProjectPlanTagModel, v0_6_0.ProjectPlanTagModel>().ReverseMap();
 
             #endregion

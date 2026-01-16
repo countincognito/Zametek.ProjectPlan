@@ -1500,6 +1500,42 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public ProjectPlanModel CreateEmptyProjectPlan()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+
+                    var plan = new ProjectPlanModel
+                    {
+                        ProjectStart = new(DateTime.Today),
+                        Today = new(DateTime.Today),
+                        DependentActivities = [],
+                        GraphSettings = m_SettingService.DefaultGraphSettings,
+                        ResourceSettings = m_SettingService.DefaultResourceSettings,
+                        WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings,
+                        Metrics = new(),
+                        DisplaySettings = new DisplaySettingsModel
+                        {
+                            ShowDates = m_SettingService.DefaultShowDates,
+                            UseClassicDates = m_SettingService.DefaultUseClassicDates,
+                            UseBusinessDays = m_SettingService.DefaultUseBusinessDays,
+                            HideCost = m_SettingService.DefaultHideCost,
+                            HideBilling = m_SettingService.DefaultHideBilling,
+                        },
+                    };
+
+                    return plan;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
         public void ClearSettings()
         {
             try
@@ -1507,21 +1543,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    ProjectStart = new(DateTime.Today);
-                    Today = new(DateTime.Today);
-                    GraphSettings = m_SettingService.DefaultGraphSettings;
-                    ResourceSettings = m_SettingService.DefaultResourceSettings;
-                    WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
+                    ProjectPlanModel emptyPlan = CreateEmptyProjectPlan();
 
-                    var defaultDisplaySettings = new DisplaySettingsModel
-                    {
-                        ShowDates = m_SettingService.DefaultShowDates,
-                        UseClassicDates = m_SettingService.DefaultUseClassicDates,
-                        UseBusinessDays = m_SettingService.DefaultUseBusinessDays,
-                        HideCost = m_SettingService.DefaultHideCost,
-                        HideBilling = m_SettingService.DefaultHideBilling,
-                    };
-
+                    ProjectStart = emptyPlan.ProjectStart;
+                    Today = emptyPlan.Today;
+                    GraphSettings = emptyPlan.GraphSettings;
+                    ResourceSettings = emptyPlan.ResourceSettings;
+                    WorkStreamSettings = emptyPlan.WorkStreamSettings;
+                    DisplaySettingsModel defaultDisplaySettings = emptyPlan.DisplaySettings;
                     DisplaySettingsViewModel.SetValues(defaultDisplaySettings);
                 }
             }
@@ -1819,8 +1848,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         ProjectStart = ProjectStart,
                         Today = Today,
                         DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(Activities),
-                        ResourceSettings = ResourceSettings.CloneObject(),
                         GraphSettings = GraphSettings.CloneObject(),
+                        ResourceSettings = ResourceSettings.CloneObject(),
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),
                         Metrics = Metrics.CloneObject(),
                         DisplaySettings = DisplaySettingsViewModel.GetValues(),

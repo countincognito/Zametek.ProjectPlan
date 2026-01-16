@@ -24,23 +24,26 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                     {
                         Id = planId,
                         ParentId = rootId,
+                        IsFolder = false,
+                        Name = Resource.ProjectPlan.Labels.Label_BaseNode,
                         CreatedOn = DateTimeOffset.UtcNow,
                         ModifiedOn = DateTimeOffset.UtcNow,
-                        Comment = Resource.ProjectPlan.Messages.Message_ConvertedFromV0_5_0,
-                        ProjectPlan = mapper.Map<v0_5_0.ProjectModel, ProjectPlanModel>(project),
+                    },
+                ],
+                Files =
+                [
+                    new ProjectPlanFileModel
+                    {
+                        NodeId = planId,
+                        Plan = mapper.Map<v0_5_0.ProjectModel, ProjectPlanModel>(project),
                     },
                 ],
                 Tags =
                 [
                     new ProjectPlanTagModel
                     {
-                        NodeId = rootId,
-                        Label = Resource.ProjectPlan.Labels.Label_RootNode,
-                    },
-                    new ProjectPlanTagModel
-                    {
                         NodeId = planId,
-                        Label = Resource.ProjectPlan.Labels.Label_BaseNode,
+                        Label = Resource.ProjectPlan.Labels.Label_RootNode,
                     },
                 ],
             };

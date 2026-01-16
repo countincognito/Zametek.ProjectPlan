@@ -87,6 +87,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadyToRevise IsReadyToReviseSettings { get; set; }
 
+        ProjectPlanModel CreateEmptyProjectPlan();
+
         void ClearSettings();
 
         void ResetProjectPlan();

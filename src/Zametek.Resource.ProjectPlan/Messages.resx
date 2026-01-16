@@ -267,4 +267,13 @@
   <data name="Message_DeleteTag" xml:space="preserve">
     <value>Delete tag from plan</value>
   </data>
+  <data name="Message_CannotSetProjectPlanOnFolderNode" xml:space="preserve">
+    <value>Cannot set a project plan on a folder node:</value>
+  </data>
+  <data name="Message_CannotGetProjectPlanFileFromFolderNode" xml:space="preserve">
+    <value>Cannot get a project plan file from a folder node:</value>
+  </data>
+  <data name="Message_CannotGetProjectPlanFileWhenProjectPlanIsNull" xml:space="preserve">
+    <value>Cannot get a project plan file when project plan is null:</value>
+  </data>
 </root>

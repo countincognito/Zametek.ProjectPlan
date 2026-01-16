@@ -3,19 +3,19 @@ using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class AddPlanTagViewModel
-        : ViewModelBase, IAddPlanTagViewModel
+    public class AddNodeTagViewModel
+        : ViewModelBase, IAddNodeTagViewModel
     {
         #region Ctors
 
-        public AddPlanTagViewModel()
+        public AddNodeTagViewModel()
         {
             m_Tag = string.Empty;
         }
 
         #endregion
 
-        #region IAddPlanTagViewModel Members
+        #region IAddNodeTagViewModel Members
 
         private string m_Tag;
         public string Tag

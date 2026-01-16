@@ -11,9 +11,15 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsLoading { get; }
 
-        bool IsBranching { get; }
+        bool IsCreating { get; }
 
-        bool IsSpawning { get; }
+        bool IsDuplicating { get; }
+
+        bool IsRenaming { get; }
+
+        bool IsMoving { get; }
+
+        bool IsRemoving { get; }
 
         bool IsProjectUpdated { get; set; }
 
@@ -21,33 +27,41 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ProjectHasChanges { get; }
 
-        IManagedPlanViewModel Root { get; }
+        IManagedNodeViewModel Root { get; }
 
-        ReadOnlyObservableCollection<IManagedPlanViewModel> Plans { get; }
+        ReadOnlyObservableCollection<IManagedNodeViewModel> Nodes { get; }
 
-        ObservableCollection<IManagedPlanViewModel> SelectedPlans { get; }
+        ObservableCollection<IManagedNodeViewModel> SelectedNodes { get; }
 
-        IManagedPlanViewModel? SelectedPlan { get; }
+        IManagedNodeViewModel? SelectedNode { get; }
 
-        ICommand SetSelectedManagedPlansCommand { get; }
+        ICommand SetSelectedManagedNodesCommand { get; }
 
         ICommand LoadProjectPlanFileCommand { get; }
 
-        ICommand BranchProjectPlanFileCommand { get; }
+        ICommand CreateEmptyProjectPlanFileCommand { get; }
 
-        ICommand SpawnProjectPlanFileCommand { get; }
+        ICommand CreateEmptyProjectPlanFolderCommand { get; }
 
-        ICommand AddProjectPlanTagCommand { get; }
+        ICommand DuplicateProjectPlanFileCommand { get; }
 
-        ICommand RemoveProjectPlanTagCommand { get; }
+        ICommand RenameProjectPlanFileCommand { get; }
+
+        ICommand MoveProjectPlanFileCommand { get; }
+
+        ICommand RemoveProjectPlanFileCommand { get; }
+
+        ICommand AddNodeTagCommand { get; }
+
+        ICommand RemoveNodeTagCommand { get; }
 
         void ResetProject();
 
         void ProcessProject(ProjectModel projectModel);
 
-        IManagedPlanViewModel? GetProjectPlan(Guid projectPlanId);
+        IManagedNodeViewModel? GetNode(Guid nodeId);
 
-        IManagedPlanViewModel? GetProjectPlanParent(Guid projectPlanId);
+        IManagedNodeViewModel? GetNodeParent(Guid nodeId);
 
         ProjectModel BuildProject();
     }

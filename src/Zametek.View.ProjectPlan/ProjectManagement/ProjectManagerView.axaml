@@ -34,8 +34,8 @@
 						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
-						Command="{Binding Path=BranchProjectPlanFileCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_BranchManagedPlan}"/>
+						Command="{Binding Path=CreateEmptyProjectPlanFileCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_NewPlanFile}"/>
 
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
@@ -43,16 +43,20 @@
 						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
-						Command="{Binding Path=SpawnProjectPlanFileCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_SpawnManagedPlan}"/>
+						Command="{Binding Path=CreateEmptyProjectPlanFolderCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_NewPlanFolder}"/>
 
+				
+				
+				
+				
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
 						Margin="0,0,0,7"
 						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
-						Command="{Binding Path=AddProjectPlanTagCommand, Mode=OneWay}"
+						Command="{Binding Path=AddNodeTagCommand, Mode=OneWay}"
 						Content="{x:Static resources:Labels.Label_AddTag}"/>
 
 				<Button DockPanel.Dock="Top"
@@ -61,16 +65,20 @@
 						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
-						Command="{Binding Path=RemoveProjectPlanTagCommand, Mode=OneWay}"
+						Command="{Binding Path=RemoveNodeTagCommand, Mode=OneWay}"
 						Content="{x:Static resources:Labels.Label_DeleteTag}"/>
 
+				
+				
+				
+				
 				<Grid/>
 			</DockPanel>
 		</ScrollViewer>
 		
 		<TreeView Name="planTree"
-				  ItemsSource="{Binding Path=Plans, Mode=OneWay}"
-				  SelectedItems="{Binding Path=SelectedPlans, Mode=OneWay}"
+				  ItemsSource="{Binding Path=Nodes, Mode=OneWay}"
+				  SelectedItems="{Binding Path=SelectedNodes, Mode=OneWay}"
 				  SelectionMode="Multiple">
 			<TreeView.Resources>
 				<ControlTheme x:Key="SimpleEmptyTreeViewItemToggleButtonTheme"
@@ -93,10 +101,10 @@
 			</TreeView.Resources>
 
 			<TreeView.Styles>
-				<Style Selector="TreeViewItem" x:DataType="vm:ManagedPlanViewModel">
+				<Style Selector="TreeViewItem" x:DataType="vm:ManagedNodeViewModel">
 					<Setter Property="IsExpanded" Value="True" />
 				</Style>
-				<Style Selector="TextBlock.isLoaded" x:DataType="vm:ManagedPlanViewModel">
+				<Style Selector="TextBlock.isLoaded" x:DataType="vm:ManagedNodeViewModel">
 					<Setter Property="FontWeight" Value="Bold" />
 				</Style>
 
@@ -108,7 +116,7 @@
 			
 			<TreeView.ItemTemplate>
 				<TreeDataTemplate ItemsSource="{Binding Path=Children, Mode=OneWay}">
-					<TextBlock Text="{Binding Path=Label, Mode=OneWay}"
+					<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"
 							   Classes.isLoaded="{Binding Path=IsLoaded, Mode=OneWay}">
 					</TextBlock>
 				</TreeDataTemplate>
@@ -116,7 +124,7 @@
 
 			<i:Interaction.Behaviors>
 				<ia:EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #planTree}">
-					<ia:InvokeCommandAction Command="{Binding Path=SetSelectedManagedPlansCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
+					<ia:InvokeCommandAction Command="{Binding Path=SetSelectedManagedNodesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
 				</ia:EventTriggerBehavior>
 				<ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #planTree}">
 					<ia:InvokeCommandAction Command="{Binding Path=LoadProjectPlanFileCommand, Mode=OneWay}" PassEventArgsToCommand="False" />

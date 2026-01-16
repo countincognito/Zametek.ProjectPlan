@@ -6,12 +6,12 @@ using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class RemovePlanTagViewModel
-        : ViewModelBase, IRemovePlanTagViewModel
+    public class RemoveNodeTagViewModel
+        : ViewModelBase, IRemoveNodeTagViewModel
     {
         #region Ctors
 
-        public RemovePlanTagViewModel(IEnumerable<ProjectPlanTagModel> projectPlanTagModels)
+        public RemoveNodeTagViewModel(IEnumerable<ProjectPlanTagModel> projectPlanTagModels)
         {
             m_Tags = [];
             m_ReadOnlyTags = new(m_Tags);

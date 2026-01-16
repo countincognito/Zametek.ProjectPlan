@@ -81,7 +81,11 @@ namespace Zametek.ViewModel.ProjectPlan
             get => string.IsNullOrWhiteSpace(m_ProjectTitle) ? string.Empty : m_ProjectTitle;
             protected set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_ProjectTitle, value);
+                lock (m_Lock)
+                {
+                    m_ProjectTitle = value;
+                    this.RaisePropertyChanged();
+                }
             }
         }
 

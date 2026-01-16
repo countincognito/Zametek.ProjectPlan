@@ -97,6 +97,33 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot get a project plan file from a folder node:.
+        /// </summary>
+        public static string Message_CannotGetProjectPlanFileFromFolderNode {
+            get {
+                return ResourceManager.GetString("Message_CannotGetProjectPlanFileFromFolderNode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot get a project plan file when project plan is null:.
+        /// </summary>
+        public static string Message_CannotGetProjectPlanFileWhenProjectPlanIsNull {
+            get {
+                return ResourceManager.GetString("Message_CannotGetProjectPlanFileWhenProjectPlanIsNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot set a project plan on a folder node:.
+        /// </summary>
+        public static string Message_CannotSetProjectPlanOnFolderNode {
+            get {
+                return ResourceManager.GetString("Message_CannotSetProjectPlanOnFolderNode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ColumnType must be derived from DataGridColumn.
         /// </summary>
         public static string Message_ColumnTypeMustBeDerivedFromDataGridColumn {

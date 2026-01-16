@@ -8,8 +8,8 @@
 			 xmlns:u="https://irihi.tech/ursa"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 			 xmlns:sys="using:System"
-			 x:DataType="vm:RemovePlanTagViewModel"
-             x:Class="Zametek.View.ProjectPlan.RemovePlanTagView">
+			 x:DataType="vm:RemoveNodeTagViewModel"
+             x:Class="Zametek.View.ProjectPlan.RemoveNodeTagView">
 	<Grid Margin="7">
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="80"/>

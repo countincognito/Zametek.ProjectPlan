@@ -171,12 +171,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     main => main.m_ProjectManagerViewModel.ProjectHasChanges,
                     (title, projectPlanId, projectHasChanges) =>
                     {
-                        string label = projectPlanId.ToShortString();
-                        if (m_ProjectManagerViewModel.GetProjectPlan(projectPlanId) is IManagedPlanViewModel managedPlan)
+                        string name = projectPlanId.ToShortString();
+                        if (m_ProjectManagerViewModel.GetNode(projectPlanId) is IManagedNodeViewModel managedNode)
                         {
-                            label = managedPlan.Label;
+                            name = managedNode.Name;
                         }
-                        return $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title)} - {label} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
+                        return $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title)} - {name} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
                     })
                 .ToProperty(this, main => main.ProjectTitle);
 
@@ -969,11 +969,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
 
                 Guid projectPlanId = m_CoreViewModel.ProjectPlanId;
-                IManagedPlanViewModel? managedPlan = m_ProjectManagerViewModel.GetProjectPlan(projectPlanId);
+                IManagedNodeViewModel? managedNode = m_ProjectManagerViewModel.GetNode(projectPlanId);
 
-                if (managedPlan is not null)
+                if (managedNode is not null)
                 {
-                    title = $@"{title}-{managedPlan.Name}";
+                    title = $@"{title}-{managedNode.Name}";
                 }
 
                 string directory = m_SettingService.ProjectDirectory;

@@ -9,13 +9,14 @@ using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class ManagedPlanViewModel
-        : ViewModelBase, IManagedPlanViewModel, IEditableObject, INotifyDataErrorInfo
+    public class ManagedNodeViewModel
+        : ViewModelBase, IManagedNodeViewModel, IEditableObject, INotifyDataErrorInfo
     {
         #region Fields
 
         private readonly object m_Lock;
         private ProjectPlanNodeModel m_ProjectPlanNodeModel;
+        private ProjectPlanModel? m_ProjectPlanModel;
 
         private static readonly string[] s_NoErrors = [];
         private readonly Dictionary<string, List<string>> m_ErrorsByPropertyName;
@@ -24,12 +25,21 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public ManagedPlanViewModel()
+        public ManagedNodeViewModel()
             : this(new ProjectPlanNodeModel())
         {
         }
 
-        public ManagedPlanViewModel(ProjectPlanNodeModel projectPlanNode)
+        public ManagedNodeViewModel(
+            ProjectPlanNodeModel projectPlanNode,
+            ProjectPlanModel projectPlan)
+            : this(projectPlanNode)
+        {
+            ArgumentNullException.ThrowIfNull(projectPlan);
+            m_ProjectPlanModel = projectPlan;
+        }
+
+        public ManagedNodeViewModel(ProjectPlanNodeModel projectPlanNode)
         {
             ArgumentNullException.ThrowIfNull(projectPlanNode);
             m_Lock = new object();
@@ -43,6 +53,7 @@ namespace Zametek.ViewModel.ProjectPlan
                .Subscribe();
 
             m_ProjectPlanNodeModel = projectPlanNode;
+            m_ProjectPlanModel = null;
             m_Children = new();
 
             // Create read-only view to the source list.
@@ -104,7 +115,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region IManagedPlanViewModel Members
+        #region IManagedNodeViewModel Members
 
         public Guid Id => m_ProjectPlanNodeModel.Id;
 
@@ -117,6 +128,22 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 m_ProjectPlanNodeModel = m_ProjectPlanNodeModel with { ParentId = value };
+            }
+        }
+
+        public bool IsFolder => m_ProjectPlanNodeModel.IsFolder;
+
+        public string Name
+        {
+            get
+            {
+                return m_ProjectPlanNodeModel.Name;
+            }
+            set
+            {
+                m_ProjectPlanNodeModel = m_ProjectPlanNodeModel with { Name = value };
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged(nameof(DisplayName));
             }
         }
 
@@ -134,31 +161,43 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public string Comment
+        public ProjectPlanModel? ProjectPlan
         {
             get
             {
-                return m_ProjectPlanNodeModel.Comment;
+                return m_ProjectPlanModel;
             }
             set
             {
-                m_ProjectPlanNodeModel = m_ProjectPlanNodeModel with { Comment = value };
-            }
-        }
-
-        public ProjectPlanModel ProjectPlan
-        {
-            get
-            {
-                return m_ProjectPlanNodeModel.ProjectPlan;
-            }
-            set
-            {
-                m_ProjectPlanNodeModel = m_ProjectPlanNodeModel with { ProjectPlan = value };
+                if (IsFolder)
+                {
+                    throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_CannotSetProjectPlanOnFolderNode} {Id}");
+                }
+                m_ProjectPlanModel = value;
             }
         }
 
         public ProjectPlanNodeModel Node => m_ProjectPlanNodeModel;
+
+        public ProjectPlanFileModel File
+        {
+            get
+            {
+                if (IsFolder)
+                {
+                    throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_CannotGetProjectPlanFileFromFolderNode} {Id}");
+                }
+                if (m_ProjectPlanModel is null)
+                {
+                    throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_CannotGetProjectPlanFileWhenProjectPlanIsNull} {Id}");
+                }
+                return new ProjectPlanFileModel
+                {
+                    NodeId = m_ProjectPlanNodeModel.Id,
+                    Plan = m_ProjectPlanModel,
+                };
+            }
+        }
 
         private bool m_IsLoaded;
         public bool IsLoaded
@@ -189,55 +228,59 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public string Name
-        {
-            get
-            {
-                return Id.ToShortString();
-            }
-        }
-
         public string Label
         {
             get
             {
                 if (Labels.Count == 0)
                 {
-                    return Name;
+                    return string.Empty;
                 }
-                return $@"[{string.Join(DependenciesStringValidationRule.Separator, Labels)}] ({Name})";
+                return $@"[{string.Join(DependenciesStringValidationRule.Separator, Labels)}]";
             }
         }
 
-        private readonly SourceList<IManagedPlanViewModel> m_Children;
-        private readonly ReadOnlyObservableCollection<IManagedPlanViewModel> m_ReadOnlyChildren;
-        public ReadOnlyObservableCollection<IManagedPlanViewModel> Children => m_ReadOnlyChildren;
+        public string DisplayName
+        {
+            get
+            {
+                if (!IsFolder)
+                {
+                    return Name;
+                }
+                return $@"[{Name}]";
+            }
+        }
 
-        public void AddChildren(IEnumerable<IManagedPlanViewModel> managedPlans)
+        private readonly SourceList<IManagedNodeViewModel> m_Children;
+        private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyChildren;
+        public ReadOnlyObservableCollection<IManagedNodeViewModel> Children => m_ReadOnlyChildren;
+
+        public void AddChildren(IEnumerable<IManagedNodeViewModel> managedNodes)
         {
             lock (m_Lock)
             {
                 m_Children.Edit(children =>
                 {
-                    foreach (IManagedPlanViewModel managedPlan in managedPlans)
+                    foreach (IManagedNodeViewModel managedNode in managedNodes)
                     {
-                        children.Add(managedPlan);
+                        children.Add(managedNode);
                     }
                 });
             }
         }
 
-        public void RemoveChildren(IEnumerable<Guid> managedPlans)
+        public void RemoveChildren(IEnumerable<Guid> managedNodeIds)
         {
             lock (m_Lock)
             {
                 m_Children.Edit(children =>
                 {
-                    IList<IManagedPlanViewModel> projectPlans = [.. Children.Where(x => managedPlans.Contains(x.Id))];
+                    IList<IManagedNodeViewModel> nodes = [.. Children.Where(x => managedNodeIds.Contains(x.Id))];
 
-                    foreach (IManagedPlanViewModel projectPlan in projectPlans)
+                    foreach (IManagedNodeViewModel node in nodes)
                     {
-                        projectPlan.Dispose();
+                        node.Dispose();
                     }
                 });
             }
@@ -249,9 +292,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_Children.Edit(children =>
                 {
-                    foreach (IManagedPlanViewModel projectPlan in Children)
+                    foreach (IManagedNodeViewModel node in Children)
                     {
-                        projectPlan.Dispose();
+                        node.Dispose();
                     }
                     children.Clear();
                 });

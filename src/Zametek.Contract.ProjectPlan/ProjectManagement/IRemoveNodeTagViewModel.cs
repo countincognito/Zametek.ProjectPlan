@@ -3,7 +3,7 @@ using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
-    public interface IRemovePlanTagViewModel
+    public interface IRemoveNodeTagViewModel
     {
         ReadOnlyObservableCollection<ProjectPlanTagModel> Tags { get; }
 

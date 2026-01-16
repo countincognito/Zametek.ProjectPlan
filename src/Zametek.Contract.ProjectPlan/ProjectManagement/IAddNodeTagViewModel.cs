@@ -1,6 +1,6 @@
 ﻿namespace Zametek.Contract.ProjectPlan
 {
-    public interface IAddPlanTagViewModel
+    public interface IAddNodeTagViewModel
     {
         string Tag { get; set; }
     }

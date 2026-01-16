@@ -4,22 +4,26 @@ using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
-    public interface IManagedPlanViewModel
+    public interface IManagedNodeViewModel
         : IDisposable, INotifyPropertyChanged, IKillSubscriptions
     {
         Guid Id { get; }
 
         Guid ParentId { get; set; }
 
+        public bool IsFolder { get;}
+
+        string Name { get; set; }
+
         DateTimeOffset CreatedOn { get; }
 
         DateTimeOffset ModifiedOn { get; set; }
 
-        string Comment { get; set; }
-
-        ProjectPlanModel ProjectPlan { get; set; }
+        ProjectPlanModel? ProjectPlan { get; set; }
 
         ProjectPlanNodeModel Node { get; }
+
+        ProjectPlanFileModel File { get; }
 
         bool IsLoaded { get; set; }
 
@@ -27,15 +31,15 @@ namespace Zametek.Contract.ProjectPlan
 
         void SetLabels(IEnumerable<string> labels);
 
-        string Name { get; }
-
         string Label { get; }
 
-        ReadOnlyObservableCollection<IManagedPlanViewModel> Children { get; }
+        string DisplayName { get; }
 
-        void AddChildren(IEnumerable<IManagedPlanViewModel> managedPlans);
+        ReadOnlyObservableCollection<IManagedNodeViewModel> Children { get; }
 
-        void RemoveChildren(IEnumerable<Guid> managedPlans);
+        void AddChildren(IEnumerable<IManagedNodeViewModel> managedNodes);
+
+        void RemoveChildren(IEnumerable<Guid> managedNodeIds);
 
         void ClearChildren();
     }

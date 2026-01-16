@@ -11,6 +11,8 @@
 
         public List<ProjectPlanNodeModel> Nodes { get; init; } = [];
 
+        public List<ProjectPlanFileModel> Files { get; init; } = [];
+
         public List<ProjectPlanTagModel> Tags { get; init; } = [];
     }
 }

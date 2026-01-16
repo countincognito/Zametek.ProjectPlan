@@ -250,15 +250,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Branch.
-        /// </summary>
-        public static string Label_BranchManagedPlan {
-            get {
-                return ResourceManager.GetString("Label_BranchManagedPlan", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string Label_CancelSplashScreen {
@@ -588,6 +579,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_EffortProjection {
             get {
                 return ResourceManager.GetString("Label_EffortProjection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Empty.
+        /// </summary>
+        public static string Label_EmptyNode {
+            get {
+                return ResourceManager.GetString("Label_EmptyNode", resourceCulture);
             }
         }
         
@@ -953,6 +953,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to New File.
+        /// </summary>
+        public static string Label_NewPlanFile {
+            get {
+                return ResourceManager.GetString("Label_NewPlanFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New Folder.
+        /// </summary>
+        public static string Label_NewPlanFolder {
+            get {
+                return ResourceManager.GetString("Label_NewPlanFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No.
         /// </summary>
         public static string Label_No {
@@ -1273,15 +1291,6 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_SlackLimit {
             get {
                 return ResourceManager.GetString("Label_SlackLimit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Spawn.
-        /// </summary>
-        public static string Label_SpawnManagedPlan {
-            get {
-                return ResourceManager.GetString("Label_SpawnManagedPlan", resourceCulture);
             }
         }
         
