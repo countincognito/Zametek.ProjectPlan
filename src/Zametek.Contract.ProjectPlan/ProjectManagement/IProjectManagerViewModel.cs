@@ -39,9 +39,16 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand LoadProjectPlanFileCommand { get; }
 
+        ICommand LoadSelectedProjectPlanFileCommand { get; }
+
         ICommand CreateEmptyProjectPlanFileCommand { get; }
 
         ICommand CreateEmptyProjectPlanFolderCommand { get; }
+
+
+
+
+
 
         ICommand DuplicateProjectPlanFileCommand { get; }
 
@@ -54,6 +61,11 @@ namespace Zametek.Contract.ProjectPlan
         ICommand AddNodeTagCommand { get; }
 
         ICommand RemoveNodeTagCommand { get; }
+
+
+
+
+
 
         void ResetProject();
 

@@ -19,32 +19,7 @@
 			  VerticalScrollBarVisibility="Hidden"
 			  HorizontalScrollBarVisibility="Disabled">
 			<DockPanel Margin="11,0,0,0">
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=LoadProjectPlanFileCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_LoadManagedPlan}"/>
 
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=CreateEmptyProjectPlanFileCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_NewPlanFile}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=CreateEmptyProjectPlanFolderCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_NewPlanFolder}"/>
 
 				
 				
@@ -116,9 +91,35 @@
 			
 			<TreeView.ItemTemplate>
 				<TreeDataTemplate ItemsSource="{Binding Path=Children, Mode=OneWay}">
-					<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"
-							   Classes.isLoaded="{Binding Path=IsLoaded, Mode=OneWay}">
-					</TextBlock>
+					<DockPanel>
+						<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"
+								   Classes.isLoaded="{Binding Path=IsLoaded, Mode=OneWay}">
+						</TextBlock>
+
+						<DockPanel.ContextMenu>
+							<ContextMenu>
+
+								<MenuItem Header="{x:Static resources:Labels.Label_NewPlanFile}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectPlanFileCommand, Mode=OneWay}" />
+
+
+
+								<MenuItem Header="{x:Static resources:Labels.Label_NewPlanFolder}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectPlanFolderCommand, Mode=OneWay}" />
+
+
+
+
+								<MenuItem Header="{x:Static resources:Labels.Label_LoadManagedPlan}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.LoadProjectPlanFileCommand, Mode=OneWay}"
+										  CommandParameter="{Binding .}" />
+								
+								
+								
+								
+							</ContextMenu>
+						</DockPanel.ContextMenu>
+					</DockPanel>
 				</TreeDataTemplate>
 			</TreeView.ItemTemplate>
 
@@ -127,7 +128,7 @@
 					<ia:InvokeCommandAction Command="{Binding Path=SetSelectedManagedNodesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
 				</ia:EventTriggerBehavior>
 				<ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #planTree}">
-					<ia:InvokeCommandAction Command="{Binding Path=LoadProjectPlanFileCommand, Mode=OneWay}" PassEventArgsToCommand="False" />
+					<ia:InvokeCommandAction Command="{Binding Path=LoadSelectedProjectPlanFileCommand, Mode=OneWay}" PassEventArgsToCommand="False" />
 				</ia:EventTriggerBehavior>
 			</i:Interaction.Behaviors>
 		</TreeView>

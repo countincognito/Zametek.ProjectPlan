@@ -585,4 +585,10 @@
   <data name="Label_NewPlanFolder" xml:space="preserve">
     <value>New Folder</value>
   </data>
+  <data name="Label_NameAlreadyExists" xml:space="preserve">
+    <value>Name already exists</value>
+  </data>
+  <data name="Label_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
 </root>

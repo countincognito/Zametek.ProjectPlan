@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:u="https://irihi.tech/ursa"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:sys="using:System"
+			 x:DataType="vm:NodeNameViewModel"
+             x:Class="Zametek.View.ProjectPlan.NodeNameView">
+	<Grid Margin="7">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="80"/>
+			<ColumnDefinition Width="160"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="36"/>
+		</Grid.RowDefinitions>
+
+		<Label Grid.Row="0" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_Name}"/>
+		
+		<TextBox Grid.Row="0" Grid.Column="1"
+				 Text="{Binding Path=Name, Mode=TwoWay}"
+				 BorderBrush="Gray"
+				 BorderThickness="1"/>
+	</Grid>
+</UserControl>
