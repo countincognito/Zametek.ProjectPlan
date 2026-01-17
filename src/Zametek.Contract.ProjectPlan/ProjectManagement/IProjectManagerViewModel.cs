@@ -13,11 +13,7 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsCreating { get; }
 
-        bool IsDuplicating { get; }
-
         bool IsRenaming { get; }
-
-        bool IsMoving { get; }
 
         bool IsRemoving { get; }
 
@@ -45,22 +41,7 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand CreateEmptyProjectPlanFolderCommand { get; }
 
-
-
-
-
-
-        //ICommand DuplicateProjectPlanFileCommand { get; }
-
         ICommand RenameProjectPlanNodeCommand { get; }
-
-        //ICommand MoveProjectPlanNodeCommand { get; }
-
-
-
-
-
-
 
         ICommand RemoveProjectPlanNodeCommand { get; }
 

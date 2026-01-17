@@ -169,6 +169,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do you wish to delete {0}?.
+        /// </summary>
+        public static string Message_DoYouWishToDelete {
+            get {
+                return ResourceManager.GetString("Message_DoYouWishToDelete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select the properties to edit.
         /// </summary>
         public static string Message_EditActivities {

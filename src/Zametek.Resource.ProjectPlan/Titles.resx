@@ -177,4 +177,7 @@
   <data name="Title_Project" xml:space="preserve">
     <value>Project</value>
   </data>
+  <data name="Title_DeleteNodes" xml:space="preserve">
+    <value>Delete</value>
+  </data>
 </root>

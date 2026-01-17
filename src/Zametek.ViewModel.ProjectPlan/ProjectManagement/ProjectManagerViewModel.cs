@@ -93,16 +93,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 createEmptyProjectPlanFolderCommand.IsExecuting.ToProperty(this, pm => pm.IsCreating, out m_IsCreating);
                 CreateEmptyProjectPlanFolderCommand = createEmptyProjectPlanFolderCommand;
             }
-            //{
-            //    ReactiveCommand<Unit, Unit> duplicateProjectPlanFileCommand = ReactiveCommand.CreateFromTask(
-            //        DuplicateProjectPlanFileAsync,
-            //        this.WhenAnyValue(
-            //            pm => pm.SelectedNode,
-            //            (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
-            //        RxApp.MainThreadScheduler);
-            //    duplicateProjectPlanFileCommand.IsExecuting.ToProperty(this, pm => pm.IsDuplicating, out m_IsDuplicating);
-            //    DuplicateProjectPlanFileCommand = duplicateProjectPlanFileCommand;
-            //}
             {
                 ReactiveCommand<Unit, Unit> renameProjectPlanNodeCommand = ReactiveCommand.CreateFromTask(
                     RenameProjectPlanNodeAsync,
@@ -113,16 +103,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 renameProjectPlanNodeCommand.IsExecuting.ToProperty(this, pm => pm.IsRenaming, out m_IsRenaming);
                 RenameProjectPlanNodeCommand = renameProjectPlanNodeCommand;
             }
-            //{
-            //    ReactiveCommand<Unit, Unit> moveProjectPlanFileCommand = ReactiveCommand.CreateFromTask(
-            //        MoveProjectPlanFileAsync,
-            //        this.WhenAnyValue(
-            //            pm => pm.SelectedNode,
-            //            (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
-            //        RxApp.MainThreadScheduler);
-            //    moveProjectPlanFileCommand.IsExecuting.ToProperty(this, pm => pm.IsMoving, out m_IsMoving);
-            //    MoveProjectPlanFileCommand = moveProjectPlanFileCommand;
-            //}
             {
                 ReactiveCommand<Unit, Unit> removeProjectPlanNodeCommand = ReactiveCommand.CreateFromTask(
                     RemoveProjectPlanNodeAsync,
@@ -305,11 +285,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = false;
             }
         }
-
-
-
-
-
 
         private HashSet<IManagedNodeViewModel> FindNestedNodes(Guid nodeId)
         {
@@ -568,10 +543,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = false;
             }
         }
-
-
-
-
 
         private void RemoveManagedNodes(IEnumerable<IManagedNodeViewModel> managedNodes)
         {
@@ -890,96 +861,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //private async Task DuplicateProjectPlanFileAsync()
-        //{
-        //    try
-        //    {
-        //        if (IsProjectPlanUpdated)
-        //        {
-        //            bool confirmation = await m_DialogService.ShowConfirmationAsync(
-        //                Resource.ProjectPlan.Titles.Title_UnsavedChanges,
-        //                string.Empty,
-        //                Resource.ProjectPlan.Messages.Message_UnsavedChanges);
-
-        //            if (!confirmation)
-        //            {
-        //                return;
-        //            }
-        //        }
-        //        await DuplicateProjectPlanFileInternalAsync();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        await m_DialogService.ShowErrorAsync(
-        //            Resource.ProjectPlan.Titles.Title_Error,
-        //            string.Empty,
-        //            ex.Message);
-        //    }
-        //}
-
-        //private async Task DuplicateProjectPlanFileInternalAsync() => await Task.Run(DuplicateProjectPlanFileInternal);
-
-        //private void DuplicateProjectPlanFileInternal()
-        //{
-        //    try
-        //    {
-        //        lock (m_Lock)
-        //        {
-        //            IsBusy = true;
-        //            //IManagedPlanViewModel? managedPlan = SelectedPlan;
-
-        //            //if (managedPlan is not null)
-        //            //{
-        //            //    // A branched plan shares a parent but has a new Id.
-        //            //    ProjectPlanNodeModel selectedPlanNodeModel = managedPlan.Node with
-        //            //    {
-        //            //        Id = Guid.NewGuid(),
-        //            //        CreatedOn = DateTimeOffset.UtcNow,
-        //            //        ModifiedOn = DateTimeOffset.UtcNow,
-        //            //        Comment = string.Empty,
-        //            //    };
-        //            //    Guid projectPlanId = selectedPlanNodeModel.Id;
-        //            //    ProjectPlanModel projectPlanModel = selectedPlanNodeModel.ProjectPlan;
-        //            //    AddManagedPlans([selectedPlanNodeModel]);
-        //            //    m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
-        //            //    MarkProjectPlanAsLoaded(projectPlanId);
-        //            //    IsProjectUpdated = true;
-        //            //}
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        IsBusy = false;
-        //    }
-        //}
-
-
-
-
-
-
-
-
-
-
-
-
-
         private async Task RenameProjectPlanNodeAsync()
         {
             try
@@ -1025,85 +906,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
-
-
-
-
-
-        //private async Task MoveProjectPlanFileAsync()
-        //{
-        //    try
-        //    {
-        //        if (IsProjectPlanUpdated)
-        //        {
-        //            bool confirmation = await m_DialogService.ShowConfirmationAsync(
-        //                Resource.ProjectPlan.Titles.Title_UnsavedChanges,
-        //                string.Empty,
-        //                Resource.ProjectPlan.Messages.Message_UnsavedChanges);
-
-        //            if (!confirmation)
-        //            {
-        //                return;
-        //            }
-        //        }
-        //        await MoveProjectPlanFileInternalAsync();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        await m_DialogService.ShowErrorAsync(
-        //            Resource.ProjectPlan.Titles.Title_Error,
-        //            string.Empty,
-        //            ex.Message);
-        //    }
-        //}
-
-        //private async Task MoveProjectPlanFileInternalAsync() => await Task.Run(MoveProjectPlanFileInternal);
-
-        //private void MoveProjectPlanFileInternal()
-        //{
-        //    try
-        //    {
-        //        lock (m_Lock)
-        //        {
-        //            IsBusy = true;
-        //            //IManagedPlanViewModel? managedPlan = SelectedPlan;
-
-        //            //if (managedPlan is not null)
-        //            //{
-        //            //    // A branched plan shares a parent but has a new Id.
-        //            //    ProjectPlanNodeModel selectedPlanNodeModel = managedPlan.Node with
-        //            //    {
-        //            //        Id = Guid.NewGuid(),
-        //            //        CreatedOn = DateTimeOffset.UtcNow,
-        //            //        ModifiedOn = DateTimeOffset.UtcNow,
-        //            //        Comment = string.Empty,
-        //            //    };
-        //            //    Guid projectPlanId = selectedPlanNodeModel.Id;
-        //            //    ProjectPlanModel projectPlanModel = selectedPlanNodeModel.ProjectPlan;
-        //            //    AddManagedPlans([selectedPlanNodeModel]);
-        //            //    m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
-        //            //    MarkProjectPlanAsLoaded(projectPlanId);
-        //            //    IsProjectUpdated = true;
-        //            //}
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        IsBusy = false;
-        //    }
-        //}
-
-
-
-
-
-
-
-
-
-
-
         private async Task RemoveProjectPlanNodeAsync()
         {
             try
@@ -1111,6 +913,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 IManagedNodeViewModel? managedNode = SelectedNode;
 
                 if (managedNode is null)
+                {
+                    return;
+                }
+
+                bool confirmation = await m_DialogService.ShowConfirmationAsync(
+                    Resource.ProjectPlan.Titles.Title_DeleteNodes,
+                    string.Empty,
+                    string.Format(Resource.ProjectPlan.Messages.Message_DoYouWishToDelete, managedNode.DisplayName));
+
+                if (!confirmation)
                 {
                     return;
                 }
@@ -1366,14 +1178,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_IsCreating;
         public bool IsCreating => m_IsCreating.Value;
 
-        private readonly ObservableAsPropertyHelper<bool> m_IsDuplicating;
-        public bool IsDuplicating => m_IsDuplicating.Value;
-
         private readonly ObservableAsPropertyHelper<bool> m_IsRenaming;
         public bool IsRenaming => m_IsRenaming.Value;
-
-        private readonly ObservableAsPropertyHelper<bool> m_IsMoving;
-        public bool IsMoving => m_IsMoving.Value;
 
         private readonly ObservableAsPropertyHelper<bool> m_IsRemoving;
         public bool IsRemoving => m_IsRemoving.Value;
@@ -1419,23 +1225,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand CreateEmptyProjectPlanFolderCommand { get; }
 
-
-
-
-
-
-        //public ICommand DuplicateProjectPlanFileCommand { get; }
-
         public ICommand RenameProjectPlanNodeCommand { get; }
 
-        //public ICommand MoveProjectPlanFileCommand { get; }
-
         public ICommand RemoveProjectPlanNodeCommand { get; }
-
-
-
-
-
 
         public ICommand AddNodeTagCommand { get; }
 
@@ -1723,9 +1515,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 KillSubscriptions();
                 m_IsLoading?.Dispose();
                 m_IsCreating?.Dispose();
-                m_IsDuplicating?.Dispose();
                 m_IsRenaming?.Dispose();
-                m_IsMoving?.Dispose();
                 m_IsRemoving?.Dispose();
                 m_IsProjectPlanUpdated?.Dispose();
                 m_ProjectHasChanges?.Dispose();

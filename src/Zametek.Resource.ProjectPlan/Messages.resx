@@ -276,4 +276,7 @@
   <data name="Message_CannotGetProjectPlanFileWhenProjectPlanIsNull" xml:space="preserve">
     <value>Cannot get a project plan file when project plan is null:</value>
   </data>
+  <data name="Message_DoYouWishToDelete" xml:space="preserve">
+    <value>Do you wish to delete {0}?</value>
+  </data>
 </root>

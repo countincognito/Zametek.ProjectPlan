@@ -90,7 +90,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
         private string m_PlanTitle;
         public string PlanTitle
         {

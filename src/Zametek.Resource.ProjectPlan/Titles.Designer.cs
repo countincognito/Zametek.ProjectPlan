@@ -79,6 +79,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Title_DeleteNodes {
+            get {
+                return ResourceManager.GetString("Title_DeleteNodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Earned-Value Chart.
         /// </summary>
         public static string Title_EarnedValueChartView {
