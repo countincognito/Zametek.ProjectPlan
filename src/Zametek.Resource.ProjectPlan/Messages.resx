@@ -262,10 +262,10 @@
     <value>Converted from v0.5.0</value>
   </data>
   <data name="Message_AddTag" xml:space="preserve">
-    <value>Add tag to plan</value>
+    <value>Add tag to node</value>
   </data>
   <data name="Message_DeleteTag" xml:space="preserve">
-    <value>Delete tag from plan</value>
+    <value>Delete tag from node</value>
   </data>
   <data name="Message_CannotSetProjectPlanOnFolderNode" xml:space="preserve">
     <value>Cannot set a project plan on a folder node:</value>

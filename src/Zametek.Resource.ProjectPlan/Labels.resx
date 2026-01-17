@@ -591,4 +591,13 @@
   <data name="Label_Name" xml:space="preserve">
     <value>Name</value>
   </data>
+  <data name="Label_NewName" xml:space="preserve">
+    <value>New Name</value>
+  </data>
+  <data name="Label_RenameNode" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Label_DeleteNode" xml:space="preserve">
+    <value>Delete</value>
+  </data>
 </root>

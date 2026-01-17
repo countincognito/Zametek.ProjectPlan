@@ -173,11 +173,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     (projectTitle, planTitle, projectPlanId, projectHasChanges) =>
                     {
                         string plan = projectPlanId.ToShortString();
-                        //if (m_ProjectManagerViewModel.GetNode(projectPlanId) is IManagedNodeViewModel managedNode)
-                        //{
-                        //    plan = managedNode.Name;
-                        //}
-
                         if (!string.IsNullOrWhiteSpace(planTitle))
                         {
                             plan = planTitle;

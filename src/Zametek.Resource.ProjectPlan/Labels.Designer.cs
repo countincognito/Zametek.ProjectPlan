@@ -421,6 +421,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Label_DeleteNode {
+            get {
+                return ResourceManager.GetString("Label_DeleteNode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete Tag.
         /// </summary>
         public static string Label_DeleteTag {
@@ -971,6 +980,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to New Name.
+        /// </summary>
+        public static string Label_NewName {
+            get {
+                return ResourceManager.GetString("Label_NewName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New File.
         /// </summary>
         public static string Label_NewPlanFile {
@@ -1147,6 +1165,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_ProjectStart {
             get {
                 return ResourceManager.GetString("Label_ProjectStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rename.
+        /// </summary>
+        public static string Label_RenameNode {
+            get {
+                return ResourceManager.GetString("Label_RenameNode", resourceCulture);
             }
         }
         

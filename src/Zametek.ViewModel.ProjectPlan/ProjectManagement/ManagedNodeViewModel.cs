@@ -281,6 +281,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach (IManagedNodeViewModel node in nodes)
                     {
                         node.Dispose();
+                        children.Remove(node);
                     }
                 });
             }

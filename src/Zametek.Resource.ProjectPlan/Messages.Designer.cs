@@ -61,7 +61,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add tag to plan.
+        ///   Looks up a localized string similar to Add tag to node.
         /// </summary>
         public static string Message_AddTag {
             get {
@@ -160,7 +160,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Delete tag from plan.
+        ///   Looks up a localized string similar to Delete tag from node.
         /// </summary>
         public static string Message_DeleteTag {
             get {

@@ -50,22 +50,23 @@ namespace Zametek.Contract.ProjectPlan
 
 
 
-        ICommand DuplicateProjectPlanFileCommand { get; }
+        //ICommand DuplicateProjectPlanFileCommand { get; }
 
-        ICommand RenameProjectPlanFileCommand { get; }
+        ICommand RenameProjectPlanNodeCommand { get; }
 
-        ICommand MoveProjectPlanFileCommand { get; }
+        //ICommand MoveProjectPlanNodeCommand { get; }
 
-        ICommand RemoveProjectPlanFileCommand { get; }
+
+
+
+
+
+
+        ICommand RemoveProjectPlanNodeCommand { get; }
 
         ICommand AddNodeTagCommand { get; }
 
         ICommand RemoveNodeTagCommand { get; }
-
-
-
-
-
 
         void ResetProject();
 

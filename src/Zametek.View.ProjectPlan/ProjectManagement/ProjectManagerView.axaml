@@ -15,42 +15,6 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-			  VerticalScrollBarVisibility="Hidden"
-			  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
-
-
-				
-				
-				
-				
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=AddNodeTagCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_AddTag}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=RemoveNodeTagCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DeleteTag}"/>
-
-				
-				
-				
-				
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
-		
 		<TreeView Name="planTree"
 				  ItemsSource="{Binding Path=Nodes, Mode=OneWay}"
 				  SelectedItems="{Binding Path=SelectedNodes, Mode=OneWay}"
@@ -98,25 +62,34 @@
 
 						<DockPanel.ContextMenu>
 							<ContextMenu>
-
 								<MenuItem Header="{x:Static resources:Labels.Label_NewPlanFile}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectPlanFileCommand, Mode=OneWay}" />
-
-
 
 								<MenuItem Header="{x:Static resources:Labels.Label_NewPlanFolder}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectPlanFolderCommand, Mode=OneWay}" />
 
+								<Separator />
+
+								<MenuItem Header="{x:Static resources:Labels.Label_RenameNode}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.RenameProjectPlanNodeCommand, Mode=OneWay}" />
 
 
+								<MenuItem Header="{x:Static resources:Labels.Label_DeleteNode}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.RemoveProjectPlanNodeCommand, Mode=OneWay}" />
+
+								<Separator />
 
 								<MenuItem Header="{x:Static resources:Labels.Label_LoadManagedPlan}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.LoadProjectPlanFileCommand, Mode=OneWay}"
 										  CommandParameter="{Binding .}" />
-								
-								
-								
-								
+
+								<Separator />
+
+								<MenuItem Header="{x:Static resources:Labels.Label_AddTag}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.AddNodeTagCommand, Mode=OneWay}" />
+
+								<MenuItem Header="{x:Static resources:Labels.Label_DeleteTag}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.RemoveNodeTagCommand, Mode=OneWay}" />
 							</ContextMenu>
 						</DockPanel.ContextMenu>
 					</DockPanel>
