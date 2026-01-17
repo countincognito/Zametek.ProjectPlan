@@ -8,6 +8,8 @@ namespace Zametek.Contract.ProjectPlan
 
         string ProjectTitle { get; }
 
+        string PlanTitle { get; }
+
         string ProjectDirectory { get; }
 
         bool DefaultShowDates { get; set; }
@@ -29,6 +31,8 @@ namespace Zametek.Contract.ProjectPlan
         void SetProjectTitle(string filename);
 
         void SetProjectDirectory(string filename);
+
+        void SetPlanTitle(string name);
 
         GraphSettingsModel DefaultGraphSettings { get; }
 

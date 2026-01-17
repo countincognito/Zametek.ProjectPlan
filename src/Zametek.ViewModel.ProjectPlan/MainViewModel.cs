@@ -167,16 +167,22 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectTitle = this
                 .WhenAnyValue(
                     main => main.m_SettingService.ProjectTitle,
+                    main => main.m_SettingService.PlanTitle,
                     main => main.m_CoreViewModel.ProjectPlanId,
                     main => main.m_ProjectManagerViewModel.ProjectHasChanges,
-                    (title, projectPlanId, projectHasChanges) =>
+                    (projectTitle, planTitle, projectPlanId, projectHasChanges) =>
                     {
-                        string name = projectPlanId.ToShortString();
-                        if (m_ProjectManagerViewModel.GetNode(projectPlanId) is IManagedNodeViewModel managedNode)
+                        string plan = projectPlanId.ToShortString();
+                        //if (m_ProjectManagerViewModel.GetNode(projectPlanId) is IManagedNodeViewModel managedNode)
+                        //{
+                        //    plan = managedNode.Name;
+                        //}
+
+                        if (!string.IsNullOrWhiteSpace(planTitle))
                         {
-                            name = managedNode.Name;
+                            plan = planTitle;
                         }
-                        return $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title)} - {name} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
+                        return $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(projectTitle) ? Resource.ProjectPlan.Titles.Title_UntitledProject : projectTitle)} - {plan} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
                     })
                 .ToProperty(this, main => main.ProjectTitle);
 

@@ -515,6 +515,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         node.IsLoaded = false;
                     }
                     currentNode.IsLoaded = true;
+                    m_SettingService.SetPlanTitle(currentNode.Name);
                 }
             }
         }
@@ -1296,9 +1297,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     AddTagLabels([projectPlanTag]);
                     AddPlanFiles([projectPlanFile]);
                     AddManagedNodes([projectPlanNode]);
-                    MarkNodeAsLoaded(projectPlanNode.Id);
 
                     m_SettingService.Reset();
+
+                    MarkNodeAsLoaded(projectPlanNode.Id);
+
                     IsProjectUpdated = false;
                 }
             }

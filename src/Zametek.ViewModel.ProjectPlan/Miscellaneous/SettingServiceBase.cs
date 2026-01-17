@@ -26,6 +26,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             m_Lock = new();
             m_ProjectTitle = string.Empty;
+            m_PlanTitle = string.Empty;
             m_AppSettingsModel = new()
             {
                 Version = Versions.AppSettingsLatest,
@@ -89,6 +90,21 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+
+        private string m_PlanTitle;
+        public string PlanTitle
+        {
+            get => string.IsNullOrWhiteSpace(m_PlanTitle) ? string.Empty : m_PlanTitle;
+            protected set
+            {
+                lock (m_Lock)
+                {
+                    m_PlanTitle = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         public abstract bool DefaultShowDates { get; set; }
 
         public abstract bool DefaultUseClassicDates { get; set; }
@@ -107,14 +123,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void SetProjectFilePath(
             string filename,
-            bool bindTitleToFilename)//!!)
+            bool bindTitleToFilename)
         {
             SetProjectTitle(filename);
             SetProjectDirectory(filename);
             IsTitleBoundToFilename = bindTitleToFilename;
         }
 
-        public void SetProjectTitle(string filename)//!!)
+        public void SetProjectTitle(string filename)
         {
             ProjectTitle = Path.GetFileNameWithoutExtension(filename).Trim();
         }
@@ -122,6 +138,11 @@ namespace Zametek.ViewModel.ProjectPlan
         public void SetProjectDirectory(string filename)//!!)
         {
             ProjectDirectory = Path.GetDirectoryName(filename) ?? string.Empty;
+        }
+
+        public void SetPlanTitle(string name)
+        {
+            PlanTitle = name.Trim();
         }
 
         public GraphSettingsModel DefaultGraphSettings =>
@@ -179,6 +200,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public void Reset()
         {
             ProjectTitle = string.Empty;
+            PlanTitle = string.Empty;
         }
 
         #endregion
