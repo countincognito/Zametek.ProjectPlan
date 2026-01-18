@@ -125,7 +125,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (ResourceActivityTrackerModel resourceActivityTracker in newResourceActivityTrackers)
                 {
-                    resourceActivityTrackerLookup.TryAdd(resourceActivityTracker.ActivityId, resourceActivityTracker);
+                    resourceActivityTrackerLookup[resourceActivityTracker.ActivityId] = resourceActivityTracker;
                 }
 
                 SetTargetResourceActivities(
