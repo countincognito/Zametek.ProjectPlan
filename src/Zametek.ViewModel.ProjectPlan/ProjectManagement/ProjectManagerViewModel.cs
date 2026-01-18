@@ -232,7 +232,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     foreach (ProjectPlanFileModel planFileModel in projectPlanFileModels)
                     {
-                        m_FilePlanLookup.TryAdd(planFileModel.NodeId, planFileModel);
+                        m_FilePlanLookup[planFileModel.NodeId] = planFileModel;
                     }
                 }
             }
@@ -328,7 +328,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         if (!m_NodeTagLookup.TryGetValue(tagModel.NodeId, out List<string>? labels))
                         {
                             labels = [];
-                            m_NodeTagLookup.TryAdd(tagModel.NodeId, labels);
+                            m_NodeTagLookup[tagModel.NodeId] = labels;
                         }
 
                         labels.Add(tagModel.Label);
@@ -506,7 +506,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             var projectPlan = new ManagedNodeViewModel(projectPlanNode);
                             SetPlanFile(projectPlan);
                             SetTagLabels(projectPlan);
-                            m_ManagedNodeLookup.TryAdd(projectPlan.Id, projectPlan);
+                            m_ManagedNodeLookup[projectPlan.Id] = projectPlan;
                         }
                     }
 
@@ -684,7 +684,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             MarkNodeAsLoaded(nodeId);
                         }
 
-                        IsProjectUpdated = false;
+                        IsProjectUpdated = true;
                     }
                 }
             }
@@ -968,9 +968,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     // Find the most recently modified plan that is not being removed.
-                    IManagedNodeViewModel? mostRecentPlan = m_Nodes.Items
+                    IManagedNodeViewModel? mostRecentPlan = m_ManagedNodeLookup.Values
                         .Where(x => !x.IsFolder)
-                        .OrderBy(x => x.Node.ModifiedOn)
+                        .OrderByDescending(x => x.Node.ModifiedOn)
                         .FirstOrDefault();
 
                     // If found, load it.

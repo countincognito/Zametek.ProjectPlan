@@ -153,7 +153,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (TargetActivityModel activity in newActivities)
                 {
-                    activityLookup.TryAdd(activity.Id, activity);
+                    activityLookup[activity.Id] = activity;
                 }
 
                 SetTargetActivities(

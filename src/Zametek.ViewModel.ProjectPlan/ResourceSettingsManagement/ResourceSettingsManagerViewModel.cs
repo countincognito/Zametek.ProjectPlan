@@ -149,7 +149,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     foreach (var managedResourceViewModel in args.AddedItems.OfType<IManagedResourceViewModel>())
                     {
-                        SelectedResources.TryAdd(managedResourceViewModel.Id, managedResourceViewModel);
+                        SelectedResources[managedResourceViewModel.Id] = managedResourceViewModel;
                     }
                 }
                 if (args.RemovedItems is not null)

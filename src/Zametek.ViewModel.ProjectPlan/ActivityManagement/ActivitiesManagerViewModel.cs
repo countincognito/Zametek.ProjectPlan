@@ -95,7 +95,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     foreach (var managedActivityViewModel in args.AddedItems.OfType<ManagedActivityViewModel>())
                     {
-                        SelectedActivities.TryAdd(managedActivityViewModel.Id, managedActivityViewModel);
+                        SelectedActivities[managedActivityViewModel.Id] = managedActivityViewModel;
                     }
                 }
                 if (args.RemovedItems is not null)

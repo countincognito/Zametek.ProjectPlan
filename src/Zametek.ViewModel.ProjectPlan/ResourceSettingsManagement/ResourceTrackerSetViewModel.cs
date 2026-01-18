@@ -43,7 +43,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (tracker.ResourceId == ResourceId)
                 {
                     var selector = new ResourceActivitySelectorViewModel(m_CoreViewModel, tracker);
-                    m_ResourceActivitySelectorLookup.TryAdd(tracker.Time, selector);
+                    m_ResourceActivitySelectorLookup[tracker.Time] = selector;
                 }
             }
 

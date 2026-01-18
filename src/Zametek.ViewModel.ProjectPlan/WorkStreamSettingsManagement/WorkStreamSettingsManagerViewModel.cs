@@ -128,7 +128,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     foreach (var managedWorkStreamViewModel in args.AddedItems.OfType<IManagedWorkStreamViewModel>())
                     {
-                        SelectedWorkStreams.TryAdd(managedWorkStreamViewModel.Id, managedWorkStreamViewModel);
+                        SelectedWorkStreams[managedWorkStreamViewModel.Id] = managedWorkStreamViewModel;
                     }
                 }
                 if (args.RemovedItems is not null)

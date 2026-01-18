@@ -38,7 +38,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (tracker.ActivityId == ActivityId)
                 {
-                    m_ActivityTrackerLookup.TryAdd(tracker.Time, tracker);
+                    m_ActivityTrackerLookup[tracker.Time] = tracker;
                 }
             }
 
@@ -90,7 +90,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         ActivityId = ActivityId,
                         PercentageComplete = value.GetValueOrDefault(),
                     };
-                    m_ActivityTrackerLookup.TryAdd(indexOffset, tracker);
+                    m_ActivityTrackerLookup[indexOffset] = tracker;
                 }
             }
         }

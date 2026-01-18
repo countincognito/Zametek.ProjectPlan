@@ -819,7 +819,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (id is not null)
                     {
                         int idVal = id.GetValueOrDefault();
-                        dependentActivities.TryAdd(idVal, new DependentActivityModel
+                        dependentActivities[idVal] = new DependentActivityModel
                         {
                             Activity = new ActivityModel
                             {
@@ -842,7 +842,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             },
                             Dependencies = dependencies,
                             PlanningDependencies = planningDependencies
-                        });
+                        };
                     }
                 }
             }
@@ -993,7 +993,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (id is not null)
                     {
                         int idVal = id.GetValueOrDefault();
-                        resources.TryAdd(idVal, new ResourceModel
+                        resources[idVal] = new ResourceModel
                         {
                             Id = idVal,
                             Name = name,
@@ -1009,7 +1009,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             DisplayOrder = displayOrder,
                             AllocationOrder = allocationOrder,
                             ColorFormat = colorFormat
-                        });
+                        };
                     }
                 }
             }
@@ -1164,14 +1164,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (id is not null)
                     {
                         int idVal = id.GetValueOrDefault();
-                        workStreams.TryAdd(idVal, new WorkStreamModel
+                        workStreams[idVal] = new WorkStreamModel
                         {
                             Id = idVal,
                             Name = name,
                             IsPhase = isPhase,
                             DisplayOrder = displayOrder,
                             ColorFormat = colorFormat
-                        });
+                        };
                     }
                 }
             }

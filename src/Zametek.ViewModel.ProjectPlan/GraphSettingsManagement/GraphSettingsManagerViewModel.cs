@@ -122,7 +122,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     foreach (var managedActivitySeverityViewModel in args.AddedItems.OfType<IManagedActivitySeverityViewModel>())
                     {
-                        SelectedActivitySeverities.TryAdd(managedActivitySeverityViewModel.Id, managedActivitySeverityViewModel);
+                        SelectedActivitySeverities[managedActivitySeverityViewModel.Id] = managedActivitySeverityViewModel;
                     }
                 }
                 if (args.RemovedItems is not null)

@@ -604,19 +604,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         // Include a catch-all work stream as default.
 
-                        workStreamLookup.TryAdd(
-                            default,
+                        workStreamLookup[default] =
                             new()
                             {
                                 Id = default,
                                 Name = Resource.ProjectPlan.Labels.Label_DefaultWorkStream,
                                 ColorFormat = ColorHelper.Black(),
                                 DisplayOrder = -1
-                            });
+                            };
 
                         foreach (WorkStreamModel workStream in workStreamSettings.WorkStreams)
                         {
-                            workStreamLookup.TryAdd(workStream.Id, workStream);
+                            workStreamLookup[workStream.Id] = workStream;
                         }
 
                         // Go through all the activities (in reverse display order).

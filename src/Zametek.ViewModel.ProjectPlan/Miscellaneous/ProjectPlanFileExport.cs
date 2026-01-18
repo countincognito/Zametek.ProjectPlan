@@ -680,7 +680,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         if (tracker.ActivityId == activityId)
                         {
-                            activityTrackerLookup.TryAdd(tracker.Time, tracker);
+                            activityTrackerLookup[tracker.Time] = tracker;
                         }
                     }
 
@@ -794,9 +794,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         if (tracker.ResourceId == resourceId)
                         {
-                            resourceTrackerLookup.TryAdd(
-                                tracker.Time,
-                                tracker.ActivityTrackers.ToDictionary(x => x.ActivityId));
+                            resourceTrackerLookup[tracker.Time] = tracker.ActivityTrackers.ToDictionary(x => x.ActivityId);
                         }
                     }
 
