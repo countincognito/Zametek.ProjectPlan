@@ -1015,13 +1015,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Plan = projectPlan,
                     };
 
-                    var projectPlanTag = new ProjectPlanTagModel
-                    {
-                        NodeId = projectPlanNode.Id,
-                        Label = Resource.ProjectPlan.Labels.Label_BaseNode,
-                    };
-
-                    AddTagLabels([projectPlanTag]);
+                    AddTagLabels([]); // Don't really need this, but for consistency.
                     AddPlanFiles([projectPlanFile]);
                     AddManagedNodes([projectPlanNode]);
 
@@ -1279,13 +1273,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Plan = projectPlan,
                     };
 
-                    var projectPlanTag = new ProjectPlanTagModel
-                    {
-                        NodeId = projectPlanNode.Id,
-                        Label = Resource.ProjectPlan.Labels.Label_BaseNode,
-                    };
-
-                    AddTagLabels([projectPlanTag]);
+                    AddTagLabels([]); // Don't really need this, but for consistency.
                     AddPlanFiles([projectPlanFile]);
                     AddManagedNodes([projectPlanNode]);
 
@@ -1346,13 +1334,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Plan = projectPlan,
                         };
 
-                        var projectPlanTag = new ProjectPlanTagModel
-                        {
-                            NodeId = projectPlanNode.Id,
-                            Label = Resource.ProjectPlan.Labels.Label_BaseNode,
-                        };
-
-                        AddTagLabels([projectPlanTag]);
+                        AddTagLabels([]); // Don't really need this, but for consistency.
                         AddPlanFiles([projectPlanFile]);
                         AddManagedNodes([projectPlanNode]);
                     }
