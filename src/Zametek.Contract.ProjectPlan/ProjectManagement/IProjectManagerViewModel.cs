@@ -47,6 +47,12 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand RemoveProjectPlanNodeCommand { get; }
 
+        ICommand CutProjectPlanNodeCommand { get; }
+
+        ICommand CopyProjectPlanNodeCommand { get; }
+
+        ICommand PasteProjectPlanNodeCommand { get; }
+
         ICommand AddNodeTagCommand { get; }
 
         ICommand RemoveNodeTagCommand { get; }

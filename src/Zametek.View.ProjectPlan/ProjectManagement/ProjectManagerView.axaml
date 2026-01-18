@@ -52,7 +52,7 @@
 					<Setter Property="Theme" Value="{StaticResource SimpleEmptyTreeViewItemToggleButtonTheme}" />
 				</Style>
 			</TreeView.Styles>
-			
+
 			<TreeView.ItemTemplate>
 				<TreeDataTemplate ItemsSource="{Binding Path=Children, Mode=OneWay}">
 					<DockPanel>
@@ -70,18 +70,28 @@
 
 								<Separator />
 
-								<MenuItem Header="{x:Static resources:Labels.Label_RenameNode}"
-										  Command="{Binding Path=$parent[TreeView].DataContext.RenameProjectPlanNodeCommand, Mode=OneWay}" />
-
-
-								<MenuItem Header="{x:Static resources:Labels.Label_DeleteNode}"
-										  Command="{Binding Path=$parent[TreeView].DataContext.RemoveProjectPlanNodeCommand, Mode=OneWay}" />
-
-								<Separator />
-
 								<MenuItem Header="{x:Static resources:Labels.Label_LoadManagedPlan}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.LoadProjectPlanFileCommand, Mode=OneWay}"
 										  CommandParameter="{Binding .}" />
+
+								<Separator />
+
+								<MenuItem Header="{x:Static resources:Labels.Label_CutNode}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.CutProjectPlanNodeCommand, Mode=OneWay}" />
+
+								<MenuItem Header="{x:Static resources:Labels.Label_CopyNode}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.CopyProjectPlanNodeCommand, Mode=OneWay}" />
+
+								<MenuItem Header="{x:Static resources:Labels.Label_PasteNode}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.PasteProjectPlanNodeCommand, Mode=OneWay}" />
+
+								<Separator />
+
+								<MenuItem Header="{x:Static resources:Labels.Label_RenameNode}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.RenameProjectPlanNodeCommand, Mode=OneWay}" />
+
+								<MenuItem Header="{x:Static resources:Labels.Label_DeleteNode}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.RemoveProjectPlanNodeCommand, Mode=OneWay}" />
 
 								<Separator />
 

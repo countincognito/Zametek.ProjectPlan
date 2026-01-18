@@ -600,4 +600,13 @@
   <data name="Label_DeleteNode" xml:space="preserve">
     <value>Delete</value>
   </data>
+  <data name="Label_CutNode" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="Label_CopyNode" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Label_PasteNode" xml:space="preserve">
+    <value>Paste</value>
+  </data>
 </root>

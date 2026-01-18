@@ -286,6 +286,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        public static string Label_CopyNode {
+            get {
+                return ResourceManager.GetString("Label_CopyNode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Copyright (c) 2025.
         /// </summary>
         public static string Label_Copyright {
@@ -309,6 +318,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_CriticalityWeight {
             get {
                 return ResourceManager.GetString("Label_CriticalityWeight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cut.
+        /// </summary>
+        public static string Label_CutNode {
+            get {
+                return ResourceManager.GetString("Label_CutNode", resourceCulture);
             }
         }
         
@@ -1066,6 +1084,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_OtherMargin {
             get {
                 return ResourceManager.GetString("Label_OtherMargin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Paste.
+        /// </summary>
+        public static string Label_PasteNode {
+            get {
+                return ResourceManager.GetString("Label_PasteNode", resourceCulture);
             }
         }
         

@@ -131,6 +131,33 @@ namespace Zametek.ViewModel.ProjectPlan
                     RxApp.MainThreadScheduler);
                 RemoveNodeTagCommand = removeNodeTagCommand;
             }
+            {
+                ReactiveCommand<Unit, Unit> cutProjectPlanNodeCommand = ReactiveCommand.CreateFromTask(
+                    CutProjectPlanNodeAsync,
+                    this.WhenAnyValue(
+                        pm => pm.SelectedNode,
+                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
+                    RxApp.MainThreadScheduler);
+                CutProjectPlanNodeCommand = cutProjectPlanNodeCommand;
+            }
+            {
+                ReactiveCommand<Unit, Unit> copyProjectPlanNodeCommand = ReactiveCommand.CreateFromTask(
+                    CopyProjectPlanNodeAsync,
+                    this.WhenAnyValue(
+                        pm => pm.SelectedNode,
+                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
+                    RxApp.MainThreadScheduler);
+                CopyProjectPlanNodeCommand = copyProjectPlanNodeCommand;
+            }
+            {
+                ReactiveCommand<Unit, Unit> pasteProjectPlanNodeCommand = ReactiveCommand.CreateFromTask(
+                    PasteProjectPlanNodeAsync,
+                    this.WhenAnyValue(
+                        pm => pm.SelectedNode,
+                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
+                    RxApp.MainThreadScheduler);
+                PasteProjectPlanNodeCommand = pasteProjectPlanNodeCommand;
+            }
 
             // Create read-only view to the source list.
             m_Nodes.Connect()
@@ -1030,6 +1057,386 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        private async Task CutProjectPlanNodeAsync()
+        {
+            try
+            {
+                //IManagedNodeViewModel? managedNode = SelectedNode;
+
+                //if (managedNode is null)
+                //{
+                //    return;
+                //}
+
+                //bool confirmation = await m_DialogService.ShowConfirmationAsync(
+                //    Resource.ProjectPlan.Titles.Title_DeleteNodes,
+                //    string.Empty,
+                //    string.Format(Resource.ProjectPlan.Messages.Message_DoYouWishToDelete, managedNode.DisplayName));
+
+                //if (!confirmation)
+                //{
+                //    return;
+                //}
+
+                //await RemoveProjectPlanNodeInternalAsync(managedNode.Id);
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task CutProjectPlanNodeInternalAsync(Guid nodeId) =>
+            await Task.Run(() => CutProjectPlanNodeInternal(nodeId));
+
+        private void CutProjectPlanNodeInternal(Guid nodeId)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    //HashSet<IManagedNodeViewModel> nestedNodes = FindNestedNodes(nodeId);
+
+                    //RemoveManagedNodes(nestedNodes);
+                    //RemovePlanFiles([.. nestedNodes.Where(x => !x.IsFolder).Select(x => x.Id)]);
+                    //RemoveTagLabels([.. nestedNodes.Select(x => x.Id)]);
+
+                    //// If the managed plan being removed is the currently loaded plan, then
+                    //// reset the core project plan to the most recently added plan, if any.
+                    //// If there are no remaining plans, then create a new blank project plan.
+
+                    //Guid currentNodeId = m_CoreViewModel.ProjectPlanId;
+                    //HashSet<Guid> nestedNodeIds = [.. nestedNodes.Select(n => n.Id).Distinct()];
+
+                    //if (!nestedNodeIds.Contains(currentNodeId))
+                    //{
+                    //    IsProjectUpdated = true;
+                    //    return;
+                    //}
+
+                    //// Find the most recently modified plan that is not being removed.
+                    //IManagedNodeViewModel? mostRecentPlan = m_ManagedNodeLookup.Values
+                    //    .Where(x => !x.IsFolder)
+                    //    .OrderByDescending(x => x.Node.ModifiedOn)
+                    //    .FirstOrDefault();
+
+                    //// If found, load it.
+                    //if (mostRecentPlan is not null)
+                    //{
+                    //    LoadProjectPlanFileInternal(mostRecentPlan);
+                    //    IsProjectUpdated = true;
+                    //    return;
+                    //}
+
+                    //// Otherwise, we need to create a new blank project plan.
+
+                    //// Reset the core project plan.
+                    //m_CoreViewModel.ResetProjectPlan();
+
+                    //// Now add the new core project plan to the project manager.
+                    //ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
+
+                    //var projectPlanNode = new ProjectPlanNodeModel
+                    //{
+                    //    Id = m_CoreViewModel.ProjectPlanId,
+                    //    ParentId = Root.Id,
+                    //    IsFolder = false,
+                    //    Name = Resource.ProjectPlan.Labels.Label_BaseNode,
+                    //    CreatedOn = DateTimeOffset.UtcNow,
+                    //    ModifiedOn = DateTimeOffset.UtcNow,
+                    //};
+
+                    //var projectPlanFile = new ProjectPlanFileModel
+                    //{
+                    //    NodeId = projectPlanNode.Id,
+                    //    Plan = projectPlan,
+                    //};
+
+                    //AddTagLabels([]); // Don't really need this, but for consistency.
+                    //AddPlanFiles([projectPlanFile]);
+                    //AddManagedNodes([projectPlanNode]);
+
+                    //MarkNodeAsLoaded(projectPlanNode.Id);
+
+                    //IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+
+
+
+
+        private async Task CopyProjectPlanNodeAsync()
+        {
+            try
+            {
+                //IManagedNodeViewModel? managedNode = SelectedNode;
+
+                //if (managedNode is null)
+                //{
+                //    return;
+                //}
+
+                //bool confirmation = await m_DialogService.ShowConfirmationAsync(
+                //    Resource.ProjectPlan.Titles.Title_DeleteNodes,
+                //    string.Empty,
+                //    string.Format(Resource.ProjectPlan.Messages.Message_DoYouWishToDelete, managedNode.DisplayName));
+
+                //if (!confirmation)
+                //{
+                //    return;
+                //}
+
+                //await RemoveProjectPlanNodeInternalAsync(managedNode.Id);
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task CopyProjectPlanNodeInternalAsync(Guid nodeId) =>
+            await Task.Run(() => CopyProjectPlanNodeInternal(nodeId));
+
+        private void CopyProjectPlanNodeInternal(Guid nodeId)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    //HashSet<IManagedNodeViewModel> nestedNodes = FindNestedNodes(nodeId);
+
+                    //RemoveManagedNodes(nestedNodes);
+                    //RemovePlanFiles([.. nestedNodes.Where(x => !x.IsFolder).Select(x => x.Id)]);
+                    //RemoveTagLabels([.. nestedNodes.Select(x => x.Id)]);
+
+                    //// If the managed plan being removed is the currently loaded plan, then
+                    //// reset the core project plan to the most recently added plan, if any.
+                    //// If there are no remaining plans, then create a new blank project plan.
+
+                    //Guid currentNodeId = m_CoreViewModel.ProjectPlanId;
+                    //HashSet<Guid> nestedNodeIds = [.. nestedNodes.Select(n => n.Id).Distinct()];
+
+                    //if (!nestedNodeIds.Contains(currentNodeId))
+                    //{
+                    //    IsProjectUpdated = true;
+                    //    return;
+                    //}
+
+                    //// Find the most recently modified plan that is not being removed.
+                    //IManagedNodeViewModel? mostRecentPlan = m_ManagedNodeLookup.Values
+                    //    .Where(x => !x.IsFolder)
+                    //    .OrderByDescending(x => x.Node.ModifiedOn)
+                    //    .FirstOrDefault();
+
+                    //// If found, load it.
+                    //if (mostRecentPlan is not null)
+                    //{
+                    //    LoadProjectPlanFileInternal(mostRecentPlan);
+                    //    IsProjectUpdated = true;
+                    //    return;
+                    //}
+
+                    //// Otherwise, we need to create a new blank project plan.
+
+                    //// Reset the core project plan.
+                    //m_CoreViewModel.ResetProjectPlan();
+
+                    //// Now add the new core project plan to the project manager.
+                    //ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
+
+                    //var projectPlanNode = new ProjectPlanNodeModel
+                    //{
+                    //    Id = m_CoreViewModel.ProjectPlanId,
+                    //    ParentId = Root.Id,
+                    //    IsFolder = false,
+                    //    Name = Resource.ProjectPlan.Labels.Label_BaseNode,
+                    //    CreatedOn = DateTimeOffset.UtcNow,
+                    //    ModifiedOn = DateTimeOffset.UtcNow,
+                    //};
+
+                    //var projectPlanFile = new ProjectPlanFileModel
+                    //{
+                    //    NodeId = projectPlanNode.Id,
+                    //    Plan = projectPlan,
+                    //};
+
+                    //AddTagLabels([]); // Don't really need this, but for consistency.
+                    //AddPlanFiles([projectPlanFile]);
+                    //AddManagedNodes([projectPlanNode]);
+
+                    //MarkNodeAsLoaded(projectPlanNode.Id);
+
+                    //IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+
+
+
+
+
+
+
+        private async Task PasteProjectPlanNodeAsync()
+        {
+            try
+            {
+                //IManagedNodeViewModel? managedNode = SelectedNode;
+
+                //if (managedNode is null)
+                //{
+                //    return;
+                //}
+
+                //bool confirmation = await m_DialogService.ShowConfirmationAsync(
+                //    Resource.ProjectPlan.Titles.Title_DeleteNodes,
+                //    string.Empty,
+                //    string.Format(Resource.ProjectPlan.Messages.Message_DoYouWishToDelete, managedNode.DisplayName));
+
+                //if (!confirmation)
+                //{
+                //    return;
+                //}
+
+                //await RemoveProjectPlanNodeInternalAsync(managedNode.Id);
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task PasteProjectPlanNodeInternalAsync(Guid nodeId, Guid destinationParentId) =>
+            await Task.Run(() => PasteProjectPlanNodeInternal(nodeId, destinationParentId));
+
+        private void PasteProjectPlanNodeInternal(
+            Guid nodeId,
+            Guid destinationParentId)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    //HashSet<IManagedNodeViewModel> nestedNodes = FindNestedNodes(nodeId);
+
+                    //RemoveManagedNodes(nestedNodes);
+                    //RemovePlanFiles([.. nestedNodes.Where(x => !x.IsFolder).Select(x => x.Id)]);
+                    //RemoveTagLabels([.. nestedNodes.Select(x => x.Id)]);
+
+                    //// If the managed plan being removed is the currently loaded plan, then
+                    //// reset the core project plan to the most recently added plan, if any.
+                    //// If there are no remaining plans, then create a new blank project plan.
+
+                    //Guid currentNodeId = m_CoreViewModel.ProjectPlanId;
+                    //HashSet<Guid> nestedNodeIds = [.. nestedNodes.Select(n => n.Id).Distinct()];
+
+                    //if (!nestedNodeIds.Contains(currentNodeId))
+                    //{
+                    //    IsProjectUpdated = true;
+                    //    return;
+                    //}
+
+                    //// Find the most recently modified plan that is not being removed.
+                    //IManagedNodeViewModel? mostRecentPlan = m_ManagedNodeLookup.Values
+                    //    .Where(x => !x.IsFolder)
+                    //    .OrderByDescending(x => x.Node.ModifiedOn)
+                    //    .FirstOrDefault();
+
+                    //// If found, load it.
+                    //if (mostRecentPlan is not null)
+                    //{
+                    //    LoadProjectPlanFileInternal(mostRecentPlan);
+                    //    IsProjectUpdated = true;
+                    //    return;
+                    //}
+
+                    //// Otherwise, we need to create a new blank project plan.
+
+                    //// Reset the core project plan.
+                    //m_CoreViewModel.ResetProjectPlan();
+
+                    //// Now add the new core project plan to the project manager.
+                    //ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
+
+                    //var projectPlanNode = new ProjectPlanNodeModel
+                    //{
+                    //    Id = m_CoreViewModel.ProjectPlanId,
+                    //    ParentId = Root.Id,
+                    //    IsFolder = false,
+                    //    Name = Resource.ProjectPlan.Labels.Label_BaseNode,
+                    //    CreatedOn = DateTimeOffset.UtcNow,
+                    //    ModifiedOn = DateTimeOffset.UtcNow,
+                    //};
+
+                    //var projectPlanFile = new ProjectPlanFileModel
+                    //{
+                    //    NodeId = projectPlanNode.Id,
+                    //    Plan = projectPlan,
+                    //};
+
+                    //AddTagLabels([]); // Don't really need this, but for consistency.
+                    //AddPlanFiles([projectPlanFile]);
+                    //AddManagedNodes([projectPlanNode]);
+
+                    //MarkNodeAsLoaded(projectPlanNode.Id);
+
+                    //IsProjectUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+
+
+
+
+
+
+
+
+
         private async Task AddNodeTagAsync()
         {
             try
@@ -1234,6 +1641,12 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand RenameProjectPlanNodeCommand { get; }
 
         public ICommand RemoveProjectPlanNodeCommand { get; }
+
+        public ICommand CutProjectPlanNodeCommand { get; }
+
+        public ICommand CopyProjectPlanNodeCommand { get; }
+
+        public ICommand PasteProjectPlanNodeCommand { get; }
 
         public ICommand AddNodeTagCommand { get; }
 
