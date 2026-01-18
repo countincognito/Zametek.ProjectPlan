@@ -603,6 +603,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             m_Nodes.Remove(managedNode);
                             m_ManagedNodeLookup.TryRemove(managedNode.Id, out _);
                             managedNode.Dispose();
+                            m_NodeAction.NodeIds.Remove(managedNode.Id);
                         }
                     }
                 }
@@ -1075,9 +1076,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 lock (m_Lock)
                 {
-                    m_NodeAction.NodeIds.Clear();
-                    m_NodeAction.NodeIds.Add(managedNode.Id);
-                    m_NodeAction.Action = NodeAction.Cut;
+                    m_NodeAction.SetCut([managedNode.Id]);
                 }
             }
             catch (Exception ex)
@@ -1103,9 +1102,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 lock (m_Lock)
                 {
-                    m_NodeAction.NodeIds.Clear();
-                    m_NodeAction.NodeIds.Add(managedNode.Id);
-                    m_NodeAction.Action = NodeAction.Copy;
+                    m_NodeAction.SetCopy([managedNode.Id]);
                 }
             }
             catch (Exception ex)
@@ -1463,6 +1460,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_SettingService.Reset();
 
                     MarkNodeAsLoaded(projectPlanNode.Id);
+
+                    m_NodeAction.Reset();
 
                     IsProjectUpdated = false;
                 }
