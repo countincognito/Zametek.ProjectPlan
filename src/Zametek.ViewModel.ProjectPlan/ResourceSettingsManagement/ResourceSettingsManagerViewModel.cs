@@ -27,7 +27,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly IDisposable? m_ProcessResourceSettingsSub;
         private readonly IDisposable? m_UpdateResourceSettingsSub;
-        //private readonly IDisposable? m_ReviseSettingsSub;
 
         #endregion
 
@@ -104,18 +103,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         UpdateResourceSettingsToCore();
                     }
                 });
-
-            // TODO: remove when shown to be unecessary.
-            //m_ReviseSettingsSub = this
-            //    .WhenAnyValue(rsm => rsm.m_CoreViewModel.IsReadyToReviseSettings)
-            //    .ObserveOn(Scheduler.CurrentThread)
-            //    .Subscribe(isReadyToRevise =>
-            //    {
-            //        if (isReadyToRevise == ReadyToRevise.Yes)
-            //        {
-            //            UpdateResourceSettingsToCore();
-            //        }
-            //    });
 
             ProcessSettings(m_SettingService.DefaultResourceSettings);
 
@@ -555,7 +542,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HideBilling?.Dispose();
                 m_ProcessResourceSettingsSub?.Dispose();
                 m_UpdateResourceSettingsSub?.Dispose();
-                //m_ReviseSettingsSub?.Dispose();
                 ClearManagedResources();
                 m_Resources?.Dispose();
             }
