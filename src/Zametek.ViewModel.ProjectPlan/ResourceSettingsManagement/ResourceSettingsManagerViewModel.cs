@@ -137,7 +137,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                return Resources.Select(x => x.Id).DefaultIfEmpty().Max() + 1;
+                return RawResources.Select(x => x.Id).DefaultIfEmpty().Max() + 1;
             }
         }
 
@@ -285,7 +285,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                Dictionary<int, IManagedResourceViewModel> resourceLookup = Resources.ToDictionary(x => x.Id);
+                Dictionary<int, IManagedResourceViewModel> resourceLookup = RawResources.ToDictionary(x => x.Id);
 
                 foreach (UpdateResourceModel updateModel in updateModels)
                 {
@@ -347,7 +347,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var resourceSettings = new ResourceSettingsModel
                 {
-                    Resources = Resources.Select(x => new ResourceModel
+                    Resources = RawResources.Select(x => new ResourceModel
                     {
                         Id = x.Id,
                         Name = x.Name,
@@ -417,7 +417,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_Resources.Edit(resources =>
                 {
-                    foreach (IManagedResourceViewModel resource in Resources)
+                    foreach (IManagedResourceViewModel resource in RawResources)
                     {
                         resource.Dispose();
                     }
@@ -519,6 +519,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private readonly SourceList<IManagedResourceViewModel> m_Resources;
+        public IReadOnlyList<IManagedResourceViewModel> RawResources => m_Resources.Items;
+
         private readonly ReadOnlyObservableCollection<IManagedResourceViewModel> m_ReadOnlyResources;
         public ReadOnlyObservableCollection<IManagedResourceViewModel> Resources => m_ReadOnlyResources;
 

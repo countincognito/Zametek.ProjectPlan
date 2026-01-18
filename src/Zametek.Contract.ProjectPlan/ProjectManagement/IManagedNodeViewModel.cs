@@ -27,6 +27,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsLoaded { get; set; }
 
+        IReadOnlyList<string> RawLabels { get; }
+
         ReadOnlyObservableCollection<string> Labels { get; }
 
         void SetLabels(IEnumerable<string> labels);
@@ -34,6 +36,8 @@ namespace Zametek.Contract.ProjectPlan
         string Label { get; }
 
         string DisplayName { get; }
+
+        IReadOnlyList<IManagedNodeViewModel> RawChildren { get; }
 
         ReadOnlyObservableCollection<IManagedNodeViewModel> Children { get; }
 

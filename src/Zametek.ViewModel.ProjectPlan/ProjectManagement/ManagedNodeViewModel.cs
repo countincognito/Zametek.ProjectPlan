@@ -211,6 +211,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private readonly SourceList<string> m_Labels;
+        public IReadOnlyList<string> RawLabels => m_Labels.Items;
+
         private readonly ReadOnlyObservableCollection<string> m_ReadOnlyLabels;
         public ReadOnlyObservableCollection<string> Labels => m_ReadOnlyLabels;
 
@@ -232,11 +234,11 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get
             {
-                if (Labels.Count == 0)
+                if (RawLabels.Count == 0)
                 {
                     return string.Empty;
                 }
-                return $@"[{string.Join(DependenciesStringValidationRule.Separator, Labels)}]";
+                return $@"[{string.Join(DependenciesStringValidationRule.Separator, RawLabels)}]";
             }
         }
 
@@ -253,6 +255,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private readonly SourceList<IManagedNodeViewModel> m_Children;
+        public IReadOnlyList<IManagedNodeViewModel> RawChildren => m_Children.Items;
+
         private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyChildren;
         public ReadOnlyObservableCollection<IManagedNodeViewModel> Children => m_ReadOnlyChildren;
 
@@ -276,7 +280,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_Children.Edit(children =>
                 {
-                    IList<IManagedNodeViewModel> nodes = [.. Children.Where(x => managedNodeIds.Contains(x.Id))];
+                    IList<IManagedNodeViewModel> nodes = [.. RawChildren.Where(x => managedNodeIds.Contains(x.Id))];
 
                     foreach (IManagedNodeViewModel node in nodes)
                     {
@@ -293,7 +297,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_Children.Edit(children =>
                 {
-                    foreach (IManagedNodeViewModel node in Children)
+                    foreach (IManagedNodeViewModel node in RawChildren)
                     {
                         node.Dispose();
                     }

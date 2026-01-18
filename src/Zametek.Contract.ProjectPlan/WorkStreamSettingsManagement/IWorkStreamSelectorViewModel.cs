@@ -5,6 +5,8 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IWorkStreamSelectorViewModel
     {
+        //IReadOnlyList<ISelectableWorkStreamViewModel> RawTargetWorkStreams { get; }
+
         ReadOnlyObservableCollection<ISelectableWorkStreamViewModel> TargetWorkStreams { get; }
 
         ObservableCollection<ISelectableWorkStreamViewModel> SelectedTargetWorkStreams { get; }

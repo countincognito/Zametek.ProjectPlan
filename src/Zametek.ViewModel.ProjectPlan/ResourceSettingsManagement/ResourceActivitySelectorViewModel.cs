@@ -108,12 +108,12 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                HashSet<int> selectedResourceActivityIds = resourceActivityTrackers.Select(x => x.ActivityId).ToHashSet();
+                HashSet<int> selectedResourceActivityIds = [.. resourceActivityTrackers.Select(x => x.ActivityId)];
 
                 Dictionary<int, ResourceActivityTrackerModel> resourceActivityTrackerLookup = resourceActivityTrackers.ToDictionary(x => x.ActivityId);
 
                 List<ResourceActivityTrackerModel> newResourceActivityTrackers =
-                    m_CoreViewModel.RawActivities
+                    [.. m_CoreViewModel.RawActivities
                     .Select(activity => new ResourceActivityTrackerModel
                     {
                         Time = m_Time,
@@ -121,7 +121,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         ActivityId = activity.Id,
                         ActivityName = activity.Name,
                         PercentageWorked = 0
-                    }).ToList();
+                    })];
 
                 foreach (ResourceActivityTrackerModel resourceActivityTracker in newResourceActivityTrackers)
                 {
@@ -139,7 +139,7 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 List<ResourceActivityTrackerModel> newResourceActivityTrackers =
-                    m_CoreViewModel.RawActivities
+                    [.. m_CoreViewModel.RawActivities
                     .Select(activity => new ResourceActivityTrackerModel
                     {
                         Time = m_Time,
@@ -147,7 +147,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         ActivityId = activity.Id,
                         ActivityName = activity.Name,
                         PercentageWorked = 0
-                    }).ToList();
+                    })];
 
                 SetTargetResourceActivities(
                     newResourceActivityTrackers,

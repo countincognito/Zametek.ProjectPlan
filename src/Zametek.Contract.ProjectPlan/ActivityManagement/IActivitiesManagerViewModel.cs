@@ -20,9 +20,9 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HideBilling { get; }
 
-        ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
-
         IReadOnlyList<IManagedActivityViewModel> RawActivities { get; }
+
+        ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
 
         ICommand SetSelectedManagedActivitiesCommand { get; }
 

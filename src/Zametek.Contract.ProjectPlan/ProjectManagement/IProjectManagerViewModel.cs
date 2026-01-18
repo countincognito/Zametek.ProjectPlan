@@ -25,6 +25,8 @@ namespace Zametek.Contract.ProjectPlan
 
         IManagedNodeViewModel Root { get; }
 
+        IReadOnlyList<IManagedNodeViewModel> RawNodes { get; }
+
         ReadOnlyObservableCollection<IManagedNodeViewModel> Nodes { get; }
 
         ObservableCollection<IManagedNodeViewModel> SelectedNodes { get; }

@@ -214,7 +214,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         ]);
 
                     SetTagLabels(Root);
-                    m_Nodes.AddRange(Root.Children);
+                    m_Nodes.AddRange(Root.RawChildren);
                 }
             }
             finally
@@ -298,7 +298,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (m_ManagedNodeLookup.TryGetValue(nodeId, out IManagedNodeViewModel? managedNode))
                     {
                         result.Add(managedNode);
-                        foreach (IManagedNodeViewModel childNode in managedNode.Children)
+                        foreach (IManagedNodeViewModel childNode in managedNode.RawChildren)
                         {
                             foreach (IManagedNodeViewModel nestedChild in FindNestedNodes(childNode.Id))
                             {
@@ -1203,6 +1203,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public IManagedNodeViewModel Root { get; private set; }
 
         private readonly SourceList<IManagedNodeViewModel> m_Nodes;
+        public IReadOnlyList<IManagedNodeViewModel> RawNodes => m_Nodes.Items;
+
         private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyNodes;
         public ReadOnlyObservableCollection<IManagedNodeViewModel> Nodes => m_ReadOnlyNodes;
 

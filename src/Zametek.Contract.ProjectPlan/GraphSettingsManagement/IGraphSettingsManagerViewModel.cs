@@ -16,9 +16,9 @@ namespace Zametek.Contract.ProjectPlan
 
         bool AreSettingsUpdated { get; set; }
 
-        ReadOnlyObservableCollection<IManagedActivitySeverityViewModel> ActivitySeverities { get; }
+        IReadOnlyList<IManagedActivitySeverityViewModel> RawActivitySeverities { get; }
 
-        //IReadOnlyList<IManagedActivitySeverityViewModel> RawActivitySeverities { get; }
+        ReadOnlyObservableCollection<IManagedActivitySeverityViewModel> ActivitySeverities { get; }
 
         ICommand SetSelectedManagedActivitySeveritiesCommand { get; }
 

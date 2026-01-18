@@ -149,7 +149,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
+        public IReadOnlyList<IManagedActivityViewModel> RawActivities => m_CoreViewModel.RawActivities;
+
         public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_CoreViewModel.Activities;
+
+        public IReadOnlyList<IManagedResourceViewModel> RawResources => m_ResourceSettingsManagerViewModel.RawResources;
 
         public ReadOnlyObservableCollection<IManagedResourceViewModel> Resources => m_ResourceSettingsManagerViewModel.Resources;
 

@@ -19,7 +19,11 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowDates { get; }
 
+        IReadOnlyList<IManagedActivityViewModel> RawActivities { get; }
+
         ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
+
+        IReadOnlyList<IManagedResourceViewModel> RawResources { get; }
 
         ReadOnlyObservableCollection<IManagedResourceViewModel> Resources { get; }
 

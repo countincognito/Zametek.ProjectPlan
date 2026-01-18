@@ -16,6 +16,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool AreSettingsUpdated { get; set; }
 
+        IReadOnlyList<IManagedWorkStreamViewModel> RawWorkStreams { get; }
+
         ReadOnlyObservableCollection<IManagedWorkStreamViewModel> WorkStreams { get; }
 
         ICommand SetSelectedManagedWorkStreamsCommand { get; }

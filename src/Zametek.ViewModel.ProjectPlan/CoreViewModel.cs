@@ -1190,9 +1190,10 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private readonly SourceList<IManagedActivityViewModel> m_Activities;
+        public IReadOnlyList<IManagedActivityViewModel> RawActivities => m_Activities.Items;
+
         private readonly ReadOnlyObservableCollection<IManagedActivityViewModel> m_ReadOnlyActivities;
         public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_ReadOnlyActivities;
-        public IReadOnlyList<IManagedActivityViewModel> RawActivities => m_Activities.Items;
 
         private GraphSettingsModel m_GraphSettings;
         public GraphSettingsModel GraphSettings

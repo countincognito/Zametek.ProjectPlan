@@ -208,7 +208,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var graphSettings = new GraphSettingsModel
                 {
-                    ActivitySeverities = [.. ActivitySeverities.Select(x => new ActivitySeverityModel
+                    ActivitySeverities = [.. RawActivitySeverities.Select(x => new ActivitySeverityModel
                     {
                         SlackLimit = x.SlackLimit,
                         CriticalityWeight = x.CriticalityWeight,
@@ -288,7 +288,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_ActivitySeverities.Edit(activitySeverities =>
                 {
-                    foreach (IManagedActivitySeverityViewModel activitySeverity in ActivitySeverities)
+                    foreach (IManagedActivitySeverityViewModel activitySeverity in RawActivitySeverities)
                     {
                         activitySeverity.Dispose();
                     }
@@ -303,7 +303,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_ActivitySeverities.Edit(activitySeverities =>
                 {
-                    if (!ActivitySeverities.Any(x => x.SlackLimit == int.MaxValue))
+                    if (!RawActivitySeverities.Any(x => x.SlackLimit == int.MaxValue))
                     {
                         activitySeverities.Add(new ManagedActivitySeverityViewModel(
                             this,
@@ -355,6 +355,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private readonly SourceList<IManagedActivitySeverityViewModel> m_ActivitySeverities;
+        public IReadOnlyList<IManagedActivitySeverityViewModel> RawActivitySeverities => m_ActivitySeverities.Items;
+
         private readonly ReadOnlyObservableCollection<IManagedActivitySeverityViewModel> m_ReadOnlyActivitySeverities;
         public ReadOnlyObservableCollection<IManagedActivitySeverityViewModel> ActivitySeverities => m_ReadOnlyActivitySeverities;
 

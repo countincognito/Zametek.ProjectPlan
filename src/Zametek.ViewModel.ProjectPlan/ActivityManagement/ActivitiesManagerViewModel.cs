@@ -268,9 +268,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_CoreViewModel.Activities;
-
         public IReadOnlyList<IManagedActivityViewModel> RawActivities => m_CoreViewModel.RawActivities;
+
+        public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_CoreViewModel.Activities;
 
         public ICommand SetSelectedManagedActivitiesCommand { get; }
 

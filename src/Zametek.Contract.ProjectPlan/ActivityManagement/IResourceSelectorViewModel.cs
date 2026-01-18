@@ -5,9 +5,9 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IResourceSelectorViewModel
     {
-        ReadOnlyObservableCollection<ISelectableResourceViewModel> TargetResources { get; }
-
         //IReadOnlyList<ISelectableResourceViewModel> RawTargetResources { get; }
+
+        ReadOnlyObservableCollection<ISelectableResourceViewModel> TargetResources { get; }
 
         ObservableCollection<ISelectableResourceViewModel> SelectedTargetResources { get; }
 

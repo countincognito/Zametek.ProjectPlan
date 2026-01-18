@@ -39,9 +39,9 @@ namespace Zametek.Contract.ProjectPlan
 
         BaseTheme BaseTheme { get; set; }
 
-        ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
-
         IReadOnlyList<IManagedActivityViewModel> RawActivities { get; }
+
+        ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
 
         GraphSettingsModel GraphSettings { get; set; }
 

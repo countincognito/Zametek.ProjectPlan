@@ -116,7 +116,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                return WorkStreams.Select(x => x.Id).DefaultIfEmpty().Max() + 1;
+                return RawWorkStreams.Select(x => x.Id).DefaultIfEmpty().Max() + 1;
             }
         }
 
@@ -213,7 +213,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var workStreamSettings = new WorkStreamSettingsModel
                 {
-                    WorkStreams = WorkStreams.Select(x => new WorkStreamModel
+                    WorkStreams = RawWorkStreams.Select(x => new WorkStreamModel
                     {
                         Id = x.Id,
                         Name = x.Name,
@@ -260,7 +260,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 m_WorkStreams.Edit(workStreams =>
                 {
-                    foreach (IManagedWorkStreamViewModel workStream in WorkStreams)
+                    foreach (IManagedWorkStreamViewModel workStream in RawWorkStreams)
                     {
                         workStream.Dispose();
                     }
@@ -304,6 +304,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private readonly SourceList<IManagedWorkStreamViewModel> m_WorkStreams;
+        public IReadOnlyList<IManagedWorkStreamViewModel> RawWorkStreams => m_WorkStreams.Items;
+
         private readonly ReadOnlyObservableCollection<IManagedWorkStreamViewModel> m_ReadOnlyWorkStreams;
         public ReadOnlyObservableCollection<IManagedWorkStreamViewModel> WorkStreams => m_ReadOnlyWorkStreams;
 

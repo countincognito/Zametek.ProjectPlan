@@ -23,6 +23,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool AreSettingsUpdated { get; set; }
 
+        IReadOnlyList<IManagedResourceViewModel> RawResources { get; }
+
         ReadOnlyObservableCollection<IManagedResourceViewModel> Resources { get; }
 
         ICommand SetSelectedManagedResourcesCommand { get; }
