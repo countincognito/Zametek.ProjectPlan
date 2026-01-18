@@ -18,6 +18,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadOnlyObservableCollection<IManagedActivitySeverityViewModel> ActivitySeverities { get; }
 
+        //IReadOnlyList<IManagedActivitySeverityViewModel> RawActivitySeverities { get; }
+
         ICommand SetSelectedManagedActivitySeveritiesCommand { get; }
 
         ICommand AddManagedActivitySeverityCommand { get; }

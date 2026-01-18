@@ -1192,6 +1192,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly SourceList<IManagedActivityViewModel> m_Activities;
         private readonly ReadOnlyObservableCollection<IManagedActivityViewModel> m_ReadOnlyActivities;
         public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_ReadOnlyActivities;
+        public IReadOnlyList<IManagedActivityViewModel> RawActivities => m_Activities.Items;
 
         private GraphSettingsModel m_GraphSettings;
         public GraphSettingsModel GraphSettings
@@ -1489,16 +1490,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private ReadyToRevise m_IsReadyToReviseSettings;
-        public ReadyToRevise IsReadyToReviseSettings
-        {
-            get => m_IsReadyToReviseSettings;
-            set
-            {
-                m_IsReadyToReviseSettings = value;
-                this.RaisePropertyChanged();
-            }
-        }
+        //private ReadyToRevise m_IsReadyToReviseSettings;
+        //public ReadyToRevise IsReadyToReviseSettings
+        //{
+        //    get => m_IsReadyToReviseSettings;
+        //    set
+        //    {
+        //        m_IsReadyToReviseSettings = value;
+        //        this.RaisePropertyChanged();
+        //    }
+        //}
 
         public ProjectPlanModel CreateEmptyProjectPlan()
         {
@@ -1547,9 +1548,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ProjectStart = emptyPlan.ProjectStart;
                     Today = emptyPlan.Today;
+
                     GraphSettings = emptyPlan.GraphSettings;
                     ResourceSettings = emptyPlan.ResourceSettings;
                     WorkStreamSettings = emptyPlan.WorkStreamSettings;
+
                     DisplaySettingsModel defaultDisplaySettings = emptyPlan.DisplaySettings;
                     DisplaySettingsViewModel.SetValues(defaultDisplaySettings);
                 }
@@ -1584,7 +1587,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IsReadyToCompile = ReadyToCompile.No;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
-                    IsReadyToReviseSettings = ReadyToRevise.No;
+                    //IsReadyToReviseSettings = ReadyToRevise.No;
 
                     //m_SettingService.Reset();
 
@@ -1798,7 +1801,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsReadyToReviseTrackers = ReadyToRevise.Yes;
 
                     // Now update Settings to the core model.
-                    IsReadyToReviseSettings = ReadyToRevise.Yes;
+                    //IsReadyToReviseSettings = ReadyToRevise.Yes;
 
                     // Display settings (the rest of the settings).
                     displaySettings = projectPlanModel.DisplaySettings with
@@ -1847,7 +1850,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         ProjectStart = ProjectStart,
                         Today = Today,
-                        DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(Activities),
+                        DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(RawActivities),
                         GraphSettings = GraphSettings.CloneObject(),
                         ResourceSettings = ResourceSettings.CloneObject(),
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),
@@ -1955,7 +1958,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_Activities.Edit(activities =>
                     {
                         IsBusy = true;
-                        IEnumerable<IManagedActivityViewModel> dependentActivities = [.. Activities.Where(x => dependentActivityIds.Contains(x.Id))];
+                        IEnumerable<IManagedActivityViewModel> dependentActivities = [.. RawActivities.Where(x => dependentActivityIds.Contains(x.Id))];
 
                         foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
                         {
@@ -1985,7 +1988,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_Activities.Edit(activities =>
                     {
                         IsBusy = true;
-                        Dictionary<int, IManagedActivityViewModel> activityLookup = Activities.ToDictionary(x => x.Id);
+                        Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
 
                         foreach (UpdateDependentActivityModel updateModel in updateModels)
                         {
@@ -2058,7 +2061,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (!HasCompilationErrors)
                     {
                         // Check the upstream activities to be milestoned are all present.
-                        IEnumerable<IManagedActivityViewModel> upstreamActivities = [.. Activities.Where(x => dependentActivityIds.Contains(x.Id))];
+                        IEnumerable<IManagedActivityViewModel> upstreamActivities = [.. RawActivities.Where(x => dependentActivityIds.Contains(x.Id))];
                         HashSet<int> upstreamActivityIds = [.. upstreamActivities.Select(x => x.Id)];
 
                         if (upstreamActivityIds.Count != 0)
@@ -2066,7 +2069,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             // Create the milestone activity
                             int milestoneId = AddManagedActivity();
 
-                            IManagedActivityViewModel? milestoneActivity = Activities
+                            IManagedActivityViewModel? milestoneActivity = RawActivities
                                 .Where(x => x.Id == milestoneId)
                                 .FirstOrDefault();
 
@@ -2076,11 +2079,11 @@ namespace Zametek.ViewModel.ProjectPlan
                                 // contain the upstream activity IDs, and add the ID of the milestone.
                                 // Be sure to exclude the upstream activities themselves to avoid
                                 // circular dependencies.
-                                IEnumerable<IManagedActivityViewModel> downstreamCompiledActivities = [.. Activities
+                                IEnumerable<IManagedActivityViewModel> downstreamCompiledActivities = [.. RawActivities
                                     .Where(x => x.Dependencies.Intersect(upstreamActivityIds).Any())
                                     .Except(upstreamActivities)];
 
-                                IEnumerable<IManagedActivityViewModel> downstreamPlanningActivities = [.. Activities
+                                IEnumerable<IManagedActivityViewModel> downstreamPlanningActivities = [.. RawActivities
                                     .Where(x => x.PlanningDependencies.Intersect(upstreamActivityIds).Any())
                                     .Except(upstreamActivities)];
 
@@ -2129,7 +2132,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         IsBusy = true;
 
-                        foreach (IManagedActivityViewModel activity in Activities)
+                        foreach (IManagedActivityViewModel activity in RawActivities)
                         {
                             activity.Dispose();
                         }
@@ -2169,7 +2172,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsProjectPlanUpdated = true;
                     HasStaleOutputs = false;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
-                    IsReadyToReviseSettings = ReadyToRevise.No;
+                    //IsReadyToReviseSettings = ReadyToRevise.No;
                     IsReadyToCompile = ReadyToCompile.No;
                 }
             }
@@ -2317,7 +2320,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 //if (!HasCompilationErrors)
                 //{
                 // TODO fix this mapping
-                IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(Activities);
+                IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(RawActivities);
                 trackingSeriesSet = CalculateTrackingSeriesSet(activityModels, ResourceSettings, HasResources);
                 //}
 

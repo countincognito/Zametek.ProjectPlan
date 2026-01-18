@@ -8,6 +8,8 @@ namespace Zametek.Contract.ProjectPlan
     {
         ReadOnlyObservableCollection<ISelectableActivityViewModel> TargetActivities { get; }
 
+        //IReadOnlyList<ISelectableActivityViewModel> RawTargetActivities { get; }
+
         ObservableCollection<ISelectableActivityViewModel> SelectedTargetActivities { get; }
 
         string TargetActivitiesString { get; }

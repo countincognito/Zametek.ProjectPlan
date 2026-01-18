@@ -113,7 +113,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Dictionary<int, ResourceActivityTrackerModel> resourceActivityTrackerLookup = resourceActivityTrackers.ToDictionary(x => x.ActivityId);
 
                 List<ResourceActivityTrackerModel> newResourceActivityTrackers =
-                    m_CoreViewModel.Activities
+                    m_CoreViewModel.RawActivities
                     .Select(activity => new ResourceActivityTrackerModel
                     {
                         Time = m_Time,
@@ -139,7 +139,7 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 List<ResourceActivityTrackerModel> newResourceActivityTrackers =
-                    m_CoreViewModel.Activities
+                    m_CoreViewModel.RawActivities
                     .Select(activity => new ResourceActivityTrackerModel
                     {
                         Time = m_Time,

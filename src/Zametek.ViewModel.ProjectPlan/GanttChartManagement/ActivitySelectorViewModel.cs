@@ -144,7 +144,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Dictionary<int, TargetActivityModel> activityLookup = targetActivities.ToDictionary(x => x.Id);
 
                 List<TargetActivityModel> newActivities =
-                    [.. m_CoreViewModel.Activities
+                    [.. m_CoreViewModel.RawActivities
                         .Select(activity => new TargetActivityModel
                         {
                             Id = activity.Id,
@@ -167,7 +167,7 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 List<TargetActivityModel> newActivities =
-                    [.. m_CoreViewModel.Activities
+                    [.. m_CoreViewModel.RawActivities
                         .Select(activity => new TargetActivityModel
                         {
                             Id = activity.Id,

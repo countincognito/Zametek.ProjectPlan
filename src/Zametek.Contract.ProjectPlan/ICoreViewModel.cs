@@ -41,6 +41,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
 
+        IReadOnlyList<IManagedActivityViewModel> RawActivities { get; }
+
         GraphSettingsModel GraphSettings { get; set; }
 
         ResourceSettingsModel ResourceSettings { get; set; }
@@ -85,7 +87,7 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadyToRevise IsReadyToReviseTrackers { get; set; }
 
-        ReadyToRevise IsReadyToReviseSettings { get; set; }
+        //ReadyToRevise IsReadyToReviseSettings { get; set; }
 
         ProjectPlanModel CreateEmptyProjectPlan();
 

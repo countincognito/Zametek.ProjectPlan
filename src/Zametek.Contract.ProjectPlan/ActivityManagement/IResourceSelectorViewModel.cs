@@ -7,6 +7,8 @@ namespace Zametek.Contract.ProjectPlan
     {
         ReadOnlyObservableCollection<ISelectableResourceViewModel> TargetResources { get; }
 
+        //IReadOnlyList<ISelectableResourceViewModel> RawTargetResources { get; }
+
         ObservableCollection<ISelectableResourceViewModel> SelectedTargetResources { get; }
 
         string TargetResourcesString { get; }
