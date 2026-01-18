@@ -44,7 +44,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_IsBusy = false;
-            Root = new ManagedNodeViewModel(); // Placeholder until ResetRootNode is called.
+            Root = new ManagedNodeViewModel(m_CoreViewModel); // Placeholder until ResetRootNode is called.
             m_Nodes = new();
             SelectedNodes = [];
             SelectedNode = null;
@@ -194,7 +194,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     // Root node.
+                    Root.Dispose();
                     Root = new ManagedNodeViewModel(
+                        m_CoreViewModel,
                         new ProjectPlanNodeModel
                         {
                             Id = rootId,
@@ -503,7 +505,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         if (!m_ManagedNodeLookup.ContainsKey(projectPlanNode.Id))
                         {
-                            var projectPlan = new ManagedNodeViewModel(projectPlanNode);
+                            var projectPlan = new ManagedNodeViewModel(m_CoreViewModel, projectPlanNode);
                             SetPlanFile(projectPlan);
                             SetTagLabels(projectPlan);
                             m_ManagedNodeLookup[projectPlan.Id] = projectPlan;
@@ -569,6 +571,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
                             m_Nodes.Remove(managedNode);
                             m_ManagedNodeLookup.TryRemove(managedNode.Id, out _);
+                            managedNode.Dispose();
                         }
                     }
                 }
@@ -895,6 +898,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 managedNode.Name = nodeNameViewModel.Name;
+
+                // update the plan title setting if the renamed node is the currently loaded plan.
+                if (managedNode.Id == m_CoreViewModel.ProjectPlanId)
+                {
+                    m_SettingService.SetPlanTitle(managedNode.Name);
+                }
+
                 IsProjectUpdated = true;
             }
             catch (Exception ex)

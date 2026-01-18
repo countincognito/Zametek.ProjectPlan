@@ -1,4 +1,5 @@
 ﻿using DynamicData;
+using java.awt.print;
 using ReactiveUI;
 using System.Collections;
 using System.Collections.ObjectModel;
@@ -15,6 +16,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
+        private readonly ICoreViewModel m_CoreViewModel;
         private ProjectPlanNodeModel m_ProjectPlanNodeModel;
         private ProjectPlanModel? m_ProjectPlanModel;
 
@@ -25,21 +27,24 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public ManagedNodeViewModel()
-            : this(new ProjectPlanNodeModel())
+        public ManagedNodeViewModel(ICoreViewModel coreViewModel)
+            : this(coreViewModel, new ProjectPlanNodeModel())
         {
         }
 
         public ManagedNodeViewModel(
+            ICoreViewModel coreViewModel,
             ProjectPlanNodeModel projectPlanNode,
             ProjectPlanModel projectPlan)
-            : this(projectPlanNode)
+            : this(coreViewModel, projectPlanNode)
         {
             ArgumentNullException.ThrowIfNull(projectPlan);
             m_ProjectPlanModel = projectPlan;
         }
 
-        public ManagedNodeViewModel(ProjectPlanNodeModel projectPlanNode)
+        public ManagedNodeViewModel(
+            ICoreViewModel coreViewModel,
+            ProjectPlanNodeModel projectPlanNode)
         {
             ArgumentNullException.ThrowIfNull(projectPlanNode);
             m_Lock = new object();
@@ -52,6 +57,7 @@ namespace Zametek.ViewModel.ProjectPlan
                .Bind(out m_ReadOnlyLabels)
                .Subscribe();
 
+            m_CoreViewModel = coreViewModel;
             m_ProjectPlanNodeModel = projectPlanNode;
             m_ProjectPlanModel = null;
             m_Children = new();
@@ -61,6 +67,26 @@ namespace Zametek.ViewModel.ProjectPlan
                .ObserveOn(RxApp.MainThreadScheduler)
                .Bind(out m_ReadOnlyChildren)
                .Subscribe();
+
+            m_DisplayName = this
+                .WhenAnyValue(
+                    x => x.m_CoreViewModel.ProjectPlanId,
+                    x => x.m_CoreViewModel.IsProjectPlanUpdated,
+                    x => x.Name,
+                    x => x.Label,
+                    (projectPlanId, isProjectPlanUpdated, name, label) =>
+                    {
+                        string displayName = name;
+                        if (IsFolder)
+                        {
+                            displayName = $@"[{name}]";
+                        }
+                        bool nodeHasChanges =
+                            m_ProjectPlanNodeModel.Id == projectPlanId
+                            && isProjectPlanUpdated;
+                        return $@"{(nodeHasChanges ? "*" : string.Empty)}{displayName} {label}";
+                    })
+                .ToProperty(this, x => x.DisplayName);
 
             m_ErrorsByPropertyName = [];
         }
@@ -227,6 +253,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
 
                 this.RaisePropertyChanged(nameof(Label));
+                this.RaisePropertyChanged(nameof(DisplayName));
             }
         }
 
@@ -238,21 +265,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     return string.Empty;
                 }
-                return $@"[{string.Join(DependenciesStringValidationRule.Separator, RawLabels)}]";
+                return $@"({string.Join(DependenciesStringValidationRule.Separator, RawLabels)})";
             }
         }
 
-        public string DisplayName
-        {
-            get
-            {
-                if (!IsFolder)
-                {
-                    return Name;
-                }
-                return $@"[{Name}]";
-            }
-        }
+        private readonly ObservableAsPropertyHelper<string> m_DisplayName;
+        public string DisplayName => m_DisplayName.Value;
 
         private readonly SourceList<IManagedNodeViewModel> m_Children;
         public IReadOnlyList<IManagedNodeViewModel> RawChildren => m_Children.Items;
@@ -284,8 +302,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     foreach (IManagedNodeViewModel node in nodes)
                     {
-                        node.Dispose();
                         children.Remove(node);
+                        node.Dispose();
                     }
                 });
             }
@@ -362,6 +380,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_Labels.Dispose();
                 ClearChildren();
                 m_Children.Dispose();
+                m_DisplayName?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
