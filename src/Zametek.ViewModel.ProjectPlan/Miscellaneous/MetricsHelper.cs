@@ -344,13 +344,91 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             double? abs = CalculateMarginAbsolute(cost, billing);
 
-            if (abs is not null
-                && billing is not null
-                && billing != 0)
+            if (abs is null)
             {
-                return abs / billing;
+                if (billing is not null
+                    && billing != 0)
+                {
+                    return 1.0;
+                }
             }
-            return null;
+            else
+            {
+                if (abs != 0
+                    && billing is not null)
+                {
+                    if (billing == 0)
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        return abs / billing;
+                    }
+                }
+            }
+
+            return 0;
+
+            // The above logic is equivalent to the commented out code below:
+
+            //if (abs is null)
+            //{
+            //    if (billing is null)
+            //    {
+            //        return 0;
+            //    }
+            //    else
+            //    {
+            //        if (billing == 0)
+            //        {
+            //            return 0;
+            //        }
+            //        else
+            //        {
+            //            return 1.0;
+            //        }
+            //    }
+            //}
+            //else
+            //{
+            //    if (abs == 0)
+            //    {
+            //        if (billing is null)
+            //        {
+            //            return 0;
+            //        }
+            //        else
+            //        {
+            //            if (billing == 0)
+            //            {
+            //                return 0;
+            //            }
+            //            else
+            //            {
+            //                return 0;
+            //            }
+            //        }
+            //    }
+            //    else
+            //    {
+            //        if (billing is null)
+            //        {
+            //            return 0;
+            //        }
+            //        else
+            //        {
+            //            if (billing == 0)
+            //            {
+            //                return null;
+            //            }
+            //            else
+            //            {
+            //                return abs / billing;
+            //            }
+            //        }
+            //    }
+            //}
         }
 
         public static double? CalculateMarginAbsolute(double? cost, double? billing)
