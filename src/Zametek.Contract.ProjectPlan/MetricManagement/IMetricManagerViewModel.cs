@@ -53,13 +53,13 @@
 
         double? TotalBilling { get; }
 
-        double? DirectMargin { get; }
+        string DirectMargin { get; }
 
-        double? IndirectMargin { get; }
+        string IndirectMargin { get; }
 
-        double? OtherMargin { get; }
+        string OtherMargin { get; }
 
-        double? TotalMargin { get; }
+        string TotalMargin { get; }
 
         double? DirectMarginAbsolute { get; }
 

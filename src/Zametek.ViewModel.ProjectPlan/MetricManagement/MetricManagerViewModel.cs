@@ -118,100 +118,108 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, mm => mm.GeometricFibonacciRisk);
 
             m_GeometricActivityRisk = this
-                 .WhenAnyValue(mm => mm.RisksMetrics, risks => risks.GeometricActivity)
-                 .ToProperty(this, mm => mm.GeometricActivityRisk);
+                .WhenAnyValue(mm => mm.RisksMetrics, risks => risks.GeometricActivity)
+                .ToProperty(this, mm => mm.GeometricActivityRisk);
 
 
             m_DirectCost = this
-                 .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Direct)
-                 .ToProperty(this, mm => mm.DirectCost);
+                .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Direct)
+                .ToProperty(this, mm => mm.DirectCost);
 
             m_IndirectCost = this
-                 .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Indirect)
-                 .ToProperty(this, mm => mm.IndirectCost);
+                .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Indirect)
+                .ToProperty(this, mm => mm.IndirectCost);
 
             m_OtherCost = this
-                 .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Other)
-                 .ToProperty(this, mm => mm.OtherCost);
+                .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Other)
+                .ToProperty(this, mm => mm.OtherCost);
 
             m_TotalCost = this
-                 .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Total)
-                 .ToProperty(this, mm => mm.TotalCost);
+                .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Total)
+                .ToProperty(this, mm => mm.TotalCost);
 
 
             m_DirectBilling = this
-                 .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Direct)
-                 .ToProperty(this, mm => mm.DirectBilling);
+                .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Direct)
+                .ToProperty(this, mm => mm.DirectBilling);
 
             m_IndirectBilling = this
-                 .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Indirect)
-                 .ToProperty(this, mm => mm.IndirectBilling);
+                .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Indirect)
+                .ToProperty(this, mm => mm.IndirectBilling);
 
             m_OtherBilling = this
-                 .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Other)
-                 .ToProperty(this, mm => mm.OtherBilling);
+                .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Other)
+                .ToProperty(this, mm => mm.OtherBilling);
 
             m_TotalBilling = this
-                 .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Total)
-                 .ToProperty(this, mm => mm.TotalBilling);
+                .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Total)
+                .ToProperty(this, mm => mm.TotalBilling);
 
 
             m_DirectMargin = this
-                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Direct)
-                 .ToProperty(this, mm => mm.DirectMargin);
+                .WhenAnyValue(
+                    mm => mm.MarginsMetrics,
+                    margins => margins.Direct is null ? string.Empty : string.Format(" ({0:P1})", margins.Direct))
+                .ToProperty(this, mm => mm.DirectMargin);
 
             m_IndirectMargin = this
-                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Indirect)
-                 .ToProperty(this, mm => mm.IndirectMargin);
+                .WhenAnyValue(
+                    mm => mm.MarginsMetrics,
+                    margins => margins.Indirect is null ? string.Empty : string.Format(" ({0:P1})", margins.Indirect))
+                .ToProperty(this, mm => mm.IndirectMargin);
 
             m_OtherMargin = this
-                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Other)
+                .WhenAnyValue(
+                    mm => mm.MarginsMetrics,
+                    margins => margins.Other is null ? string.Empty : string.Format(" ({0:P1})", margins.Other))
                  .ToProperty(this, mm => mm.OtherMargin);
 
             m_TotalMargin = this
-                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Total)
-                 .ToProperty(this, mm => mm.TotalMargin);
+                .WhenAnyValue(
+                    mm => mm.MarginsMetrics,
+                    margins => margins.Total is null ? string.Empty : string.Format(" ({0:P1})", margins.Total))
+                .ToProperty(this, mm => mm.TotalMargin);
 
             m_DirectMarginAbsolute = this
-                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.DirectAbsolute)
-                 .ToProperty(this, mm => mm.DirectMarginAbsolute);
+                .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.DirectAbsolute)
+                .ToProperty(this, mm => mm.DirectMarginAbsolute);
 
             m_IndirectMarginAbsolute = this
-                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.IndirectAbsolute)
-                 .ToProperty(this, mm => mm.IndirectMarginAbsolute);
+                .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.IndirectAbsolute)
+                .ToProperty(this, mm => mm.IndirectMarginAbsolute);
 
             m_OtherMarginAbsolute = this
-                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.OtherAbsolute)
-                 .ToProperty(this, mm => mm.OtherMarginAbsolute);
+                .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.OtherAbsolute)
+                .ToProperty(this, mm => mm.OtherMarginAbsolute);
 
             m_TotalMarginAbsolute = this
-                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.TotalAbsolute)
-                 .ToProperty(this, mm => mm.TotalMarginAbsolute);
+                .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.TotalAbsolute)
+                .ToProperty(this, mm => mm.TotalMarginAbsolute);
 
 
             m_DirectEffort = this
-                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Direct)
-                 .ToProperty(this, mm => mm.DirectEffort);
+                .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Direct)
+                .ToProperty(this, mm => mm.DirectEffort);
 
             m_IndirectEffort = this
-                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Indirect)
-                 .ToProperty(this, mm => mm.IndirectEffort);
+                .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Indirect)
+                .ToProperty(this, mm => mm.IndirectEffort);
 
             m_OtherEffort = this
-                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Other)
-                 .ToProperty(this, mm => mm.OtherEffort);
+                .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Other)
+                .ToProperty(this, mm => mm.OtherEffort);
 
             m_TotalEffort = this
-                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Total)
-                 .ToProperty(this, mm => mm.TotalEffort);
+                .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Total)
+                .ToProperty(this, mm => mm.TotalEffort);
 
             m_ActivityEffort = this
-                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Activity)
-                 .ToProperty(this, mm => mm.ActivityEffort);
+                .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Activity)
+                .ToProperty(this, mm => mm.ActivityEffort);
 
             m_EffortEfficiency = this
-                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Efficiency)
-                 .ToProperty(this, mm => mm.EffortEfficiency);
+                .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Efficiency)
+                .ToProperty(this, mm => mm.EffortEfficiency);
 
 
             m_NetworkCyclomaticComplexity = this
@@ -364,17 +372,17 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<double?> m_TotalBilling;
         public double? TotalBilling => m_TotalBilling.Value;
 
-        private readonly ObservableAsPropertyHelper<double?> m_DirectMargin;
-        public double? DirectMargin => m_DirectMargin.Value;
+        private readonly ObservableAsPropertyHelper<string> m_DirectMargin;
+        public string DirectMargin => m_DirectMargin.Value;
 
-        private readonly ObservableAsPropertyHelper<double?> m_IndirectMargin;
-        public double? IndirectMargin => m_IndirectMargin.Value;
+        private readonly ObservableAsPropertyHelper<string> m_IndirectMargin;
+        public string IndirectMargin => m_IndirectMargin.Value;
 
-        private readonly ObservableAsPropertyHelper<double?> m_OtherMargin;
-        public double? OtherMargin => m_OtherMargin.Value;
+        private readonly ObservableAsPropertyHelper<string> m_OtherMargin;
+        public string OtherMargin => m_OtherMargin.Value;
 
-        private readonly ObservableAsPropertyHelper<double?> m_TotalMargin;
-        public double? TotalMargin => m_TotalMargin.Value;
+        private readonly ObservableAsPropertyHelper<string> m_TotalMargin;
+        public string TotalMargin => m_TotalMargin.Value;
 
         private readonly ObservableAsPropertyHelper<double?> m_DirectMarginAbsolute;
         public double? DirectMarginAbsolute => m_DirectMarginAbsolute.Value;
