@@ -15,8 +15,8 @@ using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class ProjectManagerViewModel
-        : ToolViewModelBase, IProjectManagerViewModel, IDisposable
+    public class ProjectPlanManagerViewModel
+        : ToolViewModelBase, IProjectPlanManagerViewModel, IDisposable
     {
         #region Fields
 
@@ -36,7 +36,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public ProjectManagerViewModel(
+        public ProjectPlanManagerViewModel(
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService)
@@ -189,8 +189,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     (isProjectUpdated, isProjectPlanUpdated) => isProjectUpdated || isProjectPlanUpdated)
                 .ToProperty(this, pm => pm.ProjectHasChanges);
 
-            Id = Resource.ProjectPlan.Titles.Title_Project;
-            Title = Resource.ProjectPlan.Titles.Title_Project;
+            Id = Resource.ProjectPlan.Titles.Title_ProjectPlans;
+            Title = Resource.ProjectPlan.Titles.Title_ProjectPlans;
         }
 
         #endregion
@@ -1364,7 +1364,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region IProjectManagerViewModel
+        #region IProjectPlanManagerViewModel
 
         private bool m_IsBusy;
         public bool IsBusy

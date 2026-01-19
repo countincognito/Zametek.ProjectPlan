@@ -2,10 +2,10 @@ using Avalonia.Controls;
 
 namespace Zametek.View.ProjectPlan
 {
-    public partial class ProjectManagerView
+    public partial class ProjectPlanManagerView
         : UserControl
     {
-        public ProjectManagerView()
+        public ProjectPlanManagerView()
         {
             InitializeComponent();
         }

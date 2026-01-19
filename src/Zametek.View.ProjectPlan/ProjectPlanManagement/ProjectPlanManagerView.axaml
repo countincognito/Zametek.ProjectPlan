@@ -8,9 +8,9 @@
 			 xmlns:i="using:Avalonia.Xaml.Interactivity"
 	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
 			 xmlns:converters="using:Avalonia.Controls.Converters"
-			 x:DataType="vm:ProjectManagerViewModel"
+			 x:DataType="vm:ProjectPlanManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Zametek.View.ProjectPlan.ProjectManagerView">
+             x:Class="Zametek.View.ProjectPlan.ProjectPlanManagerView">
 	<UserControl.Resources>
 	</UserControl.Resources>
 

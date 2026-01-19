@@ -4,7 +4,7 @@ using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
-    public interface IProjectManagerViewModel
+    public interface IProjectPlanManagerViewModel
         : IKillSubscriptions
     {
         bool IsBusy { get; }

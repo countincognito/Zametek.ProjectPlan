@@ -72,7 +72,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ];
 
         private readonly IFactory m_DockFactory;
-        private readonly IProjectManagerViewModel m_ProjectManagerViewModel;
+        private readonly IProjectPlanManagerViewModel m_ProjectPlanManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectFileOpen m_ProjectFileOpen;
         private readonly IProjectFileSave m_ProjectFileSave;
@@ -85,7 +85,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public MainViewModel(
             IFactory dockFactory,
-            IProjectManagerViewModel projectManagerViewModel,
+            IProjectPlanManagerViewModel projectPlanManagerViewModel,
             ICoreViewModel coreViewModel,
             IProjectFileOpen projectFileOpen,
             IProjectFileSave projectFileSave,
@@ -93,7 +93,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IDialogService dialogService)
         {
             ArgumentNullException.ThrowIfNull(dockFactory);
-            ArgumentNullException.ThrowIfNull(projectManagerViewModel);
+            ArgumentNullException.ThrowIfNull(projectPlanManagerViewModel);
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(projectFileOpen);
             ArgumentNullException.ThrowIfNull(projectFileSave);
@@ -101,7 +101,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dialogService);
             m_Lock = new object();
             m_DockFactory = dockFactory;
-            m_ProjectManagerViewModel = projectManagerViewModel;
+            m_ProjectPlanManagerViewModel = projectPlanManagerViewModel;
             m_CoreViewModel = coreViewModel;
             m_ProjectFileOpen = projectFileOpen;
             m_ProjectFileSave = projectFileSave;
@@ -169,7 +169,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     main => main.m_SettingService.ProjectTitle,
                     main => main.m_SettingService.PlanTitle,
                     main => main.m_CoreViewModel.ProjectPlanId,
-                    main => main.m_ProjectManagerViewModel.ProjectHasChanges,
+                    main => main.m_ProjectPlanManagerViewModel.ProjectHasChanges,
                     (projectTitle, planTitle, projectPlanId, projectHasChanges) =>
                     {
                         string plan = projectPlanId.ToShortString();
@@ -184,12 +184,12 @@ namespace Zametek.ViewModel.ProjectPlan
             m_IsBusy = this
                 .WhenAnyValue(
                     main => main.m_CoreViewModel.IsBusy,
-                    main => main.m_ProjectManagerViewModel.IsBusy,
+                    main => main.m_ProjectPlanManagerViewModel.IsBusy,
                     (isCoreBusy, isProjectBusy) => isCoreBusy || isProjectBusy)
                 .ToProperty(this, main => main.IsBusy);
 
             m_IsProjectUpdated = this
-                .WhenAnyValue(pm => pm.m_ProjectManagerViewModel.IsProjectUpdated)
+                .WhenAnyValue(pm => pm.m_ProjectPlanManagerViewModel.IsProjectUpdated)
                 .ToProperty(this, pm => pm.IsProjectUpdated);
 
             m_IsProjectPlanUpdated = this
@@ -455,7 +455,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                return m_ProjectManagerViewModel.BuildProject();
+                return m_ProjectPlanManagerViewModel.BuildProject();
             }
         }
 
@@ -488,7 +488,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                m_ProjectManagerViewModel.ResetProject();
+                m_ProjectPlanManagerViewModel.ResetProject();
             }
         }
 
@@ -499,7 +499,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ProjectModel projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(filename);
 
                 // First process the project.
-                m_ProjectManagerViewModel.ProcessProject(projectModel);
+                m_ProjectPlanManagerViewModel.ProcessProject(projectModel);
 
                 // Now bind the project title to the filename.
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
@@ -520,7 +520,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ProjectModel projectModel = await BuildProjectAsync();
                 await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
                 m_CoreViewModel.IsProjectPlanUpdated = false;
-                m_ProjectManagerViewModel.IsProjectUpdated = false;
+                m_ProjectPlanManagerViewModel.IsProjectUpdated = false;
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
             }
         }
@@ -970,7 +970,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
 
                 Guid projectPlanId = m_CoreViewModel.ProjectPlanId;
-                IManagedNodeViewModel? managedNode = m_ProjectManagerViewModel.GetNode(projectPlanId);
+                IManagedNodeViewModel? managedNode = m_ProjectPlanManagerViewModel.GetNode(projectPlanId);
 
                 if (managedNode is not null)
                 {

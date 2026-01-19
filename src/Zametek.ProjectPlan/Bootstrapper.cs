@@ -42,7 +42,7 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<IGraphSettingsManagerViewModel, GraphSettingsManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IResourceSettingsManagerViewModel, ResourceSettingsManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IWorkStreamSettingsManagerViewModel, WorkStreamSettingsManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IProjectManagerViewModel, ProjectManagerViewModel>();
+            SplatRegistrations.RegisterLazySingleton<IProjectPlanManagerViewModel, ProjectPlanManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IMainViewModel, MainViewModel>();
             SplatRegistrations.RegisterLazySingleton<IFactory, DockFactory>();
 
@@ -59,7 +59,7 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<GraphSettingsManagerView>();
             SplatRegistrations.RegisterLazySingleton<ResourceSettingsManagerView>();
             SplatRegistrations.RegisterLazySingleton<WorkStreamSettingsManagerView>();
-            SplatRegistrations.RegisterLazySingleton<ProjectManagerView>();
+            SplatRegistrations.RegisterLazySingleton<ProjectPlanManagerView>();
             SplatRegistrations.RegisterLazySingleton<MainView>();
 
             var config = new MapperConfiguration(cfg =>
