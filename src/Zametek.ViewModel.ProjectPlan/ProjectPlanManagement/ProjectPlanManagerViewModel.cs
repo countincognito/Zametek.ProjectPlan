@@ -113,9 +113,21 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ReactiveCommand<Unit, Unit> removeProjectPlanNodeCommand = ReactiveCommand.CreateFromTask(
                     RemoveProjectPlanNodeAsync,
-                    this.WhenAnyValue(
-                        pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
+                    // Observe any changes in the observable collection.
+                    // Note that the property has no public setters, so we 
+                    // assume the collection is mutated by using the Add(), 
+                    // Delete(), Clear() and other similar methods.
+                    SelectedNodes
+                        // Convert the collection to a stream of chunks,
+                        // so we have IObservable<IChangeSet<TKey, TValue>>
+                        // type also known as the DynamicData monad.
+                        .ToObservableChangeSet()
+                        // Each time the collection changes, we get
+                        // all updated items at once.
+                        .ToCollection()
+                        // If the collection isn't empty, we convert
+                        // that to a boolean.
+                        .Select(items => items.Count != 0),
                     RxApp.MainThreadScheduler);
                 removeProjectPlanNodeCommand.IsExecuting.ToProperty(this, pm => pm.IsRemoving, out m_IsRemoving);
                 RemoveProjectPlanNodeCommand = removeProjectPlanNodeCommand;
@@ -347,6 +359,41 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     return result;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private HashSet<IManagedNodeViewModel> FindNestedNodes(IEnumerable<Guid> nodeIds)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    Dictionary<Guid, IManagedNodeViewModel> foundNodes = [];
+
+                    foreach (Guid nodeId in nodeIds)
+                    {
+                        HashSet<IManagedNodeViewModel> nestedNodes = [];
+
+                        if (!foundNodes.TryGetValue(nodeId, out IManagedNodeViewModel? existingNode))
+                        {
+                            nestedNodes = FindNestedNodes(nodeId);
+                        }
+
+                        foreach (IManagedNodeViewModel nestedNode in nestedNodes)
+                        {
+                            if (!foundNodes.ContainsKey(nestedNode.Id))
+                            {
+                                foundNodes[nestedNode.Id] = nestedNode;
+                            }
+                        }
+                    }
+                    return [.. foundNodes.Values];
                 }
             }
             finally
@@ -958,9 +1005,9 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                IManagedNodeViewModel? managedNode = SelectedNode;
+                IList<IManagedNodeViewModel> managedNodes = SelectedNodes.AsReadOnly();
 
-                if (managedNode is null)
+                if (managedNodes.Count == 0)
                 {
                     return;
                 }
@@ -968,14 +1015,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 bool confirmation = await m_DialogService.ShowConfirmationAsync(
                     Resource.ProjectPlan.Titles.Title_DeleteNodes,
                     string.Empty,
-                    string.Format(Resource.ProjectPlan.Messages.Message_DoYouWishToDelete, managedNode.DisplayName));
+                    string.Format(Resource.ProjectPlan.Messages.Message_DoYouWishToDeleteTheseItems));
 
                 if (!confirmation)
                 {
                     return;
                 }
 
-                await RemoveProjectPlanNodeInternalAsync(managedNode.Id);
+                await RemoveProjectPlanNodeInternalAsync(managedNodes.Select(x => x.Id));
             }
             catch (Exception ex)
             {
@@ -986,17 +1033,17 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private async Task RemoveProjectPlanNodeInternalAsync(Guid nodeId) =>
-            await Task.Run(() => RemoveProjectPlanNodeInternal(nodeId));
+        private async Task RemoveProjectPlanNodeInternalAsync(IEnumerable<Guid> nodeIds) =>
+            await Task.Run(() => RemoveProjectPlanNodeInternal(nodeIds));
 
-        private void RemoveProjectPlanNodeInternal(Guid nodeId)
+        private void RemoveProjectPlanNodeInternal(IEnumerable<Guid> nodeIds)
         {
             try
             {
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    HashSet<IManagedNodeViewModel> nestedNodes = FindNestedNodes(nodeId);
+                    HashSet<IManagedNodeViewModel> nestedNodes = FindNestedNodes(nodeIds);
 
                     RemoveManagedNodes(nestedNodes);
                     RemovePlanFiles([.. nestedNodes.Where(x => !x.IsFolder).Select(x => x.Id)]);
@@ -1211,7 +1258,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             switch (action)
                             {
                                 case NodeAction.Cut:
-                                    RemoveProjectPlanNodeInternal(nodeId);
+                                    RemoveProjectPlanNodeInternal([nodeId]);
                                     break;
                                 case NodeAction.Copy:
                                     break;
