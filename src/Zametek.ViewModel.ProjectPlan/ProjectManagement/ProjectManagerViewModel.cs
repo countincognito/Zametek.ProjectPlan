@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -29,6 +30,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ConcurrentDictionary<Guid, List<string>> m_NodeTagLookup;
 
         private readonly NodeActionModel m_NodeAction;
+        private readonly Subject<bool> m_NodeActionCommandManualTrigger;
 
         #endregion
 
@@ -55,6 +57,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_FilePlanLookup = new();
             m_NodeTagLookup = new();
             m_NodeAction = new();
+            m_NodeActionCommandManualTrigger = new();
 
             SetSelectedManagedNodesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedNodes);
             {
@@ -140,7 +143,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     CutProjectPlanNodeAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder),
+                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder)
+                        .Merge(m_NodeActionCommandManualTrigger),
                     RxApp.MainThreadScheduler);
                 CutProjectPlanNodeCommand = cutProjectPlanNodeCommand;
             }
@@ -149,7 +153,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     CopyProjectPlanNodeAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder),
+                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder)
+                        .Merge(m_NodeActionCommandManualTrigger),
                     RxApp.MainThreadScheduler);
                 CopyProjectPlanNodeCommand = copyProjectPlanNodeCommand;
             }
@@ -158,7 +163,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     PasteProjectPlanNodeAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && m_NodeAction.NodeIds.Count != 0),
+                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && m_NodeAction.NodeIds.Count != 0)
+                        .Merge(m_NodeActionCommandManualTrigger),
                     RxApp.MainThreadScheduler);
                 PasteProjectPlanNodeCommand = pasteProjectPlanNodeCommand;
             }
@@ -1062,6 +1068,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private async Task InvokeNodeActionChecksAsync()
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                m_NodeActionCommandManualTrigger.OnNext(true);
+            });
+        }
+
         private async Task CutProjectPlanNodeAsync()
         {
             try
@@ -1085,6 +1099,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
                     ex.Message);
+            }
+            finally
+            {
+                await InvokeNodeActionChecksAsync();
             }
         }
 
@@ -1111,6 +1129,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
                     ex.Message);
+            }
+            finally
+            {
+                await InvokeNodeActionChecksAsync();
             }
         }
 
@@ -1140,6 +1162,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
                     ex.Message);
+            }
+            finally
+            {
+                await InvokeNodeActionChecksAsync();
             }
         }
 
@@ -1695,6 +1721,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsRemoving?.Dispose();
                 m_IsProjectPlanUpdated?.Dispose();
                 m_ProjectHasChanges?.Dispose();
+                m_NodeActionCommandManualTrigger?.Dispose();
             }
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
             // TODO: set large fields to null.

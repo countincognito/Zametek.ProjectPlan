@@ -1259,6 +1259,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             private set
             {
+                // These are broken down individually so that change notifications only
+                // happen if the original Metrics record from the compiled version is
+                // different to the loaded file version.
                 RiskMetrics = value.Risks;
                 CostMetrics = value.Costs;
                 BillingMetrics = value.Billings;
