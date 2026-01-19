@@ -137,25 +137,69 @@ namespace Zametek.ProjectPlan
                 IsCollapsable = false,
                 VisibleDockables = CreateList<IDockable>
                 (
-                    new ToolDock
+                    new ProportionalDock
                     {
                         Proportion = 0.6,
+                        Orientation = Orientation.Horizontal,
                         ActiveDockable = m_ActivitiesManagerViewModel,
                         CanClose = false,
                         CanFloat = false,
                         CanPin = false,
                         IsCollapsable = false,
-                        VisibleDockables = CreateList(
-                            m_ProjectPlanManagerViewModel,
-                            m_ActivitiesManagerViewModel,
-                            m_GanttChartManagerViewModel,
-                            m_TrackingManagerViewModel,
-                            m_ArrowGraphManagerViewModel,
-                            m_VertexGraphManagerViewModel,
-                            m_ResourceChartManagerViewModel,
-                            m_EarnedValueChartManagerViewModel),
-                        Alignment = Alignment.Top,
-                        GripMode = GripMode.Visible
+
+                        VisibleDockables = CreateList<IDockable>
+                        (
+                            new ToolDock
+                            {
+                                Proportion = 0.15,
+                                ActiveDockable = m_ProjectPlanManagerViewModel,
+                                CanClose = false,
+                                CanFloat = false,
+                                CanPin = false,
+                                IsCollapsable = false,
+                                VisibleDockables = CreateList(
+                                    m_ProjectPlanManagerViewModel),
+                                Alignment = Alignment.Top,
+                                GripMode = GripMode.Visible
+                            },
+                            new ProportionalDockSplitter()
+                            {
+                                Id = "Splitter2",
+                                Title = "VerticalSplitter"
+                            },
+                            new ToolDock
+                            {
+                                Proportion = 0.85,
+                                ActiveDockable = m_ActivitiesManagerViewModel,
+                                CanClose = false,
+                                CanFloat = false,
+                                CanPin = false,
+                                IsCollapsable = false,
+                                VisibleDockables = CreateList(
+                                    m_ActivitiesManagerViewModel,
+                                    m_GanttChartManagerViewModel,
+                                    m_TrackingManagerViewModel,
+                                    m_ArrowGraphManagerViewModel,
+                                    m_VertexGraphManagerViewModel,
+                                    m_ResourceChartManagerViewModel,
+                                    m_EarnedValueChartManagerViewModel),
+                                Alignment = Alignment.Top,
+                                GripMode = GripMode.Visible
+                            }
+                        ),
+
+
+                        //VisibleDockables = CreateList(
+                        //    m_ProjectPlanManagerViewModel,
+                        //    m_ActivitiesManagerViewModel,
+                        //    m_GanttChartManagerViewModel,
+                        //    m_TrackingManagerViewModel,
+                        //    m_ArrowGraphManagerViewModel,
+                        //    m_VertexGraphManagerViewModel,
+                        //    m_ResourceChartManagerViewModel,
+                        //    m_EarnedValueChartManagerViewModel),
+                        //Alignment = Alignment.Top,
+                        //GripMode = GripMode.Visible
                     },
                     new ProportionalDockSplitter()
                     {
@@ -189,7 +233,7 @@ namespace Zametek.ProjectPlan
                             },
                             new ProportionalDockSplitter()
                             {
-                                Id = "Splitter2",
+                                Id = "Splitter3",
                                 Title = "VerticalSplitter"
                             },
                             new ToolDock
