@@ -20,7 +20,7 @@
     <Content Include="Assets\zpp.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.11" />
     <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="11.3.9" />
     <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.14.1" />
     <PackageReference Include="Splat.DependencyInjection.SourceGenerator" Version="1.2.3">
