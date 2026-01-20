@@ -142,11 +142,11 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Converted from v0.5.0.
+        ///   Looks up a localized string similar to Converted from previous version.
         /// </summary>
-        public static string Message_ConvertedFromV0_5_0 {
+        public static string Message_ConvertedFromPreviousVersion {
             get {
-                return ResourceManager.GetString("Message_ConvertedFromV0_5_0", resourceCulture);
+                return ResourceManager.GetString("Message_ConvertedFromPreviousVersion", resourceCulture);
             }
         }
         

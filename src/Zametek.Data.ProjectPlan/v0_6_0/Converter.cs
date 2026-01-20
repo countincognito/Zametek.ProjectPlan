@@ -48,7 +48,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                     new ProjectPlanTagModel
                     {
                         NodeId = planId,
-                        Label = Resource.ProjectPlan.Messages.Message_ConvertedFromV0_5_0,
+                        Label = Resource.ProjectPlan.Messages.Message_ConvertedFromPreviousVersion,
                     },
                 ],
             };
