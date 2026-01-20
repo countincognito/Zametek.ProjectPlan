@@ -427,8 +427,9 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 Guid projectPlanId = m_SettingService.ProjectPlanId;
+                string projectPlanTitle = m_SettingService.ProjectPlanTitle;
                 ProjectPlanImportModel importModel = m_CoreViewModel.ImportProjectPlanFile(filename);
-                m_CoreViewModel.ProcessProjectPlanImport(importModel, projectPlanId);
+                m_CoreViewModel.ProcessProjectPlanImport(importModel, projectPlanId, projectPlanTitle);
             }
         }
 

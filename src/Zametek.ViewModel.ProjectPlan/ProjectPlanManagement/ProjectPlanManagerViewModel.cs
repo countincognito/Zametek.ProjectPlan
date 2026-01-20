@@ -765,11 +765,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         ProjectPlanNodeModel selectedPlanNodeModel = managedNodeViewModel.Node;
                         Guid nodeId = selectedPlanNodeModel.Id;
+                        string nodeName = selectedPlanNodeModel.Name;
 
                         if (m_FilePlanLookup.TryGetValue(nodeId, out ProjectPlanFileModel? projectPlanFile))
                         {
                             ProjectPlanModel projectPlanModel = projectPlanFile.Plan;
-                            m_CoreViewModel.ProcessProjectPlan(projectPlanModel, nodeId);
+                            m_CoreViewModel.ProcessProjectPlan(projectPlanModel, nodeId, nodeName);
                             MarkNodeAsLoaded(nodeId);
                         }
 
@@ -1603,7 +1604,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         // Load the current project plan
                         Guid projectPlanId = projectPlanFileModel.NodeId;
                         ProjectPlanModel projectPlanModel = projectPlanFileModel.Plan;
-                        m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId);
+                        IManagedNodeViewModel? projectPlanNode = GetNode(projectPlanId);
+                        string projectPlanName = projectPlanNode?.Name ?? Resource.ProjectPlan.Labels.Label_UnknownNode;
+
+                        m_CoreViewModel.ProcessProjectPlan(projectPlanModel, projectPlanId, projectPlanName);
                         MarkNodeAsLoaded(projectPlanId);
                     }
                     // Otherwise, load the latest project plan.
@@ -1611,11 +1615,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         ProjectPlanNodeModel latestPlanNodeModel = projectModel.Nodes.Last();
                         Guid latestProjectPlanId = latestPlanNodeModel.Id;
+                        string latestProjectPlanName = latestPlanNodeModel.Name;
 
                         if (m_FilePlanLookup.TryGetValue(latestProjectPlanId, out ProjectPlanFileModel? latestProjectPlanFile))
                         {
                             ProjectPlanModel latestProjectPlanModel = latestProjectPlanFile.Plan;
-                            m_CoreViewModel.ProcessProjectPlan(latestProjectPlanModel, latestProjectPlanId);
+                            m_CoreViewModel.ProcessProjectPlan(latestProjectPlanModel, latestProjectPlanId, latestProjectPlanName);
                             MarkNodeAsLoaded(latestProjectPlanId);
                         }
                     }

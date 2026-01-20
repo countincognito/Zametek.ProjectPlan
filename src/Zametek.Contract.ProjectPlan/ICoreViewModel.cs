@@ -95,9 +95,9 @@ namespace Zametek.Contract.ProjectPlan
 
         void ExportProjectPlanFile(ProjectPlanModel projectPlanModel, ResourceSeriesSetModel resourceSeriesSetModel, TrackingSeriesSetModel trackingSeriesSetModel, bool showDates, string filename);
 
-        void ProcessProjectPlanImport(ProjectPlanImportModel projectPlanImportModel, Guid projectPlanId);
+        void ProcessProjectPlanImport(ProjectPlanImportModel projectPlanImportModel, Guid projectPlanId, string projectPlanTitle);
 
-        void ProcessProjectPlan(ProjectPlanModel projectPlanModel, Guid projectPlanId);
+        void ProcessProjectPlan(ProjectPlanModel projectPlanModel, Guid projectPlanId, string projectPlanTitle);
 
         ProjectPlanModel BuildProjectPlan();
 
