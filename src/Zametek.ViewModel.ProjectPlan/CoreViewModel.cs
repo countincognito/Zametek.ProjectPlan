@@ -1636,10 +1636,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
+
+                    string projectPlanTitle = m_SettingService.ProjectPlanTitle;
                     ResetProjectPlan();
+
                     m_TrackIsProjectPlanUpdated = false;
                     m_TrackHasStaleOutputs = false;
                     m_SettingService.SetProjectPlanId(projectPlanId);
+                    m_SettingService.SetProjectPlanTitle(projectPlanTitle);
 
                     // Default display mode is required for all file opening and closing.
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
