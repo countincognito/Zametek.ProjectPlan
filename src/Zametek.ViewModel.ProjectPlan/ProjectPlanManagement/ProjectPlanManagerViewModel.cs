@@ -49,7 +49,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_IsBusy = false;
-            Root = new ManagedNodeViewModel(m_CoreViewModel); // Placeholder until ResetRootNode is called.
+            Root = new ManagedNodeViewModel(m_CoreViewModel, m_SettingService); // Placeholder until ResetRootNode is called.
             m_Nodes = new();
             SelectedNodes = [];
             SelectedNode = null;
@@ -246,6 +246,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Root.Dispose();
                     Root = new ManagedNodeViewModel(
                         m_CoreViewModel,
+                        m_SettingService,
                         new ProjectPlanNodeModel
                         {
                             Id = rootId,
@@ -589,7 +590,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         if (!m_ManagedNodeLookup.ContainsKey(projectPlanNode.Id))
                         {
-                            var projectPlan = new ManagedNodeViewModel(m_CoreViewModel, projectPlanNode);
+                            var projectPlan = new ManagedNodeViewModel(m_CoreViewModel, m_SettingService, projectPlanNode);
                             SetPlanFile(projectPlan);
                             SetTagLabels(projectPlan);
                             m_ManagedNodeLookup[projectPlan.Id] = projectPlan;
@@ -985,7 +986,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 managedNode.Name = nodeNameViewModel.Name;
 
                 // update the plan title setting if the renamed node is the currently loaded plan.
-                if (managedNode.Id == m_CoreViewModel.ProjectPlanId)
+                if (managedNode.Id == m_SettingService.PlanId)
                 {
                     m_SettingService.SetPlanTitle(managedNode.Name);
                 }
@@ -1053,7 +1054,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // reset the core project plan to the most recently added plan, if any.
                     // If there are no remaining plans, then create a new blank project plan.
 
-                    Guid currentNodeId = m_CoreViewModel.ProjectPlanId;
+                    Guid currentNodeId = m_SettingService.PlanId;
                     HashSet<Guid> nestedNodeIds = [.. nestedNodes.Select(n => n.Id).Distinct()];
 
                     if (!nestedNodeIds.Contains(currentNodeId))
@@ -1086,7 +1087,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     var projectPlanNode = new ProjectPlanNodeModel
                     {
-                        Id = m_CoreViewModel.ProjectPlanId,
+                        Id = m_SettingService.PlanId,
                         ParentId = Root.Id,
                         IsFolder = false,
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
@@ -1508,12 +1509,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     ClearProject();
                     ResetRootNode();
 
+                    m_SettingService.ResetProject();
+
                     // Now add the new core project plan to the project manager.
                     ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
 
                     var projectPlanNode = new ProjectPlanNodeModel
                     {
-                        Id = m_CoreViewModel.ProjectPlanId,
+                        Id = m_SettingService.PlanId,
                         ParentId = Root.Id,
                         IsFolder = false,
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
@@ -1530,8 +1533,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     AddTagLabels([]); // Don't really need this, but for consistency.
                     AddPlanFiles([projectPlanFile]);
                     AddManagedNodes([projectPlanNode]);
-
-                    m_SettingService.Reset();
 
                     MarkNodeAsLoaded(projectPlanNode.Id);
 
@@ -1556,6 +1557,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResetProject();
                     ClearProject();
 
+                    m_SettingService.SetProjectId(projectModel.Id);
+
                     // Root node.
                     ResetRootNode(projectModel.Root);
 
@@ -1576,7 +1579,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         var projectPlanNode = new ProjectPlanNodeModel
                         {
-                            Id = m_CoreViewModel.ProjectPlanId,
+                            Id = m_SettingService.PlanId,
                             ParentId = Root.Id,
                             IsFolder = false,
                             Name = Resource.ProjectPlan.Labels.Label_BaseNode,
@@ -1655,7 +1658,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Ensure that the current project plan is up to date.
 
-                    Guid nodeId = m_CoreViewModel.ProjectPlanId;
+                    Guid nodeId = m_SettingService.PlanId;
                     ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
 
                     IManagedNodeViewModel? managedProjectPlan = GetNode(nodeId);
@@ -1700,8 +1703,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Now build the ProjectModel.
 
+                    Guid projectId = m_SettingService.ProjectId;
                     Guid rootId = Root.Id;
-                    Guid currentId = m_CoreViewModel.ProjectPlanId;
+                    Guid currentId = m_SettingService.PlanId;
                     List<ProjectPlanNodeModel> nodes = [.. m_ManagedNodeLookup.Values
                         .Select(x => x.Node)
                         .OrderBy(x => x.CreatedOn)];
@@ -1721,6 +1725,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     var projectModel = new ProjectModel
                     {
                         Version = Data.ProjectPlan.Versions.ProjectLatest,
+                        Id = projectId,
                         Root = rootId,
                         Current = currentId,
                         Nodes = nodes,

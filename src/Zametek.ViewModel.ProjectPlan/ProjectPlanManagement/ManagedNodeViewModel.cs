@@ -17,6 +17,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly object m_Lock;
         private readonly ICoreViewModel m_CoreViewModel;
+        private readonly ISettingService m_SettingService;
         private ProjectPlanNodeModel m_ProjectPlanNodeModel;
         private ProjectPlanModel? m_ProjectPlanModel;
 
@@ -27,16 +28,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public ManagedNodeViewModel(ICoreViewModel coreViewModel)
-            : this(coreViewModel, new ProjectPlanNodeModel())
+        public ManagedNodeViewModel(
+            ICoreViewModel coreViewModel,
+            ISettingService settingService)
+            : this(coreViewModel, settingService, new ProjectPlanNodeModel())
         {
         }
 
         public ManagedNodeViewModel(
             ICoreViewModel coreViewModel,
+            ISettingService settingService,
             ProjectPlanNodeModel projectPlanNode,
             ProjectPlanModel projectPlan)
-            : this(coreViewModel, projectPlanNode)
+            : this(coreViewModel, settingService, projectPlanNode)
         {
             ArgumentNullException.ThrowIfNull(projectPlan);
             m_ProjectPlanModel = projectPlan;
@@ -44,8 +48,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ManagedNodeViewModel(
             ICoreViewModel coreViewModel,
+            ISettingService settingService,
             ProjectPlanNodeModel projectPlanNode)
         {
+            ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(projectPlanNode);
             m_Lock = new object();
             m_IsLoaded = false;
@@ -58,6 +65,7 @@ namespace Zametek.ViewModel.ProjectPlan
                .Subscribe();
 
             m_CoreViewModel = coreViewModel;
+            m_SettingService = settingService;
             m_ProjectPlanNodeModel = projectPlanNode;
             m_ProjectPlanModel = null;
             m_Children = new();
@@ -70,7 +78,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_DisplayName = this
                 .WhenAnyValue(
-                    x => x.m_CoreViewModel.ProjectPlanId,
+                    x => x.m_SettingService.PlanId,
                     x => x.m_CoreViewModel.IsProjectPlanUpdated,
                     x => x.Name,
                     x => x.Label,

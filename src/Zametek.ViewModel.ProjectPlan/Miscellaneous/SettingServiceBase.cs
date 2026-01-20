@@ -26,7 +26,9 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             m_Lock = new();
             m_ProjectTitle = string.Empty;
+            m_ProjectId = Guid.NewGuid();
             m_PlanTitle = string.Empty;
+            m_PlanId = Guid.NewGuid();
             m_AppSettingsModel = new()
             {
                 Version = Versions.AppSettingsLatest,
@@ -90,6 +92,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private Guid m_ProjectId;
+        public Guid ProjectId
+        {
+            get => m_ProjectId;
+            protected set
+            {
+                lock (m_Lock)
+                {
+                    m_ProjectId = value == Guid.Empty ? Guid.NewGuid() : value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         private string m_PlanTitle;
         public string PlanTitle
         {
@@ -99,6 +115,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_PlanTitle = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        private Guid m_PlanId;
+        public Guid PlanId
+        {
+            get => m_PlanId;
+            protected set
+            {
+                lock (m_Lock)
+                {
+                    m_PlanId = value == Guid.Empty ? Guid.NewGuid() : value;
                     this.RaisePropertyChanged();
                 }
             }
@@ -134,7 +164,12 @@ namespace Zametek.ViewModel.ProjectPlan
             ProjectTitle = Path.GetFileNameWithoutExtension(filename).Trim();
         }
 
-        public void SetProjectDirectory(string filename)//!!)
+        public void SetProjectId(Guid projectId)
+        {
+            ProjectId = projectId;
+        }
+
+        public void SetProjectDirectory(string filename)
         {
             ProjectDirectory = Path.GetDirectoryName(filename) ?? string.Empty;
         }
@@ -142,6 +177,11 @@ namespace Zametek.ViewModel.ProjectPlan
         public void SetPlanTitle(string name)
         {
             PlanTitle = name.Trim();
+        }
+
+        public void SetPlanId(Guid planId)
+        {
+            PlanId = planId;
         }
 
         public GraphSettingsModel DefaultGraphSettings =>
@@ -196,10 +236,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public WorkStreamSettingsModel DefaultWorkStreamSettings => new();
 
-        public void Reset()
+        public void ResetProject()
         {
             ProjectTitle = string.Empty;
+            ProjectId = Guid.NewGuid();
+        }
+
+        public void ResetPlan()
+        {
             PlanTitle = string.Empty;
+            PlanId = Guid.NewGuid();
         }
 
         #endregion

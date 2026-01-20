@@ -6,7 +6,11 @@ namespace Zametek.Contract.ProjectPlan
     {
         string SettingsFilename { get; }
 
+        Guid ProjectId { get; }
+
         string ProjectTitle { get; }
+
+        Guid PlanId { get; }
 
         string PlanTitle { get; }
 
@@ -30,9 +34,13 @@ namespace Zametek.Contract.ProjectPlan
 
         void SetProjectTitle(string filename);
 
+        void SetProjectId(Guid projectId);
+
         void SetProjectDirectory(string filename);
 
         void SetPlanTitle(string name);
+
+        void SetPlanId(Guid planId);
 
         GraphSettingsModel DefaultGraphSettings { get; }
 
@@ -40,6 +48,8 @@ namespace Zametek.Contract.ProjectPlan
 
         WorkStreamSettingsModel DefaultWorkStreamSettings { get; }
 
-        void Reset();
+        void ResetProject();
+
+        void ResetPlan();
     }
 }

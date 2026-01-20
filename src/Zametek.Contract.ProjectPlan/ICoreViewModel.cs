@@ -7,8 +7,6 @@ namespace Zametek.Contract.ProjectPlan
     public interface ICoreViewModel
         : IKillSubscriptions, IDisposable
     {
-        Guid ProjectPlanId { get; }
-
         bool IsBusy { get; }
 
         ReadyToCompile IsReadyToCompile { get; }

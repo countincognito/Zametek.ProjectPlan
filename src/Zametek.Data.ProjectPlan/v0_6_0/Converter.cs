@@ -11,11 +11,13 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(project);
 
+            Guid projectId = Guid.NewGuid();
             Guid rootId = Guid.NewGuid();
             Guid planId = Guid.NewGuid();
 
             return new ProjectModel
             {
+                Id = projectId,
                 Root = rootId,
                 Current = planId,
                 Nodes =

@@ -970,19 +970,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region ICoreViewModel Members
 
-        private Guid m_ProjectPlanId;
-        public Guid ProjectPlanId
-        {
-            get => m_ProjectPlanId;
-            private set
-            {
-                lock (m_Lock)
-                {
-                    this.RaiseAndSetIfChanged(ref m_ProjectPlanId, value);
-                }
-            }
-        }
-
         private bool m_IsBusy;
         public bool IsBusy
         {
@@ -1570,6 +1557,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ClearSettings();
 
+                    m_SettingService.ResetPlan();
+
                     Metrics = new();
 
                     HasCompilationErrors = false;
@@ -1581,11 +1570,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsReadyToCompile = ReadyToCompile.No;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
 
-                    //m_SettingService.Reset();
-
                     m_TrackIsProjectPlanUpdated = true;
                     IsProjectPlanUpdated = false;
-                    ProjectPlanId = Guid.NewGuid();
 
                     m_TrackHasStaleOutputs = true;
                     HasStaleOutputs = false;
@@ -1653,7 +1639,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResetProjectPlan();
                     m_TrackIsProjectPlanUpdated = false;
                     m_TrackHasStaleOutputs = false;
-                    ProjectPlanId = projectPlanId;
+                    m_SettingService.SetPlanId(projectPlanId);
 
                     // Default display mode is required for all file opening and closing.
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
@@ -1755,7 +1741,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResetProjectPlan();
                     m_TrackIsProjectPlanUpdated = false;
                     m_TrackHasStaleOutputs = false;
-                    ProjectPlanId = projectPlanId;
+                    m_SettingService.SetPlanId(projectPlanId);
 
                     // Default display mode is required for all file opening and closing.
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
