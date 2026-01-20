@@ -682,7 +682,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         node.IsLoaded = false;
                     }
                     currentNode.IsLoaded = true;
-                    m_SettingService.SetPlanTitle(currentNode.Name);
+                    m_SettingService.SetProjectPlanTitle(currentNode.Name);
                 }
             }
         }
@@ -986,9 +986,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 managedNode.Name = nodeNameViewModel.Name;
 
                 // update the plan title setting if the renamed node is the currently loaded plan.
-                if (managedNode.Id == m_SettingService.PlanId)
+                if (managedNode.Id == m_SettingService.ProjectPlanId)
                 {
-                    m_SettingService.SetPlanTitle(managedNode.Name);
+                    m_SettingService.SetProjectPlanTitle(managedNode.Name);
                 }
 
                 IsProjectUpdated = true;
@@ -1054,7 +1054,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // reset the core project plan to the most recently added plan, if any.
                     // If there are no remaining plans, then create a new blank project plan.
 
-                    Guid currentNodeId = m_SettingService.PlanId;
+                    Guid currentNodeId = m_SettingService.ProjectPlanId;
                     HashSet<Guid> nestedNodeIds = [.. nestedNodes.Select(n => n.Id).Distinct()];
 
                     if (!nestedNodeIds.Contains(currentNodeId))
@@ -1087,7 +1087,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     var projectPlanNode = new ProjectPlanNodeModel
                     {
-                        Id = m_SettingService.PlanId,
+                        Id = m_SettingService.ProjectPlanId,
                         ParentId = Root.Id,
                         IsFolder = false,
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
@@ -1516,7 +1516,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     var projectPlanNode = new ProjectPlanNodeModel
                     {
-                        Id = m_SettingService.PlanId,
+                        Id = m_SettingService.ProjectPlanId,
                         ParentId = Root.Id,
                         IsFolder = false,
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
@@ -1579,7 +1579,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         var projectPlanNode = new ProjectPlanNodeModel
                         {
-                            Id = m_SettingService.PlanId,
+                            Id = m_SettingService.ProjectPlanId,
                             ParentId = Root.Id,
                             IsFolder = false,
                             Name = Resource.ProjectPlan.Labels.Label_BaseNode,
@@ -1658,7 +1658,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Ensure that the current project plan is up to date.
 
-                    Guid nodeId = m_SettingService.PlanId;
+                    Guid nodeId = m_SettingService.ProjectPlanId;
                     ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
 
                     IManagedNodeViewModel? managedProjectPlan = GetNode(nodeId);
@@ -1705,7 +1705,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     Guid projectId = m_SettingService.ProjectId;
                     Guid rootId = Root.Id;
-                    Guid currentId = m_SettingService.PlanId;
+                    Guid currentId = m_SettingService.ProjectPlanId;
                     List<ProjectPlanNodeModel> nodes = [.. m_ManagedNodeLookup.Values
                         .Select(x => x.Node)
                         .OrderBy(x => x.CreatedOn)];

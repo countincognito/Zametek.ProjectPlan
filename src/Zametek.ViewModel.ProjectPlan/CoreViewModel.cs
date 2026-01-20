@@ -1557,7 +1557,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ClearSettings();
 
-                    m_SettingService.ResetPlan();
+                    m_SettingService.ResetProjectPlan();
 
                     Metrics = new();
 
@@ -1639,7 +1639,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResetProjectPlan();
                     m_TrackIsProjectPlanUpdated = false;
                     m_TrackHasStaleOutputs = false;
-                    m_SettingService.SetPlanId(projectPlanId);
+                    m_SettingService.SetProjectPlanId(projectPlanId);
 
                     // Default display mode is required for all file opening and closing.
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
@@ -1741,7 +1741,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResetProjectPlan();
                     m_TrackIsProjectPlanUpdated = false;
                     m_TrackHasStaleOutputs = false;
-                    m_SettingService.SetPlanId(projectPlanId);
+                    m_SettingService.SetProjectPlanId(projectPlanId);
 
                     // Default display mode is required for all file opening and closing.
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;

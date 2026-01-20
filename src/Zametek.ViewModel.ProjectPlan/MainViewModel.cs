@@ -167,8 +167,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectTitle = this
                 .WhenAnyValue(
                     main => main.m_SettingService.ProjectTitle,
-                    main => main.m_SettingService.PlanTitle,
-                    main => main.m_SettingService.PlanId,
+                    main => main.m_SettingService.ProjectPlanTitle,
+                    main => main.m_SettingService.ProjectPlanId,
                     main => main.m_ProjectPlanManagerViewModel.ProjectHasChanges,
                     (projectTitle, planTitle, projectPlanId, projectHasChanges) =>
                     {
@@ -426,7 +426,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                Guid projectPlanId = m_SettingService.PlanId;
+                Guid projectPlanId = m_SettingService.ProjectPlanId;
                 ProjectPlanImportModel importModel = m_CoreViewModel.ImportProjectPlanFile(filename);
                 m_CoreViewModel.ProcessProjectPlanImport(importModel, projectPlanId);
             }
@@ -969,7 +969,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 string title = m_SettingService.ProjectTitle;
                 title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
 
-                Guid projectPlanId = m_SettingService.PlanId;
+                Guid projectPlanId = m_SettingService.ProjectPlanId;
                 IManagedNodeViewModel? managedNode = m_ProjectPlanManagerViewModel.GetNode(projectPlanId);
 
                 if (managedNode is not null)

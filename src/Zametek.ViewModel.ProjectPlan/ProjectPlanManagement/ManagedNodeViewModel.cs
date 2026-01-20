@@ -78,7 +78,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_DisplayName = this
                 .WhenAnyValue(
-                    x => x.m_SettingService.PlanId,
+                    x => x.m_SettingService.ProjectPlanId,
                     x => x.m_CoreViewModel.IsProjectPlanUpdated,
                     x => x.Name,
                     x => x.Label,

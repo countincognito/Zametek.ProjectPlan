@@ -107,7 +107,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private string m_PlanTitle;
-        public string PlanTitle
+        public string ProjectPlanTitle
         {
             get => string.IsNullOrWhiteSpace(m_PlanTitle) ? string.Empty : m_PlanTitle;
             protected set
@@ -121,7 +121,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private Guid m_PlanId;
-        public Guid PlanId
+        public Guid ProjectPlanId
         {
             get => m_PlanId;
             protected set
@@ -174,14 +174,14 @@ namespace Zametek.ViewModel.ProjectPlan
             ProjectDirectory = Path.GetDirectoryName(filename) ?? string.Empty;
         }
 
-        public void SetPlanTitle(string name)
+        public void SetProjectPlanTitle(string name)
         {
-            PlanTitle = name.Trim();
+            ProjectPlanTitle = name.Trim();
         }
 
-        public void SetPlanId(Guid planId)
+        public void SetProjectPlanId(Guid planId)
         {
-            PlanId = planId;
+            ProjectPlanId = planId;
         }
 
         public GraphSettingsModel DefaultGraphSettings =>
@@ -242,10 +242,10 @@ namespace Zametek.ViewModel.ProjectPlan
             ProjectId = Guid.NewGuid();
         }
 
-        public void ResetPlan()
+        public void ResetProjectPlan()
         {
-            PlanTitle = string.Empty;
-            PlanId = Guid.NewGuid();
+            ProjectPlanTitle = string.Empty;
+            ProjectPlanId = Guid.NewGuid();
         }
 
         #endregion
