@@ -146,7 +146,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     RemoveNodeTagAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
+                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && selectedNode.RawLabels.Count > 0),
                     RxApp.MainThreadScheduler);
                 RemoveNodeTagCommand = removeNodeTagCommand;
             }
@@ -808,9 +808,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     SuggestNodeName);
 
                 bool result = await m_DialogService.ShowContextAsync(
-                    title: Resource.ProjectPlan.Labels.Label_NewPlanFile,
+                    title: Resource.ProjectPlan.Labels.Label_NewPlan,
                     header: string.Empty,
-                    message: $@"**{Resource.ProjectPlan.Labels.Label_NewPlanFile}**",
+                    message: $@"**{Resource.ProjectPlan.Labels.Label_NewPlan}**",
                     context: nodeNameViewModel,
                     markdown: true);
 
@@ -1349,7 +1349,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 IManagedNodeViewModel? selectedNode = SelectedNode;
 
                 if (selectedNode is null
-                    || !m_NodeTagLookup.TryGetValue(selectedNode.Id, out List<string>? labels))
+                    || !m_NodeTagLookup.TryGetValue(selectedNode.Id, out List<string>? labels)
+                    || selectedNode.RawLabels.Count == 0)
                 {
                     return;
                 }

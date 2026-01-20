@@ -564,8 +564,8 @@
   <data name="Label_RootNode" xml:space="preserve">
     <value>Root</value>
   </data>
-  <data name="Label_LoadManagedPlan" xml:space="preserve">
-    <value>Load</value>
+  <data name="Label_SelectManagedPlan" xml:space="preserve">
+    <value>Select</value>
   </data>
   <data name="Label_BaseNode" xml:space="preserve">
     <value>Base</value>
@@ -579,8 +579,8 @@
   <data name="Label_EmptyNode" xml:space="preserve">
     <value>Empty</value>
   </data>
-  <data name="Label_NewPlanFile" xml:space="preserve">
-    <value>New File</value>
+  <data name="Label_NewPlan" xml:space="preserve">
+    <value>New Plan</value>
   </data>
   <data name="Label_NewPlanFolder" xml:space="preserve">
     <value>New Folder</value>

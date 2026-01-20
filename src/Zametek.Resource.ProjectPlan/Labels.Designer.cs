@@ -925,15 +925,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Load.
-        /// </summary>
-        public static string Label_LoadManagedPlan {
-            get {
-                return ResourceManager.GetString("Label_LoadManagedPlan", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Max.
         /// </summary>
         public static string Label_Max {
@@ -1007,11 +998,11 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to New File.
+        ///   Looks up a localized string similar to New Plan.
         /// </summary>
-        public static string Label_NewPlanFile {
+        public static string Label_NewPlan {
             get {
-                return ResourceManager.GetString("Label_NewPlanFile", resourceCulture);
+                return ResourceManager.GetString("Label_NewPlan", resourceCulture);
             }
         }
         
@@ -1264,6 +1255,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_ScheduleMode {
             get {
                 return ResourceManager.GetString("Label_ScheduleMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select.
+        /// </summary>
+        public static string Label_SelectManagedPlan {
+            get {
+                return ResourceManager.GetString("Label_SelectManagedPlan", resourceCulture);
             }
         }
         
