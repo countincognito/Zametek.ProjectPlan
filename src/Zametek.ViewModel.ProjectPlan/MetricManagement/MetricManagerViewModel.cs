@@ -157,28 +157,46 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
             m_DirectMargin = this
-                .WhenAnyValue(
-                    mm => mm.MarginsMetrics,
-                    margins => margins.Direct is null ? string.Empty : string.Format(" ({0:P1})", margins.Direct))
-                .ToProperty(this, mm => mm.DirectMargin);
+                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Direct)
+                 .ToProperty(this, mm => mm.DirectMargin);
 
             m_IndirectMargin = this
-                .WhenAnyValue(
-                    mm => mm.MarginsMetrics,
-                    margins => margins.Indirect is null ? string.Empty : string.Format(" ({0:P1})", margins.Indirect))
-                .ToProperty(this, mm => mm.IndirectMargin);
+                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Indirect)
+                 .ToProperty(this, mm => mm.IndirectMargin);
 
             m_OtherMargin = this
-                .WhenAnyValue(
-                    mm => mm.MarginsMetrics,
-                    margins => margins.Other is null ? string.Empty : string.Format(" ({0:P1})", margins.Other))
+                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Other)
                  .ToProperty(this, mm => mm.OtherMargin);
 
             m_TotalMargin = this
+                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Total)
+                 .ToProperty(this, mm => mm.TotalMargin);
+
+
+            m_DisplayDirectMargin = this
                 .WhenAnyValue(
-                    mm => mm.MarginsMetrics,
-                    margins => margins.Total is null ? string.Empty : string.Format(" ({0:P1})", margins.Total))
-                .ToProperty(this, mm => mm.TotalMargin);
+                    mm => mm.DirectMargin,
+                    (double? margin) => margin is null ? string.Empty : string.Format(" ({0:P1})", margin))
+                .ToProperty(this, mm => mm.DisplayDirectMargin);
+
+            m_DisplayIndirectMargin = this
+                .WhenAnyValue(
+                    mm => mm.IndirectMargin,
+                    (double? margin) => margin is null ? string.Empty : string.Format(" ({0:P1})", margin))
+                .ToProperty(this, mm => mm.DisplayIndirectMargin);
+
+            m_DisplayOtherMargin = this
+                .WhenAnyValue(
+                    mm => mm.OtherMargin,
+                    (double? margin) => margin is null ? string.Empty : string.Format(" ({0:P1})", margin))
+                 .ToProperty(this, mm => mm.DisplayOtherMargin);
+
+            m_DisplayTotalMargin = this
+                .WhenAnyValue(
+                    mm => mm.TotalMargin,
+                    (double? margin) => margin is null ? string.Empty : string.Format(" ({0:P1})", margin))
+                .ToProperty(this, mm => mm.DisplayTotalMargin);
+
 
             m_DirectMarginAbsolute = this
                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.DirectAbsolute)
@@ -372,17 +390,29 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<double?> m_TotalBilling;
         public double? TotalBilling => m_TotalBilling.Value;
 
-        private readonly ObservableAsPropertyHelper<string> m_DirectMargin;
-        public string DirectMargin => m_DirectMargin.Value;
+        private readonly ObservableAsPropertyHelper<double?> m_DirectMargin;
+        public double? DirectMargin => m_DirectMargin.Value;
 
-        private readonly ObservableAsPropertyHelper<string> m_IndirectMargin;
-        public string IndirectMargin => m_IndirectMargin.Value;
+        private readonly ObservableAsPropertyHelper<double?> m_IndirectMargin;
+        public double? IndirectMargin => m_IndirectMargin.Value;
 
-        private readonly ObservableAsPropertyHelper<string> m_OtherMargin;
-        public string OtherMargin => m_OtherMargin.Value;
+        private readonly ObservableAsPropertyHelper<double?> m_OtherMargin;
+        public double? OtherMargin => m_OtherMargin.Value;
 
-        private readonly ObservableAsPropertyHelper<string> m_TotalMargin;
-        public string TotalMargin => m_TotalMargin.Value;
+        private readonly ObservableAsPropertyHelper<double?> m_TotalMargin;
+        public double? TotalMargin => m_TotalMargin.Value;
+
+        private readonly ObservableAsPropertyHelper<string> m_DisplayDirectMargin;
+        public string DisplayDirectMargin => m_DisplayDirectMargin.Value;
+
+        private readonly ObservableAsPropertyHelper<string> m_DisplayIndirectMargin;
+        public string DisplayIndirectMargin => m_DisplayIndirectMargin.Value;
+
+        private readonly ObservableAsPropertyHelper<string> m_DisplayOtherMargin;
+        public string DisplayOtherMargin => m_DisplayOtherMargin.Value;
+
+        private readonly ObservableAsPropertyHelper<string> m_DisplayTotalMargin;
+        public string DisplayTotalMargin => m_DisplayTotalMargin.Value;
 
         private readonly ObservableAsPropertyHelper<double?> m_DirectMarginAbsolute;
         public double? DirectMarginAbsolute => m_DirectMarginAbsolute.Value;

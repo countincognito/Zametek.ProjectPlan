@@ -361,7 +361,7 @@
 					<SelectableTextBlock.Text>
 						<MultiBinding StringFormat="{}{0:N2}{1}">
 							<Binding Path="DirectMarginAbsolute" Mode="OneWay" />
-							<Binding Path="DirectMargin" Mode="OneWay" />
+							<Binding Path="DisplayDirectMargin" Mode="OneWay" />
 						</MultiBinding>
 					</SelectableTextBlock.Text>
 				</SelectableTextBlock>
@@ -377,7 +377,7 @@
 					<SelectableTextBlock.Text>
 						<MultiBinding StringFormat="{}{0:N2}{1}">
 							<Binding Path="IndirectMarginAbsolute" Mode="OneWay" />
-							<Binding Path="IndirectMargin" Mode="OneWay" />
+							<Binding Path="DisplayIndirectMargin" Mode="OneWay" />
 						</MultiBinding>
 					</SelectableTextBlock.Text>
 				</SelectableTextBlock>
@@ -393,7 +393,7 @@
 					<SelectableTextBlock.Text>
 						<MultiBinding StringFormat="{}{0:N2}{1}">
 							<Binding Path="OtherMarginAbsolute" Mode="OneWay" />
-							<Binding Path="OtherMargin" Mode="OneWay" />
+							<Binding Path="DisplayOtherMargin" Mode="OneWay" />
 						</MultiBinding>
 					</SelectableTextBlock.Text>
 				</SelectableTextBlock>
@@ -409,7 +409,7 @@
 					<SelectableTextBlock.Text>
 						<MultiBinding StringFormat="{}{0:N2}{1}">
 							<Binding Path="TotalMarginAbsolute" Mode="OneWay" />
-							<Binding Path="TotalMargin" Mode="OneWay" />
+							<Binding Path="DisplayTotalMargin" Mode="OneWay" />
 						</MultiBinding>
 					</SelectableTextBlock.Text>
 				</SelectableTextBlock>

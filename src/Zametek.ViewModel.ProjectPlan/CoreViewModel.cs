@@ -2316,14 +2316,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!HasCompilationErrors)
                 {
-                    if (!GraphCompilation.DependentActivities.Any())
+                    if (GraphCompilation.DependentActivities.Any())
                     {
-                        return;
+                        cyclomaticComplexity = CalculateCyclomaticComplexity(GraphCompilation.DependentActivities);
+                        duration = m_VertexGraphCompiler.FinishTime - m_VertexGraphCompiler.StartTime;
+                        durationManMonths = CalculateDurationManMonths(duration, m_DateTimeCalculator.DaysPerWeek);
                     }
-
-                    cyclomaticComplexity = CalculateCyclomaticComplexity(GraphCompilation.DependentActivities);
-                    duration = m_VertexGraphCompiler.FinishTime - m_VertexGraphCompiler.StartTime;
-                    durationManMonths = CalculateDurationManMonths(duration, m_DateTimeCalculator.DaysPerWeek);
                 }
 
                 NetworkMetrics = new NetworkModel
