@@ -1472,7 +1472,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_IsBusy;
             private set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_IsBusy, value);
+                this.RaiseAndSetIfChanged(ref m_IsBusy, value);
             }
         }
 
