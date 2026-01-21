@@ -295,6 +295,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name already exists.
+        /// </summary>
+        public static string Message_NameAlreadyExists {
+            get {
+                return ResourceManager.GetString("Message_NameAlreadyExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name cannot be empty.
+        /// </summary>
+        public static string Message_NameCannotBeEmpty {
+            get {
+                return ResourceManager.GetString("Message_NameCannotBeEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New Trackers must be equal or greater than 0.
         /// </summary>
         public static string Message_NewTrackersMustBeEqualOrGreaterThanZero {
@@ -336,6 +354,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_SplashScreenLoading {
             get {
                 return ResourceManager.GetString("Message_SplashScreenLoading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tag already exists.
+        /// </summary>
+        public static string Message_TagAlreadyExists {
+            get {
+                return ResourceManager.GetString("Message_TagAlreadyExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tag cannot be empty.
+        /// </summary>
+        public static string Message_TagCannotBeEmpty {
+            get {
+                return ResourceManager.GetString("Message_TagCannotBeEmpty", resourceCulture);
             }
         }
         

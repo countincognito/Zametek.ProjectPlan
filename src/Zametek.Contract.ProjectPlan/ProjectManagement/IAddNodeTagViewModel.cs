@@ -3,5 +3,7 @@
     public interface IAddNodeTagViewModel
     {
         string Tag { get; set; }
+
+        void RunValidation();
     }
 }

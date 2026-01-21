@@ -79,10 +79,17 @@ namespace Zametek.ViewModel.ProjectPlan
         private void ValidateName(string name)
         {
             ClearErrors(nameof(Name));
+
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    SetError(nameof(Name), Resource.ProjectPlan.Messages.Message_NameCannotBeEmpty);
+                }
+            }
             {
                 if (m_ExistingNames.Contains(name))
                 {
-                    SetError(nameof(Name), Resource.ProjectPlan.Labels.Label_NameAlreadyExists);
+                    SetError(nameof(Name), Resource.ProjectPlan.Messages.Message_NameAlreadyExists);
                 }
             }
         }
@@ -101,6 +108,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 ValidateName(m_Name);
                 this.RaisePropertyChanged();
             }
+        }
+
+        public void RunValidation()
+        {
+            ValidateName(Name);
         }
 
         #endregion

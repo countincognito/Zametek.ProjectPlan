@@ -440,7 +440,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                ProjectPlanModel projectPlanModel = BuildProjectPlan();
+                ProjectPlanModel projectPlanModel = m_CoreViewModel.BuildProjectPlan();
                 m_CoreViewModel.ExportProjectPlanFile(
                     projectPlanModel,
                     m_CoreViewModel.ResourceSeriesSet,
@@ -457,16 +457,6 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 return m_ProjectPlanManagerViewModel.BuildProject();
-            }
-        }
-
-        private async Task<ProjectPlanModel> BuildProjectPlanAsync() => await Task.Run(BuildProjectPlan);
-
-        private ProjectPlanModel BuildProjectPlan()
-        {
-            lock (m_Lock)
-            {
-                return m_CoreViewModel.BuildProjectPlan();
             }
         }
 

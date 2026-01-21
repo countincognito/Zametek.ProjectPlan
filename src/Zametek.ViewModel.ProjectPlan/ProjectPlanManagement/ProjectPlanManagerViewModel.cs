@@ -137,7 +137,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     AddNodeTagAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
+                        pm => pm.m_SettingService.ProjectPlanTitle,
+                        (IManagedNodeViewModel? selectedNode, string _) => selectedNode is not null),
                     RxApp.MainThreadScheduler);
                 AddNodeTagCommand = addNodeTagCommand;
             }
@@ -146,7 +147,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     RemoveNodeTagAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && selectedNode.RawLabels.Count > 0),
+                        pm => pm.m_SettingService.ProjectPlanTitle,
+                        (IManagedNodeViewModel? selectedNode, string _) => selectedNode is not null && selectedNode.RawLabels.Count > 0),
                     RxApp.MainThreadScheduler);
                 RemoveNodeTagCommand = removeNodeTagCommand;
             }
@@ -428,7 +430,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private void RemoveTagLabels(IEnumerable<ProjectPlanTagModel> projectPlanTagModels)
+        private void ClearTagLabels(IEnumerable<ProjectPlanTagModel> projectPlanTagModels)
         {
             try
             {
@@ -488,7 +490,27 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private HashSet<string> ExistingNames(Guid parentId)
+        private HashSet<string> ExistingTagNames(Guid nodeId)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+                    if (m_NodeTagLookup.TryGetValue(nodeId, out List<string>? labels))
+                    {
+                        return [.. labels];
+                    }
+                    return [];
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private HashSet<string> ExistingNodeNames(Guid parentId)
         {
             try
             {
@@ -507,6 +529,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = false;
             }
         }
+
         private static string SuggestNodeName(
             string suggestedName,
             HashSet<string> existingNames)
@@ -532,7 +555,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    HashSet<string> nameHash = ExistingNames(parentId);
+                    HashSet<string> nameHash = ExistingNodeNames(parentId);
                     return SuggestNodeName(suggestedName, nameHash);
                 }
             }
@@ -802,7 +825,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     parentId = managedNode.Id;
                 }
 
-                HashSet<string> existingNames = ExistingNames(parentId);
+                HashSet<string> existingNames = ExistingNodeNames(parentId);
 
                 var nodeNameViewModel = new NodeNameViewModel(
                     Resource.ProjectPlan.Labels.Label_EmptyNode,
@@ -816,7 +839,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     context: nodeNameViewModel,
                     markdown: true);
 
-                if (!result)
+                nodeNameViewModel.RunValidation();
+
+                if (!result
+                    || nodeNameViewModel.HasErrors)
                 {
                     return;
                 }
@@ -891,7 +917,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     parentId = managedNode.Id;
                 }
 
-                HashSet<string> existingNames = ExistingNames(parentId);
+                HashSet<string> existingNames = ExistingNodeNames(parentId);
 
                 var nodeNameViewModel = new NodeNameViewModel(
                     Resource.ProjectPlan.Labels.Label_EmptyNode,
@@ -905,7 +931,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     context: nodeNameViewModel,
                     markdown: true);
 
-                if (!result)
+                nodeNameViewModel.RunValidation();
+
+                if (!result
+                    || nodeNameViewModel.HasErrors)
                 {
                     return;
                 }
@@ -964,7 +993,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 Guid parentId = managedNode.ParentId;
                 string currentName = managedNode.Name;
-                HashSet<string> existingNames = ExistingNames(parentId);
+                HashSet<string> existingNames = ExistingNodeNames(parentId);
                 existingNames.Remove(currentName);
 
                 var nodeNameViewModel = new NodeNameViewModel(
@@ -979,7 +1008,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     context: nodeNameViewModel,
                     markdown: true);
 
-                if (!result)
+                nodeNameViewModel.RunValidation();
+
+                if (!result
+                    || nodeNameViewModel.HasErrors)
                 {
                     return;
                 }
@@ -1283,34 +1315,39 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                IManagedNodeViewModel? selectedNode = SelectedNode;
+                IManagedNodeViewModel? managedNode = SelectedNode;
 
-                if (selectedNode is null)
+                if (managedNode is null)
                 {
                     return;
                 }
 
-                var addTagViewModel = new AddNodeTagViewModel();
+                HashSet<string> existingTagNames = ExistingTagNames(managedNode.Id);
+
+                var addTagViewModel = new AddNodeTagViewModel(existingTagNames);
 
                 bool result = await m_DialogService.ShowContextAsync(
                     title: Resource.ProjectPlan.Labels.Label_AddTag,
                     header: string.Empty,
-                    message: $@"**{Resource.ProjectPlan.Messages.Message_AddTag} {selectedNode.Name}**",
+                    message: $@"**{Resource.ProjectPlan.Messages.Message_AddTag} {managedNode.Name}**",
                     context: addTagViewModel,
                     markdown: true);
 
-                if (!result)
+                addTagViewModel.RunValidation();
+
+                if (!result
+                    || addTagViewModel.HasErrors)
                 {
                     return;
                 }
 
                 var tagModel = new ProjectPlanTagModel
                 {
-                    NodeId = selectedNode.Id,
+                    NodeId = managedNode.Id,
                     Label = addTagViewModel.Tag,
                 };
 
-                await AddNodeTagInternalAsync(tagModel, selectedNode);
+                await AddNodeTagInternalAsync(tagModel, managedNode);
             }
             catch (Exception ex)
             {
@@ -1335,6 +1372,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     AddTagLabels([tagModel]);
                     SetTagLabels(managedNodeViewModel);
+                    MarkNodeAsLoaded(tagModel.NodeId);
                     IsProjectUpdated = true;
                 }
             }
@@ -1348,11 +1386,11 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                IManagedNodeViewModel? selectedNode = SelectedNode;
+                IManagedNodeViewModel? managedNode = SelectedNode;
 
-                if (selectedNode is null
-                    || !m_NodeTagLookup.TryGetValue(selectedNode.Id, out List<string>? labels)
-                    || selectedNode.RawLabels.Count == 0)
+                if (managedNode is null
+                    || !m_NodeTagLookup.TryGetValue(managedNode.Id, out List<string>? labels)
+                    || managedNode.RawLabels.Count == 0)
                 {
                     return;
                 }
@@ -1360,7 +1398,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 IList<ProjectPlanTagModel> tagModels = [.. labels
                     .Select(label => new ProjectPlanTagModel
                     {
-                        NodeId = selectedNode.Id,
+                        NodeId = managedNode.Id,
                         Label = label,
                     })];
 
@@ -1369,7 +1407,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 bool result = await m_DialogService.ShowContextAsync(
                     title: Resource.ProjectPlan.Labels.Label_DeleteTag,
                     header: string.Empty,
-                    message: $@"**{Resource.ProjectPlan.Messages.Message_DeleteTag} {selectedNode.Name}**",
+                    message: $@"**{Resource.ProjectPlan.Messages.Message_DeleteTag} {managedNode.Name}**",
                     context: removeTagViewModel,
                     markdown: true);
 
@@ -1378,7 +1416,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     return;
                 }
 
-                await RemoveNodeTagInternalAsync(removeTagViewModel.SelectedTag, selectedNode);
+                await RemoveNodeTagInternalAsync(removeTagViewModel.SelectedTag, managedNode);
             }
             catch (Exception ex)
             {
@@ -1401,8 +1439,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    RemoveTagLabels([tagModel]);
+                    ClearTagLabels([tagModel]);
                     SetTagLabels(managedNodeViewModel);
+                    MarkNodeAsLoaded(tagModel.NodeId);
                     IsProjectUpdated = true;
                 }
             }

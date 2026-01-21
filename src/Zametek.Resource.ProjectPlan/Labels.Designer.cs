@@ -980,15 +980,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Name already exists.
-        /// </summary>
-        public static string Label_NameAlreadyExists {
-            get {
-                return ResourceManager.GetString("Label_NameAlreadyExists", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to New Name.
         /// </summary>
         public static string Label_NewName {

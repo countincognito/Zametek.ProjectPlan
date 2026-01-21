@@ -279,4 +279,16 @@
   <data name="Message_DoYouWishToDeleteTheseItems" xml:space="preserve">
     <value>Do you wish to delete these items?</value>
   </data>
+  <data name="Message_NameAlreadyExists" xml:space="preserve">
+    <value>Name already exists</value>
+  </data>
+  <data name="Message_NameCannotBeEmpty" xml:space="preserve">
+    <value>Name cannot be empty</value>
+  </data>
+  <data name="Message_TagAlreadyExists" xml:space="preserve">
+    <value>Tag already exists</value>
+  </data>
+  <data name="Message_TagCannotBeEmpty" xml:space="preserve">
+    <value>Tag cannot be empty</value>
+  </data>
 </root>
