@@ -16,6 +16,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
+        private readonly IProjectPlanManagerViewModel m_ProjectPlanManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
         private ProjectPlanNodeModel m_ProjectPlanNodeModel;
@@ -29,28 +30,32 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ManagedNodeViewModel(
+            IProjectPlanManagerViewModel projectPlanManagerViewModel,
             ICoreViewModel coreViewModel,
             ISettingService settingService)
-            : this(coreViewModel, settingService, new ProjectPlanNodeModel())
+            : this(projectPlanManagerViewModel, coreViewModel, settingService, new ProjectPlanNodeModel())
         {
         }
 
         public ManagedNodeViewModel(
+            IProjectPlanManagerViewModel projectPlanManagerViewModel,
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             ProjectPlanNodeModel projectPlanNode,
             ProjectPlanModel projectPlan)
-            : this(coreViewModel, settingService, projectPlanNode)
+            : this(projectPlanManagerViewModel, coreViewModel, settingService, projectPlanNode)
         {
             ArgumentNullException.ThrowIfNull(projectPlan);
             m_ProjectPlanModel = projectPlan;
         }
 
         public ManagedNodeViewModel(
+            IProjectPlanManagerViewModel projectPlanManagerViewModel,
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             ProjectPlanNodeModel projectPlanNode)
         {
+            ArgumentNullException.ThrowIfNull(projectPlanManagerViewModel);
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(projectPlanNode);
@@ -64,6 +69,7 @@ namespace Zametek.ViewModel.ProjectPlan
                .Bind(out m_ReadOnlyLabels)
                .Subscribe();
 
+            m_ProjectPlanManagerViewModel = projectPlanManagerViewModel;
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_ProjectPlanNodeModel = projectPlanNode;
@@ -78,20 +84,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_DisplayName = this
                 .WhenAnyValue(
-                    x => x.m_SettingService.ProjectPlanId,
+                    x => x.m_ProjectPlanManagerViewModel.IsProjectUpdated,
                     x => x.m_CoreViewModel.IsProjectPlanUpdated,
                     x => x.Name,
                     x => x.Label,
-                    (projectPlanId, isProjectPlanUpdated, name, label) =>
+                    (isProjectUpdated, isProjectPlanUpdated, name, label) =>
                     {
                         string displayName = name;
                         if (IsFolder)
                         {
                             displayName = $@"[{name}]";
                         }
-                        bool nodeHasChanges =
-                            m_ProjectPlanNodeModel.Id == projectPlanId
-                            && isProjectPlanUpdated;
+                        Guid projectPlanId = m_SettingService.ProjectPlanId;
+                        bool nodeHasChanges = m_ProjectPlanNodeModel.Id == projectPlanId && isProjectPlanUpdated;
                         return $@"{(nodeHasChanges ? "*" : string.Empty)}{displayName} {label}";
                     })
                 .ToProperty(this, x => x.DisplayName);

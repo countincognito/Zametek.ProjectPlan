@@ -138,7 +138,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(changeSet =>
                 {
-                    if (!IsBusy && changeSet.Replaced > 0)
+                    if (!IsBusy && (changeSet.Replaced + changeSet.Adds) > 0)
                     {
                         lock (m_Lock)
                         {

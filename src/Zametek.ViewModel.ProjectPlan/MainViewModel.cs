@@ -79,6 +79,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
 
+        private readonly IDisposable? m_ProjectTitleUpdateSub;
+
         #endregion
 
         #region Ctors
@@ -107,6 +109,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectFileSave = projectFileSave;
             m_SettingService = settingService;
             m_DialogService = dialogService;
+            m_ProjectTitle = string.Empty;
 
             {
                 ReactiveCommand<Unit, Unit> openProjectFileCommand = ReactiveCommand.CreateFromTask(OpenProjectFileAsync);
@@ -163,23 +166,6 @@ namespace Zametek.ViewModel.ProjectPlan
             OpenReportIssueCommand = ReactiveCommand.CreateFromTask(OpenReportIssueAsync);
             OpenViewLicenseCommand = ReactiveCommand.CreateFromTask(OpenViewLicenseAsync);
             OpenAboutCommand = ReactiveCommand.Create(OpenAboutAsync);
-
-            m_ProjectTitle = this
-                .WhenAnyValue(
-                    main => main.m_SettingService.ProjectTitle,
-                    main => main.m_SettingService.ProjectPlanTitle,
-                    main => main.m_SettingService.ProjectPlanId,
-                    main => main.m_ProjectPlanManagerViewModel.ProjectHasChanges,
-                    (projectTitle, planTitle, projectPlanId, projectHasChanges) =>
-                    {
-                        string plan = projectPlanId.ToShortString();
-                        if (!string.IsNullOrWhiteSpace(planTitle))
-                        {
-                            plan = planTitle;
-                        }
-                        return $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(projectTitle) ? Resource.ProjectPlan.Titles.Title_UntitledProject : projectTitle)} - {plan} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
-                    })
-                .ToProperty(this, main => main.ProjectTitle);
 
             m_IsBusy = this
                 .WhenAnyValue(
@@ -270,6 +256,41 @@ namespace Zametek.ViewModel.ProjectPlan
             m_BaseTheme = this
                 .WhenAnyValue(main => main.m_CoreViewModel.BaseTheme)
                 .ToProperty(this, main => main.BaseTheme);
+
+            m_ProjectTitleUpdateSub = this
+                .WhenAnyValue(
+                    main => main.IsProjectUpdated,
+                    main => main.IsProjectPlanUpdated,
+                    main => main.m_ProjectPlanManagerViewModel.IsReadyToReviseTitle,
+                    (isProjectUpdated, isProjectPlanUpdated, isReadyToReviseTitle) =>
+                    {
+                        bool projectHasChanges = isProjectUpdated || isProjectPlanUpdated;
+                        string newTitle = ProjectTitle;
+
+                        if (isReadyToReviseTitle == ReadyToRevise.Yes
+                            || projectHasChanges)
+                        {
+                            string projectTitle = m_SettingService.ProjectTitle;
+                            string planTitle = m_SettingService.ProjectPlanTitle;
+                            Guid projectPlanId = m_SettingService.ProjectPlanId;
+
+                            string plan = projectPlanId.ToShortString();
+                            if (!string.IsNullOrWhiteSpace(planTitle))
+                            {
+                                plan = planTitle;
+                            }
+
+                            newTitle = $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(projectTitle) ? Resource.ProjectPlan.Titles.Title_UntitledProject : projectTitle)} - {plan} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
+                            m_ProjectPlanManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.No;
+                        }
+
+                        return newTitle;
+                    })
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(projectTitle =>
+                {
+                    ProjectTitle = projectTitle.Trim();
+                });
 
             m_CoreViewModel.AutoCompile = true;
 
@@ -494,6 +515,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 // Now bind the project title to the filename.
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
+                m_ProjectPlanManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
             }
         }
 
@@ -513,6 +535,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_CoreViewModel.IsProjectPlanUpdated = false;
                 m_ProjectPlanManagerViewModel.IsProjectUpdated = false;
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
+                m_ProjectPlanManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
             }
         }
 
@@ -535,10 +558,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IMainViewModel Members
 
-        private readonly ObservableAsPropertyHelper<string> m_ProjectTitle;
+        private string m_ProjectTitle;
         public string ProjectTitle
         {
-            get => m_ProjectTitle.Value;
+            get => m_ProjectTitle;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    m_ProjectTitle = value;
+                    this.RaisePropertyChanged();
+                }
+            }
         }
 
         private readonly ObservableAsPropertyHelper<bool> m_IsBusy;
@@ -1114,6 +1145,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IKillSubscriptions Members
+
+        public void KillSubscriptions()
+        {
+            m_ProjectTitleUpdateSub?.Dispose();
+        }
+
+        #endregion
+
         #region IDisposable Members
 
         private bool m_Disposed = false;
@@ -1128,7 +1168,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
-                m_ProjectTitle?.Dispose();
+                KillSubscriptions();
                 m_IsBusy?.Dispose();
                 m_IsProjectUpdated?.Dispose();
                 m_IsProjectPlanUpdated?.Dispose();

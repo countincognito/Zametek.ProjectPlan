@@ -1,7 +1,5 @@
-﻿using Avalonia.Threading;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ReactiveUI;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Data.ProjectPlan;
@@ -28,7 +26,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new();
             m_ProjectTitle = string.Empty;
             m_ProjectId = Guid.NewGuid();
-            m_PlanTitle = string.Empty;
+            m_ProjectPlanTitle = string.Empty;
             m_PlanId = Guid.NewGuid();
             m_AppSettingsModel = new()
             {
@@ -85,14 +83,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => string.IsNullOrWhiteSpace(m_ProjectTitle) ? string.Empty : m_ProjectTitle;
             protected set
             {
-                Dispatcher.UIThread.Invoke(() =>
+                lock (m_Lock)
                 {
-                    lock (m_Lock)
-                    {
-                        m_ProjectTitle = value;
-                        this.RaisePropertyChanged();
-                    }
-                });
+                    m_ProjectTitle = value;
+                }
             }
         }
 
@@ -102,31 +96,23 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ProjectId;
             protected set
             {
-                Dispatcher.UIThread.Invoke(() =>
+                lock (m_Lock)
                 {
-                    lock (m_Lock)
-                    {
-                        m_ProjectId = value == Guid.Empty ? Guid.NewGuid() : value;
-                        this.RaisePropertyChanged();
-                    }
-                });
+                    m_ProjectId = value == Guid.Empty ? Guid.NewGuid() : value;
+                }
             }
         }
 
-        private string m_PlanTitle;
+        private string m_ProjectPlanTitle;
         public string ProjectPlanTitle
         {
-            get => string.IsNullOrWhiteSpace(m_PlanTitle) ? string.Empty : m_PlanTitle;
+            get => string.IsNullOrWhiteSpace(m_ProjectPlanTitle) ? string.Empty : m_ProjectPlanTitle;
             protected set
             {
-                Dispatcher.UIThread.Invoke(() =>
+                lock (m_Lock)
                 {
-                    lock (m_Lock)
-                    {
-                        m_PlanTitle = value;
-                        this.RaisePropertyChanged();
-                    }
-                });
+                    m_ProjectPlanTitle = value;
+                }
             }
         }
 
@@ -136,14 +122,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_PlanId;
             protected set
             {
-                Dispatcher.UIThread.Invoke(() =>
+                lock (m_Lock)
                 {
-                    lock (m_Lock)
-                    {
-                        m_PlanId = value == Guid.Empty ? Guid.NewGuid() : value;
-                        this.RaisePropertyChanged();
-                    }
-                });
+                    m_PlanId = value == Guid.Empty ? Guid.NewGuid() : value;
+                }
             }
         }
 

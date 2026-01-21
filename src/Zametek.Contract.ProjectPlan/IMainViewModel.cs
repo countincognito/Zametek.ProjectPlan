@@ -4,7 +4,7 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IMainViewModel
-        : IDisposable
+        : IKillSubscriptions, IDisposable
     {
         string ProjectTitle { get; }
 

@@ -49,7 +49,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_IsBusy = false;
-            Root = new ManagedNodeViewModel(m_CoreViewModel, m_SettingService); // Placeholder until ResetRootNode is called.
+            Root = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService); // Placeholder until ResetRootNode is called.
             m_Nodes = new();
             SelectedNodes = [];
             SelectedNode = null;
@@ -58,6 +58,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_NodeTagLookup = new();
             m_NodeAction = new();
             m_NodeActionCommandManualTrigger = new();
+            m_IsReadyToReviseTitle = ReadyToRevise.No;
 
             SetSelectedManagedNodesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedNodes);
             {
@@ -137,8 +138,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     AddNodeTagAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
-                        pm => pm.m_SettingService.ProjectPlanTitle,
-                        (IManagedNodeViewModel? selectedNode, string _) => selectedNode is not null),
+                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
                     RxApp.MainThreadScheduler);
                 AddNodeTagCommand = addNodeTagCommand;
             }
@@ -147,8 +147,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     RemoveNodeTagAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
-                        pm => pm.m_SettingService.ProjectPlanTitle,
-                        (IManagedNodeViewModel? selectedNode, string _) => selectedNode is not null && selectedNode.RawLabels.Count > 0),
+                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && selectedNode.RawLabels.Count > 0),
                     RxApp.MainThreadScheduler);
                 RemoveNodeTagCommand = removeNodeTagCommand;
             }
@@ -247,6 +246,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Root node.
                     Root.Dispose();
                     Root = new ManagedNodeViewModel(
+                        this,
                         m_CoreViewModel,
                         m_SettingService,
                         new ProjectPlanNodeModel
@@ -613,7 +613,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         if (!m_ManagedNodeLookup.ContainsKey(projectPlanNode.Id))
                         {
-                            var projectPlan = new ManagedNodeViewModel(m_CoreViewModel, m_SettingService, projectPlanNode);
+                            var projectPlan = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, projectPlanNode);
                             SetPlanFile(projectPlan);
                             SetTagLabels(projectPlan);
                             m_ManagedNodeLookup[projectPlan.Id] = projectPlan;
@@ -798,6 +798,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
 
                         IsProjectUpdated = true;
+                        IsReadyToReviseTitle = ReadyToRevise.Yes;
                     }
                 }
             }
@@ -891,6 +892,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     AddPlanFiles([projectPlanFile]);
                     AddManagedNodes([projectPlanNode]);
                     IsProjectUpdated = true;
+                    IsReadyToReviseTitle = ReadyToRevise.Yes;
                 }
             }
             finally
@@ -972,6 +974,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     AddManagedNodes([projectPlanNode]);
                     IsProjectUpdated = true;
+                    IsReadyToReviseTitle = ReadyToRevise.Yes;
                 }
             }
             finally
@@ -1025,6 +1028,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 IsProjectUpdated = true;
+                IsReadyToReviseTitle = ReadyToRevise.Yes;
             }
             catch (Exception ex)
             {
@@ -1092,6 +1096,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (!nestedNodeIds.Contains(currentNodeId))
                     {
+                        IsReadyToReviseTitle = ReadyToRevise.Yes;
                         IsProjectUpdated = true;
                         return;
                     }
@@ -1107,6 +1112,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         LoadProjectPlanFileInternal(mostRecentPlan);
                         IsProjectUpdated = true;
+                        IsReadyToReviseTitle = ReadyToRevise.Yes;
                         return;
                     }
 
@@ -1141,6 +1147,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     MarkNodeAsLoaded(projectPlanNode.Id);
 
                     IsProjectUpdated = true;
+                    IsReadyToReviseTitle = ReadyToRevise.Yes;
                 }
             }
             finally
@@ -1301,6 +1308,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             IsProjectUpdated = true;
+                            IsReadyToReviseTitle = ReadyToRevise.Yes;
                         }
                     }
                 }
@@ -1372,8 +1380,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     AddTagLabels([tagModel]);
                     SetTagLabels(managedNodeViewModel);
-                    MarkNodeAsLoaded(tagModel.NodeId);
+                    //MarkNodeAsLoaded(tagModel.NodeId);
                     IsProjectUpdated = true;
+                    IsReadyToReviseTitle = ReadyToRevise.Yes;
                 }
             }
             finally
@@ -1441,8 +1450,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsBusy = true;
                     ClearTagLabels([tagModel]);
                     SetTagLabels(managedNodeViewModel);
-                    MarkNodeAsLoaded(tagModel.NodeId);
+                    //MarkNodeAsLoaded(tagModel.NodeId);
+
                     IsProjectUpdated = true;
+                    IsReadyToReviseTitle = ReadyToRevise.Yes;
                 }
             }
             finally
@@ -1462,6 +1473,25 @@ namespace Zametek.ViewModel.ProjectPlan
             private set
             {
                 lock (m_Lock) this.RaiseAndSetIfChanged(ref m_IsBusy, value);
+            }
+        }
+
+        // We need to use an enum because raised changes on bools aren't always captured.
+        // https://github.com/reactiveui/ReactiveUI/issues/3846
+        private ReadyToRevise m_IsReadyToReviseTitle;
+
+        // This should always be the last thing altered in order to trigger a check.
+        public ReadyToRevise IsReadyToReviseTitle
+        {
+            get => m_IsReadyToReviseTitle;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_IsReadyToReviseTitle = value;
+                    //this.RaiseAndSetIfChanged(ref m_IsReadyToReviseTitle, value);
+                    this.RaisePropertyChanged();
+                }
             }
         }
 
@@ -1579,6 +1609,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_NodeAction.Reset();
 
                     IsProjectUpdated = false;
+                    IsReadyToReviseTitle = ReadyToRevise.Yes;
                 }
             }
             finally
@@ -1665,6 +1696,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     IsProjectUpdated = false;
+                    IsReadyToReviseTitle = ReadyToRevise.Yes;
                 }
             }
             finally
