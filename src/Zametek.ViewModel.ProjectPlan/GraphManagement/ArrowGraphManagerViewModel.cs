@@ -252,7 +252,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ArrowGraphData;
             private set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_ArrowGraphData, value);
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_ArrowGraphData, value);
+                }
             }
         }
 

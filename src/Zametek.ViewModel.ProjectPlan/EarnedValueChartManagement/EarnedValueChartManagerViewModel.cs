@@ -169,7 +169,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             private set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_EarnedValueChartPlotModel, value);
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_EarnedValueChartPlotModel, value);
+                }
             }
         }
 

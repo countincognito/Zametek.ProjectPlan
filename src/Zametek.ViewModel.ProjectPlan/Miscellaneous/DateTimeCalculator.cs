@@ -300,7 +300,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_DaysPerWeek;
             private set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_DaysPerWeek, value);
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_DaysPerWeek, value);
+                }
             }
         }
 

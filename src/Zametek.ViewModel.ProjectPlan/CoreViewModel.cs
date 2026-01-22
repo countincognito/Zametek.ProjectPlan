@@ -1172,7 +1172,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_BaseTheme;
             set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_BaseTheme, value);
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_BaseTheme, value);
+                }
             }
         }
 
@@ -1449,7 +1452,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ResourceSeriesSet;
             private set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_ResourceSeriesSet, value);
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_ResourceSeriesSet, value);
+                }
             }
         }
 
@@ -1459,7 +1465,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_TrackingSeriesSet;
             private set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_TrackingSeriesSet, value);
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_TrackingSeriesSet, value);
+                }
             }
         }
 

@@ -289,7 +289,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(projectTitle =>
                 {
-                    ProjectTitle = projectTitle.Trim();
+                    ProjectTitle = projectTitle;
                 });
 
             m_CoreViewModel.AutoCompile = true;
@@ -564,11 +564,8 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ProjectTitle;
             private set
             {
-                lock (m_Lock)
-                {
-                    m_ProjectTitle = value;
-                    this.RaisePropertyChanged();
-                }
+                m_ProjectTitle = value;
+                this.RaisePropertyChanged();
             }
         }
 

@@ -239,7 +239,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             private set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_GanttChartPlotModel, value);
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_GanttChartPlotModel, value);
+                }
             }
         }
 

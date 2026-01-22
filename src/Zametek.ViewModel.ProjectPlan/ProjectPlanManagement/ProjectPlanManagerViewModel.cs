@@ -1096,8 +1096,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (!nestedNodeIds.Contains(currentNodeId))
                     {
-                        IsReadyToReviseTitle = ReadyToRevise.Yes;
                         IsProjectUpdated = true;
+                        IsReadyToReviseTitle = ReadyToRevise.Yes;
                         return;
                     }
 
@@ -1451,7 +1451,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     ClearTagLabels([tagModel]);
                     SetTagLabels(managedNodeViewModel);
                     //MarkNodeAsLoaded(tagModel.NodeId);
-
                     IsProjectUpdated = true;
                     IsReadyToReviseTitle = ReadyToRevise.Yes;
                 }
@@ -1486,12 +1485,8 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_IsReadyToReviseTitle;
             set
             {
-                lock (m_Lock)
-                {
-                    m_IsReadyToReviseTitle = value;
-                    //this.RaiseAndSetIfChanged(ref m_IsReadyToReviseTitle, value);
-                    this.RaisePropertyChanged();
-                }
+                m_IsReadyToReviseTitle = value;
+                this.RaisePropertyChanged();
             }
         }
 
@@ -1513,7 +1508,8 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_IsProjectUpdated;
             set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_IsProjectUpdated, value);
+                //lock (m_Lock) 
+                this.RaiseAndSetIfChanged(ref m_IsProjectUpdated, value);
             }
         }
 

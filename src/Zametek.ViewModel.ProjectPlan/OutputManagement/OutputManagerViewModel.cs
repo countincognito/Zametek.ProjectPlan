@@ -216,7 +216,10 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_CompilationOutput;
             set
             {
-                lock (m_Lock) this.RaiseAndSetIfChanged(ref m_CompilationOutput, value);
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_CompilationOutput, value);
+                }
             }
         }
 
