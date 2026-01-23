@@ -180,6 +180,24 @@
   <data name="Menu_ShowDates" xml:space="preserve">
     <value>Show _Dates</value>
   </data>
+  <data name="Menu_Sort" xml:space="preserve">
+    <value>Sort</value>
+  </data>
+  <data name="Menu_SortModeCreatedOn" xml:space="preserve">
+    <value>Created On</value>
+  </data>
+  <data name="Menu_SortDirectionAscending" xml:space="preserve">
+    <value>Ascending</value>
+  </data>
+  <data name="Menu_SortDirectionDescending" xml:space="preserve">
+    <value>Descending</value>
+  </data>
+  <data name="Menu_SortModeModifiedOn" xml:space="preserve">
+    <value>Modified On</value>
+  </data>
+  <data name="Menu_SortModeName" xml:space="preserve">
+    <value>Name</value>
+  </data>
   <data name="Menu_Themes" xml:space="preserve">
     <value>Themes</value>
   </data>

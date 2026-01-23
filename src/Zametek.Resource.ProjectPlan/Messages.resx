@@ -291,4 +291,10 @@
   <data name="Message_TagCannotBeEmpty" xml:space="preserve">
     <value>Tag cannot be empty</value>
   </data>
+  <data name="Message_UnknownSortMode" xml:space="preserve">
+    <value>Unknown SortDirection value:</value>
+  </data>
+  <data name="Message_UnknownSortDirection" xml:space="preserve">
+    <value>Unknown SortMode value:</value>
+  </data>
 </root>

@@ -35,6 +35,10 @@ namespace Zametek.Contract.ProjectPlan
 
         IManagedNodeViewModel? SelectedNode { get; }
 
+        SortMode SelectedSortMode { get; set; }
+
+        SortDirection SelectedSortDirection { get; set; }
+
         ICommand SetSelectedManagedNodesCommand { get; }
 
         ICommand LoadProjectPlanFileCommand { get; }
@@ -58,6 +62,10 @@ namespace Zametek.Contract.ProjectPlan
         ICommand AddNodeTagCommand { get; }
 
         ICommand RemoveNodeTagCommand { get; }
+
+        ICommand ChangeSortModeCommand { get; }
+
+        ICommand ChangeSortDirectionCommand { get; }
 
         void ResetProject();
 

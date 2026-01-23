@@ -12,6 +12,7 @@ using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
+using SortDirection = Zametek.Common.ProjectPlan.SortDirection;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -29,8 +30,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ConcurrentDictionary<Guid, ProjectPlanFileModel> m_FilePlanLookup;
         private readonly ConcurrentDictionary<Guid, List<string>> m_NodeTagLookup;
 
+        private readonly BehaviorSubject<IComparer<IManagedNodeViewModel>> m_NodeSortComparer;
+
         private readonly NodeActionModel m_NodeAction;
         private readonly Subject<bool> m_NodeActionCommandManualTrigger;
+
+        private readonly IDisposable? m_SortUpdateSub;
 
         #endregion
 
@@ -49,7 +54,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_IsBusy = false;
-            Root = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService); // Placeholder until ResetRootNode is called.
+            m_NodeSortComparer = new(SortExpressionComparer<IManagedNodeViewModel>.Ascending(x => x.CreatedOn));
+            Root = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, m_NodeSortComparer); // Placeholder until ResetRootNode is called.
             m_Nodes = new();
             SelectedNodes = [];
             SelectedNode = null;
@@ -182,9 +188,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 PasteProjectPlanNodeCommand = pasteProjectPlanNodeCommand;
             }
 
+            ChangeSortModeCommand = ReactiveCommand.CreateFromTask<SortMode>(ChangeSortModeAsync);
+            ChangeSortDirectionCommand = ReactiveCommand.CreateFromTask<SortDirection>(ChangeSortDirectionAsync);
+
             // Create read-only view to the source list.
             m_Nodes.Connect()
-                .Sort(SortExpressionComparer<IManagedNodeViewModel>.Ascending(pm => pm.CreatedOn))
+                .AutoRefresh(node => node.Name) // Re-evaluates when this property changes.
+                .AutoRefresh(node => node.CreatedOn)
+                .AutoRefresh(node => node.ModifiedOn)
+                .Sort(m_NodeSortComparer) // DynamicData listens to changes in this observable.
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Bind(out m_ReadOnlyNodes)
                 .Subscribe();
@@ -201,6 +213,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     pm => pm.IsProjectPlanUpdated,
                     (isProjectUpdated, isProjectPlanUpdated) => isProjectUpdated || isProjectPlanUpdated)
                 .ToProperty(this, pm => pm.ProjectHasChanges);
+
+            m_SortUpdateSub = this
+                .WhenAnyValue(
+                    pm => pm.SelectedSortMode,
+                    pm => pm.SelectedSortDirection)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(async _ => await ChangeSortAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ProjectPlans;
             Title = Resource.ProjectPlan.Titles.Title_ProjectPlans;
@@ -249,6 +268,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         this,
                         m_CoreViewModel,
                         m_SettingService,
+                        m_NodeSortComparer,
                         new ProjectPlanNodeModel
                         {
                             Id = rootId,
@@ -613,7 +633,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         if (!m_ManagedNodeLookup.ContainsKey(projectPlanNode.Id))
                         {
-                            var projectPlan = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, projectPlanNode);
+                            var projectPlan = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, m_NodeSortComparer, projectPlanNode);
                             SetPlanFile(projectPlan);
                             SetTagLabels(projectPlan);
                             m_ManagedNodeLookup[projectPlan.Id] = projectPlan;
@@ -1461,6 +1481,83 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private async Task ChangeSortModeAsync(SortMode sortMode)
+        {
+            try
+            {
+                SelectedSortMode = sortMode;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeSortDirectionAsync(SortDirection sortDirection)
+        {
+            try
+            {
+                SelectedSortDirection = sortDirection;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeSortAsync()
+        {
+            try
+            {
+                await Dispatcher.UIThread.InvokeAsync(ChangeSortInternal);
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private void ChangeSortInternal()
+        {
+            lock (m_Lock)
+            {
+                SortMode sortMode = SelectedSortMode;
+                SortDirection sortDirection = SelectedSortDirection;
+
+                Func<IManagedNodeViewModel, IComparable> newSortMode =
+                    (x) => x.Name;
+                Func<Func<IManagedNodeViewModel, IComparable>, SortExpressionComparer<IManagedNodeViewModel>> newSortDirection =
+                    SortExpressionComparer<IManagedNodeViewModel>.Ascending;
+
+                newSortMode = sortMode switch
+                {
+                    SortMode.Name => (x) => x.Name,
+                    SortMode.CreatedOn => (x) => x.CreatedOn,
+                    SortMode.ModifiedOn => (x) => x.ModifiedOn,
+                    _ => throw new ArgumentOutOfRangeException(nameof(sortMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownSortMode} {sortMode}"),
+                };
+
+                newSortDirection = sortDirection switch
+                {
+                    SortDirection.Ascending => SortExpressionComparer<IManagedNodeViewModel>.Ascending,
+                    SortDirection.Descending => SortExpressionComparer<IManagedNodeViewModel>.Descending,
+                    _ => throw new ArgumentOutOfRangeException(nameof(sortMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownSortDirection} {sortDirection}"),
+                };
+
+                IComparer<IManagedNodeViewModel> nodeSortComparer = newSortDirection(newSortMode);
+                m_NodeSortComparer.OnNext(nodeSortComparer);
+            }
+        }
+
         #endregion
 
         #region IProjectPlanManagerViewModel
@@ -1536,6 +1633,20 @@ namespace Zametek.ViewModel.ProjectPlan
             private set => this.RaiseAndSetIfChanged(ref m_SelectedNode, value);
         }
 
+        private SortMode m_SelectedSortMode;
+        public SortMode SelectedSortMode
+        {
+            get => m_SelectedSortMode;
+            set => this.RaiseAndSetIfChanged(ref m_SelectedSortMode, value);
+        }
+
+        private SortDirection m_SelectedSortDirection;
+        public SortDirection SelectedSortDirection
+        {
+            get => m_SelectedSortDirection;
+            set => this.RaiseAndSetIfChanged(ref m_SelectedSortDirection, value);
+        }
+
         public ICommand SetSelectedManagedNodesCommand { get; }
 
         public ICommand LoadProjectPlanFileCommand { get; }
@@ -1559,6 +1670,10 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand AddNodeTagCommand { get; }
 
         public ICommand RemoveNodeTagCommand { get; }
+
+        public ICommand ChangeSortModeCommand { get; }
+
+        public ICommand ChangeSortDirectionCommand { get; }
 
         public void ResetProject()
         {
@@ -1820,6 +1935,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
+            m_SortUpdateSub?.Dispose();
         }
 
         #endregion

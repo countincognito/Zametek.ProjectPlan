@@ -1,10 +1,10 @@
 ﻿using DynamicData;
-using java.awt.print;
 using ReactiveUI;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -19,6 +19,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IProjectPlanManagerViewModel m_ProjectPlanManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
+        private readonly BehaviorSubject<IComparer<IManagedNodeViewModel>> m_NodeSortComparer;
         private ProjectPlanNodeModel m_ProjectPlanNodeModel;
         private ProjectPlanModel? m_ProjectPlanModel;
 
@@ -32,8 +33,9 @@ namespace Zametek.ViewModel.ProjectPlan
         public ManagedNodeViewModel(
             IProjectPlanManagerViewModel projectPlanManagerViewModel,
             ICoreViewModel coreViewModel,
-            ISettingService settingService)
-            : this(projectPlanManagerViewModel, coreViewModel, settingService, new ProjectPlanNodeModel())
+            ISettingService settingService,
+            BehaviorSubject<IComparer<IManagedNodeViewModel>> nodeSortComparer)
+            : this(projectPlanManagerViewModel, coreViewModel, settingService, nodeSortComparer, new ProjectPlanNodeModel())
         {
         }
 
@@ -41,9 +43,10 @@ namespace Zametek.ViewModel.ProjectPlan
             IProjectPlanManagerViewModel projectPlanManagerViewModel,
             ICoreViewModel coreViewModel,
             ISettingService settingService,
+            BehaviorSubject<IComparer<IManagedNodeViewModel>> nodeSortComparer,
             ProjectPlanNodeModel projectPlanNode,
             ProjectPlanModel projectPlan)
-            : this(projectPlanManagerViewModel, coreViewModel, settingService, projectPlanNode)
+            : this(projectPlanManagerViewModel, coreViewModel, settingService, nodeSortComparer, projectPlanNode)
         {
             ArgumentNullException.ThrowIfNull(projectPlan);
             m_ProjectPlanModel = projectPlan;
@@ -53,11 +56,13 @@ namespace Zametek.ViewModel.ProjectPlan
             IProjectPlanManagerViewModel projectPlanManagerViewModel,
             ICoreViewModel coreViewModel,
             ISettingService settingService,
+            BehaviorSubject<IComparer<IManagedNodeViewModel>> nodeSortComparer,
             ProjectPlanNodeModel projectPlanNode)
         {
             ArgumentNullException.ThrowIfNull(projectPlanManagerViewModel);
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
+            ArgumentNullException.ThrowIfNull(nodeSortComparer);
             ArgumentNullException.ThrowIfNull(projectPlanNode);
             m_Lock = new object();
             m_IsLoaded = false;
@@ -65,22 +70,27 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Create read-only view to the source list.
             m_Labels.Connect()
-               .ObserveOn(RxApp.MainThreadScheduler)
-               .Bind(out m_ReadOnlyLabels)
-               .Subscribe();
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Bind(out m_ReadOnlyLabels)
+                .Subscribe();
 
             m_ProjectPlanManagerViewModel = projectPlanManagerViewModel;
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
+            m_NodeSortComparer = nodeSortComparer;
             m_ProjectPlanNodeModel = projectPlanNode;
             m_ProjectPlanModel = null;
             m_Children = new();
 
             // Create read-only view to the source list.
             m_Children.Connect()
-               .ObserveOn(RxApp.MainThreadScheduler)
-               .Bind(out m_ReadOnlyChildren)
-               .Subscribe();
+                .AutoRefresh(node => node.Name) // Re-evaluates when this property changes.
+                .AutoRefresh(node => node.CreatedOn)
+                .AutoRefresh(node => node.ModifiedOn)
+                .Sort(m_NodeSortComparer)
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Bind(out m_ReadOnlyChildren)
+                .Subscribe();
 
             m_DisplayName = this
                 .WhenAnyValue(
@@ -197,6 +207,7 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 m_ProjectPlanNodeModel = m_ProjectPlanNodeModel with { ModifiedOn = value };
+                this.RaisePropertyChanged();
             }
         }
 

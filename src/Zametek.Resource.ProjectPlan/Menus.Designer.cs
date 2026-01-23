@@ -250,6 +250,60 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sort.
+        /// </summary>
+        public static string Menu_Sort {
+            get {
+                return ResourceManager.GetString("Menu_Sort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ascending.
+        /// </summary>
+        public static string Menu_SortDirectionAscending {
+            get {
+                return ResourceManager.GetString("Menu_SortDirectionAscending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Descending.
+        /// </summary>
+        public static string Menu_SortDirectionDescending {
+            get {
+                return ResourceManager.GetString("Menu_SortDirectionDescending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Created On.
+        /// </summary>
+        public static string Menu_SortModeCreatedOn {
+            get {
+                return ResourceManager.GetString("Menu_SortModeCreatedOn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modified On.
+        /// </summary>
+        public static string Menu_SortModeModifiedOn {
+            get {
+                return ResourceManager.GetString("Menu_SortModeModifiedOn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string Menu_SortModeName {
+            get {
+                return ResourceManager.GetString("Menu_SortModeName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Themes.
         /// </summary>
         public static string Menu_Themes {

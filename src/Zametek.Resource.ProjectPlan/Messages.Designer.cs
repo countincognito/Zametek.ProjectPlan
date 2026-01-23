@@ -538,6 +538,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown SortMode value:.
+        /// </summary>
+        public static string Message_UnknownSortDirection {
+            get {
+                return ResourceManager.GetString("Message_UnknownSortDirection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown SortDirection value:.
+        /// </summary>
+        public static string Message_UnknownSortMode {
+            get {
+                return ResourceManager.GetString("Message_UnknownSortMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Project has unsaved changes. Do you wish to continue?.
         /// </summary>
         public static string Message_UnsavedChanges {
