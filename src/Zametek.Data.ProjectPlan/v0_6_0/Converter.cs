@@ -55,5 +55,23 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                 ],
             };
         }
+
+        public static AppSettingsModel Upgrade(
+            IMapper mapper,
+            v0_4_4.AppSettingsModel appSettingsModel)
+        {
+            return new AppSettingsModel
+            {
+                ProjectDirectory = appSettingsModel.ProjectPlanDirectory,
+                DefaultShowDates = appSettingsModel.DefaultShowDates,
+                DefaultUseClassicDates = appSettingsModel.DefaultUseClassicDates,
+                DefaultUseBusinessDays = appSettingsModel.DefaultUseBusinessDays,
+                DefaultHideCost = appSettingsModel.DefaultHideCost,
+                DefaultHideBilling = appSettingsModel.DefaultHideBilling,
+                ProjectPlanSortMode = default,
+                ProjectPlanSortDirection = default,
+                SelectedTheme = appSettingsModel.SelectedTheme,
+            };
+        }
     }
 }

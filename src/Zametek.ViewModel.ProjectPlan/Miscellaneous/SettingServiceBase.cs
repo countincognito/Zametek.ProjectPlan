@@ -65,6 +65,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         func = jString => Converter.Upgrade(
                             JsonConvert.DeserializeObject<Data.ProjectPlan.v0_4_4.AppSettingsModel>(jString)
                             ?? new Data.ProjectPlan.v0_4_4.AppSettingsModel());
+                    })
+                    .Case(Versions.v0_6_0, x =>
+                    {
+                        func = jString => Converter.Upgrade(
+                            JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_0.AppSettingsModel>(jString)
+                            ?? new Data.ProjectPlan.v0_6_0.AppSettingsModel());
                     });
 
                 m_AppSettingsModel = func(jsonString);
@@ -138,6 +144,10 @@ namespace Zametek.ViewModel.ProjectPlan
         public abstract bool DefaultHideCost { get; set; }
 
         public abstract bool DefaultHideBilling { get; set; }
+
+        public abstract SortMode ProjectPlanSortMode { get; set; }
+
+        public abstract SortDirection ProjectPlanSortDirection { get; set; }
 
         public abstract string SelectedTheme { get; set; }
 

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.IO;
+using Zametek.Common.ProjectPlan;
 using Zametek.Data.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
@@ -43,7 +44,7 @@ namespace Zametek.ProjectPlan
                     Formatting = Formatting.Indented,
                     NullValueHandling = NullValueHandling.Ignore,
                 });
-            Data.ProjectPlan.v0_4_4.AppSettingsModel output = Converter.Format(m_AppSettingsModel);
+            Data.ProjectPlan.v0_6_0.AppSettingsModel output = Converter.Format(m_AppSettingsModel);
             jsonSerializer.Serialize(writer, output, output.GetType());
         }
 
@@ -53,7 +54,7 @@ namespace Zametek.ProjectPlan
         {
             get
             {
-                string directory = m_AppSettingsModel.ProjectPlanDirectory;
+                string directory = m_AppSettingsModel.ProjectDirectory;
                 return string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory)
                     ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
                     : directory;
@@ -62,7 +63,7 @@ namespace Zametek.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_AppSettingsModel = m_AppSettingsModel with { ProjectPlanDirectory = value };
+                    m_AppSettingsModel = m_AppSettingsModel with { ProjectDirectory = value };
                     SaveSettings();
                 }
             }
@@ -143,6 +144,38 @@ namespace Zametek.ProjectPlan
                 lock (m_Lock)
                 {
                     m_AppSettingsModel = m_AppSettingsModel with { DefaultHideBilling = value };
+                    SaveSettings();
+                }
+            }
+        }
+
+        public override SortMode ProjectPlanSortMode
+        {
+            get
+            {
+                return m_AppSettingsModel.ProjectPlanSortMode;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { ProjectPlanSortMode = value };
+                    SaveSettings();
+                }
+            }
+        }
+
+        public override SortDirection ProjectPlanSortDirection
+        {
+            get
+            {
+                return m_AppSettingsModel.ProjectPlanSortDirection;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { ProjectPlanSortDirection = value };
                     SaveSettings();
                 }
             }

@@ -1633,18 +1633,30 @@ namespace Zametek.ViewModel.ProjectPlan
             private set => this.RaiseAndSetIfChanged(ref m_SelectedNode, value);
         }
 
-        private SortMode m_SelectedSortMode;
         public SortMode SelectedSortMode
         {
-            get => m_SelectedSortMode;
-            set => this.RaiseAndSetIfChanged(ref m_SelectedSortMode, value);
+            get => m_SettingService.ProjectPlanSortMode;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_SettingService.ProjectPlanSortMode = value;
+                    this.RaisePropertyChanged();
+                }
+            }
         }
 
-        private SortDirection m_SelectedSortDirection;
         public SortDirection SelectedSortDirection
         {
-            get => m_SelectedSortDirection;
-            set => this.RaiseAndSetIfChanged(ref m_SelectedSortDirection, value);
+            get => m_SettingService.ProjectPlanSortDirection;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_SettingService.ProjectPlanSortDirection = value;
+                    this.RaisePropertyChanged();
+                }
+            }
         }
 
         public ICommand SetSelectedManagedNodesCommand { get; }

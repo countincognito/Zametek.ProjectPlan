@@ -26,6 +26,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool DefaultHideBilling { get; set; }
 
+        SortMode ProjectPlanSortMode { get; set; }
+
+        SortDirection ProjectPlanSortDirection { get; set; }
+
         string SelectedTheme { get; set; }
 
         bool IsTitleBoundToFilename { get; set; }

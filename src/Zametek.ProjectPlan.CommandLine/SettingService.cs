@@ -1,4 +1,5 @@
-﻿using Zametek.ViewModel.ProjectPlan;
+﻿using Zametek.Common.ProjectPlan;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine
 {
@@ -14,6 +15,8 @@ namespace Zametek.ProjectPlan.CommandLine
         private bool m_DefaultUseBusinessDays;
         private bool m_DefaultHideCost;
         private bool m_DefaultHideBilling;
+        private SortMode m_ProjectPlanSortMode;
+        private SortDirection m_ProjectPlanSortDirection;
         private string m_SelectedTheme;
 
         #endregion
@@ -121,6 +124,36 @@ namespace Zametek.ProjectPlan.CommandLine
                 lock (m_Lock)
                 {
                     m_DefaultHideBilling = value;
+                }
+            }
+        }
+
+        public override SortMode ProjectPlanSortMode
+        {
+            get
+            {
+                return m_ProjectPlanSortMode;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ProjectPlanSortMode = value;
+                }
+            }
+        }
+
+        public override SortDirection ProjectPlanSortDirection
+        {
+            get
+            {
+                return m_ProjectPlanSortDirection;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ProjectPlanSortDirection = value;
                 }
             }
         }
