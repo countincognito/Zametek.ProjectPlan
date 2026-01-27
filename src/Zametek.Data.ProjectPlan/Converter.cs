@@ -20,76 +20,76 @@ namespace Zametek.Data.ProjectPlan
             return m_Mapper.Map<v0_6_0.ProjectModel, Common.ProjectPlan.ProjectModel>(project);
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(v0_5_0.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_5_0.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(v0_6_0.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(v0_6_0.Converter.Upgrade(m_Mapper, localNow, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(v0_4_4.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_4_4.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(v0_5_0.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(localNow, v0_5_0.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(v0_4_3.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_4_3.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(v0_4_4.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(localNow, v0_4_4.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(v0_4_2.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_4_2.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(v0_4_3.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(localNow, v0_4_3.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(v0_4_1.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_4_1.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(v0_4_2.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(localNow, v0_4_2.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(v0_4_0.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_4_0.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(v0_4_1.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(localNow, v0_4_1.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(v0_3_2.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_3_2.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(v0_4_0.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(localNow, v0_4_0.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(v0_3_1.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_3_1.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(v0_3_2.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(localNow, v0_3_2.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(v0_3_0.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_3_0.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(v0_3_1.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(localNow, v0_3_1.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(v0_2_1.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_2_1.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(v0_3_0.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(localNow, v0_3_0.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(v0_2_0.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_2_0.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(v0_2_1.Converter.Upgrade(m_Mapper, project));
+            return Upgrade(localNow, v0_2_1.Converter.Upgrade(m_Mapper, project));
         }
 
-        public static Common.ProjectPlan.ProjectModel Upgrade(v0_1_0.ProjectModel project)
+        public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_1_0.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return Upgrade(v0_2_0.Converter.Upgrade(project));
+            return Upgrade(localNow, v0_2_0.Converter.Upgrade(project));
         }
 
         #endregion

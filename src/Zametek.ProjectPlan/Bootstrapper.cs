@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Dock.Model.Core;
 using Splat;
+using System;
 using Zametek.Contract.ProjectPlan;
 using Zametek.View.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
@@ -21,6 +22,8 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.SetupIOC();
 
             // ViewModels.
+
+            SplatRegistrations.RegisterConstant(TimeProvider.System);
             SplatRegistrations.RegisterLazySingleton<IDateTimeCalculator, DateTimeCalculator>();
             SplatRegistrations.RegisterLazySingleton<IArrowGraphSerializer, ArrowGraphSerializer>();
             SplatRegistrations.RegisterLazySingleton<IVertexGraphSerializer, VertexGraphSerializer>();

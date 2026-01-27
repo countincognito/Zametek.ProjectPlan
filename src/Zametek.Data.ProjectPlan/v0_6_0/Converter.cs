@@ -6,6 +6,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
     {
         public static ProjectModel Upgrade(
             IMapper mapper,
+            DateTimeOffset localNow,
             v0_5_0.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(mapper);
@@ -28,8 +29,8 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                         ParentId = rootId,
                         IsFolder = false,
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
-                        CreatedOn = DateTimeOffset.UtcNow,
-                        ModifiedOn = DateTimeOffset.UtcNow,
+                        CreatedOn = localNow,
+                        ModifiedOn = localNow,
                     },
                 ],
                 Files =

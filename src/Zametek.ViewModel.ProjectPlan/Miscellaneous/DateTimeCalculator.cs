@@ -1,5 +1,6 @@
 ﻿using FluentDateTimeOffset;
 using ReactiveUI;
+using System;
 using System.Globalization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -12,6 +13,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
+        private readonly TimeProvider m_TimeProvider;
 
         private static readonly string s_DateFormat = DateTimeFormatInfo.CurrentInfo.ShortDatePattern;
 
@@ -23,9 +25,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public DateTimeCalculator()
+        public DateTimeCalculator(TimeProvider timeProvider)
         {
+            ArgumentNullException.ThrowIfNull(nameof(timeProvider));
             m_Lock = new object();
+            m_TimeProvider = timeProvider;
             m_AddDaysFunc = AddAllDays;
             m_CountDaysFunc = CountAllDays;
 
@@ -305,6 +309,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     this.RaiseAndSetIfChanged(ref m_DaysPerWeek, value);
                 }
             }
+        }
+
+        public DateTimeOffset GetLocalNow()
+        {
+            return m_TimeProvider.GetLocalNow();
+        }
+
+        public DateTimeOffset GetLocalNow(DateTime dateTime)
+        {
+            TimeSpan offset = m_TimeProvider.LocalTimeZone.GetUtcOffset(dateTime);
+            return new(dateTime, offset);
         }
 
         public int? CalculateTime(

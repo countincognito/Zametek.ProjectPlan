@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Reactive;
@@ -26,6 +27,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
+        private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly ConcurrentDictionary<Guid, IManagedNodeViewModel> m_ManagedNodeLookup;
         private readonly ConcurrentDictionary<Guid, ProjectPlanFileModel> m_FilePlanLookup;
         private readonly ConcurrentDictionary<Guid, List<string>> m_NodeTagLookup;
@@ -44,15 +46,18 @@ namespace Zametek.ViewModel.ProjectPlan
         public ProjectPlanManagerViewModel(
             ICoreViewModel coreViewModel,
             ISettingService settingService,
-            IDialogService dialogService)
+            IDialogService dialogService,
+            IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             m_Lock = new object();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
+            m_DateTimeCalculator = dateTimeCalculator;
             m_IsBusy = false;
             m_NodeSortComparer = new(SortExpressionComparer<IManagedNodeViewModel>.Ascending(x => x.CreatedOn));
             Root = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, m_NodeSortComparer); // Placeholder until ResetRootNode is called.
@@ -262,6 +267,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         rootId = Guid.NewGuid();
                     }
 
+                    DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
+
                     // Root node.
                     Root.Dispose();
                     Root = new ManagedNodeViewModel(
@@ -274,8 +281,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             Id = rootId,
                             IsFolder = true,
                             Name = Resource.ProjectPlan.Labels.Label_RootNode,
-                            CreatedOn = DateTimeOffset.UtcNow,
-                            ModifiedOn = DateTimeOffset.UtcNow,
+                            CreatedOn = localNow,
+                            ModifiedOn = localNow,
                         });
 
                     AddTagLabels(
@@ -891,7 +898,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    var projectPlan = m_CoreViewModel.CreateEmptyProjectPlan();
+                    ProjectPlanModel projectPlan = m_CoreViewModel.CreateEmptyProjectPlan();
+                    DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 
                     var projectPlanNode = new ProjectPlanNodeModel
                     {
@@ -899,8 +907,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         ParentId = parentId,
                         IsFolder = false,
                         Name = nodeName,
-                        CreatedOn = DateTimeOffset.UtcNow,
-                        ModifiedOn = DateTimeOffset.UtcNow,
+                        CreatedOn = localNow,
+                        ModifiedOn = localNow,
                     };
 
                     var projectPlanFile = new ProjectPlanFileModel
@@ -982,14 +990,16 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
+                    DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
+
                     var projectPlanNode = new ProjectPlanNodeModel
                     {
                         Id = Guid.NewGuid(),
                         ParentId = parentId,
                         IsFolder = true,
                         Name = nodeName,
-                        CreatedOn = DateTimeOffset.UtcNow,
-                        ModifiedOn = DateTimeOffset.UtcNow,
+                        CreatedOn = localNow,
+                        ModifiedOn = localNow,
                     };
 
                     AddManagedNodes([projectPlanNode]);
@@ -1143,6 +1153,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Now add the new core project plan to the project manager.
                     ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
+                    DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 
                     var projectPlanNode = new ProjectPlanNodeModel
                     {
@@ -1150,8 +1161,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         ParentId = Root.Id,
                         IsFolder = false,
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
-                        CreatedOn = DateTimeOffset.UtcNow,
-                        ModifiedOn = DateTimeOffset.UtcNow,
+                        CreatedOn = localNow,
+                        ModifiedOn = localNow,
                     };
 
                     var projectPlanFile = new ProjectPlanFileModel
@@ -1287,6 +1298,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
+                    DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 
                     foreach (Guid nodeId in m_NodeAction.NodeIds)
                     {
@@ -1300,8 +1312,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                 ParentId = destinationParentId,
                                 IsFolder = false,
                                 Name = managedNode.Name,
-                                CreatedOn = DateTimeOffset.UtcNow,
-                                ModifiedOn = DateTimeOffset.UtcNow,
+                                CreatedOn = localNow,
+                                ModifiedOn = localNow,
                             };
 
                             var projectPlanFile = new ProjectPlanFileModel
@@ -1706,6 +1718,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Now add the new core project plan to the project manager.
                     ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
+                    DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 
                     var projectPlanNode = new ProjectPlanNodeModel
                     {
@@ -1713,8 +1726,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         ParentId = Root.Id,
                         IsFolder = false,
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
-                        CreatedOn = DateTimeOffset.UtcNow,
-                        ModifiedOn = DateTimeOffset.UtcNow,
+                        CreatedOn = localNow,
+                        ModifiedOn = localNow,
                     };
 
                     var projectPlanFile = new ProjectPlanFileModel
@@ -1769,7 +1782,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (projectModel.Nodes.Count == 0)
                     {
                         m_CoreViewModel.ResetProjectPlan();
-                        var projectPlan = m_CoreViewModel.BuildProjectPlan();
+                        ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
+                        DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 
                         var projectPlanNode = new ProjectPlanNodeModel
                         {
@@ -1777,8 +1791,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             ParentId = Root.Id,
                             IsFolder = false,
                             Name = Resource.ProjectPlan.Labels.Label_BaseNode,
-                            CreatedOn = DateTimeOffset.UtcNow,
-                            ModifiedOn = DateTimeOffset.UtcNow,
+                            CreatedOn = localNow,
+                            ModifiedOn = localNow,
                         };
 
                         var projectPlanFile = new ProjectPlanFileModel
@@ -1861,18 +1875,20 @@ namespace Zametek.ViewModel.ProjectPlan
                     ProjectPlanModel projectPlan = m_CoreViewModel.BuildProjectPlan();
 
                     IManagedNodeViewModel? managedProjectPlan = GetNode(nodeId);
+                    DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 
                     if (managedProjectPlan is null)
                     {
                         // No existing managed plan, so add it to the Root.
+
                         var projectPlanNode = new ProjectPlanNodeModel
                         {
                             Id = nodeId,
                             ParentId = Root.Id,
                             IsFolder = false,
                             Name = Resource.ProjectPlan.Labels.Label_BaseNode,
-                            CreatedOn = DateTimeOffset.UtcNow,
-                            ModifiedOn = DateTimeOffset.UtcNow,
+                            CreatedOn = localNow,
+                            ModifiedOn = localNow,
                         };
 
                         var projectPlanFile = new ProjectPlanFileModel
@@ -1888,7 +1904,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         // Update existing managed plan.
                         managedProjectPlan.ProjectPlan = projectPlan;
-                        managedProjectPlan.ModifiedOn = DateTimeOffset.UtcNow;
+                        managedProjectPlan.ModifiedOn = localNow;
 
                         var projectPlanFile = new ProjectPlanFileModel
                         {

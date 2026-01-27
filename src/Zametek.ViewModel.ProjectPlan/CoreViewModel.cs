@@ -2,6 +2,7 @@
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive.Concurrency;
@@ -1042,7 +1043,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsProjectPlanUpdated = true;
-                    this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
+
+                    // Convert to local now using TimeProvider as we do not know
+                    // if the input is provided as just a datetime from XAML.
+                    DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow(value.DateTime);
+
+                    this.RaiseAndSetIfChanged(ref m_ProjectStart, localNow);
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
             }
@@ -1057,7 +1063,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
-                    this.RaiseAndSetIfChanged(ref m_Today, value);
+
+                    // Convert to local now using TimeProvider as we do not know
+                    // if the input is provided as just a datetime from XAML.
+                    DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow(value.DateTime);
+
+                    this.RaiseAndSetIfChanged(ref m_Today, localNow);
                 }
             }
         }

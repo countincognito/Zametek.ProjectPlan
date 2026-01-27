@@ -6,7 +6,7 @@ namespace Zametek.ViewModel.ProjectPlan
     public static class ChartHelper
     {
 
-        private static readonly DateTime s_TimeOrigin = new(1899, 12, 31, 0, 0, 0, DateTimeKind.Utc);
+        private static readonly DateTime s_TimeOrigin = new(1899, 12, 31, 0, 0, 0, DateTimeKind.Local);
 
         public static string FormatStartScheduleOutput(
             int days,

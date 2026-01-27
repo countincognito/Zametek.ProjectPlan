@@ -11,8 +11,8 @@
 
         public string Name { get; init; } = string.Empty;
 
-        public DateTimeOffset CreatedOn { get; init; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset CreatedOn { get; init; }
 
-        public DateTimeOffset ModifiedOn { get; init; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset ModifiedOn { get; init; }
     }
 }

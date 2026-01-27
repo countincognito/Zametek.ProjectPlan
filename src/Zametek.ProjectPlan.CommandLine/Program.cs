@@ -38,6 +38,7 @@ namespace Zametek.ProjectPlan.CommandLine
                         //    .ReadFrom.Configuration(context.Configuration)
                         //    .CreateLogger();
 
+                        services.AddSingleton(TimeProvider.System);
                         services.AddSingleton<IProjectPlanManagerViewModel, ProjectPlanManagerViewModel>();
                         services.AddSingleton<ICoreViewModel, CoreViewModel>();
                         services.AddSingleton<ISettingService, SettingService>();
