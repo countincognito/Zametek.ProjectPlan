@@ -17,7 +17,6 @@ namespace Zametek.ViewModel.ProjectPlan
         protected VertexGraphCompiler(VertexGraphBuilder vertexGraphBuilder)
             : base(vertexGraphBuilder)
         {
-            ArgumentNullException.ThrowIfNull(nameof(vertexGraphBuilder));
             m_VertexGraphBuilder = vertexGraphBuilder;
         }
 

@@ -27,7 +27,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public DateTimeCalculator(TimeProvider timeProvider)
         {
-            ArgumentNullException.ThrowIfNull(nameof(timeProvider));
             m_Lock = new object();
             m_TimeProvider = timeProvider;
             m_AddDaysFunc = AddAllDays;
