@@ -27,6 +27,9 @@ namespace Zametek.Contract.ProjectPlan
         public double FixedBilling { get; set; }
         bool IsFixedBillingActive { get; set; }
 
+        ColorFormatModel ColorFormat { get; set; }
+        bool IsColorFormatActive { get; set; }
+
         IWorkStreamSelectorViewModel WorkStreamSelector { get; }
         bool IsWorkStreamSelectorActive { get; set; }
 

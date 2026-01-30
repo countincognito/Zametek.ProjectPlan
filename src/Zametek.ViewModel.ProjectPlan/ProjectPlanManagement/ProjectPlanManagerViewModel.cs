@@ -3,7 +3,6 @@ using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
-using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Reactive;

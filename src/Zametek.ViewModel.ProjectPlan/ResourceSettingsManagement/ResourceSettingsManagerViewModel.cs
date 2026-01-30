@@ -5,7 +5,6 @@ using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -251,9 +250,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     UpdateResourceModel updateModel = editViewModel.BuildUpdateModel();
 
-                    IEnumerable<UpdateResourceModel> updateModels = resourceIds
-                        .Select(x => updateModel with { Id = x })
-                        .ToList();
+                    IEnumerable<UpdateResourceModel> updateModels = [.. resourceIds.Select(x => updateModel with { Id = x })];
 
                     UpdateManagedResources(updateModels);
                 }
@@ -314,6 +311,10 @@ namespace Zametek.ViewModel.ProjectPlan
                             if (updateModel.IsFixedBillingEdited)
                             {
                                 resource.FixedBilling = updateModel.FixedBilling;
+                            }
+                            if (updateModel.IsColorFormatActive)
+                            {
+                                resource.ColorFormat = updateModel.ColorFormat;
                             }
                             if (updateModel.IsInterActivityPhasesEdited)
                             {

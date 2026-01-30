@@ -31,6 +31,9 @@ namespace Zametek.Common.ProjectPlan
         public double FixedBilling { get; init; }
         public bool IsFixedBillingEdited { get; init; } = false;
 
+        public ColorFormatModel ColorFormat { get; init; } = new ColorFormatModel();
+        public bool IsColorFormatActive { get; init; } = false;
+
         public List<int> InterActivityPhases { get; init; } = [];
         public bool IsInterActivityPhasesEdited { get; init; } = false;
     }

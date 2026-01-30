@@ -11,6 +11,10 @@
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
 			 x:DataType="vm:ResourceEditViewModel"
              x:Class="Zametek.View.ProjectPlan.ResourceEditView">
+	<UserControl.Resources>
+		<local:ColorFormatToColorConverter x:Key="colorFormatToColorConverter"/>
+	</UserControl.Resources>
+
 	<Grid Margin="7">
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="140"/>
@@ -18,6 +22,7 @@
 			<ColumnDefinition Width="155"/>
 		</Grid.ColumnDefinitions>
 		<Grid.RowDefinitions>
+			<RowDefinition Height="36"/>
 			<RowDefinition Height="36"/>
 			<RowDefinition Height="36"/>
 			<RowDefinition Height="36"/>
@@ -271,6 +276,33 @@
 							   Margin="3"
 							   Padding="0"
 							   Minimum="0"/>
+
+
+
+		<Label Grid.Row="8" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_ColorFormat}"/>
+
+		<ToggleSwitch Grid.Row="8" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsColorFormatActive, Mode=TwoWay}"/>
+
+		<ColorPicker Grid.Row="8" Grid.Column="2"
+					 Cursor="Hand"
+					 IsEnabled="{Binding Path=IsColorFormatActive, Mode=OneWay}"
+					 Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}, UpdateSourceTrigger=LostFocus}"
+					 VerticalAlignment="Center"
+					 Focusable="True"
+					 Margin="3"
+					 Padding="0"/>
 
 	</Grid>
 </UserControl>
