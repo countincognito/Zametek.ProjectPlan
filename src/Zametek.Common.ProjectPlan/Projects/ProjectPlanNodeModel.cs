@@ -7,7 +7,7 @@
 
         public Guid ParentId { get; init; }
 
-        public bool IsFolder { get; init; }
+        public ProjectPlanNodeType NodeType { get; init; }
 
         public string Name { get; init; } = string.Empty;
 

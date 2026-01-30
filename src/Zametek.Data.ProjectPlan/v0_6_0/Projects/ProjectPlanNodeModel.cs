@@ -1,4 +1,6 @@
-﻿namespace Zametek.Data.ProjectPlan.v0_6_0
+﻿using Zametek.Common.ProjectPlan;
+
+namespace Zametek.Data.ProjectPlan.v0_6_0
 {
     [Serializable]
     public record ProjectPlanNodeModel
@@ -7,7 +9,7 @@
 
         public Guid ParentId { get; init; }
 
-        public bool IsFolder { get; init; }
+        public ProjectPlanNodeType NodeType { get; init; }
 
         public string Name { get; init; } = string.Empty;
 

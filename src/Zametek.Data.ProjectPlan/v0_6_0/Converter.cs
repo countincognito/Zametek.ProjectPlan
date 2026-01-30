@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Data.ProjectPlan.v0_6_0
 {
@@ -27,7 +28,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                     {
                         Id = planId,
                         ParentId = rootId,
-                        IsFolder = false,
+                        NodeType = ProjectPlanNodeType.File,
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
                         CreatedOn = localNow,
                         ModifiedOn = localNow,

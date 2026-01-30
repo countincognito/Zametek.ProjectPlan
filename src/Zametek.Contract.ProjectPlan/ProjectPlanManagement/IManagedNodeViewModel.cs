@@ -11,7 +11,7 @@ namespace Zametek.Contract.ProjectPlan
 
         Guid ParentId { get; set; }
 
-        public bool IsFolder { get;}
+        public bool IsFolder { get; }
 
         string Name { get; set; }
 

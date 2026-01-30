@@ -7,7 +7,7 @@
     {
       "Id": "a504e7ad-5b24-43e0-aef8-7ba063b813a5",
       "ParentId": "939c517b-67ee-43fa-bce1-7143bf4c41ab",
-      "IsFolder": false,
+      "NodeType": 0,
       "Name": "Base",
       "CreatedOn": "2026-01-27T14:50:30.1818949+00:00",
       "ModifiedOn": "2026-01-27T14:50:42.3092653+00:00"

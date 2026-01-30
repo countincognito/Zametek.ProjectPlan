@@ -26,7 +26,7 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             for (int i = 0; i < model1.Nodes.Count; i++)
             {
-                model1.Nodes[i].IsFolder.ShouldBe(model2.Nodes[i].IsFolder);
+                model1.Nodes[i].NodeType.ShouldBe(model2.Nodes[i].NodeType);
                 model1.Nodes[i].Name.ShouldBe(model2.Nodes[i].Name);
                 model1.Nodes[i].CreatedOn.ShouldBe(model2.Nodes[i].CreatedOn);
                 model1.Nodes[i].ModifiedOn.ShouldBe(model2.Nodes[i].ModifiedOn);
@@ -54,7 +54,7 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             for (int i = 0; i < model1.Nodes.Count; i++)
             {
-                model1.Nodes[i].IsFolder.ShouldBe(model2.Nodes[i].IsFolder);
+                model1.Nodes[i].NodeType.ShouldBe(model2.Nodes[i].NodeType);
                 model1.Nodes[i].Name.ShouldBe(model2.Nodes[i].Name);
                 //model1.Nodes[i].CreatedOn.ShouldBe(model2.Nodes[i].CreatedOn);
                 //model1.Nodes[i].ModifiedOn.ShouldBe(model2.Nodes[i].ModifiedOn);

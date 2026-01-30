@@ -180,7 +180,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public bool IsFolder => m_ProjectPlanNodeModel.IsFolder;
+        public bool IsFolder => m_ProjectPlanNodeModel.NodeType == ProjectPlanNodeType.Folder;
 
         public string Name
         {

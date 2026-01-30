@@ -279,7 +279,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         new ProjectPlanNodeModel
                         {
                             Id = rootId,
-                            IsFolder = true,
+                            NodeType = ProjectPlanNodeType.Folder,
                             Name = Resource.ProjectPlan.Labels.Label_RootNode,
                             CreatedOn = localNow,
                             ModifiedOn = localNow,
@@ -905,7 +905,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         Id = Guid.NewGuid(),
                         ParentId = parentId,
-                        IsFolder = false,
+                        NodeType = ProjectPlanNodeType.File,
                         Name = nodeName,
                         CreatedOn = localNow,
                         ModifiedOn = localNow,
@@ -996,7 +996,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         Id = Guid.NewGuid(),
                         ParentId = parentId,
-                        IsFolder = true,
+                        NodeType = ProjectPlanNodeType.Folder,
                         Name = nodeName,
                         CreatedOn = localNow,
                         ModifiedOn = localNow,
@@ -1159,7 +1159,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         Id = m_SettingService.ProjectPlanId,
                         ParentId = Root.Id,
-                        IsFolder = false,
+                        NodeType = ProjectPlanNodeType.File,
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
                         CreatedOn = localNow,
                         ModifiedOn = localNow,
@@ -1310,7 +1310,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             {
                                 Id = Guid.NewGuid(),
                                 ParentId = destinationParentId,
-                                IsFolder = false,
+                                NodeType = ProjectPlanNodeType.File,
                                 Name = managedNode.Name,
                                 CreatedOn = localNow,
                                 ModifiedOn = localNow,
@@ -1724,7 +1724,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         Id = m_SettingService.ProjectPlanId,
                         ParentId = Root.Id,
-                        IsFolder = false,
+                        NodeType = ProjectPlanNodeType.File,
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
                         CreatedOn = localNow,
                         ModifiedOn = localNow,
@@ -1789,7 +1789,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             Id = m_SettingService.ProjectPlanId,
                             ParentId = Root.Id,
-                            IsFolder = false,
+                            NodeType = ProjectPlanNodeType.File,
                             Name = Resource.ProjectPlan.Labels.Label_BaseNode,
                             CreatedOn = localNow,
                             ModifiedOn = localNow,
@@ -1885,7 +1885,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             Id = nodeId,
                             ParentId = Root.Id,
-                            IsFolder = false,
+                            NodeType = ProjectPlanNodeType.File,
                             Name = Resource.ProjectPlan.Labels.Label_BaseNode,
                             CreatedOn = localNow,
                             ModifiedOn = localNow,
