@@ -4,7 +4,7 @@ using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
-    public interface IProjectPlanManagerViewModel
+    public interface IProjectScenarioManagerViewModel
         : IKillSubscriptions
     {
         bool IsBusy { get; }
@@ -21,7 +21,7 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsProjectUpdated { get; set; }
 
-        bool IsProjectPlanUpdated { get; }
+        bool IsProjectScenarioUpdated { get; }
 
         bool ProjectHasChanges { get; }
 
@@ -41,23 +41,23 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand SetSelectedManagedNodesCommand { get; }
 
-        ICommand LoadProjectPlanFileCommand { get; }
+        ICommand LoadProjectScenarioFileCommand { get; }
 
-        ICommand LoadSelectedProjectPlanFileCommand { get; }
+        ICommand LoadSelectedProjectScenarioFileCommand { get; }
 
-        ICommand CreateEmptyProjectPlanFileCommand { get; }
+        ICommand CreateEmptyProjectScenarioFileCommand { get; }
 
-        ICommand CreateEmptyProjectPlanFolderCommand { get; }
+        ICommand CreateEmptyProjectScenarioFolderCommand { get; }
 
-        ICommand RenameProjectPlanNodeCommand { get; }
+        ICommand RenameProjectScenarioNodeCommand { get; }
 
-        ICommand RemoveProjectPlanNodeCommand { get; }
+        ICommand RemoveProjectScenarioNodeCommand { get; }
 
-        ICommand CutProjectPlanNodeCommand { get; }
+        ICommand CutProjectScenarioNodeCommand { get; }
 
-        ICommand CopyProjectPlanNodeCommand { get; }
+        ICommand CopyProjectScenarioNodeCommand { get; }
 
-        ICommand PasteProjectPlanNodeCommand { get; }
+        ICommand PasteProjectScenarioNodeCommand { get; }
 
         ICommand AddNodeTagCommand { get; }
 

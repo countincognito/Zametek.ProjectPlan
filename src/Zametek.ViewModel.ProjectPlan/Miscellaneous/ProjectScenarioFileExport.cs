@@ -9,31 +9,31 @@ using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class ProjectPlanFileExport
-        : IProjectPlanFileExport
+    public class ProjectScenarioFileExport
+        : IProjectScenarioFileExport
     {
         #region Fields
 
         private static readonly IList<string> s_GeneralColumnTitles =
         [
-            nameof(ProjectPlanModel.ProjectStart),
-            nameof(ProjectPlanModel.Today)
+            nameof(ProjectScenarioModel.ProjectStart),
+            nameof(ProjectScenarioModel.Today)
         ];
 
         private static readonly IList<string> s_ResourceSettingsColumnTitles =
         [
-            nameof(ProjectPlanModel.ResourceSettings.DefaultUnitCost),
-            nameof(ProjectPlanModel.ResourceSettings.DefaultUnitBilling),
-            nameof(ProjectPlanModel.ResourceSettings.AreDisabled),
+            nameof(ProjectScenarioModel.ResourceSettings.DefaultUnitCost),
+            nameof(ProjectScenarioModel.ResourceSettings.DefaultUnitBilling),
+            nameof(ProjectScenarioModel.ResourceSettings.AreDisabled),
         ];
 
         private static readonly IList<string> s_DisplaySettingsColumnTitles =
         [
-            nameof(ProjectPlanModel.DisplaySettings.ShowDates),
-            nameof(ProjectPlanModel.DisplaySettings.UseClassicDates),
-            nameof(ProjectPlanModel.DisplaySettings.UseBusinessDays),
-            nameof(ProjectPlanModel.DisplaySettings.HideCost),
-            nameof(ProjectPlanModel.DisplaySettings.HideBilling),
+            nameof(ProjectScenarioModel.DisplaySettings.ShowDates),
+            nameof(ProjectScenarioModel.DisplaySettings.UseClassicDates),
+            nameof(ProjectScenarioModel.DisplaySettings.UseBusinessDays),
+            nameof(ProjectScenarioModel.DisplaySettings.HideCost),
+            nameof(ProjectScenarioModel.DisplaySettings.HideBilling),
         ];
 
         private static readonly IList<string> s_ActivityColumnTitles =
@@ -121,7 +121,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public ProjectPlanFileExport(IDateTimeCalculator dateTimeCalculator)
+        public ProjectScenarioFileExport(IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             m_DateTimeCalculator = dateTimeCalculator;
@@ -249,11 +249,11 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static void WriteGeneralToWorkbook(
-            ProjectPlanModel projectPlan,
+            ProjectScenarioModel projectScenario,
             XSSFWorkbook workbook,
             ICellStyle titleStyle)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
+            ArgumentNullException.ThrowIfNull(projectScenario);
             ArgumentNullException.ThrowIfNull(workbook);
             ArgumentNullException.ThrowIfNull(titleStyle);
             ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
@@ -278,7 +278,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 rowIndex++;
             }
             {
-                Type activityType = typeof(ProjectPlanModel);
+                Type activityType = typeof(ProjectScenarioModel);
                 PropertyInfo[] propertyInfos = activityType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
                 var propertyInfoLookup = propertyInfos.ToDictionary(x => x.Name);
 
@@ -290,10 +290,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     ICell cell = row.CreateCell(columnIndex);
 
                     columnTitle.ValueSwitchOn()
-                        .Case(nameof(ProjectPlanModel.ProjectStart),
-                            colName => AddToCell(projectPlan.ProjectStart, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectPlanModel.Today),
-                            colName => AddToCell(projectPlan.Today, cell, dateTimeCellStyle));
+                        .Case(nameof(ProjectScenarioModel.ProjectStart),
+                            colName => AddToCell(projectScenario.ProjectStart, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectScenarioModel.Today),
+                            colName => AddToCell(projectScenario.Today, cell, dateTimeCellStyle));
 
                     columnIndex++;
                 }
@@ -303,11 +303,11 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static void WriteDisplaySettingsToWorkbook(
-            ProjectPlanModel projectPlan,
+            ProjectScenarioModel projectScenario,
             XSSFWorkbook workbook,
             ICellStyle titleStyle)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
+            ArgumentNullException.ThrowIfNull(projectScenario);
             ArgumentNullException.ThrowIfNull(workbook);
             ArgumentNullException.ThrowIfNull(titleStyle);
             ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
@@ -332,7 +332,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 rowIndex++;
             }
             {
-                Type activityType = typeof(ProjectPlanModel);
+                Type activityType = typeof(ProjectScenarioModel);
                 PropertyInfo[] propertyInfos = activityType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
                 var propertyInfoLookup = propertyInfos.ToDictionary(x => x.Name);
 
@@ -344,16 +344,16 @@ namespace Zametek.ViewModel.ProjectPlan
                     ICell cell = row.CreateCell(columnIndex);
 
                     columnTitle.ValueSwitchOn()
-                        .Case(nameof(ProjectPlanModel.DisplaySettings.ShowDates),
-                            colName => AddToCell(projectPlan.DisplaySettings.ShowDates, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectPlanModel.DisplaySettings.UseClassicDates),
-                            colName => AddToCell(projectPlan.DisplaySettings.UseClassicDates, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectPlanModel.DisplaySettings.UseBusinessDays),
-                            colName => AddToCell(projectPlan.DisplaySettings.UseBusinessDays, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectPlanModel.DisplaySettings.HideCost),
-                            colName => AddToCell(projectPlan.DisplaySettings.HideCost, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectPlanModel.DisplaySettings.HideBilling),
-                            colName => AddToCell(projectPlan.DisplaySettings.HideBilling, cell, dateTimeCellStyle));
+                        .Case(nameof(ProjectScenarioModel.DisplaySettings.ShowDates),
+                            colName => AddToCell(projectScenario.DisplaySettings.ShowDates, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectScenarioModel.DisplaySettings.UseClassicDates),
+                            colName => AddToCell(projectScenario.DisplaySettings.UseClassicDates, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectScenarioModel.DisplaySettings.UseBusinessDays),
+                            colName => AddToCell(projectScenario.DisplaySettings.UseBusinessDays, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectScenarioModel.DisplaySettings.HideCost),
+                            colName => AddToCell(projectScenario.DisplaySettings.HideCost, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectScenarioModel.DisplaySettings.HideBilling),
+                            colName => AddToCell(projectScenario.DisplaySettings.HideBilling, cell, dateTimeCellStyle));
 
                     columnIndex++;
                 }
@@ -363,11 +363,11 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static void WriteResourceSettingsToWorkbook(
-            ProjectPlanModel projectPlan,
+            ProjectScenarioModel projectScenario,
             XSSFWorkbook workbook,
             ICellStyle titleStyle)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
+            ArgumentNullException.ThrowIfNull(projectScenario);
             ArgumentNullException.ThrowIfNull(workbook);
             ArgumentNullException.ThrowIfNull(titleStyle);
             ICellStyle dateTimeCellStyle = workbook.CreateCellStyle();
@@ -392,7 +392,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 rowIndex++;
             }
             {
-                Type activityType = typeof(ProjectPlanModel);
+                Type activityType = typeof(ProjectScenarioModel);
                 PropertyInfo[] propertyInfos = activityType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
                 var propertyInfoLookup = propertyInfos.ToDictionary(x => x.Name);
 
@@ -404,12 +404,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     ICell cell = row.CreateCell(columnIndex);
 
                     columnTitle.ValueSwitchOn()
-                        .Case(nameof(ProjectPlanModel.ResourceSettings.DefaultUnitCost),
-                            colName => AddToCell(projectPlan.ResourceSettings.DefaultUnitCost, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectPlanModel.ResourceSettings.DefaultUnitBilling),
-                            colName => AddToCell(projectPlan.ResourceSettings.DefaultUnitBilling, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectPlanModel.ResourceSettings.AreDisabled),
-                            colName => AddToCell(projectPlan.ResourceSettings.AreDisabled, cell, dateTimeCellStyle)); ;
+                        .Case(nameof(ProjectScenarioModel.ResourceSettings.DefaultUnitCost),
+                            colName => AddToCell(projectScenario.ResourceSettings.DefaultUnitCost, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectScenarioModel.ResourceSettings.DefaultUnitBilling),
+                            colName => AddToCell(projectScenario.ResourceSettings.DefaultUnitBilling, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectScenarioModel.ResourceSettings.AreDisabled),
+                            colName => AddToCell(projectScenario.ResourceSettings.AreDisabled, cell, dateTimeCellStyle)); ;
 
                     columnIndex++;
                 }
@@ -1012,8 +1012,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IProjectFileExport Members
 
-        public void ExportProjectPlanFile(
-            ProjectPlanModel projectPlan,
+        public void ExportProjectScenarioFile(
+            ProjectScenarioModel projectScenario,
             ResourceSeriesSetModel resourceSeriesSet,
             TrackingSeriesSetModel trackingSeriesSet,
             bool showDates,
@@ -1021,29 +1021,29 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             string fileExtension = Path.GetExtension(filename);
 
-            Action<ProjectPlanModel, ResourceSeriesSetModel, TrackingSeriesSetModel, bool, string> action =
-                (projectPlan, resourceSeriesSet, trackingSeriesSet, showDates, filename) => throw new ArgumentOutOfRangeException(
+            Action<ProjectScenarioModel, ResourceSeriesSetModel, TrackingSeriesSetModel, bool, string> action =
+                (projectScenario, resourceSeriesSet, trackingSeriesSet, showDates, filename) => throw new ArgumentOutOfRangeException(
                     nameof(filename),
                     @$"{Resource.ProjectPlan.Messages.Message_UnableToExportFile} {filename}");
 
             fileExtension.ValueSwitchOn()
-                .Case($".{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}", _ => action = ExportProjectPlanXlsxFile);
+                .Case($".{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}", _ => action = ExportProjectScenarioXlsxFile);
 
-            action(projectPlan, resourceSeriesSet, trackingSeriesSet, showDates, filename);
+            action(projectScenario, resourceSeriesSet, trackingSeriesSet, showDates, filename);
         }
 
-        public async Task ExportProjectPlanFileAsync(
-            ProjectPlanModel projectPlan,
+        public async Task ExportProjectScenarioFileAsync(
+            ProjectScenarioModel projectScenario,
             ResourceSeriesSetModel resourceSeriesSet,
             TrackingSeriesSetModel trackingSeriesSet,
             bool showDates,
             string filename)
         {
-            await Task.Run(() => ExportProjectPlanFile(projectPlan, resourceSeriesSet, trackingSeriesSet, showDates, filename));
+            await Task.Run(() => ExportProjectScenarioFile(projectScenario, resourceSeriesSet, trackingSeriesSet, showDates, filename));
         }
 
-        public void ExportProjectPlanXlsxFile(
-            ProjectPlanModel projectPlan,
+        public void ExportProjectScenarioXlsxFile(
+            ProjectScenarioModel projectScenario,
             ResourceSeriesSetModel resourceSeriesSet,
             TrackingSeriesSetModel trackingSeriesSet,
             bool showDates,
@@ -1060,66 +1060,66 @@ namespace Zametek.ViewModel.ProjectPlan
             titleStyle.SetFont(titleFont);
 
             WriteGeneralToWorkbook(
-                projectPlan,
+                projectScenario,
                 workbook,
                 titleStyle);
 
             WriteDisplaySettingsToWorkbook(
-                projectPlan,
+                projectScenario,
                 workbook,
                 titleStyle);
 
             WriteResourceSettingsToWorkbook(
-                projectPlan,
+                projectScenario,
                 workbook,
                 titleStyle);
 
             WriteActivitiesToWorkbook(
-                projectPlan.DependentActivities,
+                projectScenario.DependentActivities,
                 workbook,
                 titleStyle,
                 showDates,
-                projectPlan.ProjectStart,
+                projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
             WriteItemsToWorkbook(
-                projectPlan.ResourceSettings.Resources,
+                projectScenario.ResourceSettings.Resources,
                 s_ResourceColumnTitles,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetResources,
                 workbook,
                 titleStyle);
 
             WriteItemsToWorkbook(
-                projectPlan.GraphSettings.ActivitySeverities,
+                projectScenario.GraphSettings.ActivitySeverities,
                 s_ActivitySeverityColumnTitles,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetActivitySeverities,
                 workbook,
                 titleStyle);
 
             WriteItemsToWorkbook(
-                projectPlan.WorkStreamSettings.WorkStreams,
+                projectScenario.WorkStreamSettings.WorkStreams,
                 s_WorkStreamColumnTitles,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetWorkStreams,
                 workbook,
                 titleStyle);
 
             WriteActivityTrackersToWorkbook(
-                projectPlan.DependentActivities.Select(x => x.Activity),
+                projectScenario.DependentActivities.Select(x => x.Activity),
                 tracker => tracker.PercentageComplete,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetActivityTracker,
                 workbook,
                 titleStyle,
                 showDates,
-                projectPlan.ProjectStart,
+                projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
             WriteResourceTrackersToWorkbook(
-                projectPlan.DependentActivities.Select(x => x.Activity),
-                projectPlan.ResourceSettings.Resources,
+                projectScenario.DependentActivities.Select(x => x.Activity),
+                projectScenario.ResourceSettings.Resources,
                 workbook,
                 titleStyle,
                 showDates,
-                projectPlan.ProjectStart,
+                projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
             WriteResourceChartToWorkbook(
@@ -1130,7 +1130,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 workbook,
                 titleStyle,
                 showDates,
-                projectPlan.ProjectStart,
+                projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
             WriteResourceChartToWorkbook(
@@ -1141,7 +1141,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 workbook,
                 titleStyle,
                 showDates,
-                projectPlan.ProjectStart,
+                projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
             WriteResourceChartToWorkbook(
@@ -1152,7 +1152,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 workbook,
                 titleStyle,
                 showDates,
-                projectPlan.ProjectStart,
+                projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
             WriteEarnedValueChartToWorkbook(
@@ -1161,7 +1161,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 workbook,
                 titleStyle,
                 showDates,
-                projectPlan.ProjectStart,
+                projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
             WriteEarnedValueChartToWorkbook(
@@ -1170,7 +1170,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 workbook,
                 titleStyle,
                 showDates,
-                projectPlan.ProjectStart,
+                projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
             WriteEarnedValueChartToWorkbook(
@@ -1179,7 +1179,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 workbook,
                 titleStyle,
                 showDates,
-                projectPlan.ProjectStart,
+                projectScenario.ProjectStart,
                 m_DateTimeCalculator);
 
             using var stream = File.OpenWrite(filename);

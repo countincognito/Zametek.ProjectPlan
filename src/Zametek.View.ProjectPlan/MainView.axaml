@@ -85,9 +85,9 @@
 								  Command="{Binding Path=SaveAsProjectFileCommand, Mode=OneWay}"/>
 						<Separator />
 						<MenuItem Header="{x:Static resources:Menus.Menu_Import}"
-								  Command="{Binding Path=ImportProjectPlanFileCommand, Mode=OneWay}"/>
+								  Command="{Binding Path=ImportProjectScenarioFileCommand, Mode=OneWay}"/>
 						<MenuItem Header="{x:Static resources:Menus.Menu_Export}"
-								  Command="{Binding Path=ExportProjectPlanFileCommand, Mode=OneWay}"/>
+								  Command="{Binding Path=ExportProjectScenarioFileCommand, Mode=OneWay}"/>
 						<Separator />
 						<MenuItem Header="{x:Static resources:Menus.Menu_Close}"
 								  Command="{Binding Path=CloseProjectCommand, Mode=OneWay}"/>

@@ -314,13 +314,13 @@ namespace Zametek.Data.ProjectPlan
 
             #region v0.6.0
 
-            CreateMap<v0_5_0.ProjectModel, v0_6_0.ProjectPlanModel>().ReverseMap();
+            CreateMap<v0_5_0.ProjectModel, v0_6_0.ProjectScenarioModel>().ReverseMap();
 
             CreateMap<ProjectModel, v0_6_0.ProjectModel>().ReverseMap();
-            CreateMap<ProjectPlanModel, v0_6_0.ProjectPlanModel>().ReverseMap();
-            CreateMap<ProjectPlanNodeModel, v0_6_0.ProjectPlanNodeModel>().ReverseMap();
-            CreateMap<ProjectPlanFileModel, v0_6_0.ProjectPlanFileModel>().ReverseMap();
-            CreateMap<ProjectPlanTagModel, v0_6_0.ProjectPlanTagModel>().ReverseMap();
+            CreateMap<ProjectScenarioModel, v0_6_0.ProjectScenarioModel>().ReverseMap();
+            CreateMap<ProjectScenarioNodeModel, v0_6_0.ProjectScenarioNodeModel>().ReverseMap();
+            CreateMap<ProjectScenarioFileModel, v0_6_0.ProjectScenarioFileModel>().ReverseMap();
+            CreateMap<ProjectScenarioTagModel, v0_6_0.ProjectScenarioTagModel>().ReverseMap();
 
             CreateMap<AppSettingsModel, v0_6_0.AppSettingsModel>().ReverseMap();
             CreateMap<v0_4_4.AppSettingsModel, v0_6_0.AppSettingsModel>().ReverseMap();

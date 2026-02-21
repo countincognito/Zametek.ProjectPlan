@@ -21,13 +21,13 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
-        private bool m_TrackIsProjectPlanUpdated;
+        private bool m_TrackIsProjectScenarioUpdated;
         private bool m_TrackHasStaleOutputs;
 
         private readonly VertexGraphCompiler m_VertexGraphCompiler;
 
-        private readonly IProjectPlanFileImport m_ProjectPlanFileImport;
-        private readonly IProjectPlanFileExport m_ProjectPlanFileExport;
+        private readonly IProjectScenarioFileImport m_ProjectScenarioFileImport;
+        private readonly IProjectScenarioFileExport m_ProjectScenarioFileExport;
         private readonly ISettingService m_SettingService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IMapper m_Mapper;
@@ -47,28 +47,28 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public CoreViewModel(
-            IProjectPlanFileImport projectPlanFileImport,
-            IProjectPlanFileExport projectPlanFileExport,
+            IProjectScenarioFileImport projectScenarioFileImport,
+            IProjectScenarioFileExport projectScenarioFileExport,
             ISettingService settingService,
             IDateTimeCalculator dateTimeCalculator,
             IMapper mapper)
         {
-            ArgumentNullException.ThrowIfNull(projectPlanFileImport);
-            ArgumentNullException.ThrowIfNull(projectPlanFileExport);
+            ArgumentNullException.ThrowIfNull(projectScenarioFileImport);
+            ArgumentNullException.ThrowIfNull(projectScenarioFileExport);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(mapper);
             m_Lock = new object();
-            m_TrackIsProjectPlanUpdated = true;
+            m_TrackIsProjectScenarioUpdated = true;
             m_TrackHasStaleOutputs = true;
             m_VertexGraphCompiler = new VertexGraphCompiler();
-            m_ProjectPlanFileImport = projectPlanFileImport;
-            m_ProjectPlanFileExport = projectPlanFileExport;
+            m_ProjectScenarioFileImport = projectScenarioFileImport;
+            m_ProjectScenarioFileExport = projectScenarioFileExport;
             m_SettingService = settingService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_DisplaySettingsViewModel = new DisplaySettingsViewModel(
                 m_DateTimeCalculator,
-                SetIsProjectPlanUpdated,
+                SetIsProjectScenarioUpdated,
                 () => IsReadyToCompile = ReadyToCompile.Yes);
             m_Mapper = mapper;
 
@@ -956,13 +956,13 @@ namespace Zametek.ViewModel.ProjectPlan
             return null;
         }
 
-        private void SetIsProjectPlanUpdated(bool isProjectPlanUpdated, bool trackStaleOutputs)
+        private void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated, bool trackStaleOutputs)
         {
             lock (m_Lock)
             {
                 bool originalTrackValue = m_TrackHasStaleOutputs;
                 m_TrackHasStaleOutputs = originalTrackValue && trackStaleOutputs;
-                IsProjectPlanUpdated = isProjectPlanUpdated;
+                IsProjectScenarioUpdated = isProjectScenarioUpdated;
                 m_TrackHasStaleOutputs = originalTrackValue;
             }
         }
@@ -993,7 +993,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    if (m_TrackIsProjectPlanUpdated)
+                    if (m_TrackIsProjectScenarioUpdated)
                     {
                         this.RaiseAndSetIfChanged(ref m_IsReadyToCompile, value);
                     }
@@ -1001,18 +1001,18 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private bool m_IsProjectPlanUpdated;
-        public bool IsProjectPlanUpdated
+        private bool m_IsProjectScenarioUpdated;
+        public bool IsProjectScenarioUpdated
         {
-            get => m_IsProjectPlanUpdated;
+            get => m_IsProjectScenarioUpdated;
             set
             {
                 lock (m_Lock)
                 {
                     HasStaleOutputs = value;
-                    if (m_TrackIsProjectPlanUpdated)
+                    if (m_TrackIsProjectScenarioUpdated)
                     {
-                        this.RaiseAndSetIfChanged(ref m_IsProjectPlanUpdated, value);
+                        this.RaiseAndSetIfChanged(ref m_IsProjectScenarioUpdated, value);
                     }
                 }
             }
@@ -1042,7 +1042,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsProjectPlanUpdated = true;
+                    IsProjectScenarioUpdated = true;
 
                     // Convert to local now using TimeProvider as we do not know
                     // if the input is provided as just a datetime from XAML.
@@ -1062,7 +1062,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
 
                     // Convert to local now using TimeProvider as we do not know
                     // if the input is provided as just a datetime from XAML.
@@ -1205,7 +1205,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_GraphSettings = value;
-                    IsProjectPlanUpdated = true;
+                    IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
@@ -1221,7 +1221,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_ResourceSettings = value;
-                    IsProjectPlanUpdated = true;
+                    IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
@@ -1237,7 +1237,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_WorkStreamSettings = value;
-                    IsProjectPlanUpdated = true;
+                    IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
                 }
@@ -1286,7 +1286,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_RiskMetrics = value;
-                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(Metrics));
                 }
@@ -1306,7 +1306,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_CostMetrics = value;
-                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(Metrics));
                 }
@@ -1326,7 +1326,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_BillingMetrics = value;
-                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(Metrics));
                 }
@@ -1346,7 +1346,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_MarginMetrics = value;
-                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(Metrics));
                 }
@@ -1366,7 +1366,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_EffortMetrics = value;
-                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(Metrics));
                 }
@@ -1386,7 +1386,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                     m_NetworkMetrics = value;
-                    SetIsProjectPlanUpdated(isProjectPlanUpdated: true, trackStaleOutputs: false);
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(Metrics));
                 }
@@ -1501,7 +1501,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public ProjectPlanModel CreateEmptyProjectPlan()
+        public ProjectScenarioModel CreateEmptyProjectScenario()
         {
             try
             {
@@ -1509,7 +1509,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     IsBusy = true;
 
-                    var plan = new ProjectPlanModel
+                    var plan = new ProjectScenarioModel
                     {
                         ProjectStart = new(DateTime.Today),
                         Today = new(DateTime.Today),
@@ -1544,7 +1544,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    ProjectPlanModel emptyPlan = CreateEmptyProjectPlan();
+                    ProjectScenarioModel emptyPlan = CreateEmptyProjectScenario();
 
                     ProjectStart = emptyPlan.ProjectStart;
                     Today = emptyPlan.Today;
@@ -1563,21 +1563,21 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void ResetProjectPlan()
+        public void ResetProjectScenario()
         {
             try
             {
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    m_TrackIsProjectPlanUpdated = false;
+                    m_TrackIsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = false;
 
                     ClearManagedActivities();
 
                     ClearSettings();
 
-                    m_SettingService.ResetProjectPlan();
+                    m_SettingService.ResetProjectScenario();
 
                     Metrics = new();
 
@@ -1590,8 +1590,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsReadyToCompile = ReadyToCompile.No;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
 
-                    m_TrackIsProjectPlanUpdated = true;
-                    IsProjectPlanUpdated = false;
+                    m_TrackIsProjectScenarioUpdated = true;
+                    IsProjectScenarioUpdated = false;
 
                     m_TrackHasStaleOutputs = true;
                     HasStaleOutputs = false;
@@ -1599,20 +1599,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                m_TrackIsProjectPlanUpdated = true;
+                m_TrackIsProjectScenarioUpdated = true;
                 m_TrackHasStaleOutputs = true;
                 IsBusy = false;
             }
         }
 
-        public ProjectPlanImportModel ImportProjectPlanFile(string filename)
+        public ProjectScenarioImportModel ImportProjectScenarioFile(string filename)
         {
             try
             {
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    return m_ProjectPlanFileImport.ImportProjectPlanFile(filename);
+                    return m_ProjectScenarioFileImport.ImportProjectScenarioFile(filename);
                 }
             }
             finally
@@ -1621,8 +1621,8 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void ExportProjectPlanFile(
-            ProjectPlanModel projectPlanModel,
+        public void ExportProjectScenarioFile(
+            ProjectScenarioModel projectScenarioModel,
             ResourceSeriesSetModel resourceSeriesSetModel,
             TrackingSeriesSetModel trackingSeriesSetModel,
             bool showDates,
@@ -1633,8 +1633,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    m_ProjectPlanFileExport.ExportProjectPlanFile(
-                        projectPlanModel,
+                    m_ProjectScenarioFileExport.ExportProjectScenarioFile(
+                        projectScenarioModel,
                         resourceSeriesSetModel,
                         trackingSeriesSetModel,
                         showDates,
@@ -1647,39 +1647,39 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void ProcessProjectPlanImport(
-            ProjectPlanImportModel projectPlanImportModel,
-            Guid projectPlanId,
-            string projectPlanTitle)
+        public void ProcessProjectScenarioImport(
+            ProjectScenarioImportModel projectScenarioImportModel,
+            Guid projectScenarioId,
+            string projectScenarioTitle)
         {
             try
             {
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    ResetProjectPlan();
-                    m_TrackIsProjectPlanUpdated = false;
+                    ResetProjectScenario();
+                    m_TrackIsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = false;
-                    m_SettingService.SetProjectPlanId(projectPlanId);
-                    m_SettingService.SetProjectPlanTitle(projectPlanTitle);
+                    m_SettingService.SetProjectScenarioId(projectScenarioId);
+                    m_SettingService.SetProjectScenarioTitle(projectScenarioTitle);
 
                     // Default display mode is required for all file opening and closing.
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
                     // Project Start Date.
-                    ProjectStart = projectPlanImportModel.ProjectStart;
+                    ProjectStart = projectScenarioImportModel.ProjectStart;
 
                     // Project Start Date.
-                    Today = projectPlanImportModel.Today;
+                    Today = projectScenarioImportModel.Today;
 
                     // Work Stream settings.
                     WorkStreamSettingsModel workStreamSettings = m_SettingService.DefaultWorkStreamSettings.CloneObject();
 
-                    if (projectPlanImportModel.WorkStreams.Count != 0)
+                    if (projectScenarioImportModel.WorkStreams.Count != 0)
                     {
                         workStreamSettings.WorkStreams.Clear();
 
-                        foreach (WorkStreamModel workStream in projectPlanImportModel.WorkStreams)
+                        foreach (WorkStreamModel workStream in projectScenarioImportModel.WorkStreams)
                         {
                             workStreamSettings.WorkStreams.Add(workStream);
                         }
@@ -1691,16 +1691,16 @@ namespace Zametek.ViewModel.ProjectPlan
                     ResourceSettingsModel resourceSettings = m_SettingService.DefaultResourceSettings.CloneObject();
                     resourceSettings = resourceSettings with
                     {
-                        DefaultUnitCost = projectPlanImportModel.ResourceSettings.DefaultUnitCost,
-                        DefaultUnitBilling = projectPlanImportModel.ResourceSettings.DefaultUnitBilling,
-                        AreDisabled = projectPlanImportModel.ResourceSettings.AreDisabled,
+                        DefaultUnitCost = projectScenarioImportModel.ResourceSettings.DefaultUnitCost,
+                        DefaultUnitBilling = projectScenarioImportModel.ResourceSettings.DefaultUnitBilling,
+                        AreDisabled = projectScenarioImportModel.ResourceSettings.AreDisabled,
                     };
 
-                    if (projectPlanImportModel.ResourceSettings.Resources.Count != 0)
+                    if (projectScenarioImportModel.ResourceSettings.Resources.Count != 0)
                     {
                         resourceSettings.Resources.Clear();
 
-                        foreach (ResourceModel resource in projectPlanImportModel.ResourceSettings.Resources)
+                        foreach (ResourceModel resource in projectScenarioImportModel.ResourceSettings.Resources)
                         {
                             resourceSettings.Resources.Add(resource);
                         }
@@ -1711,11 +1711,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Graph settings.
                     GraphSettingsModel graphSettings = m_SettingService.DefaultGraphSettings.CloneObject();
 
-                    if (projectPlanImportModel.ActivitySeverities.Count != 0)
+                    if (projectScenarioImportModel.ActivitySeverities.Count != 0)
                     {
                         graphSettings.ActivitySeverities.Clear();
 
-                        foreach (ActivitySeverityModel activitySeverity in projectPlanImportModel.ActivitySeverities)
+                        foreach (ActivitySeverityModel activitySeverity in projectScenarioImportModel.ActivitySeverities)
                         {
                             graphSettings.ActivitySeverities.Add(activitySeverity);
                         }
@@ -1726,58 +1726,58 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Activities.
                     // Be sure to set the ResourceSettings first, so that the activities know
                     // which resources are being referred to when marking them as selected.
-                    AddManagedActivities(projectPlanImportModel.DependentActivities);
+                    AddManagedActivities(projectScenarioImportModel.DependentActivities);
 
                     // Display settings.
-                    DisplaySettingsViewModel.SetValues(projectPlanImportModel.DisplaySettings);
+                    DisplaySettingsViewModel.SetValues(projectScenarioImportModel.DisplaySettings);
 
                     RunCompile();
 
                     //// Metrics.
                     //// It is important to put this after the compilation, so it will only
-                    //// trigger a project plan updated event if it is different from the compiled metrics.
-                    //Metrics = projectPlanModel.Metrics;
+                    //// trigger a project scenario updated event if it is different from the compiled metrics.
+                    //Metrics = projectScenarioModel.Metrics;
 
-                    m_TrackIsProjectPlanUpdated = true;
-                    IsProjectPlanUpdated = true;
+                    m_TrackIsProjectScenarioUpdated = true;
+                    IsProjectScenarioUpdated = true;
                     m_TrackHasStaleOutputs = true;
                 }
             }
             finally
             {
-                m_TrackIsProjectPlanUpdated = true;
+                m_TrackIsProjectScenarioUpdated = true;
                 m_TrackHasStaleOutputs = true;
                 IsBusy = false;
             }
         }
 
-        public void ProcessProjectPlan(
-            ProjectPlanModel projectPlanModel,
-            Guid projectPlanId,
-            string projectPlanTitle)
+        public void ProcessProjectScenario(
+            ProjectScenarioModel projectScenarioModel,
+            Guid projectScenarioId,
+            string projectScenarioTitle)
         {
             try
             {
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    ResetProjectPlan();
-                    m_TrackIsProjectPlanUpdated = false;
+                    ResetProjectScenario();
+                    m_TrackIsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = false;
-                    m_SettingService.SetProjectPlanId(projectPlanId);
-                    m_SettingService.SetProjectPlanTitle(projectPlanTitle);
+                    m_SettingService.SetProjectScenarioId(projectScenarioId);
+                    m_SettingService.SetProjectScenarioTitle(projectScenarioTitle);
 
                     // Default display mode is required for all file opening and closing.
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
                     // Project Start Date.
-                    ProjectStart = projectPlanModel.ProjectStart;
+                    ProjectStart = projectScenarioModel.ProjectStart;
 
                     // Project Start Date.
-                    Today = projectPlanModel.Today;
+                    Today = projectScenarioModel.Today;
 
                     // Display settings.
-                    var displaySettings = projectPlanModel.DisplaySettings with
+                    var displaySettings = projectScenarioModel.DisplaySettings with
                     {
                         ShowDates = DisplaySettingsViewModel.ShowDates,
                         UseClassicDates = DisplaySettingsViewModel.UseClassicDates,
@@ -1787,27 +1787,27 @@ namespace Zametek.ViewModel.ProjectPlan
                     DisplaySettingsViewModel.SetValues(displaySettings);
 
                     // Work Stream Settings.
-                    WorkStreamSettings = projectPlanModel.WorkStreamSettings;
+                    WorkStreamSettings = projectScenarioModel.WorkStreamSettings;
 
                     // Resource Settings.
-                    ResourceSettings = projectPlanModel.ResourceSettings;
+                    ResourceSettings = projectScenarioModel.ResourceSettings;
 
                     // Graph Settings.
-                    GraphSettings = projectPlanModel.GraphSettings;
+                    GraphSettings = projectScenarioModel.GraphSettings;
 
                     // Activities.
-                    AddManagedActivities(projectPlanModel.DependentActivities);
+                    AddManagedActivities(projectScenarioModel.DependentActivities);
 
                     // Now that Resources and Activities are in place,
                     // revise all tracker values.
                     IsReadyToReviseTrackers = ReadyToRevise.Yes;
 
                     // Display settings (the rest of the settings).
-                    displaySettings = projectPlanModel.DisplaySettings with
+                    displaySettings = projectScenarioModel.DisplaySettings with
                     {
-                        ShowDates = projectPlanModel.DisplaySettings.ShowDates,
-                        UseClassicDates = projectPlanModel.DisplaySettings.UseClassicDates,
-                        UseBusinessDays = projectPlanModel.DisplaySettings.UseBusinessDays,
+                        ShowDates = projectScenarioModel.DisplaySettings.ShowDates,
+                        UseClassicDates = projectScenarioModel.DisplaySettings.UseClassicDates,
+                        UseBusinessDays = projectScenarioModel.DisplaySettings.UseBusinessDays,
                     };
 
                     DisplaySettingsViewModel.SetValues(displaySettings);
@@ -1817,22 +1817,22 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Metrics.
                     // It is important to put this after the compilation, so it will only
                     // trigger a project plan updated event if it is different from the compiled metrics.
-                    Metrics = projectPlanModel.Metrics;
+                    Metrics = projectScenarioModel.Metrics;
 
-                    m_TrackIsProjectPlanUpdated = true;
-                    IsProjectPlanUpdated = false;
+                    m_TrackIsProjectScenarioUpdated = true;
+                    IsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = true;
                 }
             }
             finally
             {
-                m_TrackIsProjectPlanUpdated = true;
+                m_TrackIsProjectScenarioUpdated = true;
                 m_TrackHasStaleOutputs = true;
                 IsBusy = false;
             }
         }
 
-        public ProjectPlanModel BuildProjectPlan()
+        public ProjectScenarioModel BuildProjectScenario()
         {
             try
             {
@@ -1845,7 +1845,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
-                    var plan = new ProjectPlanModel
+                    var plan = new ProjectScenarioModel
                     {
                         ProjectStart = ProjectStart,
                         Today = Today,
@@ -1939,7 +1939,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
 
-                    //IsProjectPlanUpdated = true;
+                    //IsProjectScenarioUpdated = true;
                 }
             }
             finally
@@ -1969,7 +1969,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
 
-                    IsProjectPlanUpdated = true;
+                    IsProjectScenarioUpdated = true;
                 }
             }
             finally
@@ -2040,7 +2040,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
 
-                    IsProjectPlanUpdated = true;
+                    IsProjectScenarioUpdated = true;
                 }
             }
             finally
@@ -2111,7 +2111,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
                         }
 
-                        IsProjectPlanUpdated = true;
+                        IsProjectScenarioUpdated = true;
                     }
                 }
             }
@@ -2168,7 +2168,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     HasCompilationErrors = graphCompilation.CompilationErrors.Any();
                     GraphCompilation = graphCompilation;
 
-                    IsProjectPlanUpdated = true;
+                    IsProjectScenarioUpdated = true;
                     HasStaleOutputs = false;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
                     IsReadyToCompile = ReadyToCompile.No;

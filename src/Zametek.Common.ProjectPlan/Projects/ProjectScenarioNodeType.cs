@@ -1,7 +1,7 @@
 ﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public enum ProjectPlanNodeType
+    public enum ProjectScenarioNodeType
     {
         File,
         Folder,

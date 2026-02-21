@@ -174,8 +174,8 @@
   <data name="Title_WorkStreamSettingsView" xml:space="preserve">
     <value>Work Stream Settings</value>
   </data>
-  <data name="Title_ProjectPlans" xml:space="preserve">
-    <value>Plans</value>
+  <data name="Title_ProjectScenarios" xml:space="preserve">
+    <value>Scenarios</value>
   </data>
   <data name="Title_DeleteNodes" xml:space="preserve">
     <value>Delete</value>

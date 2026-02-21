@@ -10,9 +10,9 @@ namespace Zametek.Contract.ProjectPlan
 
         string ProjectTitle { get; }
 
-        Guid ProjectPlanId { get; }
+        Guid ScenarioId { get; }
 
-        string ProjectPlanTitle { get; }
+        string ScenarioTitle { get; }
 
         string ProjectDirectory { get; }
 
@@ -26,9 +26,9 @@ namespace Zametek.Contract.ProjectPlan
 
         bool DefaultHideBilling { get; set; }
 
-        SortMode ProjectPlanSortMode { get; set; }
+        SortMode ProjectScenarioSortMode { get; set; }
 
-        SortDirection ProjectPlanSortDirection { get; set; }
+        SortDirection ProjectScenarioSortDirection { get; set; }
 
         string SelectedTheme { get; set; }
 
@@ -42,9 +42,9 @@ namespace Zametek.Contract.ProjectPlan
 
         void SetProjectDirectory(string filename);
 
-        void SetProjectPlanTitle(string name);
+        void SetProjectScenarioTitle(string name);
 
-        void SetProjectPlanId(Guid planId);
+        void SetProjectScenarioId(Guid scenarioId);
 
         GraphSettingsModel DefaultGraphSettings { get; }
 
@@ -54,6 +54,6 @@ namespace Zametek.Contract.ProjectPlan
 
         void ResetProject();
 
-        void ResetProjectPlan();
+        void ResetProjectScenario();
     }
 }

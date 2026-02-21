@@ -14,7 +14,7 @@ namespace Zametek.ProjectPlan
     {
         private IRootDock? m_RootDock;
 
-        private readonly IDockable m_ProjectPlanManagerViewModel;
+        private readonly IDockable m_ProjectScenarioManagerViewModel;
         private readonly IDockable m_ActivitiesManagerViewModel;
         private readonly IDockable m_TrackingManagerViewModel;
         private readonly IDockable m_MetricManagerViewModel;
@@ -29,7 +29,7 @@ namespace Zametek.ProjectPlan
         private readonly IDockable m_WorkStreamSettingsManagerViewModel;
 
         public DockFactory(
-            IProjectPlanManagerViewModel projectPlanManagerViewModel,
+            IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
             IActivitiesManagerViewModel activitiesManagerViewModel,
             ITrackingManagerViewModel trackingManagerViewModel,
             IMetricManagerViewModel metricManagerViewModel,
@@ -43,7 +43,7 @@ namespace Zametek.ProjectPlan
             IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
             IWorkStreamSettingsManagerViewModel workStreamSettingsManagerViewModel)
         {
-            m_ProjectPlanManagerViewModel = projectPlanManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(projectPlanManagerViewModel));
+            m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(projectScenarioManagerViewModel));
             m_ActivitiesManagerViewModel = activitiesManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(activitiesManagerViewModel));
             m_TrackingManagerViewModel = trackingManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(trackingManagerViewModel));
             m_MetricManagerViewModel = metricManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(metricManagerViewModel));
@@ -61,9 +61,9 @@ namespace Zametek.ProjectPlan
         public override IRootDock CreateLayout()
         {
             {
-                m_ProjectPlanManagerViewModel.CanClose = false;
-                m_ProjectPlanManagerViewModel.CanFloat = true;
-                m_ProjectPlanManagerViewModel.CanPin = true;
+                m_ProjectScenarioManagerViewModel.CanClose = false;
+                m_ProjectScenarioManagerViewModel.CanFloat = true;
+                m_ProjectScenarioManagerViewModel.CanPin = true;
             }
             {
                 m_ActivitiesManagerViewModel.CanClose = false;
@@ -152,13 +152,13 @@ namespace Zametek.ProjectPlan
                             new ToolDock
                             {
                                 Proportion = 0.15,
-                                ActiveDockable = m_ProjectPlanManagerViewModel,
+                                ActiveDockable = m_ProjectScenarioManagerViewModel,
                                 CanClose = false,
                                 CanFloat = false,
                                 CanPin = false,
                                 IsCollapsable = false,
                                 VisibleDockables = CreateList(
-                                    m_ProjectPlanManagerViewModel),
+                                    m_ProjectScenarioManagerViewModel),
                                 Alignment = Alignment.Top,
                                 GripMode = GripMode.Visible
                             },
@@ -190,7 +190,7 @@ namespace Zametek.ProjectPlan
 
 
                         //VisibleDockables = CreateList(
-                        //    m_ProjectPlanManagerViewModel,
+                        //    m_ProjectScenarioManagerViewModel,
                         //    m_ActivitiesManagerViewModel,
                         //    m_GanttChartManagerViewModel,
                         //    m_TrackingManagerViewModel,

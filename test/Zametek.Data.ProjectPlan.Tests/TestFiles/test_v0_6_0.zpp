@@ -16,7 +16,7 @@
   "Files": [
     {
       "NodeId": "a504e7ad-5b24-43e0-aef8-7ba063b813a5",
-      "Plan": {
+      "Scenario": {
         "ProjectStart": "2025-01-06T00:00:00+00:00",
         "Today": "2025-01-06T00:00:00+00:00",
         "DependentActivities": [

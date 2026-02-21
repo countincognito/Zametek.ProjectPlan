@@ -19,11 +19,11 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeOffset ModifiedOn { get; set; }
 
-        ProjectPlanModel? ProjectPlan { get; set; }
+        ProjectScenarioModel? Scenario { get; set; }
 
-        ProjectPlanNodeModel Node { get; }
+        ProjectScenarioNodeModel Node { get; }
 
-        ProjectPlanFileModel File { get; }
+        ProjectScenarioFileModel File { get; }
 
         bool IsLoaded { get; set; }
 

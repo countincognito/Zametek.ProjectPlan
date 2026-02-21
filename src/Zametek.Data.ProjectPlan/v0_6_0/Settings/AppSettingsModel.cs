@@ -19,9 +19,9 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
 
         public bool DefaultHideBilling { get; init; } = false;
 
-        public SortMode ProjectPlanSortMode { get; init; } = default;
+        public SortMode ProjectScenarioSortMode { get; init; } = default;
 
-        public SortDirection ProjectPlanSortDirection { get; init; } = default;
+        public SortDirection ProjectScenarioSortDirection { get; init; } = default;
 
         public string SelectedTheme { get; init; } = string.Empty;
     }

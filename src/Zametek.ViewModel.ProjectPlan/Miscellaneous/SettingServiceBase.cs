@@ -26,8 +26,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new();
             m_ProjectTitle = string.Empty;
             m_ProjectId = Guid.NewGuid();
-            m_ProjectPlanTitle = string.Empty;
-            m_PlanId = Guid.NewGuid();
+            m_ScenarioTitle = string.Empty;
+            m_ScenarioId = Guid.NewGuid();
             m_AppSettingsModel = new()
             {
                 Version = Versions.AppSettingsLatest,
@@ -109,28 +109,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private string m_ProjectPlanTitle;
-        public string ProjectPlanTitle
+        private string m_ScenarioTitle;
+        public string ScenarioTitle
         {
-            get => string.IsNullOrWhiteSpace(m_ProjectPlanTitle) ? string.Empty : m_ProjectPlanTitle;
+            get => string.IsNullOrWhiteSpace(m_ScenarioTitle) ? string.Empty : m_ScenarioTitle;
             protected set
             {
                 lock (m_Lock)
                 {
-                    m_ProjectPlanTitle = value;
+                    m_ScenarioTitle = value;
                 }
             }
         }
 
-        private Guid m_PlanId;
-        public Guid ProjectPlanId
+        private Guid m_ScenarioId;
+        public Guid ScenarioId
         {
-            get => m_PlanId;
+            get => m_ScenarioId;
             protected set
             {
                 lock (m_Lock)
                 {
-                    m_PlanId = value == Guid.Empty ? Guid.NewGuid() : value;
+                    m_ScenarioId = value == Guid.Empty ? Guid.NewGuid() : value;
                 }
             }
         }
@@ -145,9 +145,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public abstract bool DefaultHideBilling { get; set; }
 
-        public abstract SortMode ProjectPlanSortMode { get; set; }
+        public abstract SortMode ProjectScenarioSortMode { get; set; }
 
-        public abstract SortDirection ProjectPlanSortDirection { get; set; }
+        public abstract SortDirection ProjectScenarioSortDirection { get; set; }
 
         public abstract string SelectedTheme { get; set; }
 
@@ -179,14 +179,14 @@ namespace Zametek.ViewModel.ProjectPlan
             ProjectDirectory = Path.GetDirectoryName(filename) ?? string.Empty;
         }
 
-        public void SetProjectPlanTitle(string name)
+        public void SetProjectScenarioTitle(string name)
         {
-            ProjectPlanTitle = name.Trim();
+            ScenarioTitle = name.Trim();
         }
 
-        public void SetProjectPlanId(Guid planId)
+        public void SetProjectScenarioId(Guid scenarioId)
         {
-            ProjectPlanId = planId;
+            ScenarioId = scenarioId;
         }
 
         public GraphSettingsModel DefaultGraphSettings =>
@@ -247,10 +247,10 @@ namespace Zametek.ViewModel.ProjectPlan
             ProjectId = Guid.NewGuid();
         }
 
-        public void ResetProjectPlan()
+        public void ResetProjectScenario()
         {
-            ProjectPlanTitle = string.Empty;
-            ProjectPlanId = Guid.NewGuid();
+            ScenarioTitle = string.Empty;
+            ScenarioId = Guid.NewGuid();
         }
 
         #endregion

@@ -32,16 +32,16 @@
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="ProjectPlanManagement\NodeNameView.axaml.cs">
+    <Compile Update="ProjectScenarioManagement\NodeNameView.axaml.cs">
       <DependentUpon>NodeNameView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="ProjectPlanManagement\AddNodeTagView.axaml.cs">
+    <Compile Update="ProjectScenarioManagement\AddNodeTagView.axaml.cs">
       <DependentUpon>AddNodeTagView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="ProjectPlanManagement\ProjectPlanManagerView.axaml.cs">
-      <DependentUpon>ProjectPlanManagerView.axaml</DependentUpon>
+    <Compile Update="ProjectScenarioManagement\ProjectScenarioManagerView.axaml.cs">
+      <DependentUpon>ProjectScenarioManagerView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="ProjectPlanManagement\RemoveNodeTagView.axaml.cs">
+    <Compile Update="ProjectScenarioManagement\RemoveNodeTagView.axaml.cs">
       <DependentUpon>RemoveNodeTagView.axaml</DependentUpon>
     </Compile>
   </ItemGroup>

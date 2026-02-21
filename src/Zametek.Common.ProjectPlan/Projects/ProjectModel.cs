@@ -11,10 +11,10 @@
 
         public Guid Current { get; init; }
 
-        public List<ProjectPlanNodeModel> Nodes { get; init; } = [];
+        public List<ProjectScenarioNodeModel> Nodes { get; init; } = [];
 
-        public List<ProjectPlanFileModel> Files { get; init; } = [];
+        public List<ProjectScenarioFileModel> Files { get; init; } = [];
 
-        public List<ProjectPlanTagModel> Tags { get; init; } = [];
+        public List<ProjectScenarioTagModel> Tags { get; init; } = [];
     }
 }

@@ -1,10 +1,10 @@
 ﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public record ProjectPlanFileModel
+    public record ProjectScenarioTagModel
     {
         public Guid NodeId { get; init; }
 
-        public ProjectPlanModel Plan { get; init; } = new();
+        public string Label { get; init; } = string.Empty;
     }
 }

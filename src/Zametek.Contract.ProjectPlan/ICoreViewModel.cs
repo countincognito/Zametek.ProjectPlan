@@ -11,7 +11,7 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadyToCompile IsReadyToCompile { get; }
 
-        bool IsProjectPlanUpdated { get; set; }
+        bool IsProjectScenarioUpdated { get; set; }
 
         bool HasStaleOutputs { get; set; }
 
@@ -85,21 +85,21 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadyToRevise IsReadyToReviseTrackers { get; set; }
 
-        ProjectPlanModel CreateEmptyProjectPlan();
+        ProjectScenarioModel CreateEmptyProjectScenario();
 
         void ClearSettings();
 
-        void ResetProjectPlan();
+        void ResetProjectScenario();
 
-        ProjectPlanImportModel ImportProjectPlanFile(string filename);
+        ProjectScenarioImportModel ImportProjectScenarioFile(string filename);
 
-        void ExportProjectPlanFile(ProjectPlanModel projectPlanModel, ResourceSeriesSetModel resourceSeriesSetModel, TrackingSeriesSetModel trackingSeriesSetModel, bool showDates, string filename);
+        void ExportProjectScenarioFile(ProjectScenarioModel projectScenarioModel, ResourceSeriesSetModel resourceSeriesSetModel, TrackingSeriesSetModel trackingSeriesSetModel, bool showDates, string filename);
 
-        void ProcessProjectPlanImport(ProjectPlanImportModel projectPlanImportModel, Guid projectPlanId, string projectPlanTitle);
+        void ProcessProjectScenarioImport(ProjectScenarioImportModel projectScenarioImportModel, Guid projectScenarioId, string projectScenarioTitle);
 
-        void ProcessProjectPlan(ProjectPlanModel projectPlanModel, Guid projectPlanId, string projectPlanTitle);
+        void ProcessProjectScenario(ProjectScenarioModel projectScenarioModel, Guid projectScenarioId, string projectScenarioTitle);
 
-        ProjectPlanModel BuildProjectPlan();
+        ProjectScenarioModel BuildProjectScenario();
 
         int AddManagedActivity();
 

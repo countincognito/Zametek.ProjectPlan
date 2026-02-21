@@ -39,7 +39,7 @@ namespace Zametek.ProjectPlan.CommandLine
                         //    .CreateLogger();
 
                         services.AddSingleton(TimeProvider.System);
-                        services.AddSingleton<IProjectPlanManagerViewModel, ProjectPlanManagerViewModel>();
+                        services.AddSingleton<IProjectScenarioManagerViewModel, ProjectScenarioManagerViewModel>();
                         services.AddSingleton<ICoreViewModel, CoreViewModel>();
                         services.AddSingleton<ISettingService, SettingService>();
                         services.AddSingleton<IDialogService, DialogService>();
@@ -56,9 +56,9 @@ namespace Zametek.ProjectPlan.CommandLine
                         services.AddSingleton<IOutputManagerViewModel, OutputManagerViewModel>();
 
                         services.AddSingleton<IProjectFileOpen, ProjectFileOpen>();
-                        services.AddSingleton<IProjectPlanFileImport, ProjectPlanFileImport>();
+                        services.AddSingleton<IProjectScenarioFileImport, ProjectScenarioFileImport>();
                         services.AddSingleton<IProjectFileSave, ProjectFileSave>();
-                        services.AddSingleton<IProjectPlanFileExport, ProjectPlanFileExport>();
+                        services.AddSingleton<IProjectScenarioFileExport, ProjectScenarioFileExport>();
 
                         var config = new MapperConfiguration(cfg =>
                         {
@@ -72,17 +72,17 @@ namespace Zametek.ProjectPlan.CommandLine
                     .UseSerilog()
                     .Build();
 
-                IProjectPlanManagerViewModel project = host.Services.GetRequiredService<IProjectPlanManagerViewModel>();
+                IProjectScenarioManagerViewModel project = host.Services.GetRequiredService<IProjectScenarioManagerViewModel>();
                 project.KillSubscriptions();
 
                 ICoreViewModel core = host.Services.GetRequiredService<ICoreViewModel>();
                 core.KillSubscriptions();
 
                 IProjectFileOpen projectFileOpen = host.Services.GetRequiredService<IProjectFileOpen>();
-                IProjectPlanFileImport projectFileImport = host.Services.GetRequiredService<IProjectPlanFileImport>();
+                IProjectScenarioFileImport projectFileImport = host.Services.GetRequiredService<IProjectScenarioFileImport>();
 
                 IProjectFileSave projectFileSave = host.Services.GetRequiredService<IProjectFileSave>();
-                IProjectPlanFileExport projectFileExport = host.Services.GetRequiredService<IProjectPlanFileExport>();
+                IProjectScenarioFileExport projectFileExport = host.Services.GetRequiredService<IProjectScenarioFileExport>();
 
                 ISettingService settingService = host.Services.GetRequiredService<ISettingService>();
 
@@ -134,10 +134,10 @@ namespace Zametek.ProjectPlan.CommandLine
                             }
                             else if (importFilename is not null)
                             {
-                                Guid projectPlanId = settingService.ProjectPlanId;
-                                string projectPlanTitle = settingService.ProjectPlanTitle;
-                                ProjectPlanImportModel projectImport = projectFileImport.ImportProjectPlanFile(importFilename);
-                                core.ProcessProjectPlanImport(projectImport, projectPlanId, projectPlanTitle);
+                                Guid projectScenarioId = settingService.ScenarioId;
+                                string projectScenarioTitle = settingService.ScenarioTitle;
+                                ProjectScenarioImportModel projectImport = projectFileImport.ImportProjectScenarioFile(importFilename);
+                                core.ProcessProjectScenarioImport(projectImport, projectScenarioId, projectScenarioTitle);
                                 settingService.SetProjectFilePath(importFilename, bindTitleToFilename: true);
                             }
                             else
@@ -188,9 +188,9 @@ namespace Zametek.ProjectPlan.CommandLine
                             }
                             if (exportFilename is not null)
                             {
-                                ProjectPlanModel projectPlanModel = core.BuildProjectPlan();
-                                projectFileExport.ExportProjectPlanFile(
-                                    projectPlanModel,
+                                ProjectScenarioModel projectScenarioModel = core.BuildProjectScenario();
+                                projectFileExport.ExportProjectScenarioFile(
+                                    projectScenarioModel,
                                     core.ResourceSeriesSet,
                                     core.TrackingSeriesSet,
                                     core.DisplaySettingsViewModel.ShowDates,

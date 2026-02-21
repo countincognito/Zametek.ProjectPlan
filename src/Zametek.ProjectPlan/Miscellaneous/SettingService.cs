@@ -149,33 +149,33 @@ namespace Zametek.ProjectPlan
             }
         }
 
-        public override SortMode ProjectPlanSortMode
+        public override SortMode ProjectScenarioSortMode
         {
             get
             {
-                return m_AppSettingsModel.ProjectPlanSortMode;
+                return m_AppSettingsModel.ProjectScenarioSortMode;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_AppSettingsModel = m_AppSettingsModel with { ProjectPlanSortMode = value };
+                    m_AppSettingsModel = m_AppSettingsModel with { ProjectScenarioSortMode = value };
                     SaveSettings();
                 }
             }
         }
 
-        public override SortDirection ProjectPlanSortDirection
+        public override SortDirection ProjectScenarioSortDirection
         {
             get
             {
-                return m_AppSettingsModel.ProjectPlanSortDirection;
+                return m_AppSettingsModel.ProjectScenarioSortDirection;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_AppSettingsModel = m_AppSettingsModel with { ProjectPlanSortDirection = value };
+                    m_AppSettingsModel = m_AppSettingsModel with { ProjectScenarioSortDirection = value };
                     SaveSettings();
                 }
             }

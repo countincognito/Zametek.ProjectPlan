@@ -15,8 +15,8 @@ namespace Zametek.ProjectPlan.CommandLine
         private bool m_DefaultUseBusinessDays;
         private bool m_DefaultHideCost;
         private bool m_DefaultHideBilling;
-        private SortMode m_ProjectPlanSortMode;
-        private SortDirection m_ProjectPlanSortDirection;
+        private SortMode m_ProjectScenarioSortMode;
+        private SortDirection m_ProjectScenarioSortDirection;
         private string m_SelectedTheme;
 
         #endregion
@@ -128,32 +128,32 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        public override SortMode ProjectPlanSortMode
+        public override SortMode ProjectScenarioSortMode
         {
             get
             {
-                return m_ProjectPlanSortMode;
+                return m_ProjectScenarioSortMode;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_ProjectPlanSortMode = value;
+                    m_ProjectScenarioSortMode = value;
                 }
             }
         }
 
-        public override SortDirection ProjectPlanSortDirection
+        public override SortDirection ProjectScenarioSortDirection
         {
             get
             {
-                return m_ProjectPlanSortDirection;
+                return m_ProjectScenarioSortDirection;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_ProjectPlanSortDirection = value;
+                    m_ProjectScenarioSortDirection = value;
                 }
             }
         }

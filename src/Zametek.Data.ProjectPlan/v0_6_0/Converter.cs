@@ -15,20 +15,20 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
 
             Guid projectId = Guid.NewGuid();
             Guid rootId = Guid.NewGuid();
-            Guid planId = Guid.NewGuid();
+            Guid scenarioId = Guid.NewGuid();
 
             return new ProjectModel
             {
                 Id = projectId,
                 Root = rootId,
-                Current = planId,
+                Current = scenarioId,
                 Nodes =
                 [
-                    new ProjectPlanNodeModel
+                    new ProjectScenarioNodeModel
                     {
-                        Id = planId,
+                        Id = scenarioId,
                         ParentId = rootId,
-                        NodeType = ProjectPlanNodeType.File,
+                        NodeType = ProjectScenarioNodeType.File,
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
                         CreatedOn = localNow,
                         ModifiedOn = localNow,
@@ -36,22 +36,22 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                 ],
                 Files =
                 [
-                    new ProjectPlanFileModel
+                    new ProjectScenarioFileModel
                     {
-                        NodeId = planId,
-                        Plan = mapper.Map<v0_5_0.ProjectModel, ProjectPlanModel>(project),
+                        NodeId = scenarioId,
+                        Scenario = mapper.Map<v0_5_0.ProjectModel, ProjectScenarioModel>(project),
                     },
                 ],
                 Tags =
                 [
-                    new ProjectPlanTagModel
+                    new ProjectScenarioTagModel
                     {
                         NodeId = rootId,
                         Label = Resource.ProjectPlan.Labels.Label_RootNode,
                     },
-                    new ProjectPlanTagModel
+                    new ProjectScenarioTagModel
                     {
-                        NodeId = planId,
+                        NodeId = scenarioId,
                         Label = Resource.ProjectPlan.Messages.Message_ConvertedFromPreviousVersion,
                     },
                 ],
@@ -70,8 +70,8 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                 DefaultUseBusinessDays = appSettingsModel.DefaultUseBusinessDays,
                 DefaultHideCost = appSettingsModel.DefaultHideCost,
                 DefaultHideBilling = appSettingsModel.DefaultHideBilling,
-                ProjectPlanSortMode = default,
-                ProjectPlanSortDirection = default,
+                ProjectScenarioSortMode = default,
+                ProjectScenarioSortDirection = default,
                 SelectedTheme = appSettingsModel.SelectedTheme,
             };
         }

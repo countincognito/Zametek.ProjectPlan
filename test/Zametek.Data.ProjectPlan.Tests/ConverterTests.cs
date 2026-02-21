@@ -36,7 +36,7 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             for (int i = 0; i < model1.Files.Count; i++)
             {
-                model1.Files[i].Plan.ShouldBeEquivalentTo(model2.Files[i].Plan);
+                model1.Files[i].Scenario.ShouldBeEquivalentTo(model2.Files[i].Scenario);
             }
 
             model1.Tags.Count.ShouldBe(model2.Tags.Count);
@@ -64,7 +64,7 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             for (int i = 0; i < model1.Files.Count; i++)
             {
-                model1.Files[i].Plan.ShouldBeEquivalentTo(model2.Files[i].Plan);
+                model1.Files[i].Scenario.ShouldBeEquivalentTo(model2.Files[i].Scenario);
             }
 
             model1.Tags.Count.ShouldBe(model2.Tags.Count);

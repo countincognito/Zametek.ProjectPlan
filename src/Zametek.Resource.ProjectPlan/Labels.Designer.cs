@@ -19,7 +19,7 @@ namespace Zametek.Resource.ProjectPlan {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Labels {
@@ -989,20 +989,20 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to New Plan.
+        ///   Looks up a localized string similar to New Scenario.
         /// </summary>
-        public static string Label_NewPlan {
+        public static string Label_NewScenario {
             get {
-                return ResourceManager.GetString("Label_NewPlan", resourceCulture);
+                return ResourceManager.GetString("Label_NewScenario", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to New Folder.
         /// </summary>
-        public static string Label_NewPlanFolder {
+        public static string Label_NewScenarioFolder {
             get {
-                return ResourceManager.GetString("Label_NewPlanFolder", resourceCulture);
+                return ResourceManager.GetString("Label_NewScenarioFolder", resourceCulture);
             }
         }
         
@@ -1252,9 +1252,9 @@ namespace Zametek.Resource.ProjectPlan {
         /// <summary>
         ///   Looks up a localized string similar to Select.
         /// </summary>
-        public static string Label_SelectManagedPlan {
+        public static string Label_SelectManagedScenario {
             get {
-                return ResourceManager.GetString("Label_SelectManagedPlan", resourceCulture);
+                return ResourceManager.GetString("Label_SelectManagedScenario", resourceCulture);
             }
         }
         

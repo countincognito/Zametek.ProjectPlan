@@ -564,7 +564,7 @@
   <data name="Label_RootNode" xml:space="preserve">
     <value>Root</value>
   </data>
-  <data name="Label_SelectManagedPlan" xml:space="preserve">
+  <data name="Label_SelectManagedScenario" xml:space="preserve">
     <value>Select</value>
   </data>
   <data name="Label_BaseNode" xml:space="preserve">
@@ -579,10 +579,10 @@
   <data name="Label_EmptyNode" xml:space="preserve">
     <value>Empty</value>
   </data>
-  <data name="Label_NewPlan" xml:space="preserve">
-    <value>New Plan</value>
+  <data name="Label_NewScenario" xml:space="preserve">
+    <value>New Scenario</value>
   </data>
-  <data name="Label_NewPlanFolder" xml:space="preserve">
+  <data name="Label_NewScenarioFolder" xml:space="preserve">
     <value>New Folder</value>
   </data>
   <data name="Label_Name" xml:space="preserve">

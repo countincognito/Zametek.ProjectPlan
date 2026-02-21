@@ -1,7 +1,7 @@
 ﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public record ProjectPlanImportModel
+    public record ProjectScenarioImportModel
     {
         public DateTimeOffset ProjectStart { get; init; }
 

@@ -72,7 +72,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ];
 
         private readonly IFactory m_DockFactory;
-        private readonly IProjectPlanManagerViewModel m_ProjectPlanManagerViewModel;
+        private readonly IProjectScenarioManagerViewModel m_ProjectScenarioManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectFileOpen m_ProjectFileOpen;
         private readonly IProjectFileSave m_ProjectFileSave;
@@ -87,7 +87,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public MainViewModel(
             IFactory dockFactory,
-            IProjectPlanManagerViewModel projectPlanManagerViewModel,
+            IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
             ICoreViewModel coreViewModel,
             IProjectFileOpen projectFileOpen,
             IProjectFileSave projectFileSave,
@@ -95,7 +95,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IDialogService dialogService)
         {
             ArgumentNullException.ThrowIfNull(dockFactory);
-            ArgumentNullException.ThrowIfNull(projectPlanManagerViewModel);
+            ArgumentNullException.ThrowIfNull(projectScenarioManagerViewModel);
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(projectFileOpen);
             ArgumentNullException.ThrowIfNull(projectFileSave);
@@ -103,7 +103,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dialogService);
             m_Lock = new object();
             m_DockFactory = dockFactory;
-            m_ProjectPlanManagerViewModel = projectPlanManagerViewModel;
+            m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel;
             m_CoreViewModel = coreViewModel;
             m_ProjectFileOpen = projectFileOpen;
             m_ProjectFileSave = projectFileSave;
@@ -127,14 +127,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 SaveAsProjectFileCommand = saveAsProjectFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> importProjectPlanFileCommand = ReactiveCommand.CreateFromTask(ImportProjectPlanFileAsync);
-                importProjectPlanFileCommand.IsExecuting.ToProperty(this, main => main.IsImporting, out m_IsImporting);
-                ImportProjectPlanFileCommand = importProjectPlanFileCommand;
+                ReactiveCommand<Unit, Unit> importProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ImportProjectScenarioFileAsync);
+                importProjectScenarioFileCommand.IsExecuting.ToProperty(this, main => main.IsImporting, out m_IsImporting);
+                ImportProjectScenarioFileCommand = importProjectScenarioFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> exportProjectPlanFileCommand = ReactiveCommand.CreateFromTask(ExportProjectPlanFileAsync);
-                exportProjectPlanFileCommand.IsExecuting.ToProperty(this, main => main.IsExporting, out m_IsExporting);
-                ExportProjectPlanFileCommand = exportProjectPlanFileCommand;
+                ReactiveCommand<Unit, Unit> exportProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ExportProjectScenarioFileAsync);
+                exportProjectScenarioFileCommand.IsExecuting.ToProperty(this, main => main.IsExporting, out m_IsExporting);
+                ExportProjectScenarioFileCommand = exportProjectScenarioFileCommand;
             }
             {
                 ReactiveCommand<Unit, Unit> closeProjectCommand = ReactiveCommand.CreateFromTask(CloseProjectAsync);
@@ -170,23 +170,23 @@ namespace Zametek.ViewModel.ProjectPlan
             m_IsBusy = this
                 .WhenAnyValue(
                     main => main.m_CoreViewModel.IsBusy,
-                    main => main.m_ProjectPlanManagerViewModel.IsBusy,
+                    main => main.m_ProjectScenarioManagerViewModel.IsBusy,
                     (isCoreBusy, isProjectBusy) => isCoreBusy || isProjectBusy)
                 .ToProperty(this, main => main.IsBusy);
 
             m_IsProjectUpdated = this
-                .WhenAnyValue(pm => pm.m_ProjectPlanManagerViewModel.IsProjectUpdated)
+                .WhenAnyValue(pm => pm.m_ProjectScenarioManagerViewModel.IsProjectUpdated)
                 .ToProperty(this, pm => pm.IsProjectUpdated);
 
-            m_IsProjectPlanUpdated = this
-                .WhenAnyValue(pm => pm.m_CoreViewModel.IsProjectPlanUpdated)
-                .ToProperty(this, pm => pm.IsProjectPlanUpdated);
+            m_IsProjectScenarioUpdated = this
+                .WhenAnyValue(pm => pm.m_CoreViewModel.IsProjectScenarioUpdated)
+                .ToProperty(this, pm => pm.IsProjectScenarioUpdated);
 
             m_ProjectHasChanges = this
                 .WhenAnyValue(
                     pm => pm.IsProjectUpdated,
-                    pm => pm.IsProjectPlanUpdated,
-                    (isProjectUpdated, isProjectPlanUpdated) => isProjectUpdated || isProjectPlanUpdated)
+                    pm => pm.IsProjectScenarioUpdated,
+                    (isProjectUpdated, isProjectScenarioUpdated) => isProjectUpdated || isProjectScenarioUpdated)
                 .ToProperty(this, pm => pm.ProjectHasChanges);
 
             m_ProjectStart = this
@@ -260,28 +260,28 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectTitleUpdateSub = this
                 .WhenAnyValue(
                     main => main.IsProjectUpdated,
-                    main => main.IsProjectPlanUpdated,
-                    main => main.m_ProjectPlanManagerViewModel.IsReadyToReviseTitle,
-                    (isProjectUpdated, isProjectPlanUpdated, isReadyToReviseTitle) =>
+                    main => main.IsProjectScenarioUpdated,
+                    main => main.m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle,
+                    (isProjectUpdated, isProjectScenarioUpdated, isReadyToReviseTitle) =>
                     {
-                        bool projectHasChanges = isProjectUpdated || isProjectPlanUpdated;
+                        bool projectHasChanges = isProjectUpdated || isProjectScenarioUpdated;
                         string newTitle = ProjectTitle;
 
                         if (isReadyToReviseTitle == ReadyToRevise.Yes
                             || projectHasChanges)
                         {
                             string projectTitle = m_SettingService.ProjectTitle;
-                            string planTitle = m_SettingService.ProjectPlanTitle;
-                            Guid projectPlanId = m_SettingService.ProjectPlanId;
+                            string scenarioTitle = m_SettingService.ScenarioTitle;
+                            Guid projectScenarioId = m_SettingService.ScenarioId;
 
-                            string plan = projectPlanId.ToShortString();
-                            if (!string.IsNullOrWhiteSpace(planTitle))
+                            string scenario = projectScenarioId.ToShortString();
+                            if (!string.IsNullOrWhiteSpace(scenarioTitle))
                             {
-                                plan = planTitle;
+                                scenario = scenarioTitle;
                             }
 
-                            newTitle = $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(projectTitle) ? Resource.ProjectPlan.Titles.Title_UntitledProject : projectTitle)} - {plan} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
-                            m_ProjectPlanManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.No;
+                            newTitle = $@"{(projectHasChanges ? "*" : string.Empty)}{(string.IsNullOrWhiteSpace(projectTitle) ? Resource.ProjectPlan.Titles.Title_UntitledProject : projectTitle)} - {scenario} - {Resource.ProjectPlan.Titles.Title_ProjectPlan} {Resource.ProjectPlan.Labels.Label_AppVersion}";
+                            m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.No;
                         }
 
                         return newTitle;
@@ -440,30 +440,30 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleAutoCompile() => AutoCompile = !AutoCompile;
 
-        private async Task ProjectPlanImportAsync(string filename) =>
-            await Task.Run(() => ProjectPlanImport(filename));
+        private async Task ProjectScenarioImportAsync(string filename) =>
+            await Task.Run(() => ProjectScenarioImport(filename));
 
-        private void ProjectPlanImport(string filename)
+        private void ProjectScenarioImport(string filename)
         {
             lock (m_Lock)
             {
-                Guid projectPlanId = m_SettingService.ProjectPlanId;
-                string projectPlanTitle = m_SettingService.ProjectPlanTitle;
-                ProjectPlanImportModel importModel = m_CoreViewModel.ImportProjectPlanFile(filename);
-                m_CoreViewModel.ProcessProjectPlanImport(importModel, projectPlanId, projectPlanTitle);
+                Guid projectScenarioId = m_SettingService.ScenarioId;
+                string projectScenarioTitle = m_SettingService.ScenarioTitle;
+                ProjectScenarioImportModel importModel = m_CoreViewModel.ImportProjectScenarioFile(filename);
+                m_CoreViewModel.ProcessProjectScenarioImport(importModel, projectScenarioId, projectScenarioTitle);
             }
         }
 
-        private async Task ProjectPlanExportAsync(string filename) =>
-            await Task.Run(() => ProjectPlanExport(filename));
+        private async Task ProjectScenarioExportAsync(string filename) =>
+            await Task.Run(() => ProjectScenarioExport(filename));
 
-        private void ProjectPlanExport(string filename)
+        private void ProjectScenarioExport(string filename)
         {
             lock (m_Lock)
             {
-                ProjectPlanModel projectPlanModel = m_CoreViewModel.BuildProjectPlan();
-                m_CoreViewModel.ExportProjectPlanFile(
-                    projectPlanModel,
+                ProjectScenarioModel projectScenarioModel = m_CoreViewModel.BuildProjectScenario();
+                m_CoreViewModel.ExportProjectScenarioFile(
+                    projectScenarioModel,
                     m_CoreViewModel.ResourceSeriesSet,
                     m_CoreViewModel.TrackingSeriesSet,
                     ShowDates,
@@ -477,7 +477,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                return m_ProjectPlanManagerViewModel.BuildProject();
+                return m_ProjectScenarioManagerViewModel.BuildProject();
             }
         }
 
@@ -500,7 +500,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                m_ProjectPlanManagerViewModel.ResetProject();
+                m_ProjectScenarioManagerViewModel.ResetProject();
             }
         }
 
@@ -511,11 +511,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 ProjectModel projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(filename);
 
                 // First process the project.
-                m_ProjectPlanManagerViewModel.ProcessProject(projectModel);
+                m_ProjectScenarioManagerViewModel.ProcessProject(projectModel);
 
                 // Now bind the project title to the filename.
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
-                m_ProjectPlanManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
+                m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
             }
         }
 
@@ -532,10 +532,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ProjectModel projectModel = await BuildProjectAsync();
                 await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
-                m_CoreViewModel.IsProjectPlanUpdated = false;
-                m_ProjectPlanManagerViewModel.IsProjectUpdated = false;
+                m_CoreViewModel.IsProjectScenarioUpdated = false;
+                m_ProjectScenarioManagerViewModel.IsProjectUpdated = false;
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
-                m_ProjectPlanManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
+                m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
             }
         }
 
@@ -593,8 +593,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_IsProjectUpdated;
         public bool IsProjectUpdated => m_IsProjectUpdated.Value;
 
-        private readonly ObservableAsPropertyHelper<bool> m_IsProjectPlanUpdated;
-        public bool IsProjectPlanUpdated => m_IsProjectPlanUpdated.Value;
+        private readonly ObservableAsPropertyHelper<bool> m_IsProjectScenarioUpdated;
+        public bool IsProjectScenarioUpdated => m_IsProjectScenarioUpdated.Value;
 
         private readonly ObservableAsPropertyHelper<bool> m_ProjectHasChanges;
         public bool ProjectHasChanges => m_ProjectHasChanges.Value;
@@ -761,9 +761,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand SaveAsProjectFileCommand { get; }
 
-        public ICommand ImportProjectPlanFileCommand { get; }
+        public ICommand ImportProjectScenarioFileCommand { get; }
 
-        public ICommand ExportProjectPlanFileCommand { get; }
+        public ICommand ExportProjectScenarioFileCommand { get; }
 
         public ICommand CloseProjectCommand { get; }
 
@@ -946,11 +946,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public async Task ImportProjectPlanFileAsync()
+        public async Task ImportProjectScenarioFileAsync()
         {
             try
             {
-                if (IsProjectPlanUpdated)
+                if (IsProjectScenarioUpdated)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
                         Resource.ProjectPlan.Titles.Title_UnsavedChanges,
@@ -967,7 +967,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    await ProjectPlanImportAsync(filename);
+                    await ProjectScenarioImportAsync(filename);
                     await RunAutoCompileAsync();
                 }
             }
@@ -981,15 +981,15 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public async Task ExportProjectPlanFileAsync()
+        public async Task ExportProjectScenarioFileAsync()
         {
             try
             {
                 string title = m_SettingService.ProjectTitle;
                 title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
 
-                Guid projectPlanId = m_SettingService.ProjectPlanId;
-                IManagedNodeViewModel? managedNode = m_ProjectPlanManagerViewModel.GetNode(projectPlanId);
+                Guid projectScenarioId = m_SettingService.ScenarioId;
+                IManagedNodeViewModel? managedNode = m_ProjectScenarioManagerViewModel.GetNode(projectScenarioId);
 
                 if (managedNode is not null)
                 {
@@ -1001,7 +1001,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    await ProjectPlanExportAsync(filename);
+                    await ProjectScenarioExportAsync(filename);
                 }
             }
             catch (Exception ex)
@@ -1168,7 +1168,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 KillSubscriptions();
                 m_IsBusy?.Dispose();
                 m_IsProjectUpdated?.Dispose();
-                m_IsProjectPlanUpdated?.Dispose();
+                m_IsProjectScenarioUpdated?.Dispose();
                 m_ProjectHasChanges?.Dispose();
                 m_ProjectStart?.Dispose();
                 m_Today?.Dispose();

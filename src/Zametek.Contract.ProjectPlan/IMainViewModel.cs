@@ -24,7 +24,7 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsProjectUpdated { get; }
 
-        bool IsProjectPlanUpdated { get; }
+        bool IsProjectScenarioUpdated { get; }
 
         bool ProjectHasChanges { get; }
 
@@ -64,9 +64,9 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand SaveAsProjectFileCommand { get; }
 
-        ICommand ImportProjectPlanFileCommand { get; }
+        ICommand ImportProjectScenarioFileCommand { get; }
 
-        ICommand ExportProjectPlanFileCommand { get; }
+        ICommand ExportProjectScenarioFileCommand { get; }
 
         ICommand CloseProjectCommand { get; }
 
@@ -122,9 +122,9 @@ namespace Zametek.Contract.ProjectPlan
 
         Task SaveAsProjectFileAsync();
 
-        Task ImportProjectPlanFileAsync();
+        Task ImportProjectScenarioFileAsync();
 
-        Task ExportProjectPlanFileAsync();
+        Task ExportProjectScenarioFileAsync();
 
         Task CloseProjectAsync();
 

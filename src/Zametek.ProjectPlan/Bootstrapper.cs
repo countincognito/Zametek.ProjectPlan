@@ -27,8 +27,8 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<IDateTimeCalculator, DateTimeCalculator>();
             SplatRegistrations.RegisterLazySingleton<IArrowGraphSerializer, ArrowGraphSerializer>();
             SplatRegistrations.RegisterLazySingleton<IVertexGraphSerializer, VertexGraphSerializer>();
-            SplatRegistrations.RegisterLazySingleton<IProjectPlanFileImport, ProjectPlanFileImport>();
-            SplatRegistrations.RegisterLazySingleton<IProjectPlanFileExport, ProjectPlanFileExport>();
+            SplatRegistrations.RegisterLazySingleton<IProjectScenarioFileImport, ProjectScenarioFileImport>();
+            SplatRegistrations.RegisterLazySingleton<IProjectScenarioFileExport, ProjectScenarioFileExport>();
             SplatRegistrations.RegisterLazySingleton<IProjectFileOpen, ProjectFileOpen>();
             SplatRegistrations.RegisterLazySingleton<IProjectFileSave, ProjectFileSave>();
             SplatRegistrations.RegisterLazySingleton<IDialogService, DialogService>();
@@ -45,7 +45,7 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<IGraphSettingsManagerViewModel, GraphSettingsManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IResourceSettingsManagerViewModel, ResourceSettingsManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IWorkStreamSettingsManagerViewModel, WorkStreamSettingsManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IProjectPlanManagerViewModel, ProjectPlanManagerViewModel>();
+            SplatRegistrations.RegisterLazySingleton<IProjectScenarioManagerViewModel, ProjectScenarioManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IMainViewModel, MainViewModel>();
             SplatRegistrations.RegisterLazySingleton<IFactory, DockFactory>();
 
@@ -62,7 +62,7 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<GraphSettingsManagerView>();
             SplatRegistrations.RegisterLazySingleton<ResourceSettingsManagerView>();
             SplatRegistrations.RegisterLazySingleton<WorkStreamSettingsManagerView>();
-            SplatRegistrations.RegisterLazySingleton<ProjectPlanManagerView>();
+            SplatRegistrations.RegisterLazySingleton<ProjectScenarioManagerView>();
             SplatRegistrations.RegisterLazySingleton<MainView>();
 
             var config = new MapperConfiguration(cfg =>

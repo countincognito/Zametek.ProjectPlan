@@ -16,12 +16,12 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly object m_Lock;
-        private readonly IProjectPlanManagerViewModel m_ProjectPlanManagerViewModel;
+        private readonly IProjectScenarioManagerViewModel m_ProjectScenarioManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
         private readonly BehaviorSubject<IComparer<IManagedNodeViewModel>> m_NodeSortComparer;
-        private ProjectPlanNodeModel m_ProjectPlanNodeModel;
-        private ProjectPlanModel? m_ProjectPlanModel;
+        private ProjectScenarioNodeModel m_ProjectScenarioNodeModel;
+        private ProjectScenarioModel? m_ProjectScenarioModel;
 
         private static readonly string[] s_NoErrors = [];
         private readonly Dictionary<string, List<string>> m_ErrorsByPropertyName;
@@ -31,39 +31,39 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Ctors
 
         public ManagedNodeViewModel(
-            IProjectPlanManagerViewModel projectPlanManagerViewModel,
+            IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             BehaviorSubject<IComparer<IManagedNodeViewModel>> nodeSortComparer)
-            : this(projectPlanManagerViewModel, coreViewModel, settingService, nodeSortComparer, new ProjectPlanNodeModel())
+            : this(projectScenarioManagerViewModel, coreViewModel, settingService, nodeSortComparer, new ProjectScenarioNodeModel())
         {
         }
 
         public ManagedNodeViewModel(
-            IProjectPlanManagerViewModel projectPlanManagerViewModel,
+            IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             BehaviorSubject<IComparer<IManagedNodeViewModel>> nodeSortComparer,
-            ProjectPlanNodeModel projectPlanNode,
-            ProjectPlanModel projectPlan)
-            : this(projectPlanManagerViewModel, coreViewModel, settingService, nodeSortComparer, projectPlanNode)
+            ProjectScenarioNodeModel projectScenarioNode,
+            ProjectScenarioModel projectScenario)
+            : this(projectScenarioManagerViewModel, coreViewModel, settingService, nodeSortComparer, projectScenarioNode)
         {
-            ArgumentNullException.ThrowIfNull(projectPlan);
-            m_ProjectPlanModel = projectPlan;
+            ArgumentNullException.ThrowIfNull(projectScenario);
+            m_ProjectScenarioModel = projectScenario;
         }
 
         public ManagedNodeViewModel(
-            IProjectPlanManagerViewModel projectPlanManagerViewModel,
+            IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             BehaviorSubject<IComparer<IManagedNodeViewModel>> nodeSortComparer,
-            ProjectPlanNodeModel projectPlanNode)
+            ProjectScenarioNodeModel projectScenarioNode)
         {
-            ArgumentNullException.ThrowIfNull(projectPlanManagerViewModel);
+            ArgumentNullException.ThrowIfNull(projectScenarioManagerViewModel);
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(nodeSortComparer);
-            ArgumentNullException.ThrowIfNull(projectPlanNode);
+            ArgumentNullException.ThrowIfNull(projectScenarioNode);
             m_Lock = new object();
             m_IsLoaded = false;
             m_Labels = new();
@@ -74,12 +74,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Bind(out m_ReadOnlyLabels)
                 .Subscribe();
 
-            m_ProjectPlanManagerViewModel = projectPlanManagerViewModel;
+            m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel;
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_NodeSortComparer = nodeSortComparer;
-            m_ProjectPlanNodeModel = projectPlanNode;
-            m_ProjectPlanModel = null;
+            m_ProjectScenarioNodeModel = projectScenarioNode;
+            m_ProjectScenarioModel = null;
             m_Children = new();
 
             // Create read-only view to the source list.
@@ -94,19 +94,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_DisplayName = this
                 .WhenAnyValue(
-                    x => x.m_ProjectPlanManagerViewModel.IsProjectUpdated,
-                    x => x.m_CoreViewModel.IsProjectPlanUpdated,
+                    x => x.m_ProjectScenarioManagerViewModel.IsProjectUpdated,
+                    x => x.m_CoreViewModel.IsProjectScenarioUpdated,
                     x => x.Name,
                     x => x.Label,
-                    (isProjectUpdated, isProjectPlanUpdated, name, label) =>
+                    (isProjectUpdated, isProjectScenarioUpdated, name, label) =>
                     {
                         string displayName = name;
                         if (IsFolder)
                         {
                             displayName = $@"[{name}]";
                         }
-                        Guid projectPlanId = m_SettingService.ProjectPlanId;
-                        bool nodeHasChanges = m_ProjectPlanNodeModel.Id == projectPlanId && isProjectPlanUpdated;
+                        Guid projectScenarioId = m_SettingService.ScenarioId;
+                        bool nodeHasChanges = m_ProjectScenarioNodeModel.Id == projectScenarioId && isProjectScenarioUpdated;
                         return $@"{(nodeHasChanges ? "*" : string.Empty)}{displayName} {label}";
                     })
                 .ToProperty(this, x => x.DisplayName);
@@ -166,85 +166,85 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IManagedNodeViewModel Members
 
-        public Guid Id => m_ProjectPlanNodeModel.Id;
+        public Guid Id => m_ProjectScenarioNodeModel.Id;
 
         public Guid ParentId
         {
             get
             {
-                return m_ProjectPlanNodeModel.ParentId;
+                return m_ProjectScenarioNodeModel.ParentId;
             }
             set
             {
-                m_ProjectPlanNodeModel = m_ProjectPlanNodeModel with { ParentId = value };
+                m_ProjectScenarioNodeModel = m_ProjectScenarioNodeModel with { ParentId = value };
             }
         }
 
-        public bool IsFolder => m_ProjectPlanNodeModel.NodeType == ProjectPlanNodeType.Folder;
+        public bool IsFolder => m_ProjectScenarioNodeModel.NodeType == ProjectScenarioNodeType.Folder;
 
         public string Name
         {
             get
             {
-                return m_ProjectPlanNodeModel.Name;
+                return m_ProjectScenarioNodeModel.Name;
             }
             set
             {
-                m_ProjectPlanNodeModel = m_ProjectPlanNodeModel with { Name = value };
+                m_ProjectScenarioNodeModel = m_ProjectScenarioNodeModel with { Name = value };
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged(nameof(DisplayName));
             }
         }
 
-        public DateTimeOffset CreatedOn => m_ProjectPlanNodeModel.CreatedOn;
+        public DateTimeOffset CreatedOn => m_ProjectScenarioNodeModel.CreatedOn;
 
         public DateTimeOffset ModifiedOn
         {
             get
             {
-                return m_ProjectPlanNodeModel.ModifiedOn;
+                return m_ProjectScenarioNodeModel.ModifiedOn;
             }
             set
             {
-                m_ProjectPlanNodeModel = m_ProjectPlanNodeModel with { ModifiedOn = value };
+                m_ProjectScenarioNodeModel = m_ProjectScenarioNodeModel with { ModifiedOn = value };
                 this.RaisePropertyChanged();
             }
         }
 
-        public ProjectPlanModel? ProjectPlan
+        public ProjectScenarioModel? Scenario
         {
             get
             {
-                return m_ProjectPlanModel;
+                return m_ProjectScenarioModel;
             }
             set
             {
                 if (IsFolder)
                 {
-                    throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_CannotSetProjectPlanOnFolderNode} {Id}");
+                    throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_CannotSetProjectScenarioOnFolderNode} {Id}");
                 }
-                m_ProjectPlanModel = value;
+                m_ProjectScenarioModel = value;
             }
         }
 
-        public ProjectPlanNodeModel Node => m_ProjectPlanNodeModel;
+        public ProjectScenarioNodeModel Node => m_ProjectScenarioNodeModel;
 
-        public ProjectPlanFileModel File
+        public ProjectScenarioFileModel File
         {
             get
             {
                 if (IsFolder)
                 {
-                    throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_CannotGetProjectPlanFileFromFolderNode} {Id}");
+                    throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_CannotGetProjectScenarioFileFromFolderNode} {Id}");
                 }
-                if (m_ProjectPlanModel is null)
+                if (m_ProjectScenarioModel is null)
                 {
-                    throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_CannotGetProjectPlanFileWhenProjectPlanIsNull} {Id}");
+                    throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_CannotGetProjectScenarioFileWhenProjectScenarioIsNull} {Id}");
                 }
-                return new ProjectPlanFileModel
+                return new ProjectScenarioFileModel
                 {
-                    NodeId = m_ProjectPlanNodeModel.Id,
-                    Plan = m_ProjectPlanModel,
+                    NodeId = m_ProjectScenarioNodeModel.Id,
+                    Scenario = m_ProjectScenarioModel,
                 };
             }
         }

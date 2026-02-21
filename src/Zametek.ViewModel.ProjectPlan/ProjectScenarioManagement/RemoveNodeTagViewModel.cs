@@ -11,11 +11,11 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Ctors
 
-        public RemoveNodeTagViewModel(IEnumerable<ProjectPlanTagModel> projectPlanTagModels)
+        public RemoveNodeTagViewModel(IEnumerable<ProjectScenarioTagModel> projectScenarioTagModels)
         {
             m_Tags = [];
             m_ReadOnlyTags = new(m_Tags);
-            m_Tags.AddRange(projectPlanTagModels);
+            m_Tags.AddRange(projectScenarioTagModels);
             m_SelectedTag = m_ReadOnlyTags.FirstOrDefault() ?? new();
         }
 
@@ -25,14 +25,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region IRemovePlanTagViewModel Members
+        #region IRemoveNodeTagViewModel Members
 
-        private readonly ObservableUniqueCollection<ProjectPlanTagModel> m_Tags;
-        private readonly ReadOnlyObservableCollection<ProjectPlanTagModel> m_ReadOnlyTags;
-        public ReadOnlyObservableCollection<ProjectPlanTagModel> Tags => m_ReadOnlyTags;
+        private readonly ObservableUniqueCollection<ProjectScenarioTagModel> m_Tags;
+        private readonly ReadOnlyObservableCollection<ProjectScenarioTagModel> m_ReadOnlyTags;
+        public ReadOnlyObservableCollection<ProjectScenarioTagModel> Tags => m_ReadOnlyTags;
 
-        private ProjectPlanTagModel m_SelectedTag;
-        public ProjectPlanTagModel SelectedTag
+        private ProjectScenarioTagModel m_SelectedTag;
+        public ProjectScenarioTagModel SelectedTag
         {
             get => m_SelectedTag;
             set

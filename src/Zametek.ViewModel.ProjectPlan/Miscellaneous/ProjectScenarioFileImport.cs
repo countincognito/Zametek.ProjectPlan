@@ -10,8 +10,8 @@ using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class ProjectPlanFileImport
-        : IProjectPlanFileImport
+    public class ProjectScenarioFileImport
+        : IProjectScenarioFileImport
     {
         #region Fields
 
@@ -19,24 +19,24 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly IList<string> s_GeneralColumnTitles =
         [
-            nameof(ProjectPlanImportModel.ProjectStart),
-            nameof(ProjectPlanImportModel.Today)
+            nameof(ProjectScenarioImportModel.ProjectStart),
+            nameof(ProjectScenarioImportModel.Today)
         ];
 
         private static readonly IList<string> s_ResourceSettingsColumnTitles =
         [
-            nameof(ProjectPlanImportModel.ResourceSettings.DefaultUnitCost),
-            nameof(ProjectPlanImportModel.ResourceSettings.DefaultUnitBilling),
-            nameof(ProjectPlanImportModel.ResourceSettings.AreDisabled)
+            nameof(ProjectScenarioImportModel.ResourceSettings.DefaultUnitCost),
+            nameof(ProjectScenarioImportModel.ResourceSettings.DefaultUnitBilling),
+            nameof(ProjectScenarioImportModel.ResourceSettings.AreDisabled)
         ];
 
         private static readonly IList<string> s_DisplaySettingsColumnTitles =
         [
-            nameof(ProjectPlanModel.DisplaySettings.ShowDates),
-            nameof(ProjectPlanModel.DisplaySettings.UseClassicDates),
-            nameof(ProjectPlanModel.DisplaySettings.UseBusinessDays),
-            nameof(ProjectPlanModel.DisplaySettings.HideCost),
-            nameof(ProjectPlanModel.DisplaySettings.HideBilling),
+            nameof(ProjectScenarioModel.DisplaySettings.ShowDates),
+            nameof(ProjectScenarioModel.DisplaySettings.UseClassicDates),
+            nameof(ProjectScenarioModel.DisplaySettings.UseBusinessDays),
+            nameof(ProjectScenarioModel.DisplaySettings.HideCost),
+            nameof(ProjectScenarioModel.DisplaySettings.HideBilling),
         ];
 
         private static readonly IList<string> s_ActivityColumnTitles =
@@ -109,7 +109,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public ProjectPlanFileImport(ISettingService settingService)
+        public ProjectScenarioFileImport(ISettingService settingService)
         {
             ArgumentNullException.ThrowIfNull(settingService);
             m_SettingService = settingService;
@@ -166,13 +166,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region IProjectPlanFileImport Members
+        #region IProjectScenarioFileImport Members
 
-        public ProjectPlanImportModel ImportProjectPlanFile(string filename)
+        public ProjectScenarioImportModel ImportProjectScenarioFile(string filename)
         {
             string fileExtension = Path.GetExtension(filename);
 
-            Func<string, ProjectPlanImportModel> func =
+            Func<string, ProjectScenarioImportModel> func =
                 filename => throw new ArgumentOutOfRangeException(
                     nameof(filename),
                     @$"{Resource.ProjectPlan.Messages.Message_UnableToImportFile} {filename}");
@@ -180,17 +180,17 @@ namespace Zametek.ViewModel.ProjectPlan
             fileExtension.ValueSwitchOn()
                 .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectMppFileExtension}", _ => func = ImportMicrosoftProjectFile)
                 .Case($".{Resource.ProjectPlan.Filters.Filter_MicrosoftProjectXmlFileExtension}", _ => func = ImportMicrosoftProjectFile)
-                .Case($".{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}", _ => func = ImportProjectPlanXlsxFile);
+                .Case($".{Resource.ProjectPlan.Filters.Filter_ProjectXlsxFileExtension}", _ => func = ImportProjectScenarioXlsxFile);
 
             return func(filename);
         }
 
-        public async Task<ProjectPlanImportModel> ImportProjectPlanFileAsync(string filename)
+        public async Task<ProjectScenarioImportModel> ImportProjectScenarioFileAsync(string filename)
         {
-            return await Task.Run(() => ImportProjectPlanFile(filename));
+            return await Task.Run(() => ImportProjectScenarioFile(filename));
         }
 
-        public ProjectPlanImportModel ImportMicrosoftProjectFile(string filename)
+        public ProjectScenarioImportModel ImportMicrosoftProjectFile(string filename)
         {
             var reader = new UniversalProjectReader();
             net.sf.mpxj.ProjectFile mpxjProjectFile = reader.read(filename);
@@ -294,7 +294,7 @@ namespace Zametek.ViewModel.ProjectPlan
             bool hideCost = m_SettingService.DefaultHideCost;
             bool hideBilling = m_SettingService.DefaultHideBilling;
 
-            return new ProjectPlanImportModel
+            return new ProjectScenarioImportModel
             {
                 ProjectStart = projectStart,
                 Today = new(DateTime.Today),
@@ -314,7 +314,7 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        public ProjectPlanImportModel ImportProjectPlanXlsxFile(string filename)
+        public ProjectScenarioImportModel ImportProjectScenarioXlsxFile(string filename)
         {
             using FileStream file = new(filename, FileMode.Open, FileAccess.Read);
 
@@ -345,7 +345,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         foreach (string columnName in columnNames)
                         {
                             columnName.ValueSwitchOn()
-                                .Case(nameof(ProjectPlanImportModel.ProjectStart),
+                                .Case(nameof(ProjectScenarioImportModel.ProjectStart),
                                     name =>
                                     {
                                         if (DateTimeOffset.TryParse(row[name]?.ToString(), out DateTimeOffset output))
@@ -353,7 +353,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             projectStart = output;
                                         }
                                     })
-                                .Case(nameof(ProjectPlanImportModel.Today),
+                                .Case(nameof(ProjectScenarioImportModel.Today),
                                     name =>
                                     {
                                         if (DateTimeOffset.TryParse(row[name]?.ToString(), out DateTimeOffset output))
@@ -396,7 +396,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         foreach (string columnName in columnNames)
                         {
                             columnName.ValueSwitchOn()
-                                .Case(nameof(ProjectPlanImportModel.DisplaySettings.ShowDates),
+                                .Case(nameof(ProjectScenarioImportModel.DisplaySettings.ShowDates),
                                     name =>
                                     {
                                         if (bool.TryParse(row[name]?.ToString(), out bool output))
@@ -404,7 +404,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             showDates = output;
                                         }
                                     })
-                                .Case(nameof(ProjectPlanImportModel.DisplaySettings.UseClassicDates),
+                                .Case(nameof(ProjectScenarioImportModel.DisplaySettings.UseClassicDates),
                                     name =>
                                     {
                                         if (bool.TryParse(row[name]?.ToString(), out bool output))
@@ -412,7 +412,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             useClassicDates = output;
                                         }
                                     })
-                                .Case(nameof(ProjectPlanImportModel.DisplaySettings.UseBusinessDays),
+                                .Case(nameof(ProjectScenarioImportModel.DisplaySettings.UseBusinessDays),
                                     name =>
                                     {
                                         if (bool.TryParse(row[name]?.ToString(), out bool output))
@@ -420,7 +420,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             useBusinessDays = output;
                                         }
                                     })
-                                .Case(nameof(ProjectPlanImportModel.DisplaySettings.HideCost),
+                                .Case(nameof(ProjectScenarioImportModel.DisplaySettings.HideCost),
                                     name =>
                                     {
                                         if (bool.TryParse(row[name]?.ToString(), out bool output))
@@ -428,7 +428,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             hideCost = output;
                                         }
                                     })
-                                .Case(nameof(ProjectPlanImportModel.DisplaySettings.HideBilling),
+                                .Case(nameof(ProjectScenarioImportModel.DisplaySettings.HideBilling),
                                     name =>
                                     {
                                         if (bool.TryParse(row[name]?.ToString(), out bool output))
@@ -469,7 +469,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         foreach (string columnName in columnNames)
                         {
                             columnName.ValueSwitchOn()
-                                .Case(nameof(ProjectPlanImportModel.ResourceSettings.DefaultUnitCost),
+                                .Case(nameof(ProjectScenarioImportModel.ResourceSettings.DefaultUnitCost),
                                     name =>
                                     {
                                         if (double.TryParse(row[name]?.ToString(), out double output))
@@ -477,7 +477,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             defaultUnitCost = output;
                                         }
                                     })
-                                .Case(nameof(ProjectPlanImportModel.ResourceSettings.DefaultUnitBilling),
+                                .Case(nameof(ProjectScenarioImportModel.ResourceSettings.DefaultUnitBilling),
                                     name =>
                                     {
                                         if (double.TryParse(row[name]?.ToString(), out double output))
@@ -485,7 +485,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                             defaultUnitBilling = output;
                                         }
                                     })
-                                .Case(nameof(ProjectPlanImportModel.ResourceSettings.AreDisabled),
+                                .Case(nameof(ProjectScenarioImportModel.ResourceSettings.AreDisabled),
                                     name =>
                                     {
                                         if (bool.TryParse(row[name]?.ToString(), out bool output))
@@ -510,7 +510,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ImportWorksheetResourceTrackers(workbook, resource, dependentActivities);
             }
 
-            return new ProjectPlanImportModel
+            return new ProjectScenarioImportModel
             {
                 ProjectStart = projectStart,
                 Today = today,

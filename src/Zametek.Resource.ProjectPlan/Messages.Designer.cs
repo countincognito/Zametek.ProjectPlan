@@ -19,7 +19,7 @@ namespace Zametek.Resource.ProjectPlan {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Messages {
@@ -97,29 +97,29 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot get a project plan file from a folder node:.
+        ///   Looks up a localized string similar to Cannot get a project scenario file from a folder node:.
         /// </summary>
-        public static string Message_CannotGetProjectPlanFileFromFolderNode {
+        public static string Message_CannotGetProjectScenarioFileFromFolderNode {
             get {
-                return ResourceManager.GetString("Message_CannotGetProjectPlanFileFromFolderNode", resourceCulture);
+                return ResourceManager.GetString("Message_CannotGetProjectScenarioFileFromFolderNode", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot get a project plan file when project plan is null:.
+        ///   Looks up a localized string similar to Cannot get a project scenario file when project scenario is null:.
         /// </summary>
-        public static string Message_CannotGetProjectPlanFileWhenProjectPlanIsNull {
+        public static string Message_CannotGetProjectScenarioFileWhenProjectScenarioIsNull {
             get {
-                return ResourceManager.GetString("Message_CannotGetProjectPlanFileWhenProjectPlanIsNull", resourceCulture);
+                return ResourceManager.GetString("Message_CannotGetProjectScenarioFileWhenProjectScenarioIsNull", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot set a project plan on a folder node:.
+        ///   Looks up a localized string similar to Cannot set a project scenario on a folder node:.
         /// </summary>
-        public static string Message_CannotSetProjectPlanOnFolderNode {
+        public static string Message_CannotSetProjectScenarioOnFolderNode {
             get {
-                return ResourceManager.GetString("Message_CannotSetProjectPlanOnFolderNode", resourceCulture);
+                return ResourceManager.GetString("Message_CannotSetProjectScenarioOnFolderNode", resourceCulture);
             }
         }
         

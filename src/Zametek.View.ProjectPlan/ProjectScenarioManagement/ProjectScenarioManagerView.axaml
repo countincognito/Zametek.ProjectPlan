@@ -9,15 +9,15 @@
 			 xmlns:i="using:Avalonia.Xaml.Interactivity"
 	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
 			 xmlns:converters="using:Avalonia.Controls.Converters"
-			 x:DataType="vm:ProjectPlanManagerViewModel"
+			 x:DataType="vm:ProjectScenarioManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Zametek.View.ProjectPlan.ProjectPlanManagerView">
+             x:Class="Zametek.View.ProjectPlan.ProjectScenarioManagerView">
 	<UserControl.Resources>
 		<converters:EnumToBoolConverter x:Key="enumToBool" />
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<TreeView Name="planTree"
+		<TreeView Name="scenarioTree"
 				  ItemsSource="{Binding Path=Nodes, Mode=OneWay}"
 				  SelectedItems="{Binding Path=SelectedNodes, Mode=OneWay}"
 				  SelectionMode="Multiple">
@@ -57,28 +57,28 @@
 				<Style Selector="TreeViewItem">
 					<Setter Property="ContextMenu">
 						<ContextMenu>
-							<MenuItem Header="{x:Static resources:Labels.Label_SelectManagedPlan}"
-									  Command="{Binding Path=$parent[TreeView].DataContext.LoadProjectPlanFileCommand, Mode=OneWay}"
+							<MenuItem Header="{x:Static resources:Labels.Label_SelectManagedScenario}"
+									  Command="{Binding Path=$parent[TreeView].DataContext.LoadProjectScenarioFileCommand, Mode=OneWay}"
 									  CommandParameter="{Binding .}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_NewPlan}"
-									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectPlanFileCommand, Mode=OneWay}" />
+							<MenuItem Header="{x:Static resources:Labels.Label_NewScenario}"
+									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectScenarioFileCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_NewPlanFolder}"
-									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectPlanFolderCommand, Mode=OneWay}" />
+							<MenuItem Header="{x:Static resources:Labels.Label_NewScenarioFolder}"
+									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectScenarioFolderCommand, Mode=OneWay}" />
 
 							<Separator />
 
 							<MenuItem Header="{x:Static resources:Labels.Label_CutNode}"
-									  Command="{Binding Path=$parent[TreeView].DataContext.CutProjectPlanNodeCommand, Mode=OneWay}" />
+									  Command="{Binding Path=$parent[TreeView].DataContext.CutProjectScenarioNodeCommand, Mode=OneWay}" />
 
 							<MenuItem Header="{x:Static resources:Labels.Label_CopyNode}"
-									  Command="{Binding Path=$parent[TreeView].DataContext.CopyProjectPlanNodeCommand, Mode=OneWay}" />
+									  Command="{Binding Path=$parent[TreeView].DataContext.CopyProjectScenarioNodeCommand, Mode=OneWay}" />
 
 							<MenuItem Header="{x:Static resources:Labels.Label_PasteNode}"
-									  Command="{Binding Path=$parent[TreeView].DataContext.PasteProjectPlanNodeCommand, Mode=OneWay}" />
+									  Command="{Binding Path=$parent[TreeView].DataContext.PasteProjectScenarioNodeCommand, Mode=OneWay}" />
 
 							<Separator />
 
@@ -120,10 +120,10 @@
 							<Separator />
 
 							<MenuItem Header="{x:Static resources:Labels.Label_RenameNode}"
-									  Command="{Binding Path=$parent[TreeView].DataContext.RenameProjectPlanNodeCommand, Mode=OneWay}" />
+									  Command="{Binding Path=$parent[TreeView].DataContext.RenameProjectScenarioNodeCommand, Mode=OneWay}" />
 
 							<MenuItem Header="{x:Static resources:Labels.Label_DeleteNode}"
-									  Command="{Binding Path=$parent[TreeView].DataContext.RemoveProjectPlanNodeCommand, Mode=OneWay}" />
+									  Command="{Binding Path=$parent[TreeView].DataContext.RemoveProjectScenarioNodeCommand, Mode=OneWay}" />
 
 							<Separator />
 
@@ -151,11 +151,11 @@
 			</TreeView.ItemTemplate>
 
 			<i:Interaction.Behaviors>
-				<ia:EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #planTree}">
+				<ia:EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #scenarioTree}">
 					<ia:InvokeCommandAction Command="{Binding Path=SetSelectedManagedNodesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
 				</ia:EventTriggerBehavior>
-				<ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #planTree}">
-					<ia:InvokeCommandAction Command="{Binding Path=LoadSelectedProjectPlanFileCommand, Mode=OneWay}" PassEventArgsToCommand="False" />
+				<ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #scenarioTree}">
+					<ia:InvokeCommandAction Command="{Binding Path=LoadSelectedProjectScenarioFileCommand, Mode=OneWay}" PassEventArgsToCommand="False" />
 				</ia:EventTriggerBehavior>
 			</i:Interaction.Behaviors>
 		</TreeView>
