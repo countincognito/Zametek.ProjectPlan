@@ -11,7 +11,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
         private readonly bool m_PhaseOnly;
         private static readonly EqualityComparer<ISelectableWorkStreamViewModel> s_EqualityComparer =
             EqualityComparer<ISelectableWorkStreamViewModel>.Create(
@@ -60,7 +60,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public WorkStreamSelectorViewModel(bool phaseOnly)
         {
-            m_Lock = new object();
+            m_Lock = new();
             m_PhaseOnly = phaseOnly;
             m_TargetWorkStreams = new(s_EqualityComparer);
             m_ReadOnlyTargetWorkStreams = new(m_TargetWorkStreams);

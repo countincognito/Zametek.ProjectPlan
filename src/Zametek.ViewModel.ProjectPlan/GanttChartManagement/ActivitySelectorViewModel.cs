@@ -13,7 +13,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
         private readonly ICoreViewModel m_CoreViewModel;
         private static readonly EqualityComparer<ISelectableActivityViewModel> s_EqualityComparer =
             EqualityComparer<ISelectableActivityViewModel>.Create(
@@ -62,7 +62,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IList<TargetActivityModel> targetActivities)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
-            m_Lock = new object();
+            m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_TargetActivities = new(s_EqualityComparer);
             m_ReadOnlyTargetActivities = new(m_TargetActivities);

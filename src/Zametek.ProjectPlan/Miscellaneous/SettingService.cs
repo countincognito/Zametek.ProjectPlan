@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Threading;
 using Zametek.Common.ProjectPlan;
 using Zametek.Data.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
@@ -12,7 +13,7 @@ namespace Zametek.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
 
         #endregion
 
@@ -22,7 +23,7 @@ namespace Zametek.ProjectPlan
             : base(settingsFilename)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(settingsFilename);
-            m_Lock = new object();
+            m_Lock = new();
             string? directory = Path.GetDirectoryName(SettingsFilename);
 
             if (string.IsNullOrWhiteSpace(directory))

@@ -21,7 +21,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
@@ -55,7 +55,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            m_Lock = new object();
+            m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
@@ -242,6 +242,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(changeSet =>
                 {
+
+
+
+
+                    BuildTrackedMetrics();
                     //if (!IsBusy && (changeSet.Replaced + changeSet.Adds) > 0)
                     //{
                     //    lock (m_Lock)
@@ -654,6 +659,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     IsBusy = true;
 
+                    List<IManagedNodeViewModel> forFlattenedList = [];
+
                     // First add all the scenarios to the lookup.
                     foreach (ProjectScenarioNodeModel projectScenarioNode in managedNodes)
                     {
@@ -665,15 +672,16 @@ namespace Zametek.ViewModel.ProjectPlan
                                 && m_FileScenarioLookup.TryGetValue(projectScenarioViewModel.Id, out ProjectScenarioFileModel? projectScenarioFile))
                             {
                                 projectScenarioViewModel.Scenario = projectScenarioFile.Scenario;
-
-                                // Keep the flattened file colleciton in-synch.
-                                m_FlattenedFileNodes.Add(projectScenarioViewModel);
+                                forFlattenedList.Add(projectScenarioViewModel);
                             }
 
                             SetTagLabels(projectScenarioViewModel);
                             m_ManagedNodeLookup[projectScenarioViewModel.Id] = projectScenarioViewModel;
                         }
                     }
+
+                    // Keep the flattened file colleciton in-synch.
+                    m_FlattenedFileNodes.Edit(nodes => nodes.AddRange(forFlattenedList));
 
                     // Now build the hierarchy.
                     // Remember that the Root node is not in the lookup and forms the top-level parent.
@@ -719,6 +727,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Reverse the order of AddManagedNodes.
 
+                    List<IManagedNodeViewModel> forFlattenedList = [];
+
                     foreach (IManagedNodeViewModel managedNode in managedNodes)
                     {
                         if (m_ManagedNodeLookup.TryGetValue(managedNode.Id, out _))
@@ -736,13 +746,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             if (m_ManagedNodeLookup.TryRemove(managedNode.Id, out IManagedNodeViewModel? projectScenarioViewModel))
                             {
-                                m_FlattenedFileNodes.Remove(projectScenarioViewModel);
+                                forFlattenedList.Add(projectScenarioViewModel);
                             }
 
                             managedNode.Dispose();
                             m_NodeAction.NodeIds.Remove(managedNode.Id);
                         }
                     }
+
+                    // Keep the flattened file colleciton in-synch.
+                    m_FlattenedFileNodes.Edit(nodes => nodes.RemoveMany(forFlattenedList));
                 }
             }
             finally
@@ -1607,6 +1620,54 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private void BuildTrackedMetrics()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+
+                    var trackedMetricsModels = RawFlattenedFileNodes
+                        .Where(x => x.IsTracked && !x.IsFolder && x.Scenario is not null)
+                        .Select(x => new
+                        {
+                            x.Name,
+                            Path = GetNodePath(x.Id),
+                            x.Scenario!.Metrics,
+                        }).ToList();
+
+
+
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+
+
+        private string GetNodePath(Guid id)
+        {
+            lock (m_Lock)
+            {
+                List<string> pathSegments = [];
+                IManagedNodeViewModel? currentNode = GetNode(id);
+                while (currentNode is not null)
+                {
+                    pathSegments.Add(currentNode.Name);
+                    currentNode = GetNode(currentNode.ParentId);
+                }
+                pathSegments.Reverse();
+                return string.Join(" > ", pathSegments);
+            }
+        }
+
+
+
+
         #endregion
 
         #region IProjectScenarioManagerViewModel
@@ -1673,22 +1734,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyNodes;
         public ReadOnlyObservableCollection<IManagedNodeViewModel> Nodes => m_ReadOnlyNodes;
 
-
-
-
         private readonly SourceList<IManagedNodeViewModel> m_FlattenedFileNodes;
         public IReadOnlyList<IManagedNodeViewModel> RawFlattenedFileNodes => m_FlattenedFileNodes.Items;
 
         private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyFlattenedFileNodes;
         public ReadOnlyObservableCollection<IManagedNodeViewModel> FlattenedFileNodes => m_ReadOnlyFlattenedFileNodes;
-
-
-
-
-
-
-
-
 
         public ObservableCollection<IManagedNodeViewModel> SelectedNodes { get; }
 

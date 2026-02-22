@@ -13,7 +13,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly int m_ResourceId;
         private readonly int m_Time;
@@ -65,7 +65,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(resourceTrackerModel);
-            m_Lock = new object();
+            m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_TargetResourceActivities = new(s_EqualityComparer);
             m_ReadOnlyTargetResourceActivities = new(m_TargetResourceActivities);

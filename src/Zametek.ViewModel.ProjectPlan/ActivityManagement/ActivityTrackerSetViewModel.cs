@@ -11,7 +11,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly Dictionary<int, ActivityTrackerModel> m_ActivityTrackerLookup;
 
@@ -29,7 +29,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IEnumerable<ActivityTrackerModel> trackers)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
-            m_Lock = new object();
+            m_Lock = new();
             m_CoreViewModel = coreViewModel;
             ActivityId = activityId;
             m_ActivityTrackerLookup = [];

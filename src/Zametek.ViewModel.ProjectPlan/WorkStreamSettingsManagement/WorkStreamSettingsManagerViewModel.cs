@@ -15,7 +15,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
         private WorkStreamSettingsModel m_Current;
 
         private readonly ICoreViewModel m_CoreViewModel;
@@ -41,7 +41,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(resourceSettingsManagerViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
-            m_Lock = new object();
+            m_Lock = new();
             m_Current = new WorkStreamSettingsModel();
             m_CoreViewModel = coreViewModel;
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;

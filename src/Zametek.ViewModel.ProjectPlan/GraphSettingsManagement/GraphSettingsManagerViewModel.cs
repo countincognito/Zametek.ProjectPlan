@@ -15,7 +15,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
         private GraphSettingsModel m_Current;
         private readonly IList<EdgeTypeFormatModel> m_EdgeTypeFormats;
         private readonly IList<NodeTypeFormatModel> m_NodeTypeFormats;
@@ -40,7 +40,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
-            m_Lock = new object();
+            m_Lock = new();
             m_Current = new GraphSettingsModel();
             m_EdgeTypeFormats = [];
             m_NodeTypeFormats = [];

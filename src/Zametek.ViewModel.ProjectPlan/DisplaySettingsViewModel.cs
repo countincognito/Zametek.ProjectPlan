@@ -9,7 +9,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private Action<bool, bool>? m_SetIsProjectScenarioUpdated;
         private Action? m_IsReadyToCompile;
@@ -26,7 +26,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(setIsProjectScenarioUpdated);
             ArgumentNullException.ThrowIfNull(isReadyToCompile);
-            m_Lock = new object();
+            m_Lock = new();
             m_DateTimeCalculator = dateTimeCalculator;
             m_SetIsProjectScenarioUpdated = setIsProjectScenarioUpdated;
             m_IsReadyToCompile = isReadyToCompile;

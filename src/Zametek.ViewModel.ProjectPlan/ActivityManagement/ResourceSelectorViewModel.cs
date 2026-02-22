@@ -11,7 +11,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
         private static readonly EqualityComparer<ISelectableResourceViewModel> s_EqualityComparer =
             EqualityComparer<ISelectableResourceViewModel>.Create(
                     (x, y) =>
@@ -54,7 +54,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ResourceSelectorViewModel()
         {
-            m_Lock = new object();
+            m_Lock = new();
             m_TargetResources = new(s_EqualityComparer);
             m_ReadOnlyTargetResources = new(m_TargetResources);
             m_SelectedTargetResources = new(s_EqualityComparer);

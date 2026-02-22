@@ -12,7 +12,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
         private readonly TimeProvider m_TimeProvider;
 
         private static readonly string s_DateFormat = DateTimeFormatInfo.CurrentInfo.ShortDatePattern;
@@ -27,7 +27,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public DateTimeCalculator(TimeProvider timeProvider)
         {
-            m_Lock = new object();
+            m_Lock = new();
             m_TimeProvider = timeProvider;
             m_AddDaysFunc = AddAllDays;
             m_CountDaysFunc = CountAllDays;

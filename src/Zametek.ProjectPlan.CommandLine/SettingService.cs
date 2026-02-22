@@ -8,7 +8,7 @@ namespace Zametek.ProjectPlan.CommandLine
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
         private string m_ProjectDirectory;
         private bool m_DefaultShowDates;
         private bool m_DefaultUseClassicDates;
@@ -26,7 +26,7 @@ namespace Zametek.ProjectPlan.CommandLine
         public SettingService()
             : base(string.Empty)
         {
-            m_Lock = new object();
+            m_Lock = new();
             m_ProjectDirectory = string.Empty;
             m_SelectedTheme = string.Empty;
         }

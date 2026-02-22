@@ -15,7 +15,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
         private readonly IProjectScenarioManagerViewModel m_ProjectScenarioManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
@@ -67,7 +67,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(nodeSortComparer);
             ArgumentNullException.ThrowIfNull(projectScenarioNode);
-            m_Lock = new object();
+            m_Lock = new();
             m_IsLoaded = false;
             m_Labels = new();
 

@@ -12,7 +12,7 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly object m_Lock;
+        private readonly Lock m_Lock;
         protected AppSettingsModel m_AppSettingsModel;
 
         private static readonly double s_GoldenRatio = (1.0 + Math.Sqrt(5.0)) / 2.0;
