@@ -31,6 +31,10 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadOnlyObservableCollection<IManagedNodeViewModel> Nodes { get; }
 
+        IReadOnlyList<IManagedNodeViewModel> RawFlattenedFileNodes { get; }
+
+        ReadOnlyObservableCollection<IManagedNodeViewModel> FlattenedFileNodes { get; }
+
         ObservableCollection<IManagedNodeViewModel> SelectedNodes { get; }
 
         IManagedNodeViewModel? SelectedNode { get; }

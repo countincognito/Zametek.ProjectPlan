@@ -11,6 +11,7 @@ using System.Reactive.Subjects;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.Utility;
 using SortDirection = Zametek.Common.ProjectPlan.SortDirection;
 
@@ -36,7 +37,10 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly NodeActionModel m_NodeAction;
         private readonly Subject<bool> m_NodeActionCommandManualTrigger;
 
+        private readonly IDisposable? m_ReadOnlyNodesSub;
+        private readonly IDisposable? m_ReadOnlyFlattenedFileNodesSub;
         private readonly IDisposable? m_SortUpdateSub;
+        private readonly IDisposable? m_AreScenariosDisplayedSub;
 
         #endregion
 
@@ -61,6 +65,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_NodeSortComparer = new(SortExpressionComparer<IManagedNodeViewModel>.Ascending(x => x.CreatedOn));
             Root = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, m_NodeSortComparer); // Placeholder until ResetRootNode is called.
             m_Nodes = new();
+            m_FlattenedFileNodes = new();
             SelectedNodes = [];
             SelectedNode = null;
             m_ManagedNodeLookup = new();
@@ -196,13 +201,19 @@ namespace Zametek.ViewModel.ProjectPlan
             ChangeSortDirectionCommand = ReactiveCommand.CreateFromTask<SortDirection>(ChangeSortDirectionAsync);
 
             // Create read-only view to the source list.
-            m_Nodes.Connect()
+            m_ReadOnlyNodesSub = m_Nodes.Connect()
                 .AutoRefresh(node => node.Name) // Re-evaluates when this property changes.
                 .AutoRefresh(node => node.CreatedOn)
                 .AutoRefresh(node => node.ModifiedOn)
                 .Sort(m_NodeSortComparer) // DynamicData listens to changes in this observable.
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Bind(out m_ReadOnlyNodes)
+                .Subscribe();
+
+            // Create read-only view to the source list.
+            m_ReadOnlyFlattenedFileNodesSub = m_FlattenedFileNodes.Connect()
+                .AutoRefresh(node => node.IsTracked) // Re-evaluates when this property changes.
+                .Bind(out m_ReadOnlyFlattenedFileNodes)
                 .Subscribe();
 
             ResetRootNode();
@@ -224,6 +235,31 @@ namespace Zametek.ViewModel.ProjectPlan
                     pm => pm.SelectedSortDirection)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await ChangeSortAsync());
+
+            m_AreScenariosDisplayedSub = m_ReadOnlyFlattenedFileNodes
+                .ToObservableChangeSet()
+                .AutoRefresh(node => node.IsTracked) // Subscribe only to IsCompiled property changes
+                .Filter(node => !node.IsFolder && node.Scenario is not null)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(changeSet =>
+                {
+                    //if (!IsBusy && (changeSet.Replaced + changeSet.Adds) > 0)
+                    //{
+                    //    lock (m_Lock)
+                    //    {
+                    //        if (AutoCompile)
+                    //        {
+                    //            IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                    //            IsReadyToCompile = ReadyToCompile.Yes;
+                    //        }
+                    //        else
+                    //        {
+                    //            IsReadyToReviseTrackers = ReadyToRevise.No;
+                    //            IsReadyToCompile = ReadyToCompile.No;
+                    //        }
+                    //    }
+                    //}
+                });
 
             Id = Resource.ProjectPlan.Titles.Title_ProjectScenarios;
             Title = Resource.ProjectPlan.Titles.Title_ProjectScenarios;
@@ -314,6 +350,34 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         m_FileScenarioLookup[projectScenarioFileModel.NodeId] = projectScenarioFileModel;
                     }
+
+
+                    //m_FlattenedFileNodes.Edit(nodes =>
+                    //{
+                    //    foreach (DependentActivityModel dependentActivity in dependentActivityModels)
+                    //    {
+                    //        var activity = new ManagedActivityViewModel(
+                    //            this,
+                    //            m_Mapper.Map<DependentActivityModel, DependentActivity>(dependentActivity),
+                    //            m_DateTimeCalculator,
+                    //            m_VertexGraphCompiler,
+                    //            ProjectStart,
+                    //            dependentActivity.Activity.Trackers,
+                    //            dependentActivity.Activity.MinimumEarliestStartDateTime,
+                    //            dependentActivity.Activity.MaximumLatestFinishDateTime);
+
+                    //        if (m_VertexGraphCompiler.AddActivity(activity))
+                    //        {
+                    //            activities.Add(activity);
+                    //        }
+                    //        else
+                    //        {
+                    //            activity.Dispose();
+                    //        }
+                    //    }
+                    //});
+
+
                 }
             }
             finally
@@ -1635,6 +1699,23 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyNodes;
         public ReadOnlyObservableCollection<IManagedNodeViewModel> Nodes => m_ReadOnlyNodes;
 
+
+
+
+        private readonly SourceList<IManagedNodeViewModel> m_FlattenedFileNodes;
+        public IReadOnlyList<IManagedNodeViewModel> RawFlattenedFileNodes => m_FlattenedFileNodes.Items;
+
+        private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyFlattenedFileNodes;
+        public ReadOnlyObservableCollection<IManagedNodeViewModel> FlattenedFileNodes => m_ReadOnlyFlattenedFileNodes;
+
+
+
+
+
+
+
+
+
         public ObservableCollection<IManagedNodeViewModel> SelectedNodes { get; }
 
         private IManagedNodeViewModel? m_SelectedNode;
@@ -1962,7 +2043,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
+            m_ReadOnlyNodesSub?.Dispose();
+            m_ReadOnlyFlattenedFileNodesSub?.Dispose();
             m_SortUpdateSub?.Dispose();
+            m_AreScenariosDisplayedSub?.Dispose();
         }
 
         #endregion

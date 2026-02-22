@@ -23,6 +23,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
 
+        private readonly IDisposable? m_ReadOnlyWorkStreamsSub;
         private readonly IDisposable? m_ProcessWorkStreamSettingsSub;
         private readonly IDisposable? m_UpdateWorkStreamSettingsSub;
 
@@ -57,7 +58,7 @@ namespace Zametek.ViewModel.ProjectPlan
             RemoveManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(RemoveManagedWorkStreamsAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
 
             // Create read-only view to the source list.
-            m_WorkStreams.Connect()
+            m_ReadOnlyWorkStreamsSub = m_WorkStreams.Connect()
                .ObserveOn(RxApp.MainThreadScheduler)
                .Bind(out m_ReadOnlyWorkStreams)
                .Subscribe();
@@ -334,6 +335,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
+                m_ReadOnlyWorkStreamsSub?.Dispose();
                 m_ProcessWorkStreamSettingsSub?.Dispose();
                 m_UpdateWorkStreamSettingsSub?.Dispose();
                 ClearManagedWorkStreams();

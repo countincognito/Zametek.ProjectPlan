@@ -24,6 +24,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
 
+        private readonly IDisposable? m_ReadOnlyResourcesSub;
         private readonly IDisposable? m_ProcessResourceSettingsSub;
         private readonly IDisposable? m_UpdateResourceSettingsSub;
 
@@ -56,7 +57,7 @@ namespace Zametek.ViewModel.ProjectPlan
             EditManagedResourcesCommand = ReactiveCommand.CreateFromTask(EditManagedResourcesAsync, this.WhenAnyValue(am => am.HasSelectedResources));
 
             // Create read-only view to the source list.
-            m_Resources.Connect()
+            m_ReadOnlyResourcesSub = m_Resources.Connect()
                .ObserveOn(RxApp.MainThreadScheduler)
                .Bind(out m_ReadOnlyResources)
                .Subscribe();
@@ -541,6 +542,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_HideCost?.Dispose();
                 m_HideBilling?.Dispose();
+                m_ReadOnlyResourcesSub?.Dispose();
                 m_ProcessResourceSettingsSub?.Dispose();
                 m_UpdateResourceSettingsSub?.Dispose();
                 ClearManagedResources();

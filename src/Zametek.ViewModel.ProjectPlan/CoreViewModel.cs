@@ -32,6 +32,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IMapper m_Mapper;
 
+        private readonly IDisposable? m_ReadOnlyActivitiesSub;
         private readonly IDisposable? m_NetworkMetricsSub;
         private readonly IDisposable? m_AreActivitiesUncompiledSub;
         private readonly IDisposable? m_CompileOnSettingsUpdateSub;
@@ -104,7 +105,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SelectedTheme = m_SettingService.SelectedTheme;
 
             // Create read-only view to the source list.
-            m_Activities.Connect()
+            m_ReadOnlyActivitiesSub = m_Activities.Connect()
                .ObserveOn(RxApp.MainThreadScheduler)
                .Bind(out m_ReadOnlyActivities)
                .Subscribe();
@@ -2419,6 +2420,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
+            m_ReadOnlyActivitiesSub?.Dispose();
             m_NetworkMetricsSub?.Dispose();
             m_AreActivitiesUncompiledSub?.Dispose();
             m_CompileOnSettingsUpdateSub?.Dispose();

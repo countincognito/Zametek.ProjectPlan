@@ -26,6 +26,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly string[] s_NoErrors = [];
         private readonly Dictionary<string, List<string>> m_ErrorsByPropertyName;
 
+        private readonly IDisposable m_ReadOnlyLabelsSub;
+        private readonly IDisposable m_ReadOnlyChildrenSub;
+
         #endregion
 
         #region Ctors
@@ -69,7 +72,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Labels = new();
 
             // Create read-only view to the source list.
-            m_Labels.Connect()
+            m_ReadOnlyLabelsSub = m_Labels.Connect()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Bind(out m_ReadOnlyLabels)
                 .Subscribe();
@@ -83,7 +86,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Children = new();
 
             // Create read-only view to the source list.
-            m_Children.Connect()
+            m_ReadOnlyChildrenSub = m_Children.Connect()
                 .AutoRefresh(node => node.Name) // Re-evaluates when this property changes.
                 .AutoRefresh(node => node.CreatedOn)
                 .AutoRefresh(node => node.ModifiedOn)
@@ -403,6 +406,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
+            m_ReadOnlyLabelsSub?.Dispose();
+            m_ReadOnlyChildrenSub?.Dispose();
         }
 
         #endregion

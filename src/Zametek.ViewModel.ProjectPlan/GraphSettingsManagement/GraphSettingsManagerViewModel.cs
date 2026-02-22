@@ -24,6 +24,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
 
+        private readonly IDisposable? m_ReadOnlyActivitySeveritiesSub;
         private readonly IDisposable? m_ProcessGraphSettingsSub;
         private readonly IDisposable? m_UpdateGraphSettingsSub;
 
@@ -57,7 +58,7 @@ namespace Zametek.ViewModel.ProjectPlan
             RemoveManagedActivitySeveritiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitySeveritiesAsync, this.WhenAnyValue(agsm => agsm.HasActivitySeverities));
 
             // Create read-only view to the source list.
-            m_ActivitySeverities.Connect()
+            m_ReadOnlyActivitySeveritiesSub = m_ActivitySeverities.Connect()
                .ObserveOn(RxApp.MainThreadScheduler)
                .Bind(out m_ReadOnlyActivitySeverities)
                .Subscribe();
@@ -385,6 +386,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
+                m_ReadOnlyActivitySeveritiesSub?.Dispose();
                 m_ProcessGraphSettingsSub?.Dispose();
                 m_UpdateGraphSettingsSub?.Dispose();
                 ClearManagedActivitySeverities();
