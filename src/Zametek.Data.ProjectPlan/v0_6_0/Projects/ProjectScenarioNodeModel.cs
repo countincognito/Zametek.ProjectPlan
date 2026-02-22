@@ -15,6 +15,8 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
 
         public DateTimeOffset CreatedOn { get; init; }
 
+        public bool IsTracked { get; init; }
+
         public DateTimeOffset ModifiedOn { get; init; }
     }
 }

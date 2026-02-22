@@ -178,6 +178,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Project has unsaved changes.
+        /// </summary>
+        public static string Title_ProjectUnsavedChanges {
+            get {
+                return ResourceManager.GetString("Title_ProjectUnsavedChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resource Chart.
         /// </summary>
         public static string Title_ResourceChartView {
@@ -196,20 +205,20 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Scenario has unsaved changes.
+        /// </summary>
+        public static string Title_ScenarioUnsavedChanges {
+            get {
+                return ResourceManager.GetString("Title_ScenarioUnsavedChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tracking.
         /// </summary>
         public static string Title_TrackingView {
             get {
                 return ResourceManager.GetString("Title_TrackingView", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Project has unsaved changes.
-        /// </summary>
-        public static string Title_UnsavedChanges {
-            get {
-                return ResourceManager.GetString("Title_UnsavedChanges", resourceCulture);
             }
         }
         

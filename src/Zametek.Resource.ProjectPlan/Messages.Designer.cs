@@ -349,6 +349,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Project has unsaved changes. Do you wish to continue?.
+        /// </summary>
+        public static string Message_ProjectUnsavedChanges {
+            get {
+                return ResourceManager.GetString("Message_ProjectUnsavedChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scenario has unsaved changes. Do you wish to continue?.
+        /// </summary>
+        public static string Message_ScenarioUnsavedChanges {
+            get {
+                return ResourceManager.GetString("Message_ScenarioUnsavedChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Slack Limit must be equal or greater than 0.
         /// </summary>
         public static string Message_SlackLimitMustBeEqualOrGreaterThanZero {
@@ -561,15 +579,6 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_UnknownSortMode {
             get {
                 return ResourceManager.GetString("Message_UnknownSortMode", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Project has unsaved changes. Do you wish to continue?.
-        /// </summary>
-        public static string Message_UnsavedChanges {
-            get {
-                return ResourceManager.GetString("Message_UnsavedChanges", resourceCulture);
             }
         }
         

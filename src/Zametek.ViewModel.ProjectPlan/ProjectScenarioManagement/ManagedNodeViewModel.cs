@@ -252,7 +252,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private bool m_IsTracked;
         public bool IsTracked
         {
             get
@@ -261,7 +260,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     return false;
                 }
-                return m_IsTracked;
+                return m_ProjectScenarioNodeModel.IsTracked;
             }
             set
             {
@@ -269,7 +268,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_CannotTrackProjectScenarioFileFromFolderNode} {Id}");
                 }
-                m_IsTracked = value;
+                m_ProjectScenarioNodeModel = m_ProjectScenarioNodeModel with { IsTracked = value };
+                m_ProjectScenarioManagerViewModel.IsProjectUpdated = true;
                 this.RaisePropertyChanged();
             }
         }

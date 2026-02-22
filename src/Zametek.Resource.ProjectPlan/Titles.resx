@@ -162,8 +162,11 @@
   <data name="Title_TrackingView" xml:space="preserve">
     <value>Tracking</value>
   </data>
-  <data name="Title_UnsavedChanges" xml:space="preserve">
+  <data name="Title_ProjectUnsavedChanges" xml:space="preserve">
     <value>Project has unsaved changes</value>
+  </data>
+  <data name="Title_ScenarioUnsavedChanges" xml:space="preserve">
+    <value>Scenario has unsaved changes</value>
   </data>
   <data name="Title_UntitledProject" xml:space="preserve">
     <value>Untitled</value>

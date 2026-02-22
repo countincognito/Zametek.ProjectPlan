@@ -843,9 +843,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (ProjectHasChanges)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
-                        Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                        Resource.ProjectPlan.Titles.Title_ProjectUnsavedChanges,
                         string.Empty,
-                        Resource.ProjectPlan.Messages.Message_UnsavedChanges);
+                        Resource.ProjectPlan.Messages.Message_ProjectUnsavedChanges);
 
                     if (!confirmation)
                     {
@@ -873,9 +873,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (ProjectHasChanges)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
-                        Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                        Resource.ProjectPlan.Titles.Title_ProjectUnsavedChanges,
                         string.Empty,
-                        Resource.ProjectPlan.Messages.Message_UnsavedChanges);
+                        Resource.ProjectPlan.Messages.Message_ProjectUnsavedChanges);
 
                     if (!confirmation)
                     {
@@ -953,9 +953,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (IsProjectScenarioUpdated)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
-                        Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                        Resource.ProjectPlan.Titles.Title_ScenarioUnsavedChanges,
                         string.Empty,
-                        Resource.ProjectPlan.Messages.Message_UnsavedChanges);
+                        Resource.ProjectPlan.Messages.Message_ScenarioUnsavedChanges);
 
                     if (!confirmation)
                     {
@@ -1020,9 +1020,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (ProjectHasChanges)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
-                        Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                        Resource.ProjectPlan.Titles.Title_ProjectUnsavedChanges,
                         string.Empty,
-                        Resource.ProjectPlan.Messages.Message_UnsavedChanges);
+                        Resource.ProjectPlan.Messages.Message_ProjectUnsavedChanges);
 
                     if (!confirmation)
                     {

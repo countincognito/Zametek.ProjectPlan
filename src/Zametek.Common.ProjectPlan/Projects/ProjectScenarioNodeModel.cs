@@ -14,5 +14,7 @@
         public DateTimeOffset CreatedOn { get; init; }
 
         public DateTimeOffset ModifiedOn { get; init; }
+
+        public bool IsTracked { get; init; }
     }
 }

@@ -11,7 +11,6 @@ using System.Reactive.Subjects;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Maths.Graphs;
 using Zametek.Utility;
 using SortDirection = Zametek.Common.ProjectPlan.SortDirection;
 
@@ -318,6 +317,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Name = Resource.ProjectPlan.Labels.Label_RootNode,
                             CreatedOn = localNow,
                             ModifiedOn = localNow,
+                            IsTracked = false,
                         });
 
                     AddTagLabels(
@@ -339,6 +339,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        /// <summary>
+        /// Be sure to run this BEFORE you run AddManagedNodes.
+        /// </summary>
+        /// <param name="projectScenarioFileModels"></param>
         private void AddScenarioFiles(IEnumerable<ProjectScenarioFileModel> projectScenarioFileModels)
         {
             try
@@ -350,34 +354,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         m_FileScenarioLookup[projectScenarioFileModel.NodeId] = projectScenarioFileModel;
                     }
-
-
-                    //m_FlattenedFileNodes.Edit(nodes =>
-                    //{
-                    //    foreach (DependentActivityModel dependentActivity in dependentActivityModels)
-                    //    {
-                    //        var activity = new ManagedActivityViewModel(
-                    //            this,
-                    //            m_Mapper.Map<DependentActivityModel, DependentActivity>(dependentActivity),
-                    //            m_DateTimeCalculator,
-                    //            m_VertexGraphCompiler,
-                    //            ProjectStart,
-                    //            dependentActivity.Activity.Trackers,
-                    //            dependentActivity.Activity.MinimumEarliestStartDateTime,
-                    //            dependentActivity.Activity.MaximumLatestFinishDateTime);
-
-                    //        if (m_VertexGraphCompiler.AddActivity(activity))
-                    //        {
-                    //            activities.Add(activity);
-                    //        }
-                    //        else
-                    //        {
-                    //            activity.Dispose();
-                    //        }
-                    //    }
-                    //});
-
-
                 }
             }
             finally
@@ -386,6 +362,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        /// <summary>
+        /// Be sure to run this AFTER you run RemoveManagedNodes.
+        /// </summary>
+        /// <param name="projectScenarioFileIds"></param>
         private void RemoveScenarioFiles(IEnumerable<Guid> projectScenarioFileIds)
         {
             try
@@ -396,31 +376,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     foreach (Guid projectScenarioFileId in projectScenarioFileIds)
                     {
                         m_FileScenarioLookup.TryRemove(projectScenarioFileId, out _);
-                    }
-                }
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
-
-        private void SetScenarioFile(IManagedNodeViewModel managedNode)
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    IsBusy = true;
-
-                    if (managedNode.IsFolder)
-                    {
-                        return;
-                    }
-
-                    if (m_FileScenarioLookup.TryGetValue(managedNode.Id, out ProjectScenarioFileModel? projectScenarioFile))
-                    {
-                        managedNode.Scenario = projectScenarioFile.Scenario;
                     }
                 }
             }
@@ -667,6 +622,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_FileScenarioLookup.Clear();
                     m_NodeTagLookup.Clear();
                     m_Nodes.Clear();
+                    m_FlattenedFileNodes.Clear();
                 }
             }
             finally
@@ -703,10 +659,19 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         if (!m_ManagedNodeLookup.ContainsKey(projectScenarioNode.Id))
                         {
-                            var projectScenario = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, m_NodeSortComparer, projectScenarioNode);
-                            SetScenarioFile(projectScenario);
-                            SetTagLabels(projectScenario);
-                            m_ManagedNodeLookup[projectScenario.Id] = projectScenario;
+                            var projectScenarioViewModel = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, m_NodeSortComparer, projectScenarioNode);
+
+                            if (!projectScenarioViewModel.IsFolder
+                                && m_FileScenarioLookup.TryGetValue(projectScenarioViewModel.Id, out ProjectScenarioFileModel? projectScenarioFile))
+                            {
+                                projectScenarioViewModel.Scenario = projectScenarioFile.Scenario;
+
+                                // Keep the flattened file colleciton in-synch.
+                                m_FlattenedFileNodes.Add(projectScenarioViewModel);
+                            }
+
+                            SetTagLabels(projectScenarioViewModel);
+                            m_ManagedNodeLookup[projectScenarioViewModel.Id] = projectScenarioViewModel;
                         }
                     }
 
@@ -768,7 +733,12 @@ namespace Zametek.ViewModel.ProjectPlan
                                 Root.RemoveChildren([managedNode.Id]);
                             }
                             m_Nodes.Remove(managedNode);
-                            m_ManagedNodeLookup.TryRemove(managedNode.Id, out _);
+
+                            if (m_ManagedNodeLookup.TryRemove(managedNode.Id, out IManagedNodeViewModel? projectScenarioViewModel))
+                            {
+                                m_FlattenedFileNodes.Remove(projectScenarioViewModel);
+                            }
+
                             managedNode.Dispose();
                             m_NodeAction.NodeIds.Remove(managedNode.Id);
                         }
@@ -807,9 +777,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (IsProjectScenarioUpdated)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
-                        Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                        Resource.ProjectPlan.Titles.Title_ScenarioUnsavedChanges,
                         string.Empty,
-                        Resource.ProjectPlan.Messages.Message_UnsavedChanges);
+                        Resource.ProjectPlan.Messages.Message_ScenarioUnsavedChanges);
 
                     if (!confirmation)
                     {
@@ -839,9 +809,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (IsProjectScenarioUpdated)
                 {
                     bool confirmation = await m_DialogService.ShowConfirmationAsync(
-                        Resource.ProjectPlan.Titles.Title_UnsavedChanges,
+                        Resource.ProjectPlan.Titles.Title_ScenarioUnsavedChanges,
                         string.Empty,
-                        Resource.ProjectPlan.Messages.Message_UnsavedChanges);
+                        Resource.ProjectPlan.Messages.Message_ScenarioUnsavedChanges);
 
                     if (!confirmation)
                     {
@@ -972,6 +942,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Name = nodeName,
                         CreatedOn = localNow,
                         ModifiedOn = localNow,
+                        IsTracked = false,
                     };
 
                     var projectScenarioFile = new ProjectScenarioFileModel
@@ -1063,6 +1034,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Name = nodeName,
                         CreatedOn = localNow,
                         ModifiedOn = localNow,
+                        IsTracked = false,
                     };
 
                     AddManagedNodes([projectScenarioNode]);
@@ -1226,6 +1198,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
                         CreatedOn = localNow,
                         ModifiedOn = localNow,
+                        IsTracked = false,
                     };
 
                     var projectScenarioFile = new ProjectScenarioFileModel
@@ -1377,6 +1350,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 Name = managedNode.Name,
                                 CreatedOn = localNow,
                                 ModifiedOn = localNow,
+                                IsTracked = managedNode.IsTracked,
                             };
 
                             var projectScenarioFile = new ProjectScenarioFileModel
@@ -1808,6 +1782,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
                         CreatedOn = localNow,
                         ModifiedOn = localNow,
+                        IsTracked = false,
                     };
 
                     var projectScenarioFile = new ProjectScenarioFileModel
@@ -1873,6 +1848,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Name = Resource.ProjectPlan.Labels.Label_BaseNode,
                             CreatedOn = localNow,
                             ModifiedOn = localNow,
+                            IsTracked = false,
                         };
 
                         var projectScenarioFile = new ProjectScenarioFileModel
@@ -1969,6 +1945,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Name = Resource.ProjectPlan.Labels.Label_BaseNode,
                             CreatedOn = localNow,
                             ModifiedOn = localNow,
+                            IsTracked = false,
                         };
 
                         var projectScenarioFile = new ProjectScenarioFileModel

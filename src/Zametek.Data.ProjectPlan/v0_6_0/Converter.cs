@@ -32,6 +32,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                         Name = Resource.ProjectPlan.Labels.Label_BaseNode,
                         CreatedOn = localNow,
                         ModifiedOn = localNow,
+                        IsTracked = false,
                     },
                 ],
                 Files =
