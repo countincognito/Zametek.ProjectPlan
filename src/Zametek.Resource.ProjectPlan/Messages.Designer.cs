@@ -124,6 +124,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot track a project scenario file from a folder node:.
+        /// </summary>
+        public static string Message_CannotTrackProjectScenarioFileFromFolderNode {
+            get {
+                return ResourceManager.GetString("Message_CannotTrackProjectScenarioFileFromFolderNode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ColumnType must be derived from DataGridColumn.
         /// </summary>
         public static string Message_ColumnTypeMustBeDerivedFromDataGridColumn {

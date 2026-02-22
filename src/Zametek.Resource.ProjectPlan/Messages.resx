@@ -273,6 +273,9 @@
   <data name="Message_CannotGetProjectScenarioFileFromFolderNode" xml:space="preserve">
     <value>Cannot get a project scenario file from a folder node:</value>
   </data>
+  <data name="Message_CannotTrackProjectScenarioFileFromFolderNode" xml:space="preserve">
+    <value>Cannot track a project scenario file from a folder node:</value>
+  </data>
   <data name="Message_CannotGetProjectScenarioFileWhenProjectScenarioIsNull" xml:space="preserve">
     <value>Cannot get a project scenario file when project scenario is null:</value>
   </data>

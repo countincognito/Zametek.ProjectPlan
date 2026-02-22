@@ -5,7 +5,7 @@ using System.Globalization;
 namespace Zametek.View.ProjectPlan
 {
     // Copied from:
-    // https://github.com/AvaloniaUI/Avalonia/blob/master/samples/ControlCatalog/Models/GDPdLengthConverter.cs
+    // https://github.com/AvaloniaUI/Avalonia/blob/release/11.0/samples/ControlCatalog/Models/GDPdLengthConverter.cs
     public class GDPdLengthConverter
         : IValueConverter
     {

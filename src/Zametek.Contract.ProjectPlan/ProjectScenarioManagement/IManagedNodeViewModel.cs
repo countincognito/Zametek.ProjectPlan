@@ -25,6 +25,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ProjectScenarioFileModel File { get; }
 
+        public bool IsTracked { get; set; }
+
         bool IsLoaded { get; set; }
 
         IReadOnlyList<string> RawLabels { get; }

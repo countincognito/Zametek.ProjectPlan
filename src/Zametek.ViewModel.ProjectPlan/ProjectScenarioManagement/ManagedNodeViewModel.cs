@@ -249,6 +249,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_IsTracked;
+        public bool IsTracked
+        {
+            get
+            {
+                if (IsFolder)
+                {
+                    return false;
+                }
+                return m_IsTracked;
+            }
+            set
+            {
+                if (IsFolder)
+                {
+                    throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_CannotTrackProjectScenarioFileFromFolderNode} {Id}");
+                }
+                m_IsTracked = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         private bool m_IsLoaded;
         public bool IsLoaded
         {
