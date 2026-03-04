@@ -73,6 +73,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_NodeAction = new();
             m_NodeActionCommandManualTrigger = new();
             m_IsReadyToReviseTitle = ReadyToRevise.No;
+            m_TrackedMetricsSet = new();
 
             SetSelectedManagedNodesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedNodes);
             {
@@ -1628,17 +1629,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     IsBusy = true;
 
-                    var trackedMetricsModels = RawFlattenedFileNodes
+                    List<TrackedMetricsModel> trackedMetricsModels = [.. RawFlattenedFileNodes
                         .Where(x => x.IsTracked && !x.IsFolder && x.Scenario is not null)
-                        .Select(x => new
+                        .Select(x => new TrackedMetricsModel
                         {
-                            x.Name,
+                            NodeId = x.Id,
+                            Name = x.Name,
                             Path = GetNodePath(x.Id),
-                            x.Scenario!.Metrics,
-                        }).ToList();
+                            Metrics = x.Scenario!.Metrics,
+                        })];
 
-
-
+                    TrackedMetricsSet = new()
+                    {
+                        TrackedMetrics = trackedMetricsModels,
+                    };
                 }
             }
             finally
@@ -1770,6 +1774,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     m_SettingService.ProjectScenarioSortDirection = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        private TrackedMetricsSetModel m_TrackedMetricsSet;
+        public TrackedMetricsSetModel TrackedMetricsSet
+        {
+            get => m_TrackedMetricsSet;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    m_TrackedMetricsSet = value;
                     this.RaisePropertyChanged();
                 }
             }

@@ -1,0 +1,166 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:i="using:Avalonia.Xaml.Interactivity"
+	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:common="using:Zametek.Common.ProjectPlan"
+			 x:DataType="vm:ScenarioChartManagerViewModel"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Zametek.View.ProjectPlan.ScenarioChartManagerView">
+	<UserControl.Resources>
+	</UserControl.Resources>
+
+	<DockPanel Margin="7">
+		<ScrollViewer DockPanel.Dock="Right"
+					  VerticalScrollBarVisibility="Hidden"
+					  HorizontalScrollBarVisibility="Disabled">
+			<DockPanel MinWidth="120"
+					   Margin="11,0,0,0">
+
+				<!--<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_AllocationMode}"/>
+
+					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:AllocationMode}}}"
+							  SelectedItem="{Binding Path=AllocationMode, Mode=TwoWay}"
+							  BorderBrush="Gray"
+							  BorderThickness="1"
+							  DockPanel.Dock="Top"
+							  IsTabStop="False"
+							  Margin="0,0,0,11"
+							  Height="25">
+						<ComboBox.ItemTemplate>
+							<DataTemplate>
+								<TextBlock VerticalAlignment="Center"
+										   TextAlignment="Left"
+										   Margin="0"
+										   Padding="3"
+										   Classes="displayOnly"
+										   Text="{Binding Converter={x:Static local:StringConverters.AllocationModeValue}, Mode=OneWay}"/>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+				</DockPanel>
+
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_ScheduleMode}"/>
+
+					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:ScheduleMode}}}"
+							  SelectedItem="{Binding Path=ScheduleMode, Mode=TwoWay}"
+							  BorderBrush="Gray"
+							  BorderThickness="1"
+							  DockPanel.Dock="Top"
+							  IsTabStop="False"
+							  Margin="0,0,0,11"
+							  Height="25">
+						<ComboBox.ItemTemplate>
+							<DataTemplate>
+								<TextBlock VerticalAlignment="Center"
+										   TextAlignment="Left"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Converter={x:Static local:StringConverters.ScheduleModeValue}, Mode=OneWay}"/>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+				</DockPanel>
+
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_DisplayStyle}"/>
+
+					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:DisplayStyle}}}"
+							  SelectedItem="{Binding Path=DisplayStyle, Mode=TwoWay}"
+							  BorderBrush="Gray"
+							  BorderThickness="1"
+							  DockPanel.Dock="Top"
+							  IsTabStop="False"
+							  Margin="0,0,0,11"
+							  Height="25">
+						<ComboBox.ItemTemplate>
+							<DataTemplate>
+								<TextBlock VerticalAlignment="Center"
+										   TextAlignment="Left"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Converter={x:Static local:StringConverters.DisplayStyleValue}, Mode=OneWay}"/>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+				</DockPanel>
+
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_ShowToday}"/>
+
+					<ToggleSwitch DockPanel.Dock="Top"
+								  IsTabStop="False"
+								  Margin="0,0,0,11"
+								  VerticalAlignment="Center"
+								  VerticalContentAlignment="Center"
+								  HorizontalAlignment="Center"
+								  HorizontalContentAlignment="Center"
+								  OffContent="{x:Static resources:Labels.Label_No}"
+								  OnContent="{x:Static resources:Labels.Label_Yes}"
+								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"/>
+				</DockPanel>
+				
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_ShowMilestones}"/>
+
+					<ToggleSwitch DockPanel.Dock="Top"
+								  IsTabStop="False"
+								  Margin="0,0,0,11"
+								  VerticalAlignment="Center"
+								  VerticalContentAlignment="Center"
+								  HorizontalAlignment="Center"
+								  HorizontalContentAlignment="Center"
+								  OffContent="{x:Static resources:Labels.Label_No}"
+								  OnContent="{x:Static resources:Labels.Label_Yes}"
+								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"/>
+				</DockPanel>-->
+
+				<Grid/>
+			</DockPanel>
+		</ScrollViewer>
+
+		<Grid>
+			<!-- ScottPlot PlotView -->
+			<ContentControl x:Name="scottplot"
+							Content="{Binding ScenarioChartPlotModel, Mode=OneWay}"
+							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
+		</Grid>
+	</DockPanel>
+</UserControl>

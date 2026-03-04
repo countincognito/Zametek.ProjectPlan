@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -159,7 +160,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.ShowMilestones,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
                     (a, b, c, d, e, f, g, h, i, j, k, l) => (a, b, c, d, e, f, g, h, i, j, k, l)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ResourceChartView;
@@ -196,10 +197,13 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                lock (m_Lock)
+                await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    BuildResourceChartPlotModel();
-                }
+                    lock (m_Lock)
+                    {
+                        BuildResourceChartPlotModel();
+                    }
+                });
             }
             catch (Exception ex)
             {

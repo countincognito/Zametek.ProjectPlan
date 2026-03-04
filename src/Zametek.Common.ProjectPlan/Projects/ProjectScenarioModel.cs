@@ -9,14 +9,14 @@
 
         public List<DependentActivityModel> DependentActivities { get; init; } = [];
 
-        public GraphSettingsModel GraphSettings { get; init; } = new GraphSettingsModel();
+        public GraphSettingsModel GraphSettings { get; init; } = new();
 
-        public ResourceSettingsModel ResourceSettings { get; init; } = new ResourceSettingsModel();
+        public ResourceSettingsModel ResourceSettings { get; init; } = new();
 
-        public WorkStreamSettingsModel WorkStreamSettings { get; init; } = new WorkStreamSettingsModel();
+        public WorkStreamSettingsModel WorkStreamSettings { get; init; } = new();
 
-        public MetricsModel Metrics { get; init; } = new MetricsModel();
+        public MetricsModel Metrics { get; init; } = new();
 
-        public DisplaySettingsModel DisplaySettings { get; init; } = new DisplaySettingsModel();
+        public DisplaySettingsModel DisplaySettings { get; init; } = new();
     }
 }

@@ -44,5 +44,8 @@
     <Compile Update="ProjectScenarioManagement\RemoveNodeTagView.axaml.cs">
       <DependentUpon>RemoveNodeTagView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="ScenarioChartManagement\ScenarioChartManagerView.axaml.cs">
+      <DependentUpon>ScenarioChartManagerView.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

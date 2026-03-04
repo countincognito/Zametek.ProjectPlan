@@ -205,6 +205,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Scenario Chart.
+        /// </summary>
+        public static string Title_ScenarioChartView {
+            get {
+                return ResourceManager.GetString("Title_ScenarioChartView", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Scenario has unsaved changes.
         /// </summary>
         public static string Title_ScenarioUnsavedChanges {

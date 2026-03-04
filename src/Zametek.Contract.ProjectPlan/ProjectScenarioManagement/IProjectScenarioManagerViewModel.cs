@@ -43,6 +43,8 @@ namespace Zametek.Contract.ProjectPlan
 
         SortDirection SelectedSortDirection { get; set; }
 
+        TrackedMetricsSetModel TrackedMetricsSet { get; }
+
         ICommand SetSelectedManagedNodesCommand { get; }
 
         ICommand LoadProjectScenarioFileCommand { get; }
