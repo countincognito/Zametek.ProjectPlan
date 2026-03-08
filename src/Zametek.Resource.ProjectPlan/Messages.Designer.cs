@@ -583,6 +583,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown TrackedMetric value:.
+        /// </summary>
+        public static string Message_UnknownTrackedMetric {
+            get {
+                return ResourceManager.GetString("Message_UnknownTrackedMetric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Vertex graph cannot contain Normal nodes without any End nodes.
         /// </summary>
         public static string Message_VertexGraphCannotContainNormalNodesWithoutAnyEndNodes {

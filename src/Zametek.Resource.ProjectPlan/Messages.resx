@@ -300,6 +300,9 @@
   <data name="Message_UnknownSortMode" xml:space="preserve">
     <value>Unknown SortDirection value:</value>
   </data>
+  <data name="Message_UnknownTrackedMetric" xml:space="preserve">
+    <value>Unknown TrackedMetric value:</value>
+  </data>
   <data name="Message_UnknownSortDirection" xml:space="preserve">
     <value>Unknown SortMode value:</value>
   </data>

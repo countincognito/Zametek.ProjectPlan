@@ -1,0 +1,41 @@
+﻿namespace Zametek.Common.ProjectPlan
+{
+
+    [Serializable]
+    public enum TrackedMetrics
+    {
+        RisksCriticality,
+        RisksFibonacci,
+        RisksActivity,
+        RisksActivityStdDevCorrection,
+        RisksGeometricCriticality,
+        RisksGeometricFibonacci,
+        RisksGeometricActivity,
+        CostsDirect,
+        CostsIndirect,
+        CostsOther,
+        CostsTotal,
+        BillingsDirect,
+        BillingsIndirect,
+        BillingsOther,
+        BillingsTotal,
+        MarginsDirect,
+        MarginsIndirect,
+        MarginsOther,
+        MarginsTotal,
+        MarginsDirectAbsolute,
+        MarginsIndirectAbsolute,
+        MarginsOtherAbsolute,
+        MarginsTotalAbsolute,
+        EffortsDirect,
+        EffortsIndirect,
+        EffortsOther,
+        EffortsTotal,
+        EffortsActivity,
+        EffortsEfficiency,
+
+        NetworkCyclomaticComplexity,
+        NetworkDuration,
+        NetworkDurationManMonths,
+    }
+}

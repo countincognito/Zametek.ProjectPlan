@@ -25,7 +25,9 @@ namespace Zametek.Contract.ProjectPlan
 
         ProjectScenarioFileModel File { get; }
 
-        public bool IsTracked { get; set; }
+        bool IsTracked { get; set; }
+
+        bool IsUpdated { get; }
 
         bool IsLoaded { get; set; }
 

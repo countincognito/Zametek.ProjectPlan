@@ -95,22 +95,30 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Bind(out m_ReadOnlyChildren)
                 .Subscribe();
 
+            m_IsUpdated = this
+                .WhenAnyValue(
+                    x => x.m_CoreViewModel.IsProjectScenarioUpdated,
+                    (isProjectScenarioUpdated) =>
+                    {
+                        Guid projectScenarioId = m_SettingService.ScenarioId;
+                        return m_ProjectScenarioNodeModel.Id == projectScenarioId && isProjectScenarioUpdated;
+                    })
+                .ToProperty(this, x => x.IsUpdated);
+
             m_DisplayName = this
                 .WhenAnyValue(
                     x => x.m_ProjectScenarioManagerViewModel.IsProjectUpdated,
-                    x => x.m_CoreViewModel.IsProjectScenarioUpdated,
+                    x => x.IsUpdated,
                     x => x.Name,
                     x => x.Label,
-                    (isProjectUpdated, isProjectScenarioUpdated, name, label) =>
+                    (isProjectUpdated, isUpdated, name, label) =>
                     {
                         string displayName = name;
                         if (IsFolder)
                         {
                             displayName = $@"[{name}]";
                         }
-                        Guid projectScenarioId = m_SettingService.ScenarioId;
-                        bool nodeHasChanges = m_ProjectScenarioNodeModel.Id == projectScenarioId && isProjectScenarioUpdated;
-                        return $@"{(nodeHasChanges ? "*" : string.Empty)}{displayName} {label}";
+                        return $@"{(isUpdated ? "*" : string.Empty)}{displayName} {label}";
                     })
                 .ToProperty(this, x => x.DisplayName);
 
@@ -274,6 +282,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_IsUpdated;
+        public bool IsUpdated => m_IsUpdated.Value;
+
         private bool m_IsLoaded;
         public bool IsLoaded
         {
@@ -431,6 +442,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_Labels.Dispose();
                 ClearChildren();
                 m_Children.Dispose();
+                m_IsUpdated?.Dispose();
                 m_DisplayName?.Dispose();
             }
 

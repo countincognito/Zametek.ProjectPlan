@@ -11,6 +11,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadyToRevise IsReadyToReviseTitle { get; set; }
 
+        ReadyToRevise IsReadyToReviseTrackedMetrics { get; set; }
+
         bool IsLoading { get; }
 
         bool IsCreating { get; }

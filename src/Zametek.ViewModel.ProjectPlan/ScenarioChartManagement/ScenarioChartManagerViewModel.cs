@@ -1,5 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Threading;
+using DynamicData;
+using java.awt;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -155,20 +157,11 @@ namespace Zametek.ViewModel.ProjectPlan
             m_BuildScenarioChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
-                    //rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
-                    //rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-                    //rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
-                    //rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
-                    //rcm => rcm.m_CoreViewModel.ProjectStart,
-                    //rcm => rcm.m_CoreViewModel.Today,
-                    //rcm => rcm.AllocationMode,
-                    //rcm => rcm.ScheduleMode,
-                    //rcm => rcm.DisplayStyle,
-                    //rcm => rcm.ShowToday,
-                    //rcm => rcm.ShowMilestones,
-                    rcm => rcm.m_CoreViewModel.BaseTheme,
-                    (a, b) => (a, b))
-                //(a, b, c, d, e, f, g, h, i, j, k, l) => (a, b, c, d, e, f, g, h, i, j, k, l)) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
+                    rcm => rcm.m_CoreViewModel.ProjectStart,
+                    rcm => rcm.m_CoreViewModel.BaseTheme)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildScenarioChartPlotModelAsync());
 
@@ -224,25 +217,63 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static AvaPlot BuildScenarioChartPlotModelInternal(
-        //IDateTimeCalculator dateTimeCalculator,
-        //ResourceSeriesSetModel resourceSeriesSet,
-        //bool showDates,
-        //DateTimeOffset projectStart,
-        //DateTimeOffset today,
-        //IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
-        //AllocationMode allocationMode,
-        //ScheduleMode scheduleMode,
-        //DisplayStyle displayStyle,
-        //bool showToday,
-        //bool showMilestones,
+            TrackedMetricsSetModel trackedMetricsSet,
+            IDateTimeCalculator dateTimeCalculator,
+            bool showDates,
+            DateTimeOffset projectStart,
+            TrackedMetrics xMetric,
+            TrackedMetrics yMetric,
             BaseTheme baseTheme)
         {
-            //ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            //ArgumentNullException.ThrowIfNull(resourceSeriesSet);
-            //ArgumentNullException.ThrowIfNull(graphCompilation);
+            ArgumentNullException.ThrowIfNull(trackedMetricsSet);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             var plotModel = new AvaPlot();
             plotModel.Plot.HideGrid();
 
+            // Select the metric for the X axis.
+            Func<MetricsModel, double>? xMetricFunction = null;
+
+            xMetricFunction = xMetric switch
+            {
+                TrackedMetrics.RisksCriticality => (MetricsModel model) => model.Risks.Criticality.GetValueOrDefault(),
+                TrackedMetrics.RisksFibonacci => throw new NotImplementedException(),
+                TrackedMetrics.RisksActivity => (MetricsModel model) => model.Risks.Activity.GetValueOrDefault(),
+                TrackedMetrics.RisksActivityStdDevCorrection => throw new NotImplementedException(),
+                TrackedMetrics.RisksGeometricCriticality => throw new NotImplementedException(),
+                TrackedMetrics.RisksGeometricFibonacci => throw new NotImplementedException(),
+                TrackedMetrics.RisksGeometricActivity => throw new NotImplementedException(),
+                TrackedMetrics.CostsDirect => throw new NotImplementedException(),
+                TrackedMetrics.CostsIndirect => throw new NotImplementedException(),
+                TrackedMetrics.CostsOther => throw new NotImplementedException(),
+                TrackedMetrics.CostsTotal => throw new NotImplementedException(),
+                TrackedMetrics.BillingsDirect => throw new NotImplementedException(),
+                TrackedMetrics.BillingsIndirect => throw new NotImplementedException(),
+                TrackedMetrics.BillingsOther => throw new NotImplementedException(),
+                TrackedMetrics.BillingsTotal => throw new NotImplementedException(),
+                TrackedMetrics.MarginsDirect => throw new NotImplementedException(),
+                TrackedMetrics.MarginsIndirect => throw new NotImplementedException(),
+                TrackedMetrics.MarginsOther => throw new NotImplementedException(),
+                TrackedMetrics.MarginsTotal => throw new NotImplementedException(),
+                TrackedMetrics.MarginsDirectAbsolute => throw new NotImplementedException(),
+                TrackedMetrics.MarginsIndirectAbsolute => throw new NotImplementedException(),
+                TrackedMetrics.MarginsOtherAbsolute => throw new NotImplementedException(),
+                TrackedMetrics.MarginsTotalAbsolute => throw new NotImplementedException(),
+                TrackedMetrics.EffortsDirect => throw new NotImplementedException(),
+                TrackedMetrics.EffortsIndirect => throw new NotImplementedException(),
+                TrackedMetrics.EffortsOther => throw new NotImplementedException(),
+                TrackedMetrics.EffortsTotal => throw new NotImplementedException(),
+                TrackedMetrics.EffortsActivity => throw new NotImplementedException(),
+                TrackedMetrics.EffortsEfficiency => throw new NotImplementedException(),
+                TrackedMetrics.NetworkCyclomaticComplexity => throw new NotImplementedException(),
+                TrackedMetrics.NetworkDuration => (MetricsModel model) => model.Network.Duration.GetValueOrDefault(),
+                TrackedMetrics.NetworkDurationManMonths => throw new NotImplementedException(),
+                _ => throw new ArgumentOutOfRangeException(nameof(xMetric), @$"{Resource.ProjectPlan.Messages.Message_UnknownTrackedMetric} {xMetric}"),
+            };
+
+            // Select the metric for the Y axis.
+            Func<MetricsModel, double>? yMetricFunction = null;
+
+            yMetricFunction = (MetricsModel model) => model.Risks.Criticality.GetValueOrDefault();
 
 
 
@@ -250,42 +281,94 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-            //// Select the type of allocation to be displayed.
 
-            //Func<ResourceScheduleModel, List<bool>>? allocationFunction = null;
+            // Now build the plot.
 
-            //allocationFunction = allocationMode switch
+            if (trackedMetricsSet.TrackedMetrics.Count == 0)
+            {
+                return plotModel.SetBaseTheme(baseTheme);
+            }
+
+            // Gather the data points for the selected metrics.
+
+            var dataX = new List<double>();
+            var dataY = new List<double>();
+
+            foreach (TrackedMetricsModel trackedMetrics in trackedMetricsSet.TrackedMetrics)
+            {
+                dataX.Add(xMetricFunction(trackedMetrics.Metrics));
+                dataY.Add(yMetricFunction(trackedMetrics.Metrics));
+            }
+
+
+            Scatter scatter = plotModel.Plot.Add.Scatter(dataX, dataY);
+            //scatter.LegendText = title;
+            scatter.LineWidth = 0;
+            scatter.MarkerSize = 10;
+            //scatter.LineColor = Colors.Transparent;
+            //scatter.MarkerSize = 0;
+
+
+
+
+
+
+            //// Build the X axis.
+
             //{
-            //    AllocationMode.Activity => (ResourceScheduleModel model) => model.ActivityAllocation,
-            //    AllocationMode.Cost => (ResourceScheduleModel model) => model.CostAllocation,
-            //    AllocationMode.Billing => (ResourceScheduleModel model) => model.BillingAllocation,
-            //    AllocationMode.Effort => (ResourceScheduleModel model) => model.EffortAllocation,
-            //    _ => throw new ArgumentOutOfRangeException(nameof(allocationMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownAllocationMode} {allocationMode}"),
-            //};
+            //    //int chartEnd = trackingSeriesSet.Plan
+            //    //    .Concat(trackingSeriesSet.Progress)
+            //    //    .Concat(trackingSeriesSet.Effort)
+            //    //    .Select(x => x.Time).DefaultIfEmpty().Max();
 
-            //// Select the type of schedule to be displayed.
 
-            //Func<ResourceSeriesSetModel, List<ResourceSeriesModel>>? scheduleFunction = null;
 
-            //scheduleFunction = scheduleMode switch
-            //{
-            //    ScheduleMode.Combined => (ResourceSeriesSetModel model) => model.Combined,
-            //    ScheduleMode.Scheduled => (ResourceSeriesSetModel model) => model.Scheduled,
-            //    ScheduleMode.Unscheduled => (ResourceSeriesSetModel model) => model.Unscheduled,
-            //    _ => throw new ArgumentOutOfRangeException(nameof(scheduleMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownScheduleMode} {scheduleMode}"),
-            //};
+            //    //IXAxis xAxis = plotModel.Plot.Axes.Bottom;
 
-            //// Now build the plot.
+            //    //double minValue = ChartHelper.CalculateChartStartTimeXValue(
+            //    //    chartStart,
+            //    //    showDates,
+            //    //    projectStart,
+            //    //    dateTimeCalculator);
+            //    //double maxValue = ChartHelper.CalculateChartFinishTimeXValue(
+            //    //    chartEnd,
+            //    //    showDates,
+            //    //    projectStart,
+            //    //    dateTimeCalculator);
 
-            //if (scheduleFunction(resourceSeriesSet).Count == 0)
-            //{
-            //    return plotModel.SetBaseTheme(baseTheme);
+            //    //if (showDates)
+            //    //{
+            //    //    // Setup the plot to display X axis tick labels using date time format.
+            //    //    xAxis = plotModel.Plot.Axes.DateTimeTicksBottom();
+            //    //}
+
+            //    //xAxis.Min = minValue;
+            //    //xAxis.Max = maxValue;
+            //    //xAxis.Label.Text = Resource.ProjectPlan.Labels.Label_TimeAxisTitle;
+            //    //xAxis.Label.FontSize = PlotHelper.FontSize;
+            //    //xAxis.Label.Bold = false;
             //}
+
+
+
+
+
+
+
+
+
+
 
             //IEnumerable<ResourceSeriesModel> resourceSeries = scheduleFunction(resourceSeriesSet).OrderBy(x => x.DisplayOrder);
             //int finishTime = resourceSeriesSet.ResourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
 
             //BuildScenarioChartXAxis(plotModel, dateTimeCalculator, finishTime, showDates, projectStart);
+
+
+
+
+
+
 
             //plotModel.Plot.Legend.OutlineWidth = 1;
             //plotModel.Plot.Legend.BackgroundColor = Colors.Transparent;
@@ -293,6 +376,15 @@ namespace Zametek.ViewModel.ProjectPlan
             //plotModel.Plot.Legend.ShadowOffset = new(0, 0);
 
             //plotModel.Plot.ShowLegend(Edge.Right);
+
+
+
+
+
+
+
+
+
 
             //var scatters = new List<Scatter>();
             //var labels = new List<string>();
@@ -460,8 +552,16 @@ namespace Zametek.ViewModel.ProjectPlan
             //    plotModel.Plot.PlottableList.AddRange(milestoneLines);
             //}
 
-            //// Style the plot so the bars start on the left edge.
+
+
+
+
+            // Style the plot so the bars start on the left edge.
             //plotModel.Plot.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
+
+
+
+
 
             //IYAxis yAxis = BuildScenarioChartYAxis(plotModel);
 
@@ -489,6 +589,88 @@ namespace Zametek.ViewModel.ProjectPlan
         //        X = start,
         //    };
         //}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        private static IAxis BuildEarnedValueChartXAxis(
+            AvaPlot plotModel,
+            IDateTimeCalculator dateTimeCalculator,
+            int chartStart,
+            int chartEnd,
+            bool showDates,
+            DateTimeOffset projectStart)
+        {
+            ArgumentNullException.ThrowIfNull(plotModel);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+
+            IXAxis xAxis = plotModel.Plot.Axes.Bottom;
+
+            if (chartEnd != default)
+            {
+                double minValue = ChartHelper.CalculateChartStartTimeXValue(
+                    chartStart,
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator);
+                double maxValue = ChartHelper.CalculateChartFinishTimeXValue(
+                    chartEnd,
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator);
+
+                if (showDates)
+                {
+                    // Setup the plot to display X axis tick labels using date time format.
+                    xAxis = plotModel.Plot.Axes.DateTimeTicksBottom();
+                }
+
+                xAxis.Min = minValue;
+                xAxis.Max = maxValue;
+                xAxis.Label.Text = Resource.ProjectPlan.Labels.Label_TimeAxisTitle;
+                xAxis.Label.FontSize = PlotHelper.FontSize;
+                xAxis.Label.Bold = false;
+            }
+
+            return xAxis;
+        }
+
+        private static IYAxis BuildEarnedValueChartYAxis(
+            AvaPlot plotModel,
+            double maximum)
+        {
+            ArgumentNullException.ThrowIfNull(plotModel);
+            IYAxis yAxis = plotModel.Plot.Axes.Left;
+
+            yAxis.Min = 0.0;
+            yAxis.Max = maximum;
+            yAxis.Label.Text = Resource.ProjectPlan.Labels.Label_PercentageAxisTitle;
+            yAxis.Label.FontSize = PlotHelper.FontSize;
+            yAxis.Label.Bold = false;
+            return yAxis;
+        }
+
+
+
+
+
+
+
+
+
+
+
 
         //private static IXAxis BuildScenarioChartXAxis(
         //    AvaPlot plotModel,
@@ -533,6 +715,43 @@ namespace Zametek.ViewModel.ProjectPlan
         //    yAxis.Label.Bold = false;
         //    return yAxis;
         //}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         private async Task SaveScenarioChartImageFileAsync()
         {
@@ -695,17 +914,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (!HasCompilationErrors)
                 {
                     plotModel = BuildScenarioChartPlotModelInternal(
-                    //m_DateTimeCalculator,
-                    //m_CoreViewModel.ResourceSeriesSet,
-                    //m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-                    //m_CoreViewModel.ProjectStart,
-                    //m_CoreViewModel.Today,
-                    //m_CoreViewModel.GraphCompilation,
-                    //AllocationMode,
-                    //ScheduleMode,
-                    //DisplayStyle,
-                    //ShowToday,
-                    //ShowMilestones,
+                        m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
+                        m_DateTimeCalculator,
+                        m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                        m_CoreViewModel.ProjectStart,
+                        TrackedMetrics.NetworkDuration,
+                        TrackedMetrics.RisksActivity,
                         m_CoreViewModel.BaseTheme);
                 }
             }

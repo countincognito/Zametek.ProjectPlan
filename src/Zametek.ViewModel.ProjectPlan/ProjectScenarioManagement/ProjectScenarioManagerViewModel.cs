@@ -6,6 +6,7 @@ using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Input;
@@ -40,6 +41,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable? m_ReadOnlyFlattenedFileNodesSub;
         private readonly IDisposable? m_SortUpdateSub;
         private readonly IDisposable? m_AreScenariosDisplayedSub;
+        private readonly IDisposable? m_MetricsSub;
+        private readonly IDisposable? m_ReviseTrackedMetricsSub;
 
         #endregion
 
@@ -73,6 +76,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_NodeAction = new();
             m_NodeActionCommandManualTrigger = new();
             m_IsReadyToReviseTitle = ReadyToRevise.No;
+            m_IsReadyToReviseTrackedMetrics = ReadyToRevise.No;
             m_TrackedMetricsSet = new();
 
             SetSelectedManagedNodesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedNodes);
@@ -238,32 +242,52 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_AreScenariosDisplayedSub = m_ReadOnlyFlattenedFileNodes
                 .ToObservableChangeSet()
-                .AutoRefresh(node => node.IsTracked) // Subscribe only to IsCompiled property changes
+                .AutoRefresh(node => node.IsUpdated)
+                .AutoRefresh(node => node.IsTracked)
                 .Filter(node => !node.IsFolder && node.Scenario is not null)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(changeSet =>
+                .Subscribe(_ =>
                 {
+                    if (!IsBusy)
+                    {
+                        lock (m_Lock)
+                        {
+                            IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
+                        }
+                    }
+                });
 
+            m_MetricsSub = this
+                .WhenAnyValue(pm => pm.m_CoreViewModel.Metrics)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ =>
+                {
+                    if (!IsBusy)
+                    {
+                        lock (m_Lock)
+                        {
+                            IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
+                        }
+                    }
+                });
 
-
-
-                    BuildTrackedMetrics();
-                    //if (!IsBusy && (changeSet.Replaced + changeSet.Adds) > 0)
-                    //{
-                    //    lock (m_Lock)
-                    //    {
-                    //        if (AutoCompile)
-                    //        {
-                    //            IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                    //            IsReadyToCompile = ReadyToCompile.Yes;
-                    //        }
-                    //        else
-                    //        {
-                    //            IsReadyToReviseTrackers = ReadyToRevise.No;
-                    //            IsReadyToCompile = ReadyToCompile.No;
-                    //        }
-                    //    }
-                    //}
+            m_ReviseTrackedMetricsSub = this
+                .WhenAnyValue(pm => pm.IsReadyToReviseTrackedMetrics)
+                .ObserveOn(Scheduler.CurrentThread)
+                .Subscribe(isReady =>
+                {
+                    if (isReady == ReadyToRevise.Yes
+                        && !IsBusy)
+                    {
+                        lock (m_Lock)
+                        {
+                            if (isReady == ReadyToRevise.Yes
+                                && !IsBusy)
+                            {
+                                BuildTrackedMetrics();
+                            }
+                        }
+                    }
                 });
 
             Id = Resource.ProjectPlan.Titles.Title_ProjectScenarios;
@@ -873,6 +897,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         IsProjectUpdated = true;
                         IsReadyToReviseTitle = ReadyToRevise.Yes;
+                        BuildTrackedMetrics();
                     }
                 }
             }
@@ -969,6 +994,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     AddManagedNodes([projectScenarioNode]);
                     IsProjectUpdated = true;
                     IsReadyToReviseTitle = ReadyToRevise.Yes;
+                    BuildTrackedMetrics();
                 }
             }
             finally
@@ -1177,6 +1203,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         IsProjectUpdated = true;
                         IsReadyToReviseTitle = ReadyToRevise.Yes;
+                        BuildTrackedMetrics();
                         return;
                     }
 
@@ -1192,6 +1219,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         LoadProjectScenarioFileInternal(mostRecentScenario);
                         IsProjectUpdated = true;
                         IsReadyToReviseTitle = ReadyToRevise.Yes;
+                        BuildTrackedMetrics();
                         return;
                     }
 
@@ -1229,6 +1257,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IsProjectUpdated = true;
                     IsReadyToReviseTitle = ReadyToRevise.Yes;
+                    BuildTrackedMetrics();
                 }
             }
             finally
@@ -1392,6 +1421,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             IsProjectUpdated = true;
                             IsReadyToReviseTitle = ReadyToRevise.Yes;
+                            BuildTrackedMetrics();
                         }
                     }
                 }
@@ -1629,7 +1659,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     IsBusy = true;
 
-                    List<TrackedMetricsModel> trackedMetricsModels = [.. RawFlattenedFileNodes
+                    Dictionary<Guid, TrackedMetricsModel> trackedMetricsModelLookup = RawFlattenedFileNodes
                         .Where(x => x.IsTracked && !x.IsFolder && x.Scenario is not null)
                         .Select(x => new TrackedMetricsModel
                         {
@@ -1637,12 +1667,30 @@ namespace Zametek.ViewModel.ProjectPlan
                             Name = x.Name,
                             Path = GetNodePath(x.Id),
                             Metrics = x.Scenario!.Metrics,
-                        })];
+                        })
+                        .ToDictionary(x => x.NodeId);
 
-                    TrackedMetricsSet = new()
+                    // Replace current project scenario metrics.
+
+                    Guid currentNodeId = m_SettingService.ScenarioId;
+
+                    if (trackedMetricsModelLookup.TryGetValue(currentNodeId, out TrackedMetricsModel? currentTrackedMetricsModel))
                     {
-                        TrackedMetrics = trackedMetricsModels,
+                        var updatedCurrentTrackedMetricsModel = currentTrackedMetricsModel with
+                        {
+                            Metrics = m_CoreViewModel.Metrics
+                        };
+                        trackedMetricsModelLookup[currentNodeId] = updatedCurrentTrackedMetricsModel;
+                    }
+
+                    var trackedMetricsSet = new TrackedMetricsSetModel
+                    {
+                        TrackedMetrics = [.. trackedMetricsModelLookup.Values],
                     };
+
+                    IsReadyToReviseTrackedMetrics = ReadyToRevise.No;
+
+                    TrackedMetricsSet = trackedMetricsSet;
                 }
             }
             finally
@@ -1650,8 +1698,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 IsBusy = false;
             }
         }
-
-
 
         private string GetNodePath(Guid id)
         {
@@ -1668,9 +1714,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 return string.Join(" > ", pathSegments);
             }
         }
-
-
-
 
         #endregion
 
@@ -1697,6 +1740,19 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 m_IsReadyToReviseTitle = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        // We need to use an enum because raised changes on bools aren't always captured.
+        // https://github.com/reactiveui/ReactiveUI/issues/3846
+        private ReadyToRevise m_IsReadyToReviseTrackedMetrics;
+        public ReadyToRevise IsReadyToReviseTrackedMetrics
+        {
+            get => m_IsReadyToReviseTrackedMetrics;
+            set
+            {
+                m_IsReadyToReviseTrackedMetrics = value;
                 this.RaisePropertyChanged();
             }
         }
@@ -1869,6 +1925,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IsProjectUpdated = false;
                     IsReadyToReviseTitle = ReadyToRevise.Yes;
+                    BuildTrackedMetrics();
                 }
             }
             finally
@@ -1958,6 +2015,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IsProjectUpdated = false;
                     IsReadyToReviseTitle = ReadyToRevise.Yes;
+
+                    BuildTrackedMetrics();
                 }
             }
             finally
@@ -2092,6 +2151,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ReadOnlyFlattenedFileNodesSub?.Dispose();
             m_SortUpdateSub?.Dispose();
             m_AreScenariosDisplayedSub?.Dispose();
+            m_MetricsSub?.Dispose();
+            m_ReviseTrackedMetricsSub?.Dispose();
         }
 
         #endregion
