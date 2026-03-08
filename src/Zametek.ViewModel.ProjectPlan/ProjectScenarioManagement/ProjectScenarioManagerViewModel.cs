@@ -273,20 +273,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ReviseTrackedMetricsSub = this
                 .WhenAnyValue(pm => pm.IsReadyToReviseTrackedMetrics)
-                .ObserveOn(Scheduler.CurrentThread)
+                .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(isReady =>
                 {
-                    if (isReady == ReadyToRevise.Yes
-                        && !IsBusy)
+                    if (isReady == ReadyToRevise.Yes)
                     {
-                        lock (m_Lock)
-                        {
-                            if (isReady == ReadyToRevise.Yes
-                                && !IsBusy)
-                            {
-                                BuildTrackedMetrics();
-                            }
-                        }
+                        BuildTrackedMetrics();
                     }
                 });
 
@@ -897,7 +889,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         IsProjectUpdated = true;
                         IsReadyToReviseTitle = ReadyToRevise.Yes;
-                        BuildTrackedMetrics();
+                        IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
                     }
                 }
             }
@@ -994,7 +986,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     AddManagedNodes([projectScenarioNode]);
                     IsProjectUpdated = true;
                     IsReadyToReviseTitle = ReadyToRevise.Yes;
-                    BuildTrackedMetrics();
+                    IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
                 }
             }
             finally
@@ -1203,7 +1195,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         IsProjectUpdated = true;
                         IsReadyToReviseTitle = ReadyToRevise.Yes;
-                        BuildTrackedMetrics();
+                        IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
                         return;
                     }
 
@@ -1219,7 +1211,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         LoadProjectScenarioFileInternal(mostRecentScenario);
                         IsProjectUpdated = true;
                         IsReadyToReviseTitle = ReadyToRevise.Yes;
-                        BuildTrackedMetrics();
+                        IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
                         return;
                     }
 
@@ -1257,7 +1249,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IsProjectUpdated = true;
                     IsReadyToReviseTitle = ReadyToRevise.Yes;
-                    BuildTrackedMetrics();
+                    IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
                 }
             }
             finally
@@ -1421,7 +1413,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             IsProjectUpdated = true;
                             IsReadyToReviseTitle = ReadyToRevise.Yes;
-                            BuildTrackedMetrics();
+                            IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
                         }
                     }
                 }
@@ -1653,49 +1645,40 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void BuildTrackedMetrics()
         {
-            try
+            lock (m_Lock)
             {
-                lock (m_Lock)
+                Dictionary<Guid, TrackedMetricsModel> trackedMetricsModelLookup = RawFlattenedFileNodes
+                    .Where(x => x.IsTracked && !x.IsFolder && x.Scenario is not null)
+                    .Select(x => new TrackedMetricsModel
+                    {
+                        NodeId = x.Id,
+                        Name = x.Name,
+                        Path = GetNodePath(x.Id),
+                        Metrics = x.Scenario!.Metrics,
+                    })
+                    .ToDictionary(x => x.NodeId);
+
+                // Replace current project scenario metrics.
+
+                Guid currentNodeId = m_SettingService.ScenarioId;
+
+                if (trackedMetricsModelLookup.TryGetValue(currentNodeId, out TrackedMetricsModel? currentTrackedMetricsModel))
                 {
-                    IsBusy = true;
-
-                    Dictionary<Guid, TrackedMetricsModel> trackedMetricsModelLookup = RawFlattenedFileNodes
-                        .Where(x => x.IsTracked && !x.IsFolder && x.Scenario is not null)
-                        .Select(x => new TrackedMetricsModel
-                        {
-                            NodeId = x.Id,
-                            Name = x.Name,
-                            Path = GetNodePath(x.Id),
-                            Metrics = x.Scenario!.Metrics,
-                        })
-                        .ToDictionary(x => x.NodeId);
-
-                    // Replace current project scenario metrics.
-
-                    Guid currentNodeId = m_SettingService.ScenarioId;
-
-                    if (trackedMetricsModelLookup.TryGetValue(currentNodeId, out TrackedMetricsModel? currentTrackedMetricsModel))
+                    var updatedCurrentTrackedMetricsModel = currentTrackedMetricsModel with
                     {
-                        var updatedCurrentTrackedMetricsModel = currentTrackedMetricsModel with
-                        {
-                            Metrics = m_CoreViewModel.Metrics
-                        };
-                        trackedMetricsModelLookup[currentNodeId] = updatedCurrentTrackedMetricsModel;
-                    }
-
-                    var trackedMetricsSet = new TrackedMetricsSetModel
-                    {
-                        TrackedMetrics = [.. trackedMetricsModelLookup.Values],
+                        Metrics = m_CoreViewModel.Metrics
                     };
-
-                    IsReadyToReviseTrackedMetrics = ReadyToRevise.No;
-
-                    TrackedMetricsSet = trackedMetricsSet;
+                    trackedMetricsModelLookup[currentNodeId] = updatedCurrentTrackedMetricsModel;
                 }
-            }
-            finally
-            {
-                IsBusy = false;
+
+                var trackedMetricsSet = new TrackedMetricsSetModel
+                {
+                    TrackedMetrics = [.. trackedMetricsModelLookup.Values],
+                };
+
+                IsReadyToReviseTrackedMetrics = ReadyToRevise.No;
+
+                TrackedMetricsSet = trackedMetricsSet;
             }
         }
 
@@ -1925,7 +1908,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IsProjectUpdated = false;
                     IsReadyToReviseTitle = ReadyToRevise.Yes;
-                    BuildTrackedMetrics();
+                    IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
                 }
             }
             finally
@@ -2015,8 +1998,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     IsProjectUpdated = false;
                     IsReadyToReviseTitle = ReadyToRevise.Yes;
-
-                    BuildTrackedMetrics();
+                    IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
                 }
             }
             finally
