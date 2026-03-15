@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using ScottPlot;
 using ScottPlot.Avalonia;
+using ScottPlot.Plottables;
 using System.Linq;
 using Zametek.ViewModel.ProjectPlan;
 
@@ -41,14 +42,14 @@ namespace Zametek.View.ProjectPlan
             Pixel mousePixel = new(pos.X, pos.Y);
             Coordinates mouseLocation = plotModel.Plot.GetCoordinates(mousePixel);
 
-            // Milestones.
+            // Scenario points.
 
-            AnnotatedVerticalLine? annotatedVerticalLine = plotModel.Plot.GetPlottables<AnnotatedVerticalLine>()
-                .FirstOrDefault(arrow => arrow.CoordinateRect.Contains(mouseLocation));
+            AnnotatedMarker? annotatedMarker = plotModel.Plot.GetPlottables<AnnotatedMarker>()
+                .FirstOrDefault(marker => IsPointInMarker(plotModel.Plot, mouseLocation, marker));
 
-            if (annotatedVerticalLine is not null)
+            if (annotatedMarker is not null)
             {
-                scottplot.SetValue(ToolTip.TipProperty, annotatedVerticalLine.Annotation);
+                scottplot.SetValue(ToolTip.TipProperty, annotatedMarker.Annotation);
                 return;
             }
 
@@ -65,6 +66,31 @@ namespace Zametek.View.ProjectPlan
 
             // If no bar or rectangle was found, clear the tooltip.
             ClearToolTip();
+        }
+
+        private static bool IsPointInMarker(
+            Plot plot,
+            Coordinates point,
+            Marker marker)
+        {
+
+            // Get pixel location of the marker center.
+            Pixel markerPixel = plot.GetPixel(marker.Coordinates);
+
+            // Get pixel location of the point center.
+            Pixel pointPixel = plot.GetPixel(point);
+
+            // Calculate pixel rectangle based on MarkerSize (e.g. 10).
+            float halfSize = marker.MarkerStyle.Size / 2;
+            ScottPlot.PixelRect markerRect = new(
+                left: markerPixel.X - halfSize,
+                right: markerPixel.X + halfSize,
+                bottom: markerPixel.Y + halfSize,
+                top: markerPixel.Y - halfSize
+            );
+
+            // Check if the point pixel is within the marker rectangle.
+            return markerRect.Contains(pointPixel);
         }
 
         private void ClearToolTip()

@@ -1,5 +1,7 @@
 ﻿using Avalonia;
+using Avalonia.Input;
 using Avalonia.Threading;
+using com.sun.tools.javadoc;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -80,9 +82,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly IDisposable? m_BuildScenarioChartPlotModelSub;
 
-        private const float c_ScatterLineWidth = 5.0f;
-
-        private const float c_VerticalLineWidth = 2.0f;
+        private const double c_AnnotatedEllipseRadius = 5.0;
 
         #endregion
 
@@ -235,14 +235,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
             foreach (TrackedMetricsModel trackedMetrics in trackedMetricsSet.TrackedMetrics)
             {
-                dataX.Add(xMetricFunction(trackedMetrics.Metrics));
-                dataY.Add(yMetricFunction(trackedMetrics.Metrics));
+                var marker = new AnnotatedMarker
+                {
+                    X = xMetricFunction(trackedMetrics.Metrics),
+                    Y = yMetricFunction(trackedMetrics.Metrics),
+                    Size = 10,
+                    Color = Colors.Blue,
+                    Shape = MarkerShape.FilledCircle,
+                    Annotation = trackedMetrics.Path
+                };
+
+                plotModel.Plot.PlottableList.Add(marker);
             }
-
-
-            Scatter scatter = plotModel.Plot.Add.Scatter(dataX, dataY);
-            scatter.LineWidth = 0;
-            scatter.MarkerSize = 10;
 
             plotModel.Plot.Axes.AutoScale();
 
@@ -288,6 +292,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 _ => throw new ArgumentOutOfRangeException(nameof(metric), @$"{Resource.ProjectPlan.Messages.Message_UnknownTrackedMetric} {metric}"),
             };
         }
+
         private async Task SaveScenarioChartImageFileAsync()
         {
             try
