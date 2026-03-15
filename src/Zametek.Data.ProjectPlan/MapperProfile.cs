@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Zametek.Common.ProjectPlan;
-using Zametek.Maths.Graphs;
 
 namespace Zametek.Data.ProjectPlan
 {

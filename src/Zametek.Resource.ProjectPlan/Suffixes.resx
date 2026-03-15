@@ -132,4 +132,7 @@
   <data name="Suffix_ResourceChart" xml:space="preserve">
     <value>-resource</value>
   </data>
+  <data name="Suffix_ScenarioChart" xml:space="preserve">
+    <value>-scenario</value>
+  </data>
 </root>

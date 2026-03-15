@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using ReactiveUI;
 using System;
 using System.IO;
 using System.Threading;
@@ -178,6 +179,34 @@ namespace Zametek.ProjectPlan
                 {
                     m_AppSettingsModel = m_AppSettingsModel with { ProjectScenarioSortDirection = value };
                     SaveSettings();
+                }
+            }
+        }
+
+        public override TrackedMetrics ScenarioChartTrackedMetricXAxis
+        {
+            get => m_AppSettingsModel.ScenarioChartTrackedMetricXAxis;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { ScenarioChartTrackedMetricXAxis = value };
+                    SaveSettings();
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        public override TrackedMetrics ScenarioChartTrackedMetricYAxis
+        {
+            get => m_AppSettingsModel.ScenarioChartTrackedMetricYAxis;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { ScenarioChartTrackedMetricYAxis = value };
+                    SaveSettings();
+                    this.RaisePropertyChanged();
                 }
             }
         }

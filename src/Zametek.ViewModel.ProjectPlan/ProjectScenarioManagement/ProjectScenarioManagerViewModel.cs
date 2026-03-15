@@ -1377,12 +1377,15 @@ namespace Zametek.ViewModel.ProjectPlan
                             && !managedNode.IsFolder
                             && managedNode.Scenario is not null)
                         {
+                            HashSet<string> existingNames = ExistingNodeNames(destinationParentId);
+                            string newName = SuggestNodeName(managedNode.Name, existingNames);
+
                             var projectScenarioNode = new ProjectScenarioNodeModel
                             {
                                 Id = Guid.NewGuid(),
                                 ParentId = destinationParentId,
                                 NodeType = ProjectScenarioNodeType.File,
-                                Name = managedNode.Name,
+                                Name = newName,
                                 CreatedOn = localNow,
                                 ModifiedOn = localNow,
                                 IsTracked = managedNode.IsTracked,

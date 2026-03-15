@@ -14,13 +14,10 @@
         public bool HideBilling { get; init; } = default;
 
 
-
         public bool ArrowGraphShowNames { get; init; } = default;
 
 
-
         public bool VertexGraphShowNames { get; init; } = default;
-
 
 
         public GroupByMode GanttChartGroupByMode { get; init; } = default;
@@ -40,7 +37,6 @@
         public bool GanttChartShowSlack { get; init; } = default;
 
 
-
         public AllocationMode ResourceChartAllocationMode { get; init; } = default;
 
         public ScheduleMode ResourceChartScheduleMode { get; init; } = default;
@@ -50,7 +46,6 @@
         public bool ResourceChartShowToday { get; init; } = default;
 
         public bool ResourceChartShowMilestones { get; init; } = default;
-
 
 
         public bool EarnedValueShowProjections { get; init; } = default;

@@ -1484,6 +1484,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to X Axis Metric.
+        /// </summary>
+        public static string Label_TrackedMetricXAxis {
+            get {
+                return ResourceManager.GetString("Label_TrackedMetricXAxis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Y Axis Metric.
+        /// </summary>
+        public static string Label_TrackedMetricYAxis {
+            get {
+                return ResourceManager.GetString("Label_TrackedMetricYAxis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unit Billing.
         /// </summary>
         public static string Label_UnitBilling {

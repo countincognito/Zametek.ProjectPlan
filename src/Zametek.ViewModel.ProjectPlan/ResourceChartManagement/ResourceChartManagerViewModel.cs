@@ -240,10 +240,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
             allocationFunction = allocationMode switch
             {
-                AllocationMode.Activity => (ResourceScheduleModel model) => model.ActivityAllocation,
-                AllocationMode.Cost => (ResourceScheduleModel model) => model.CostAllocation,
-                AllocationMode.Billing => (ResourceScheduleModel model) => model.BillingAllocation,
-                AllocationMode.Effort => (ResourceScheduleModel model) => model.EffortAllocation,
+                AllocationMode.Activity => model => model.ActivityAllocation,
+                AllocationMode.Cost => model => model.CostAllocation,
+                AllocationMode.Billing => model => model.BillingAllocation,
+                AllocationMode.Effort => model => model.EffortAllocation,
                 _ => throw new ArgumentOutOfRangeException(nameof(allocationMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownAllocationMode} {allocationMode}"),
             };
 
@@ -253,9 +253,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             scheduleFunction = scheduleMode switch
             {
-                ScheduleMode.Combined => (ResourceSeriesSetModel model) => model.Combined,
-                ScheduleMode.Scheduled => (ResourceSeriesSetModel model) => model.Scheduled,
-                ScheduleMode.Unscheduled => (ResourceSeriesSetModel model) => model.Unscheduled,
+                ScheduleMode.Combined => model => model.Combined,
+                ScheduleMode.Scheduled => model => model.Scheduled,
+                ScheduleMode.Unscheduled => model => model.Unscheduled,
                 _ => throw new ArgumentOutOfRangeException(nameof(scheduleMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownScheduleMode} {scheduleMode}"),
             };
 

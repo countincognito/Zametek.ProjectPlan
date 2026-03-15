@@ -19,7 +19,7 @@ namespace Zametek.Resource.ProjectPlan {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Suffixes {
@@ -93,6 +93,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Suffix_ResourceChart {
             get {
                 return ResourceManager.GetString("Suffix_ResourceChart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -scenario.
+        /// </summary>
+        public static string Suffix_ScenarioChart {
+            get {
+                return ResourceManager.GetString("Suffix_ScenarioChart", resourceCulture);
             }
         }
         

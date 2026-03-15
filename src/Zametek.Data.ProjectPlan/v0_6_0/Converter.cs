@@ -73,6 +73,8 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                 DefaultHideBilling = appSettingsModel.DefaultHideBilling,
                 ProjectScenarioSortMode = default,
                 ProjectScenarioSortDirection = default,
+                ScenarioChartTrackedMetricXAxis = default,
+                ScenarioChartTrackedMetricYAxis = default,
                 SelectedTheme = appSettingsModel.SelectedTheme,
             };
         }

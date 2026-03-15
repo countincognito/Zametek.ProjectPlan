@@ -19,20 +19,20 @@
 		<ScrollViewer DockPanel.Dock="Right"
 					  VerticalScrollBarVisibility="Hidden"
 					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel MinWidth="120"
+			<DockPanel MinWidth="205"
 					   Margin="11,0,0,0">
 
-				<!--<DockPanel DockPanel.Dock="Top">
+				<DockPanel DockPanel.Dock="Top">
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
 						   Height="25"
 						   DockPanel.Dock="Top"
 						   IsTabStop="False"
 						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_AllocationMode}"/>
+						   Content="{x:Static resources:Labels.Label_TrackedMetricXAxis}"/>
 
-					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:AllocationMode}}}"
-							  SelectedItem="{Binding Path=AllocationMode, Mode=TwoWay}"
+					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:TrackedMetrics}}}"
+							  SelectedItem="{Binding Path=TrackedMetricXAxis, Mode=TwoWay}"
 							  BorderBrush="Gray"
 							  BorderThickness="1"
 							  DockPanel.Dock="Top"
@@ -46,7 +46,7 @@
 										   Margin="0"
 										   Padding="3"
 										   Classes="displayOnly"
-										   Text="{Binding Converter={x:Static local:StringConverters.AllocationModeValue}, Mode=OneWay}"/>
+										   Text="{Binding Converter={x:Static local:StringConverters.TrackedMetricsValue}, Mode=OneWay}"/>
 							</DataTemplate>
 						</ComboBox.ItemTemplate>
 					</ComboBox>
@@ -59,10 +59,10 @@
 						   DockPanel.Dock="Top"
 						   IsTabStop="False"
 						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ScheduleMode}"/>
+						   Content="{x:Static resources:Labels.Label_TrackedMetricYAxis}"/>
 
-					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:ScheduleMode}}}"
-							  SelectedItem="{Binding Path=ScheduleMode, Mode=TwoWay}"
+					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:TrackedMetrics}}}"
+							  SelectedItem="{Binding Path=TrackedMetricYAxis, Mode=TwoWay}"
 							  BorderBrush="Gray"
 							  BorderThickness="1"
 							  DockPanel.Dock="Top"
@@ -75,13 +75,13 @@
 										   TextAlignment="Left"
 										   Margin="0"
 										   Padding="3"
-										   Text="{Binding Converter={x:Static local:StringConverters.ScheduleModeValue}, Mode=OneWay}"/>
+										   Text="{Binding Converter={x:Static local:StringConverters.TrackedMetricsValue}, Mode=OneWay}"/>
 							</DataTemplate>
 						</ComboBox.ItemTemplate>
 					</ComboBox>
 				</DockPanel>
 
-				<DockPanel DockPanel.Dock="Top">
+				<!--<DockPanel DockPanel.Dock="Top">
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
 						   Height="25"

@@ -1,4 +1,5 @@
-﻿using Zametek.Common.ProjectPlan;
+﻿using ReactiveUI;
+using Zametek.Common.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine
@@ -17,6 +18,8 @@ namespace Zametek.ProjectPlan.CommandLine
         private bool m_DefaultHideBilling;
         private SortMode m_ProjectScenarioSortMode;
         private SortDirection m_ProjectScenarioSortDirection;
+        private TrackedMetrics m_ScenarioChartTrackedMetricXAxis;
+        private TrackedMetrics m_ScenarioChartTrackedMetricYAxis;
         private string m_SelectedTheme;
 
         #endregion
@@ -154,6 +157,30 @@ namespace Zametek.ProjectPlan.CommandLine
                 lock (m_Lock)
                 {
                     m_ProjectScenarioSortDirection = value;
+                }
+            }
+        }
+
+        public override TrackedMetrics ScenarioChartTrackedMetricXAxis
+        {
+            get => m_ScenarioChartTrackedMetricXAxis;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ScenarioChartTrackedMetricXAxis = value;
+                }
+            }
+        }
+
+        public override TrackedMetrics ScenarioChartTrackedMetricYAxis
+        {
+            get => m_ScenarioChartTrackedMetricYAxis;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ScenarioChartTrackedMetricYAxis = value;
                 }
             }
         }

@@ -33,7 +33,6 @@
         EffortsTotal,
         EffortsActivity,
         EffortsEfficiency,
-
         NetworkCyclomaticComplexity,
         NetworkDuration,
         NetworkDurationManMonths,

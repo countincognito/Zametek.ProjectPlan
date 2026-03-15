@@ -81,5 +81,44 @@ namespace Zametek.View.ProjectPlan
                     DisplayStyle.Block => Enums.Enum_DisplayStyle_Block,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
+
+        public static readonly IValueConverter TrackedMetricsValue =
+            new FuncValueConverter<TrackedMetrics, string>(
+                x => x switch
+                {
+                    TrackedMetrics.RisksCriticality => Enums.Enum_TrackedMetric_RisksCriticality,
+                    TrackedMetrics.RisksFibonacci => Enums.Enum_TrackedMetric_RisksFibonacci,
+                    TrackedMetrics.RisksActivity => Enums.Enum_TrackedMetric_RisksActivity,
+                    TrackedMetrics.RisksActivityStdDevCorrection => Enums.Enum_TrackedMetric_RisksActivityStdDevCorrection,
+                    TrackedMetrics.RisksGeometricCriticality => Enums.Enum_TrackedMetric_RisksGeometricCriticality,
+                    TrackedMetrics.RisksGeometricFibonacci => Enums.Enum_TrackedMetric_RisksGeometricFibonacci,
+                    TrackedMetrics.RisksGeometricActivity => Enums.Enum_TrackedMetric_RisksGeometricActivity,
+                    TrackedMetrics.CostsDirect => Enums.Enum_TrackedMetric_CostsDirect,
+                    TrackedMetrics.CostsIndirect => Enums.Enum_TrackedMetric_CostsIndirect,
+                    TrackedMetrics.CostsOther => Enums.Enum_TrackedMetric_CostsOther,
+                    TrackedMetrics.CostsTotal => Enums.Enum_TrackedMetric_CostsTotal,
+                    TrackedMetrics.BillingsDirect => Enums.Enum_TrackedMetric_BillingsDirect,
+                    TrackedMetrics.BillingsIndirect => Enums.Enum_TrackedMetric_BillingsIndirect,
+                    TrackedMetrics.BillingsOther => Enums.Enum_TrackedMetric_BillingsOther,
+                    TrackedMetrics.BillingsTotal => Enums.Enum_TrackedMetric_BillingsTotal,
+                    TrackedMetrics.MarginsDirect => Enums.Enum_TrackedMetric_MarginsDirect,
+                    TrackedMetrics.MarginsIndirect => Enums.Enum_TrackedMetric_MarginsIndirect,
+                    TrackedMetrics.MarginsOther => Enums.Enum_TrackedMetric_MarginsOther,
+                    TrackedMetrics.MarginsTotal => Enums.Enum_TrackedMetric_MarginsTotal,
+                    TrackedMetrics.MarginsDirectAbsolute => Enums.Enum_TrackedMetric_MarginsDirectAbsolute,
+                    TrackedMetrics.MarginsIndirectAbsolute => Enums.Enum_TrackedMetric_MarginsIndirectAbsolute,
+                    TrackedMetrics.MarginsOtherAbsolute => Enums.Enum_TrackedMetric_MarginsOtherAbsolute,
+                    TrackedMetrics.MarginsTotalAbsolute => Enums.Enum_TrackedMetric_MarginsTotalAbsolute,
+                    TrackedMetrics.EffortsDirect => Enums.Enum_TrackedMetric_EffortsDirect,
+                    TrackedMetrics.EffortsIndirect => Enums.Enum_TrackedMetric_EffortsIndirect,
+                    TrackedMetrics.EffortsOther => Enums.Enum_TrackedMetric_EffortsOther,
+                    TrackedMetrics.EffortsTotal => Enums.Enum_TrackedMetric_EffortsTotal,
+                    TrackedMetrics.EffortsActivity => Enums.Enum_TrackedMetric_EffortsActivity,
+                    TrackedMetrics.EffortsEfficiency => Enums.Enum_TrackedMetric_EffortsEfficiency,
+                    TrackedMetrics.NetworkCyclomaticComplexity => Enums.Enum_TrackedMetric_NetworkCyclomaticComplexity,
+                    TrackedMetrics.NetworkDuration => Enums.Enum_TrackedMetric_NetworkDuration,
+                    TrackedMetrics.NetworkDurationManMonths => Enums.Enum_TrackedMetric_NetworkDurationManMonths,
+                    _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
+                });
     }
 }

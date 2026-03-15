@@ -609,4 +609,10 @@
   <data name="Label_UnknownNode" xml:space="preserve">
     <value>Unknown</value>
   </data>
+  <data name="Label_TrackedMetricXAxis" xml:space="preserve">
+    <value>X Axis Metric</value>
+  </data>
+  <data name="Label_TrackedMetricYAxis" xml:space="preserve">
+    <value>Y Axis Metric</value>
+  </data>
 </root>

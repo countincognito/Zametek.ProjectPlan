@@ -12,7 +12,9 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
-        //AllocationMode AllocationMode { get; set; }
+        TrackedMetrics TrackedMetricXAxis { get; set; }
+
+        TrackedMetrics TrackedMetricYAxis { get; set; }
 
         //ScheduleMode ScheduleMode { get; set; }
 

@@ -15,9 +15,7 @@ namespace Zametek.Contract.ProjectPlan
         bool ArrowGraphShowNames { get; set; }
 
 
-
         bool VertexGraphShowNames { get; set; }
-
 
 
         GroupByMode GanttChartGroupByMode { get; set; }

@@ -21,6 +21,10 @@
 
         public  SortDirection ProjectScenarioSortDirection { get; init; } = default;
 
+        public TrackedMetrics ScenarioChartTrackedMetricXAxis { get; init; } = default;
+
+        public TrackedMetrics ScenarioChartTrackedMetricYAxis { get; init; } = default;
+
         public string SelectedTheme { get; init; } = string.Empty;
     }
 }

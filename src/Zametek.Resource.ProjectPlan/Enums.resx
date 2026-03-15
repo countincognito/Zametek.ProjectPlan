@@ -180,4 +180,100 @@
   <data name="Enum_DisplayStyle_Block" xml:space="preserve">
     <value>Block</value>
   </data>
+  <data name="Enum_TrackedMetric_RisksCriticality" xml:space="preserve">
+    <value>Criticality Risk</value>
+  </data>
+  <data name="Enum_TrackedMetric_RisksFibonacci" xml:space="preserve">
+    <value>Fibonacci Risk</value>
+  </data>
+  <data name="Enum_TrackedMetric_RisksGeometricCriticality" xml:space="preserve">
+    <value>Geometric Criticality Risk</value>
+  </data>
+  <data name="Enum_TrackedMetric_RisksGeometricFibonacci" xml:space="preserve">
+    <value>Geometric Fibonacci Risk</value>
+  </data>
+  <data name="Enum_TrackedMetric_NetworkCyclomaticComplexity" xml:space="preserve">
+    <value>Cyclomatic Complexity</value>
+  </data>
+  <data name="Enum_TrackedMetric_NetworkDuration" xml:space="preserve">
+    <value>Duration (days)</value>
+  </data>
+  <data name="Enum_TrackedMetric_NetworkDurationManMonths" xml:space="preserve">
+    <value>Duration (months)</value>
+  </data>
+  <data name="Enum_TrackedMetric_EffortsActivity" xml:space="preserve">
+    <value>Activity Effort</value>
+  </data>
+  <data name="Enum_TrackedMetric_EffortsEfficiency" xml:space="preserve">
+    <value>Efficiency</value>
+  </data>
+  <data name="Enum_TrackedMetric_CostsDirect" xml:space="preserve">
+    <value>Direct Cost</value>
+  </data>
+  <data name="Enum_TrackedMetric_EffortsDirect" xml:space="preserve">
+    <value>Direct Effort</value>
+  </data>
+  <data name="Enum_TrackedMetric_MarginsDirect" xml:space="preserve">
+    <value>Direct Margin</value>
+  </data>
+  <data name="Enum_TrackedMetric_MarginsDirectAbsolute" xml:space="preserve">
+    <value>Direct Abs. Margin</value>
+  </data>
+  <data name="Enum_TrackedMetric_BillingsDirect" xml:space="preserve">
+    <value>Direct Billing</value>
+  </data>
+  <data name="Enum_TrackedMetric_CostsIndirect" xml:space="preserve">
+    <value>Indirect Cost</value>
+  </data>
+  <data name="Enum_TrackedMetric_EffortsIndirect" xml:space="preserve">
+    <value>Indirect Effort</value>
+  </data>
+  <data name="Enum_TrackedMetric_MarginsIndirect" xml:space="preserve">
+    <value>Indirect Margin</value>
+  </data>
+  <data name="Enum_TrackedMetric_MarginsIndirectAbsolute" xml:space="preserve">
+    <value>Indirect Abs. Margin</value>
+  </data>
+  <data name="Enum_TrackedMetric_BillingsIndirect" xml:space="preserve">
+    <value>Indirect Billing</value>
+  </data>
+  <data name="Enum_TrackedMetric_CostsOther" xml:space="preserve">
+    <value>Other Cost</value>
+  </data>
+  <data name="Enum_TrackedMetric_EffortsOther" xml:space="preserve">
+    <value>Other Effort</value>
+  </data>
+  <data name="Enum_TrackedMetric_MarginsOther" xml:space="preserve">
+    <value>Other Margin</value>
+  </data>
+  <data name="Enum_TrackedMetric_MarginsOtherAbsolute" xml:space="preserve">
+    <value>Other Abs. Margin</value>
+  </data>
+  <data name="Enum_TrackedMetric_BillingsOther" xml:space="preserve">
+    <value>Other Billing</value>
+  </data>
+  <data name="Enum_TrackedMetric_CostsTotal" xml:space="preserve">
+    <value>Total Cost</value>
+  </data>
+  <data name="Enum_TrackedMetric_EffortsTotal" xml:space="preserve">
+    <value>Total Effort</value>
+  </data>
+  <data name="Enum_TrackedMetric_MarginsTotal" xml:space="preserve">
+    <value>Total Margin</value>
+  </data>
+  <data name="Enum_TrackedMetric_MarginsTotalAbsolute" xml:space="preserve">
+    <value>Total Abs. Margin</value>
+  </data>
+  <data name="Enum_TrackedMetric_BillingsTotal" xml:space="preserve">
+    <value>Total Billing</value>
+  </data>
+  <data name="Enum_TrackedMetric_RisksGeometricActivity" xml:space="preserve">
+    <value>Geometric Activity Risk</value>
+  </data>
+  <data name="Enum_TrackedMetric_RisksActivityStdDevCorrection" xml:space="preserve">
+    <value>Activity Risk (with Std Dev)</value>
+  </data>
+  <data name="Enum_TrackedMetric_RisksActivity" xml:space="preserve">
+    <value>Activity Risk</value>
+  </data>
 </root>

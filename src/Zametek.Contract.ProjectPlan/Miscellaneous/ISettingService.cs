@@ -30,6 +30,10 @@ namespace Zametek.Contract.ProjectPlan
 
         SortDirection ProjectScenarioSortDirection { get; set; }
 
+        TrackedMetrics ScenarioChartTrackedMetricXAxis { get; set; }
+
+        TrackedMetrics ScenarioChartTrackedMetricYAxis { get; set; }
+
         string SelectedTheme { get; set; }
 
         bool IsTitleBoundToFilename { get; set; }
