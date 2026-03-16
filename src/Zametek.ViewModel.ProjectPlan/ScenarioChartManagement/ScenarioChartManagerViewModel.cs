@@ -1,11 +1,8 @@
 ﻿using Avalonia;
-using Avalonia.Input;
 using Avalonia.Threading;
-using com.sun.tools.javadoc;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
-using ScottPlot.Plottables;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Input;
@@ -229,9 +226,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // Gather the data points for the selected metrics.
-
-            var dataX = new List<double>();
-            var dataY = new List<double>();
 
             foreach (TrackedMetricsModel trackedMetrics in trackedMetricsSet.TrackedMetrics)
             {
