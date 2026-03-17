@@ -3,18 +3,7 @@ using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Data.ProjectPlan
 {
-    [Mapper(
-
-    //// Do not throw when a nullable source is mapped into a non-nullable target
-    //ThrowOnPropertyMappingNullMismatch = false,
-    //// Do not allow null to be assigned to target properties
-    //AllowNullPropertyAssignment = false
-
-
-        //ThrowOnMappingNullMismatch = false,              // for return values
-        //ThrowOnPropertyMappingNullMismatch = false//,      // for properties
-        ////AllowNullPropertyAssignment = false              // never assign null to target
-    )]
+    [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.None)]
     public partial class VersionMapper
     {
         // ---------------------------------------------------------------------
@@ -27,8 +16,6 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_1_0.ActivityModel FromCurrentToV0_1_0(ActivityModel src);
         public DateTime FromCurrentToV0_1_0(DateTimeOffset value)
             => value.LocalDateTime; // or .UtcDateTime / .DateTime depending on your semantics
-
-
 
         public partial ActivityModel FromV0_1_0ToCurrent(v0_1_0.ActivityModel src);
 
@@ -225,26 +212,9 @@ namespace Zametek.Data.ProjectPlan
         public v0_3_0.ResourceModel FromV0_2_1NullableToV0_3_0(v0_2_1.ResourceModel? src)
             => src is null ? new v0_3_0.ResourceModel() : FromV0_2_1ToV0_3_0(src);
 
-
-
-
-
         public partial v0_2_1.ResourceModel FromV0_3_0ToV0_2_1(v0_3_0.ResourceModel src);
 
-        //[MapProperty(
-        //    nameof(v0_2_1.ResourceScheduleModel.Resource),
-        //    nameof(v0_3_0.ResourceScheduleModel.Resource),
-        //    Use = nameof(FromV0_2_1NullableToV0_3_0AllowNull))]
         public partial v0_3_0.ResourceScheduleModel FromV0_2_1ToV0_3_0(v0_2_1.ResourceScheduleModel src);
-
-        //public v0_3_0.ResourceModel? FromV0_2_1NullableToV0_3_0AllowNull(v0_2_1.ResourceModel? src)
-        //    => src is null ? null : FromV0_2_1NullableToV0_3_0(src); // allow null pass-through here
-
-
-
-
-
-
         public partial v0_2_1.ResourceScheduleModel FromV0_3_0ToV0_2_1(v0_3_0.ResourceScheduleModel src);
 
 
@@ -513,12 +483,8 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_4_4.ActivityModel FromCurrentToV0_4_4(ActivityModel src);
         public partial ActivityModel FromV0_4_4ToCurrent(v0_4_4.ActivityModel src);
 
-
         public string FromV0_4_4ToCurrent(string? src)
             => src is null ? string.Empty : src;
-
-
-
 
         public partial v0_4_4.ActivityModel FromV0_4_0ToV0_4_4(v0_4_0.ActivityModel src);
         public partial v0_4_0.ActivityModel FromV0_4_4ToV0_4_0(v0_4_4.ActivityModel src);
@@ -659,8 +625,4 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_6_0.AppSettingsModel FromV0_4_4ToV0_6_0(v0_4_4.AppSettingsModel src);
         public partial v0_4_4.AppSettingsModel FromV0_6_0ToV0_4_4(v0_6_0.AppSettingsModel src);
     }
-
-
-
-
 }
