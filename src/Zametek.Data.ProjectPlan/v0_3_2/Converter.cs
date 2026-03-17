@@ -1,11 +1,9 @@
-﻿using AutoMapper;
-
-namespace Zametek.Data.ProjectPlan.v0_3_2
+﻿namespace Zametek.Data.ProjectPlan.v0_3_2
 {
     public static class Converter
     {
         public static ProjectModel Upgrade(
-            IMapper mapper,
+            VersionMapper mapper,
             v0_3_1.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(mapper);
@@ -14,12 +12,12 @@ namespace Zametek.Data.ProjectPlan.v0_3_2
             return new ProjectModel
             {
                 ProjectStart = project.ProjectStart,
-                DependentActivities = mapper.Map<List<v0_3_0.DependentActivityModel>, List<DependentActivityModel>>(project.DependentActivities),
+                DependentActivities = [.. project.DependentActivities.Select(mapper.FromV0_3_0ToV0_3_2)],
                 ArrowGraphSettings = project.ArrowGraphSettings ?? new v0_1_0.ArrowGraphSettingsModel(),
-                ResourceSettings = mapper.Map<v0_3_1.ResourceSettingsModel, ResourceSettingsModel>(project.ResourceSettings ?? new v0_3_1.ResourceSettingsModel()),
+                ResourceSettings = mapper.FromV0_3_1ToV0_3_2(project.ResourceSettings ?? new v0_3_1.ResourceSettingsModel()),
                 WorkStreamSettings = new WorkStreamSettingsModel(),
-                GraphCompilation = mapper.Map<v0_3_1.GraphCompilationModel, GraphCompilationModel>(project.GraphCompilation ?? new v0_3_1.GraphCompilationModel()),
-                ArrowGraph = mapper.Map<v0_3_0.ArrowGraphModel, ArrowGraphModel>(project.ArrowGraph ?? new v0_3_0.ArrowGraphModel()),
+                GraphCompilation = mapper.FromV0_3_1ToV0_3_2(project.GraphCompilation ?? new v0_3_1.GraphCompilationModel()),
+                ArrowGraph = mapper.FromV0_3_0ToV0_3_2(project.ArrowGraph ?? new v0_3_0.ArrowGraphModel()),
                 HasStaleOutputs = project.HasStaleOutputs,
             };
         }

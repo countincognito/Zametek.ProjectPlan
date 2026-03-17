@@ -1,12 +1,11 @@
-﻿using AutoMapper;
-using Zametek.Common.ProjectPlan;
+﻿using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Data.ProjectPlan.v0_5_0
 {
     public static class Converter
     {
         public static ProjectModel Upgrade(
-            IMapper mapper,
+            VersionMapper mapper,
             v0_4_4.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(mapper);
@@ -25,7 +24,7 @@ namespace Zametek.Data.ProjectPlan.v0_5_0
                 });
             }
 
-            var nodeTypeFormats = mapper.Map<List<Common.ProjectPlan.NodeTypeFormatModel>, List<NodeTypeFormatModel>>(DefaultFormatCollections.NodeTypeFormats);
+            List<NodeTypeFormatModel> nodeTypeFormats = [.. DefaultFormatCollections.NodeTypeFormats.Select(mapper.FromCurrentToV0_5_0)];
 
             GraphSettingsModel graphSettings = new()
             {
@@ -34,7 +33,7 @@ namespace Zametek.Data.ProjectPlan.v0_5_0
                 ActivitySeverities = activitySeverities,
             };
 
-            DisplaySettingsModel displaySettings = mapper.Map<v0_4_4.DisplaySettingsModel, DisplaySettingsModel>(project.DisplaySettings ?? new());
+            DisplaySettingsModel displaySettings = mapper.FromV0_4_4ToV0_5_0(project.DisplaySettings ?? new());
 
             return new ProjectModel
             {

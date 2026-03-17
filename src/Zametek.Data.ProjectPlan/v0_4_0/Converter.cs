@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Zametek.Resource.ProjectPlan;
+﻿using Zametek.Resource.ProjectPlan;
 
 namespace Zametek.Data.ProjectPlan.v0_4_0
 {
@@ -38,7 +37,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
                     x => x.Time.GetHashCode() + x.ResourceId.GetHashCode() + x.ActivityId.GetHashCode());
 
         public static ProjectModel Upgrade(
-            IMapper mapper,
+            VersionMapper mapper,
             v0_3_2.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(mapper);
@@ -47,13 +46,13 @@ namespace Zametek.Data.ProjectPlan.v0_4_0
             var output = new ProjectModel
             {
                 ProjectStart = project.ProjectStart,
-                DependentActivities = mapper.Map<List<v0_3_2.DependentActivityModel>, List<DependentActivityModel>>(project.DependentActivities),
+                DependentActivities = [.. project.DependentActivities.Select(mapper.FromV0_3_2ToV0_4_0)],
                 ArrowGraphSettings = project.ArrowGraphSettings ?? new v0_1_0.ArrowGraphSettingsModel(),
-                ResourceSettings = mapper.Map<v0_3_2.ResourceSettingsModel, ResourceSettingsModel>(project.ResourceSettings ?? new v0_3_2.ResourceSettingsModel()),
+                ResourceSettings = mapper.FromV0_3_2ToV0_4_0(project.ResourceSettings ?? new v0_3_2.ResourceSettingsModel()),
                 WorkStreamSettings = project.WorkStreamSettings ?? new v0_3_2.WorkStreamSettingsModel(),
                 DisplaySettings = new DisplaySettingsModel(),
-                GraphCompilation = mapper.Map<v0_3_2.GraphCompilationModel, GraphCompilationModel>(project.GraphCompilation ?? new v0_3_2.GraphCompilationModel()),
-                ArrowGraph = mapper.Map<v0_3_2.ArrowGraphModel, ArrowGraphModel>(project.ArrowGraph ?? new v0_3_2.ArrowGraphModel()),
+                GraphCompilation = mapper.FromV0_3_2ToV0_4_0(project.GraphCompilation ?? new v0_3_2.GraphCompilationModel()),
+                ArrowGraph = mapper.FromV0_3_2ToV0_4_0(project.ArrowGraph ?? new v0_3_2.ArrowGraphModel()),
                 HasStaleOutputs = project.HasStaleOutputs,
             };
 

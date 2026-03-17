@@ -2099,7 +2099,23 @@
         "FinishTime": 135
       },
       {
-        "Resource": null,
+        "Resource": {
+          "Id": 0,
+          "Name": null,
+          "IsExplicitTarget": false,
+          "IsInactive": false,
+          "InterActivityAllocationType": "None",
+          "InterActivityPhases": [],
+          "UnitCost": 0,
+          "DisplayOrder": 0,
+          "AllocationOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          }
+        },
         "ScheduledActivities": [
           {
             "Id": 15,
@@ -2169,7 +2185,23 @@
         "FinishTime": 135
       },
       {
-        "Resource": null,
+        "Resource": {
+          "Id": 0,
+          "Name": null,
+          "IsExplicitTarget": false,
+          "IsInactive": false,
+          "InterActivityAllocationType": "None",
+          "InterActivityPhases": [],
+          "UnitCost": 0,
+          "DisplayOrder": 0,
+          "AllocationOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          }
+        },
         "ScheduledActivities": [
           {
             "Id": 17,
@@ -2231,7 +2263,23 @@
         "FinishTime": 135
       },
       {
-        "Resource": null,
+        "Resource": {
+          "Id": 0,
+          "Name": null,
+          "IsExplicitTarget": false,
+          "IsInactive": false,
+          "InterActivityAllocationType": "None",
+          "InterActivityPhases": [],
+          "UnitCost": 0,
+          "DisplayOrder": 0,
+          "AllocationOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          }
+        },
         "ScheduledActivities": [
           {
             "Id": 24,
@@ -2261,7 +2309,23 @@
         "FinishTime": 135
       },
       {
-        "Resource": null,
+        "Resource": {
+          "Id": 0,
+          "Name": null,
+          "IsExplicitTarget": false,
+          "IsInactive": false,
+          "InterActivityAllocationType": "None",
+          "InterActivityPhases": [],
+          "UnitCost": 0,
+          "DisplayOrder": 0,
+          "AllocationOrder": 0,
+          "ColorFormat": {
+            "A": 0,
+            "R": 0,
+            "G": 0,
+            "B": 0
+          }
+        },
         "ScheduledActivities": [
           {
             "Id": 25,

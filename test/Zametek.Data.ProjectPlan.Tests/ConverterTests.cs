@@ -1,4 +1,3 @@
-using AutoMapper;
 using Newtonsoft.Json;
 using Shouldly;
 using System;
@@ -93,7 +92,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         {
             v0_2_0.ProjectModel? project_v0_2_0 = JsonConvert.DeserializeObject<v0_2_0.ProjectModel>(m_Fixture.V0_2_0_JsonString);
             v0_2_1.ProjectModel? project_v0_2_1 = JsonConvert.DeserializeObject<v0_2_1.ProjectModel>(m_Fixture.V0_2_1_JsonString);
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            var mapper = new VersionMapper();
             v0_2_1.ProjectModel project_v0_2_1_upgraded = v0_2_1.Converter.Upgrade(mapper, project_v0_2_0!);
             project_v0_2_1_upgraded.ShouldBeEquivalentTo(project_v0_2_1);
 
@@ -107,7 +106,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         {
             v0_2_1.ProjectModel? project_v0_2_1 = JsonConvert.DeserializeObject<v0_2_1.ProjectModel>(m_Fixture.V0_2_1_JsonString);
             v0_3_0.ProjectModel? project_v0_3_0 = JsonConvert.DeserializeObject<v0_3_0.ProjectModel>(m_Fixture.V0_3_0_JsonString);
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            var mapper = new VersionMapper();
             v0_3_0.ProjectModel project_v0_3_0_upgraded = v0_3_0.Converter.Upgrade(mapper, project_v0_2_1!);
             project_v0_3_0_upgraded.ShouldBeEquivalentTo(project_v0_3_0);
 
@@ -121,7 +120,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         {
             v0_3_0.ProjectModel? project_v0_3_0 = JsonConvert.DeserializeObject<v0_3_0.ProjectModel>(m_Fixture.V0_3_0_JsonString);
             v0_3_1.ProjectModel? project_v0_3_1 = JsonConvert.DeserializeObject<v0_3_1.ProjectModel>(m_Fixture.V0_3_1_JsonString);
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            var mapper = new VersionMapper();
             v0_3_1.ProjectModel project_v0_3_0_upgraded = v0_3_1.Converter.Upgrade(mapper, project_v0_3_0!);
             project_v0_3_0_upgraded.ShouldBeEquivalentTo(project_v0_3_1);
 
@@ -135,7 +134,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         {
             v0_3_1.ProjectModel? project_v0_3_1 = JsonConvert.DeserializeObject<v0_3_1.ProjectModel>(m_Fixture.V0_3_1_JsonString);
             v0_3_2.ProjectModel? project_v0_3_2 = JsonConvert.DeserializeObject<v0_3_2.ProjectModel>(m_Fixture.V0_3_2_JsonString);
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            var mapper = new VersionMapper();
             v0_3_2.ProjectModel project_v0_3_1_upgraded = v0_3_2.Converter.Upgrade(mapper, project_v0_3_1!);
             project_v0_3_1_upgraded.ShouldBeEquivalentTo(project_v0_3_2);
 
@@ -149,7 +148,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         {
             v0_3_2.ProjectModel? project_v0_3_2 = JsonConvert.DeserializeObject<v0_3_2.ProjectModel>(m_Fixture.V0_3_2a_JsonString);
             v0_4_0.ProjectModel? project_v0_4_0 = JsonConvert.DeserializeObject<v0_4_0.ProjectModel>(m_Fixture.V0_4_0a_JsonString);
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            var mapper = new VersionMapper();
             v0_4_0.ProjectModel project_v0_3_2_upgraded = v0_4_0.Converter.Upgrade(mapper, project_v0_3_2!);
             project_v0_3_2_upgraded.ShouldBeEquivalentTo(project_v0_4_0);
 
@@ -163,7 +162,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         {
             v0_4_0.ProjectModel? project_v0_4_0 = JsonConvert.DeserializeObject<v0_4_0.ProjectModel>(m_Fixture.V0_4_0b_JsonString);
             v0_4_1.ProjectModel? project_v0_4_1 = JsonConvert.DeserializeObject<v0_4_1.ProjectModel>(m_Fixture.V0_4_1b_JsonString);
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            var mapper = new VersionMapper();
             v0_4_1.ProjectModel project_v0_4_0_upgraded = v0_4_1.Converter.Upgrade(mapper, project_v0_4_0!);
             project_v0_4_0_upgraded.ShouldBeEquivalentTo(project_v0_4_1);
 
@@ -177,7 +176,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         {
             v0_4_1.ProjectModel? project_v0_4_1 = JsonConvert.DeserializeObject<v0_4_1.ProjectModel>(m_Fixture.V0_4_1c_JsonString);
             v0_4_2.ProjectModel? project_v0_4_2 = JsonConvert.DeserializeObject<v0_4_2.ProjectModel>(m_Fixture.V0_4_2c_JsonString);
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            var mapper = new VersionMapper();
             v0_4_2.ProjectModel project_v0_4_1_upgraded = v0_4_2.Converter.Upgrade(mapper, project_v0_4_1!);
             project_v0_4_1_upgraded.ShouldBeEquivalentTo(project_v0_4_2);
 
@@ -191,7 +190,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         {
             v0_4_2.ProjectModel? project_v0_4_2 = JsonConvert.DeserializeObject<v0_4_2.ProjectModel>(m_Fixture.V0_4_2d_JsonString);
             v0_4_3.ProjectModel? project_v0_4_3 = JsonConvert.DeserializeObject<v0_4_3.ProjectModel>(m_Fixture.V0_4_3d_JsonString);
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            var mapper = new VersionMapper();
             v0_4_3.ProjectModel project_v0_4_2_upgraded = v0_4_3.Converter.Upgrade(mapper, project_v0_4_2!);
             project_v0_4_2_upgraded.ShouldBeEquivalentTo(project_v0_4_3);
 
@@ -205,7 +204,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         {
             v0_4_3.ProjectModel? project_v0_4_3 = JsonConvert.DeserializeObject<v0_4_3.ProjectModel>(m_Fixture.V0_4_3d_JsonString);
             v0_4_4.ProjectModel? project_v0_4_4 = JsonConvert.DeserializeObject<v0_4_4.ProjectModel>(m_Fixture.V0_4_4d_JsonString);
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            var mapper = new VersionMapper();
             v0_4_4.ProjectModel project_v0_4_3_upgraded = v0_4_4.Converter.Upgrade(mapper, project_v0_4_3!);
             project_v0_4_3_upgraded.ShouldBeEquivalentTo(project_v0_4_4);
 
@@ -219,7 +218,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         {
             v0_4_4.ProjectModel? project_v0_4_4 = JsonConvert.DeserializeObject<v0_4_4.ProjectModel>(m_Fixture.V0_4_4d_JsonString);
             v0_5_0.ProjectModel? project_v0_5_0 = JsonConvert.DeserializeObject<v0_5_0.ProjectModel>(m_Fixture.V0_5_0_JsonString);
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            var mapper = new VersionMapper();
             v0_5_0.ProjectModel project_v0_4_4_upgraded = v0_5_0.Converter.Upgrade(mapper, project_v0_4_4!);
             project_v0_4_4_upgraded.ShouldBeEquivalentTo(project_v0_5_0);
 
@@ -233,7 +232,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         {
             v0_5_0.ProjectModel? project_v0_5_0 = JsonConvert.DeserializeObject<v0_5_0.ProjectModel>(m_Fixture.V0_5_0_JsonString);
             v0_6_0.ProjectModel? project_v0_6_0 = JsonConvert.DeserializeObject<v0_6_0.ProjectModel>(m_Fixture.V0_6_0_JsonString);
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile<MapperProfile>()).CreateMapper();
+            var mapper = new VersionMapper();
             v0_6_0.ProjectModel project_v0_5_0_upgraded = v0_6_0.Converter.Upgrade(mapper, m_LocalNow, project_v0_5_0!);
             //project_v0_5_0_upgraded.ShouldBeEquivalentTo(project_v0_6_0);
 

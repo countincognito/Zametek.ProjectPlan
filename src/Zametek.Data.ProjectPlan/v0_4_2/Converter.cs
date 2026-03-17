@@ -1,11 +1,9 @@
-﻿using AutoMapper;
-
-namespace Zametek.Data.ProjectPlan.v0_4_2
+﻿namespace Zametek.Data.ProjectPlan.v0_4_2
 {
     public static class Converter
     {
         public static ProjectModel Upgrade(
-            IMapper mapper,
+            VersionMapper mapper,
             v0_4_1.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(mapper);
@@ -15,12 +13,12 @@ namespace Zametek.Data.ProjectPlan.v0_4_2
             {
                 ProjectStart = project.ProjectStart,
                 Today = project.ProjectStart,
-                DependentActivities = mapper.Map<List<v0_4_0.DependentActivityModel>, List<DependentActivityModel>>(project.DependentActivities),
+                DependentActivities = [.. project.DependentActivities.Select(mapper.FromV0_4_0ToV0_4_2)],
                 ArrowGraphSettings = project.ArrowGraphSettings ?? new(),
                 ResourceSettings = project.ResourceSettings ?? new(),
                 WorkStreamSettings = project.WorkStreamSettings ?? new(),
                 DisplaySettings = project.DisplaySettings ?? new(),
-                GraphCompilation = mapper.Map<v0_4_0.GraphCompilationModel, GraphCompilationModel>(project.GraphCompilation ?? new v0_4_0.GraphCompilationModel()),
+                GraphCompilation = mapper.FromV0_4_0ToV0_4_2(project.GraphCompilation ?? new v0_4_0.GraphCompilationModel()),
                 ArrowGraph = project.ArrowGraph ?? new(),
                 HasStaleOutputs = project.HasStaleOutputs,
             };

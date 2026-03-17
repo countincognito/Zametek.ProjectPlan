@@ -1,18 +1,16 @@
-﻿using AutoMapper;
-
-namespace Zametek.Data.ProjectPlan.v0_4_4
+﻿namespace Zametek.Data.ProjectPlan.v0_4_4
 {
     public static class Converter
     {
         public static ProjectModel Upgrade(
-            IMapper mapper,
+            VersionMapper mapper,
             v0_4_3.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(project);
 
-            List<DependentActivityModel> activities = mapper.Map<List<v0_4_3.DependentActivityModel>, List<DependentActivityModel>>(project.DependentActivities);
-            GraphCompilationModel graphCompilation = mapper.Map<v0_4_3.GraphCompilationModel, GraphCompilationModel>(project.GraphCompilation ?? new v0_4_3.GraphCompilationModel());
+            List<DependentActivityModel> activities = [.. project.DependentActivities.Select(mapper.FromV0_4_3ToV0_4_4)];
+            GraphCompilationModel graphCompilation = mapper.FromV0_4_3ToV0_4_4(project.GraphCompilation ?? new v0_4_3.GraphCompilationModel());
 
             List<ResourceScheduleModel> resourceSchedules = [];
 
@@ -29,7 +27,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
 
             graphCompilation = graphCompilation with { ResourceSchedules = resourceSchedules };
 
-            ResourceSettingsModel resourceSettings = mapper.Map<v0_4_0.ResourceSettingsModel, ResourceSettingsModel>(project.ResourceSettings ?? new v0_4_0.ResourceSettingsModel());
+            ResourceSettingsModel resourceSettings = mapper.FromV0_4_0ToV0_4_4(project.ResourceSettings ?? new v0_4_0.ResourceSettingsModel());
 
             List<ResourceModel> resources = [];
 
@@ -46,7 +44,7 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
                 Resources = resources,
             };
 
-            DisplaySettingsModel displaySettings = mapper.Map<v0_4_1.DisplaySettingsModel, DisplaySettingsModel>(project.DisplaySettings ?? new());
+            DisplaySettingsModel displaySettings = mapper.FromV0_4_1ToV0_4_4(project.DisplaySettings ?? new());
 
             return new ProjectModel
             {
@@ -64,10 +62,10 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
         }
 
         public static AppSettingsModel Upgrade(
-            IMapper mapper,
+            VersionMapper mapper,
             v0_4_1.AppSettingsModel appSettingsModel)
         {
-            AppSettingsModel appSettings = mapper.Map<v0_4_1.AppSettingsModel, AppSettingsModel>(appSettingsModel);
+            AppSettingsModel appSettings = mapper.FromV0_4_1ToV0_4_4(appSettingsModel);
             return appSettings;
         }
     }

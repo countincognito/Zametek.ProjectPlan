@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 
 namespace Zametek.Data.ProjectPlan.v0_3_0
@@ -7,7 +6,7 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
     public static class Converter
     {
         public static ProjectModel Upgrade(
-            IMapper mapper,
+            VersionMapper mapper,
             v0_2_1.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(mapper);
@@ -58,18 +57,18 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
             return new ProjectModel
             {
                 ProjectStart = project.ProjectStart,
-                DependentActivities = mapper.Map<List<v0_2_1.DependentActivityModel>, List<DependentActivityModel>>(project.DependentActivities),
+                DependentActivities = [.. project.DependentActivities.Select(mapper.FromV0_2_1ToV0_3_0)],
                 ArrowGraphSettings = project.ArrowGraphSettings ?? new v0_1_0.ArrowGraphSettingsModel(),
                 ResourceSettings = project.ResourceSettings ?? new v0_1_0.ResourceSettingsModel(),
                 GraphCompilation = new GraphCompilationModel
                 {
-                    DependentActivities = mapper.Map<List<v0_2_1.DependentActivityModel>, List<DependentActivityModel>>(project.GraphCompilation?.DependentActivities ?? []),
-                    ResourceSchedules = mapper.Map<List<v0_2_1.ResourceScheduleModel>, List<ResourceScheduleModel>>(project.GraphCompilation?.ResourceSchedules ?? []),
+                    DependentActivities = [.. (project.GraphCompilation?.DependentActivities ?? []).Select(mapper.FromV0_2_1ToV0_3_0)],
+                    ResourceSchedules = [.. (project.GraphCompilation?.ResourceSchedules ?? []).Select(mapper.FromV0_2_1ToV0_3_0)],
                     CompilationErrors = compilationErrors,
                     CyclomaticComplexity = project.GraphCompilation?.CyclomaticComplexity ?? default,
                     Duration = project.GraphCompilation?.Duration ?? default,
                 },
-                ArrowGraph = mapper.Map<v0_2_1.ArrowGraphModel, ArrowGraphModel>(project.ArrowGraph ?? new v0_2_1.ArrowGraphModel()),
+                ArrowGraph = mapper.FromV0_2_1ToV0_3_0(project.ArrowGraph ?? new v0_2_1.ArrowGraphModel()),
                 HasStaleOutputs = project.HasStaleOutputs,
             };
         }

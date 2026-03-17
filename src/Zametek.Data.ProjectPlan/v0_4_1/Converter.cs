@@ -1,11 +1,9 @@
-﻿using AutoMapper;
-
-namespace Zametek.Data.ProjectPlan.v0_4_1
+﻿namespace Zametek.Data.ProjectPlan.v0_4_1
 {
     public static class Converter
     {
         public static ProjectModel Upgrade(
-            IMapper mapper,
+            VersionMapper mapper,
             v0_4_0.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(mapper);

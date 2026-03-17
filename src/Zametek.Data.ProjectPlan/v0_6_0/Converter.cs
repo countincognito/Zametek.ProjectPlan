@@ -1,12 +1,11 @@
-﻿using AutoMapper;
-using Zametek.Common.ProjectPlan;
+﻿using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Data.ProjectPlan.v0_6_0
 {
     public static class Converter
     {
         public static ProjectModel Upgrade(
-            IMapper mapper,
+            VersionMapper mapper,
             DateTimeOffset localNow,
             v0_5_0.ProjectModel project)
         {
@@ -40,7 +39,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                     new ProjectScenarioFileModel
                     {
                         NodeId = scenarioId,
-                        Scenario = mapper.Map<v0_5_0.ProjectModel, ProjectScenarioModel>(project),
+                        Scenario = mapper.FromV0_5_0ToV0_6_0(project),
                     },
                 ],
                 Tags =
@@ -60,7 +59,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
         }
 
         public static AppSettingsModel Upgrade(
-            IMapper mapper,
+            VersionMapper mapper,
             v0_4_4.AppSettingsModel appSettingsModel)
         {
             return new AppSettingsModel
