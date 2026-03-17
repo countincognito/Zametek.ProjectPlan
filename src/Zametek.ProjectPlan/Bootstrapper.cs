@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Dock.Model.Core;
+﻿using Dock.Model.Core;
 using Splat;
 using System;
 using Zametek.Contract.ProjectPlan;
@@ -67,15 +66,9 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<ScenarioChartManagerView>();
             SplatRegistrations.RegisterLazySingleton<MainView>();
 
-            var config = new MapperConfiguration(cfg =>
-            {
-                cfg.AddProfile<Data.ProjectPlan.MapperProfile>();
-                cfg.AddProfile<ViewModel.ProjectPlan.MapperProfile>();
-                cfg.AddProfile<View.ProjectPlan.MapperProfile>();
-            });
-            IMapper mapper = config.CreateMapper();
-
-            SplatRegistrations.RegisterConstant(mapper);
+            SplatRegistrations.RegisterConstant(new Data.ProjectPlan.VersionMapper());
+            SplatRegistrations.RegisterConstant(new ViewModel.ProjectPlan.ProjectPlanMapper());
+            SplatRegistrations.RegisterConstant(new View.ProjectPlan.ProjectPlanMapper());
         }
     }
 }

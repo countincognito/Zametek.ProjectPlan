@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using ReactiveUI;
+﻿using ReactiveUI;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -15,7 +14,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IDialogService m_DialogService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
-        private readonly IMapper m_Mapper;
+        private readonly ProjectPlanMapper m_Mapper;
 
         #endregion
 
@@ -25,7 +24,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator,
-            IMapper mapper)
+            ProjectPlanMapper mapper)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(dialogService);

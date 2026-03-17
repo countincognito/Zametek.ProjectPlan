@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using DynamicData;
+﻿using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.ObjectModel;
@@ -29,7 +28,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IProjectScenarioFileExport m_ProjectScenarioFileExport;
         private readonly ISettingService m_SettingService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
-        private readonly IMapper m_Mapper;
+        private readonly ProjectPlanMapper m_Mapper;
 
         private readonly IDisposable? m_ReadOnlyActivitiesSub;
         private readonly IDisposable? m_NetworkMetricsSub;
@@ -51,7 +50,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IProjectScenarioFileExport projectScenarioFileExport,
             ISettingService settingService,
             IDateTimeCalculator dateTimeCalculator,
-            IMapper mapper)
+            ProjectPlanMapper mapper)
         {
             ArgumentNullException.ThrowIfNull(projectScenarioFileImport);
             ArgumentNullException.ThrowIfNull(projectScenarioFileExport);
@@ -1839,7 +1838,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    var graphCompilation = m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity>, GraphCompilationModel>(GraphCompilation);
+                    var graphCompilation = m_Mapper.ToGraphCompilationModel(GraphCompilation);
 
                     // Default display mode is required for all file opening and closing.
                     DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
@@ -1849,7 +1848,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         ProjectStart = ProjectStart,
                         Today = Today,
-                        DependentActivities = m_Mapper.Map<List<DependentActivityModel>>(RawActivities),
+                        DependentActivities = [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToDependentActivityModel)],
                         GraphSettings = GraphSettings.CloneObject(),
                         ResourceSettings = ResourceSettings.CloneObject(),
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),
@@ -1920,7 +1919,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             var activity = new ManagedActivityViewModel(
                                 this,
-                                m_Mapper.Map<DependentActivityModel, DependentActivity>(dependentActivity),
+                                m_Mapper.ToDependentActivity(dependentActivity),
                                 m_DateTimeCalculator,
                                 m_VertexGraphCompiler,
                                 ProjectStart,
@@ -2158,13 +2157,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     var availableResources = new List<IResource<int, int>>();
                     if (!ResourceSettings.AreDisabled)
                     {
-                        availableResources.AddRange(m_Mapper.Map<IEnumerable<ResourceModel>, IEnumerable<Resource<int, int>>>(ResourceSettings.Resources));
+                        availableResources.AddRange(ResourceSettings.Resources.Select(m_Mapper.ToResource));
                     }
 
                     var workStreams = new List<IWorkStream<int>>();
-                    workStreams.AddRange(m_Mapper.Map<IEnumerable<WorkStreamModel>, IEnumerable<WorkStream<int>>>(WorkStreamSettings.WorkStreams));
+                    workStreams.AddRange(WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream));
 
-                    var graphCompilation = m_VertexGraphCompiler.Compile(availableResources, workStreams);
+                    IGraphCompilation<int, int, int, IDependentActivity> graphCompilation = m_VertexGraphCompiler.Compile(availableResources, workStreams);
                     HasCompilationErrors = graphCompilation.CompilationErrors.Any();
                     GraphCompilation = graphCompilation;
 
@@ -2241,7 +2240,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         arrowGraphCompiler.Compile();
                         Graph<int, IDependentActivity, IEvent<int>>? arrowGraph =
                             arrowGraphCompiler.ToGraph() ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotBuildArrowGraph);
-                        ArrowGraph = m_Mapper.Map<Graph<int, IDependentActivity, IEvent<int>>, ArrowGraphModel>(arrowGraph);
+                        ArrowGraph = m_Mapper.ToArrowGraphModel(arrowGraph);
                     }
                 }
             }
@@ -2263,11 +2262,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         var availableResources = new List<IResource<int, int>>();
                         if (!ResourceSettings.AreDisabled)
                         {
-                            availableResources.AddRange(m_Mapper.Map<IEnumerable<ResourceModel>, IEnumerable<Resource<int, int>>>(ResourceSettings.Resources));
+                            availableResources.AddRange(ResourceSettings.Resources.Select(m_Mapper.ToResource));
                         }
 
                         var workStreams = new List<IWorkStream<int>>();
-                        workStreams.AddRange(m_Mapper.Map<IEnumerable<WorkStreamModel>, IEnumerable<WorkStream<int>>>(WorkStreamSettings.WorkStreams));
+                        workStreams.AddRange(WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream));
 
                         var vertexGraphCompiler = new VertexGraphCompiler();
                         foreach (IDependentActivity dependentActivity in dependentActivities)
@@ -2282,7 +2281,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         Graph<int, IEvent<int>, IDependentActivity>? vertexGraph =
                             vertexGraphCompiler.ToGraph() ?? throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotBuildArrowGraph);
-                        VertexGraph = m_Mapper.Map<Graph<int, IEvent<int>, IDependentActivity>, VertexGraphModel>(vertexGraph);
+                        VertexGraph = m_Mapper.ToVertexGraphModel(vertexGraph);
                     }
                 }
             }
@@ -2298,7 +2297,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 //{
 
                 IList<ResourceScheduleModel> resourceScheduleModels =
-                    m_Mapper.Map<IGraphCompilation<int, int, int, IDependentActivity>, IList<ResourceScheduleModel>>(GraphCompilation);
+                    [.. m_Mapper.ToResourceScheduleModels(GraphCompilation)];
 
                 resourceSeriesSet = CalculateResourceSeriesSet(
                     resourceScheduleModels,
@@ -2318,7 +2317,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 //if (!HasCompilationErrors)
                 //{
                 // TODO fix this mapping
-                IList<ActivityModel> activityModels = m_Mapper.Map<List<ActivityModel>>(RawActivities);
+                IList<ActivityModel> activityModels = [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToActivityModel)];
                 trackingSeriesSet = CalculateTrackingSeriesSet(activityModels, ResourceSettings, HasResources);
                 //}
 
@@ -2367,9 +2366,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     if (!HasCompilationErrors)
                     {
-                        IEnumerable<ActivityModel> activities =
-                            m_Mapper.Map<IEnumerable<IActivity<int, int, int>>, IList<ActivityModel>>(
-                                dependentActivities.Where(x => !x.IsDummy).Select(x => (IActivity<int, int, int>)x));
+                        IEnumerable<ActivityModel> activities = dependentActivities
+                            .Where(x => !x.IsDummy)
+                            .Cast<DependentActivity<int, int, int>>()
+                            .Select(m_Mapper.ToActivityModel);
 
                         IEnumerable<ActivitySeverityModel> activitySeverities = GraphSettings.ActivitySeverities;
 

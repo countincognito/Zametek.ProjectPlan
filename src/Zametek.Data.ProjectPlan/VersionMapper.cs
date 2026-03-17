@@ -6,15 +6,26 @@ namespace Zametek.Data.ProjectPlan
     [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.None)]
     public partial class VersionMapper
     {
+        public static string FromNullableStringToEmpty(string? src)
+            => src is null ? string.Empty : src;
+
         // ---------------------------------------------------------------------
         // v0.1.0 <-> Current
         // ---------------------------------------------------------------------
 
         public partial v0_1_0.ActivityEdgeModel FromCurrentToV0_1_0(ActivityEdgeModel src);
+
+        [MapProperty(
+            nameof(v0_1_0.ActivityEdgeModel.Content),
+            nameof(ActivityEdgeModel.Content),
+            Use = nameof(ActivityModelFromV0_1_0ToCurrentDisallowNull))]
         public partial ActivityEdgeModel FromV0_1_0ToCurrent(v0_1_0.ActivityEdgeModel src);
 
+        public ActivityModel ActivityModelFromV0_1_0ToCurrentDisallowNull(v0_1_0.ActivityModel? src)
+            => src is null ? new() : FromV0_1_0ToCurrent(src);
+
         public partial v0_1_0.ActivityModel FromCurrentToV0_1_0(ActivityModel src);
-        public DateTime FromCurrentToV0_1_0(DateTimeOffset value)
+        public static DateTime FromCurrentToV0_1_0(DateTimeOffset value)
             => value.LocalDateTime; // or .UtcDateTime / .DateTime depending on your semantics
 
         public partial ActivityModel FromV0_1_0ToCurrent(v0_1_0.ActivityModel src);
@@ -44,7 +55,15 @@ namespace Zametek.Data.ProjectPlan
         public partial EdgeWeightStyle FromV0_1_0ToCurrent(v0_1_0.EdgeWeightStyle src);
 
         public partial v0_1_0.EventEdgeModel FromCurrentToV0_1_0(EventEdgeModel src);
+
+        [MapProperty(
+            nameof(v0_1_0.EventEdgeModel.Content),
+            nameof(EventEdgeModel.Content),
+            Use = nameof(EventModelFromV0_1_0ToCurrentDisallowNull))]
         public partial EventEdgeModel FromV0_1_0ToCurrent(v0_1_0.EventEdgeModel src);
+
+        public EventModel EventModelFromV0_1_0ToCurrentDisallowNull(v0_1_0.EventModel? src)
+            => src is null ? new() : FromV0_1_0ToCurrent(src);
 
         public partial v0_1_0.EventModel FromCurrentToV0_1_0(EventModel src);
         public partial EventModel FromV0_1_0ToCurrent(v0_1_0.EventModel src);
@@ -59,10 +78,26 @@ namespace Zametek.Data.ProjectPlan
         public partial VertexGraphModel FromV0_1_0ToCurrent(v0_1_0.VertexGraphModel src);
 
         public partial v0_1_0.ResourceModel FromCurrentToV0_1_0(ResourceModel src);
+
+        [MapProperty(
+            nameof(v0_1_0.ResourceModel.ColorFormat),
+            nameof(ResourceModel.ColorFormat),
+            Use = nameof(ColorFormatModelFromV0_1_0ToCurrentDisallowNull))]
         public partial ResourceModel FromV0_1_0ToCurrent(v0_1_0.ResourceModel src);
 
+        public ColorFormatModel ColorFormatModelFromV0_1_0ToCurrentDisallowNull(v0_1_0.ColorFormatModel? src)
+            => src is null ? new() : FromV0_1_0ToCurrent(src);
+
         public partial v0_1_0.ResourceScheduleModel FromCurrentToV0_1_0(ResourceScheduleModel src);
+
+        [MapProperty(
+            nameof(v0_1_0.ResourceScheduleModel.Resource),
+            nameof(ResourceScheduleModel.Resource),
+            Use = nameof(ResourceModelFromV0_1_0ToCurrentDisallowNull))]
         public partial ResourceScheduleModel FromV0_1_0ToCurrent(v0_1_0.ResourceScheduleModel src);
+
+        public ResourceModel ResourceModelFromV0_1_0ToCurrentDisallowNull(v0_1_0.ResourceModel? src)
+            => src is null ? new() : FromV0_1_0ToCurrent(src);
 
         public partial v0_1_0.ActivitySeverityModel FromCurrentToV0_1_0(ActivitySeverityModel src);
         public partial ActivitySeverityModel FromV0_1_0ToCurrent(v0_1_0.ActivitySeverityModel src);
@@ -79,7 +114,15 @@ namespace Zametek.Data.ProjectPlan
         // ---------------------------------------------------------------------
 
         public partial v0_2_1.ActivityEdgeModel FromCurrentToV0_2_1(ActivityEdgeModel src);
+
+        [MapProperty(
+            nameof(v0_2_1.ActivityEdgeModel.Content),
+            nameof(ActivityEdgeModel.Content),
+            Use = nameof(ActivityModelFromV0_2_1ToCurrentDisallowNull))]
         public partial ActivityEdgeModel FromV0_2_1ToCurrent(v0_2_1.ActivityEdgeModel src);
+
+        public ActivityModel ActivityModelFromV0_2_1ToCurrentDisallowNull(v0_2_1.ActivityModel? src)
+            => src is null ? new() : FromV0_2_1ToCurrent(src);
 
         public partial v0_2_1.ActivityModel FromCurrentToV0_2_1(ActivityModel src);
         public partial ActivityModel FromV0_2_1ToCurrent(v0_2_1.ActivityModel src);
@@ -106,8 +149,15 @@ namespace Zametek.Data.ProjectPlan
         public partial ResourceModel FromV0_2_1ToCurrent(v0_2_1.ResourceModel src);
 
         public partial v0_2_1.ResourceScheduleModel FromCurrentToV0_2_1(ResourceScheduleModel src);
+
+        [MapProperty(
+            nameof(v0_2_1.ResourceScheduleModel.Resource),
+            nameof(ResourceScheduleModel.Resource),
+            Use = nameof(ResourceModelFromV0_2_1ToCurrentDisallowNull))]
         public partial ResourceScheduleModel FromV0_2_1ToCurrent(v0_2_1.ResourceScheduleModel src);
 
+        public ResourceModel ResourceModelFromV0_2_1ToCurrentDisallowNull(v0_2_1.ResourceModel? src)
+            => src is null ? new() : FromV0_2_1ToCurrent(src);
 
         // ---------------------------------------------------------------------
         // v0.1.0 <-> v0.2.1
@@ -181,15 +231,23 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_3_0.ResourceScheduleModel FromCurrentToV0_3_0(ResourceScheduleModel src);
         public partial ResourceScheduleModel FromV0_3_0ToCurrent(v0_3_0.ResourceScheduleModel src);
 
-        public partial v0_3_0.ProjectModel FromCurrentToV0_3_0(ProjectModel src);
-        public partial ProjectModel FromV0_3_0ToCurrent(v0_3_0.ProjectModel src);
+        public partial v0_3_0.ProjectModel FromCurrentToV0_3_0(ProjectScenarioModel src);
+        public partial ProjectScenarioModel FromV0_3_0ToCurrent(v0_3_0.ProjectModel src);
 
 
         // ---------------------------------------------------------------------
         // v0.2.1 <-> v0.3.0
         // ---------------------------------------------------------------------
 
+        [MapProperty(
+            nameof(v0_2_1.ActivityEdgeModel.Content),
+            nameof(v0_3_0.ActivityEdgeModel.Content),
+            Use = nameof(ActivityModelFromV0_2_1ToV0_3_0DisallowNull))]
         public partial v0_3_0.ActivityEdgeModel FromV0_2_1ToV0_3_0(v0_2_1.ActivityEdgeModel src);
+
+        public v0_3_0.ActivityModel ActivityModelFromV0_2_1ToV0_3_0DisallowNull(v0_2_1.ActivityModel? src)
+            => src is null ? new() : FromV0_2_1ToV0_3_0(src);
+
         public partial v0_2_1.ActivityEdgeModel FromV0_3_0ToV0_2_1(v0_3_0.ActivityEdgeModel src);
 
         public partial v0_3_0.ActivityNodeModel FromV0_2_1ToV0_3_0(v0_2_1.ActivityNodeModel src);
@@ -202,15 +260,21 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_2_1.DependentActivityModel FromV0_3_0ToV0_2_1(v0_3_0.DependentActivityModel src);
 
         public partial v0_3_0.ArrowGraphModel FromV0_2_1ToV0_3_0(v0_2_1.ArrowGraphModel src);
+
+        public partial v0_3_0.EventNodeModel FromV0_1_0ToV0_3_0(v0_1_0.EventNodeModel src);
+
+        public v0_3_0.EventNodeModel FromV0_1_0NullableToV0_3_0(v0_1_0.EventNodeModel? src)
+            => src is null ? new() : FromV0_1_0ToV0_3_0(src);
+
         public partial v0_2_1.ArrowGraphModel FromV0_3_0ToV0_2_1(v0_3_0.ArrowGraphModel src);
 
         public partial v0_3_0.ResourceModel FromV0_2_1ToV0_3_0(v0_2_1.ResourceModel src);
 
-        public v0_1_0.ColorFormatModel FromV0_2_1ToV0_3_0(v0_1_0.ColorFormatModel? src)
-            => src is null ? new v0_1_0.ColorFormatModel() : src;
+        public static v0_1_0.ColorFormatModel FromV0_2_1ToV0_3_0(v0_1_0.ColorFormatModel? src)
+            => src is null ? new() : src;
 
         public v0_3_0.ResourceModel FromV0_2_1NullableToV0_3_0(v0_2_1.ResourceModel? src)
-            => src is null ? new v0_3_0.ResourceModel() : FromV0_2_1ToV0_3_0(src);
+            => src is null ? new() : FromV0_2_1ToV0_3_0(src);
 
         public partial v0_2_1.ResourceModel FromV0_3_0ToV0_2_1(v0_3_0.ResourceModel src);
 
@@ -249,8 +313,8 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_3_1.ResourceSettingsModel FromV0_1_0ToV0_3_1(v0_1_0.ResourceSettingsModel src);
         public partial v0_1_0.ResourceSettingsModel FromV0_3_1ToV0_1_0(v0_3_1.ResourceSettingsModel src);
 
-        public partial v0_3_1.ProjectModel FromCurrentToV0_3_1(ProjectModel src);
-        public partial ProjectModel FromV0_3_1ToCurrent(v0_3_1.ProjectModel src);
+        public partial v0_3_1.ProjectModel FromCurrentToV0_3_1(ProjectScenarioModel src);
+        public partial ProjectScenarioModel FromV0_3_1ToCurrent(v0_3_1.ProjectModel src);
 
 
         // ---------------------------------------------------------------------
@@ -317,8 +381,8 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_3_2.WorkStreamSettingsModel FromCurrentToV0_3_2(WorkStreamSettingsModel src);
         public partial WorkStreamSettingsModel FromV0_3_2ToCurrent(v0_3_2.WorkStreamSettingsModel src);
 
-        public partial v0_3_2.ProjectModel FromCurrentToV0_3_2(ProjectModel src);
-        public partial ProjectModel FromV0_3_2ToCurrent(v0_3_2.ProjectModel src);
+        public partial v0_3_2.ProjectModel FromCurrentToV0_3_2(ProjectScenarioModel src);
+        public partial ProjectScenarioModel FromV0_3_2ToCurrent(v0_3_2.ProjectModel src);
 
 
         // ---------------------------------------------------------------------
@@ -400,8 +464,8 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_4_0.DisplaySettingsModel FromCurrentToV0_4_0(DisplaySettingsModel src);
         public partial DisplaySettingsModel FromV0_4_0ToCurrent(v0_4_0.DisplaySettingsModel src);
 
-        public partial v0_4_0.ProjectModel FromCurrentToV0_4_0(ProjectModel src);
-        public partial ProjectModel FromV0_4_0ToCurrent(v0_4_0.ProjectModel src);
+        public partial v0_4_0.ProjectModel FromCurrentToV0_4_0(ProjectScenarioModel src);
+        public partial ProjectScenarioModel FromV0_4_0ToCurrent(v0_4_0.ProjectModel src);
 
 
         // ---------------------------------------------------------------------
@@ -414,8 +478,8 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_4_1.DisplaySettingsModel FromV0_4_0ToV0_4_1(v0_4_0.DisplaySettingsModel src);
         public partial v0_4_0.DisplaySettingsModel FromV0_4_1ToV0_4_0(v0_4_1.DisplaySettingsModel src);
 
-        public partial v0_4_1.ProjectModel FromCurrentToV0_4_1(ProjectModel src);
-        public partial ProjectModel FromV0_4_1ToCurrent(v0_4_1.ProjectModel src);
+        public partial v0_4_1.ProjectModel FromCurrentToV0_4_1(ProjectScenarioModel src);
+        public partial ProjectScenarioModel FromV0_4_1ToCurrent(v0_4_1.ProjectModel src);
 
         public partial v0_4_1.ProjectModel FromV0_4_0ToV0_4_1(v0_4_0.ProjectModel src);
         public partial v0_4_0.ProjectModel FromV0_4_1ToV0_4_0(v0_4_1.ProjectModel src);
@@ -440,8 +504,8 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_4_2.GraphCompilationModel FromV0_4_0ToV0_4_2(v0_4_0.GraphCompilationModel src);
         public partial v0_4_0.GraphCompilationModel FromV0_4_2ToV0_4_0(v0_4_2.GraphCompilationModel src);
 
-        public partial v0_4_2.ProjectModel FromCurrentToV0_4_2(ProjectModel src);
-        public partial ProjectModel FromV0_4_2ToCurrent(v0_4_2.ProjectModel src);
+        public partial v0_4_2.ProjectModel FromCurrentToV0_4_2(ProjectScenarioModel src);
+        public partial ProjectScenarioModel FromV0_4_2ToCurrent(v0_4_2.ProjectModel src);
 
         public partial v0_4_2.ProjectModel FromV0_4_1ToV0_4_2(v0_4_1.ProjectModel src);
         public partial v0_4_1.ProjectModel FromV0_4_2ToV0_4_1(v0_4_2.ProjectModel src);
@@ -469,8 +533,8 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_4_3.ResourceScheduleModel FromV0_4_0ToV0_4_3(v0_4_0.ResourceScheduleModel src);
         public partial v0_4_0.ResourceScheduleModel FromV0_4_3ToV0_4_0(v0_4_3.ResourceScheduleModel src);
 
-        public partial v0_4_3.ProjectModel FromCurrentToV0_4_3(ProjectModel src);
-        public partial ProjectModel FromV0_4_3ToCurrent(v0_4_3.ProjectModel src);
+        public partial v0_4_3.ProjectModel FromCurrentToV0_4_3(ProjectScenarioModel src);
+        public partial ProjectScenarioModel FromV0_4_3ToCurrent(v0_4_3.ProjectModel src);
 
         public partial v0_4_3.ProjectModel FromV0_4_2ToV0_4_3(v0_4_2.ProjectModel src);
         public partial v0_4_2.ProjectModel FromV0_4_3ToV0_4_2(v0_4_3.ProjectModel src);
@@ -482,9 +546,6 @@ namespace Zametek.Data.ProjectPlan
 
         public partial v0_4_4.ActivityModel FromCurrentToV0_4_4(ActivityModel src);
         public partial ActivityModel FromV0_4_4ToCurrent(v0_4_4.ActivityModel src);
-
-        public string FromV0_4_4ToCurrent(string? src)
-            => src is null ? string.Empty : src;
 
         public partial v0_4_4.ActivityModel FromV0_4_0ToV0_4_4(v0_4_0.ActivityModel src);
         public partial v0_4_0.ActivityModel FromV0_4_4ToV0_4_0(v0_4_4.ActivityModel src);
@@ -537,8 +598,8 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_4_4.ResourceSettingsModel FromV0_4_0ToV0_4_4(v0_4_0.ResourceSettingsModel src);
         public partial v0_4_0.ResourceSettingsModel FromV0_4_4ToV0_4_0(v0_4_4.ResourceSettingsModel src);
 
-        public partial v0_4_4.ProjectModel FromCurrentToV0_4_4(ProjectModel src);
-        public partial ProjectModel FromV0_4_4ToCurrent(v0_4_4.ProjectModel src);
+        public partial v0_4_4.ProjectModel FromCurrentToV0_4_4(ProjectScenarioModel src);
+        public partial ProjectScenarioModel FromV0_4_4ToCurrent(v0_4_4.ProjectModel src);
 
         public partial v0_4_4.ProjectModel FromV0_4_3ToV0_4_4(v0_4_3.ProjectModel src);
         public partial v0_4_3.ProjectModel FromV0_4_4ToV0_4_3(v0_4_4.ProjectModel src);
@@ -569,8 +630,8 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_5_0.DisplaySettingsModel FromV0_4_4ToV0_5_0(v0_4_4.DisplaySettingsModel src);
         public partial v0_4_4.DisplaySettingsModel FromV0_5_0ToV0_4_4(v0_5_0.DisplaySettingsModel src);
 
-        public partial v0_5_0.ProjectModel FromCurrentToV0_5_0(ProjectModel src);
-        public partial ProjectModel FromV0_5_0ToCurrent(v0_5_0.ProjectModel src);
+        public partial v0_5_0.ProjectModel FromCurrentToV0_5_0(ProjectScenarioModel src);
+        public partial ProjectScenarioModel FromV0_5_0ToCurrent(v0_5_0.ProjectModel src);
 
         public partial v0_5_0.ProjectModel FromV0_4_4ToV0_5_0(v0_4_4.ProjectModel src);
         public partial v0_4_4.ProjectModel FromV0_5_0ToV0_4_4(v0_5_0.ProjectModel src);

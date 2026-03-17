@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using MsBox.Avalonia;
@@ -21,11 +20,11 @@ namespace Zametek.View.ProjectPlan
         #region Fields
 
         private Window? m_Parent;
-        private readonly IMapper m_Mapper;
+        private readonly ProjectPlanMapper m_Mapper;
 
         #endregion
 
-        public DialogService(IMapper mapper)
+        public DialogService(ProjectPlanMapper mapper)
         {
             ArgumentNullException.ThrowIfNull(mapper);
             m_Mapper = mapper;
@@ -247,7 +246,7 @@ namespace Zametek.View.ProjectPlan
                 return null;
             }
 
-            var filters = m_Mapper.Map<IList<IFileFilter>, List<FilePickerFileType>>(fileFilters);
+            List<FilePickerFileType> filters = [.. fileFilters.Cast<FileFilter>().Select(m_Mapper.ToFilePickerFileType)];
 
             var options = new FilePickerOpenOptions
             {
@@ -281,7 +280,7 @@ namespace Zametek.View.ProjectPlan
                 return null;
             }
 
-            var filters = m_Mapper.Map<IList<IFileFilter>, List<FilePickerFileType>>(fileFilters);
+            List<FilePickerFileType> filters = [.. fileFilters.Cast<FileFilter>().Select(m_Mapper.ToFilePickerFileType)];
 
             var options = new FilePickerSaveOptions
             {
