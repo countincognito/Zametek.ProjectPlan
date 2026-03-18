@@ -20,10 +20,10 @@
     <Content Include="Assets\zpp.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.11" />
-    <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="11.3.9" />
-    <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.14.1" />
-    <PackageReference Include="Splat.DependencyInjection.SourceGenerator" Version="1.2.3">
+    <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.12" />
+    <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="11.3.11.22" />
+    <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.15.0" />
+    <PackageReference Include="Splat.DependencyInjection.SourceGenerator" Version="2.2.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
