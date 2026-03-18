@@ -2291,15 +2291,13 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                var resourceSeriesSet = new ResourceSeriesSetModel();
-
                 //if (!HasCompilationErrors)
                 //{
 
                 IList<ResourceScheduleModel> resourceScheduleModels =
                     [.. m_Mapper.ToResourceScheduleModels(GraphCompilation)];
 
-                resourceSeriesSet = CalculateResourceSeriesSet(
+                ResourceSeriesSetModel resourceSeriesSet = CalculateResourceSeriesSet(
                     resourceScheduleModels,
                     ResourceSettings);
                 //}

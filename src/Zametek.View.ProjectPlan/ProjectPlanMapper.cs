@@ -1,6 +1,5 @@
 ﻿using Avalonia.Platform.Storage;
 using Riok.Mapperly.Abstractions;
-using Zametek.Contract.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan

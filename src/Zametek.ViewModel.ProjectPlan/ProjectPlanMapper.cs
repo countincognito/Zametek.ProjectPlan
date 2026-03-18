@@ -8,8 +8,29 @@ namespace Zametek.ViewModel.ProjectPlan
     [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.None)]
     public partial class ProjectPlanMapper
     {
-        public static string FromNullableStringToEmpty(string? src)
+        public static string FromNullableToDefault(string? src)
             => src is null ? string.Empty : src;
+
+        public static List<int> FromNullableToDefault(HashSet<int>? src)
+            => src is null ? [] : [.. src];
+
+        public static List<bool> FromNullableToDefault(IEnumerable<bool>? src)
+            => src is null ? [] : [.. src];
+
+        public ResourceModel FromNullableToDefault(IResource<int, int>? src)
+            => src is null ? new() : ToResourceModel((Resource<int, int>)src);
+
+        public ScheduledActivityModel FromNullableToDefault(IScheduledActivity<int>? src)
+            => src is null ? new() : ToScheduledActivityModel((ScheduledActivity<int>)src);
+
+        public GraphCompilationErrorModel FromNullableToDefault(IGraphCompilationError? src)
+            => src is null ? new() : ToGraphCompilationErrorModel((GraphCompilationError)src);
+
+        public ResourceScheduleModel FromNullableToDefault(IResourceSchedule<int, int, int>? src)
+            => src is null ? new() : ToResourceScheduleModel((ResourceSchedule<int, int, int>)src);
+
+        public WorkStreamModel FromNullableToDefault(IWorkStream<int>? src)
+            => src is null ? new() : ToWorkStreamModel((WorkStream<int>)src);
 
         // --------------------------------------------------------------------
         // Resource
@@ -21,15 +42,15 @@ namespace Zametek.ViewModel.ProjectPlan
         // Manual: ResourceModel -> Resource<int,int> (uses ctor)
         public Resource<int, int> ToResource(ResourceModel src)
             => new(
-                src.Id,
-                src.Name,
-                src.IsExplicitTarget,
-                src.IsInactive,
-                src.InterActivityAllocationType,
-                src.UnitCost,
-                src.UnitBilling,
-                src.AllocationOrder,
-                src.InterActivityPhases
+                id: src.Id,
+                name: src.Name,
+                isExplicitTarget: src.IsExplicitTarget,
+                isInactive: src.IsInactive,
+                interActivityAllocationType: src.InterActivityAllocationType,
+                unitCost: src.UnitCost,
+                unitBilling: src.UnitBilling,
+                allocationOrder: src.AllocationOrder,
+                interActivityPhases: src.InterActivityPhases
             );
 
         // --------------------------------------------------------------------
@@ -38,8 +59,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public partial EventModel ToEventModel(Event<int> src);
 
-        public Event<int> ToEvent(EventModel src)
-            => new(src.Id, src.EarliestFinishTime, src.LatestFinishTime);
+        public static Event<int> ToEvent(EventModel src)
+            => new(
+                id: src.Id,
+                earliestFinishTime: src.EarliestFinishTime,
+                latestFinishTime: src.LatestFinishTime
+            );
 
         // --------------------------------------------------------------------
         // Activity
@@ -49,78 +74,62 @@ namespace Zametek.ViewModel.ProjectPlan
         public partial ActivityModel ToActivityModel(Activity<int, int, int> src);
 
         // Manual: ActivityModel -> Activity<int,int,int>
-        public Activity<int, int, int> ToActivity(ActivityModel src)
-        {
-            var dest = new Activity<int, int, int>(src.Id, src.Duration);
-
-            dest.TargetResources.Clear();
-            foreach (int targetResource in src.TargetResources)
-            {
-                dest.TargetResources.Add(targetResource);
-            }
-            dest.AllocatedToResources.Clear();
-            foreach (int allocatedToResource in src.AllocatedToResources)
-            {
-                dest.AllocatedToResources.Add(allocatedToResource);
-            }
-            dest.TargetWorkStreams.Clear();
-            foreach (int targetWorkStream in src.TargetWorkStreams)
-            {
-                dest.TargetWorkStreams.Add(targetWorkStream);
-            }
-
-            return dest;
-        }
+        public static Activity<int, int, int> ToActivity(ActivityModel src)
+            => new(
+                    id: src.Id,
+                    name: src.Name,
+                    notes: src.Notes,
+                    targetWorkStreams: src.TargetWorkStreams,
+                    targetResources: src.TargetResources,
+                    targetLogicalOperator: src.TargetResourceOperator,
+                    allocatedToResources: src.AllocatedToResources,
+                    canBeRemoved: src.CanBeRemoved,
+                    hasNoCost: src.HasNoCost,
+                    hasNoBilling: src.HasNoBilling,
+                    hasNoEffort: src.HasNoEffort,
+                    duration: src.Duration,
+                    freeSlack: src.FreeSlack,
+                    earliestStartTime: src.EarliestStartTime,
+                    latestFinishTime: src.LatestFinishTime,
+                    minimumFreeSlack: src.MinimumFreeSlack,
+                    minimumEarliestStartTime: src.MinimumEarliestStartTime,
+                    maximumLatestFinishTime: src.MaximumLatestFinishTime
+                );
 
         // --------------------------------------------------------------------
         // DependentActivityModel <-> DependentActivity
         // --------------------------------------------------------------------
 
-        // Base Activity<int,int,int> -> ActivityModel
-        [MapProperty(nameof(DependentActivity.Id), nameof(ActivityModel.Id))]
-        [MapProperty(nameof(DependentActivity.Duration), nameof(ActivityModel.Duration))]
         public partial ActivityModel ToActivityModel(DependentActivity src);
 
         // DependentActivityModel -> DependentActivity
         public DependentActivity ToDependentActivity(DependentActivityModel src)
-        {
-            // Create with base activity data
-            var dest = new DependentActivity(src.Activity.Id, src.Activity.Duration);
-
-            // Map “Activity” part
-            Activity<int, int, int> baseActivity = ToActivity(src.Activity);
-            CopyActivity(baseActivity, dest);
-
-            // Map dependency collections
-            dest.Dependencies.Clear();
-            foreach (int dependency in src.Dependencies)
-            {
-                dest.Dependencies.Add(dependency);
-            }
-
-            dest.PlanningDependencies.Clear();
-            foreach (int planningDependency in src.PlanningDependencies)
-            {
-                dest.PlanningDependencies.Add(planningDependency);
-            }
-
-            dest.ResourceDependencies.Clear();
-            foreach (int resourceDependency in src.ResourceDependencies)
-            {
-                dest.ResourceDependencies.Add(resourceDependency);
-            }
-
-            dest.Successors.Clear();
-            foreach (int successor in src.Successors)
-            {
-                dest.Successors.Add(successor);
-            }
-
-            dest.Trackers.Clear();
-            dest.Trackers.AddRange(src.Activity.Trackers);
-
-            return dest;
-        }
+            => new(
+                    id: src.Activity.Id,
+                    name: src.Activity.Name,
+                    notes: src.Activity.Notes,
+                    targetWorkStreams: src.Activity.TargetWorkStreams,
+                    targetResources: src.Activity.TargetResources,
+                    dependencies: src.Dependencies,
+                    planningDependencies: src.PlanningDependencies,
+                    resourceDependencies: src.ResourceDependencies,
+                    successors: src.Successors,
+                    targetLogicalOperator: src.Activity.TargetResourceOperator,
+                    allocatedToResources: src.Activity.AllocatedToResources,
+                    canBeRemoved: src.Activity.CanBeRemoved,
+                    hasNoCost: src.Activity.HasNoCost,
+                    hasNoBilling: src.Activity.HasNoBilling,
+                    hasNoEffort: src.Activity.HasNoEffort,
+                    hasNoRisk: src.Activity.HasNoRisk,
+                    duration: src.Activity.Duration,
+                    freeSlack: src.Activity.FreeSlack,
+                    earliestStartTime: src.Activity.EarliestStartTime,
+                    latestFinishTime: src.Activity.LatestFinishTime,
+                    minimumFreeSlack: src.Activity.MinimumFreeSlack,
+                    minimumEarliestStartTime: src.Activity.MinimumEarliestStartTime,
+                    maximumLatestFinishTime: src.Activity.MaximumLatestFinishTime,
+                    trackers: src.Activity.Trackers
+                );
 
         // DependentActivity -> DependentActivityModel
         public DependentActivityModel ToDependentActivityModel(DependentActivity src)
@@ -139,25 +148,6 @@ namespace Zametek.ViewModel.ProjectPlan
             model.Activity.Trackers.AddRange(src.Trackers);
 
             return model;
-        }
-
-        private static void CopyActivity(Activity<int, int, int> src, DependentActivity dest)
-        {
-            dest.TargetResources.Clear();
-            foreach (int targetResource in src.TargetResources)
-            {
-                dest.TargetResources.Add(targetResource);
-            }
-            dest.AllocatedToResources.Clear();
-            foreach (int allocatedToResource in src.AllocatedToResources)
-            {
-                dest.AllocatedToResources.Add(allocatedToResource);
-            }
-            dest.TargetWorkStreams.Clear();
-            foreach (int targetWorkStream in src.TargetWorkStreams)
-            {
-                dest.TargetWorkStreams.Add(targetWorkStream);
-            }
         }
 
         // --------------------------------------------------------------------
@@ -194,16 +184,16 @@ namespace Zametek.ViewModel.ProjectPlan
         // ScheduledActivity
         // --------------------------------------------------------------------
 
-        public ScheduledActivity<int> ToScheduledActivity(ScheduledActivityModel src)
+        public static ScheduledActivity<int> ToScheduledActivity(ScheduledActivityModel src)
             => new(
-                src.Id,
-                src.Name,
-                src.HasNoCost,
-                src.HasNoBilling,
-                src.HasNoEffort,
-                src.Duration,
-                src.StartTime,
-                src.FinishTime
+                id: src.Id,
+                name: src.Name,
+                hasNoCost: src.HasNoCost,
+                hasNoBilling: src.HasNoBilling,
+                hasNoEffort: src.HasNoEffort,
+                duration: src.Duration,
+                startTime: src.StartTime,
+                finishTime: src.FinishTime
             );
 
         public partial ScheduledActivityModel ToScheduledActivityModel(ScheduledActivity<int> src);
@@ -214,13 +204,14 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public IResourceSchedule<int, int, int> ToResourceSchedule(ResourceScheduleModel src)
         {
-            var builder = src.Resource is null
-                ? new ResourceScheduleBuilder<int, int, int>()
-                : new ResourceScheduleBuilder<int, int, int>(ToResource(src.Resource));
+            ResourceScheduleBuilder<int, int, int> builder =
+                src.Resource == default || src.Resource is null
+                ? new()
+                : new(ToResource(src.Resource));
 
-            foreach (var sa in src.ScheduledActivities)
+            foreach (ScheduledActivityModel scheduledActivity in src.ScheduledActivities)
             {
-                builder.AppendActivityWithoutChecks(ToScheduledActivity(sa));
+                builder.AppendActivityWithoutChecks(ToScheduledActivity(scheduledActivity));
             }
 
             return builder.ToResourceSchedule([], src.StartTime, src.FinishTime);
@@ -229,15 +220,36 @@ namespace Zametek.ViewModel.ProjectPlan
         public ResourceSchedule<int, int, int> ToConcreteResourceSchedule(ResourceScheduleModel src)
             => (ResourceSchedule<int, int, int>)ToResourceSchedule(src);
 
-        // Auto: IResourceSchedule<int,int,int> -> ResourceScheduleModel (simple props & collections)
-        public partial ResourceScheduleModel ToResourceScheduleModel(IResourceSchedule<int, int, int> src);
+        public ResourceScheduleModel ToResourceScheduleModel(IResourceSchedule<int, int, int> src)
+        {
+            ResourceModel resourceModel =
+                src.Resource == default || src.Resource is null
+                ? new()
+                : ToResourceModel((Resource<int, int>)src.Resource);
+
+            return new ResourceScheduleModel
+            {
+                Resource = resourceModel,
+                ScheduledActivities = [.. src.ScheduledActivities.Select(x => ToScheduledActivityModel((ScheduledActivity<int>)x))],
+                ActivityAllocation = [.. src.ActivityAllocation],
+                CostAllocation = [.. src.CostAllocation],
+                BillingAllocation = [.. src.BillingAllocation],
+                EffortAllocation = [.. src.EffortAllocation],
+                StartTime = src.StartTime,
+                FinishTime = src.FinishTime
+            };
+        }
 
         // --------------------------------------------------------------------
         // WorkStream
         // --------------------------------------------------------------------
 
         public WorkStream<int> ToWorkStream(WorkStreamModel src)
-            => new(src.Id, src.Name, src.IsPhase);
+            => new(
+                id: src.Id,
+                name: src.Name,
+                isPhase: src.IsPhase
+            );
 
         public partial WorkStreamModel ToWorkStreamModel(WorkStream<int> src);
 
@@ -245,10 +257,13 @@ namespace Zametek.ViewModel.ProjectPlan
         // GraphCompilationError
         // --------------------------------------------------------------------
 
-        public GraphCompilationError ToCompilationError(GraphCompilationErrorModel src)
-            => new(src.ErrorCode, src.ErrorMessage);
+        public static GraphCompilationError ToGraphCompilationError(GraphCompilationErrorModel src)
+            => new(
+                errorCode: src.ErrorCode,
+                errorMessage: src.ErrorMessage
+            );
 
-        public partial GraphCompilationErrorModel ToCompilationErrorModel(GraphCompilationError src);
+        public partial GraphCompilationErrorModel ToGraphCompilationErrorModel(GraphCompilationError src);
 
         // --------------------------------------------------------------------
         // GraphCompilation
@@ -256,25 +271,34 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public IGraphCompilation<int, int, int, DependentActivity> ToGraphCompilation(GraphCompilationModel src)
         {
-            var dependentActivities = src.DependentActivities.Select(ToDependentActivity).ToList();
-            var resourceSchedules = src.ResourceSchedules.Select(ToConcreteResourceSchedule).ToList();
-            var workStreams = src.WorkStreams.Select(ToWorkStream).ToList();
-            var errors = src.CompilationErrors.Select(ToCompilationError).ToList();
+            List<DependentActivity> dependentActivities = [.. src.DependentActivities.Select(ToDependentActivity)];
+            List<ResourceSchedule<int, int, int>> resourceSchedules = [.. src.ResourceSchedules.Select(ToConcreteResourceSchedule)];
+            List<WorkStream<int>> workStreams = [.. src.WorkStreams.Select(ToWorkStream)];
+            List<GraphCompilationError> compilationErrors = [.. src.CompilationErrors.Select(ToGraphCompilationError)];
 
             return new GraphCompilation<int, int, int, DependentActivity>(
-                dependentActivities,
-                resourceSchedules,
-                workStreams,
-                errors
+                dependentActivities: dependentActivities,
+                resourceSchedules: resourceSchedules,
+                workStreams: workStreams,
+                compilationErrors: compilationErrors
             );
         }
 
-        public IEnumerable<ResourceScheduleModel> ToResourceScheduleModels(
-            IGraphCompilation<int, int, int, IDependentActivity> src)
+        public IEnumerable<ResourceScheduleModel> ToResourceScheduleModels(IGraphCompilation<int, int, int, IDependentActivity> src)
             => src.ResourceSchedules.Select(ToResourceScheduleModel);
 
-        public partial GraphCompilationModel ToGraphCompilationModel(
-            IGraphCompilation<int, int, int, IDependentActivity> src);
+        public GraphCompilationModel ToGraphCompilationModel(IGraphCompilation<int, int, int, IDependentActivity> src)
+        {
+            return new GraphCompilationModel
+            {
+                DependentActivities = [.. src.DependentActivities.Select(x => ToDependentActivityModel((DependentActivity)x))],
+                ResourceSchedules = [.. src.ResourceSchedules.Select(x => ToResourceScheduleModel(x))],
+                WorkStreams = [.. src.WorkStreams.Select(x => ToWorkStreamModel((WorkStream<int>)x))],
+                CompilationErrors = [.. src.CompilationErrors.Select(x => ToGraphCompilationErrorModel((GraphCompilationError)x))],
+                CyclomaticComplexity = default,
+                Duration = default
+            };
+        }
 
         // --------------------------------------------------------------------
         // Edges, Nodes, Graphs
@@ -287,12 +311,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public partial ActivityEdgeModel ToActivityEdgeModel(Edge<int, IDependentActivity> src);
 
-        public Edge<int, IEvent<int>> ToEventEdge(EventEdgeModel src)
+        public static Edge<int, IEvent<int>> ToEventEdge(EventEdgeModel src)
             => new(ToEvent(src.Content));
 
         public partial EventEdgeModel ToEventEdgeModel(Edge<int, IEvent<int>> src);
 
-        public Node<int, IEvent<int>> ToEventNode(EventNodeModel src)
+        public static Node<int, IEvent<int>> ToEventNode(EventNodeModel src)
         {
             var dest = new Node<int, IEvent<int>>(src.NodeType, ToEvent(src.Content));
 
@@ -408,7 +432,9 @@ namespace Zametek.ViewModel.ProjectPlan
             return dest;
         }
 
-        public ArrowGraphModel ToArrowGraphModel(Graph<int, IDependentActivity, IEvent<int>> src)
+        public ArrowGraphModel ToArrowGraphModel(
+            Graph<int, IDependentActivity,
+                IEvent<int>> src)
         {
             var dest = new ArrowGraphModel
             {
@@ -419,11 +445,11 @@ namespace Zametek.ViewModel.ProjectPlan
             return dest;
         }
 
-        public partial Graph<int, IDependentActivity, IEvent<int>> ToArrowGraph(
-            ArrowGraphModel src);
+        public partial Graph<int, IDependentActivity, IEvent<int>> ToArrowGraph(ArrowGraphModel src);
 
         public VertexGraphModel ToVertexGraphModel(
-            Graph<int, IEvent<int>, IDependentActivity> src)
+            Graph<int, IEvent<int>,
+                IDependentActivity> src)
         {
             var dest = new VertexGraphModel
             {
@@ -433,8 +459,6 @@ namespace Zametek.ViewModel.ProjectPlan
             return dest;
         }
 
-        public partial Graph<int, IEvent<int>, IDependentActivity> ToVertexGraph(
-            VertexGraphModel src);
+        public partial Graph<int, IEvent<int>, IDependentActivity> ToVertexGraph(VertexGraphModel src);
     }
-
 }

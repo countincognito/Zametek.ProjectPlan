@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using CommandLine;
+﻿using CommandLine;
 using CommandLine.Text;
 using ConsoleTables;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,14 +59,8 @@ namespace Zametek.ProjectPlan.CommandLine
                         services.AddSingleton<IProjectFileSave, ProjectFileSave>();
                         services.AddSingleton<IProjectScenarioFileExport, ProjectScenarioFileExport>();
 
-                        var config = new MapperConfiguration(cfg =>
-                        {
-                            cfg.AddProfile<Data.ProjectPlan.MapperProfile>();
-                            cfg.AddProfile<MapperProfile>();
-                        });
-                        IMapper mapper = config.CreateMapper();
-
-                        services.AddSingleton(mapper);
+                        services.AddSingleton(new Data.ProjectPlan.VersionMapper());
+                        services.AddSingleton(new ProjectPlanMapper());
                     })
                     .UseSerilog()
                     .Build();

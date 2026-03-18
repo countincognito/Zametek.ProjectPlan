@@ -6,8 +6,11 @@ namespace Zametek.Data.ProjectPlan
     [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.None)]
     public partial class VersionMapper
     {
-        public static string FromNullableStringToEmpty(string? src)
+        public static string FromNullableToDefault(string? src)
             => src is null ? string.Empty : src;
+
+        public static v0_1_0.EventModel FromNullableToDefault(v0_1_0.EventModel? src)
+            => src is null ? new() : src;
 
         // ---------------------------------------------------------------------
         // v0.1.0 <-> Current
@@ -262,9 +265,6 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_3_0.ArrowGraphModel FromV0_2_1ToV0_3_0(v0_2_1.ArrowGraphModel src);
 
         public partial v0_3_0.EventNodeModel FromV0_1_0ToV0_3_0(v0_1_0.EventNodeModel src);
-
-        public v0_3_0.EventNodeModel FromV0_1_0NullableToV0_3_0(v0_1_0.EventNodeModel? src)
-            => src is null ? new() : FromV0_1_0ToV0_3_0(src);
 
         public partial v0_2_1.ArrowGraphModel FromV0_3_0ToV0_2_1(v0_3_0.ArrowGraphModel src);
 
