@@ -502,6 +502,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown CurveFittingType value:.
+        /// </summary>
+        public static string Message_UnknownCurveFittingType {
+            get {
+                return ResourceManager.GetString("Message_UnknownCurveFittingType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown DateTimeCalculatorMode value:.
         /// </summary>
         public static string Message_UnknownDateTimeCalculatorMode {

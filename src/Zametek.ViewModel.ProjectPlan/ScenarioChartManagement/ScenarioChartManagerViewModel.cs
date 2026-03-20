@@ -3,8 +3,11 @@ using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
+using ScottPlot.Plottables;
+using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Text;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -227,6 +230,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Gather the data points for the selected metrics.
 
+            List<AnnotatedMarker> markers = [];
+
             foreach (TrackedMetricsModel trackedMetrics in trackedMetricsSet.TrackedMetrics)
             {
                 var marker = new AnnotatedMarker
@@ -239,12 +244,198 @@ namespace Zametek.ViewModel.ProjectPlan
                     Annotation = trackedMetrics.Path
                 };
 
-                plotModel.Plot.PlottableList.Add(marker);
+                markers.Add(marker);
             }
+
+            markers = [.. markers.OrderBy(m => m.X).ThenBy(m => m.Y)];
+
+            plotModel.Plot.PlottableList.AddRange(markers);
+
+
+
+
+
+            string formula = BuildCurveFit(plotModel, markers, CurveFittingType.PolynomialOrder3);
+
+            plotModel.Plot.Title(formula);
+
 
             plotModel.Plot.Axes.AutoScale();
 
             return plotModel.SetBaseTheme(baseTheme);
+        }
+
+        private static string BuildCurveFit(
+            AvaPlot plotModel,
+            List<AnnotatedMarker> markers,
+            CurveFittingType curveFittingType)
+        {
+            string formula = string.Empty;
+            double[] xs = [.. markers.Select(x => x.X)];
+            double[] ys = [.. markers.Select(x => x.Y)];
+
+            Debug.Assert(xs.Length == ys.Length);
+
+            switch (curveFittingType)
+            {
+                case CurveFittingType.None:
+                    break;
+                case CurveFittingType.Linear:
+                    {
+                        if (xs.Length >= 2)
+                        {
+                            (double a, double b) = MathNet.Numerics.Fit.Line(xs, ys);
+                            double[] fx = [.. xs.Select(x => a + b * x)];
+                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
+                            formula = $"y = {b:F3}x + {a:F3} (r²={r2:F3})";
+                            Scatter line = plotModel.Plot.Add.ScatterLine(xs, fx);
+                            line.MarkerSize = 0;
+                            line.LineWidth = 2;
+                            line.LinePattern = LinePattern.Dashed;
+                        }
+                    }
+                    break;
+                case CurveFittingType.Exponential:
+                    {
+                        if (xs.Length >= 2)
+                        {
+                            (double a, double r) = MathNet.Numerics.Fit.Exponential(xs, ys);
+                            double[] fx = [.. xs.Select(x => a * Math.Exp(r * x))];
+                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
+                            formula = $"y = {a:F3}e^{r:F3}x (r²={r2:F3})";
+                            Scatter line = plotModel.Plot.Add.ScatterLine(xs, fx);
+                            line.MarkerSize = 0;
+                            line.LineWidth = 2;
+                            line.LinePattern = LinePattern.Dashed;
+                        }
+                    }
+                    break;
+                case CurveFittingType.Logarithmic:
+                    {
+                        if (xs.Length >= 2)
+                        {
+                            (double a, double b) = MathNet.Numerics.Fit.Logarithm(xs, ys);
+                            double[] fx = [.. xs.Select(x => a + b * Math.Log(x))];
+                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
+                            formula = $"y = {b:F3}ln(x) + {a:F3} (r²={r2:F3})";
+                            Scatter line = plotModel.Plot.Add.ScatterLine(xs, fx);
+                            line.MarkerSize = 0;
+                            line.LineWidth = 2;
+                            line.LinePattern = LinePattern.Dashed;
+                        }
+                    }
+                    break;
+                case CurveFittingType.Power:
+                    {
+                        if (xs.Length >= 2)
+                        {
+                            (double a, double b) = MathNet.Numerics.Fit.Power(xs, ys);
+                            double f(double x) => a * Math.Pow(x, b);
+                            Coordinates pt1 = new(xs.First(), f(xs.First()));
+                            Coordinates pt2 = new(xs.Last(), f(xs.Last()));
+                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => f(x)));
+                            formula = $"y = {a:F3}x^{b:F3} (r²={r2:F3})";
+                            LinePlot line = plotModel.Plot.Add.Line(pt1, pt2);
+                            line.MarkerSize = 0;
+                            line.LineWidth = 2;
+                            line.LinePattern = LinePattern.Dashed;
+                        }
+                    }
+                    break;
+                case CurveFittingType.PolynomialOrder0:
+                    {
+                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 0);
+                    }
+                    break;
+                case CurveFittingType.PolynomialOrder1:
+                    {
+                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 1);
+                    }
+                    break;
+                case CurveFittingType.PolynomialOrder2:
+                    {
+                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 2);
+                    }
+                    break;
+                case CurveFittingType.PolynomialOrder3:
+                    {
+                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 3);
+                    }
+                    break;
+                case CurveFittingType.PolynomialOrder4:
+                    {
+                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 4);
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(curveFittingType), @$"{Resource.ProjectPlan.Messages.Message_UnknownCurveFittingType} {curveFittingType}");
+            }
+
+            return formula;
+        }
+
+        private static string BuildPolynomialCurveFit(
+            AvaPlot plotModel,
+            double[] xs,
+            double[] ys,
+            int order)
+        {
+            char[] superscript = { '⁰', '¹', '²', '³', '⁴' };
+
+            int minimumOrder = 0;
+            int maximumOrder = superscript.Length - 1;
+
+            if (xs.Length != ys.Length
+                || order < minimumOrder
+                || order > maximumOrder
+                || xs.Length <= order)
+            {
+                return string.Empty;
+            }
+
+            double[] coefficients = MathNet.Numerics.Fit.Polynomial(xs, ys, order);
+            double[] fx = [.. xs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, coefficients))];
+
+            // Plot the regression line.
+            Scatter line = plotModel.Plot.Add.ScatterLine(xs, fx);
+            line.MarkerSize = 0;
+            line.LineWidth = 2;
+            line.LinePattern = LinePattern.Dashed;
+
+            // Build the formula.
+            StringBuilder formula = new(@"y = ");
+
+            for (int i = coefficients.Length - 1; i >= 0; i--)
+            {
+                if (i < coefficients.Length - 1)
+                {
+                    if (coefficients[i] < 0)
+                    {
+                        formula.Append(@" - ");
+                    }
+                    else
+                    {
+                        formula.Append(@" + ");
+                    }
+                }
+                else if (coefficients[i] < 0)
+                {
+                    formula.Append('-');
+                }
+
+                if (i > 0)
+                {
+                    formula.Append($"{Math.Abs(coefficients[i]):F3}x{superscript[i]}");
+                }
+                else
+                {
+                    formula.Append($"{Math.Abs(coefficients[i]):F3}");
+                }
+            }
+
+            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
+            formula.Append($@" (r²={r2:F3})");
+            return formula.ToString();
         }
 
         private static Func<MetricsModel, double> GetMetricFunction(TrackedMetrics metric)

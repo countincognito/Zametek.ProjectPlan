@@ -306,4 +306,7 @@
   <data name="Message_UnknownSortDirection" xml:space="preserve">
     <value>Unknown SortMode value:</value>
   </data>
+  <data name="Message_UnknownCurveFittingType" xml:space="preserve">
+    <value>Unknown CurveFittingType value:</value>
+  </data>
 </root>
