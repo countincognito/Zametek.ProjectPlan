@@ -120,5 +120,22 @@ namespace Zametek.View.ProjectPlan
                     TrackedMetrics.NetworkDurationManMonths => Enums.Enum_TrackedMetric_NetworkDurationManMonths,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
+
+        public static readonly IValueConverter CurveFittingTypeValue =
+            new FuncValueConverter<CurveFittingType, string>(
+                x => x switch
+                {
+                    CurveFittingType.None => Enums.Enum_CurveFittingTypeNone,
+                    CurveFittingType.Linear => Enums.Enum_CurveFittingTypeLinear,
+                    CurveFittingType.Exponential => Enums.Enum_CurveFittingTypeExponential,
+                    CurveFittingType.Logarithmic => Enums.Enum_CurveFittingTypeLogarithmic,
+                    CurveFittingType.Power => Enums.Enum_CurveFittingTypePower,
+                    CurveFittingType.PolynomialOrder0 => Enums.Enum_CurveFittingTypePolynomialOrder0,
+                    CurveFittingType.PolynomialOrder1 => Enums.Enum_CurveFittingTypePolynomialOrder1,
+                    CurveFittingType.PolynomialOrder2 => Enums.Enum_CurveFittingTypePolynomialOrder2,
+                    CurveFittingType.PolynomialOrder3 => Enums.Enum_CurveFittingTypePolynomialOrder3,
+                    CurveFittingType.PolynomialOrder4 => Enums.Enum_CurveFittingTypePolynomialOrder4,
+                    _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
+                });
     }
 }

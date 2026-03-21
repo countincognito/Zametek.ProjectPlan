@@ -276,4 +276,34 @@
   <data name="Enum_TrackedMetric_RisksActivity" xml:space="preserve">
     <value>Activity Risk</value>
   </data>
+  <data name="Enum_CurveFittingTypeNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Enum_CurveFittingTypeLinear" xml:space="preserve">
+    <value>Linear</value>
+  </data>
+  <data name="Enum_CurveFittingTypeExponential" xml:space="preserve">
+    <value>Exponential</value>
+  </data>
+  <data name="Enum_CurveFittingTypePolynomialOrder0" xml:space="preserve">
+    <value>Polynomial (0th order)</value>
+  </data>
+  <data name="Enum_CurveFittingTypePolynomialOrder1" xml:space="preserve">
+    <value>Polynomial (1st order)</value>
+  </data>
+  <data name="Enum_CurveFittingTypePolynomialOrder2" xml:space="preserve">
+    <value>Polynomial (2nd order)</value>
+  </data>
+  <data name="Enum_CurveFittingTypePolynomialOrder3" xml:space="preserve">
+    <value>Polynomial (3rd order)</value>
+  </data>
+  <data name="Enum_CurveFittingTypePolynomialOrder4" xml:space="preserve">
+    <value>Polynomial (4th order)</value>
+  </data>
+  <data name="Enum_CurveFittingTypePower" xml:space="preserve">
+    <value>Power</value>
+  </data>
+  <data name="Enum_CurveFittingTypeLogarithmic" xml:space="preserve">
+    <value>Logarithmic</value>
+  </data>
 </root>

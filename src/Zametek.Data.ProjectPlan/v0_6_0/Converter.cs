@@ -74,6 +74,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                 ProjectScenarioSortDirection = default,
                 ScenarioChartTrackedMetricXAxis = default,
                 ScenarioChartTrackedMetricYAxis = default,
+                ScenarioChartCurveFittingType = default,
                 SelectedTheme = appSettingsModel.SelectedTheme,
             };
         }

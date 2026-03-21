@@ -136,6 +136,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_SettingService.ScenarioChartTrackedMetricYAxis)
                 .ToProperty(this, rcm => rcm.TrackedMetricYAxis);
 
+            m_CurveFittingType = this
+                .WhenAnyValue(rcm => rcm.m_SettingService.ScenarioChartCurveFittingType)
+                .ToProperty(this, rcm => rcm.CurveFittingType);
+
             m_BuildScenarioChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
@@ -144,9 +148,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     //rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
                     rcm => rcm.m_SettingService.ScenarioChartTrackedMetricXAxis,
                     rcm => rcm.m_SettingService.ScenarioChartTrackedMetricYAxis,
+                    rcm => rcm.m_SettingService.ScenarioChartCurveFittingType,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
-                    rcm => rcm.m_CoreViewModel.BaseTheme)//,
-                                                         //(x, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.)
+                    rcm => rcm.m_CoreViewModel.BaseTheme)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildScenarioChartPlotModelAsync());
 
@@ -208,6 +212,7 @@ namespace Zametek.ViewModel.ProjectPlan
             //DateTimeOffset projectStart,
             TrackedMetrics xMetric,
             TrackedMetrics yMetric,
+            CurveFittingType curveFittingType,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(trackedMetricsSet);
@@ -251,11 +256,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             plotModel.Plot.PlottableList.AddRange(markers);
 
-
-
-
-
-            string formula = BuildCurveFit(plotModel, markers, CurveFittingType.PolynomialOrder3);
+            string formula = BuildCurveFit(plotModel, markers, curveFittingType);
 
             plotModel.Plot.Title(formula);
 
@@ -539,6 +540,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<CurveFittingType> m_CurveFittingType;
+        public CurveFittingType CurveFittingType
+        {
+            get => m_CurveFittingType.Value;
+            set
+            {
+                lock (m_Lock) m_SettingService.ScenarioChartCurveFittingType = value;
+            }
+        }
+
         public ICommand SaveScenarioChartImageFileCommand { get; }
 
         public async Task SaveScenarioChartImageFileAsync(
@@ -615,6 +626,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         //m_CoreViewModel.ProjectStart,
                         m_SettingService.ScenarioChartTrackedMetricXAxis,
                         m_SettingService.ScenarioChartTrackedMetricYAxis,
+                        m_SettingService.ScenarioChartCurveFittingType,
                         m_CoreViewModel.BaseTheme);
                 }
             }
@@ -669,6 +681,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_TrackedMetricXAxis?.Dispose();
                 m_TrackedMetricYAxis?.Dispose();
+                m_CurveFittingType?.Dispose();
                 //m_DisplayStyle?.Dispose();
                 //m_ShowToday?.Dispose();
                 //m_ShowMilestones?.Dispose();

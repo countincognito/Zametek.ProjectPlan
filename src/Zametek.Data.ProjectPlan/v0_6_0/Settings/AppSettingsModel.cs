@@ -27,6 +27,8 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
 
         public TrackedMetrics ScenarioChartTrackedMetricYAxis { get; init; } = default;
 
+        public CurveFittingType ScenarioChartCurveFittingType { get; init; } = default;
+
         public string SelectedTheme { get; init; } = string.Empty;
     }
 }

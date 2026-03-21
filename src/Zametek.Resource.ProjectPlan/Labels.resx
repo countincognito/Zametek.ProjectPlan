@@ -615,4 +615,7 @@
   <data name="Label_TrackedMetricYAxis" xml:space="preserve">
     <value>Y Axis Metric</value>
   </data>
+  <data name="Label_CurveFittingType" xml:space="preserve">
+    <value>Curve Fitting</value>
+  </data>
 </root>

@@ -124,6 +124,96 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exponential.
+        /// </summary>
+        public static string Enum_CurveFittingTypeExponential {
+            get {
+                return ResourceManager.GetString("Enum_CurveFittingTypeExponential", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear.
+        /// </summary>
+        public static string Enum_CurveFittingTypeLinear {
+            get {
+                return ResourceManager.GetString("Enum_CurveFittingTypeLinear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Logarithmic.
+        /// </summary>
+        public static string Enum_CurveFittingTypeLogarithmic {
+            get {
+                return ResourceManager.GetString("Enum_CurveFittingTypeLogarithmic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string Enum_CurveFittingTypeNone {
+            get {
+                return ResourceManager.GetString("Enum_CurveFittingTypeNone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polynomial (0th order).
+        /// </summary>
+        public static string Enum_CurveFittingTypePolynomialOrder0 {
+            get {
+                return ResourceManager.GetString("Enum_CurveFittingTypePolynomialOrder0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polynomial (1st order).
+        /// </summary>
+        public static string Enum_CurveFittingTypePolynomialOrder1 {
+            get {
+                return ResourceManager.GetString("Enum_CurveFittingTypePolynomialOrder1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polynomial (2nd order).
+        /// </summary>
+        public static string Enum_CurveFittingTypePolynomialOrder2 {
+            get {
+                return ResourceManager.GetString("Enum_CurveFittingTypePolynomialOrder2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polynomial (3rd order).
+        /// </summary>
+        public static string Enum_CurveFittingTypePolynomialOrder3 {
+            get {
+                return ResourceManager.GetString("Enum_CurveFittingTypePolynomialOrder3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polynomial (4th order).
+        /// </summary>
+        public static string Enum_CurveFittingTypePolynomialOrder4 {
+            get {
+                return ResourceManager.GetString("Enum_CurveFittingTypePolynomialOrder4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Power.
+        /// </summary>
+        public static string Enum_CurveFittingTypePower {
+            get {
+                return ResourceManager.GetString("Enum_CurveFittingTypePower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Block.
         /// </summary>
         public static string Enum_DisplayStyle_Block {

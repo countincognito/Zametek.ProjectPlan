@@ -1,5 +1,4 @@
-﻿using ReactiveUI;
-using Zametek.Common.ProjectPlan;
+﻿using Zametek.Common.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine
@@ -20,6 +19,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private SortDirection m_ProjectScenarioSortDirection;
         private TrackedMetrics m_ScenarioChartTrackedMetricXAxis;
         private TrackedMetrics m_ScenarioChartTrackedMetricYAxis;
+        private CurveFittingType m_ScenarioChartCurveFittingType;
         private string m_SelectedTheme;
 
         #endregion
@@ -181,6 +181,18 @@ namespace Zametek.ProjectPlan.CommandLine
                 lock (m_Lock)
                 {
                     m_ScenarioChartTrackedMetricYAxis = value;
+                }
+            }
+        }
+
+        public override CurveFittingType ScenarioChartCurveFittingType
+        {
+            get => m_ScenarioChartCurveFittingType;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ScenarioChartCurveFittingType = value;
                 }
             }
         }

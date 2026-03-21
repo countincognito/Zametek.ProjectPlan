@@ -322,6 +322,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Curve Fitting.
+        /// </summary>
+        public static string Label_CurveFittingType {
+            get {
+                return ResourceManager.GetString("Label_CurveFittingType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cut.
         /// </summary>
         public static string Label_CutNode {

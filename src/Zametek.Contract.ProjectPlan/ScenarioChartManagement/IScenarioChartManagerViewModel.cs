@@ -16,7 +16,7 @@ namespace Zametek.Contract.ProjectPlan
 
         TrackedMetrics TrackedMetricYAxis { get; set; }
 
-        //ScheduleMode ScheduleMode { get; set; }
+        CurveFittingType CurveFittingType { get; set; }
 
         //DisplayStyle DisplayStyle { get; set; }
 

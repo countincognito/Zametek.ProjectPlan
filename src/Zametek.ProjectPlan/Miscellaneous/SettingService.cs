@@ -211,6 +211,20 @@ namespace Zametek.ProjectPlan
             }
         }
 
+        public override CurveFittingType ScenarioChartCurveFittingType
+        {
+            get => m_AppSettingsModel.ScenarioChartCurveFittingType;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { ScenarioChartCurveFittingType = value };
+                    SaveSettings();
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         public override string SelectedTheme
         {
             get

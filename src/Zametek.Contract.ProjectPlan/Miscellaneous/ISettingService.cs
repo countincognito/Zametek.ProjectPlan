@@ -34,6 +34,8 @@ namespace Zametek.Contract.ProjectPlan
 
         TrackedMetrics ScenarioChartTrackedMetricYAxis { get; set; }
 
+        CurveFittingType ScenarioChartCurveFittingType { get; set; }
+
         string SelectedTheme { get; set; }
 
         bool IsTitleBoundToFilename { get; set; }
