@@ -107,6 +107,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScenarioChartPlotModel = new AvaPlot();
+            m_CurveFittingFormula = string.Empty;
 
             {
                 ReactiveCommand<Unit, Unit> saveScenarioChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveScenarioChartImageFileAsync);
@@ -143,9 +144,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_BuildScenarioChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
-                    //rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-                    //rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
-                    //rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
                     rcm => rcm.m_SettingService.ScenarioChartTrackedMetricXAxis,
                     rcm => rcm.m_SettingService.ScenarioChartTrackedMetricYAxis,
                     rcm => rcm.m_SettingService.ScenarioChartCurveFittingType,
@@ -205,33 +203,32 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static AvaPlot BuildScenarioChartPlotModelInternal(
+        private static (AvaPlot, string) BuildScenarioChartPlotModelInternal(
             TrackedMetricsSetModel trackedMetricsSet,
-            //IDateTimeCalculator dateTimeCalculator,
-            //bool showDates,
-            //DateTimeOffset projectStart,
             TrackedMetrics xMetric,
             TrackedMetrics yMetric,
             CurveFittingType curveFittingType,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(trackedMetricsSet);
-            //ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             var plotModel = new AvaPlot();
             plotModel.Plot.HideGrid();
+            plotModel.SetBaseTheme(baseTheme);
+
+            // Now build the plot.
+
+            if (trackedMetricsSet.TrackedMetrics.Count == 0
+                || xMetric == TrackedMetrics.None
+                || yMetric == TrackedMetrics.None)
+            {
+                return (plotModel, string.Empty);
+            }
 
             // Select the metric for the X axis.
             Func<MetricsModel, double> xMetricFunction = GetMetricFunction(xMetric);
 
             // Select the metric for the Y axis.
             Func<MetricsModel, double> yMetricFunction = GetMetricFunction(yMetric);
-
-            // Now build the plot.
-
-            if (trackedMetricsSet.TrackedMetrics.Count == 0)
-            {
-                return plotModel.SetBaseTheme(baseTheme);
-            }
 
             // Gather the data points for the selected metrics.
 
@@ -253,17 +250,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             markers = [.. markers.OrderBy(m => m.X).ThenBy(m => m.Y)];
-
             plotModel.Plot.PlottableList.AddRange(markers);
-
-            string formula = BuildCurveFit(plotModel, markers, curveFittingType);
-
-            plotModel.Plot.Title(formula);
-
-
+            string curveFittingFormula = BuildCurveFit(plotModel, markers, curveFittingType);
             plotModel.Plot.Axes.AutoScale();
-
-            return plotModel.SetBaseTheme(baseTheme);
+            return (plotModel, curveFittingFormula);
         }
 
         private static string BuildCurveFit(
@@ -341,16 +331,6 @@ namespace Zametek.ViewModel.ProjectPlan
                             line.LineWidth = 2;
                             line.LinePattern = LinePattern.Dashed;
                         }
-                    }
-                    break;
-                case CurveFittingType.PolynomialOrder0:
-                    {
-                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 0);
-                    }
-                    break;
-                case CurveFittingType.PolynomialOrder1:
-                    {
-                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 1);
                     }
                     break;
                 case CurveFittingType.PolynomialOrder2:
@@ -443,6 +423,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             return metric switch
             {
+                TrackedMetrics.None => model => 0,
                 TrackedMetrics.RisksCriticality => model => model.Risks.Criticality.GetValueOrDefault(),
                 TrackedMetrics.RisksFibonacci => model => model.Risks.Fibonacci.GetValueOrDefault(),
                 TrackedMetrics.RisksActivity => model => model.Risks.Activity.GetValueOrDefault(),
@@ -611,19 +592,31 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private string m_CurveFittingFormula;
+        public string CurveFittingFormula
+        {
+            get => string.IsNullOrWhiteSpace(m_CurveFittingFormula) ? string.Empty : m_CurveFittingFormula;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    m_CurveFittingFormula = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         public void BuildScenarioChartPlotModel()
         {
             AvaPlot? plotModel = null;
+            string curveFittingFormula = string.Empty;
 
             lock (m_Lock)
             {
                 if (!HasCompilationErrors)
                 {
-                    plotModel = BuildScenarioChartPlotModelInternal(
+                    (plotModel, curveFittingFormula) = BuildScenarioChartPlotModelInternal(
                         m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
-                        //m_DateTimeCalculator,
-                        //m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-                        //m_CoreViewModel.ProjectStart,
                         m_SettingService.ScenarioChartTrackedMetricXAxis,
                         m_SettingService.ScenarioChartTrackedMetricYAxis,
                         m_SettingService.ScenarioChartCurveFittingType,
@@ -648,6 +641,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             //plotModel.Plot.Axes.AutoScale();
             ScenarioChartPlotModel = plotModel;
+            CurveFittingFormula = curveFittingFormula;
         }
 
         #endregion
@@ -682,9 +676,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_TrackedMetricXAxis?.Dispose();
                 m_TrackedMetricYAxis?.Dispose();
                 m_CurveFittingType?.Dispose();
-                //m_DisplayStyle?.Dispose();
-                //m_ShowToday?.Dispose();
-                //m_ShowMilestones?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

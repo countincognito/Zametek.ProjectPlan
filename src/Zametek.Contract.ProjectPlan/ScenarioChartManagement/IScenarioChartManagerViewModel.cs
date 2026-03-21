@@ -18,9 +18,7 @@ namespace Zametek.Contract.ProjectPlan
 
         CurveFittingType CurveFittingType { get; set; }
 
-        //DisplayStyle DisplayStyle { get; set; }
-
-        //bool ShowToday { get; set; }
+        string CurveFittingFormula { get; }
 
         ICommand SaveScenarioChartImageFileCommand { get; }
 

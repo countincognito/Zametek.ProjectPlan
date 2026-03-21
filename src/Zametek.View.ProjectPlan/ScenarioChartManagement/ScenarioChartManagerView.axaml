@@ -19,7 +19,7 @@
 		<ScrollViewer DockPanel.Dock="Right"
 					  VerticalScrollBarVisibility="Hidden"
 					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel MinWidth="205"
+			<DockPanel Width="205"
 					   Margin="11,0,0,0">
 
 				<DockPanel DockPanel.Dock="Top">
@@ -110,47 +110,16 @@
 					</ComboBox>
 				</DockPanel>
 
-				<!--<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowToday}"/>
-
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"/>
-				</DockPanel>
-				
 				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowMilestones}"/>
-
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"/>
-				</DockPanel>-->
+					<ScrollViewer VerticalScrollBarVisibility="Auto"
+								  HorizontalScrollBarVisibility="Disabled">
+						<SelectableTextBlock Text="{Binding Path=CurveFittingFormula, Mode=OneWay}"
+											 TextWrapping="Wrap"
+											 FontWeight="Bold"
+											 Margin="0,0,0,11"
+											 VerticalAlignment="Stretch"/>
+					</ScrollViewer>
+				</DockPanel>
 
 				<Grid/>
 			</DockPanel>

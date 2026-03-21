@@ -86,6 +86,7 @@ namespace Zametek.View.ProjectPlan
             new FuncValueConverter<TrackedMetrics, string>(
                 x => x switch
                 {
+                    TrackedMetrics.None => Enums.Enum_TrackedMetric_None,
                     TrackedMetrics.RisksCriticality => Enums.Enum_TrackedMetric_RisksCriticality,
                     TrackedMetrics.RisksFibonacci => Enums.Enum_TrackedMetric_RisksFibonacci,
                     TrackedMetrics.RisksActivity => Enums.Enum_TrackedMetric_RisksActivity,
@@ -130,8 +131,6 @@ namespace Zametek.View.ProjectPlan
                     CurveFittingType.Exponential => Enums.Enum_CurveFittingTypeExponential,
                     CurveFittingType.Logarithmic => Enums.Enum_CurveFittingTypeLogarithmic,
                     CurveFittingType.Power => Enums.Enum_CurveFittingTypePower,
-                    CurveFittingType.PolynomialOrder0 => Enums.Enum_CurveFittingTypePolynomialOrder0,
-                    CurveFittingType.PolynomialOrder1 => Enums.Enum_CurveFittingTypePolynomialOrder1,
                     CurveFittingType.PolynomialOrder2 => Enums.Enum_CurveFittingTypePolynomialOrder2,
                     CurveFittingType.PolynomialOrder3 => Enums.Enum_CurveFittingTypePolynomialOrder3,
                     CurveFittingType.PolynomialOrder4 => Enums.Enum_CurveFittingTypePolynomialOrder4,

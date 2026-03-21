@@ -285,12 +285,6 @@
   <data name="Enum_CurveFittingTypeExponential" xml:space="preserve">
     <value>Exponential</value>
   </data>
-  <data name="Enum_CurveFittingTypePolynomialOrder0" xml:space="preserve">
-    <value>Polynomial (0th order)</value>
-  </data>
-  <data name="Enum_CurveFittingTypePolynomialOrder1" xml:space="preserve">
-    <value>Polynomial (1st order)</value>
-  </data>
   <data name="Enum_CurveFittingTypePolynomialOrder2" xml:space="preserve">
     <value>Polynomial (2nd order)</value>
   </data>
@@ -305,5 +299,8 @@
   </data>
   <data name="Enum_CurveFittingTypeLogarithmic" xml:space="preserve">
     <value>Logarithmic</value>
+  </data>
+  <data name="Enum_TrackedMetric_None" xml:space="preserve">
+    <value>None</value>
   </data>
 </root>

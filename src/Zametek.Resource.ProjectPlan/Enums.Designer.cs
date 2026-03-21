@@ -160,24 +160,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Polynomial (0th order).
-        /// </summary>
-        public static string Enum_CurveFittingTypePolynomialOrder0 {
-            get {
-                return ResourceManager.GetString("Enum_CurveFittingTypePolynomialOrder0", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Polynomial (1st order).
-        /// </summary>
-        public static string Enum_CurveFittingTypePolynomialOrder1 {
-            get {
-                return ResourceManager.GetString("Enum_CurveFittingTypePolynomialOrder1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Polynomial (2nd order).
         /// </summary>
         public static string Enum_CurveFittingTypePolynomialOrder2 {
@@ -561,6 +543,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Enum_TrackedMetric_NetworkDurationManMonths {
             get {
                 return ResourceManager.GetString("Enum_TrackedMetric_NetworkDurationManMonths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string Enum_TrackedMetric_None {
+            get {
+                return ResourceManager.GetString("Enum_TrackedMetric_None", resourceCulture);
             }
         }
         

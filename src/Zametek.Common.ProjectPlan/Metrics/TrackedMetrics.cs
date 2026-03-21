@@ -4,6 +4,7 @@
     [Serializable]
     public enum TrackedMetrics
     {
+        None,
         RisksCriticality,
         RisksFibonacci,
         RisksActivity,

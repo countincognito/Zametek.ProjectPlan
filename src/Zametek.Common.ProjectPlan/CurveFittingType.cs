@@ -8,8 +8,6 @@
         Exponential,
         Logarithmic,
         Power,
-        PolynomialOrder0,
-        PolynomialOrder1,
         PolynomialOrder2,
         PolynomialOrder3,
         PolynomialOrder4
