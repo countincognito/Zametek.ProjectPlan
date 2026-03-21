@@ -16,7 +16,7 @@
 	<PackageReference Include="ScottPlot.Avalonia" Version="5.1.57" />
 	<PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.2" />
-    <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="11.3.9.4" />
+    <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="11.3.9.5" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.5" />
     <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="2.4.8" />
   </ItemGroup>
