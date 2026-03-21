@@ -4,6 +4,7 @@
 ARCH := x64
 OS := win
 CONFIGURATION := Release
+DOTNET := net10.0
 
 help:
 	@echo "ARCH=x64|x86|arm64"
@@ -28,9 +29,9 @@ build: build-desktop build-cli ## Compile all projects
 
 
 publish-desktop: build-desktop ## publish projectplan.net
-	dotnet publish -p:publishsinglefile=true -p:includenativelibrariesforselfextract=true --self-contained=true -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output src/Zametek.ProjectPlan/bin/$(CONFIGURATION)/net8.0/$(OS)-$(ARCH)/publish/
+	dotnet publish -p:publishsinglefile=true -p:includenativelibrariesforselfextract=true --self-contained=true -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output src/Zametek.ProjectPlan/bin/$(CONFIGURATION)/$(DOTNET)/$(OS)-$(ARCH)/publish/
 
 publish-cli: build-cli ## publish projectplan.net cli
-	dotnet publish -p:publishsinglefile=true -p:includenativelibrariesforselfextract=true --self-contained=true -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output src/Zametek.ProjectPlan.CommandLine/bin/$(CONFIGURATION)/net8.0/$(OS)-$(ARCH)/publish/
+	dotnet publish -p:publishsinglefile=true -p:includenativelibrariesforselfextract=true --self-contained=true -c $(CONFIGURATION) --os $(OS) --arch $(ARCH) src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output src/Zametek.ProjectPlan.CommandLine/bin/$(CONFIGURATION)/$(DOTNET)/$(OS)-$(ARCH)/publish/
 
 publish: publish-desktop publish-cli ## publish projectplan.net and projectplan.net cli
