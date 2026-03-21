@@ -214,7 +214,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.9.3-alpha.
+        ///   Looks up a localized string similar to 0.9.3-beta.
         /// </summary>
         public static string Label_AppVersion {
             get {
