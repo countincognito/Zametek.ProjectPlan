@@ -42,6 +42,10 @@
 		<Style Selector="TextBox">
 			<Setter Property="FontSize" Value="12"/>
 		</Style>
+		
+		<Style Selector="MenuItem">
+			<Setter Property="FontSize" Value="12"/>
+		</Style>
 
 		<Style Selector="ComboBox">
 			<Setter Property="VerticalAlignment" Value="Center"/>

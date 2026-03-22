@@ -6,7 +6,6 @@ using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows.Input;
@@ -38,7 +37,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly Subject<bool> m_NodeActionCommandManualTrigger;
 
         private readonly IDisposable? m_ReadOnlyNodesSub;
-        private readonly IDisposable? m_ReadOnlyFlattenedFileNodesSub;
+        private readonly IDisposable? m_ReadOnlyFlattenedNodesSub;
         private readonly IDisposable? m_SortUpdateSub;
         private readonly IDisposable? m_AreScenariosDisplayedSub;
         private readonly IDisposable? m_MetricsSub;
@@ -67,7 +66,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_NodeSortComparer = new(SortExpressionComparer<IManagedNodeViewModel>.Ascending(x => x.CreatedOn));
             Root = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, m_NodeSortComparer); // Placeholder until ResetRootNode is called.
             m_Nodes = new();
-            m_FlattenedFileNodes = new();
+            m_FlattenedNodes = new();
             SelectedNodes = [];
             SelectedNode = null;
             m_ManagedNodeLookup = new();
@@ -215,9 +214,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe();
 
             // Create read-only view to the source list.
-            m_ReadOnlyFlattenedFileNodesSub = m_FlattenedFileNodes.Connect()
-                .AutoRefresh(node => node.IsTracked) // Re-evaluates when this property changes.
-                .Bind(out m_ReadOnlyFlattenedFileNodes)
+            m_ReadOnlyFlattenedNodesSub = m_FlattenedNodes.Connect()
+                //.AutoRefresh(node => node.IsTracked) // Re-evaluates when this property changes.
+                .Bind(out m_ReadOnlyFlattenedNodes)
                 .Subscribe();
 
             ResetRootNode();
@@ -240,11 +239,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await ChangeSortAsync());
 
-            m_AreScenariosDisplayedSub = m_ReadOnlyFlattenedFileNodes
+            m_AreScenariosDisplayedSub = m_ReadOnlyFlattenedNodes
                 .ToObservableChangeSet()
                 .AutoRefresh(node => node.IsUpdated)
+                .AutoRefresh(node => node.DisplayName)
                 .AutoRefresh(node => node.IsTracked)
-                .Filter(node => !node.IsFolder && node.Scenario is not null)
+                //.Filter(node => !node.IsFolder && node.Scenario is not null)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ =>
                 {
@@ -644,7 +644,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_FileScenarioLookup.Clear();
                     m_NodeTagLookup.Clear();
                     m_Nodes.Clear();
-                    m_FlattenedFileNodes.Clear();
+                    m_FlattenedNodes.Clear();
                 }
             }
             finally
@@ -689,16 +689,16 @@ namespace Zametek.ViewModel.ProjectPlan
                                 && m_FileScenarioLookup.TryGetValue(projectScenarioViewModel.Id, out ProjectScenarioFileModel? projectScenarioFile))
                             {
                                 projectScenarioViewModel.Scenario = projectScenarioFile.Scenario;
-                                forFlattenedList.Add(projectScenarioViewModel);
                             }
 
+                            forFlattenedList.Add(projectScenarioViewModel);
                             SetTagLabels(projectScenarioViewModel);
                             m_ManagedNodeLookup[projectScenarioViewModel.Id] = projectScenarioViewModel;
                         }
                     }
 
                     // Keep the flattened file colleciton in-synch.
-                    m_FlattenedFileNodes.Edit(nodes => nodes.AddRange(forFlattenedList));
+                    m_FlattenedNodes.Edit(nodes => nodes.AddRange(forFlattenedList));
 
                     // Now build the hierarchy.
                     // Remember that the Root node is not in the lookup and forms the top-level parent.
@@ -772,7 +772,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     // Keep the flattened file colleciton in-synch.
-                    m_FlattenedFileNodes.Edit(nodes => nodes.RemoveMany(forFlattenedList));
+                    m_FlattenedNodes.Edit(nodes => nodes.RemoveMany(forFlattenedList));
                 }
             }
             finally
@@ -1650,7 +1650,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                Dictionary<Guid, TrackedMetricsModel> trackedMetricsModelLookup = RawFlattenedFileNodes
+                Dictionary<Guid, TrackedMetricsModel> trackedMetricsModelLookup = RawFlattenedNodes
                     .Where(x => x.IsTracked && !x.IsFolder && x.Scenario is not null)
                     .Select(x => new TrackedMetricsModel
                     {
@@ -1780,11 +1780,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyNodes;
         public ReadOnlyObservableCollection<IManagedNodeViewModel> Nodes => m_ReadOnlyNodes;
 
-        private readonly SourceList<IManagedNodeViewModel> m_FlattenedFileNodes;
-        public IReadOnlyList<IManagedNodeViewModel> RawFlattenedFileNodes => m_FlattenedFileNodes.Items;
+        private readonly SourceList<IManagedNodeViewModel> m_FlattenedNodes;
+        public IReadOnlyList<IManagedNodeViewModel> RawFlattenedNodes => m_FlattenedNodes.Items;
 
-        private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyFlattenedFileNodes;
-        public ReadOnlyObservableCollection<IManagedNodeViewModel> FlattenedFileNodes => m_ReadOnlyFlattenedFileNodes;
+        private readonly ReadOnlyObservableCollection<IManagedNodeViewModel> m_ReadOnlyFlattenedNodes;
+        public ReadOnlyObservableCollection<IManagedNodeViewModel> FlattenedNodes => m_ReadOnlyFlattenedNodes;
 
         public ObservableCollection<IManagedNodeViewModel> SelectedNodes { get; }
 
@@ -2133,7 +2133,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public void KillSubscriptions()
         {
             m_ReadOnlyNodesSub?.Dispose();
-            m_ReadOnlyFlattenedFileNodesSub?.Dispose();
+            m_ReadOnlyFlattenedNodesSub?.Dispose();
             m_SortUpdateSub?.Dispose();
             m_AreScenariosDisplayedSub?.Dispose();
             m_MetricsSub?.Dispose();
