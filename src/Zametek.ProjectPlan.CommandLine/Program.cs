@@ -164,6 +164,7 @@ namespace Zametek.ProjectPlan.CommandLine
                             core.BuildVertexGraph();
                             core.BuildResourceSeriesSet();
                             core.BuildTrackingSeriesSet();
+                            core.BuildNetworkMetrics();
                             core.BuildRiskMetrics();
                             core.BuildFinancialMetrics();
                         }

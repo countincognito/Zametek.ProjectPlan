@@ -14,14 +14,6 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeOffset GetLocalNow(DateTime dateTime);
 
-        int? CalculateTime(DateTimeOffset projectStart, DateTimeOffset? input);
-
-        int? CalculateTime(int? input);
-
-        DateTimeOffset? CalculateDateTime(DateTimeOffset projectStart, int? input);
-
-        DateTimeOffset? CalculateDateTime(DateTimeOffset projectStart, DateTimeOffset? input);
-
         (int?, DateTimeOffset?) CalculateTimeAndDateTime(DateTimeOffset projectStart, int? input);
 
         (int?, DateTimeOffset?) CalculateTimeAndDateTime(DateTimeOffset projectStart, DateTimeOffset? input);

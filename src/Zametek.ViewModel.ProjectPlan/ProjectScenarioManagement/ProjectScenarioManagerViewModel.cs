@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
@@ -79,6 +80,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TrackedMetricsSet = new();
 
             SetSelectedManagedNodesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedNodes);
+            SetNoSelectedManagedNodesCommand = ReactiveCommand.Create<PointerPressedEventArgs>(SetNoSelectedManagedNodes);
+
             {
                 ReactiveCommand<IManagedNodeViewModel, Unit> loadProjectScenarioFileCommand = ReactiveCommand.CreateFromTask<IManagedNodeViewModel>(
                     LoadProjectScenarioFileAsync,
@@ -104,7 +107,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     CreateEmptyProjectScenarioFileAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
+                        (IManagedNodeViewModel? selectedNode) => true),
                     RxApp.MainThreadScheduler);
                 createEmptyProjectScenarioFileCommand.IsExecuting.ToProperty(this, pm => pm.IsCreating, out m_IsCreating);
                 CreateEmptyProjectScenarioFileCommand = createEmptyProjectScenarioFileCommand;
@@ -114,7 +117,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     CreateEmptyProjectScenarioFolderAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
+                        (IManagedNodeViewModel? selectedNode) => true),
                     RxApp.MainThreadScheduler);
                 createEmptyProjectScenarioFolderCommand.IsExecuting.ToProperty(this, pm => pm.IsCreating, out m_IsCreating);
                 CreateEmptyProjectScenarioFolderCommand = createEmptyProjectScenarioFolderCommand;
@@ -190,11 +193,21 @@ namespace Zametek.ViewModel.ProjectPlan
                 CopyProjectScenarioNodeCommand = copyProjectScenarioNodeCommand;
             }
             {
+                ReactiveCommand<Unit, Unit> duplicateProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
+                    DuplicateProjectScenarioNodeAsync,
+                    this.WhenAnyValue(
+                        pm => pm.SelectedNode,
+                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder)
+                        .Merge(m_NodeActionCommandManualTrigger),
+                    RxApp.MainThreadScheduler);
+                DuplicateProjectScenarioNodeCommand = duplicateProjectScenarioNodeCommand;
+            }
+            {
                 ReactiveCommand<Unit, Unit> pasteProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
                     PasteProjectScenarioNodeAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && m_NodeAction.NodeIds.Count != 0)
+                        (IManagedNodeViewModel? selectedNode) => m_NodeAction.NodeIds.Count != 0)
                         .Merge(m_NodeActionCommandManualTrigger),
                     RxApp.MainThreadScheduler);
                 PasteProjectScenarioNodeCommand = pasteProjectScenarioNodeCommand;
@@ -668,6 +681,15 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private void SetNoSelectedManagedNodes(PointerPressedEventArgs args)
+        {
+            lock (m_Lock)
+            {
+                SelectedNodes.Clear();
+                SelectedNode = null;
+            }
+        }
+
         private void AddManagedNodes(IEnumerable<ProjectScenarioNodeModel> managedNodes)
         {
             try
@@ -876,6 +898,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                     if (managedNodeViewModel is not null)
                     {
+                        //BuildProject(); // TODO use this to persist changes before loading a new scenario.
+
+
+
                         ProjectScenarioNodeModel selectedScenarioNodeModel = managedNodeViewModel.Node;
                         Guid nodeId = selectedScenarioNodeModel.Id;
                         string nodeName = selectedScenarioNodeModel.Name;
@@ -903,18 +929,17 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
+                Guid parentId = Root.Id;
                 IManagedNodeViewModel? managedNode = SelectedNode;
 
-                if (managedNode is null)
+                if (managedNode is not null)
                 {
-                    return;
-                }
+                    parentId = managedNode.ParentId;
 
-                Guid parentId = managedNode.ParentId;
-
-                if (managedNode.IsFolder)
-                {
-                    parentId = managedNode.Id;
+                    if (managedNode.IsFolder)
+                    {
+                        parentId = managedNode.Id;
+                    }
                 }
 
                 HashSet<string> existingNames = ExistingNodeNames(parentId);
@@ -999,18 +1024,17 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
+                Guid parentId = Root.Id;
                 IManagedNodeViewModel? managedNode = SelectedNode;
 
-                if (managedNode is null)
+                if (managedNode is not null)
                 {
-                    return;
-                }
+                    parentId = managedNode.ParentId;
 
-                Guid parentId = managedNode.ParentId;
-
-                if (managedNode.IsFolder)
-                {
-                    parentId = managedNode.Id;
+                    if (managedNode.IsFolder)
+                    {
+                        parentId = managedNode.Id;
+                    }
                 }
 
                 HashSet<string> existingNames = ExistingNodeNames(parentId);
@@ -1326,22 +1350,27 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private async Task DuplicateProjectScenarioNodeAsync()
+        {
+            await CopyProjectScenarioNodeAsync();
+            await PasteProjectScenarioNodeAsync();
+        }
+
         private async Task PasteProjectScenarioNodeAsync()
         {
             try
             {
+                Guid destinationParentId = Root.Id;
                 IManagedNodeViewModel? managedNode = SelectedNode;
 
-                if (managedNode is null)
+                if (managedNode is not null)
                 {
-                    return;
-                }
+                    destinationParentId = managedNode.ParentId;
 
-                Guid destinationParentId = managedNode.ParentId;
-
-                if (managedNode.IsFolder)
-                {
-                    destinationParentId = managedNode.Id;
+                    if (managedNode.IsFolder)
+                    {
+                        destinationParentId = managedNode.Id;
+                    }
                 }
 
                 await PasteProjectScenarioNodeInternalAsync(destinationParentId);
@@ -1837,6 +1866,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand SetSelectedManagedNodesCommand { get; }
 
+        public ICommand SetNoSelectedManagedNodesCommand { get; }
+
         public ICommand LoadProjectScenarioFileCommand { get; }
 
         public ICommand LoadSelectedProjectScenarioFileCommand { get; }
@@ -1852,6 +1883,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand CutProjectScenarioNodeCommand { get; }
 
         public ICommand CopyProjectScenarioNodeCommand { get; }
+
+        public ICommand DuplicateProjectScenarioNodeCommand { get; }
 
         public ICommand PasteProjectScenarioNodeCommand { get; }
 

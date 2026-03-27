@@ -23,7 +23,7 @@
 	<DockPanel Margin="7">
 		<TreeView Name="scenarioTree"
 				  ItemsSource="{Binding Path=Nodes, Mode=OneWay}"
-				  SelectedItems="{Binding Path=SelectedNodes, Mode=OneWay}"
+				  SelectedItems="{Binding Path=SelectedNodes, Mode=TwoWay}"
 				  SelectionMode="Multiple">
 			<TreeView.Resources>
 				<ControlTheme x:Key="SimpleEmptyTreeViewItemToggleButtonTheme"
@@ -46,9 +46,63 @@
 			</TreeView.Resources>
 
 			<TreeView.Styles>
-				<Style Selector="TreeViewItem" x:DataType="vm:ManagedNodeViewModel">
-					<Setter Property="IsExpanded" Value="True" />
+				<Style>
+					<Setter Property="ContextMenu">
+						<ContextMenu>
+							<MenuItem Header="{x:Static resources:Labels.Label_NewScenario}"
+									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectScenarioFileCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_NewScenarioFolder}"
+									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectScenarioFolderCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_PasteNode}"
+									  Command="{Binding Path=$parent[TreeView].DataContext.PasteProjectScenarioNodeCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_Sort}">
+								<MenuItem Header="{x:Static resources:Menus.Menu_SortModeName}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.Name}, Mode=OneWay}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortModeCommand, Mode=OneWay}"
+										  CommandParameter="{x:Static common:SortMode.Name}"
+										  ToggleType="Radio" />
+
+								<MenuItem Header="{x:Static resources:Menus.Menu_SortModeCreatedOn}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.CreatedOn}, Mode=OneWay}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortModeCommand, Mode=OneWay}"
+										  CommandParameter="{x:Static common:SortMode.CreatedOn}"
+										  ToggleType="Radio" />
+
+								<MenuItem Header="{x:Static resources:Menus.Menu_SortModeModifiedOn}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.ModifiedOn}, Mode=OneWay}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortModeCommand, Mode=OneWay}"
+										  CommandParameter="{x:Static common:SortMode.ModifiedOn}"
+										  ToggleType="Radio" />
+
+								<Separator />
+
+								<MenuItem Header="{x:Static resources:Menus.Menu_SortDirectionAscending}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortDirection, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortDirection.Ascending}, Mode=OneWay}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortDirectionCommand, Mode=OneWay}"
+										  CommandParameter="{x:Static common:SortDirection.Ascending}"
+										  ToggleType="Radio" />
+
+
+								<MenuItem Header="{x:Static resources:Menus.Menu_SortDirectionDescending}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortDirection, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortDirection.Descending}, Mode=OneWay}"
+										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortDirectionCommand, Mode=OneWay}"
+										  CommandParameter="{x:Static common:SortDirection.Descending}"
+										  ToggleType="Radio" />
+							</MenuItem>
+						</ContextMenu>
+					</Setter>
+
+					<!-- Ensure the item stretches to fill the available width -->
+					<Setter Property="HorizontalAlignment" Value="Stretch"/>
 				</Style>
+				
 				<Style Selector="TextBlock.isLoaded" x:DataType="vm:ManagedNodeViewModel">
 					<Setter Property="FontWeight" Value="Bold" />
 				</Style>
@@ -58,7 +112,9 @@
 					<Setter Property="Theme" Value="{StaticResource SimpleEmptyTreeViewItemToggleButtonTheme}" />
 				</Style>
 
-				<Style Selector="TreeViewItem">
+				<Style Selector="TreeViewItem" x:DataType="vm:ManagedNodeViewModel">
+					<Setter Property="IsExpanded" Value="True" />
+					
 					<Setter Property="ContextMenu">
 						<ContextMenu>
 							<MenuItem Header="{x:Static resources:Labels.Label_SelectManagedScenario}"
@@ -80,6 +136,9 @@
 
 							<MenuItem Header="{x:Static resources:Labels.Label_CopyNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CopyProjectScenarioNodeCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_DuplicateNode}"
+									  Command="{Binding Path=$parent[TreeView].DataContext.DuplicateProjectScenarioNodeCommand, Mode=OneWay}" />
 
 							<MenuItem Header="{x:Static resources:Labels.Label_PasteNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.PasteProjectScenarioNodeCommand, Mode=OneWay}" />
@@ -196,6 +255,9 @@
 				</ia:EventTriggerBehavior>
 				<ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #scenarioTree}">
 					<ia:InvokeCommandAction Command="{Binding Path=LoadSelectedProjectScenarioFileCommand, Mode=OneWay}" PassEventArgsToCommand="False" />
+				</ia:EventTriggerBehavior>
+				<ia:EventTriggerBehavior EventName="PointerPressed" SourceObject="{Binding #scenarioTree}">
+					<ia:InvokeCommandAction Command="{Binding Path=SetNoSelectedManagedNodesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
 				</ia:EventTriggerBehavior>
 			</i:Interaction.Behaviors>
 		</TreeView>

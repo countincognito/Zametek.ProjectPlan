@@ -1,6 +1,8 @@
 ﻿using FluentDateTimeOffset;
+using Ical.Net;
+using Ical.Net.CalendarComponents;
+using Ical.Net.DataTypes;
 using ReactiveUI;
-using System;
 using System.Globalization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -20,6 +22,26 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly string s_DateTimeFormat = $@"{s_DateFormat} {DateTimeFormatInfo.CurrentInfo.LongTimePattern}";
 
         private static readonly string s_DateTimeOffsetFormat = s_DateTimeFormat + (DateTimeFormatInfo.CurrentInfo.LongTimePattern.Contains('z') ? string.Empty : " zzz");
+
+
+        private static readonly RecurrencePattern s_WeekendRecurrencePattern = new()
+        {
+            Frequency = FrequencyType.Weekly,
+            ByDay =
+                [
+                    new(DayOfWeek.Saturday),
+                    new(DayOfWeek.Sunday)
+                ]
+        };
+
+
+
+
+
+
+
+
+
 
         #endregion
 
@@ -64,12 +86,103 @@ namespace Zametek.ViewModel.ProjectPlan
             return current.AddDays(days);
         }
 
+
+
+
+
         private static DateTimeOffset AddBusinessDays(
             DateTimeOffset current,
             int days)
         {
-            return current.AddBusinessDays(days);
+            //int sign = Math.Sign(days);
+
+            if (days < 0)
+            {
+                return AddBusinessDays(current, -days);
+            }
+
+
+
+            DateTimeOffset startDateTime = current;
+            var startCalDateTime = new CalDateTime(startDateTime.Date);
+
+            var weekendEvent = new CalendarEvent
+            {
+                Start = startCalDateTime,
+                RecurrenceRules = [s_WeekendRecurrencePattern]
+            };
+
+            int unsignedDays = Math.Abs(days);
+
+
+            for (int i = 0; i < unsignedDays; i++)
+            {
+                bool isWorkDay = false;
+
+                do
+                {
+                    current = current.AddDays(1);
+                    var currentCalDateTime = new CalDateTime(current.Date);
+                    var endCalDateTime = currentCalDateTime.AddDays(1);
+
+                    List<Occurrence> occurrences = [.. weekendEvent
+                        .GetOccurrences(currentCalDateTime)
+                        .TakeWhileBefore(endCalDateTime)];
+
+                    isWorkDay = occurrences.Count == 0;
+                } while (!isWorkDay);
+            }
+
+            return current;
         }
+
+
+
+        //private static DateTimeOffset AddBusinessDays(
+        //    DateTimeOffset current,
+        //    int days)
+        //{
+        //    //int sign = Math.Sign(days);
+
+        //    if (days < 0)
+        //    {
+        //        return AddBusinessDays(current, -days);
+        //    }
+
+
+
+        //    DateTimeOffset startDateTime = current;
+        //    var startCalDateTime = new CalDateTime(startDateTime.Date);
+
+        //    var weekendEvent = new CalendarEvent
+        //    {
+        //        Start = startCalDateTime,
+        //        RecurrenceRules = [s_WeekendRecurrencePattern]
+        //    };
+
+        //    int unsignedDays = Math.Abs(days);
+
+
+        //    for (int i = 0; i < unsignedDays; i++)
+        //    {
+        //        bool isWorkDay = false;
+
+        //        do
+        //        {
+        //            current = current.AddDays(1);
+        //            var currentCalDateTime = new CalDateTime(current.Date);
+        //            var endCalDateTime = currentCalDateTime.AddDays(1);
+
+        //            List<Occurrence> occurrences = [.. weekendEvent
+        //                .GetOccurrences(currentCalDateTime)
+        //                .TakeWhileBefore(endCalDateTime)];
+
+        //            isWorkDay = occurrences.Count == 0;
+        //        } while (!isWorkDay);
+        //    }
+
+        //    return current;
+        //}
 
         private static int CountAllDays(
             DateTimeOffset current,
@@ -94,8 +207,21 @@ namespace Zametek.ViewModel.ProjectPlan
             while (current.IsBefore(toCompareWith))
             {
                 current = current.AddDays(1);
-                if (current.DayOfWeek != DayOfWeek.Saturday
-                    && current.DayOfWeek != DayOfWeek.Sunday)
+                var startDateTime = new CalDateTime(current.Date);
+
+                var weekendEvent = new CalendarEvent
+                {
+                    Start = startDateTime,
+                    RecurrenceRules = [s_WeekendRecurrencePattern]
+                };
+
+                List<Occurrence> occurrences = [.. weekendEvent
+                    .GetOccurrences(startDateTime)
+                    .TakeWhileBefore(startDateTime.AddDays(1))];
+
+                bool isWorkDay = occurrences.Count == 0;
+
+                if (isWorkDay)
                 {
                     count++;
                 }
@@ -223,6 +349,70 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private int? CalculateTime(int? input)
+        {
+            lock (m_Lock)
+            {
+                int? result = input;
+                if (result.HasValue && result < 0)
+                {
+                    result = 0;
+                }
+                return result;
+            }
+        }
+
+        private int? CalculateTime(
+            DateTimeOffset projectStart,
+            DateTimeOffset? input)
+        {
+            lock (m_Lock)
+            {
+                int? result = null;
+                if (input.HasValue)
+                {
+                    result = CountDays(projectStart, input.GetValueOrDefault());
+                    result = CalculateTime(result);
+                }
+                return result;
+            }
+        }
+
+        private DateTimeOffset? CalculateDateTime(
+            DateTimeOffset projectStart,
+            DateTimeOffset? input)
+        {
+            lock (m_Lock)
+            {
+                DateTimeOffset? result = input;
+                if (result.HasValue)
+                {
+                    if (result < projectStart)
+                    {
+                        result = projectStart.DateTime;
+                    }
+                    result = new DateTimeOffset(result.GetValueOrDefault().Date + projectStart.TimeOfDay, projectStart.Offset);
+                }
+                return result;
+            }
+        }
+
+        private DateTimeOffset? CalculateDateTime(
+            DateTimeOffset projectStart,
+            int? input)
+        {
+            lock (m_Lock)
+            {
+                DateTimeOffset? result = null;
+                if (input.HasValue)
+                {
+                    result = AddDays(projectStart, input.GetValueOrDefault());
+                    result = CalculateDateTime(projectStart, result);
+                }
+                return result;
+            }
+        }
+
         #endregion
 
         #region IDateTimeCalculator Members
@@ -319,70 +509,6 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             TimeSpan offset = m_TimeProvider.LocalTimeZone.GetUtcOffset(dateTime);
             return new(dateTime, offset);
-        }
-
-        public int? CalculateTime(
-            DateTimeOffset projectStart,
-            DateTimeOffset? input)
-        {
-            lock (m_Lock)
-            {
-                int? result = null;
-                if (input.HasValue)
-                {
-                    result = CountDays(projectStart, input.GetValueOrDefault());
-                    result = CalculateTime(result);
-                }
-                return result;
-            }
-        }
-
-        public int? CalculateTime(int? input)
-        {
-            lock (m_Lock)
-            {
-                int? result = input;
-                if (result.HasValue && result < 0)
-                {
-                    result = 0;
-                }
-                return result;
-            }
-        }
-
-        public DateTimeOffset? CalculateDateTime(
-            DateTimeOffset projectStart,
-            int? input)
-        {
-            lock (m_Lock)
-            {
-                DateTimeOffset? result = null;
-                if (input.HasValue)
-                {
-                    result = AddDays(projectStart, input.GetValueOrDefault());
-                    result = CalculateDateTime(projectStart, result);
-                }
-                return result;
-            }
-        }
-
-        public DateTimeOffset? CalculateDateTime(
-            DateTimeOffset projectStart,
-            DateTimeOffset? input)
-        {
-            lock (m_Lock)
-            {
-                DateTimeOffset? result = input;
-                if (result.HasValue)
-                {
-                    if (result < projectStart)
-                    {
-                        result = projectStart.DateTime;
-                    }
-                    result = new DateTimeOffset(result.GetValueOrDefault().Date + projectStart.TimeOfDay, projectStart.Offset);
-                }
-                return result;
-            }
         }
 
         public (int?, DateTimeOffset?) CalculateTimeAndDateTime(

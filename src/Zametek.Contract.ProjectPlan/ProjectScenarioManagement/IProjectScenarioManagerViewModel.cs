@@ -49,6 +49,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand SetSelectedManagedNodesCommand { get; }
 
+        ICommand SetNoSelectedManagedNodesCommand { get; }
+
         ICommand LoadProjectScenarioFileCommand { get; }
 
         ICommand LoadSelectedProjectScenarioFileCommand { get; }
@@ -64,6 +66,8 @@ namespace Zametek.Contract.ProjectPlan
         ICommand CutProjectScenarioNodeCommand { get; }
 
         ICommand CopyProjectScenarioNodeCommand { get; }
+
+        ICommand DuplicateProjectScenarioNodeCommand { get; }
 
         ICommand PasteProjectScenarioNodeCommand { get; }
 

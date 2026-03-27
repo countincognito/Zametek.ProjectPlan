@@ -618,4 +618,7 @@
   <data name="Label_CurveFittingType" xml:space="preserve">
     <value>Curve Fitting</value>
   </data>
+  <data name="Label_DuplicateNode" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
 </root>
