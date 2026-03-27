@@ -1,4 +1,5 @@
-﻿using FluentDateTimeOffset;
+﻿using FluentDateTime;
+using FluentDateTimeOffset;
 using Ical.Net;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
@@ -90,21 +91,30 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
+
+
+
+
         private static DateTimeOffset AddBusinessDays(
             DateTimeOffset current,
             int days)
         {
-            //int sign = Math.Sign(days);
+            int sign = Math.Sign(days);
 
-            if (days < 0)
+
+            DateTime startDateTime = current.Date;
+            DateTime endDateTime = startDateTime.AddDays(days * 2);
+
+            if (startDateTime.IsAfter(endDateTime))
             {
-                return AddBusinessDays(current, -days);
+                (startDateTime, endDateTime) = (endDateTime, startDateTime);
             }
 
 
 
-            DateTimeOffset startDateTime = current;
-            var startCalDateTime = new CalDateTime(startDateTime.Date);
+
+            var startCalDateTime = new CalDateTime(startDateTime);
+            var endCalDateTime = new CalDateTime(endDateTime);
 
             var weekendEvent = new CalendarEvent
             {
@@ -112,25 +122,25 @@ namespace Zametek.ViewModel.ProjectPlan
                 RecurrenceRules = [s_WeekendRecurrencePattern]
             };
 
+            List<Occurrence> occurrences = [.. weekendEvent
+                .GetOccurrences(startCalDateTime)
+                .TakeWhileBefore(endCalDateTime)];
+
+            //HashSet<DateOnly> nonWorkingDays = occurrences.SelectMany(x => GetAllDates(x.Period.StartTime.Date, x.Period.EndTime.Date)).ToHashSet();
+            HashSet<DateOnly> nonWorkingDays = [.. occurrences.Select(x => x.Period.StartTime.Date)];
+
+
             int unsignedDays = Math.Abs(days);
 
-
-            for (int i = 0; i < unsignedDays; i++)
+            int count = 0;
+            while (count < unsignedDays)
             {
-                bool isWorkDay = false;
+                current = current.AddDays(sign);
 
-                do
+                if (!nonWorkingDays.Contains(DateOnly.FromDateTime(current.Date)))
                 {
-                    current = current.AddDays(1);
-                    var currentCalDateTime = new CalDateTime(current.Date);
-                    var endCalDateTime = currentCalDateTime.AddDays(1);
-
-                    List<Occurrence> occurrences = [.. weekendEvent
-                        .GetOccurrences(currentCalDateTime)
-                        .TakeWhileBefore(endCalDateTime)];
-
-                    isWorkDay = occurrences.Count == 0;
-                } while (!isWorkDay);
+                    count += 1;
+                }
             }
 
             return current;
