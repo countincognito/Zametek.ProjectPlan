@@ -148,51 +148,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-        //private static DateTimeOffset AddBusinessDays(
-        //    DateTimeOffset current,
-        //    int days)
-        //{
-        //    //int sign = Math.Sign(days);
 
-        //    if (days < 0)
-        //    {
-        //        return AddBusinessDays(current, -days);
-        //    }
-
-
-
-        //    DateTimeOffset startDateTime = current;
-        //    var startCalDateTime = new CalDateTime(startDateTime.Date);
-
-        //    var weekendEvent = new CalendarEvent
-        //    {
-        //        Start = startCalDateTime,
-        //        RecurrenceRules = [s_WeekendRecurrencePattern]
-        //    };
-
-        //    int unsignedDays = Math.Abs(days);
-
-
-        //    for (int i = 0; i < unsignedDays; i++)
-        //    {
-        //        bool isWorkDay = false;
-
-        //        do
-        //        {
-        //            current = current.AddDays(1);
-        //            var currentCalDateTime = new CalDateTime(current.Date);
-        //            var endCalDateTime = currentCalDateTime.AddDays(1);
-
-        //            List<Occurrence> occurrences = [.. weekendEvent
-        //                .GetOccurrences(currentCalDateTime)
-        //                .TakeWhileBefore(endCalDateTime)];
-
-        //            isWorkDay = occurrences.Count == 0;
-        //        } while (!isWorkDay);
-        //    }
-
-        //    return current;
-        //}
 
         private static int CountAllDays(
             DateTimeOffset current,
@@ -213,27 +169,30 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 return -CountBusinessDays(toCompareWith, current);
             }
+
+            var startCalDateTime = new CalDateTime(current.Date);
+            var endCalDateTime = new CalDateTime(toCompareWith.Date);
+
+            var weekendEvent = new CalendarEvent
+            {
+                Start = startCalDateTime,
+                RecurrenceRules = [s_WeekendRecurrencePattern]
+            };
+
+            List<Occurrence> occurrences = [.. weekendEvent
+                .GetOccurrences(startCalDateTime)
+                .TakeWhileBefore(endCalDateTime)];
+
+            HashSet<DateOnly> nonWorkingDays = [.. occurrences.Select(x => x.Period.StartTime.Date)];
+
             int count = 0;
             while (current.IsBefore(toCompareWith))
             {
                 current = current.AddDays(1);
-                var startDateTime = new CalDateTime(current.Date);
 
-                var weekendEvent = new CalendarEvent
+                if (!nonWorkingDays.Contains(DateOnly.FromDateTime(current.Date)))
                 {
-                    Start = startDateTime,
-                    RecurrenceRules = [s_WeekendRecurrencePattern]
-                };
-
-                List<Occurrence> occurrences = [.. weekendEvent
-                    .GetOccurrences(startDateTime)
-                    .TakeWhileBefore(startDateTime.AddDays(1))];
-
-                bool isWorkDay = occurrences.Count == 0;
-
-                if (isWorkDay)
-                {
-                    count++;
+                    count += 1;
                 }
             }
             return count;
