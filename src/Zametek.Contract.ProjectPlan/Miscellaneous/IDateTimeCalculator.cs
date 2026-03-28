@@ -8,6 +8,10 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeDisplayMode DisplayMode { get; set; }
 
+        DateTimeOffset ProjectStart { get; set; }
+
+        DateTimeOffset NonWorkingDaysFinish { get; }
+
         int DaysPerWeek { get; }
 
         DateTimeOffset GetLocalNow();

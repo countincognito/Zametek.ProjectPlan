@@ -24,7 +24,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly string s_DateTimeOffsetFormat = s_DateTimeFormat + (DateTimeFormatInfo.CurrentInfo.LongTimePattern.Contains('z') ? string.Empty : " zzz");
 
-
         private static readonly RecurrencePattern s_WeekendRecurrencePattern = new()
         {
             Frequency = FrequencyType.Weekly,
@@ -35,14 +34,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ]
         };
 
-
-
-
-
-
-
-
-
+        private readonly HashSet<DateOnly> m_NonWorkingDays;
 
         #endregion
 
@@ -54,6 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TimeProvider = timeProvider;
             m_AddDaysFunc = AddAllDays;
             m_CountDaysFunc = CountAllDays;
+            m_NonWorkingDays = [];
 
             m_DisplayEarliestStartDateFunc = DisplayDefaultEarliestStartDate;
             m_DisplayLatestStartDateFunc = DisplayDefaultLatestStartDate;
@@ -79,6 +72,35 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Private Methods
+
+        private static DateTimeOffset AddAllDays(
+            DateTimeOffset current,
+            int days)
+        {
+            return current.AddDays(days);
+        }
+
+        private static int CountAllDays(
+            DateTimeOffset current,
+            DateTimeOffset toCompareWith)
+        {
+            if (current.IsAfter(toCompareWith))
+            {
+                return -CountAllDays(toCompareWith, current);
+            }
+            return Convert.ToInt32((toCompareWith - current).TotalDays);
+        }
+
+
+
+
+
+
+
+
+
+
+
 
         private static HashSet<DateOnly> GetNonWorkingDays(
             DateTime startDateTime,
@@ -123,14 +145,36 @@ namespace Zametek.ViewModel.ProjectPlan
             return nonWorkingDays;
         }
 
-        private static DateTimeOffset AddAllDays(
-            DateTimeOffset current,
-            int days)
+
+
+
+        private void ClearNonWorkingDays()
         {
-            return current.AddDays(days);
+            lock(m_Lock)
+            {
+                m_NonWorkingDays.Clear();
+                m_NonWorkingDaysFinish = m_ProjectStart;
+            }
         }
 
-        private static DateTimeOffset AddBusinessDays(
+        private void AppendNonWorkingDays(
+            int extraDaysCoverage,
+            List<RecurrencePattern> nonWorkingDayPatterns)
+        {
+            lock (m_Lock)
+            {
+                DateTime startDateTime = m_ProjectStart.Date;
+                m_NonWorkingDaysFinish = m_NonWorkingDaysFinish.AddDays(extraDaysCoverage).Date;
+                DateTime endDateTime = m_NonWorkingDaysFinish.AddDays(extraDaysCoverage).Date;
+                HashSet<DateOnly> newNonWorkingDays = GetNonWorkingDays(
+                    startDateTime,
+                    endDateTime,
+                    nonWorkingDayPatterns);
+                m_NonWorkingDays.UnionWith(newNonWorkingDays);
+            }   
+        }
+
+        private DateTimeOffset AddBusinessDays(
             DateTimeOffset current,
             int days)
         {
@@ -155,18 +199,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return current;
         }
 
-        private static int CountAllDays(
-            DateTimeOffset current,
-            DateTimeOffset toCompareWith)
-        {
-            if (current.IsAfter(toCompareWith))
-            {
-                return -CountAllDays(toCompareWith, current);
-            }
-            return Convert.ToInt32((toCompareWith - current).TotalDays);
-        }
-
-        private static int CountBusinessDays(
+        private int CountBusinessDays(
             DateTimeOffset current,
             DateTimeOffset toCompareWith)
         {
@@ -180,6 +213,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 toCompareWith.Date,
                 [s_WeekendRecurrencePattern]);
 
+
+
+
+
+
+
+
+
+
+
+
             int count = 0;
             while (current.IsBefore(toCompareWith))
             {
@@ -192,6 +236,22 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             return count;
         }
+
+
+
+
+        private const int c_BufferDays = 10;
+
+
+
+
+
+
+
+
+
+
+
 
         private static DateTimeOffset DisplayDefaultEarliestStartDate(
             DateTimeOffset projectStart,
@@ -394,14 +454,18 @@ namespace Zametek.ViewModel.ProjectPlan
                     switch (calculatorMode)
                     {
                         case DateTimeCalculatorMode.AllDays:
-                            DaysPerWeek = 7;
-                            m_AddDaysFunc = AddAllDays;
-                            m_CountDaysFunc = CountAllDays;
+                            {
+                                DaysPerWeek = 7;
+                                m_AddDaysFunc = AddAllDays;
+                                m_CountDaysFunc = CountAllDays;
+                            }
                             break;
                         case DateTimeCalculatorMode.BusinessDays:
-                            DaysPerWeek = 5;
-                            m_AddDaysFunc = AddBusinessDays;
-                            m_CountDaysFunc = CountBusinessDays;
+                            {
+                                DaysPerWeek = 5;
+                                m_AddDaysFunc = AddBusinessDays;
+                                m_CountDaysFunc = CountBusinessDays;
+                            }
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(
@@ -427,18 +491,22 @@ namespace Zametek.ViewModel.ProjectPlan
                     switch (displayMode)
                     {
                         case DateTimeDisplayMode.Default:
-                            m_DisplayEarliestStartDateFunc = DisplayDefaultEarliestStartDate;
-                            m_DisplayLatestStartDateFunc = DisplayDefaultLatestStartDate;
-                            m_DisplayFinishDateFunc = DisplayDefaultFinishDate;
-                            m_MaximumLatestFinishDateInFunc = DefaultMaximumLatestFinishDateIn;
-                            m_MaximumLatestFinishDateOutFunc = DefaultMaximumLatestFinishDateOut;
+                            {
+                                m_DisplayEarliestStartDateFunc = DisplayDefaultEarliestStartDate;
+                                m_DisplayLatestStartDateFunc = DisplayDefaultLatestStartDate;
+                                m_DisplayFinishDateFunc = DisplayDefaultFinishDate;
+                                m_MaximumLatestFinishDateInFunc = DefaultMaximumLatestFinishDateIn;
+                                m_MaximumLatestFinishDateOutFunc = DefaultMaximumLatestFinishDateOut;
+                            }
                             break;
                         case DateTimeDisplayMode.Classic:
-                            m_DisplayEarliestStartDateFunc = DisplayClassicEarliestStartDate;
-                            m_DisplayLatestStartDateFunc = DisplayClassicLatestStartDate;
-                            m_DisplayFinishDateFunc = DisplayClassicFinishDate;
-                            m_MaximumLatestFinishDateInFunc = ClassicMaximumLatestFinishDateIn;
-                            m_MaximumLatestFinishDateOutFunc = ClassicMaximumLatestFinishDateOut;
+                            {
+                                m_DisplayEarliestStartDateFunc = DisplayClassicEarliestStartDate;
+                                m_DisplayLatestStartDateFunc = DisplayClassicLatestStartDate;
+                                m_DisplayFinishDateFunc = DisplayClassicFinishDate;
+                                m_MaximumLatestFinishDateInFunc = ClassicMaximumLatestFinishDateIn;
+                                m_MaximumLatestFinishDateOutFunc = ClassicMaximumLatestFinishDateOut;
+                            }
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(
@@ -447,6 +515,36 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     this.RaiseAndSetIfChanged(ref m_DisplayMode, displayMode);
+                }
+            }
+        }
+
+        private DateTimeOffset m_ProjectStart;
+        public DateTimeOffset ProjectStart
+        {
+            get => m_ProjectStart;
+            set
+            {
+                lock (m_Lock)
+                {
+                    // Convert to local now using TimeProvider as we do not know
+                    // if the input is provided as just a datetime from XAML.
+                    m_ProjectStart = GetLocalNow(value.DateTime);
+                    ClearNonWorkingDays();
+                    this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
+                }
+            }
+        }
+
+        private DateTimeOffset m_NonWorkingDaysFinish;
+        public DateTimeOffset NonWorkingDaysFinish
+        {
+            get => m_NonWorkingDaysFinish;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_NonWorkingDaysFinish, value);
                 }
             }
         }
