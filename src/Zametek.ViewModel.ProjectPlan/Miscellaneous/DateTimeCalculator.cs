@@ -35,6 +35,7 @@ namespace Zametek.ViewModel.ProjectPlan
         };
 
         private readonly HashSet<DateOnly> m_NonWorkingDays;
+        private const int c_NonWorkingDaysSearchBuffer = 30;
 
         #endregion
 
@@ -183,32 +184,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        private const int c_BufferDays = 10;
-
-
         private DateTimeOffset AddBusinessDays(
             DateTimeOffset current,
             int days)
@@ -229,7 +204,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     // then calculate more non-working days.
                     if (current.IsAfter(NonWorkingDaysFinish))
                     {
-                        AppendNonWorkingDays(current.Date, c_BufferDays, [s_WeekendRecurrencePattern]);
+                        AppendNonWorkingDays(
+                            current.Date,
+                            c_NonWorkingDaysSearchBuffer,
+                            [s_WeekendRecurrencePattern]);
                     }
 
                     if (!m_NonWorkingDays.Contains(DateOnly.FromDateTime(current.Date)))
@@ -468,6 +446,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     DateTimeCalculatorMode calculatorMode = value;
+                    ClearNonWorkingDays();
 
                     switch (calculatorMode)
                     {
@@ -505,6 +484,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     DateTimeDisplayMode displayMode = value;
+                    ClearNonWorkingDays();
 
                     switch (displayMode)
                     {
