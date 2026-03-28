@@ -208,6 +208,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ResourceSettings,
                     rcm => rcm.m_CoreViewModel.GraphSettings,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
+                    rcm => rcm.m_CoreViewModel.ProjectFinish,
                     rcm => rcm.m_CoreViewModel.Metrics,
                     rcm => rcm.m_CoreViewModel.Today,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
@@ -215,7 +216,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.AnnotationStyle,
                     rcm => rcm.BoolAccumulator,
                     rcm => rcm.ActivitySelector.TargetActivitiesString,
-                    (x, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                    (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
 
@@ -286,6 +287,7 @@ namespace Zametek.ViewModel.ProjectPlan
             GraphSettingsModel graphSettings,
             WorkStreamSettingsModel workStreamSettings,
             DateTimeOffset projectStart,
+            string projectFinish,
             int? duration,
             DateTimeOffset today,
             bool showToday,
@@ -814,21 +816,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (showProjectFinish)
             {
-                var projectFinish = new StringBuilder(Resource.ProjectPlan.Labels.Label_ProjectFinish);
-                projectFinish.Append(' ');
-
-                if (showDates)
-                {
-                    DateTimeOffset startAndFinish = dateTimeCalculator.AddDays(projectStart, finishTime);
-                    projectFinish.Append(
-                        dateTimeCalculator
-                            .DisplayFinishDate(startAndFinish, startAndFinish, 1)
-                            .ToString(DateTimeCalculator.DateFormat));
-                }
-                else
-                {
-                    projectFinish.Append(finishTime);
-                }
+                var projectFinishDisplay = new StringBuilder(Resource.ProjectPlan.Labels.Label_ProjectFinish);
+                projectFinishDisplay.Append(' ');
+                projectFinishDisplay.Append(projectFinish);
 
                 double finishTimeX = ChartHelper.CalculateChartFinishTimeXValue(
                     finishTime,
@@ -837,7 +827,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     dateTimeCalculator);
                 double finishTimeY = labels.Count;
 
-                Annotation annotation = plotModel.Plot.Add.Annotation(projectFinish.ToString(), Alignment.UpperRight);
+                Annotation annotation = plotModel.Plot.Add.Annotation(projectFinishDisplay.ToString(), Alignment.UpperRight);
                 annotation.LabelBackgroundColor = Colors.Transparent;
                 annotation.LabelBorderColor = Colors.Transparent;
                 annotation.LabelShadowColor = Colors.Transparent;
@@ -1557,6 +1547,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.GraphSettings,
                     m_CoreViewModel.WorkStreamSettings,
                     m_CoreViewModel.ProjectStart,
+                    m_CoreViewModel.ProjectFinish,
                     m_CoreViewModel.Metrics?.Network?.Duration,
                     m_CoreViewModel.Today,
                     ShowToday,

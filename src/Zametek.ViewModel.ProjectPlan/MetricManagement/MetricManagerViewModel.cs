@@ -253,31 +253,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
             m_ProjectFinish = this
-                .WhenAnyValue(
-                    mm => mm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-                    mm => mm.m_CoreViewModel.ProjectStart,
-                    mm => mm.NetworkDuration,
-                    mm => mm.m_DateTimeCalculator.DaysPerWeek,
-                    mm => mm.m_DateTimeCalculator.CalculatorMode,
-                    mm => mm.m_DateTimeCalculator.DisplayMode,
-                    (bool showDates, DateTimeOffset projectStart, int? duration, int daysPerWeek, DateTimeCalculatorMode calculatorMode, DateTimeDisplayMode displayMode) =>
-                    {
-                        if (duration is null || duration == 0)
-                        {
-                            return string.Empty;
-                        }
-
-                        if (showDates)
-                        {
-                            int durationValue = duration.GetValueOrDefault();
-                            DateTimeOffset startAndFinish = m_DateTimeCalculator.AddDays(projectStart, durationValue);
-                            return m_DateTimeCalculator
-                                .DisplayFinishDate(startAndFinish, startAndFinish, 1)
-                                .ToString(DateTimeCalculator.DateFormat);
-                        }
-
-                        return duration.GetValueOrDefault().ToString();
-                    })
+                .WhenAnyValue(mm => mm.m_CoreViewModel.ProjectFinish)
                 .ToProperty(this, mm => mm.ProjectFinish);
 
             Id = Resource.ProjectPlan.Titles.Title_Metrics;

@@ -102,6 +102,33 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_SelectedTheme = m_SettingService.SelectedTheme;
 
+            m_ProjectFinish = this
+                .WhenAnyValue(
+                    core => core.DisplaySettingsViewModel.ShowDates,
+                    core => core.ProjectStart,
+                    core => core.NetworkMetrics,
+                    core => core.m_DateTimeCalculator.CalculatorMode,
+                    core => core.m_DateTimeCalculator.DisplayMode,
+                    (bool showDates, DateTimeOffset projectStart, NetworkModel networkModel, DateTimeCalculatorMode _, DateTimeDisplayMode _) =>
+                    {
+                        if (networkModel.Duration is null || networkModel.Duration == 0)
+                        {
+                            return string.Empty;
+                        }
+
+                        if (showDates)
+                        {
+                            int durationValue = networkModel.Duration.GetValueOrDefault();
+                            DateTimeOffset startAndFinish = m_DateTimeCalculator.AddDays(projectStart, durationValue);
+                            return m_DateTimeCalculator
+                                .DisplayFinishDate(startAndFinish, startAndFinish, 1)
+                                .ToString(DateTimeCalculator.DateFormat);
+                        }
+
+                        return networkModel.Duration.GetValueOrDefault().ToString();
+                    })
+                .ToProperty(this, mm => mm.ProjectFinish);
+
             // Create read-only view to the source list.
             m_ReadOnlyActivitiesSub = m_Activities.Connect()
                .ObserveOn(RxApp.MainThreadScheduler)
@@ -1070,6 +1097,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
         }
+
+        private readonly ObservableAsPropertyHelper<string> m_ProjectFinish;
+        public string ProjectFinish => m_ProjectFinish.Value;
 
         private readonly DisplaySettingsViewModel m_DisplaySettingsViewModel;
         public IDisplaySettingsViewModel DisplaySettingsViewModel
@@ -2445,6 +2475,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
+                m_ProjectFinish?.Dispose();
                 m_HasActivities?.Dispose();
                 m_HasResources?.Dispose();
                 m_HasWorkStreams?.Dispose();

@@ -19,6 +19,8 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeOffset Today { get; set; }
 
+        string ProjectFinish { get; }
+
         IDisplaySettingsViewModel DisplaySettingsViewModel { get; }
 
         bool DefaultShowDates { get; set; }
