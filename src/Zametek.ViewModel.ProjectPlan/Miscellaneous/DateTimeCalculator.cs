@@ -91,32 +91,26 @@ namespace Zametek.ViewModel.ProjectPlan
             return Convert.ToInt32((toCompareWith - current).TotalDays);
         }
 
-
-
-
-
-
-
-
-
-
-
-
-        private static HashSet<DateOnly> GetNonWorkingDays(
+        private static HashSet<DateOnly> GetNonWorkingDaysFromRecurrencePatterns(
             DateTime startDateTime,
-            DateTime endDateTime,
+            DateTime finishDateTime,
             List<RecurrencePattern> nonWorkingDayPatterns)
         {
-            var startCalDateTime = new CalDateTime(startDateTime);
-            var endCalDateTime = new CalDateTime(endDateTime);
+            if (startDateTime.IsAfter(finishDateTime))
+            {
+                (startDateTime, finishDateTime) = (finishDateTime, startDateTime);
+            }
 
-            var weekendEvent = new CalendarEvent
+            var startCalDateTime = new CalDateTime(startDateTime);
+            var endCalDateTime = new CalDateTime(finishDateTime);
+
+            var nonWorkingDaysEvent = new CalendarEvent
             {
                 Start = startCalDateTime,
                 RecurrenceRules = nonWorkingDayPatterns,
             };
 
-            List<Occurrence> occurrences = [.. weekendEvent
+            List<Occurrence> occurrences = [.. nonWorkingDaysEvent
                 .GetOccurrences(startCalDateTime)
                 .TakeWhileBefore(endCalDateTime)];
 
@@ -124,118 +118,90 @@ namespace Zametek.ViewModel.ProjectPlan
             return nonWorkingDays;
         }
 
-        private static HashSet<DateOnly> GetNonWorkingDays(
-            DateTime startDateTime,
-            List<RecurrencePattern> nonWorkingDayPatterns,
-            int days,
-            int buffer = 100)
-        {
-            int sign = Math.Sign(days);
-            DateTime endDateTime = startDateTime.AddDays(days + (buffer * sign));
-
-            if (startDateTime.IsAfter(endDateTime))
-            {
-                (startDateTime, endDateTime) = (endDateTime, startDateTime);
-            }
-
-            HashSet<DateOnly> nonWorkingDays = GetNonWorkingDays(
-                startDateTime,
-                endDateTime,
-                nonWorkingDayPatterns);
-            return nonWorkingDays;
-        }
-
-
-
-
         private void ClearNonWorkingDays()
         {
-            lock(m_Lock)
+            lock (m_Lock)
             {
                 m_NonWorkingDays.Clear();
-                m_NonWorkingDaysFinish = m_ProjectStart;
+                NonWorkingDaysStart = ProjectStart;
+                NonWorkingDaysFinish = ProjectStart;
             }
         }
 
         private void AppendNonWorkingDays(
-            int extraDaysCoverage,
+            DateTime startDateTime,
+            DateTime finishDateTime,
             List<RecurrencePattern> nonWorkingDayPatterns)
         {
             lock (m_Lock)
             {
-                DateTime startDateTime = m_ProjectStart.Date;
-                m_NonWorkingDaysFinish = m_NonWorkingDaysFinish.AddDays(extraDaysCoverage).Date;
-                DateTime endDateTime = m_NonWorkingDaysFinish.AddDays(extraDaysCoverage).Date;
-                HashSet<DateOnly> newNonWorkingDays = GetNonWorkingDays(
+                if (startDateTime.IsAfter(finishDateTime))
+                {
+                    (startDateTime, finishDateTime) = (finishDateTime, startDateTime);
+                }
+
+                if (startDateTime.IsAfter(NonWorkingDaysStart.Date)
+                    && finishDateTime.IsBefore(NonWorkingDaysFinish.Date))
+                {
+                    return;
+                }
+
+                startDateTime = startDateTime.AddDays(-1).Date;
+                finishDateTime = finishDateTime.AddDays(1).Date;
+
+                HashSet<DateOnly> newNonWorkingDays = GetNonWorkingDaysFromRecurrencePatterns(
                     startDateTime,
-                    endDateTime,
+                    finishDateTime,
                     nonWorkingDayPatterns);
+
                 m_NonWorkingDays.UnionWith(newNonWorkingDays);
-            }   
-        }
 
-        private DateTimeOffset AddBusinessDays(
-            DateTimeOffset current,
-            int days)
-        {
-            HashSet<DateOnly> nonWorkingDays = GetNonWorkingDays(
-                current.Date,
-                [s_WeekendRecurrencePattern],
-                days);
-
-            int sign = Math.Sign(days);
-            int unsignedDays = Math.Abs(days);
-
-            int count = 0;
-            while (count < unsignedDays)
-            {
-                current = current.AddDays(sign);
-
-                if (!nonWorkingDays.Contains(DateOnly.FromDateTime(current.Date)))
+                if (startDateTime.IsBefore(NonWorkingDaysStart.Date))
                 {
-                    count += 1;
+                    NonWorkingDaysStart = startDateTime.Date;
+                }
+                if (finishDateTime.IsAfter(NonWorkingDaysFinish.Date))
+                {
+                    NonWorkingDaysFinish = finishDateTime.Date;
                 }
             }
-            return current;
         }
 
-        private int CountBusinessDays(
-            DateTimeOffset current,
-            DateTimeOffset toCompareWith)
+        private void AppendNonWorkingDays(
+            DateTime startDateTime,
+            int days,
+            List<RecurrencePattern> nonWorkingDayPatterns)
         {
-            if (current.IsAfter(toCompareWith))
+            lock (m_Lock)
             {
-                return -CountBusinessDays(toCompareWith, current);
+                DateTime finishDateTime = startDateTime.AddDays(days).Date;
+
+                AppendNonWorkingDays(
+                    startDateTime,
+                    finishDateTime,
+                    nonWorkingDayPatterns);
             }
-
-            HashSet<DateOnly> nonWorkingDays = GetNonWorkingDays(
-                current.Date,
-                toCompareWith.Date,
-                [s_WeekendRecurrencePattern]);
-
-
-
-
-
-
-
-
-
-
-
-
-            int count = 0;
-            while (current.IsBefore(toCompareWith))
-            {
-                current = current.AddDays(1);
-
-                if (!nonWorkingDays.Contains(DateOnly.FromDateTime(current.Date)))
-                {
-                    count += 1;
-                }
-            }
-            return count;
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -243,15 +209,67 @@ namespace Zametek.ViewModel.ProjectPlan
         private const int c_BufferDays = 10;
 
 
+        private DateTimeOffset AddBusinessDays(
+            DateTimeOffset current,
+            int days)
+        {
+            lock (m_Lock)
+            {
+                AppendNonWorkingDays(current.Date, days, [s_WeekendRecurrencePattern]);
 
+                int sign = Math.Sign(days);
+                int unsignedDays = Math.Abs(days);
 
+                int count = 0;
+                while (count < unsignedDays)
+                {
+                    current = current.AddDays(sign);
 
+                    // If we have moved out of the range of already calculated non-working days,
+                    // then calculate more non-working days.
+                    if (current.IsAfter(NonWorkingDaysFinish))
+                    {
+                        AppendNonWorkingDays(current.Date, c_BufferDays, [s_WeekendRecurrencePattern]);
+                    }
 
+                    if (!m_NonWorkingDays.Contains(DateOnly.FromDateTime(current.Date)))
+                    {
+                        count += 1;
+                    }
+                }
+                return current;
+            }
+        }
 
+        private int CountBusinessDays(
+            DateTimeOffset current,
+            DateTimeOffset toCompareWith)
+        {
+            lock (m_Lock)
+            {
+                if (current.IsAfter(toCompareWith))
+                {
+                    return -CountBusinessDays(toCompareWith, current);
+                }
 
+                AppendNonWorkingDays(
+                    current.Date,
+                    toCompareWith.Date,
+                    nonWorkingDayPatterns: [s_WeekendRecurrencePattern]);
 
+                int count = 0;
+                while (current.IsBefore(toCompareWith))
+                {
+                    current = current.AddDays(1);
 
-
+                    if (!m_NonWorkingDays.Contains(DateOnly.FromDateTime(current.Date)))
+                    {
+                        count += 1;
+                    }
+                }
+                return count;
+            }
+        }
 
         private static DateTimeOffset DisplayDefaultEarliestStartDate(
             DateTimeOffset projectStart,
@@ -536,6 +554,18 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private DateTimeOffset m_NonWorkingDaysStart;
+        public DateTimeOffset NonWorkingDaysStart
+        {
+            get => m_NonWorkingDaysStart;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_NonWorkingDaysStart, value);
+                }
+            }
+        }
         private DateTimeOffset m_NonWorkingDaysFinish;
         public DateTimeOffset NonWorkingDaysFinish
         {

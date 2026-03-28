@@ -10,6 +10,8 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeOffset ProjectStart { get; set; }
 
+        DateTimeOffset NonWorkingDaysStart { get; }
+
         DateTimeOffset NonWorkingDaysFinish { get; }
 
         int DaysPerWeek { get; }
