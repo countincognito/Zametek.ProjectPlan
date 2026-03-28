@@ -97,22 +97,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe();
 
             m_IsUpdatedSub = this
-                .WhenAnyValue(
-                    x => x.m_ProjectScenarioManagerViewModel.IsProjectUpdated,
-                    x => x.m_CoreViewModel.IsProjectScenarioUpdated)
+                .WhenAnyValue(x => x.m_CoreViewModel.IsProjectScenarioUpdated)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(_ =>
+                .Subscribe(isProjectScenarioUpdated =>
                 {
-                    bool isProjectUpdated = m_ProjectScenarioManagerViewModel.IsProjectUpdated;
-                    bool isProjectScenarioUpdated = m_CoreViewModel.IsProjectScenarioUpdated;
                     Guid projectScenarioId = m_SettingService.ScenarioId;
 
-                    if (!isProjectUpdated)
-                    {
-                        IsUpdated = false;
-                    }
-                    else if (m_ProjectScenarioNodeModel.Id == projectScenarioId
-                        && isProjectScenarioUpdated)
+                    if (isProjectScenarioUpdated
+                        && m_ProjectScenarioNodeModel.Id == projectScenarioId)
                     {
                         IsUpdated = true;
                     }
@@ -120,11 +112,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_DisplayName = this
                 .WhenAnyValue(
-                    x => x.m_ProjectScenarioManagerViewModel.IsProjectUpdated,
                     x => x.IsUpdated,
                     x => x.Name,
                     x => x.Label,
-                    (isProjectUpdated, isUpdated, name, label) =>
+                    (isUpdated, name, label) =>
                     {
                         string displayName = name;
                         if (IsFolder)
