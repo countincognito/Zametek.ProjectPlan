@@ -826,18 +826,18 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                if (IsProjectScenarioUpdated)
-                {
-                    bool confirmation = await m_DialogService.ShowConfirmationAsync(
-                        Resource.ProjectPlan.Titles.Title_ScenarioUnsavedChanges,
-                        string.Empty,
-                        Resource.ProjectPlan.Messages.Message_ScenarioUnsavedChanges);
+                //if (IsProjectScenarioUpdated)
+                //{
+                //    bool confirmation = await m_DialogService.ShowConfirmationAsync(
+                //        Resource.ProjectPlan.Titles.Title_ScenarioUnsavedChanges,
+                //        string.Empty,
+                //        Resource.ProjectPlan.Messages.Message_ScenarioUnsavedChanges);
 
-                    if (!confirmation)
-                    {
-                        return;
-                    }
-                }
+                //    if (!confirmation)
+                //    {
+                //        return;
+                //    }
+                //}
                 IManagedNodeViewModel? managedNode = SelectedNode;
                 await LoadProjectScenarioFileInternalAsync(managedNode);
             }
@@ -858,18 +858,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     return;
                 }
-                if (IsProjectScenarioUpdated)
-                {
-                    bool confirmation = await m_DialogService.ShowConfirmationAsync(
-                        Resource.ProjectPlan.Titles.Title_ScenarioUnsavedChanges,
-                        string.Empty,
-                        Resource.ProjectPlan.Messages.Message_ScenarioUnsavedChanges);
+                //if (IsProjectScenarioUpdated)
+                //{
+                //    bool confirmation = await m_DialogService.ShowConfirmationAsync(
+                //        Resource.ProjectPlan.Titles.Title_ScenarioUnsavedChanges,
+                //        string.Empty,
+                //        Resource.ProjectPlan.Messages.Message_ScenarioUnsavedChanges);
 
-                    if (!confirmation)
-                    {
-                        return;
-                    }
-                }
+                //    if (!confirmation)
+                //    {
+                //        return;
+                //    }
+                //}
                 await LoadProjectScenarioFileInternalAsync(managedNodeViewModel);
             }
             catch (Exception ex)
@@ -898,7 +898,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                     if (managedNodeViewModel is not null)
                     {
-                        //BuildProject(); // TODO use this to persist changes before loading a new scenario.
+                        BuildProject(); // TODO use this to persist changes before loading a new scenario.
 
 
 

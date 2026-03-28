@@ -28,6 +28,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly IDisposable m_ReadOnlyLabelsSub;
         private readonly IDisposable m_ReadOnlyChildrenSub;
+        private readonly IDisposable m_IsUpdatedSub;
 
         #endregion
 
@@ -95,15 +96,27 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Bind(out m_ReadOnlyChildren)
                 .Subscribe();
 
-            m_IsUpdated = this
+            m_IsUpdatedSub = this
                 .WhenAnyValue(
-                    x => x.m_CoreViewModel.IsProjectScenarioUpdated,
-                    (isProjectScenarioUpdated) =>
+                    x => x.m_ProjectScenarioManagerViewModel.IsProjectUpdated,
+                    x => x.m_CoreViewModel.IsProjectScenarioUpdated)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ =>
+                {
+                    bool isProjectUpdated = m_ProjectScenarioManagerViewModel.IsProjectUpdated;
+                    bool isProjectScenarioUpdated = m_CoreViewModel.IsProjectScenarioUpdated;
+                    Guid projectScenarioId = m_SettingService.ScenarioId;
+
+                    if (!isProjectUpdated)
                     {
-                        Guid projectScenarioId = m_SettingService.ScenarioId;
-                        return m_ProjectScenarioNodeModel.Id == projectScenarioId && isProjectScenarioUpdated;
-                    })
-                .ToProperty(this, x => x.IsUpdated);
+                        IsUpdated = false;
+                    }
+                    else if (m_ProjectScenarioNodeModel.Id == projectScenarioId
+                        && isProjectScenarioUpdated)
+                    {
+                        IsUpdated = true;
+                    }
+                });
 
             m_DisplayName = this
                 .WhenAnyValue(
@@ -282,8 +295,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<bool> m_IsUpdated;
-        public bool IsUpdated => m_IsUpdated.Value;
+        private bool m_IsUpdated;
+        public bool IsUpdated
+        {
+            get => m_IsUpdated;
+            set
+            {
+                m_IsUpdated = value;
+                this.RaisePropertyChanged();
+            }
+        }
 
         private bool m_IsLoaded;
         public bool IsLoaded
@@ -419,6 +440,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             m_ReadOnlyLabelsSub?.Dispose();
             m_ReadOnlyChildrenSub?.Dispose();
+            m_IsUpdatedSub?.Dispose();
         }
 
         #endregion
@@ -442,7 +464,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_Labels.Dispose();
                 ClearChildren();
                 m_Children.Dispose();
-                m_IsUpdated?.Dispose();
                 m_DisplayName?.Dispose();
             }
 

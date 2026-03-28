@@ -148,7 +148,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     evc => evc.m_CoreViewModel.Today,
                     evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections,
                     evc => evc.m_CoreViewModel.BaseTheme,
-                    (a, b, c, d, e, f, g, h, i, j) => (a, b, c, d, e, f, g, h, i, j))
+                    (x, _, _, _, _, _, _, _, _, _) => x)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(async _ => await BuildEarnedValueChartPlotModelAsync());
 

@@ -191,7 +191,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.ShowToday,
                     rcm => rcm.ShowMilestones,
                     rcm => rcm.ShowSlack,
-                    (a, b, c, d, e, f, g, h) =>
+                    (x, _, _, _, _, _, _, _) =>
                     {
                         if (m_BoolAccumulator is null
                             || m_BoolAccumulator.Value == BoolToggle.Up)
