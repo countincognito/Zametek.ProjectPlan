@@ -190,7 +190,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                AppendNonWorkingDays(current.Date, days, [s_WeekendRecurrencePattern]);
+                AppendNonWorkingDays(current.Date, days + c_NonWorkingDaysSearchBuffer, [s_WeekendRecurrencePattern]);
 
                 int sign = Math.Sign(days);
                 int unsignedDays = Math.Abs(days);
