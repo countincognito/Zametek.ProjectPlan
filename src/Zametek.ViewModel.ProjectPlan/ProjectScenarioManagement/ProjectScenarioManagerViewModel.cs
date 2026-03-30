@@ -898,10 +898,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                     if (managedNodeViewModel is not null)
                     {
-                        BuildProject(); // TODO use this to persist changes before loading a new scenario.
-
-
-
+                        BuildProject(); // Use this to persist changes before loading a new scenario.
                         ProjectScenarioNodeModel selectedScenarioNodeModel = managedNodeViewModel.Node;
                         Guid nodeId = selectedScenarioNodeModel.Id;
                         string nodeName = selectedScenarioNodeModel.Name;
@@ -1295,6 +1292,8 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 IManagedNodeViewModel? managedNode = SelectedNode;
+                BuildProject(); // Use this to persist changes before loading a new scenario.
+                SelectedNode = managedNode;
 
                 if (managedNode is null
                     || managedNode.IsFolder)
@@ -1325,6 +1324,8 @@ namespace Zametek.ViewModel.ProjectPlan
             try
             {
                 IManagedNodeViewModel? managedNode = SelectedNode;
+                BuildProject(); // Use this to persist changes before loading a new scenario.
+                SelectedNode = managedNode;
 
                 if (managedNode is null
                     || managedNode.IsFolder)
@@ -1435,7 +1436,20 @@ namespace Zametek.ViewModel.ProjectPlan
                             switch (action)
                             {
                                 case NodeAction.Cut:
-                                    RemoveProjectScenarioNodeInternal([nodeId]);
+                                    {
+                                        // If the loaded scenario is being moved, then we need to make sure
+                                        // to reload it once it has reached its destination.
+                                        if (nodeId == m_SettingService.ScenarioId)
+                                        {
+                                            IManagedNodeViewModel? newNode = GetNode(projectScenarioFile.NodeId);
+                                            if (newNode is not null)
+                                            {
+                                                LoadProjectScenarioFileInternal(newNode);
+                                            }
+                                        }
+
+                                        RemoveProjectScenarioNodeInternal([nodeId]);
+                                    }
                                     break;
                                 case NodeAction.Copy:
                                     break;
@@ -1896,6 +1910,26 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ChangeSortDirectionCommand { get; }
 
+        public void ResetManagedNodes()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+
+                    foreach (IManagedNodeViewModel managedNode in RawFlattenedNodes)
+                    {
+                        managedNode.IsUpdated = false;
+                    }
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
         public void ResetProject()
         {
             try
@@ -2078,31 +2112,32 @@ namespace Zametek.ViewModel.ProjectPlan
                     IManagedNodeViewModel? managedProjectScenario = GetNode(nodeId);
                     DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 
-                    if (managedProjectScenario is null)
-                    {
-                        // No existing managed scenario, so add it to the Root.
+                    //if (managedProjectScenario is null)
+                    //{
+                    //    // No existing managed scenario, so add it to the Root.
 
-                        var projectScenarioNode = new ProjectScenarioNodeModel
-                        {
-                            Id = nodeId,
-                            ParentId = Root.Id,
-                            NodeType = ProjectScenarioNodeType.File,
-                            Name = Resource.ProjectPlan.Labels.Label_BaseNode,
-                            CreatedOn = localNow,
-                            ModifiedOn = localNow,
-                            IsTracked = false,
-                        };
+                    //    var projectScenarioNode = new ProjectScenarioNodeModel
+                    //    {
+                    //        Id = nodeId,
+                    //        ParentId = Root.Id,
+                    //        NodeType = ProjectScenarioNodeType.File,
+                    //        Name = Resource.ProjectPlan.Labels.Label_BaseNode,
+                    //        CreatedOn = localNow,
+                    //        ModifiedOn = localNow,
+                    //        IsTracked = false,
+                    //    };
 
-                        var projectScenarioFile = new ProjectScenarioFileModel
-                        {
-                            NodeId = projectScenarioNode.Id,
-                            Scenario = projectScenario,
-                        };
+                    //    var projectScenarioFile = new ProjectScenarioFileModel
+                    //    {
+                    //        NodeId = projectScenarioNode.Id,
+                    //        Scenario = projectScenario,
+                    //    };
 
-                        AddScenarioFiles([projectScenarioFile]);
-                        AddManagedNodes([projectScenarioNode]);
-                    }
-                    else
+                    //    AddScenarioFiles([projectScenarioFile]);
+                    //    AddManagedNodes([projectScenarioNode]);
+                    //}
+                    //else
+                    if (managedProjectScenario is not null)
                     {
                         // Update existing managed scenario.
                         managedProjectScenario.Scenario = projectScenario;

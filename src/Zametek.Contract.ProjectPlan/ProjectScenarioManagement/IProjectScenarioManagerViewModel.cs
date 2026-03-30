@@ -79,6 +79,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ChangeSortDirectionCommand { get; }
 
+        void ResetManagedNodes();
+
         void ResetProject();
 
         void ProcessProject(ProjectModel projectModel);

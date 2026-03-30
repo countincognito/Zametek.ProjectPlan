@@ -27,7 +27,7 @@ namespace Zametek.Contract.ProjectPlan
 
         bool IsTracked { get; set; }
 
-        bool IsUpdated { get; }
+        bool IsUpdated { get; set; }
 
         bool IsLoaded { get; set; }
 

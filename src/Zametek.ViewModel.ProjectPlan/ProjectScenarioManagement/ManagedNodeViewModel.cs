@@ -97,18 +97,25 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe();
 
             m_IsUpdatedSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.IsProjectScenarioUpdated)
-                .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(isProjectScenarioUpdated =>
-                {
-                    Guid projectScenarioId = m_SettingService.ScenarioId;
-
-                    if (isProjectScenarioUpdated
-                        && m_ProjectScenarioNodeModel.Id == projectScenarioId)
+                .WhenAnyValue(
+                    x => x.m_CoreViewModel.IsProjectScenarioUpdated,
+                    (isProjectScenarioUpdated) =>
                     {
-                        IsUpdated = true;
-                    }
-                });
+                        bool isUpdated = IsUpdated;
+
+                        if (isProjectScenarioUpdated && !IsFolder)
+                        {
+                            Guid projectScenarioId = m_SettingService.ScenarioId;
+                            if (m_ProjectScenarioNodeModel.Id == projectScenarioId)
+                            {
+                                isUpdated = true;
+                            }
+                        }
+
+                        return isUpdated;
+                    })
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(isUpdated => IsUpdated = isUpdated);
 
             m_DisplayName = this
                 .WhenAnyValue(

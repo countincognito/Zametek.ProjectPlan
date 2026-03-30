@@ -259,12 +259,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ProjectTitleUpdateSub = this
                 .WhenAnyValue(
-                    main => main.IsProjectUpdated,
-                    main => main.IsProjectScenarioUpdated,
+                    main => main.ProjectHasChanges,
                     main => main.m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle,
-                    (isProjectUpdated, isProjectScenarioUpdated, isReadyToReviseTitle) =>
+                    (projectHasChanges, isReadyToReviseTitle) =>
                     {
-                        bool projectHasChanges = isProjectUpdated || isProjectScenarioUpdated;
                         string newTitle = ProjectTitle;
 
                         if (isReadyToReviseTitle == ReadyToRevise.Yes
@@ -534,6 +532,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
                 m_CoreViewModel.IsProjectScenarioUpdated = false;
                 m_ProjectScenarioManagerViewModel.IsProjectUpdated = false;
+                m_ProjectScenarioManagerViewModel.ResetManagedNodes();
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
                 m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
             }
