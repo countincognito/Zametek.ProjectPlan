@@ -14,8 +14,6 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeOffset NonWorkingDaysFinish { get; }
 
-        int DaysPerWeek { get; }
-
         DateTimeOffset GetLocalNow();
 
         DateTimeOffset GetLocalNow(DateTime dateTime);

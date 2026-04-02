@@ -4,6 +4,7 @@
     public enum DateTimeCalculatorMode
     {
         AllDays,
-        BusinessDays
+        BusinessDays,
+        CustomCalendarDays
     }
 }

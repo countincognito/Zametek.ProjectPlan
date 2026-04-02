@@ -970,14 +970,18 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static double? CalculateDurationManMonths(
+            DateTimeOffset projectStart,
             int? duration,
-            int daysPerWeek)
+            IDateTimeCalculator dateTimeCalculator)
         {
-            if (duration is not null
-                && duration != 0
-                && daysPerWeek != 0)
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            (_, DateTimeOffset? endDate) = dateTimeCalculator.CalculateTimeAndDateTime(projectStart, duration);
+
+            if (endDate is not null)
             {
-                return duration / (daysPerWeek * 52 / 12.0);
+                TimeSpan diff = endDate.Value - projectStart;
+                double days = diff.TotalDays;
+                return 12.0 * (days / 365.0);
             }
             return null;
         }
@@ -2366,7 +2370,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         cyclomaticComplexity = CalculateCyclomaticComplexity(GraphCompilation.DependentActivities);
                         duration = m_VertexGraphCompiler.FinishTime - m_VertexGraphCompiler.StartTime;
-                        durationManMonths = CalculateDurationManMonths(duration, m_DateTimeCalculator.DaysPerWeek);
+                        durationManMonths = CalculateDurationManMonths(ProjectStart, duration, m_DateTimeCalculator);
                     }
                 }
 
