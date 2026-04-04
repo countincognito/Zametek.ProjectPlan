@@ -68,7 +68,7 @@
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=RemoveManagedActivitiesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DeleteManagedActivity}"/>
+						Content="{x:Static resources:Labels.Label_DeleteManagedActivities}"/>
 
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
@@ -77,7 +77,7 @@
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=EditManagedActivitiesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_EditManagedActivity}"/>
+						Content="{x:Static resources:Labels.Label_EditManagedActivities}"/>
 
 				<Button DockPanel.Dock="Bottom"
 						IsTabStop="True"

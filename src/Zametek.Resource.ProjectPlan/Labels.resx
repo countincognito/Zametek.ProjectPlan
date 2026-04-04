@@ -141,6 +141,9 @@
   <data name="Label_AddManagedResource" xml:space="preserve">
     <value>Add</value>
   </data>
+  <data name="Label_AddManagedHoliday" xml:space="preserve">
+    <value>Add</value>
+  </data>
   <data name="Label_AddManagedWorkStream" xml:space="preserve">
     <value>Add</value>
   </data>
@@ -204,13 +207,16 @@
   <data name="Label_DeleteColumn" xml:space="preserve">
     <value>Delete</value>
   </data>
-  <data name="Label_DeleteManagedActivity" xml:space="preserve">
+  <data name="Label_DeleteManagedActivities" xml:space="preserve">
     <value>Delete</value>
   </data>
   <data name="Label_DeleteManagedActivitySeverities" xml:space="preserve">
     <value>Delete</value>
   </data>
   <data name="Label_DeleteManagedResources" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Label_DeleteManagedHolidays" xml:space="preserve">
     <value>Delete</value>
   </data>
   <data name="Label_DeleteManagedWorkStreams" xml:space="preserve">
@@ -471,7 +477,7 @@
   <data name="Label_Version" xml:space="preserve">
     <value>Version</value>
   </data>
-  <data name="Label_EditManagedActivity" xml:space="preserve">
+  <data name="Label_EditManagedActivities" xml:space="preserve">
     <value>Edit</value>
   </data>
   <data name="Label_On" xml:space="preserve">
@@ -483,7 +489,10 @@
   <data name="Label_IsIsolated" xml:space="preserve">
     <value>Isolated</value>
   </data>
-  <data name="Label_EditManagedResource" xml:space="preserve">
+  <data name="Label_EditManagedResources" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Label_EditManagedHoliday" xml:space="preserve">
     <value>Edit</value>
   </data>
   <data name="Label_ShowNames" xml:space="preserve">
@@ -620,5 +629,14 @@
   </data>
   <data name="Label_DuplicateNode" xml:space="preserve">
     <value>Duplicate</value>
+  </data>
+  <data name="Label_HolidayName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Label_HolidayNotes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Label_HolidayRecurrencePatternDisplay" xml:space="preserve">
+    <value>Non-Working Days</value>
   </data>
 </root>

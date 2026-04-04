@@ -261,4 +261,13 @@
   <data name="ToolTip_HasNoRisk" xml:space="preserve">
     <value>Ignore Risk</value>
   </data>
+  <data name="ToolTip_HolidayName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="ToolTip_HolidayNotes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="ToolTip_HolidayRecurrencePatternDisplay" xml:space="preserve">
+    <value>Non-Working Days</value>
+  </data>
 </root>

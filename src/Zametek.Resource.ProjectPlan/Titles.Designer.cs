@@ -142,6 +142,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Non-Working Day Settings.
+        /// </summary>
+        public static string Title_HolidaySettingsView {
+            get {
+                return ResourceManager.GetString("Title_HolidaySettingsView", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Metrics.
         /// </summary>
         public static string Title_Metrics {

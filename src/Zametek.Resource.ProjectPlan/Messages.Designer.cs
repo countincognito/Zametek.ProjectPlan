@@ -169,6 +169,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Weekends.
+        /// </summary>
+        public static string Message_DefaultWeekendsName {
+            get {
+                return ResourceManager.GetString("Message_DefaultWeekendsName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Weekends off.
+        /// </summary>
+        public static string Message_DefaultWeekendsNotes {
+            get {
+                return ResourceManager.GetString("Message_DefaultWeekendsNotes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete tag from node.
         /// </summary>
         public static string Message_DeleteTag {

@@ -28,6 +28,7 @@ namespace Zametek.ProjectPlan
         private readonly IDockable m_GraphSettingsManagerViewModel;
         private readonly IDockable m_ResourceSettingsManagerViewModel;
         private readonly IDockable m_WorkStreamSettingsManagerViewModel;
+        private readonly IDockable m_HolidaySettingsManagerViewModel;
 
         public DockFactory(
             IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
@@ -43,7 +44,8 @@ namespace Zametek.ProjectPlan
             IScenarioChartManagerViewModel scenarioChartManagerViewModel,
             IGraphSettingsManagerViewModel graphSettingsManagerViewModel,
             IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
-            IWorkStreamSettingsManagerViewModel workStreamSettingsManagerViewModel)
+            IWorkStreamSettingsManagerViewModel workStreamSettingsManagerViewModel,
+            IHolidaySettingsManagerViewModel holidaySettingsManagerViewModel)
         {
             m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(projectScenarioManagerViewModel));
             m_ActivitiesManagerViewModel = activitiesManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(activitiesManagerViewModel));
@@ -59,6 +61,7 @@ namespace Zametek.ProjectPlan
             m_GraphSettingsManagerViewModel = graphSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(graphSettingsManagerViewModel));
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(resourceSettingsManagerViewModel));
             m_WorkStreamSettingsManagerViewModel = workStreamSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(workStreamSettingsManagerViewModel));
+            m_HolidaySettingsManagerViewModel = holidaySettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(holidaySettingsManagerViewModel));
         }
 
         public override IRootDock CreateLayout()
@@ -132,6 +135,11 @@ namespace Zametek.ProjectPlan
                 m_WorkStreamSettingsManagerViewModel.CanClose = false;
                 m_WorkStreamSettingsManagerViewModel.CanFloat = true;
                 m_WorkStreamSettingsManagerViewModel.CanPin = true;
+            }
+            {
+                m_HolidaySettingsManagerViewModel.CanClose = false;
+                m_HolidaySettingsManagerViewModel.CanFloat = true;
+                m_HolidaySettingsManagerViewModel.CanPin = true;
             }
 
             var mainLayout = new ProportionalDock
@@ -256,7 +264,8 @@ namespace Zametek.ProjectPlan
                                 VisibleDockables = CreateList(
                                     m_ResourceSettingsManagerViewModel,
                                     m_GraphSettingsManagerViewModel,
-                                    m_WorkStreamSettingsManagerViewModel),
+                                    m_WorkStreamSettingsManagerViewModel,
+                                    m_HolidaySettingsManagerViewModel),
                                 Alignment = Alignment.Bottom,
                                 GripMode = GripMode.Visible
                             }

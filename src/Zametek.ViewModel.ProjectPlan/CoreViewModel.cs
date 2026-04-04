@@ -81,6 +81,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_GraphSettings = m_SettingService.DefaultGraphSettings;
             m_ResourceSettings = m_SettingService.DefaultResourceSettings;
             m_WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings;
+            m_HolidaySettings = m_SettingService.DefaultHolidaySettings;
             m_RiskMetrics = new();
             m_CostMetrics = new();
             m_BillingMetrics = new();
@@ -1276,6 +1277,24 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private HolidaySettingsModel m_HolidaySettings;
+        public HolidaySettingsModel HolidaySettings
+        {
+            get => m_HolidaySettings;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_HolidaySettings = value;
+                    m_DateTimeCalculator.SetNonWorkingDayRecurrencePatterns(
+                        [.. m_HolidaySettings.Holidays.Select(x => x.RecurrencePattern)]);
+                    IsProjectScenarioUpdated = true;
+                    this.RaisePropertyChanged();
+                    IsReadyToCompile = ReadyToCompile.Yes;
+                }
+            }
+        }
+
         public MetricsModel Metrics
         {
             get
@@ -1549,6 +1568,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         GraphSettings = m_SettingService.DefaultGraphSettings,
                         ResourceSettings = m_SettingService.DefaultResourceSettings,
                         WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings,
+                        HolidaySettings = m_SettingService.DefaultHolidaySettings,
                         Metrics = new(),
                         DisplaySettings = new DisplaySettingsModel
                         {
@@ -1584,6 +1604,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     GraphSettings = emptyPlan.GraphSettings;
                     ResourceSettings = emptyPlan.ResourceSettings;
                     WorkStreamSettings = emptyPlan.WorkStreamSettings;
+                    HolidaySettings = emptyPlan.HolidaySettings;
 
                     DisplaySettingsModel defaultDisplaySettings = emptyPlan.DisplaySettings;
                     DisplaySettingsViewModel.SetValues(defaultDisplaySettings);
@@ -1704,6 +1725,22 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Project Start Date.
                     Today = projectScenarioImportModel.Today;
 
+                    // Holiday settings.
+
+                    HolidaySettingsModel holidaySettings = m_SettingService.DefaultHolidaySettings.CloneObject();
+
+                    if (projectScenarioImportModel.Holidays.Count != 0)
+                    {
+                        holidaySettings.Holidays.Clear();
+
+                        foreach (HolidayModel holiday in projectScenarioImportModel.Holidays)
+                        {
+                            holidaySettings.Holidays.Add(holiday);
+                        }
+                    }
+
+                    HolidaySettings = holidaySettings;
+
                     // Work Stream settings.
                     WorkStreamSettingsModel workStreamSettings = m_SettingService.DefaultWorkStreamSettings.CloneObject();
 
@@ -1818,6 +1855,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     DisplaySettingsViewModel.SetValues(displaySettings);
 
+                    // Holiday Settings.
+                    HolidaySettings = projectScenarioModel.HolidaySettings;
+
                     // Work Stream Settings.
                     WorkStreamSettings = projectScenarioModel.WorkStreamSettings;
 
@@ -1885,6 +1925,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         GraphSettings = GraphSettings.CloneObject(),
                         ResourceSettings = ResourceSettings.CloneObject(),
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),
+                        HolidaySettings = HolidaySettings.CloneObject(),
                         Metrics = Metrics.CloneObject(),
                         DisplaySettings = DisplaySettingsViewModel.GetValues(),
                     };

@@ -123,6 +123,9 @@
   <data name="Reporting_WorksheetActivities" xml:space="preserve">
     <value>Activities</value>
   </data>
+  <data name="Reporting_WorksheetHolidays" xml:space="preserve">
+    <value>Non-Working Days</value>
+  </data>
   <data name="Reporting_WorksheetActivitySeverities" xml:space="preserve">
     <value>Activity Severities</value>
   </data>

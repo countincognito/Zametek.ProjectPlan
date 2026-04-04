@@ -144,6 +144,15 @@ namespace Zametek.Resource.ProjectPlan {
         /// <summary>
         ///   Looks up a localized string similar to Add.
         /// </summary>
+        public static string Label_AddManagedHoliday {
+            get {
+                return ResourceManager.GetString("Label_AddManagedHoliday", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
         public static string Label_AddManagedResource {
             get {
                 return ResourceManager.GetString("Label_AddManagedResource", resourceCulture);
@@ -414,9 +423,9 @@ namespace Zametek.Resource.ProjectPlan {
         /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
-        public static string Label_DeleteManagedActivity {
+        public static string Label_DeleteManagedActivities {
             get {
-                return ResourceManager.GetString("Label_DeleteManagedActivity", resourceCulture);
+                return ResourceManager.GetString("Label_DeleteManagedActivities", resourceCulture);
             }
         }
         
@@ -426,6 +435,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_DeleteManagedActivitySeverities {
             get {
                 return ResourceManager.GetString("Label_DeleteManagedActivitySeverities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Label_DeleteManagedHolidays {
+            get {
+                return ResourceManager.GetString("Label_DeleteManagedHolidays", resourceCulture);
             }
         }
         
@@ -585,18 +603,27 @@ namespace Zametek.Resource.ProjectPlan {
         /// <summary>
         ///   Looks up a localized string similar to Edit.
         /// </summary>
-        public static string Label_EditManagedActivity {
+        public static string Label_EditManagedActivities {
             get {
-                return ResourceManager.GetString("Label_EditManagedActivity", resourceCulture);
+                return ResourceManager.GetString("Label_EditManagedActivities", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Edit.
         /// </summary>
-        public static string Label_EditManagedResource {
+        public static string Label_EditManagedHoliday {
             get {
-                return ResourceManager.GetString("Label_EditManagedResource", resourceCulture);
+                return ResourceManager.GetString("Label_EditManagedHoliday", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit.
+        /// </summary>
+        public static string Label_EditManagedResources {
+            get {
+                return ResourceManager.GetString("Label_EditManagedResources", resourceCulture);
             }
         }
         
@@ -786,6 +813,33 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_HasNoRisk {
             get {
                 return ResourceManager.GetString("Label_HasNoRisk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string Label_HolidayName {
+            get {
+                return ResourceManager.GetString("Label_HolidayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notes.
+        /// </summary>
+        public static string Label_HolidayNotes {
+            get {
+                return ResourceManager.GetString("Label_HolidayNotes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Non-Working Days.
+        /// </summary>
+        public static string Label_HolidayRecurrencePatternDisplay {
+            get {
+                return ResourceManager.GetString("Label_HolidayRecurrencePatternDisplay", resourceCulture);
             }
         }
         

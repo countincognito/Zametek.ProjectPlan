@@ -200,7 +200,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 NodeTypeFormats = DefaultFormatCollections.NodeTypeFormats,
                 EdgeTypeFormats = DefaultFormatCollections.EdgeTypeFormats,
-                ActivitySeverities = new List<ActivitySeverityModel>(
+                ActivitySeverities =
                     [
                         // Black.
                         new()
@@ -234,7 +234,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             FibonacciWeight = Math.Pow(s_GoldenRatio, 0.0),
                             ColorFormat = ColorHelper.Green()
                         }
-                    ])
+                    ],
             };
 
         public ResourceSettingsModel DefaultResourceSettings =>
@@ -246,6 +246,22 @@ namespace Zametek.ViewModel.ProjectPlan
             };
 
         public WorkStreamSettingsModel DefaultWorkStreamSettings => new();
+
+        public HolidaySettingsModel DefaultHolidaySettings =>
+            new()
+            {
+                Holidays =
+                    [
+                        // Weekends.
+                        new()
+                        {
+                            Id = 1,
+                            Name = Resource.ProjectPlan.Messages.Message_DefaultWeekendsName,
+                            Notes = Resource.ProjectPlan.Messages.Message_DefaultWeekendsNotes,
+                            RecurrencePattern = "FREQ=WEEKLY;BYDAY=SA,SU",
+                        },
+                    ],
+            };
 
         public void ResetProject()
         {

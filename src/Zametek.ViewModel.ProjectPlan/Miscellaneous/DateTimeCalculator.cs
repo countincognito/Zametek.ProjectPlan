@@ -71,6 +71,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public static string DateTimeOffsetFormat => s_DateTimeOffsetFormat;
 
+        public List<string> NonWorkingDayRecurrencePatterns =>
+            [.. m_CustomCalendarNonWorkingRecurrencePatterns
+                .Select(x => x?.ToString() ?? string.Empty)
+                .Where(x => !string.IsNullOrWhiteSpace(x))];
+
         #endregion
 
         #region Private Methods
@@ -604,6 +609,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     this.RaiseAndSetIfChanged(ref m_NonWorkingDaysFinish, value);
+                }
+            }
+        }
+
+        public void SetNonWorkingDayRecurrencePatterns(List<string> nonWorkingDayRecurrencePatterns)
+        {
+            lock (m_Lock)
+            {
+                m_CustomCalendarNonWorkingRecurrencePatterns.Clear();
+
+                foreach (string pattern in nonWorkingDayRecurrencePatterns)
+                {
+                    m_CustomCalendarNonWorkingRecurrencePatterns.Add(new RecurrencePattern(pattern));
                 }
             }
         }

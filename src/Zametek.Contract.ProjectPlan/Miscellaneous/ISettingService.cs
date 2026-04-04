@@ -58,6 +58,8 @@ namespace Zametek.Contract.ProjectPlan
 
         WorkStreamSettingsModel DefaultWorkStreamSettings { get; }
 
+        HolidaySettingsModel DefaultHolidaySettings { get; }
+
         void ResetProject();
 
         void ResetProjectScenario();

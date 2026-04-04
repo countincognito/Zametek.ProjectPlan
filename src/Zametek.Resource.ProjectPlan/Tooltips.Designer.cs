@@ -19,7 +19,7 @@ namespace Zametek.Resource.ProjectPlan {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class ToolTips {
@@ -228,6 +228,33 @@ namespace Zametek.Resource.ProjectPlan {
         public static string ToolTip_HasNoRisk {
             get {
                 return ResourceManager.GetString("ToolTip_HasNoRisk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string ToolTip_HolidayName {
+            get {
+                return ResourceManager.GetString("ToolTip_HolidayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notes.
+        /// </summary>
+        public static string ToolTip_HolidayNotes {
+            get {
+                return ResourceManager.GetString("ToolTip_HolidayNotes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Non-Working Days.
+        /// </summary>
+        public static string ToolTip_HolidayRecurrencePatternDisplay {
+            get {
+                return ResourceManager.GetString("ToolTip_HolidayRecurrencePatternDisplay", resourceCulture);
             }
         }
         

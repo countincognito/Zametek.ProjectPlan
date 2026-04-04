@@ -10,6 +10,9 @@ namespace Zametek.Common.ProjectPlan
         public string Name { get; init; } = string.Empty;
         public bool IsNameEdited { get; init; } = false;
 
+        public string Notes { get; init; } = string.Empty;
+        public bool IsNotesEdited { get; init; } = false;
+
         public bool IsExplicitTarget { get; init; }
         public bool IsIsExplicitTargetEdited { get; init; } = false;
 

@@ -15,6 +15,8 @@
 
         public WorkStreamSettingsModel WorkStreamSettings { get; init; } = new();
 
+        public HolidaySettingsModel HolidaySettings { get; init; } = new();
+
         public MetricsModel Metrics { get; init; } = new();
 
         public DisplaySettingsModel DisplaySettings { get; init; } = new();

@@ -204,10 +204,10 @@ namespace Zametek.ViewModel.ProjectPlan
                             return;
                         }
 
-                        foreach (IManagedResourceViewModel resouce in selectedResources)
+                        foreach (IManagedResourceViewModel resource in selectedResources)
                         {
-                            resources.Remove(resouce);
-                            resouce.Dispose();
+                            resources.Remove(resource);
+                            resource.Dispose();
                         }
                     });
                 }
@@ -284,6 +284,10 @@ namespace Zametek.ViewModel.ProjectPlan
                             if (updateModel.IsNameEdited)
                             {
                                 resource.Name = updateModel.Name;
+                            }
+                            if (updateModel.IsNotesEdited)
+                            {
+                                resource.Notes = updateModel.Notes;
                             }
                             if (updateModel.IsIsExplicitTargetEdited)
                             {

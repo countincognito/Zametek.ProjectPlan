@@ -14,6 +14,10 @@ namespace Zametek.Contract.ProjectPlan
 
         DateTimeOffset NonWorkingDaysFinish { get; }
 
+        List<string> NonWorkingDayRecurrencePatterns { get; }
+
+        void SetNonWorkingDayRecurrencePatterns(List<string> nonWorkingDayRecurrencePatterns);
+
         DateTimeOffset GetLocalNow();
 
         DateTimeOffset GetLocalNow(DateTime dateTime);

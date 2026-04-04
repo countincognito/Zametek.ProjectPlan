@@ -106,6 +106,14 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(WorkStreamModel.ColorFormat)
         ];
 
+        private static readonly IList<string> s_HolidayColumnTitles =
+        [
+            nameof(HolidayModel.Id),
+            nameof(HolidayModel.Name),
+            nameof(HolidayModel.RecurrencePattern),
+            nameof(HolidayModel.Notes)
+        ];
+
         private static readonly IList<string> s_TrackingPointColumnTitles =
         [
             nameof(TrackingPointModel.Time),
@@ -1100,6 +1108,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectScenario.WorkStreamSettings.WorkStreams,
                 s_WorkStreamColumnTitles,
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetWorkStreams,
+                workbook,
+                titleStyle);
+
+            WriteItemsToWorkbook(
+                projectScenario.HolidaySettings.Holidays,
+                s_HolidayColumnTitles,
+                Resource.ProjectPlan.Reporting.Reporting_WorksheetHolidays,
                 workbook,
                 titleStyle);
 

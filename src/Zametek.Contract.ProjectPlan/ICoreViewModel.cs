@@ -49,6 +49,8 @@ namespace Zametek.Contract.ProjectPlan
 
         WorkStreamSettingsModel WorkStreamSettings { get; set; }
 
+        HolidaySettingsModel HolidaySettings { get; set; }
+
         MetricsModel Metrics { get; }
 
         RisksModel RiskMetrics { get; }

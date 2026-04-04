@@ -15,6 +15,8 @@
 
         public List<WorkStreamModel> WorkStreams { get; init; } = [];
 
+        public List<HolidayModel> Holidays { get; init; } = [];
+
         public DisplaySettingsModel DisplaySettings { get; init; } = new DisplaySettingsModel();
     }
 }

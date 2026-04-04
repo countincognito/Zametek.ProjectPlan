@@ -19,7 +19,7 @@ namespace Zametek.Resource.ProjectPlan {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Reporting {
@@ -147,6 +147,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Reporting_WorksheetGeneral {
             get {
                 return ResourceManager.GetString("Reporting_WorksheetGeneral", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Non-Working Days.
+        /// </summary>
+        public static string Reporting_WorksheetHolidays {
+            get {
+                return ResourceManager.GetString("Reporting_WorksheetHolidays", resourceCulture);
             }
         }
         

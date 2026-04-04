@@ -101,6 +101,14 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(WorkStreamModel.ColorFormat)
         ];
 
+        private static readonly IList<string> s_HolidayColumnTitles =
+        [
+            nameof(HolidayModel.Id),
+            nameof(HolidayModel.Name),
+            nameof(HolidayModel.RecurrencePattern),
+            nameof(HolidayModel.Notes)
+        ];
+
         private static readonly int[] s_FilterTaskIds = [0];
 
         private static readonly int[] s_FilterResourceIds = [0];
@@ -502,6 +510,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IDictionary<int, ResourceModel> resources = ImportWorksheetResources(workbook);
             IList<ActivitySeverityModel> activitySeverities = ImportWorksheetActivitySeverities(workbook);
             IDictionary<int, WorkStreamModel> workStreams = ImportWorksheetWorkStreams(workbook);
+            IDictionary<int, HolidayModel> holidays = ImportWorksheetHolidays(workbook);
 
             dependentActivities = ImportWorksheetActivityTrackers(workbook, dependentActivities);
 
@@ -524,6 +533,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 },
                 ActivitySeverities = [.. activitySeverities],
                 WorkStreams = [.. workStreams.Values],
+                Holidays = [.. holidays.Values],
+
                 DisplaySettings = new()
                 {
                     ShowDates = showDates,
@@ -1176,6 +1187,68 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
             return workStreams;
+        }
+
+        private static Dictionary<int, HolidayModel> ImportWorksheetHolidays(XSSFWorkbook? workbook)
+        {
+            Dictionary<int, HolidayModel> holidays = [];
+            ISheet? sheet = workbook?.GetSheet(Resource.ProjectPlan.Reporting.Reporting_WorksheetHolidays);
+            if (sheet is not null)
+            {
+                DataTable dtTable = SheetToDataTable(sheet);
+                DataColumnCollection columns = dtTable.Columns;
+
+                // Check columns.
+                var columnNames = new List<string>();
+
+                foreach (string title in s_HolidayColumnTitles)
+                {
+                    if (columns.Contains(title))
+                    {
+                        columnNames.Add(title);
+                    }
+                }
+
+                foreach (DataRow row in dtTable.Rows)
+                {
+                    int? id = 0;
+                    string name = string.Empty;
+                    string recurrencePatterm = string.Empty;
+                    string notes = string.Empty;
+
+                    foreach (string columnName in columnNames)
+                    {
+                        columnName.ValueSwitchOn()
+                            .Case(nameof(HolidayModel.Id),
+                                colName =>
+                                {
+                                    if (int.TryParse(row[colName]?.ToString(), out int output))
+                                    {
+                                        id = output;
+                                    }
+                                })
+                            .Case(nameof(HolidayModel.Name),
+                                colName => name = row[colName]?.ToString() ?? string.Empty)
+                            .Case(nameof(HolidayModel.RecurrencePattern),
+                                colName => recurrencePatterm = row[colName]?.ToString() ?? string.Empty)
+                            .Case(nameof(HolidayModel.Notes),
+                                colName => notes = row[colName]?.ToString() ?? string.Empty);
+                    }
+
+                    if (id is not null)
+                    {
+                        int idVal = id.GetValueOrDefault();
+                        holidays[idVal] = new HolidayModel
+                        {
+                            Id = idVal,
+                            Name = name,
+                            RecurrencePattern = recurrencePatterm,
+                            Notes = notes,
+                        };
+                    }
+                }
+            }
+            return holidays;
         }
 
         private static IDictionary<int, DependentActivityModel> ImportWorksheetActivityTrackers(

@@ -44,6 +44,7 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<IGraphSettingsManagerViewModel, GraphSettingsManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IResourceSettingsManagerViewModel, ResourceSettingsManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IWorkStreamSettingsManagerViewModel, WorkStreamSettingsManagerViewModel>();
+            SplatRegistrations.RegisterLazySingleton<IHolidaySettingsManagerViewModel, HolidaySettingsManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IProjectScenarioManagerViewModel, ProjectScenarioManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IScenarioChartManagerViewModel, ScenarioChartManagerViewModel>();
             SplatRegistrations.RegisterLazySingleton<IMainViewModel, MainViewModel>();
@@ -62,6 +63,7 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterLazySingleton<GraphSettingsManagerView>();
             SplatRegistrations.RegisterLazySingleton<ResourceSettingsManagerView>();
             SplatRegistrations.RegisterLazySingleton<WorkStreamSettingsManagerView>();
+            SplatRegistrations.RegisterLazySingleton<HolidaySettingsManagerView>();
             SplatRegistrations.RegisterLazySingleton<ProjectScenarioManagerView>();
             SplatRegistrations.RegisterLazySingleton<ScenarioChartManagerView>();
             SplatRegistrations.RegisterLazySingleton<MainView>();

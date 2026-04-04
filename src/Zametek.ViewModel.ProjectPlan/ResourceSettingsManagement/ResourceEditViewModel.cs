@@ -32,7 +32,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region IResourceManagerViewModel Members
+        #region IResourceEditViewModel Members
 
         private bool m_IsExplicitTarget;
         public bool IsExplicitTarget
