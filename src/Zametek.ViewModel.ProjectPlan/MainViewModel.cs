@@ -144,13 +144,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
             ToggleShowDatesCommand = ReactiveCommand.Create(ToggleShowDates);
             ToggleUseClassicDatesCommand = ReactiveCommand.Create(ToggleUseClassicDates);
+
+            ChangeNonWorkingDayModeCommand = ReactiveCommand.CreateFromTask<NonWorkingDayMode>(ChangeNonWorkingDayModeAsync);
+
             ToggleHideCostCommand = ReactiveCommand.Create(ToggleHideCost);
             ToggleHideBillingCommand = ReactiveCommand.Create(ToggleHideBilling);
 
             ToggleDefaultShowDatesCommand = ReactiveCommand.Create(ToggleDefaultShowDates);
             ToggleDefaultUseClassicDatesCommand = ReactiveCommand.Create(ToggleDefaultUseClassicDates);
 
-            ChangeNonWorkingDayModeCommand = ReactiveCommand.CreateFromTask<NonWorkingDayMode>(ChangeNonWorkingDayModeAsync);
+            ChangeDefaultNonWorkingDayModeCommand = ReactiveCommand.CreateFromTask<NonWorkingDayMode>(ChangeDefaultNonWorkingDayModeAsync);
 
             ToggleDefaultHideCostCommand = ReactiveCommand.Create(ToggleDefaultHideCost);
             ToggleDefaultHideBillingCommand = ReactiveCommand.Create(ToggleDefaultHideBilling);
@@ -421,6 +424,21 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleUseClassicDates() => UseClassicDates = !UseClassicDates;
 
+        private async Task ChangeNonWorkingDayModeAsync(NonWorkingDayMode mode)
+        {
+            try
+            {
+                NonWorkingDayMode = mode;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
         private void ToggleHideCost() => HideCost = !HideCost;
 
         private void ToggleHideBilling() => HideBilling = !HideBilling;
@@ -428,6 +446,21 @@ namespace Zametek.ViewModel.ProjectPlan
         private void ToggleDefaultShowDates() => DefaultShowDates = !DefaultShowDates;
 
         private void ToggleDefaultUseClassicDates() => DefaultUseClassicDates = !DefaultUseClassicDates;
+
+        private async Task ChangeDefaultNonWorkingDayModeAsync(NonWorkingDayMode mode)
+        {
+            try
+            {
+                DefaultNonWorkingDayMode = mode;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
 
         private void ToggleDefaultHideCost() => DefaultHideCost = !DefaultHideCost;
 
@@ -534,26 +567,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
             }
         }
-
-
-        
-
-        private async Task ChangeNonWorkingDayModeAsync(NonWorkingDayMode mode)
-        {
-            try
-            {
-                m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode = mode;
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
-            }
-        }
-
-
 
         private async Task ChangeThemeAsync(string theme)
         {
@@ -787,6 +800,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ToggleUseClassicDatesCommand { get; }
 
+        public ICommand ChangeNonWorkingDayModeCommand { get; }
+
         public ICommand ToggleHideCostCommand { get; }
 
         public ICommand ToggleHideBillingCommand { get; }
@@ -795,7 +810,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ToggleDefaultUseClassicDatesCommand { get; }
 
-        public ICommand ChangeNonWorkingDayModeCommand { get; }
+        public ICommand ChangeDefaultNonWorkingDayModeCommand { get; }
 
         public ICommand ToggleDefaultHideCostCommand { get; }
 

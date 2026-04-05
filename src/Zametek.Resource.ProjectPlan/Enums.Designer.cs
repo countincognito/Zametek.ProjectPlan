@@ -295,33 +295,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Custom Calendar.
-        /// </summary>
-        public static string Enum_NonWorkingDayMode_CustomCalendar {
-            get {
-                return ResourceManager.GetString("Enum_NonWorkingDayMode_CustomCalendar", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to None.
-        /// </summary>
-        public static string Enum_NonWorkingDayMode_None {
-            get {
-                return ResourceManager.GetString("Enum_NonWorkingDayMode_None", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Weekends.
-        /// </summary>
-        public static string Enum_NonWorkingDayMode_Weekends {
-            get {
-                return ResourceManager.GetString("Enum_NonWorkingDayMode_Weekends", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Combined.
         /// </summary>
         public static string Enum_ScheduleMode_Combined {

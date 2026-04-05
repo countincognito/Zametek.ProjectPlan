@@ -303,13 +303,4 @@
   <data name="Enum_TrackedMetric_None" xml:space="preserve">
     <value>None</value>
   </data>
-  <data name="Enum_NonWorkingDayMode_None" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="Enum_NonWorkingDayMode_Weekends" xml:space="preserve">
-    <value>Weekends</value>
-  </data>
-  <data name="Enum_NonWorkingDayMode_CustomCalendar" xml:space="preserve">
-    <value>Custom Calendar</value>
-  </data>
 </root>

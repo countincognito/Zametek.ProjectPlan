@@ -136,15 +136,5 @@ namespace Zametek.View.ProjectPlan
                     CurveFittingType.PolynomialOrder4 => Enums.Enum_CurveFittingType_PolynomialOrder4,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
-
-        public static readonly IValueConverter NonWorkingDayModeValue =
-            new FuncValueConverter<NonWorkingDayMode, string>(
-                x => x switch
-                {
-                    NonWorkingDayMode.None => Enums.Enum_NonWorkingDayMode_None,
-                    NonWorkingDayMode.Weekends => Enums.Enum_NonWorkingDayMode_Weekends,
-                    NonWorkingDayMode.CustomCalendar => Enums.Enum_NonWorkingDayMode_CustomCalendar,
-                    _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
-                });
     }
 }

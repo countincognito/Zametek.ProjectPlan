@@ -67,7 +67,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                 ProjectDirectory = appSettingsModel.ProjectPlanDirectory,
                 DefaultShowDates = appSettingsModel.DefaultShowDates,
                 DefaultUseClassicDates = appSettingsModel.DefaultUseClassicDates,
-                DefaultUseBusinessDays = appSettingsModel.DefaultUseBusinessDays,
+                DefaultNonWorkingDayMode = appSettingsModel.DefaultUseBusinessDays ? NonWorkingDayMode.Weekends : NonWorkingDayMode.None,
                 DefaultHideCost = appSettingsModel.DefaultHideCost,
                 DefaultHideBilling = appSettingsModel.DefaultHideBilling,
                 ProjectScenarioSortMode = default,

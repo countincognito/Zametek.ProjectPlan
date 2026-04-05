@@ -13,7 +13,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
 
         public bool DefaultUseClassicDates { get; init; } = false;
 
-        public bool DefaultUseBusinessDays { get; init; } = true;
+        public NonWorkingDayMode DefaultNonWorkingDayMode { get; init; } = default;
 
         public bool DefaultHideCost { get; init; } = false;
 
