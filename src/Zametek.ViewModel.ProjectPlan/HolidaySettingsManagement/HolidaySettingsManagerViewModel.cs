@@ -45,6 +45,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             SelectedHolidays = new ConcurrentDictionary<int, IManagedHolidayViewModel>();
+            m_HasSelectedHoliday = false;
             m_HasSelectedHolidays = false;
             m_AreSettingsUpdated = false; ;
 
@@ -53,7 +54,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SetSelectedManagedHolidaysCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedHolidays);
             AddManagedHolidayCommand = ReactiveCommand.CreateFromTask(AddManagedHolidayAsync);
             RemoveManagedHolidaysCommand = ReactiveCommand.CreateFromTask(RemoveManagedHolidaysAsync, this.WhenAnyValue(rm => rm.HasSelectedHolidays));
-            EditManagedHolidayCommand = ReactiveCommand.CreateFromTask(EditManagedHolidayAsync, this.WhenAnyValue(am => am.HasSelectedHolidays));
+            EditManagedHolidayCommand = ReactiveCommand.CreateFromTask(EditManagedHolidayAsync, this.WhenAnyValue(am => am.HasSelectedHoliday));
 
             // Create read-only view to the source list.
             m_ReadOnlyHolidaysSub = m_Holidays.Connect()
@@ -139,6 +140,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 HasSelectedHolidays = SelectedHolidays.Any();
+                HasSelectedHoliday = HasSelectedHolidays && SelectedHolidays.Count == 1;
             }
         }
 
@@ -157,14 +159,6 @@ namespace Zametek.ViewModel.ProjectPlan
                                 new HolidayModel
                                 {
                                     Id = holidayId,
-                                    //IsExplicitTarget = false,
-                                    //IsInactive = false,
-                                    //UnitCost = DefaultUnitCost,
-                                    //UnitBilling = DefaultUnitBilling,
-                                    //FixedCost = 0.0,
-                                    //FixedBilling = 0.0,
-                                    //ColorFormat = ColorHelper.Random(),
-                                    //Trackers = []
                                 }));
                     });
                 }
@@ -214,6 +208,24 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task EditManagedHolidayAsync()
         {
+
+
+
+            var editViewModel = new RRuleEditorViewModel();
+
+            bool result = await m_DialogService.ShowContextAsync(
+                title: "Calendar",
+                header: string.Empty,
+                message: "Calendar",
+                context: editViewModel,
+                markdown: true);
+
+
+
+
+
+
+
             //try
             //{
             //    var editViewModel = new HolidayEditViewModel(m_CoreViewModel.WorkStreamSettings.WorkStreams);
@@ -298,13 +310,13 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var holidaySettings = new HolidaySettingsModel
                 {
-                    Holidays = RawHolidays.Select(x => new HolidayModel
+                    Holidays = [.. RawHolidays.Select(x => new HolidayModel
                     {
                         Id = x.Id,
                         Name = x.Name,
                         Notes = x.Notes,
                         RecurrencePattern = x.RecurrencePattern,
-                    }).ToList(),
+                    })],
                 };
 
                 if (m_Current != holidaySettings)
@@ -366,6 +378,19 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
+        private bool m_HasSelectedHoliday;
+        public bool HasSelectedHoliday
+        {
+            get => m_HasSelectedHoliday;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_HasSelectedHoliday = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
         private bool m_HasSelectedHolidays;
         public bool HasSelectedHolidays
         {

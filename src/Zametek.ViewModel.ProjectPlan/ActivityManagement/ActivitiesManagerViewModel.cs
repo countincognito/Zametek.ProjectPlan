@@ -161,54 +161,38 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-
-
-                var editViewModel = new RRuleEditorViewModel();
+                var editViewModel = new ActivityEditViewModel(
+                    m_CoreViewModel.ResourceSettings.Resources,
+                    m_CoreViewModel.WorkStreamSettings.WorkStreams);
 
                 bool result = await m_DialogService.ShowContextAsync(
-                    title: "Calendar",
+                    title: Resource.ProjectPlan.Titles.Title_EditActivities,
                     header: string.Empty,
-                    message: "Calendar",
+                    message: $@"**{Resource.ProjectPlan.Messages.Message_EditActivities}**",
                     context: editViewModel,
                     markdown: true);
 
+                if (!result)
+                {
+                    return;
+                }
 
+                lock (m_Lock)
+                {
+                    ICollection<int> activityIds = SelectedActivities.Keys;
 
+                    if (activityIds.Count == 0)
+                    {
+                        return;
+                    }
 
+                    UpdateDependentActivityModel updateModel = editViewModel.BuildUpdateModel();
 
+                    IEnumerable<UpdateDependentActivityModel> updateModels = [.. activityIds.Select(x => updateModel with { Id = x })];
 
-                //var editViewModel = new ActivityEditViewModel(
-                //    m_CoreViewModel.ResourceSettings.Resources,
-                //    m_CoreViewModel.WorkStreamSettings.WorkStreams);
-
-                //bool result = await m_DialogService.ShowContextAsync(
-                //    title: Resource.ProjectPlan.Titles.Title_EditActivities,
-                //    header: string.Empty,
-                //    message: $@"**{Resource.ProjectPlan.Messages.Message_EditActivities}**",
-                //    context: editViewModel,
-                //    markdown: true);
-
-                //if (!result)
-                //{
-                //    return;
-                //}
-
-                //lock (m_Lock)
-                //{
-                //    ICollection<int> activityIds = SelectedActivities.Keys;
-
-                //    if (activityIds.Count == 0)
-                //    {
-                //        return;
-                //    }
-
-                //    UpdateDependentActivityModel updateModel = editViewModel.BuildUpdateModel();
-
-                //    IEnumerable<UpdateDependentActivityModel> updateModels = [.. activityIds.Select(x => updateModel with { Id = x })];
-
-                //    m_CoreViewModel.UpdateManagedActivities(updateModels);
-                //}
-                //await RunAutoCompileAsync();
+                    m_CoreViewModel.UpdateManagedActivities(updateModels);
+                }
+                await RunAutoCompileAsync();
             }
             catch (Exception ex)
             {

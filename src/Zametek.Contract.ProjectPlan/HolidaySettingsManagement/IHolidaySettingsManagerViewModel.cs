@@ -11,6 +11,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
+        bool HasSelectedHoliday { get; }
+
         bool HasSelectedHolidays { get; }
 
         bool AreSettingsUpdated { get; set; }
