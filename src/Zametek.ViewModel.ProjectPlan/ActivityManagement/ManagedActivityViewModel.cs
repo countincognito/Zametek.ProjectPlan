@@ -118,7 +118,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe(x => WorkStreamSettings = x);
 
             m_DateTimeCalculatorCalculatorModeSub = this
-                .ObservableForProperty(x => x.m_DateTimeCalculator.CalculatorMode)
+                .ObservableForProperty(x => x.m_DateTimeCalculator.NonWorkingDayMode)
                 //.ObserveOn(RxApp.TaskpoolScheduler)
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(_ => UpdateEarliestStartAndLatestFinishDateTimes());

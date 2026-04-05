@@ -4,7 +4,7 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IDateTimeCalculator
     {
-        DateTimeCalculatorMode CalculatorMode { get; set; }
+        NonWorkingDayMode NonWorkingDayMode { get; set; }
 
         DateTimeDisplayMode DisplayMode { get; set; }
 

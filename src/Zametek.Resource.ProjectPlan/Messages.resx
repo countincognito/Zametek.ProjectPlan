@@ -201,8 +201,8 @@
   <data name="Message_FixedCostMustBeZeroOrGreater" xml:space="preserve">
     <value>Fixed Cost must be equal to or greater than 0</value>
   </data>
-  <data name="Message_UnknownDateTimeCalculatorMode" xml:space="preserve">
-    <value>Unknown DateTimeCalculatorMode value:</value>
+  <data name="Message_UnknownNonWorkingDayMode" xml:space="preserve">
+    <value>Unknown NonWorkingDayMode value:</value>
   </data>
   <data name="Message_UnknownEdgeDashStyleValue" xml:space="preserve">
     <value>Unknown EdgeDashStyle value</value>

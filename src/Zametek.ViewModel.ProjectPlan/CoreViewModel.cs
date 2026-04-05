@@ -108,9 +108,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     core => core.DisplaySettingsViewModel.ShowDates,
                     core => core.ProjectStart,
                     core => core.NetworkMetrics,
-                    core => core.m_DateTimeCalculator.CalculatorMode,
+                    core => core.m_DateTimeCalculator.NonWorkingDayMode,
                     core => core.m_DateTimeCalculator.DisplayMode,
-                    (bool showDates, DateTimeOffset projectStart, NetworkModel networkModel, DateTimeCalculatorMode _, DateTimeDisplayMode _) =>
+                    (bool showDates, DateTimeOffset projectStart, NetworkModel networkModel, NonWorkingDayMode _, DateTimeDisplayMode _) =>
                     {
                         if (networkModel.Duration is null || networkModel.Duration == 0)
                         {

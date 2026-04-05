@@ -529,15 +529,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown DateTimeCalculatorMode value:.
-        /// </summary>
-        public static string Message_UnknownDateTimeCalculatorMode {
-            get {
-                return ResourceManager.GetString("Message_UnknownDateTimeCalculatorMode", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unknown DateTimeDisplayMode value:.
         /// </summary>
         public static string Message_UnknownDateTimeDisplayMode {
@@ -579,6 +570,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_UnknownNodeBorderDashStyleValue {
             get {
                 return ResourceManager.GetString("Message_UnknownNodeBorderDashStyleValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown NonWorkingDayMode value:.
+        /// </summary>
+        public static string Message_UnknownNonWorkingDayMode {
+            get {
+                return ResourceManager.GetString("Message_UnknownNonWorkingDayMode", resourceCulture);
             }
         }
         

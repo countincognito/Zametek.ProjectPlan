@@ -65,7 +65,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ColumnTitleSub = this
                 .WhenAnyValue(
-                    tm => tm.m_DateTimeCalculator.CalculatorMode,
+                    tm => tm.m_DateTimeCalculator.NonWorkingDayMode,
                     tm => tm.m_CoreViewModel.TrackerIndex,
                     tm => tm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                     tm => tm.m_CoreViewModel.ProjectStart)

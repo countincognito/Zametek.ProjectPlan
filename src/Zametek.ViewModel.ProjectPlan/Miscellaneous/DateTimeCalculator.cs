@@ -57,7 +57,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_MaximumLatestFinishDateInFunc = DefaultMaximumLatestFinishDateIn;
             m_MaximumLatestFinishDateOutFunc = DefaultMaximumLatestFinishDateOut;
 
-            CalculatorMode = DateTimeCalculatorMode.AllDays;
+            NonWorkingDayMode = NonWorkingDayMode.None;
             DisplayMode = DateTimeDisplayMode.Default;
         }
 
@@ -487,32 +487,32 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IDateTimeCalculator Members
 
-        private DateTimeCalculatorMode m_CalculatorMode;
-        public DateTimeCalculatorMode CalculatorMode
+        private NonWorkingDayMode m_NonWorkingDayMode;
+        public NonWorkingDayMode NonWorkingDayMode
         {
-            get => m_CalculatorMode;
+            get => m_NonWorkingDayMode;
             set
             {
                 lock (m_Lock)
                 {
-                    DateTimeCalculatorMode calculatorMode = value;
+                    NonWorkingDayMode nonWorkingDayMode = value;
                     ClearNonWorkingDays();
 
-                    switch (calculatorMode)
+                    switch (nonWorkingDayMode)
                     {
-                        case DateTimeCalculatorMode.AllDays:
+                        case NonWorkingDayMode.None:
                             {
                                 m_AddDaysFunc = AddAllDays;
                                 m_CountDaysFunc = CountAllDays;
                             }
                             break;
-                        case DateTimeCalculatorMode.BusinessDays:
+                        case NonWorkingDayMode.Weekends:
                             {
                                 m_AddDaysFunc = AddBusinessDays;
                                 m_CountDaysFunc = CountBusinessDays;
                             }
                             break;
-                        case DateTimeCalculatorMode.CustomCalendarDays:
+                        case NonWorkingDayMode.CustomCalendar:
                             {
                                 m_AddDaysFunc = AddCustomCalendarDays;
                                 m_CountDaysFunc = CountCustomCalendarDays;
@@ -520,11 +520,11 @@ namespace Zametek.ViewModel.ProjectPlan
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(
-                                nameof(CalculatorMode),
-                                @$"{Resource.ProjectPlan.Messages.Message_UnknownDateTimeCalculatorMode} {calculatorMode}");
+                                nameof(NonWorkingDayMode),
+                                @$"{Resource.ProjectPlan.Messages.Message_UnknownNonWorkingDayMode} {nonWorkingDayMode}");
                     }
 
-                    this.RaiseAndSetIfChanged(ref m_CalculatorMode, calculatorMode);
+                    this.RaiseAndSetIfChanged(ref m_NonWorkingDayMode, nonWorkingDayMode);
                 }
             }
         }

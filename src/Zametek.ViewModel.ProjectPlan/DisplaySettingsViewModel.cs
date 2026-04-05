@@ -110,11 +110,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_UseBusinessDays = value;
                     if (m_UseBusinessDays)
                     {
-                        m_DateTimeCalculator.CalculatorMode = DateTimeCalculatorMode.BusinessDays;
+                        m_DateTimeCalculator.NonWorkingDayMode = NonWorkingDayMode.Weekends;
                     }
                     else
                     {
-                        m_DateTimeCalculator.CalculatorMode = DateTimeCalculatorMode.AllDays;
+                        m_DateTimeCalculator.NonWorkingDayMode = NonWorkingDayMode.None;
                     }
                     SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: true);
                     this.RaisePropertyChanged();
