@@ -159,7 +159,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // If we have moved out of the range of already calculated non-working days,
                     // then calculate more non-working days.
-                    if (current.IsAfter(NonWorkingDaysFinish))
+                    if (current.IsAfterOrOn(NonWorkingDaysFinish))
                     {
                         AppendNonWorkingDays(
                             current.Date,
@@ -183,7 +183,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                if (current.IsAfter(toCompareWith))
+                if (current.IsAfterOrOn(toCompareWith))
                 {
                     return -CountNonWorkingDays(toCompareWith, current, nonWorkingDayRecurrencePatterns);
                 }
@@ -224,32 +224,32 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                if (startDateTime.IsAfter(finishDateTime))
+                if (startDateTime.IsAfterOrOn(finishDateTime))
                 {
                     (startDateTime, finishDateTime) = (finishDateTime, startDateTime);
                 }
 
-                if (startDateTime.IsAfter(NonWorkingDaysStart.Date)
-                    && finishDateTime.IsBefore(NonWorkingDaysFinish.Date))
+                if (startDateTime.IsAfterOrOn(NonWorkingDaysStart.Date)
+                    && finishDateTime.IsBeforeOrOn(NonWorkingDaysFinish.Date))
                 {
                     return;
                 }
 
-                startDateTime = startDateTime.AddDays(-1).Date;
-                finishDateTime = finishDateTime.AddDays(1).Date;
+                DateTime bufferedStartDateTime = startDateTime.AddDays(-1).Date;
+                DateTime bufferedFinishDateTime = finishDateTime.AddDays(1).Date;
 
                 HashSet<DateOnly> newNonWorkingDays = GetNonWorkingDaysFromRecurrencePatterns(
-                    startDateTime,
-                    finishDateTime,
+                    bufferedStartDateTime,
+                    bufferedFinishDateTime,
                     nonWorkingDayPatterns);
 
                 m_NonWorkingDays.UnionWith(newNonWorkingDays);
 
-                if (startDateTime.IsBefore(NonWorkingDaysStart.Date))
+                if (startDateTime.IsBeforeOrOn(NonWorkingDaysStart.Date))
                 {
                     NonWorkingDaysStart = startDateTime.Date;
                 }
-                if (finishDateTime.IsAfter(NonWorkingDaysFinish.Date))
+                if (finishDateTime.IsAfterOrOn(NonWorkingDaysFinish.Date))
                 {
                     NonWorkingDaysFinish = finishDateTime.Date;
                 }
@@ -277,7 +277,7 @@ namespace Zametek.ViewModel.ProjectPlan
             DateTime finishDateTime,
             List<RecurrencePattern> nonWorkingDayPatterns)
         {
-            if (startDateTime.IsAfter(finishDateTime))
+            if (startDateTime.IsAfterOrOn(finishDateTime))
             {
                 (startDateTime, finishDateTime) = (finishDateTime, startDateTime);
             }
