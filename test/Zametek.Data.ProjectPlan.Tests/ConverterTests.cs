@@ -228,9 +228,9 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_5_0_Input_ThenConvertsTo_v0_6_0()
+        public void Converter_Given_v0_5_0a_Input_ThenConvertsTo_v0_6_0()
         {
-            v0_5_0.ProjectModel? project_v0_5_0 = JsonConvert.DeserializeObject<v0_5_0.ProjectModel>(m_Fixture.V0_5_0_JsonString);
+            v0_5_0.ProjectModel? project_v0_5_0 = JsonConvert.DeserializeObject<v0_5_0.ProjectModel>(m_Fixture.V0_5_0a_JsonString);
             v0_6_0.ProjectModel? project_v0_6_0 = JsonConvert.DeserializeObject<v0_6_0.ProjectModel>(m_Fixture.V0_6_0_JsonString);
             var mapper = new VersionMapper();
             v0_6_0.ProjectModel project_v0_5_0_upgraded = v0_6_0.Converter.Upgrade(mapper, m_LocalNow, project_v0_5_0!);

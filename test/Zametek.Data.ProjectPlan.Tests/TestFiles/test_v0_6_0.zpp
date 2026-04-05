@@ -3606,7 +3606,7 @@
         "DisplaySettings": {
           "ShowDates": false,
           "UseClassicDates": false,
-          "UseBusinessDays": false,
+          "NonWorkingDayMode": 1,
           "HideCost": false,
           "HideBilling": false,
           "ArrowGraphShowNames": false,
