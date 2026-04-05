@@ -11,7 +11,7 @@
 
         public bool DefaultUseClassicDates { get; init; } = false;
 
-        public bool DefaultUseBusinessDays { get; init; } = true;
+        public NonWorkingDayMode DefaultNonWorkingDayMode { get; init; } = default;
 
         public bool DefaultHideCost { get; init; } = false;
 
@@ -19,7 +19,7 @@
 
         public SortMode ProjectScenarioSortMode { get; init; } = default;
 
-        public  SortDirection ProjectScenarioSortDirection { get; init; } = default;
+        public SortDirection ProjectScenarioSortDirection { get; init; } = default;
 
         public TrackedMetrics ScenarioChartTrackedMetricXAxis { get; init; } = default;
 

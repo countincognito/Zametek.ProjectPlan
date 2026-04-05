@@ -103,17 +103,17 @@ namespace Zametek.ProjectPlan
             }
         }
 
-        public override bool DefaultUseBusinessDays
+        public override NonWorkingDayMode DefaultNonWorkingDayMode
         {
             get
             {
-                return m_AppSettingsModel.DefaultUseBusinessDays;
+                return m_AppSettingsModel.DefaultNonWorkingDayMode;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_AppSettingsModel = m_AppSettingsModel with { DefaultUseBusinessDays = value };
+                    m_AppSettingsModel = m_AppSettingsModel with { DefaultNonWorkingDayMode = value };
                     SaveSettings();
                 }
             }

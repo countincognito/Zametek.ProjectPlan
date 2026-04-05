@@ -139,7 +139,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public abstract bool DefaultUseClassicDates { get; set; }
 
-        public abstract bool DefaultUseBusinessDays { get; set; }
+        public abstract NonWorkingDayMode DefaultNonWorkingDayMode { get; set; }
 
         public abstract bool DefaultHideCost { get; set; }
 

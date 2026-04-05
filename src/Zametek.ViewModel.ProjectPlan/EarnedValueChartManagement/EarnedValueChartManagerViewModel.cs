@@ -141,7 +141,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     evc => evc.m_CoreViewModel.TrackingSeriesSet,
                     evc => evc.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                     evc => evc.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
-                    evc => evc.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
+                    evc => evc.m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode,
                     evc => evc.ShowToday,
                     evc => evc.ShowMilestones,
                     evc => evc.m_CoreViewModel.ProjectStart,

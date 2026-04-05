@@ -58,9 +58,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(om => om.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates)
                 .ToProperty(this, om => om.UseClassicDates);
 
-            m_UseBusinessDays = this
-                .WhenAnyValue(om => om.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays)
-                .ToProperty(this, om => om.UseBusinessDays);
+            m_NonWorkingDayMode = this
+                .WhenAnyValue(om => om.m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode)
+                .ToProperty(this, om => om.NonWorkingDayMode);
 
             m_ProjectStart = this
                 .WhenAnyValue(om => om.m_CoreViewModel.ProjectStart)
@@ -72,7 +72,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     om => om.m_CoreViewModel.ResourceSeriesSet,
                     om => om.ShowDates,
                     om => om.UseClassicDates,
-                    om => om.UseBusinessDays,
+                    om => om.NonWorkingDayMode,
                     om => om.ProjectStart,
                     om => om.HasCompilationErrors)
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -92,8 +92,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_UseClassicDates;
         public bool UseClassicDates => m_UseClassicDates.Value;
 
-        private readonly ObservableAsPropertyHelper<bool> m_UseBusinessDays;
-        public bool UseBusinessDays => m_UseBusinessDays.Value;
+        private readonly ObservableAsPropertyHelper<NonWorkingDayMode> m_NonWorkingDayMode;
+        public NonWorkingDayMode NonWorkingDayMode => m_NonWorkingDayMode.Value;
 
         private readonly ObservableAsPropertyHelper<DateTimeOffset> m_ProjectStart;
         public DateTimeOffset ProjectStart => m_ProjectStart.Value;
@@ -272,7 +272,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_ShowDates?.Dispose();
                 m_UseClassicDates?.Dispose();
-                m_UseBusinessDays?.Dispose();
+                m_NonWorkingDayMode?.Dispose();
                 m_ProjectStart?.Dispose();
             }
 

@@ -99,23 +99,16 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private bool m_UseBusinessDays;
-        public bool UseBusinessDays
+        private NonWorkingDayMode m_NonWorkingDayMode;
+        public NonWorkingDayMode NonWorkingDayMode
         {
-            get => m_UseBusinessDays;
+            get => m_NonWorkingDayMode;
             set
             {
                 lock (m_Lock)
                 {
-                    m_UseBusinessDays = value;
-                    if (m_UseBusinessDays)
-                    {
-                        m_DateTimeCalculator.NonWorkingDayMode = NonWorkingDayMode.Weekends;
-                    }
-                    else
-                    {
-                        m_DateTimeCalculator.NonWorkingDayMode = NonWorkingDayMode.None;
-                    }
+                    m_NonWorkingDayMode = value;
+                    m_DateTimeCalculator.NonWorkingDayMode = m_NonWorkingDayMode;
                     SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: true);
                     this.RaisePropertyChanged();
                     IsReadyToCompile();
@@ -425,9 +418,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     UseClassicDates = model.UseClassicDates;
                 }
-                if (UseBusinessDays != model.UseBusinessDays)
+                if (NonWorkingDayMode != model.NonWorkingDayMode)
                 {
-                    UseBusinessDays = model.UseBusinessDays;
+                    NonWorkingDayMode = model.NonWorkingDayMode;
                 }
                 if (HideCost != model.HideCost)
                 {
@@ -530,7 +523,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ShowDates = ShowDates,
                     UseClassicDates = UseClassicDates,
-                    UseBusinessDays = UseBusinessDays,
+                    NonWorkingDayMode = NonWorkingDayMode,
                     HideCost = HideCost,
                     HideBilling = HideBilling,
 

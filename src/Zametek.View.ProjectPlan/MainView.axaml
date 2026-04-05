@@ -27,9 +27,6 @@
 					Command="{Binding Path=ToggleUseClassicDatesCommand, Mode=OneWay}"
 					Gesture="Ctrl+F" />
 		<KeyBinding x:DataType="vm:MainViewModel"
-					Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}"
-					Gesture="Ctrl+B" />
-		<KeyBinding x:DataType="vm:MainViewModel"
 					Command="{Binding Path=ToggleHideCostCommand, Mode=OneWay}"
 					Gesture="Ctrl+W" />
 		<KeyBinding x:DataType="vm:MainViewModel"
@@ -115,7 +112,7 @@
 										  IsChecked="{Binding Path=UseClassicDates, Mode=OneWay}" />
 							</MenuItem.Icon>
 						</MenuItem>
-						<MenuItem Header="{x:Static resources:Menus.Menu_UseBusinessDays}"
+						<!--<MenuItem Header="{x:Static resources:Menus.Menu_UseBusinessDays}"
 								  Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}"
 								  InputGesture="Ctrl+B">
 							<MenuItem.Icon>
@@ -124,7 +121,7 @@
 										  IsHitTestVisible="False"
 										  IsChecked="{Binding Path=UseBusinessDays, Mode=OneWay}" />
 							</MenuItem.Icon>
-						</MenuItem>
+						</MenuItem>-->
 						<MenuItem Header="{x:Static resources:Menus.Menu_HideCost}"
 								  Command="{Binding Path=ToggleHideCostCommand, Mode=OneWay}"
 								  InputGesture="Ctrl+W">
@@ -166,7 +163,7 @@
 											  IsChecked="{Binding Path=DefaultUseClassicDates, Mode=OneWay}" />
 								</MenuItem.Icon>
 							</MenuItem>
-							<MenuItem Header="{x:Static resources:Menus.Menu_UseBusinessDays}"
+							<!--<MenuItem Header="{x:Static resources:Menus.Menu_UseBusinessDays}"
 									  Command="{Binding Path=ToggleDefaultUseBusinessDaysCommand, Mode=OneWay}">
 								<MenuItem.Icon>
 									<CheckBox BorderThickness="0"
@@ -174,7 +171,7 @@
 											  IsHitTestVisible="False"
 											  IsChecked="{Binding Path=DefaultUseBusinessDays, Mode=OneWay}" />
 								</MenuItem.Icon>
-							</MenuItem>
+							</MenuItem>-->
 							<MenuItem Header="{x:Static resources:Menus.Menu_HideCost}"
 									  Command="{Binding Path=ToggleDefaultHideCostCommand, Mode=OneWay}">
 								<MenuItem.Icon>

@@ -12,7 +12,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private string m_ProjectDirectory;
         private bool m_DefaultShowDates;
         private bool m_DefaultUseClassicDates;
-        private bool m_DefaultUseBusinessDays;
+        private NonWorkingDayMode m_DefaultNonWorkingDayMode;
         private bool m_DefaultHideCost;
         private bool m_DefaultHideBilling;
         private SortMode m_ProjectScenarioSortMode;
@@ -86,17 +86,17 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        public override bool DefaultUseBusinessDays
+        public override NonWorkingDayMode DefaultNonWorkingDayMode
         {
             get
             {
-                return m_DefaultUseBusinessDays;
+                return m_DefaultNonWorkingDayMode;
             }
             set
             {
                 lock (m_Lock)
                 {
-                    m_DefaultUseBusinessDays = value;
+                    m_DefaultNonWorkingDayMode = value;
                 }
             }
         }

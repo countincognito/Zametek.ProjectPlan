@@ -204,9 +204,6 @@
   <data name="Menu_TransitiveReduction" xml:space="preserve">
     <value>Transitive Reduction</value>
   </data>
-  <data name="Menu_UseBusinessDays" xml:space="preserve">
-    <value>Use _Business Days</value>
-  </data>
   <data name="Menu_UseClassicDates" xml:space="preserve">
     <value>Use Classic Dates</value>
   </data>

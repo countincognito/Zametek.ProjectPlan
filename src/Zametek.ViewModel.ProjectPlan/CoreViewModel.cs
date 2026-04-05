@@ -91,7 +91,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             DisplaySettingsViewModel.ShowDates = m_SettingService.DefaultShowDates;
             DisplaySettingsViewModel.UseClassicDates = m_SettingService.DefaultUseClassicDates;
-            DisplaySettingsViewModel.UseBusinessDays = m_SettingService.DefaultUseBusinessDays;
+            DisplaySettingsViewModel.NonWorkingDayMode = m_SettingService.DefaultNonWorkingDayMode;
             DisplaySettingsViewModel.HideCost = m_SettingService.DefaultHideCost;
             DisplaySettingsViewModel.HideBilling = m_SettingService.DefaultHideBilling;
 
@@ -1138,14 +1138,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public bool DefaultUseBusinessDays
+        public NonWorkingDayMode DefaultNonWorkingDayMode
         {
-            get => m_SettingService.DefaultUseBusinessDays;
+            get => m_SettingService.DefaultNonWorkingDayMode;
             set
             {
                 lock (m_Lock)
                 {
-                    m_SettingService.DefaultUseBusinessDays = value;
+                    m_SettingService.DefaultNonWorkingDayMode = value;
                     this.RaisePropertyChanged();
                 }
             }
@@ -1574,7 +1574,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             ShowDates = m_SettingService.DefaultShowDates,
                             UseClassicDates = m_SettingService.DefaultUseClassicDates,
-                            UseBusinessDays = m_SettingService.DefaultUseBusinessDays,
+                            NonWorkingDayMode = m_SettingService.DefaultNonWorkingDayMode,
                             HideCost = m_SettingService.DefaultHideCost,
                             HideBilling = m_SettingService.DefaultHideBilling,
                         },
@@ -1850,7 +1850,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         ShowDates = DisplaySettingsViewModel.ShowDates,
                         UseClassicDates = DisplaySettingsViewModel.UseClassicDates,
-                        UseBusinessDays = DisplaySettingsViewModel.UseBusinessDays,
+                        NonWorkingDayMode = DisplaySettingsViewModel.NonWorkingDayMode,
                     };
 
                     DisplaySettingsViewModel.SetValues(displaySettings);
@@ -1879,7 +1879,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         ShowDates = projectScenarioModel.DisplaySettings.ShowDates,
                         UseClassicDates = projectScenarioModel.DisplaySettings.UseClassicDates,
-                        UseBusinessDays = projectScenarioModel.DisplaySettings.UseBusinessDays,
+                        NonWorkingDayMode = projectScenarioModel.DisplaySettings.NonWorkingDayMode,
                     };
 
                     DisplaySettingsViewModel.SetValues(displaySettings);

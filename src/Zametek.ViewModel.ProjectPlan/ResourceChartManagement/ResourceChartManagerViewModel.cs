@@ -150,7 +150,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
                     rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                     rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays,
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
                     rcm => rcm.m_CoreViewModel.Today,
                     rcm => rcm.AllocationMode,

@@ -34,7 +34,7 @@ namespace Zametek.ViewModel.ProjectPlan
         [
             nameof(ProjectScenarioModel.DisplaySettings.ShowDates),
             nameof(ProjectScenarioModel.DisplaySettings.UseClassicDates),
-            nameof(ProjectScenarioModel.DisplaySettings.UseBusinessDays),
+            nameof(ProjectScenarioModel.DisplaySettings.NonWorkingDayMode),
             nameof(ProjectScenarioModel.DisplaySettings.HideCost),
             nameof(ProjectScenarioModel.DisplaySettings.HideBilling),
         ];
@@ -298,7 +298,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             bool showDates = m_SettingService.DefaultShowDates;
             bool useClassicDates = m_SettingService.DefaultUseClassicDates;
-            bool useBusinessDays = m_SettingService.DefaultUseBusinessDays;
+            NonWorkingDayMode nonWorkingDayMode = m_SettingService.DefaultNonWorkingDayMode;
             bool hideCost = m_SettingService.DefaultHideCost;
             bool hideBilling = m_SettingService.DefaultHideBilling;
 
@@ -315,7 +315,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ShowDates = showDates,
                     UseClassicDates = useClassicDates,
-                    UseBusinessDays = useBusinessDays,
+                    NonWorkingDayMode = nonWorkingDayMode,
                     HideCost = hideCost,
                     HideBilling = hideBilling,
                 }
@@ -377,7 +377,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             bool showDates = false;
             bool useClassicDates = false;
-            bool useBusinessDays = false;
+            NonWorkingDayMode nonWorkingDayMode = NonWorkingDayMode.None;
             bool hideCost = false;
             bool hideBilling = false;
 
@@ -420,14 +420,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                             useClassicDates = output;
                                         }
                                     })
-                                .Case(nameof(ProjectScenarioImportModel.DisplaySettings.UseBusinessDays),
-                                    name =>
-                                    {
-                                        if (bool.TryParse(row[name]?.ToString(), out bool output))
-                                        {
-                                            useBusinessDays = output;
-                                        }
-                                    })
+                                .Case(nameof(ProjectScenarioImportModel.DisplaySettings.NonWorkingDayMode),
+                                    name => nonWorkingDayMode = row[name]?.ToString().GetValueFromDescription<NonWorkingDayMode>() ?? default)
                                 .Case(nameof(ProjectScenarioImportModel.DisplaySettings.HideCost),
                                     name =>
                                     {
@@ -539,7 +533,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ShowDates = showDates,
                     UseClassicDates = useClassicDates,
-                    UseBusinessDays = useBusinessDays,
+                    NonWorkingDayMode = nonWorkingDayMode,
                     HideCost = hideCost,
                     HideBilling = hideBilling,
                 }

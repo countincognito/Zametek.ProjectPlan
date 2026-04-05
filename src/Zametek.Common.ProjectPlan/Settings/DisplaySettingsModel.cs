@@ -7,7 +7,7 @@
 
         public bool UseClassicDates { get; init; } = default;
 
-        public bool UseBusinessDays { get; init; } = default;
+        public NonWorkingDayMode NonWorkingDayMode { get; init; } = default;
 
         public bool HideCost { get; init; } = default;
 

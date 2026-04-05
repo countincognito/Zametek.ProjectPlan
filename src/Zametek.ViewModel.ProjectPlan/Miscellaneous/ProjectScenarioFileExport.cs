@@ -31,7 +31,7 @@ namespace Zametek.ViewModel.ProjectPlan
         [
             nameof(ProjectScenarioModel.DisplaySettings.ShowDates),
             nameof(ProjectScenarioModel.DisplaySettings.UseClassicDates),
-            nameof(ProjectScenarioModel.DisplaySettings.UseBusinessDays),
+            nameof(ProjectScenarioModel.DisplaySettings.NonWorkingDayMode),
             nameof(ProjectScenarioModel.DisplaySettings.HideCost),
             nameof(ProjectScenarioModel.DisplaySettings.HideBilling),
         ];
@@ -356,8 +356,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             colName => AddToCell(projectScenario.DisplaySettings.ShowDates, cell, dateTimeCellStyle))
                         .Case(nameof(ProjectScenarioModel.DisplaySettings.UseClassicDates),
                             colName => AddToCell(projectScenario.DisplaySettings.UseClassicDates, cell, dateTimeCellStyle))
-                        .Case(nameof(ProjectScenarioModel.DisplaySettings.UseBusinessDays),
-                            colName => AddToCell(projectScenario.DisplaySettings.UseBusinessDays, cell, dateTimeCellStyle))
+                        .Case(nameof(ProjectScenarioModel.DisplaySettings.NonWorkingDayMode),
+                            colName => AddToCell(projectScenario.DisplaySettings.NonWorkingDayMode, cell, dateTimeCellStyle))
                         .Case(nameof(ProjectScenarioModel.DisplaySettings.HideCost),
                             colName => AddToCell(projectScenario.DisplaySettings.HideCost, cell, dateTimeCellStyle))
                         .Case(nameof(ProjectScenarioModel.DisplaySettings.HideBilling),

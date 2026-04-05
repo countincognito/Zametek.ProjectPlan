@@ -144,13 +144,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             ToggleShowDatesCommand = ReactiveCommand.Create(ToggleShowDates);
             ToggleUseClassicDatesCommand = ReactiveCommand.Create(ToggleUseClassicDates);
-            ToggleUseBusinessDaysCommand = ReactiveCommand.Create(ToggleUseBusinessDays);
             ToggleHideCostCommand = ReactiveCommand.Create(ToggleHideCost);
             ToggleHideBillingCommand = ReactiveCommand.Create(ToggleHideBilling);
 
             ToggleDefaultShowDatesCommand = ReactiveCommand.Create(ToggleDefaultShowDates);
             ToggleDefaultUseClassicDatesCommand = ReactiveCommand.Create(ToggleDefaultUseClassicDates);
-            ToggleDefaultUseBusinessDaysCommand = ReactiveCommand.Create(ToggleDefaultUseBusinessDays);
             ToggleDefaultHideCostCommand = ReactiveCommand.Create(ToggleDefaultHideCost);
             ToggleDefaultHideBillingCommand = ReactiveCommand.Create(ToggleDefaultHideBilling);
 
@@ -213,9 +211,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates)
                 .ToProperty(this, main => main.UseClassicDates);
 
-            m_UseBusinessDays = this
-                .WhenAnyValue(main => main.m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays)
-                .ToProperty(this, main => main.UseBusinessDays);
+            m_NonWorkingDayMode = this
+                .WhenAnyValue(main => main.m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode)
+                .ToProperty(this, main => main.NonWorkingDayMode);
 
             m_HideCost = this
                 .WhenAnyValue(main => main.m_CoreViewModel.DisplaySettingsViewModel.HideCost)
@@ -233,9 +231,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(main => main.m_CoreViewModel.DefaultUseClassicDates)
                 .ToProperty(this, main => main.DefaultUseClassicDates);
 
-            m_DefaultUseBusinessDays = this
-                .WhenAnyValue(main => main.m_CoreViewModel.DefaultUseBusinessDays)
-                .ToProperty(this, main => main.DefaultUseBusinessDays);
+            m_DefaultNonWorkingDayMode = this
+                .WhenAnyValue(main => main.m_CoreViewModel.DefaultNonWorkingDayMode)
+                .ToProperty(this, main => main.DefaultNonWorkingDayMode);
 
             m_DefaultHideCost = this
                 .WhenAnyValue(main => main.m_CoreViewModel.DefaultHideCost)
@@ -420,8 +418,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ToggleUseClassicDates() => UseClassicDates = !UseClassicDates;
 
-        private void ToggleUseBusinessDays() => UseBusinessDays = !UseBusinessDays;
-
         private void ToggleHideCost() => HideCost = !HideCost;
 
         private void ToggleHideBilling() => HideBilling = !HideBilling;
@@ -429,8 +425,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private void ToggleDefaultShowDates() => DefaultShowDates = !DefaultShowDates;
 
         private void ToggleDefaultUseClassicDates() => DefaultUseClassicDates = !DefaultUseClassicDates;
-
-        private void ToggleDefaultUseBusinessDays() => DefaultUseBusinessDays = !DefaultUseBusinessDays;
 
         private void ToggleDefaultHideCost() => DefaultHideCost = !DefaultHideCost;
 
@@ -644,13 +638,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<bool> m_UseBusinessDays;
-        public bool UseBusinessDays
+        private readonly ObservableAsPropertyHelper<NonWorkingDayMode> m_NonWorkingDayMode;
+        public NonWorkingDayMode NonWorkingDayMode
         {
-            get => m_UseBusinessDays.Value;
+            get => m_NonWorkingDayMode.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.UseBusinessDays = value;
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode = value;
             }
         }
 
@@ -694,13 +688,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<bool> m_DefaultUseBusinessDays;
-        public bool DefaultUseBusinessDays
+        private readonly ObservableAsPropertyHelper<NonWorkingDayMode> m_DefaultNonWorkingDayMode;
+        public NonWorkingDayMode DefaultNonWorkingDayMode
         {
-            get => m_DefaultUseBusinessDays.Value;
+            get => m_DefaultNonWorkingDayMode.Value;
             set
             {
-                lock (m_Lock) m_CoreViewModel.DefaultUseBusinessDays = value;
+                lock (m_Lock) m_CoreViewModel.DefaultNonWorkingDayMode = value;
             }
         }
 
@@ -770,8 +764,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ToggleUseClassicDatesCommand { get; }
 
-        public ICommand ToggleUseBusinessDaysCommand { get; }
-
         public ICommand ToggleHideCostCommand { get; }
 
         public ICommand ToggleHideBillingCommand { get; }
@@ -779,8 +771,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand ToggleDefaultShowDatesCommand { get; }
 
         public ICommand ToggleDefaultUseClassicDatesCommand { get; }
-
-        public ICommand ToggleDefaultUseBusinessDaysCommand { get; }
 
         public ICommand ToggleDefaultHideCostCommand { get; }
 
@@ -1175,7 +1165,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_ShowDates?.Dispose();
                 m_UseClassicDates?.Dispose();
-                m_UseBusinessDays?.Dispose();
+                m_NonWorkingDayMode?.Dispose();
                 m_AutoCompile?.Dispose();
                 m_SelectedTheme?.Dispose();
                 m_BaseTheme?.Dispose();

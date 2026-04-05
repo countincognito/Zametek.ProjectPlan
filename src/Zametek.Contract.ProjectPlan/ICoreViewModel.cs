@@ -27,7 +27,7 @@ namespace Zametek.Contract.ProjectPlan
 
         bool DefaultUseClassicDates { get; set; }
 
-        bool DefaultUseBusinessDays { get; set; }
+        NonWorkingDayMode DefaultNonWorkingDayMode { get; set; }
 
         bool DefaultHideCost { get; set; }
 
