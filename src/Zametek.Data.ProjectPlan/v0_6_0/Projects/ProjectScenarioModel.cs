@@ -17,6 +17,6 @@
 
         public v0_5_0.MetricsModel Metrics { get; init; } = new();
 
-        public v0_5_0.DisplaySettingsModel DisplaySettings { get; init; } = new();
+        public DisplaySettingsModel DisplaySettings { get; init; } = new();
     }
 }

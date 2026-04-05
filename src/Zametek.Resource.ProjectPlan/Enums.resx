@@ -276,31 +276,40 @@
   <data name="Enum_TrackedMetric_RisksActivity" xml:space="preserve">
     <value>Activity Risk</value>
   </data>
-  <data name="Enum_CurveFittingTypeNone" xml:space="preserve">
+  <data name="Enum_CurveFittingType_None" xml:space="preserve">
     <value>None</value>
   </data>
-  <data name="Enum_CurveFittingTypeLinear" xml:space="preserve">
+  <data name="Enum_CurveFittingType_Linear" xml:space="preserve">
     <value>Linear</value>
   </data>
-  <data name="Enum_CurveFittingTypeExponential" xml:space="preserve">
+  <data name="Enum_CurveFittingType_Exponential" xml:space="preserve">
     <value>Exponential</value>
   </data>
-  <data name="Enum_CurveFittingTypePolynomialOrder2" xml:space="preserve">
+  <data name="Enum_CurveFittingType_PolynomialOrder2" xml:space="preserve">
     <value>Polynomial (2nd order)</value>
   </data>
-  <data name="Enum_CurveFittingTypePolynomialOrder3" xml:space="preserve">
+  <data name="Enum_CurveFittingType_PolynomialOrder3" xml:space="preserve">
     <value>Polynomial (3rd order)</value>
   </data>
-  <data name="Enum_CurveFittingTypePolynomialOrder4" xml:space="preserve">
+  <data name="Enum_CurveFittingType_PolynomialOrder4" xml:space="preserve">
     <value>Polynomial (4th order)</value>
   </data>
-  <data name="Enum_CurveFittingTypePower" xml:space="preserve">
+  <data name="Enum_CurveFittingType_Power" xml:space="preserve">
     <value>Power</value>
   </data>
-  <data name="Enum_CurveFittingTypeLogarithmic" xml:space="preserve">
+  <data name="Enum_CurveFittingType_Logarithmic" xml:space="preserve">
     <value>Logarithmic</value>
   </data>
   <data name="Enum_TrackedMetric_None" xml:space="preserve">
     <value>None</value>
+  </data>
+  <data name="Enum_NonWorkingDayMode_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Enum_NonWorkingDayMode_Weekends" xml:space="preserve">
+    <value>Weekends</value>
+  </data>
+  <data name="Enum_NonWorkingDayMode_CustomCalendar" xml:space="preserve">
+    <value>Custom Calendar</value>
   </data>
 </root>

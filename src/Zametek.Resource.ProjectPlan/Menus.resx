@@ -210,4 +210,16 @@
   <data name="Menu_ViewLicense" xml:space="preserve">
     <value>View License</value>
   </data>
+  <data name="Menu_NonWorkingDaysSettings" xml:space="preserve">
+    <value>Non-Working Days</value>
+  </data>
+  <data name="Menu_NonWorkingDaysNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Menu_NonWorkingDaysWeekends" xml:space="preserve">
+    <value>Weekends</value>
+  </data>
+  <data name="Menu_NonWorkingDaysCustomCalendar" xml:space="preserve">
+    <value>Custom Calendar</value>
+  </data>
 </root>

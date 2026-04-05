@@ -126,72 +126,72 @@ namespace Zametek.Resource.ProjectPlan {
         /// <summary>
         ///   Looks up a localized string similar to Exponential.
         /// </summary>
-        public static string Enum_CurveFittingTypeExponential {
+        public static string Enum_CurveFittingType_Exponential {
             get {
-                return ResourceManager.GetString("Enum_CurveFittingTypeExponential", resourceCulture);
+                return ResourceManager.GetString("Enum_CurveFittingType_Exponential", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Linear.
         /// </summary>
-        public static string Enum_CurveFittingTypeLinear {
+        public static string Enum_CurveFittingType_Linear {
             get {
-                return ResourceManager.GetString("Enum_CurveFittingTypeLinear", resourceCulture);
+                return ResourceManager.GetString("Enum_CurveFittingType_Linear", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Logarithmic.
         /// </summary>
-        public static string Enum_CurveFittingTypeLogarithmic {
+        public static string Enum_CurveFittingType_Logarithmic {
             get {
-                return ResourceManager.GetString("Enum_CurveFittingTypeLogarithmic", resourceCulture);
+                return ResourceManager.GetString("Enum_CurveFittingType_Logarithmic", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to None.
         /// </summary>
-        public static string Enum_CurveFittingTypeNone {
+        public static string Enum_CurveFittingType_None {
             get {
-                return ResourceManager.GetString("Enum_CurveFittingTypeNone", resourceCulture);
+                return ResourceManager.GetString("Enum_CurveFittingType_None", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Polynomial (2nd order).
         /// </summary>
-        public static string Enum_CurveFittingTypePolynomialOrder2 {
+        public static string Enum_CurveFittingType_PolynomialOrder2 {
             get {
-                return ResourceManager.GetString("Enum_CurveFittingTypePolynomialOrder2", resourceCulture);
+                return ResourceManager.GetString("Enum_CurveFittingType_PolynomialOrder2", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Polynomial (3rd order).
         /// </summary>
-        public static string Enum_CurveFittingTypePolynomialOrder3 {
+        public static string Enum_CurveFittingType_PolynomialOrder3 {
             get {
-                return ResourceManager.GetString("Enum_CurveFittingTypePolynomialOrder3", resourceCulture);
+                return ResourceManager.GetString("Enum_CurveFittingType_PolynomialOrder3", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Polynomial (4th order).
         /// </summary>
-        public static string Enum_CurveFittingTypePolynomialOrder4 {
+        public static string Enum_CurveFittingType_PolynomialOrder4 {
             get {
-                return ResourceManager.GetString("Enum_CurveFittingTypePolynomialOrder4", resourceCulture);
+                return ResourceManager.GetString("Enum_CurveFittingType_PolynomialOrder4", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Power.
         /// </summary>
-        public static string Enum_CurveFittingTypePower {
+        public static string Enum_CurveFittingType_Power {
             get {
-                return ResourceManager.GetString("Enum_CurveFittingTypePower", resourceCulture);
+                return ResourceManager.GetString("Enum_CurveFittingType_Power", resourceCulture);
             }
         }
         
@@ -291,6 +291,33 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Enum_LogicalOperator_OR {
             get {
                 return ResourceManager.GetString("Enum_LogicalOperator_OR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom Calendar.
+        /// </summary>
+        public static string Enum_NonWorkingDayMode_CustomCalendar {
+            get {
+                return ResourceManager.GetString("Enum_NonWorkingDayMode_CustomCalendar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string Enum_NonWorkingDayMode_None {
+            get {
+                return ResourceManager.GetString("Enum_NonWorkingDayMode_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Weekends.
+        /// </summary>
+        public static string Enum_NonWorkingDayMode_Weekends {
+            get {
+                return ResourceManager.GetString("Enum_NonWorkingDayMode_Weekends", resourceCulture);
             }
         }
         

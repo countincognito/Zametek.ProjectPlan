@@ -126,14 +126,24 @@ namespace Zametek.View.ProjectPlan
             new FuncValueConverter<CurveFittingType, string>(
                 x => x switch
                 {
-                    CurveFittingType.None => Enums.Enum_CurveFittingTypeNone,
-                    CurveFittingType.Linear => Enums.Enum_CurveFittingTypeLinear,
-                    CurveFittingType.Exponential => Enums.Enum_CurveFittingTypeExponential,
-                    CurveFittingType.Logarithmic => Enums.Enum_CurveFittingTypeLogarithmic,
-                    CurveFittingType.Power => Enums.Enum_CurveFittingTypePower,
-                    CurveFittingType.PolynomialOrder2 => Enums.Enum_CurveFittingTypePolynomialOrder2,
-                    CurveFittingType.PolynomialOrder3 => Enums.Enum_CurveFittingTypePolynomialOrder3,
-                    CurveFittingType.PolynomialOrder4 => Enums.Enum_CurveFittingTypePolynomialOrder4,
+                    CurveFittingType.None => Enums.Enum_CurveFittingType_None,
+                    CurveFittingType.Linear => Enums.Enum_CurveFittingType_Linear,
+                    CurveFittingType.Exponential => Enums.Enum_CurveFittingType_Exponential,
+                    CurveFittingType.Logarithmic => Enums.Enum_CurveFittingType_Logarithmic,
+                    CurveFittingType.Power => Enums.Enum_CurveFittingType_Power,
+                    CurveFittingType.PolynomialOrder2 => Enums.Enum_CurveFittingType_PolynomialOrder2,
+                    CurveFittingType.PolynomialOrder3 => Enums.Enum_CurveFittingType_PolynomialOrder3,
+                    CurveFittingType.PolynomialOrder4 => Enums.Enum_CurveFittingType_PolynomialOrder4,
+                    _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
+                });
+
+        public static readonly IValueConverter NonWorkingDayModeValue =
+            new FuncValueConverter<NonWorkingDayMode, string>(
+                x => x switch
+                {
+                    NonWorkingDayMode.None => Enums.Enum_NonWorkingDayMode_None,
+                    NonWorkingDayMode.Weekends => Enums.Enum_NonWorkingDayMode_Weekends,
+                    NonWorkingDayMode.CustomCalendar => Enums.Enum_NonWorkingDayMode_CustomCalendar,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
     }

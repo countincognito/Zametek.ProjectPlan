@@ -8,6 +8,8 @@
 
         public static bool IsBefore(this DateTimeOffset current, DateTimeOffset toCompareWith) => current < toCompareWith;
 
+        public static bool IsAfter(this DateTimeOffset current, DateTimeOffset toCompareWith) => current > toCompareWith;
+
         public static bool IsAfterOrOn(this DateTimeOffset current, DateTimeOffset toCompareWith) => current >= toCompareWith;
     }
 }

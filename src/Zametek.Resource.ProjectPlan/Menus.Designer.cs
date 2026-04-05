@@ -187,6 +187,42 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Custom Calendar.
+        /// </summary>
+        public static string Menu_NonWorkingDaysCustomCalendar {
+            get {
+                return ResourceManager.GetString("Menu_NonWorkingDaysCustomCalendar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string Menu_NonWorkingDaysNone {
+            get {
+                return ResourceManager.GetString("Menu_NonWorkingDaysNone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Non-Working Days.
+        /// </summary>
+        public static string Menu_NonWorkingDaysSettings {
+            get {
+                return ResourceManager.GetString("Menu_NonWorkingDaysSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Weekends.
+        /// </summary>
+        public static string Menu_NonWorkingDaysWeekends {
+            get {
+                return ResourceManager.GetString("Menu_NonWorkingDaysWeekends", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Open....
         /// </summary>
         public static string Menu_Open {

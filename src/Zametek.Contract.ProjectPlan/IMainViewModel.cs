@@ -82,6 +82,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ToggleDefaultUseClassicDatesCommand { get; }
 
+        ICommand ChangeNonWorkingDayModeCommand { get; }
+
         ICommand ToggleDefaultHideCostCommand { get; }
 
         ICommand ToggleDefaultHideBillingCommand { get; }

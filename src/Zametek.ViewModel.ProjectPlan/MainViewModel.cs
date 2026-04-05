@@ -149,6 +149,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             ToggleDefaultShowDatesCommand = ReactiveCommand.Create(ToggleDefaultShowDates);
             ToggleDefaultUseClassicDatesCommand = ReactiveCommand.Create(ToggleDefaultUseClassicDates);
+
+            ChangeNonWorkingDayModeCommand = ReactiveCommand.CreateFromTask<NonWorkingDayMode>(ChangeNonWorkingDayModeAsync);
+
             ToggleDefaultHideCostCommand = ReactiveCommand.Create(ToggleDefaultHideCost);
             ToggleDefaultHideBillingCommand = ReactiveCommand.Create(ToggleDefaultHideBilling);
 
@@ -532,6 +535,26 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+
+        
+
+        private async Task ChangeNonWorkingDayModeAsync(NonWorkingDayMode mode)
+        {
+            try
+            {
+                m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode = mode;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+
+
         private async Task ChangeThemeAsync(string theme)
         {
             try
@@ -771,6 +794,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand ToggleDefaultShowDatesCommand { get; }
 
         public ICommand ToggleDefaultUseClassicDatesCommand { get; }
+
+        public ICommand ChangeNonWorkingDayModeCommand { get; }
 
         public ICommand ToggleDefaultHideCostCommand { get; }
 

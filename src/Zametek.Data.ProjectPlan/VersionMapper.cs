@@ -662,6 +662,39 @@ namespace Zametek.Data.ProjectPlan
         // v0.6.0 <-> Current and v0.5.0 / v0.4.4
         // ---------------------------------------------------------------------
 
+
+        public v0_6_0.DisplaySettingsModel FromV0_5_0ToV0_6_0(v0_5_0.DisplaySettingsModel src)
+        {
+            var model = new v0_6_0.DisplaySettingsModel
+            {
+                ShowDates = src.ShowDates,
+                UseClassicDates = src.UseClassicDates,
+                NonWorkingDayMode = src.UseBusinessDays ? NonWorkingDayMode.Weekends : NonWorkingDayMode.None,
+                HideCost = src.HideCost,
+                HideBilling = src.HideBilling,
+                ArrowGraphShowNames = src.ArrowGraphShowNames,
+                VertexGraphShowNames = src.VertexGraphShowNames,
+                GanttChartGroupByMode = src.GanttChartGroupByMode,
+                GanttChartAnnotationStyle = src.GanttChartAnnotationStyle,
+                GanttChartShowGroupLabels = src.GanttChartShowGroupLabels,
+                GanttChartShowProjectFinish = src.GanttChartShowProjectFinish,
+                GanttChartShowTracking = src.GanttChartShowTracking,
+                GanttChartShowToday = src.GanttChartShowToday,
+                GanttChartShowMilestones = src.GanttChartShowMilestones,
+                GanttChartShowSlack = src.GanttChartShowSlack,
+                ResourceChartAllocationMode = src.ResourceChartAllocationMode,
+                ResourceChartScheduleMode = src.ResourceChartScheduleMode,
+                ResourceChartDisplayStyle = src.ResourceChartDisplayStyle,
+                ResourceChartShowToday = src.ResourceChartShowToday,
+                ResourceChartShowMilestones = src.ResourceChartShowMilestones,
+                EarnedValueShowProjections = src.EarnedValueShowProjections,
+                EarnedValueShowToday = src.EarnedValueShowToday,
+                EarnedValueShowMilestones = src.EarnedValueShowMilestones,
+            };
+
+            return model;
+        }
+
         public partial v0_6_0.ProjectScenarioModel FromV0_5_0ToV0_6_0(v0_5_0.ProjectModel src);
         public partial v0_5_0.ProjectModel FromV0_6_0ToV0_5_0(v0_6_0.ProjectScenarioModel src);
 

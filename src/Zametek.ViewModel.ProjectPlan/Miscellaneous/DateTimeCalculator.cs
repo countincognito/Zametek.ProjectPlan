@@ -183,7 +183,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                if (current.IsAfterOrOn(toCompareWith))
+                if (current.IsAfter(toCompareWith))
                 {
                     return -CountNonWorkingDays(toCompareWith, current, nonWorkingDayRecurrencePatterns);
                 }

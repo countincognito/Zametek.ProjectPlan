@@ -10,6 +10,5 @@ namespace Zametek.View.ProjectPlan
         public partial FileFilter ToFileFilter(FilePickerFileType src);
 
         public partial FilePickerFileType ToFilePickerFileType(FileFilter src);
-
     }
 }

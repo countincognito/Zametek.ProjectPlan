@@ -9,6 +9,7 @@
 		xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
 		xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 		xmlns:local="using:Zametek.View.ProjectPlan"
+		xmlns:common="using:Zametek.Common.ProjectPlan"
 		x:DataType="vm:MainViewModel"
         Icon="resm:Zametek.Resource.ProjectPlan.Icons.zpp.ico?assembly=Zametek.Resource.ProjectPlan"
 		xmlns:u="https://irihi.tech/ursa"
@@ -112,16 +113,25 @@
 										  IsChecked="{Binding Path=UseClassicDates, Mode=OneWay}" />
 							</MenuItem.Icon>
 						</MenuItem>
-						<!--<MenuItem Header="{x:Static resources:Menus.Menu_UseBusinessDays}"
-								  Command="{Binding Path=ToggleUseBusinessDaysCommand, Mode=OneWay}"
-								  InputGesture="Ctrl+B">
-							<MenuItem.Icon>
-								<CheckBox BorderThickness="0"
-										  Theme="{StaticResource SimpleCheckBox}"
-										  IsHitTestVisible="False"
-										  IsChecked="{Binding Path=UseBusinessDays, Mode=OneWay}" />
-							</MenuItem.Icon>
-						</MenuItem>-->
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysSettings}">
+							<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysNone}"
+									  IsChecked="{Binding Path=NonWorkingDayMode, Converter={x:Static local:StringConverters.NonWorkingDayModeValue}, ConverterParameter={x:Static resources:Enum.Enum_NonWorkingDayMode_None}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeNonWorkingDayModeCommand, Mode=OneWay}"
+								      CommandParameter="{x:Static common:NonWorkingDayMode.None}"
+									  ToggleType="Radio" />
+							<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysWeekends}"
+									  IsChecked="{Binding Path=NonWorkingDayMode, Converter={x:Static local:StringConverters.NonWorkingDayModeValue}, ConverterParameter={x:Static resources:Enum.Enum_NonWorkingDayMode_Weekends}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeNonWorkingDayModeCommand, Mode=OneWay}"
+								      CommandParameter="{x:Static common:NonWorkingDayMode.Weekends}"
+									  ToggleType="Radio" />
+							<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysCustomCalendar}"
+									  IsChecked="{Binding Path=NonWorkingDayMode, Converter={x:Static local:StringConverters.NonWorkingDayModeValue}, ConverterParameter={x:Static resources:Enum.Enum_NonWorkingDayMode_CustomCalendar}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeNonWorkingDayModeCommand, Mode=OneWay}"
+								      CommandParameter="{x:Static common:NonWorkingDayMode.CustomCalendar}"
+									  ToggleType="Radio" />
+						</MenuItem>
+
 						<MenuItem Header="{x:Static resources:Menus.Menu_HideCost}"
 								  Command="{Binding Path=ToggleHideCostCommand, Mode=OneWay}"
 								  InputGesture="Ctrl+W">
