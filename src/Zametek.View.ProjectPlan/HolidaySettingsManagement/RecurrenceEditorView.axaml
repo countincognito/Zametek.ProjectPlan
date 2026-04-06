@@ -1,0 +1,463 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 xmlns:common="using:Zametek.Common.ProjectPlan"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:converters="using:Avalonia.Controls.Converters"
+			 xmlns:u="https://irihi.tech/ursa"
+			 x:DataType="vm:RecurrenceEditorViewModel"
+			 x:Class="Zametek.View.ProjectPlan.RecurrenceEditorView">
+
+	<UserControl.Resources>
+		<converters:EnumToBoolConverter x:Key="enumToBool" />
+	</UserControl.Resources>
+
+	<StackPanel>
+
+		<!-- Week start (WKST) -->
+		<!--<TextBlock Grid.Row="3" Grid.Column="0" Margin="0,0,8,4"
+                   VerticalAlignment="Center"
+                   Text="Week starts on:"/>
+        <ComboBox Grid.Row="3" Grid.Column="1" Margin="0,0,0,4"
+                  SelectedItem="{Binding WeekStart, Mode=TwoWay}">
+            <ComboBoxItem Content="Monday" Tag="MO"/>
+            <ComboBoxItem Content="Tuesday" Tag="TU"/>
+            <ComboBoxItem Content="Wednesday" Tag="WE"/>
+            <ComboBoxItem Content="Thursday" Tag="TH"/>
+            <ComboBoxItem Content="Friday" Tag="FR"/>
+            <ComboBoxItem Content="Saturday" Tag="SA"/>
+            <ComboBoxItem Content="Sunday" Tag="SU"/>
+        </ComboBox>-->
+
+		<DockPanel Margin="0,11,0,0">
+
+			<!-- Start -->
+
+			<DockPanel DockPanel.Dock="Left"
+					   Margin="0,0,11,0">
+				<Label DockPanel.Dock="Top"
+					   Margin="0,0,0,7"
+					   VerticalAlignment="Center"
+					   Content="Start:"/>
+
+				<CalendarDatePicker DockPanel.Dock="Top"
+									SelectedDate="{Binding Path=StartDateTime, Mode=TwoWay}"
+									Margin="0,0,0,7"
+									Focusable="True"
+									IsTodayHighlighted="True"
+									VerticalAlignment="Center"/>
+
+				<Grid />
+			</DockPanel>
+
+			<!-- End -->
+
+			<DockPanel DockPanel.Dock="Left"
+					   IsEnabled="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsNotRecurrenceFrequencyTypeMatch}, ConverterParameter={x:Static common:RecurrenceFrequencyType.None}, Mode=OneWay}">
+				<Label DockPanel.Dock="Top"
+					   VerticalAlignment="Center"
+					   Content="Ends:"/>
+
+				<StackPanel Orientation="Vertical">
+					<DockPanel Margin="0,7,0,0">
+						<RadioButton DockPanel.Dock="Left"
+									 Content="Never"
+									 GroupName="EndType"
+									 Margin="0,0,7,0"
+									 VerticalAlignment="Center"
+									 IsChecked="{Binding Path=IsEndNever, Mode=TwoWay}"/>
+						<Grid/>
+					</DockPanel>
+
+					<DockPanel Margin="0,7,0,0">
+						<RadioButton DockPanel.Dock="Left"
+									 Content="On date"
+									 GroupName="EndType"
+									 Margin="0,0,7,0"
+									 VerticalAlignment="Center"
+									 IsChecked="{Binding Path=IsEndUntil, Mode=TwoWay}"/>
+
+						<CalendarDatePicker DockPanel.Dock="Left"
+											Margin="0,0,7,0"
+											Focusable="True"
+											VerticalAlignment="Center"
+											IsEnabled="{Binding Path=IsEndUntil}"
+											IsTodayHighlighted="True"
+											SelectedDate="{Binding Path=Until, Mode=TwoWay}"/>
+						<Grid/>
+					</DockPanel>
+
+					<DockPanel Margin="0,7,0,0">
+						<RadioButton DockPanel.Dock="Left"
+									 Content="After"
+									 GroupName="EndType"
+									 Margin="0,0,7,0"
+									 VerticalAlignment="Center"
+									 IsChecked="{Binding Path=IsEndCount, Mode=TwoWay}"/>
+
+						<u:NumericIntUpDown DockPanel.Dock="Left"
+											Margin="0,0,7,0"
+											Padding="0"
+									        Width="75"
+									        Minimum="1"
+									        Maximum="99"
+											ShowButtonSpinner="True"
+											VerticalAlignment="Center"
+									        IsEnabled="{Binding Path=IsEndCount}"
+									        Value="{Binding Path=Count, Mode=TwoWay}"/>
+
+						<TextBlock DockPanel.Dock="Left"
+								   VerticalAlignment="Center"
+								   Text="occurrences"/>
+
+						<Grid/>
+					</DockPanel>
+				</StackPanel>
+
+				<Grid />
+			</DockPanel>
+
+			<Grid />
+		</DockPanel>
+
+		<DockPanel Margin="0,11,0,0">
+			<StackPanel DockPanel.Dock="Left"
+						Margin="0,0,11,0">
+				<TextBlock>Recurrence Pattern</TextBlock>
+
+				<RadioButton Margin="0,7,0,0"
+							 GroupName="RecurrencePattern"
+							 Content="None"
+							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyTypeMatch}, ConverterParameter={x:Static common:RecurrenceFrequencyType.None}, Mode=OneWay}"
+							 Command="{Binding Path=ChangeRecurrenceFrequencyCommand, Mode=OneWay}"
+							 CommandParameter="{x:Static common:RecurrenceFrequencyType.None}"/>
+
+				<RadioButton Margin="0,7,0,0"
+							 GroupName="RecurrencePattern"
+							 Content="Daily"
+							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyTypeMatch}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Daily}, Mode=OneWay}"
+							 Command="{Binding Path=ChangeRecurrenceFrequencyCommand, Mode=OneWay}"
+							 CommandParameter="{x:Static common:RecurrenceFrequencyType.Daily}"/>
+
+				<RadioButton Margin="0,7,0,0"
+							 GroupName="RecurrencePattern"
+							 Content="Weekly"
+							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyTypeMatch}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Weekly}, Mode=OneWay}"
+							 Command="{Binding Path=ChangeRecurrenceFrequencyCommand, Mode=OneWay}"
+							 CommandParameter="{x:Static common:RecurrenceFrequencyType.Weekly}"/>
+
+				<RadioButton Margin="0,7,0,0"
+							 GroupName="RecurrencePattern"
+							 Content="Monthly"
+							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyTypeMatch}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Monthly}, Mode=OneWay}"
+							 Command="{Binding Path=ChangeRecurrenceFrequencyCommand, Mode=OneWay}"
+							 CommandParameter="{x:Static common:RecurrenceFrequencyType.Monthly}"/>
+
+				<RadioButton Margin="0,7,0,0"
+							 GroupName="RecurrencePattern"
+							 Content="Yearly"
+							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyTypeMatch}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Yearly}, Mode=OneWay}"
+							 Command="{Binding Path=ChangeRecurrenceFrequencyCommand, Mode=OneWay}"
+							 CommandParameter="{x:Static common:RecurrenceFrequencyType.Yearly}"/>
+			</StackPanel>
+
+			<DockPanel Margin="0">
+
+				<!-- Daily -->
+				<DockPanel IsVisible="{Binding Path=RecurrenceFrequency, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Daily}, Mode=OneWay}">
+					<DockPanel DockPanel.Dock="Top">
+						<Label DockPanel.Dock="Left"
+							   Margin="0,0,7,0"
+							   VerticalAlignment="Center"
+							   Content="Interval:"/>
+
+						<u:NumericIntUpDown DockPanel.Dock="Left"
+											Value="{Binding Path=Interval, Mode=TwoWay}"
+											VerticalAlignment="Center"
+											ShowButtonSpinner="True"
+											Focusable="True"
+											Margin="0"
+											Padding="0"
+											Width="75"
+											Minimum="1"
+											Maximum="99"/>
+
+						<Grid />
+					</DockPanel>
+
+					<Grid />
+				</DockPanel>
+
+				<!-- Weekly -->
+				<DockPanel IsVisible="{Binding Path=RecurrenceFrequency, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Weekly}, Mode=OneWay}">
+					<DockPanel DockPanel.Dock="Top">
+						<Label DockPanel.Dock="Left"
+							   Margin="0,0,7,0"
+							   VerticalAlignment="Center"
+							   Content="Interval:"/>
+
+						<u:NumericIntUpDown DockPanel.Dock="Left"
+											Value="{Binding Path=Interval, Mode=TwoWay}"
+											VerticalAlignment="Center"
+											ShowButtonSpinner="True"
+											Focusable="True"
+											Margin="0"
+											Padding="0"
+											Width="75"
+											Minimum="1"
+											Maximum="99"/>
+
+						<Grid />
+					</DockPanel>
+
+					<DockPanel DockPanel.Dock="Top">
+						<StackPanel Orientation="Vertical">
+							<TextBlock Text="Repeat on:" Margin="0,0,0,4"/>
+							<WrapPanel>
+								<CheckBox Content="Mon" IsChecked="{Binding ByWeekDays[0]}" Margin="0,0,7,0"/>
+								<CheckBox Content="Tue" IsChecked="{Binding ByWeekDays[1]}" Margin="0,0,7,0"/>
+								<CheckBox Content="Wed" IsChecked="{Binding ByWeekDays[2]}" Margin="0,0,7,0"/>
+								<CheckBox Content="Thu" IsChecked="{Binding ByWeekDays[3]}" Margin="0,0,7,0"/>
+								<CheckBox Content="Fri" IsChecked="{Binding ByWeekDays[4]}" Margin="0,0,7,0"/>
+								<CheckBox Content="Sat" IsChecked="{Binding ByWeekDays[5]}" Margin="0,0,7,0"/>
+								<CheckBox Content="Sun" IsChecked="{Binding ByWeekDays[6]}" Margin="0,0,7,0"/>
+							</WrapPanel>
+						</StackPanel>
+					</DockPanel>
+
+					<Grid />
+				</DockPanel>
+
+				<!-- Monthly -->
+				<DockPanel IsVisible="{Binding Path=RecurrenceFrequency, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Monthly}, Mode=OneWay}">
+					<DockPanel DockPanel.Dock="Top">
+						<Label DockPanel.Dock="Left"
+							   Margin="0,0,7,0"
+							   VerticalAlignment="Center"
+							   Content="Interval:"/>
+
+						<u:NumericIntUpDown DockPanel.Dock="Left"
+											Value="{Binding Path=Interval, Mode=TwoWay}"
+											VerticalAlignment="Center"
+											ShowButtonSpinner="True"
+											Focusable="True"
+											Margin="0"
+											Padding="0"
+											Width="75"
+											Minimum="1"
+											Maximum="99"/>
+
+						<Grid />
+					</DockPanel>
+
+					<DockPanel DockPanel.Dock="Top">
+						<RadioButton DockPanel.Dock="Left"
+									 Content="Day"
+									 GroupName="MonthType"
+									 Margin="0,0,7,0"
+									 VerticalAlignment="Center"
+									 IsChecked="{Binding Path=IsMonthDay, Mode=TwoWay}"/>
+
+						<u:NumericIntUpDown DockPanel.Dock="Left"
+											Margin="0,0,7,0"
+											Padding="0"
+									        Width="75"
+									        Minimum="1"
+									        Maximum="31"
+											ShowButtonSpinner="True"
+											VerticalAlignment="Center"
+									        IsEnabled="{Binding Path=IsMonthDay}"
+									        Value="{Binding Path=ByMonthDay, Mode=TwoWay}"/>
+
+
+						<Grid />
+					</DockPanel>
+
+					<DockPanel DockPanel.Dock="Top"
+							   Margin="0,7,0,0">
+						<RadioButton DockPanel.Dock="Left"
+									 Content="The"
+									 GroupName="MonthType"
+									 Margin="0,0,7,0"
+									 VerticalAlignment="Center"
+									 IsChecked="{Binding Path=IsMonthWeekday, Mode=TwoWay}"/>
+
+						<ComboBox Width="120"
+								  DockPanel.Dock="Left"
+								  SelectedValue="{Binding Path=BySetPosSelection, Mode=TwoWay}"
+								  IsEnabled="{Binding Path=IsMonthWeekday}">
+							<ComboBoxItem Content="First" Tag="1"/>
+							<ComboBoxItem Content="Second" Tag="2"/>
+							<ComboBoxItem Content="Third" Tag="3"/>
+							<ComboBoxItem Content="Fourth" Tag="4"/>
+							<ComboBoxItem Content="Last" Tag="-1"/>
+						</ComboBox>
+
+						<ComboBox Width="140"
+								  DockPanel.Dock="Left"
+								  SelectedValue="{Binding Path=ByMonthWeekdaySelection, Mode=TwoWay}"
+							      IsEnabled="{Binding Path=IsMonthWeekday}">
+							<ComboBoxItem Content="Monday" Tag="MO"/>
+							<ComboBoxItem Content="Tuesday" Tag="TU"/>
+							<ComboBoxItem Content="Wednesday" Tag="WE"/>
+							<ComboBoxItem Content="Thursday" Tag="TH"/>
+							<ComboBoxItem Content="Friday" Tag="FR"/>
+							<ComboBoxItem Content="Saturday" Tag="SA"/>
+							<ComboBoxItem Content="Sunday" Tag="SU"/>
+							<ComboBoxItem Content="Weekday" Tag="MO,TU,WE,TH,FR"/>
+							<ComboBoxItem Content="Weekend day" Tag="SA,SU"/>
+						</ComboBox>
+
+
+						<Grid />
+					</DockPanel>
+
+					<Grid />
+				</DockPanel>
+
+
+
+
+
+
+
+			</DockPanel>
+
+			<Grid/>
+		</DockPanel>
+
+		<Grid/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        <!-- Yearly -->
+                        <!--<DataTrigger Binding="{Binding DetailsTemplateKey}" Value="Yearly">
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Vertical" Spacing="6">
+                                            <TextBlock Text="Yearly pattern:"/>
+                                            <TabControl>
+                                                <TabItem Header="Specific dates">
+                                                    <StackPanel Margin="4" Spacing="4">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <TextBlock Text="Month:" VerticalAlignment="Center"/>
+                                                            <ComboBox Width="140"
+                                                                      SelectedIndex="{Binding YearlyMonthIndex, Mode=TwoWay}">
+                                                                <ComboBoxItem Content="January"/>
+                                                                <ComboBoxItem Content="February"/>
+                                                                <ComboBoxItem Content="March"/>
+                                                                <ComboBoxItem Content="April"/>
+                                                                <ComboBoxItem Content="May"/>
+                                                                <ComboBoxItem Content="June"/>
+                                                                <ComboBoxItem Content="July"/>
+                                                                <ComboBoxItem Content="August"/>
+                                                                <ComboBoxItem Content="September"/>
+                                                                <ComboBoxItem Content="October"/>
+                                                                <ComboBoxItem Content="November"/>
+                                                                <ComboBoxItem Content="December"/>
+                                                            </ComboBox>
+                                                        </StackPanel>
+
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <TextBlock Text="Day:" VerticalAlignment="Center"/>
+                                                            <NumericUpDown Minimum="1" Maximum="31"
+                                                                           Value="{Binding YearlyDayOfMonth, Mode=TwoWay}"
+                                                                           Width="80"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </TabItem>
+
+                                                <TabItem Header="Pattern">
+                                                    <StackPanel Margin="4" Spacing="4">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <TextBlock Text="Position:" VerticalAlignment="Center"/>
+                                                            <ComboBox Width="120"
+                                                                      SelectedItem="{Binding YearlySetPosSelection, Mode=TwoWay}">
+                                                                <ComboBoxItem Content="First" Tag="1"/>
+                                                                <ComboBoxItem Content="Second" Tag="2"/>
+                                                                <ComboBoxItem Content="Third" Tag="3"/>
+                                                                <ComboBoxItem Content="Fourth" Tag="4"/>
+                                                                <ComboBoxItem Content="Last" Tag="-1"/>
+                                                            </ComboBox>
+                                                        </StackPanel>
+
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <TextBlock Text="Day:" VerticalAlignment="Center"/>
+                                                            <ComboBox Width="140"
+                                                                      SelectedItem="{Binding YearlyWeekdaySelection, Mode=TwoWay}">
+                                                                <ComboBoxItem Content="Monday" Tag="MO"/>
+                                                                <ComboBoxItem Content="Tuesday" Tag="TU"/>
+                                                                <ComboBoxItem Content="Wednesday" Tag="WE"/>
+                                                                <ComboBoxItem Content="Thursday" Tag="TH"/>
+                                                                <ComboBoxItem Content="Friday" Tag="FR"/>
+                                                                <ComboBoxItem Content="Saturday" Tag="SA"/>
+                                                                <ComboBoxItem Content="Sunday" Tag="SU"/>
+                                                                <ComboBoxItem Content="Weekday" Tag="MO,TU,WE,TH,FR"/>
+                                                                <ComboBoxItem Content="Weekend day" Tag="SA,SU"/>
+                                                            </ComboBox>
+                                                        </StackPanel>
+
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <TextBlock Text="Month:" VerticalAlignment="Center"/>
+                                                            <ComboBox Width="140"
+                                                                      SelectedIndex="{Binding YearlyPatternMonthIndex, Mode=TwoWay}">
+                                                                <ComboBoxItem Content="January"/>
+                                                                <ComboBoxItem Content="February"/>
+                                                                <ComboBoxItem Content="March"/>
+                                                                <ComboBoxItem Content="April"/>
+                                                                <ComboBoxItem Content="May"/>
+                                                                <ComboBoxItem Content="June"/>
+                                                                <ComboBoxItem Content="July"/>
+                                                                <ComboBoxItem Content="August"/>
+                                                                <ComboBoxItem Content="September"/>
+                                                                <ComboBoxItem Content="October"/>
+                                                                <ComboBoxItem Content="November"/>
+                                                                <ComboBoxItem Content="December"/>
+                                                            </ComboBox>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </TabItem>
+                                            </TabControl>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>-->
+
+
+        <!-- RRULE string display / debug -->
+        <!--<TextBlock Grid.Row="5" Grid.Column="0" Margin="0,8,8,0"
+                   VerticalAlignment="Top"
+                   Text="RRULE:"/>
+        <TextBox Grid.Row="5" Grid.Column="1" Margin="0,8,0,0"
+                 IsReadOnly="True"
+                 Text="{Binding RRuleString, Mode=OneWay}"/>-->
+
+
+
+
+
+
+
+
+
+
+
+
+	</StackPanel>
+</UserControl>

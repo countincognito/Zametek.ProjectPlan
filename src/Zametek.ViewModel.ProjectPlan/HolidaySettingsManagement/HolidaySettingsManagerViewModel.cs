@@ -211,7 +211,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-            var editViewModel = new RRuleEditorViewModel();
+            var editViewModel = new RecurrenceEditorViewModel();
 
             bool result = await m_DialogService.ShowContextAsync(
                 title: "Calendar",
