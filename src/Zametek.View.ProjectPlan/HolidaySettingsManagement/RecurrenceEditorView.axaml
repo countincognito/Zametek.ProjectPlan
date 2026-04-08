@@ -329,6 +329,29 @@
 			<Grid/>
 		</DockPanel>
 
+
+
+
+		<DockPanel Margin="0,11,0,0">
+
+
+			<!-- RRULE string display / debug -->
+			<TextBlock DockPanel.Dock="Left"
+					   Margin="0,8,8,0"
+					   VerticalAlignment="Top"
+					   Text="RRULE:"/>
+			<TextBox Margin="0,8,0,0"
+					 IsReadOnly="True"
+					 Text="{Binding Path=RRuleString, Mode=OneWay}"/>
+
+
+
+		</DockPanel>
+		
+		
+		
+		
+		
 		<Grid/>
 
 
@@ -438,15 +461,6 @@
                                 </Setter.Value>
                             </Setter>
                         </DataTrigger>-->
-
-
-        <!-- RRULE string display / debug -->
-        <!--<TextBlock Grid.Row="5" Grid.Column="0" Margin="0,8,8,0"
-                   VerticalAlignment="Top"
-                   Text="RRULE:"/>
-        <TextBox Grid.Row="5" Grid.Column="1" Margin="0,8,0,0"
-                 IsReadOnly="True"
-                 Text="{Binding RRuleString, Mode=OneWay}"/>-->
 
 
 
