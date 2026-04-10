@@ -276,6 +276,22 @@
 						<Grid />
 					</DockPanel>
 
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
 					<DockPanel DockPanel.Dock="Top"
 							   Margin="0,7,0,0">
 						<RadioButton DockPanel.Dock="Left"

@@ -50,7 +50,7 @@
 			</DockPanel>
 		</ScrollViewer>
 
-		<DataGrid Name="workStreams"
+		<DataGrid Name="workStreamsGrid"
 				  FrozenColumnCount="1"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
@@ -89,7 +89,7 @@
 
 			<i:Interaction.Behaviors>
 				<ia:EventTriggerBehavior EventName="SelectionChanged"
-										 SourceObject="{Binding #workStreams}">
+										 SourceObject="{Binding #workStreamsGrid}">
 					<ia:InvokeCommandAction x:DataType="vm:WorkStreamSettingsManagerViewModel"
 											Command="{Binding Path=SetSelectedManagedWorkStreamsCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />

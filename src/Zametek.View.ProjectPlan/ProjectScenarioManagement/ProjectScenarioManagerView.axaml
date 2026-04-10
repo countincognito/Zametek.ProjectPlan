@@ -10,6 +10,7 @@
 	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
 			 xmlns:converters="using:Avalonia.Controls.Converters"
 			 x:DataType="vm:ProjectScenarioManagerViewModel"
+			 Focusable="True"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ProjectScenarioManagerView">
 	<UserControl.Resources>
@@ -24,7 +25,8 @@
 		<TreeView Name="scenarioTree"
 				  ItemsSource="{Binding Path=Nodes, Mode=OneWay}"
 				  SelectedItems="{Binding Path=SelectedNodes, Mode=TwoWay}"
-				  SelectionMode="Multiple">
+				  SelectionMode="Multiple"
+				  Focusable="True">
 			<TreeView.Resources>
 				<ControlTheme x:Key="SimpleEmptyTreeViewItemToggleButtonTheme"
 							  TargetType="ToggleButton">

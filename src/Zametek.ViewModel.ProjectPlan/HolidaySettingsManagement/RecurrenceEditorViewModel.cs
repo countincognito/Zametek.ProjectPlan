@@ -65,47 +65,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-            //// Keep end flags mutually exclusive
-            //this.WhenAnyValue(
-            //        x => x.IsEndNever,
-            //        x => x.IsEndUntil,
-            //        x => x.IsEndCount)
-            //    .ObserveOn(RxApp.MainThreadScheduler)
-            //    .Subscribe(tuple =>
-            //    {
-            //        var (never, until, count) = tuple;
-            //        var trueCount = new[] { never, until, count }.Count(x => x);
-            //        if (trueCount == 0)
-            //        {
-            //            IsEndNever = true;
-            //        }
-            //        else if (trueCount > 1)
-            //        {
-            //            // Simple normalization: favor the last changed flag, but here
-            //            // we reset others when one is explicitly set in the UI
-            //            if (never)
-            //            {
-            //                IsEndUntil = false;
-            //                IsEndCount = false;
-            //                Until = null;
-            //                Count = null;
-            //            }
-            //            else if (until)
-            //            {
-            //                IsEndNever = false;
-            //                IsEndCount = false;
-            //                Count = null;
-            //            }
-            //            else if (count)
-            //            {
-            //                IsEndNever = false;
-            //                IsEndUntil = false;
-            //                Until = null;
-            //            }
-            //        }
-            //    });
-
-
             // Compute DetailsTemplateKey from Frequency
             this
                 .WhenAnyValue(
@@ -128,7 +87,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     //x => x.YearlyWeekdaySelection,
                     //x => x.YearlyPatternMonthIndex,
                     (a, _, _, _, _, _, _, _, _, _, _, _) => a)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(freq =>
                 {
                     RebuildRecurrencePattern();
@@ -427,21 +386,49 @@ namespace Zametek.ViewModel.ProjectPlan
         public bool IsEndNever
         {
             get => m_IsEndNever;
-            set => this.RaiseAndSetIfChanged(ref m_IsEndNever, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref m_IsEndNever, value);
+                if (m_IsEndNever)
+                {
+                    IsEndUntil = false;
+                    IsEndCount = false;
+                    Until = null;
+                    Count = null;
+                }
+            }
         }
 
         private bool m_IsEndUntil;
         public bool IsEndUntil
         {
             get => m_IsEndUntil;
-            set => this.RaiseAndSetIfChanged(ref m_IsEndUntil, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref m_IsEndUntil, value);
+                if (m_IsEndUntil)
+                {
+                    IsEndNever = false;
+                    IsEndCount = false;
+                    Count = null;
+                }
+            }
         }
 
         private bool m_IsEndCount;
         public bool IsEndCount
         {
             get => m_IsEndCount;
-            set => this.RaiseAndSetIfChanged(ref m_IsEndCount, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref m_IsEndCount, value);
+                if (m_IsEndCount)
+                {
+                    IsEndNever = false;
+                    IsEndUntil = false;
+                    Until = null;
+                }
+            }
         }
 
         private DateTime? m_Until;
