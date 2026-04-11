@@ -169,6 +169,42 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Christmas Day.
+        /// </summary>
+        public static string Message_DefaultChristmasDayName {
+            get {
+                return ResourceManager.GetString("Message_DefaultChristmasDayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Christmas holiday.
+        /// </summary>
+        public static string Message_DefaultChristmasDayNotes {
+            get {
+                return ResourceManager.GetString("Message_DefaultChristmasDayNotes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New Year&apos;s Day.
+        /// </summary>
+        public static string Message_DefaultNewYearsDayName {
+            get {
+                return ResourceManager.GetString("Message_DefaultNewYearsDayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New Year&apos;s holiday.
+        /// </summary>
+        public static string Message_DefaultNewYearsDayNotes {
+            get {
+                return ResourceManager.GetString("Message_DefaultNewYearsDayNotes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Weekends.
         /// </summary>
         public static string Message_DefaultWeekendsName {

@@ -18,8 +18,6 @@ namespace Zametek.ProjectPlan
 
         public static void RegisterIOC()
         {
-            SplatRegistrations.SetupIOC();
-
             // ViewModels.
 
             SplatRegistrations.RegisterConstant(TimeProvider.System);
@@ -71,6 +69,10 @@ namespace Zametek.ProjectPlan
             SplatRegistrations.RegisterConstant(new Data.ProjectPlan.VersionMapper());
             SplatRegistrations.RegisterConstant(new ViewModel.ProjectPlan.ProjectPlanMapper());
             SplatRegistrations.RegisterConstant(new View.ProjectPlan.ProjectPlanMapper());
+
+            SplatRegistrations.RegisterLazySingleton<ICommitEditHandler, CommitEditHandler>();
+
+            SplatRegistrations.SetupIOC();
         }
     }
 }

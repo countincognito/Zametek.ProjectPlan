@@ -312,7 +312,19 @@
   <data name="Message_DefaultWeekendsNotes" xml:space="preserve">
     <value>Weekends off</value>
   </data>
+  <data name="Message_DefaultChristmasDayNotes" xml:space="preserve">
+    <value>Christmas holiday</value>
+  </data>
+  <data name="Message_DefaultNewYearsDayNotes" xml:space="preserve">
+    <value>New Year's holiday</value>
+  </data>
   <data name="Message_DefaultWeekendsName" xml:space="preserve">
     <value>Weekends</value>
+  </data>
+  <data name="Message_DefaultChristmasDayName" xml:space="preserve">
+    <value>Christmas Day</value>
+  </data>
+  <data name="Message_DefaultNewYearsDayName" xml:space="preserve">
+    <value>New Year's Day</value>
   </data>
 </root>

@@ -38,6 +38,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 using StreamReader reader = File.OpenText(SettingsFilename);
                 string content = reader.ReadToEnd();
+
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    return;
+                }
+
                 JObject json = JObject.Parse(content);
                 string version =
                     json?.GetValue(nameof(AppSettingsModel.Version), StringComparison.OrdinalIgnoreCase)?.ToString()
@@ -259,6 +265,22 @@ namespace Zametek.ViewModel.ProjectPlan
                             Name = Resource.ProjectPlan.Messages.Message_DefaultWeekendsName,
                             Notes = Resource.ProjectPlan.Messages.Message_DefaultWeekendsNotes,
                             RecurrencePattern = "FREQ=WEEKLY;BYDAY=SA,SU",
+                        },
+                        // Christmas Day.
+                        new()
+                        {
+                            Id = 2,
+                            Name = Resource.ProjectPlan.Messages.Message_DefaultChristmasDayName,
+                            Notes = Resource.ProjectPlan.Messages.Message_DefaultChristmasDayNotes,
+                            RecurrencePattern = "FREQ=YEARLY;BYMONTH=12;BYMONTHDAY=25",
+                        },
+                        // New Year's Day.
+                        new()
+                        {
+                            Id = 3,
+                            Name = Resource.ProjectPlan.Messages.Message_DefaultNewYearsDayName,
+                            Notes = Resource.ProjectPlan.Messages.Message_DefaultNewYearsDayNotes,
+                            RecurrencePattern = "FREQ=YEARLY;BYMONTH=1;BYMONTHDAY=1",
                         },
                     ],
             };
