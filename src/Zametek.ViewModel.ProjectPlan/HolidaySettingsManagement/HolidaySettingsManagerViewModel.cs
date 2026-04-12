@@ -262,31 +262,43 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-                //if (!result)
-                //{
-                //    return;
-                //}
+                if (!result)
+                {
+                    return;
+                }
 
-                //lock (m_Lock)
-                //{
+                lock (m_Lock)
+                {
 
-                //    if (resourceIds.Count == 0)
-                //    {
-                //        return;
-                //    }
+                    //if (resourceIds.Count == 0)
+                    //{
+                    //    return;
+                    //}
 
-                //    UpdateResourceModel updateModel = editViewModel.BuildUpdateModel();
+                    //UpdateResourceModel updateModel = editViewModel.BuildUpdateModel();
 
-                //    IEnumerable<UpdateResourceModel> updateModels = [.. resourceIds.Select(x => updateModel with { Id = x })];
+                    var updateModel = new UpdateHolidayModel
+                    {
+                        Id = selectedHoliday.Id,
+                        Name = selectedHoliday.Name,
+                        IsNameEdited = false, //editViewModel.IsNameEdited,
+                        Notes = selectedHoliday.Notes,
+                        IsNotesEdited = false, //editViewModel.IsNotesEdited,
+                        RecurrencePattern = editViewModel.RRuleString,
+                        IsRecurrencePatternEdited = true, //editViewModel.IsRecurrencePatternEdited,
+                    };
 
-                //    UpdateManagedHolidays(updateModels);
+
+
+
+                    UpdateManagedHolidays([updateModel]);
 
 
 
 
 
-                //}
-                //UpdateHolidaySettingsToCore();
+                }
+                UpdateHolidaySettingsToCore();
             }
             catch (Exception ex)
             {

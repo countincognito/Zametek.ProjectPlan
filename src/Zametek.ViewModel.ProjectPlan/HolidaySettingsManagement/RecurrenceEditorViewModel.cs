@@ -161,7 +161,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (IsEndUntil && Until.HasValue)
             {
                 pattern.Until = new CalDateTime(Until.Value, false);
-                pattern.Count = 0;
+                pattern.Count = null;
             }
             else if (IsEndCount && Count.HasValue)
             {
@@ -170,7 +170,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             else
             {
-                pattern.Count = 0;
+                pattern.Count = null;
                 pattern.Until = null;
             }
 
