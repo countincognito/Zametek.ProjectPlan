@@ -28,6 +28,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand AddManagedActivityCommand { get; }
 
+        ICommand InsertManagedActivityCommand { get; }
+
         ICommand RemoveManagedActivitiesCommand { get; }
 
         ICommand EditManagedActivitiesCommand { get; }

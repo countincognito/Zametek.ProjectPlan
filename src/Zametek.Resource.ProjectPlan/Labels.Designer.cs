@@ -889,6 +889,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Insert.
+        /// </summary>
+        public static string Label_InsertManagedActivity {
+            get {
+                return ResourceManager.GetString("Label_InsertManagedActivity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Inter-activity Allocation.
         /// </summary>
         public static string Label_InterActivityAllocationType {

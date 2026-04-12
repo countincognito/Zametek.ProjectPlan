@@ -639,4 +639,7 @@
   <data name="Label_HolidayRecurrencePatternDisplay" xml:space="preserve">
     <value>Non-Working Days</value>
   </data>
+  <data name="Label_InsertManagedActivity" xml:space="preserve">
+    <value>Insert</value>
+  </data>
 </root>

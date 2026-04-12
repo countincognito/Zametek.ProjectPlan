@@ -37,6 +37,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             SetSelectedManagedActivitiesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedActivities);
             AddManagedActivityCommand = ReactiveCommand.CreateFromTask(AddManagedActivityAsync);
+            InsertManagedActivityCommand = ReactiveCommand.CreateFromTask(InsertManagedActivityAsync, this.WhenAnyValue(am => am.HasActivities));
             RemoveManagedActivitiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitiesAsync, this.WhenAnyValue(am => am.HasActivities));
             EditManagedActivitiesCommand = ReactiveCommand.CreateFromTask(EditManagedActivitiesAsync, this.WhenAnyValue(am => am.HasActivities));
 
@@ -114,12 +115,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                lock (m_Lock)
-                {
-                    m_CoreViewModel.AddManagedActivity();
-                    m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                }
-                await RunAutoCompileAsync();
+                await AddManagedActivityInternalAsync();
             }
             catch (Exception ex)
             {
@@ -130,23 +126,23 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private async Task RemoveManagedActivitiesAsync()
+        private async Task AddManagedActivityInternalAsync() => await Task.Run(AddManagedActivityInternal);
+
+        private void AddManagedActivityInternal()
+        {
+            lock (m_Lock)
+            {
+                m_CoreViewModel.AddManagedActivity();
+                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+            }
+            m_CoreViewModel.RunAutoCompile();
+        }
+
+        private async Task InsertManagedActivityAsync()
         {
             try
             {
-                lock (m_Lock)
-                {
-                    ICollection<int> activityIds = SelectedActivities.Keys;
-
-                    if (activityIds.Count == 0)
-                    {
-                        return;
-                    }
-
-                    m_CoreViewModel.RemoveManagedActivities(activityIds);
-                    m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                }
-                await RunAutoCompileAsync();
+                await InsertManagedActivityInternalAsync();
             }
             catch (Exception ex)
             {
@@ -155,6 +151,62 @@ namespace Zametek.ViewModel.ProjectPlan
                     string.Empty,
                     ex.Message);
             }
+        }
+
+        private async Task InsertManagedActivityInternalAsync() => await Task.Run(InsertManagedActivityInternal);
+
+        private void InsertManagedActivityInternal()
+        {
+            lock (m_Lock)
+            {
+                ICollection<int> activityIds = SelectedActivities.Keys;
+
+                if (activityIds.Count == 0)
+                {
+                    return;
+                }
+
+                int lowestId = activityIds.Min();
+                int newId = m_CoreViewModel.AddManagedActivity();
+
+                m_CoreViewModel.UpdateManagedActivityIds([(newId, lowestId)]);
+                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+            }
+            m_CoreViewModel.RunAutoCompile();
+        }
+
+        private async Task RemoveManagedActivitiesAsync()
+        {
+            try
+            {
+                await RemoveManagedActivitiesInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task RemoveManagedActivitiesInternalAsync() => await Task.Run(RemoveManagedActivitiesInternal);
+
+        private void RemoveManagedActivitiesInternal()
+        {
+            lock (m_Lock)
+            {
+                ICollection<int> activityIds = SelectedActivities.Keys;
+
+                if (activityIds.Count == 0)
+                {
+                    return;
+                }
+
+                m_CoreViewModel.RemoveManagedActivities(activityIds);
+                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+            }
+            m_CoreViewModel.RunAutoCompile();
         }
 
         private async Task EditManagedActivitiesAsync()
@@ -177,22 +229,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     return;
                 }
 
-                lock (m_Lock)
-                {
-                    ICollection<int> activityIds = SelectedActivities.Keys;
-
-                    if (activityIds.Count == 0)
-                    {
-                        return;
-                    }
-
-                    UpdateDependentActivityModel updateModel = editViewModel.BuildUpdateModel();
-
-                    IEnumerable<UpdateDependentActivityModel> updateModels = [.. activityIds.Select(x => updateModel with { Id = x })];
-
-                    m_CoreViewModel.UpdateManagedActivities(updateModels);
-                }
-                await RunAutoCompileAsync();
+                UpdateDependentActivityModel updateModel = editViewModel.BuildUpdateModel();
+                await EditManagedActivitiesInternalAsync(updateModel);
             }
             catch (Exception ex)
             {
@@ -201,32 +239,34 @@ namespace Zametek.ViewModel.ProjectPlan
                     string.Empty,
                     ex.Message);
             }
+        }
+
+        private async Task EditManagedActivitiesInternalAsync(UpdateDependentActivityModel updateModel) =>
+            await Task.Run(() => EditManagedActivitiesInternal(updateModel));
+
+        private void EditManagedActivitiesInternal(UpdateDependentActivityModel updateModel)
+        {
+            lock (m_Lock)
+            {
+                ICollection<int> activityIds = SelectedActivities.Keys;
+
+                if (activityIds.Count == 0)
+                {
+                    return;
+                }
+
+                IEnumerable<UpdateDependentActivityModel> updateModels = [.. activityIds.Select(x => updateModel with { Id = x })];
+
+                m_CoreViewModel.UpdateManagedActivities(updateModels);
+            }
+            m_CoreViewModel.RunAutoCompile();
         }
 
         private async Task AddMilestoneAsync()
         {
             try
             {
-                lock (m_Lock)
-                {
-                    ICollection<int> activityIds = SelectedActivities.Keys;
-
-                    if (activityIds.Count == 0)
-                    {
-                        return;
-                    }
-
-                    //m_CoreViewModel.AddMilestone(activityIds);
-
-
-                    m_CoreViewModel.UpdateManagedActivityIds([(8, 4), (9, 5), (10, 6)]);
-
-
-
-
-                    m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                }
-                await RunAutoCompileAsync();
+                await AddMilestoneInternalAsync();
             }
             catch (Exception ex)
             {
@@ -237,7 +277,25 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private async Task RunAutoCompileAsync() => await Task.Run(m_CoreViewModel.RunAutoCompile);
+        private async Task AddMilestoneInternalAsync() =>
+            await Task.Run(() => AddMilestoneInternal());
+
+        private void AddMilestoneInternal()
+        {
+            lock (m_Lock)
+            {
+                ICollection<int> activityIds = SelectedActivities.Keys;
+
+                if (activityIds.Count == 0)
+                {
+                    return;
+                }
+
+                m_CoreViewModel.AddMilestone(activityIds);
+                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+            }
+            m_CoreViewModel.RunAutoCompile();
+        }
 
         #endregion
 
@@ -282,6 +340,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand SetSelectedManagedActivitiesCommand { get; }
 
         public ICommand AddManagedActivityCommand { get; }
+
+        public ICommand InsertManagedActivityCommand { get; }
 
         public ICommand RemoveManagedActivitiesCommand { get; }
 

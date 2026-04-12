@@ -67,6 +67,15 @@
 						Height="25" Width="75"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
+						Command="{Binding Path=InsertManagedActivityCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_InsertManagedActivity}"/>
+
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,7"
+						Height="25" Width="75"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
 						Command="{Binding Path=RemoveManagedActivitiesCommand, Mode=OneWay}"
 						Content="{x:Static resources:Labels.Label_DeleteManagedActivities}"/>
 
