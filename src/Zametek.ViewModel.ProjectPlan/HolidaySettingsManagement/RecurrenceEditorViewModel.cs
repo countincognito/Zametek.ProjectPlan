@@ -9,8 +9,16 @@ using Zametek.Contract.ProjectPlan;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class RecurrenceEditorViewModel
-        : ViewModelBase
+        : ViewModelBase, IRecurrenceEditorViewModel
     {
+        #region Fields
+
+        private readonly IDisposable? m_ReviseRecurrencePattern01Sub;
+        private readonly IDisposable? m_ReviseRecurrencePattern02Sub;
+        private readonly IDisposable? m_ReviseRecurrencePattern03Sub;
+        private readonly IDisposable? m_ReviseRecurrencePattern04Sub;
+
+        #endregion
 
         #region Ctors
 
@@ -18,14 +26,6 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             m_StartDateTime = null;
             m_RecurrenceFrequency = RecurrenceFrequencyType.None;
-
-
-
-
-
-
-
-
             m_Interval = 1;
             m_IsEndNever = true;
             m_IsEndUntil = false;
@@ -34,23 +34,20 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Count = null;
 
             // Weekly flags: Monday..Sunday
-            ByWeekDays = [.. Enumerable.Repeat(false, 7)];
+            ByWeekDaysMonday = false;
+            ByWeekDaysTuesday = false;
+            ByWeekDaysWednesday = false;
+            ByWeekDaysThursday = false;
+            ByWeekDaysFriday = false;
+            ByWeekDaysSaturday = false;
+            ByWeekDaysSunday = false;
 
             // Month-day display 1..31
-            //ByMonthDaysDisplay = [.. Enumerable.Range(1, 31)];
-            //ByMonthDaysSelection = ByMonthDaysDisplay.ToDictionary(d => d, _ => false);
-
             m_ByMonthDay = 1;
-
-
-
-
             m_IsMonthDay = true;
             m_IsMonthWeekday = false;
 
-
-
-
+            // Yearly
 
             m_YearlyMonthIndex = 0;
             m_YearlyDayOfMonth = 1;
@@ -61,12 +58,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             ChangeRecurrenceFrequencyCommand = ReactiveCommand.Create<RecurrenceFrequencyType>(ChangeRecurrenceFrequency);
 
-
-
-
-
-            // Compute DetailsTemplateKey from Frequency
-            this
+            m_ReviseRecurrencePattern01Sub = this
                 .WhenAnyValue(
                     x => x.StartDateTime,
                     x => x.RecurrenceFrequency,
@@ -74,65 +66,96 @@ namespace Zametek.ViewModel.ProjectPlan
                     x => x.IsEndNever,
                     x => x.IsEndUntil,
                     x => x.IsEndCount,
-                    x => x.Until,
+                    x => x.Until)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => RebuildRecurrencePattern());
+
+            m_ReviseRecurrencePattern02Sub = this
+                .WhenAnyValue(
+                    x => x.ByWeekDaysMonday,
+                    x => x.ByWeekDaysTuesday,
+                    x => x.ByWeekDaysWednesday,
+                    x => x.ByWeekDaysThursday,
+                    x => x.ByWeekDaysFriday,
+                    x => x.ByWeekDaysSaturday,
+                    x => x.ByWeekDaysSunday)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => RebuildRecurrencePattern());
+
+            m_ReviseRecurrencePattern03Sub = this
+                .WhenAnyValue(
                     x => x.Count,
                     x => x.IsMonthDay,
                     x => x.IsMonthWeekday,
                     x => x.ByMonthDay,
                     x => x.BySetPosSelection,
-                    //x => x.ByMonthWeekdaySelection,
-                    //x => x.YearlyMonthIndex,
-                    //x => x.YearlyDayOfMonth,
-                    //x => x.YearlySetPosSelection,
-                    //x => x.YearlyWeekdaySelection,
-                    //x => x.YearlyPatternMonthIndex,
-                    (a, _, _, _, _, _, _, _, _, _, _, _) => a)
+                    x => x.ByMonthWeekdaySelection)
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(freq =>
-                {
-                    RebuildRecurrencePattern();
-                });
+                .Subscribe(_ => RebuildRecurrencePattern());
 
-
-
-
-
+            m_ReviseRecurrencePattern04Sub = this
+                .WhenAnyValue(
+                    x => x.YearlyMonthIndex,
+                    x => x.YearlyDayOfMonth,
+                    x => x.YearlySetPosSelection,
+                    x => x.YearlyWeekdaySelection,
+                    x => x.YearlyPatternMonthIndex)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ => RebuildRecurrencePattern());
         }
 
         #endregion
 
+        #region Properties
 
+        //// WKST (week start) as two-letter code, e.g. "MO"
+        //public string WeekStart { get; set; } = "MO";
 
+        //    // RSCALE/SKIP extension hooks (RFC 7529)
+        //    [Reactive] public string? RScale { get; set; }
+        //    [Reactive] public string? Skip { get; set; }
 
+        // BYMONTH (used for yearly)
+        public List<int> ByMonths { get; set; } = [];
 
+        // Additional BY* fields for completeness (user can extend UI to expose them)
+        public List<int> ByHours { get; set; } = [];
 
+        public List<int> ByMinutes { get; set; } = [];
 
+        public List<int> BySeconds { get; set; } = [];
 
+        public List<int> ByYearDays { get; set; } = [];
 
+        public List<int> ByWeekNumbers { get; set; } = [];
+
+        public List<int> BySetPositions { get; set; } = [];
+
+        #endregion
 
         #region Private Members
-
-
-
-
-
-
 
         void RebuildRecurrencePattern()
         {
             if (RecurrenceFrequency == RecurrenceFrequencyType.None)
             {
-                RecurrencePattern = null;
                 RRuleString = string.Empty;
                 return;
             }
 
-            var freq = FrequencyTypeToIcal(RecurrenceFrequency);
+            FrequencyType frequencyType = FrequencyTypeToIcal(RecurrenceFrequency);
 
-            var pattern = new RecurrencePattern(freq)
+            var pattern = new RecurrencePattern(frequencyType)
             {
                 Interval = Interval <= 0 ? 1 : Interval
             };
+
+
+            // Start
+
+
+
+
 
             // End conditions
             if (IsEndUntil && Until.HasValue)
@@ -161,15 +184,51 @@ namespace Zametek.ViewModel.ProjectPlan
             if (RecurrenceFrequency == RecurrenceFrequencyType.Weekly)
             {
                 pattern.ByDay.Clear();
-                var codes = new[] { "MO", "TU", "WE", "TH", "FR", "SA", "SU" };
-                for (int i = 0; i < codes.Length; i++)
+                if (ByWeekDaysMonday)
                 {
-                    if (ByWeekDays[i])
-                    {
-                        pattern.ByDay.Add(new WeekDay(ParseWeekDay(codes[i])));
-                    }
+                    pattern.ByDay.Add(new WeekDay(DayOfWeek.Monday));
+                }
+                if (ByWeekDaysTuesday)
+                {
+                    pattern.ByDay.Add(new WeekDay(DayOfWeek.Tuesday));
+                }
+                if (ByWeekDaysWednesday)
+                {
+                    pattern.ByDay.Add(new WeekDay(DayOfWeek.Wednesday));
+                }
+                if (ByWeekDaysThursday)
+                {
+                    pattern.ByDay.Add(new WeekDay(DayOfWeek.Thursday));
+                }
+                if (ByWeekDaysFriday)
+                {
+                    pattern.ByDay.Add(new WeekDay(DayOfWeek.Friday));
+                }
+                if (ByWeekDaysSaturday)
+                {
+                    pattern.ByDay.Add(new WeekDay(DayOfWeek.Saturday));
+                }
+                if (ByWeekDaysSunday)
+                {
+                    pattern.ByDay.Add(new WeekDay(DayOfWeek.Sunday));
                 }
             }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             // MONTHLY
             if (RecurrenceFrequency == RecurrenceFrequencyType.Monthly)
@@ -178,28 +237,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 pattern.ByDay.Clear();
                 pattern.BySetPosition.Clear();
 
-                // ByMonthDay from selection
-                //var selectedMonthDays = ByMonthDaysSelection
-                //    .Where(kv => kv.Value)
-                //    .Select(kv => kv.Key)
-                //    .ToList();
-                //foreach (var d in selectedMonthDays)
-                //{
-                //    pattern.ByMonthDay.Add(d);
-                //}
-
-
+                // ByMonthDay
                 if (ByMonthDay.HasValue)
+                {
                     pattern.ByMonthDay.Add(ByMonthDay.GetValueOrDefault());
-
-
-
-
-
-
+                }
 
                 // Pattern via BySetPosSelection + ByMonthWeekdaySelection
-                if (BySetPosSelection.HasValue && !string.IsNullOrEmpty(ByMonthWeekdaySelection))
+                if (BySetPosSelection.HasValue
+                    && !string.IsNullOrEmpty(ByMonthWeekdaySelection))
                 {
                     pattern.BySetPosition.Add(BySetPosSelection.Value);
 
@@ -263,8 +309,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // RSCALE/SKIP extensions are not directly supported by iCal.NET RecurrencePattern,
             // but you can inject them into the ToString output if needed.
-            RecurrencePattern = pattern;
-            RRuleString = pattern.ToString();
+            RRuleString = pattern?.ToString() ?? string.Empty;
 
             //if (!string.IsNullOrEmpty(RScale))
             //{
@@ -276,43 +321,64 @@ namespace Zametek.ViewModel.ProjectPlan
             //}
         }
 
-        static void CopyList(IList<int> target, IList<int> source)
+        private static void CopyList(
+            List<int> target,
+            List<int> source)
         {
             target.Clear();
-            foreach (var v in source.Distinct())
-                target.Add(v);
+            foreach (int val in source.Distinct())
+            {
+                target.Add(val);
+            }
         }
 
-
-        static FrequencyType FrequencyTypeToIcal(RecurrenceFrequencyType freq)
+        private static FrequencyType FrequencyTypeToIcal(RecurrenceFrequencyType frequencyType)
         {
-            return freq switch
+            return frequencyType switch
             {
-                //FrequencyType.Secondly => RecurrenceFrequencyType.Secondly,
-                //FrequencyType.Minutely => RecurrenceFrequencyType.Minutely,
-                //FrequencyType.Hourly => RecurrenceFrequencyType.Hourly,
+                //RecurrenceFrequencyType.Secondly => FrequencyType.Secondly,
+                //RecurrenceFrequencyType.Minutely => FrequencyType.Minutely,
+                //RecurrenceFrequencyType.Hourly => FrequencyType.Hourly,
                 RecurrenceFrequencyType.Daily => FrequencyType.Daily,
                 RecurrenceFrequencyType.Weekly => FrequencyType.Weekly,
                 RecurrenceFrequencyType.Monthly => FrequencyType.Monthly,
                 RecurrenceFrequencyType.Yearly => FrequencyType.Yearly,
-                _ => throw new ArgumentOutOfRangeException(nameof(freq)),
+                _ => throw new ArgumentOutOfRangeException(nameof(frequencyType)),
             };
         }
 
-        static DayOfWeek ParseWeekDay(string code)
+        private static DayOfWeek ParseWeekDay(string code)
         {
-            return code.ToUpperInvariant() switch
+            return code.Trim().ToUpperInvariant() switch
             {
-                "MO" => DayOfWeek.Monday,
-                "TU" => DayOfWeek.Tuesday,
-                "WE" => DayOfWeek.Wednesday,
-                "TH" => DayOfWeek.Thursday,
-                "FR" => DayOfWeek.Friday,
-                "SA" => DayOfWeek.Saturday,
-                "SU" => DayOfWeek.Sunday,
+                @"MO" => DayOfWeek.Monday,
+                @"TU" => DayOfWeek.Tuesday,
+                @"WE" => DayOfWeek.Wednesday,
+                @"TH" => DayOfWeek.Thursday,
+                @"FR" => DayOfWeek.Friday,
+                @"SA" => DayOfWeek.Saturday,
+                @"SU" => DayOfWeek.Sunday,
                 _ => DayOfWeek.Monday
             };
         }
+
+        private static string WeekDayToCode(DayOfWeek day)
+        {
+            return day switch
+            {
+                DayOfWeek.Monday => @"MO",
+                DayOfWeek.Tuesday => @"TU",
+                DayOfWeek.Wednesday => @"WE",
+                DayOfWeek.Thursday => @"TH",
+                DayOfWeek.Friday => @"FR",
+                DayOfWeek.Saturday => @"SA",
+                DayOfWeek.Sunday => @"SU",
+                _ => "MO"
+            };
+        }
+
+
+
 
 
 
@@ -338,19 +404,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-
-
-
-
-
-
-
-
-
-
-
         #region IRecurrenceEditorViewModel Members
-
 
         private DateTime? m_StartDateTime;
         public DateTime? StartDateTime
@@ -366,21 +420,12 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_RecurrenceFrequency, value);
         }
 
-
-
-
         private int m_Interval;
         public int Interval
         {
             get => m_Interval;
             set => this.RaiseAndSetIfChanged(ref m_Interval, value);
         }
-
-
-
-
-
-
 
         private bool m_IsEndNever;
         public bool IsEndNever
@@ -445,23 +490,58 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_Count, value);
         }
 
-
-        //// WKST (week start) as two-letter code, e.g. "MO"
-        //public string WeekStart { get; set; } = "MO";
-
-
         // Weekly: 7-day flags for BYDAY
-        public IList<bool> ByWeekDays { get; }
 
+        private bool m_ByWeekDaysMonday;
+        public bool ByWeekDaysMonday
+        {
+            get => m_ByWeekDaysMonday;
+            set => this.RaiseAndSetIfChanged(ref m_ByWeekDaysMonday, value);
+        }
 
+        private bool m_ByWeekDaysTuesday;
+        public bool ByWeekDaysTuesday
+        {
+            get => m_ByWeekDaysTuesday;
+            set => this.RaiseAndSetIfChanged(ref m_ByWeekDaysTuesday, value);
+        }
 
+        private bool m_ByWeekDaysWednesday;
+        public bool ByWeekDaysWednesday
+        {
+            get => m_ByWeekDaysWednesday;
+            set => this.RaiseAndSetIfChanged(ref m_ByWeekDaysWednesday, value);
+        }
 
+        private bool m_ByWeekDaysThursday;
+        public bool ByWeekDaysThursday
+        {
+            get => m_ByWeekDaysThursday;
+            set => this.RaiseAndSetIfChanged(ref m_ByWeekDaysThursday, value);
+        }
 
+        private bool m_ByWeekDaysFriday;
+        public bool ByWeekDaysFriday
+        {
+            get => m_ByWeekDaysFriday;
+            set => this.RaiseAndSetIfChanged(ref m_ByWeekDaysFriday, value);
+        }
 
+        private bool m_ByWeekDaysSaturday;
+        public bool ByWeekDaysSaturday
+        {
+            get => m_ByWeekDaysSaturday;
+            set => this.RaiseAndSetIfChanged(ref m_ByWeekDaysSaturday, value);
+        }
 
+        private bool m_ByWeekDaysSunday;
+        public bool ByWeekDaysSunday
+        {
+            get => m_ByWeekDaysSunday;
+            set => this.RaiseAndSetIfChanged(ref m_ByWeekDaysSunday, value);
+        }
 
-
-
+        // Monthly
 
         private bool m_IsMonthDay;
         public bool IsMonthDay
@@ -477,11 +557,6 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_IsMonthWeekday, value);
         }
 
-
-
-
-
-
         // Monthly BYMONTHDAY support: 1..31, -31..-1 as needed
 
         private int? m_ByMonthDay;
@@ -490,11 +565,6 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ByMonthDay;
             set => this.RaiseAndSetIfChanged(ref m_ByMonthDay, value);
         }
-
-
-
-
-
 
         // Monthly/Yearly pattern via BYSETPOS + BYDAY
 
@@ -512,18 +582,7 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_ByMonthWeekdaySelection, value);
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
+        // Yearly
 
         // 0-11
         private int m_YearlyMonthIndex;
@@ -561,56 +620,6 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_YearlyPatternMonthIndex, value);
         }
 
-
-
-
-
-
-
-
-
-
-
-
-        // BYMONTH (used for yearly)
-        //[Reactive]
-        public IList<int> ByMonths { get; set; } = new List<int>();
-
-        // Additional BY* fields for completeness (user can extend UI to expose them)
-        //[Reactive]
-        public IList<int> ByHours { get; set; } = new List<int>();
-        //[Reactive]
-        public IList<int> ByMinutes { get; set; } = new List<int>();
-        //[Reactive]
-        public IList<int> BySeconds { get; set; } = new List<int>();
-        //[Reactive]
-        public IList<int> ByYearDays { get; set; } = new List<int>();
-        //[Reactive]
-        public IList<int> ByWeekNumbers { get; set; } = new List<int>();
-        //[Reactive]
-        public IList<int> BySetPositions { get; set; } = new List<int>();
-
-        //    // RSCALE/SKIP extension hooks (RFC 7529)
-        //    [Reactive] public string? RScale { get; set; }
-        //    [Reactive] public string? Skip { get; set; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         // RRULE string preview
         private string m_RRuleString;
         public string RRuleString
@@ -619,30 +628,172 @@ namespace Zametek.ViewModel.ProjectPlan
             private set => this.RaiseAndSetIfChanged(ref m_RRuleString, value);
         }
 
-
-        // Underlying iCal.NET object
-        private RecurrencePattern? m_RecurrencePattern;
-        public RecurrencePattern? RecurrencePattern
-        {
-            get => m_RecurrencePattern;
-            private set => this.RaiseAndSetIfChanged(ref m_RecurrencePattern, value);
-        }
-
-
-
-
-
-
-
-
         public ICommand ChangeRecurrenceFrequencyCommand { get; }
 
 
+        // Populate from an existing RecurrencePattern (e.g., when editing)
+        public void LoadFromPattern(string rrule)
+        {
+            var pattern = new RecurrencePattern(rrule);
 
+            if (pattern == null)
+            {
 
+                RecurrenceFrequency = RecurrenceFrequencyType.None;
+                return;
+            }
 
+            RecurrenceFrequency = pattern.Frequency switch
+            {
+                //FrequencyType.Secondly => RecurrenceFrequencyType.Secondly,
+                //FrequencyType.Minutely => RecurrenceFrequencyType.Minutely,
+                //FrequencyType.Hourly => RecurrenceFrequencyType.Hourly,
+                FrequencyType.Daily => RecurrenceFrequencyType.Daily,
+                FrequencyType.Weekly => RecurrenceFrequencyType.Weekly,
+                FrequencyType.Monthly => RecurrenceFrequencyType.Monthly,
+                FrequencyType.Yearly => RecurrenceFrequencyType.Yearly,
+                _ => RecurrenceFrequencyType.None
+            };
 
+            Interval = pattern.Interval <= 0 ? 1 : pattern.Interval;
 
+            if (pattern.Count > 0)
+            {
+                IsEndCount = true;
+                //IsEndNever = false;
+                //IsEndUntil = false;
+                Count = pattern.Count;
+                //Until = null;
+            }
+            else if (pattern.Until != new CalDateTime(DateTime.MinValue))
+            {
+                IsEndUntil = true;
+                //IsEndNever = false;
+                //IsEndCount = false;
+                Until = pattern.Until?.Value;//            new DateTimeOffset(pattern.Until, TimeSpan.Zero);
+                //Count = null;
+            }
+            else
+            {
+                IsEndNever = true;
+                //IsEndUntil = false;
+                //IsEndCount = false;
+                //Count = null;
+                //Until = null;
+            }
+
+            //WeekStart = pattern.WeekStart switch
+            //{
+            //    DayOfWeek.Monday => "MO",
+            //    DayOfWeek.Tuesday => "TU",
+            //    DayOfWeek.Wednesday => "WE",
+            //    DayOfWeek.Thursday => "TH",
+            //    DayOfWeek.Friday => "FR",
+            //    DayOfWeek.Saturday => "SA",
+            //    DayOfWeek.Sunday => "SU",
+            //    _ => "MO"
+            //};
+
+            // Weekly
+            if (RecurrenceFrequency == RecurrenceFrequencyType.Weekly)
+            {
+                HashSet<DayOfWeek> byDays = [.. pattern.ByDay.Select(x => x.DayOfWeek)];
+
+                if (byDays.Contains(DayOfWeek.Monday))
+                {
+                    ByWeekDaysMonday = true;
+                }
+                if (byDays.Contains(DayOfWeek.Tuesday))
+                {
+                    ByWeekDaysTuesday = true;
+                }
+                if (byDays.Contains(DayOfWeek.Wednesday))
+                {
+                    ByWeekDaysWednesday = true;
+                }
+                if (byDays.Contains(DayOfWeek.Thursday))
+                {
+                    ByWeekDaysThursday = true;
+                }
+                if (byDays.Contains(DayOfWeek.Friday))
+                {
+                    ByWeekDaysFriday = true;
+                }
+                if (byDays.Contains(DayOfWeek.Saturday))
+                {
+                    ByWeekDaysSaturday = true;
+                }
+                if (byDays.Contains(DayOfWeek.Sunday))
+                {
+                    ByWeekDaysSunday = true;
+                }
+                //var codes = new[] { "MO", "TU", "WE", "TH", "FR", "SA", "SU" };
+                //for (int i = 0; i < ByWeekDays.Count; i++)
+                //{
+                //    var wd = ParseWeekDay(codes[i]);
+                //    ByWeekDays[i] = pattern.ByDay.Any(b => b.DayOfWeek == wd);
+                //}
+            }
+
+            // Monthly
+            if (RecurrenceFrequency == RecurrenceFrequencyType.Monthly)
+            {
+                //foreach (var key in ByMonthDaysDisplay.ToList())
+                //{
+                //    ByMonthDaysSelection[key] = pattern.ByMonthDay.Contains(key);
+                //}
+
+                if (pattern.ByMonthDay.Count != 0)
+                {
+                    ByMonthDay = pattern.ByMonthDay.First();
+                }
+                else
+                {
+                    ByMonthDay = null;
+                }
+
+                if (pattern.BySetPosition.Count != 0
+                    && pattern.ByDay.Count != 0)
+                {
+                    BySetPosSelection = pattern.BySetPosition.First();
+                    var wds = pattern.ByDay.Select(b => WeekDayToCode(b.DayOfWeek)).ToArray();
+                    ByMonthWeekdaySelection = string.Join(",", wds);
+                }
+                else
+                {
+                    BySetPosSelection = null;
+                    ByMonthWeekdaySelection = null;
+                }
+            }
+
+            // Yearly
+            if (RecurrenceFrequency == RecurrenceFrequencyType.Yearly)
+            {
+                if (pattern.ByMonth.Any() && pattern.ByMonthDay.Any())
+                {
+                    YearlyMonthIndex = pattern.ByMonth.First() - 1;
+                    YearlyDayOfMonth = pattern.ByMonthDay.First();
+                }
+
+                if (pattern.ByMonth.Any() && pattern.BySetPosition.Any() && pattern.ByDay.Any())
+                {
+                    YearlyPatternMonthIndex = pattern.ByMonth.First() - 1;
+                    YearlySetPosSelection = pattern.BySetPosition.First();
+                    YearlyWeekdaySelection = string.Join(",", pattern.ByDay.Select(b => WeekDayToCode(b.DayOfWeek)));
+                }
+            }
+
+            ByMonths = [.. pattern.ByMonth];
+            ByHours = [.. pattern.ByHour];
+            ByMinutes = [.. pattern.ByMinute];
+            BySeconds = [.. pattern.BySecond];
+            ByYearDays = [.. pattern.ByYearDay];
+            ByWeekNumbers = [.. pattern.ByWeekNo];
+            BySetPositions = [.. pattern.BySetPosition];
+
+            //RecurrencePattern = pattern;
+            RRuleString = pattern?.ToString() ?? string.Empty;
+        }
 
 
 
@@ -651,514 +802,49 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
+        #region IKillSubscriptions Members
 
+        public void KillSubscriptions()
+        {
+            m_ReviseRecurrencePattern01Sub?.Dispose();
+            m_ReviseRecurrencePattern02Sub?.Dispose();
+            m_ReviseRecurrencePattern03Sub?.Dispose();
+            m_ReviseRecurrencePattern04Sub?.Dispose();
+        }
 
+        #endregion
 
+        #region IDisposable Members
 
+        private bool m_Disposed = false;
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (m_Disposed)
+            {
+                return;
+            }
 
+            if (disposing)
+            {
+                // TODO: dispose managed state (managed objects).
+                KillSubscriptions();
+            }
+
+            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+            // TODO: set large fields to null.
+
+            m_Disposed = true;
+        }
+
+        public void Dispose()
+        {
+            // Dispose of unmanaged resources.
+            Dispose(true);
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
     }
 }
-
-
-
-
-
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Reactive.Linq;
-//using Ical.Net;
-//using Ical.Net.DataTypes;
-//using ReactiveUI;
-//using ReactiveUI.Fody.Helpers;
-
-//namespace MyApp.ViewModels;
-
-
-//public class RecurrenceEditorViewModel : ReactiveObject
-//{
-//    // Core RRULE fields
-//    [Reactive] public FrequencyTypeEnum Frequency { get; set; } = FrequencyTypeEnum.None;
-//    [Reactive] public int Interval { get; set; } = 1;
-
-//    [Reactive] public bool IsEndNever { get; set; } = true;
-//    [Reactive] public bool IsEndUntil { get; set; }
-//    [Reactive] public bool IsEndCount { get; set; }
-//    [Reactive] public DateTimeOffset? Until { get; set; }
-//    [Reactive] public int? Count { get; set; }
-
-//    // WKST (week start) as two-letter code, e.g. "MO"
-//    [Reactive] public string WeekStart { get; set; } = "MO";
-
-//    // Weekly: 7-day flags for BYDAY
-//    public IList<bool> ByWeekDays { get; }
-
-//    // Monthly BYMONTHDAY support: 1..31, -31..-1 as needed
-//    public IList<int> ByMonthDaysDisplay { get; }
-//    public IDictionary<int, bool> ByMonthDaysSelection { get; }
-
-//    // Monthly/Yearly pattern via BYSETPOS + BYDAY
-//    [Reactive] public int? BySetPosSelection { get; set; }
-//    [Reactive] public string? ByMonthWeekdaySelection { get; set; }
-
-//    [Reactive] public int YearlyMonthIndex { get; set; } // 0-11
-//    [Reactive] public int YearlyDayOfMonth { get; set; } = 1;
-
-//    [Reactive] public int? YearlySetPosSelection { get; set; }
-//    [Reactive] public string? YearlyWeekdaySelection { get; set; }
-//    [Reactive] public int YearlyPatternMonthIndex { get; set; }
-
-//    // BYMONTH (used for yearly)
-//    [Reactive] public IList<int> ByMonths { get; set; } = new List<int>();
-
-//    // Additional BY* fields for completeness (user can extend UI to expose them)
-//    [Reactive] public IList<int> ByHours { get; set; } = new List<int>();
-//    [Reactive] public IList<int> ByMinutes { get; set; } = new List<int>();
-//    [Reactive] public IList<int> BySeconds { get; set; } = new List<int>();
-//    [Reactive] public IList<int> ByYearDays { get; set; } = new List<int>();
-//    [Reactive] public IList<int> ByWeekNumbers { get; set; } = new List<int>();
-//    [Reactive] public IList<int> BySetPositions { get; set; } = new List<int>();
-
-//    // RSCALE/SKIP extension hooks (RFC 7529)
-//    [Reactive] public string? RScale { get; set; }
-//    [Reactive] public string? Skip { get; set; }
-
-//    // Calculated template key for XAML dynamic region
-//    [Reactive] public string DetailsTemplateKey { get; private set; } = "Simple";
-
-//    // RRULE string preview
-//    [Reactive] public string RRuleString { get; private set; } = string.Empty;
-
-//    // Underlying iCal.NET object
-//    [Reactive] public RecurrencePattern? RecurrencePattern { get; private set; }
-
-//    public RecurrenceEditorViewModel()
-//    {
-//        // Weekly flags: Monday..Sunday
-//        ByWeekDays = new List<bool>(Enumerable.Repeat(false, 7));
-
-//        // Month-day display 1..31
-//        ByMonthDaysDisplay = Enumerable.Range(1, 31).ToList();
-//        ByMonthDaysSelection = ByMonthDaysDisplay.ToDictionary(d => d, _ => false);
-
-//        // // Keep end flags mutually exclusive
-//        this.WhenAnyValue(x => x.IsEndNever, x => x.IsEndUntil, x => x.IsEndCount)
-//            .Subscribe(tuple =>
-//            {
-//                var (never, until, count) = tuple;
-//                var trueCount = new[] { never, until, count }.Count(x => x);
-//                if (trueCount == 0)
-//                {
-//                    IsEndNever = true;
-//                }
-//                else if (trueCount > 1)
-//                {
-//                    // Simple normalization: favor the last changed flag, but here
-//                    // we reset others when one is explicitly set in the UI
-//                    if (never)
-//                    {
-//                        IsEndUntil = false;
-//                        IsEndCount = false;
-//                        Until = null;
-//                        Count = null;
-//                    }
-//                    else if (until)
-//                    {
-//                        IsEndNever = false;
-//                        IsEndCount = false;
-//                        Count = null;
-//                    }
-//                    else if (count)
-//                    {
-//                        IsEndNever = false;
-//                        IsEndUntil = false;
-//                        Until = null;
-//                    }
-//                }
-//            });
-
-//        // Compute DetailsTemplateKey from Frequency
-//        this.WhenAnyValue(x => x.Frequency)
-//            .Subscribe(freq =>
-//            {
-//                switch (freq)
-//                {
-//                    case FrequencyTypeEnum.Weekly:
-//                        DetailsTemplateKey = "Weekly";
-//                        break;
-//                    case FrequencyTypeEnum.Monthly:
-//                        DetailsTemplateKey = "Monthly";
-//                        break;
-//                    case FrequencyTypeEnum.Yearly:
-//                        DetailsTemplateKey = "Yearly";
-//                        break;
-//                    default:
-//                        DetailsTemplateKey = "Simple";
-//                        break;
-//                }
-//            });
-
-//        // Rebuild RecurrencePattern whenever anything changes
-//        this.WhenAnyPropertyChanged()
-//            .Throttle(TimeSpan.FromMilliseconds(50))
-//            .ObserveOn(RxApp.MainThreadScheduler)
-//            .Subscribe(_ => RebuildRecurrencePattern());
-//    }
-
-//    IObservable<object?> WhenAnyPropertyChanged()
-//    {
-//        return this.WhenAnyValue(
-//            x => x.Frequency,
-//            x => x.Interval,
-//            x => x.IsEndNever,
-//            x => x.IsEndUntil,
-//            x => x.IsEndCount,
-//            x => x.Until,
-//            x => x.Count,
-//            x => x.WeekStart,
-//            x => x.ByWeekDays,
-//            x => x.ByMonthDaysSelection,
-//            x => x.BySetPosSelection,
-//            x => x.ByMonthWeekdaySelection,
-//            x => x.YearlyMonthIndex,
-//            x => x.YearlyDayOfMonth,
-//            x => x.YearlySetPosSelection,
-//            x => x.YearlyWeekdaySelection,
-//            x => x.YearlyPatternMonthIndex,
-//            x => x.ByMonths,
-//            x => x.ByHours,
-//            x => x.ByMinutes,
-//            x => x.BySeconds,
-//            x => x.ByYearDays,
-//            x => x.ByWeekNumbers,
-//            x => x.BySetPositions,
-//            x => x.RScale,
-//            x => x.Skip,
-//            (a1, a2, a3, a4, a5, a6, a7, a8,
-//             a9, a10, a11, a12, a13, a14, a15,
-//             a16, a17, a18, a19, a20, a21, a22,
-//             a23, a24, a25, a26, a27) => (object?)null);
-//    }
-
-//    void RebuildRecurrencePattern()
-//    {
-//        if (Frequency == FrequencyTypeEnum.None)
-//        {
-//            RecurrencePattern = null;
-//            RRuleString = string.Empty;
-//            return;
-//        }
-
-//        var freq = FrequencyTypeToIcal(Frequency);
-
-//        var pattern = new RecurrencePattern(freq)
-//        {
-//            Interval = Interval <= 0 ? 1 : Interval
-//        };
-
-//        // End conditions
-//        if (IsEndUntil && Until.HasValue)
-//        {
-//            pattern.Until = Until.Value.UtcDateTime;
-//            pattern.Count = 0;
-//        }
-//        else if (IsEndCount && Count.HasValue)
-//        {
-//            pattern.Count = Count.Value;
-//            pattern.Until = null;
-//        }
-//        else
-//        {
-//            pattern.Count = 0;
-//            pattern.Until = null;
-//        }
-
-//        // WKST
-//        if (!string.IsNullOrWhiteSpace(WeekStart))
-//        {
-//            pattern.WeekStart = ParseWeekDay(WeekStart);
-//        }
-
-//        // BYDAY for weekly
-//        if (Frequency == FrequencyType.Weekly)
-//        {
-//            pattern.ByDay.Clear();
-//            var codes = new[] { "MO", "TU", "WE", "TH", "FR", "SA", "SU" };
-//            for (int i = 0; i < codes.Length; i++)
-//            {
-//                if (ByWeekDays[i])
-//                {
-//                    pattern.ByDay.Add(new WeekDay(ParseWeekDay(codes[i])));
-//                }
-//            }
-//        }
-
-//        // MONTHLY
-//        if (Frequency == FrequencyType.Monthly)
-//        {
-//            pattern.ByMonthDay.Clear();
-//            pattern.ByDay.Clear();
-//            pattern.BySetPosition.Clear();
-
-//            // ByMonthDay from selection
-//            var selectedMonthDays = ByMonthDaysSelection
-//                .Where(kv => kv.Value)
-//                .Select(kv => kv.Key)
-//                .ToList();
-//            foreach (var d in selectedMonthDays)
-//            {
-//                pattern.ByMonthDay.Add(d);
-//            }
-
-//            // Pattern via BySetPosSelection + ByMonthWeekdaySelection
-//            if (BySetPosSelection.HasValue && !string.IsNullOrEmpty(ByMonthWeekdaySelection))
-//            {
-//                pattern.BySetPosition.Add(BySetPosSelection.Value);
-
-//                var tokens = ByMonthWeekdaySelection.Split(',', StringSplitOptions.RemoveEmptyEntries);
-//                foreach (var t in tokens)
-//                {
-//                    var wd = ParseWeekDay(t.Trim());
-//                    pattern.ByDay.Add(new WeekDay(wd));
-//                }
-//            }
-//        }
-
-//        // YEARLY
-//        if (Frequency == FrequencyType.Yearly)
-//        {
-//            pattern.ByMonth.Clear();
-//            pattern.ByMonthDay.Clear();
-//            pattern.ByDay.Clear();
-//            pattern.BySetPosition.Clear();
-
-//            // Specific date
-//            if (YearlyMonthIndex >= 0 && YearlyMonthIndex <= 11 && YearlyDayOfMonth > 0)
-//            {
-//                pattern.ByMonth.Add(YearlyMonthIndex + 1);
-//                pattern.ByMonthDay.Add(YearlyDayOfMonth);
-//            }
-
-//            // Pattern tab
-//            if (YearlyPatternMonthIndex >= 0 && YearlyPatternMonthIndex <= 11
-//                && YearlySetPosSelection.HasValue
-//                && !string.IsNullOrEmpty(YearlyWeekdaySelection))
-//            {
-//                pattern.ByMonth.Clear();
-//                pattern.ByMonth.Add(YearlyPatternMonthIndex + 1);
-
-//                pattern.BySetPosition.Add(YearlySetPosSelection.Value);
-
-//                var tokens = YearlyWeekdaySelection.Split(',', StringSplitOptions.RemoveEmptyEntries);
-//                foreach (var t in tokens)
-//                {
-//                    var wd = ParseWeekDay(t.Trim());
-//                    pattern.ByDay.Add(new WeekDay(wd));
-//                }
-//            }
-//        }
-
-//        // Other BY* fields
-//        CopyList(pattern.ByHour, ByHours);
-//        CopyList(pattern.ByMinute, ByMinutes);
-//        CopyList(pattern.BySecond, BySeconds);
-//        CopyList(pattern.ByYearDay, ByYearDays);
-//        CopyList(pattern.ByWeekNo, ByWeekNumbers);
-//        CopyList(pattern.BySetPosition, BySetPositions);
-
-//        // BYMONTH (explicit)
-//        pattern.ByMonth.Clear();
-//        foreach (var m in ByMonths.Distinct())
-//        {
-//            pattern.ByMonth.Add(m);
-//        }
-
-//        // RSCALE/SKIP extensions are not directly supported by iCal.NET RecurrencePattern,
-//        // but you can inject them into the ToString output if needed.
-//        RecurrencePattern = pattern;
-//        RRuleString = pattern.ToString();
-
-//        if (!string.IsNullOrEmpty(RScale))
-//        {
-//            RRuleString += $";RSCALE={RScale}";
-//        }
-//        if (!string.IsNullOrEmpty(Skip))
-//        {
-//            RRuleString += $";SKIP={Skip}";
-//        }
-//    }
-
-//    static void CopyList(IList<int> target, IList<int> source)
-//    {
-//        target.Clear();
-//        foreach (var v in source.Distinct())
-//            target.Add(v);
-//    }
-
-//    static FrequencyTypeEnum FrequencyTypeToIcal(FrequencyType freq)
-//    {
-//        return freq switch
-//        {
-//            FrequencyType.Secondly => FrequencyTypeEnum.Secondly,
-//            FrequencyType.Minutely => FrequencyTypeEnum.Minutely,
-//            FrequencyType.Hourly => FrequencyTypeEnum.Hourly,
-//            FrequencyType.Daily => FrequencyTypeEnum.Daily,
-//            FrequencyType.Weekly => FrequencyTypeEnum.Weekly,
-//            FrequencyType.Monthly => FrequencyTypeEnum.Monthly,
-//            FrequencyType.Yearly => FrequencyTypeEnum.Yearly,
-//            _ => FrequencyTypeEnum.None
-//        };
-//    }
-
-//    static DayOfWeek ParseWeekDay(string code)
-//    {
-//        return code.ToUpperInvariant() switch
-//        {
-//            "MO" => DayOfWeek.Monday,
-//            "TU" => DayOfWeek.Tuesday,
-//            "WE" => DayOfWeek.Wednesday,
-//            "TH" => DayOfWeek.Thursday,
-//            "FR" => DayOfWeek.Friday,
-//            "SA" => DayOfWeek.Saturday,
-//            "SU" => DayOfWeek.Sunday,
-//            _ => DayOfWeek.Monday
-//        };
-//    }
-
-//    // Populate from an existing RecurrencePattern (e.g., when editing)
-//    public void LoadFromPattern(RecurrencePattern? pattern)
-//    {
-//        if (pattern == null)
-//        {
-//            Frequency = FrequencyType.None;
-//            return;
-//        }
-
-//        Frequency = pattern.Frequency switch
-//        {
-//            FrequencyType.Secondly => FrequencyTypeEnum.Secondly,
-//            FrequencyType.Minutely => FrequencyTypeEnum.Minutely,
-//            FrequencyType.Hourly => FrequencyTypeEnum.Hourly,
-//            FrequencyType.Daily => FrequencyTypeEnum.Daily,
-//            FrequencyType.Weekly => FrequencyTypeEnum.Weekly,
-//            FrequencyType.Monthly => FrequencyTypeEnum.Monthly,
-//            FrequencyType.Yearly => FrequencyTypeEnum.Yearly,
-//            _ => FrequencyTypeEnum.None
-//        };
-
-//        Interval = pattern.Interval <= 0 ? 1 : pattern.Interval;
-
-//        if (pattern.Count > 0)
-//        {
-//            IsEndCount = true;
-//            IsEndNever = false;
-//            IsEndUntil = false;
-//            Count = pattern.Count;
-//            Until = null;
-//        }
-//        else if (pattern.Until != DateTime.MinValue)
-//        {
-//            IsEndUntil = true;
-//            IsEndNever = false;
-//            IsEndCount = false;
-//            Until = new DateTimeOffset(pattern.Until, TimeSpan.Zero);
-//            Count = null;
-//        }
-//        else
-//        {
-//            IsEndNever = true;
-//            IsEndUntil = false;
-//            IsEndCount = false;
-//            Count = null;
-//            Until = null;
-//        }
-
-//        WeekStart = pattern.WeekStart switch
-//        {
-//            DayOfWeek.Monday => "MO",
-//            DayOfWeek.Tuesday => "TU",
-//            DayOfWeek.Wednesday => "WE",
-//            DayOfWeek.Thursday => "TH",
-//            DayOfWeek.Friday => "FR",
-//            DayOfWeek.Saturday => "SA",
-//            DayOfWeek.Sunday => "SU",
-//            _ => "MO"
-//        };
-
-//        // Weekly
-//        if (Frequency == FrequencyType.Weekly)
-//        {
-//            var codes = new[] { "MO", "TU", "WE", "TH", "FR", "SA", "SU" };
-//            for (int i = 0; i < ByWeekDays.Count; i++)
-//            {
-//                var wd = ParseWeekDay(codes[i]);
-//                ByWeekDays[i] = pattern.ByDay.Any(b => b.DayOfWeek == wd);
-//            }
-//        }
-
-//        // Monthly
-//        if (Frequency == FrequencyType.Monthly)
-//        {
-//            foreach (var key in ByMonthDaysDisplay.ToList())
-//            {
-//                ByMonthDaysSelection[key] = pattern.ByMonthDay.Contains(key);
-//            }
-
-//            if (pattern.BySetPosition.Any() && pattern.ByDay.Any())
-//            {
-//                BySetPosSelection = pattern.BySetPosition.First();
-//                var wds = pattern.ByDay.Select(b => WeekDayToCode(b.DayOfWeek)).ToArray();
-//                ByMonthWeekdaySelection = string.Join(",", wds);
-//            }
-//            else
-//            {
-//                BySetPosSelection = null;
-//                ByMonthWeekdaySelection = null;
-//            }
-//        }
-
-//        // Yearly
-//        if (Frequency == FrequencyType.Yearly)
-//        {
-//            if (pattern.ByMonth.Any() && pattern.ByMonthDay.Any())
-//            {
-//                YearlyMonthIndex = pattern.ByMonth.First() - 1;
-//                YearlyDayOfMonth = pattern.ByMonthDay.First();
-//            }
-
-//            if (pattern.ByMonth.Any() && pattern.BySetPosition.Any() && pattern.ByDay.Any())
-//            {
-//                YearlyPatternMonthIndex = pattern.ByMonth.First() - 1;
-//                YearlySetPosSelection = pattern.BySetPosition.First();
-//                YearlyWeekdaySelection = string.Join(",", pattern.ByDay.Select(b => WeekDayToCode(b.DayOfWeek)));
-//            }
-//        }
-
-//        ByMonths = pattern.ByMonth.ToList();
-//        ByHours = pattern.ByHour.ToList();
-//        ByMinutes = pattern.ByMinute.ToList();
-//        BySeconds = pattern.BySecond.ToList();
-//        ByYearDays = pattern.ByYearDay.ToList();
-//        ByWeekNumbers = pattern.ByWeekNo.ToList();
-//        BySetPositions = pattern.BySetPosition.ToList();
-
-//        RecurrencePattern = pattern;
-//        RRuleString = pattern.ToString();
-//    }
-
-//    static string WeekDayToCode(DayOfWeek day)
-//    {
-//        return day switch
-//        {
-//            DayOfWeek.Monday => "MO",
-//            DayOfWeek.Tuesday => "TU",
-//            DayOfWeek.Wednesday => "WE",
-//            DayOfWeek.Thursday => "TH",
-//            DayOfWeek.Friday => "FR",
-//            DayOfWeek.Saturday => "SA",
-//            DayOfWeek.Sunday => "SU",
-//            _ => "MO"
-//        };
-//    }
-//}

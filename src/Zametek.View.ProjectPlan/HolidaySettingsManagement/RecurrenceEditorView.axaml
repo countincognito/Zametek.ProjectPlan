@@ -217,13 +217,13 @@
 						<StackPanel Orientation="Vertical">
 							<TextBlock Text="Repeat on:" Margin="0,0,0,4"/>
 							<WrapPanel>
-								<CheckBox Content="Mon" IsChecked="{Binding ByWeekDays[0]}" Margin="0,0,7,0"/>
-								<CheckBox Content="Tue" IsChecked="{Binding ByWeekDays[1]}" Margin="0,0,7,0"/>
-								<CheckBox Content="Wed" IsChecked="{Binding ByWeekDays[2]}" Margin="0,0,7,0"/>
-								<CheckBox Content="Thu" IsChecked="{Binding ByWeekDays[3]}" Margin="0,0,7,0"/>
-								<CheckBox Content="Fri" IsChecked="{Binding ByWeekDays[4]}" Margin="0,0,7,0"/>
-								<CheckBox Content="Sat" IsChecked="{Binding ByWeekDays[5]}" Margin="0,0,7,0"/>
-								<CheckBox Content="Sun" IsChecked="{Binding ByWeekDays[6]}" Margin="0,0,7,0"/>
+								<CheckBox Content="Mon" IsChecked="{Binding Path=ByWeekDaysMonday, Mode=TwoWay}" Margin="0,0,7,0"/>
+								<CheckBox Content="Tue" IsChecked="{Binding Path=ByWeekDaysTuesday, Mode=TwoWay}" Margin="0,0,7,0"/>
+								<CheckBox Content="Wed" IsChecked="{Binding Path=ByWeekDaysWednesday, Mode=TwoWay}" Margin="0,0,7,0"/>
+								<CheckBox Content="Thu" IsChecked="{Binding Path=ByWeekDaysThursday, Mode=TwoWay}" Margin="0,0,7,0"/>
+								<CheckBox Content="Fri" IsChecked="{Binding Path=ByWeekDaysFriday, Mode=TwoWay}" Margin="0,0,7,0"/>
+								<CheckBox Content="Sat" IsChecked="{Binding Path=ByWeekDaysSaturday, Mode=TwoWay}" Margin="0,0,7,0"/>
+								<CheckBox Content="Sun" IsChecked="{Binding Path=ByWeekDaysSunday, Mode=TwoWay}" Margin="0,0,7,0"/>
 							</WrapPanel>
 						</StackPanel>
 					</DockPanel>
@@ -271,7 +271,6 @@
 											VerticalAlignment="Center"
 									        IsEnabled="{Binding Path=IsMonthDay}"
 									        Value="{Binding Path=ByMonthDay, Mode=TwoWay}"/>
-
 
 						<Grid />
 					</DockPanel>

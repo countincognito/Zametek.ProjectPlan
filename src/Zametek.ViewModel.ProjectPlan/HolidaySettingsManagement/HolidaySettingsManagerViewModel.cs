@@ -211,14 +211,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-            var editViewModel = new RecurrenceEditorViewModel();
-
-            bool result = await m_DialogService.ShowContextAsync(
-                title: "Calendar",
-                header: string.Empty,
-                message: "Calendar",
-                context: editViewModel,
-                markdown: true);
 
 
 
@@ -226,46 +218,83 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-            //try
-            //{
-            //    var editViewModel = new HolidayEditViewModel(m_CoreViewModel.WorkStreamSettings.WorkStreams);
 
-            //    bool result = await m_DialogService.ShowContextAsync(
-            //        title: Resource.ProjectPlan.Titles.Title_EditResources,
-            //        header: string.Empty,
-            //        message: $@"**{Resource.ProjectPlan.Messages.Message_EditResources}**",
-            //        context: editViewModel,
-            //        markdown: true);
+            try
+            {
+                //var editViewModel = new HolidayEditViewModel(m_CoreViewModel.WorkStreamSettings.WorkStreams);
 
-            //    if (!result)
-            //    {
-            //        return;
-            //    }
+                //bool result = await m_DialogService.ShowContextAsync(
+                //    title: Resource.ProjectPlan.Titles.Title_EditResources,
+                //    header: string.Empty,
+                //    message: $@"**{Resource.ProjectPlan.Messages.Message_EditResources}**",
+                //    context: editViewModel,
+                //    markdown: true);
 
-            //    lock (m_Lock)
-            //    {
-            //        ICollection<int> resourceIds = SelectedResources.Keys;
 
-            //        if (resourceIds.Count == 0)
-            //        {
-            //            return;
-            //        }
 
-            //        UpdateResourceModel updateModel = editViewModel.BuildUpdateModel();
+                SelectedHolidays.TryGetValue(SelectedHolidays.Keys.First(), out IManagedHolidayViewModel? selectedHoliday);
 
-            //        IEnumerable<UpdateResourceModel> updateModels = [.. resourceIds.Select(x => updateModel with { Id = x })];
+                if (selectedHoliday is null)
+                {
+                    return;
+                }
 
-            //        UpdateManagedResources(updateModels);
-            //    }
-            //    UpdateResourceSettingsToCore();
-            //}
-            //catch (Exception ex)
-            //{
-            //    await m_DialogService.ShowErrorAsync(
-            //        Resource.ProjectPlan.Titles.Title_Error,
-            //        string.Empty,
-            //        ex.Message);
-            //}
+
+
+                var editViewModel = new RecurrenceEditorViewModel();
+
+
+                editViewModel.LoadFromPattern(selectedHoliday.RecurrencePattern.ToString());
+
+
+
+                bool result = await m_DialogService.ShowContextAsync(
+                    title: "Calendar",
+                    header: string.Empty,
+                    message: "Calendar",
+                    context: editViewModel,
+                    markdown: true);
+
+
+
+
+
+
+
+
+                //if (!result)
+                //{
+                //    return;
+                //}
+
+                //lock (m_Lock)
+                //{
+
+                //    if (resourceIds.Count == 0)
+                //    {
+                //        return;
+                //    }
+
+                //    UpdateResourceModel updateModel = editViewModel.BuildUpdateModel();
+
+                //    IEnumerable<UpdateResourceModel> updateModels = [.. resourceIds.Select(x => updateModel with { Id = x })];
+
+                //    UpdateManagedHolidays(updateModels);
+
+
+
+
+
+                //}
+                //UpdateHolidaySettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
         }
 
         private void UpdateManagedHolidays(IEnumerable<UpdateHolidayModel> updateModels)
