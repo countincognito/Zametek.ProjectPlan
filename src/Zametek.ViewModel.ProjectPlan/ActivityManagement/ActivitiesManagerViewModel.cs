@@ -216,7 +216,14 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
 
-                    m_CoreViewModel.AddMilestone(activityIds);
+                    //m_CoreViewModel.AddMilestone(activityIds);
+
+
+                    m_CoreViewModel.UpdateManagedActivityIds([(8, 4), (9, 5), (10, 6)]);
+
+
+
+
                     m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
                 }
                 await RunAutoCompileAsync();

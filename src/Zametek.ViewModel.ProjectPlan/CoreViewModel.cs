@@ -2142,8 +2142,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             int milestoneId = AddManagedActivity();
 
                             IManagedActivityViewModel? milestoneActivity = RawActivities
-                                .Where(x => x.Id == milestoneId)
-                                .FirstOrDefault();
+                                .FirstOrDefault(x => x.Id == milestoneId);
 
                             if (milestoneActivity != null)
                             {
@@ -2186,6 +2185,29 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         IsProjectScenarioUpdated = true;
                     }
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        public void UpdateManagedActivityIds(IEnumerable<(int OldId, int NewId)> idUpdates)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+
+                    ProjectScenarioModel projectScenarioModel = BuildProjectScenario();
+                    Guid projectScenarioId = m_SettingService.ScenarioId;
+                    string projectScenarioTitle = m_SettingService.ScenarioTitle;
+                    projectScenarioModel = ProjectScenarioHelper.UpdateActivityIds(projectScenarioModel, [.. idUpdates]);
+                    ProcessProjectScenario(projectScenarioModel, projectScenarioId, projectScenarioTitle);
+
+                    IsProjectScenarioUpdated = true;
                 }
             }
             finally

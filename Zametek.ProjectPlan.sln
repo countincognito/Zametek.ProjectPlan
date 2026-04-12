@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.1.32421.90
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11626.88 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{00473AF6-71E3-4AF8-8036-79F8A167BD4F}"
 EndProject
@@ -32,6 +32,8 @@ EndProject
 Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "Zametek.ProjectPlan.WapPackager", "pkg\Zametek.ProjectPlan.WapPackager\Zametek.ProjectPlan.WapPackager.wapproj", "{E0E0348B-B129-44B2-8D57-4C587EC48232}"
 EndProject
 Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "Zametek.ProjectPlan.CommandLine.WapPackager", "pkg\Zametek.ProjectPlan.CommandLine.WapPackager\Zametek.ProjectPlan.CommandLine.WapPackager.wapproj", "{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zametek.ViewModel.ProjectPlan.Tests", "test\Zametek.ViewModel.ProjectPlan.Tests\Zametek.ViewModel.ProjectPlan.Tests.csproj", "{B40B980C-B832-4C56-89B1-2520D3DCC4EA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -245,6 +247,22 @@ Global
 		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Release|x86.ActiveCfg = Release|x86
 		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Release|x86.Build.0 = Release|x86
 		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE}.Release|x86.Deploy.0 = Release|x86
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Debug|x64.Build.0 = Debug|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Debug|x86.Build.0 = Debug|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Release|ARM64.Build.0 = Release|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Release|x64.ActiveCfg = Release|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Release|x64.Build.0 = Release|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Release|x86.ActiveCfg = Release|Any CPU
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -262,6 +280,7 @@ Global
 		{46EC2746-BADD-4055-976C-97A0EA9FE5A5} = {58CA6F41-53CD-4303-9E7D-D8E078FB8790}
 		{E0E0348B-B129-44B2-8D57-4C587EC48232} = {58CA6F41-53CD-4303-9E7D-D8E078FB8790}
 		{53421CA9-C0D3-49F6-AD27-8CABF8A7E0BE} = {58CA6F41-53CD-4303-9E7D-D8E078FB8790}
+		{B40B980C-B832-4C56-89B1-2520D3DCC4EA} = {2D8630E7-83F0-4159-B9C4-EAB17491B87F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FC2AE5E7-6877-4295-9E87-C83CA5C3FB40}
