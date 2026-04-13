@@ -1,5 +1,4 @@
-﻿using DeepWinter.RRuleParserNet;
-using ReactiveUI;
+﻿using ReactiveUI;
 using System.ComponentModel;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -12,7 +11,6 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly IHolidaySettingsManagerViewModel m_HolidaySettingsManagerViewModel;
-        private readonly IRRuleParser m_RRuleParser;
 
         #endregion
 
@@ -25,7 +23,6 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(holidaySettingsManagerViewModel);
             ArgumentNullException.ThrowIfNull(holiday);
             m_HolidaySettingsManagerViewModel = holidaySettingsManagerViewModel;
-            m_RRuleParser = RRuleParser.CreateDefault();
             Id = holiday.Id;
             m_Name = holiday.Name;
             m_Notes = holiday.Notes;
@@ -74,7 +71,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public string RecurrencePatternDisplay
         {
-            get => m_RRuleParser.ParseRRule(m_RecurrencePattern);
+            get => RRuleLanguageParser.ToText(m_RecurrencePattern);
         }
 
         public bool IsEditing => m_isDirty;

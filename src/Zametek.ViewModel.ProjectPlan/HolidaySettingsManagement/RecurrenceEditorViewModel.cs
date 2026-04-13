@@ -660,26 +660,16 @@ namespace Zametek.ViewModel.ProjectPlan
             if (pattern.Count > 0)
             {
                 IsEndCount = true;
-                //IsEndNever = false;
-                //IsEndUntil = false;
                 Count = pattern.Count;
-                //Until = null;
             }
             else if (pattern.Until != new CalDateTime(DateTime.MinValue))
             {
                 IsEndUntil = true;
-                //IsEndNever = false;
-                //IsEndCount = false;
-                Until = pattern.Until?.Value;//            new DateTimeOffset(pattern.Until, TimeSpan.Zero);
-                //Count = null;
+                Until = pattern.Until?.Value;
             }
             else
             {
                 IsEndNever = true;
-                //IsEndUntil = false;
-                //IsEndCount = false;
-                //Count = null;
-                //Until = null;
             }
 
             //WeekStart = pattern.WeekStart switch
@@ -727,12 +717,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ByWeekDaysSunday = true;
                 }
-                //var codes = new[] { "MO", "TU", "WE", "TH", "FR", "SA", "SU" };
-                //for (int i = 0; i < ByWeekDays.Count; i++)
-                //{
-                //    var wd = ParseWeekDay(codes[i]);
-                //    ByWeekDays[i] = pattern.ByDay.Any(b => b.DayOfWeek == wd);
-                //}
             }
 
             // Monthly
@@ -794,11 +778,6 @@ namespace Zametek.ViewModel.ProjectPlan
             //RecurrencePattern = pattern;
             RRuleString = pattern?.ToString() ?? string.Empty;
         }
-
-
-
-
-
 
         #endregion
 
