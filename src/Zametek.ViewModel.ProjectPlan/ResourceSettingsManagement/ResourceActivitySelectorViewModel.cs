@@ -120,12 +120,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         ResourceId = m_ResourceId,
                         ActivityId = activity.Id,
                         ActivityName = activity.Name,
-                        PercentageWorked = 0
+                        PercentageWorked = resourceActivityTrackerLookup.TryGetValue(activity.Id, out ResourceActivityTrackerModel? existingTracker) ? existingTracker.PercentageWorked : 0,
                     })];
 
                 foreach (ResourceActivityTrackerModel resourceActivityTracker in newResourceActivityTrackers)
                 {
-                    resourceActivityTrackerLookup.TryAdd(resourceActivityTracker.ActivityId, resourceActivityTracker);
+                    resourceActivityTrackerLookup[resourceActivityTracker.ActivityId] = resourceActivityTracker;
                 }
 
                 SetTargetResourceActivities(
