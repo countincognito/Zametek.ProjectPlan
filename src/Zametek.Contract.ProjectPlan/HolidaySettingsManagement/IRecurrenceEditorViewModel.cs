@@ -37,9 +37,21 @@ namespace Zametek.Contract.ProjectPlan
 
         int? ByMonthDay { get; set; }
 
-        int? BySetPosSelection { get; set; }
+        SetByIntModel? BySetPosSelection { get; set; }
 
-        string? ByMonthWeekdaySelection { get; set; }
+
+        List<SetByIntModel> BySetPosOptions { get; }
+
+
+
+        SetByStringModel? ByMonthWeekdaySelection { get; set; }
+
+
+
+        List<SetByStringModel> ByMonthWeekdayOptions { get; }
+
+
+
 
         int YearlyMonthIndex { get; set; }
 

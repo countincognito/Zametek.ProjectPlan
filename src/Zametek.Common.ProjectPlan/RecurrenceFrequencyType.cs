@@ -4,9 +4,9 @@
     public enum RecurrenceFrequencyType
     {
         None,
-        //Secondly,
-        //Minutely,
-        //Hourly,
+        Secondly,
+        Minutely,
+        Hourly,
         Daily,
         Weekly,
         Monthly,

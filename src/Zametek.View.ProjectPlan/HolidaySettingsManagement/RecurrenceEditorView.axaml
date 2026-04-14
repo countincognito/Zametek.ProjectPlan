@@ -302,28 +302,18 @@
 
 						<ComboBox Width="120"
 								  DockPanel.Dock="Left"
+								  ItemsSource="{Binding Path=BySetPosOptions, Mode=OneWay}"
 								  SelectedValue="{Binding Path=BySetPosSelection, Mode=TwoWay}"
-								  IsEnabled="{Binding Path=IsMonthWeekday}">
-							<ComboBoxItem Content="First" Tag="1"/>
-							<ComboBoxItem Content="Second" Tag="2"/>
-							<ComboBoxItem Content="Third" Tag="3"/>
-							<ComboBoxItem Content="Fourth" Tag="4"/>
-							<ComboBoxItem Content="Last" Tag="-1"/>
+								  DisplayMemberBinding="{Binding Path=Name}"
+								  IsEnabled="{Binding Path=IsMonthWeekday, Mode=OneWay}">
 						</ComboBox>
 
 						<ComboBox Width="140"
 								  DockPanel.Dock="Left"
+								  ItemsSource="{Binding Path=ByMonthWeekdayOptions, Mode=OneWay}"
 								  SelectedValue="{Binding Path=ByMonthWeekdaySelection, Mode=TwoWay}"
-							      IsEnabled="{Binding Path=IsMonthWeekday}">
-							<ComboBoxItem Content="Monday" Tag="MO"/>
-							<ComboBoxItem Content="Tuesday" Tag="TU"/>
-							<ComboBoxItem Content="Wednesday" Tag="WE"/>
-							<ComboBoxItem Content="Thursday" Tag="TH"/>
-							<ComboBoxItem Content="Friday" Tag="FR"/>
-							<ComboBoxItem Content="Saturday" Tag="SA"/>
-							<ComboBoxItem Content="Sunday" Tag="SU"/>
-							<ComboBoxItem Content="Weekday" Tag="MO,TU,WE,TH,FR"/>
-							<ComboBoxItem Content="Weekend day" Tag="SA,SU"/>
+								  DisplayMemberBinding="{Binding Path=Name}"
+							      IsEnabled="{Binding Path=IsMonthWeekday, Mode=OneWay}">
 						</ComboBox>
 
 

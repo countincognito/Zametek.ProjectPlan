@@ -47,6 +47,26 @@ namespace Zametek.ViewModel.ProjectPlan
             m_IsMonthDay = true;
             m_IsMonthWeekday = false;
 
+            BySetPosOptions = [
+                new SetByIntModel { Name = "First", Content = 1 },
+                new SetByIntModel { Name = "Second", Content = 2 },
+                new SetByIntModel { Name = "Third", Content = 3 },
+                new SetByIntModel { Name = "Fourth", Content = 4 },
+                new SetByIntModel { Name = "Last", Content = -1 }
+            ];
+
+            ByMonthWeekdayOptions = [
+                new SetByStringModel { Name = "Monday", Content = "MO" },
+                new SetByStringModel { Name = "Tuesday", Content = "TU" },
+                new SetByStringModel { Name = "Wednesday", Content = "WE" },
+                new SetByStringModel { Name = "Thursday", Content = "TH" },
+                new SetByStringModel { Name = "Friday", Content = "FR" },
+                new SetByStringModel { Name = "Saturday", Content = "SA" },
+                new SetByStringModel { Name = "Sunday", Content = "SU" },
+                new SetByStringModel { Name = "Week day", Content = "MO,TU,WE,TH,FR" },
+                new SetByStringModel { Name = "Weekend day", Content = "SA,SU" }
+            ];
+
             // Yearly
 
             m_YearlyMonthIndex = 0;
@@ -244,12 +264,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 // Pattern via BySetPosSelection + ByMonthWeekdaySelection
-                if (BySetPosSelection.HasValue
-                    && !string.IsNullOrEmpty(ByMonthWeekdaySelection))
+                if (BySetPosSelection is not null
+                    && ByMonthWeekdaySelection is not null)
                 {
-                    pattern.BySetPosition.Add(BySetPosSelection.Value);
+                    pattern.BySetPosition.Add(BySetPosSelection.Content);
 
-                    var tokens = ByMonthWeekdaySelection.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    var tokens = ByMonthWeekdaySelection.Content.Split(',', StringSplitOptions.RemoveEmptyEntries);
                     foreach (var t in tokens)
                     {
                         var wd = ParseWeekDay(t.Trim());
@@ -298,7 +318,7 @@ namespace Zametek.ViewModel.ProjectPlan
             CopyList(pattern.BySecond, BySeconds);
             CopyList(pattern.ByYearDay, ByYearDays);
             CopyList(pattern.ByWeekNo, ByWeekNumbers);
-            CopyList(pattern.BySetPosition, BySetPositions);
+            //CopyList(pattern.BySetPosition, BySetPositions);
 
             // BYMONTH (explicit)
             pattern.ByMonth.Clear();
@@ -361,6 +381,26 @@ namespace Zametek.ViewModel.ProjectPlan
                 _ => DayOfWeek.Monday
             };
         }
+
+
+
+        private SetByIntModel? SetPositionToModel(int position)
+        {
+            return BySetPosOptions.FirstOrDefault(s => s.Content == position);
+        }
+
+
+
+        private SetByStringModel? MonthWeekdayToModel(string? monthWeekday)
+        {
+            return ByMonthWeekdayOptions.FirstOrDefault(s => s.Content.Equals(monthWeekday, StringComparison.OrdinalIgnoreCase));
+        }
+
+
+
+
+
+
 
         private static string WeekDayToCode(DayOfWeek day)
         {
@@ -547,14 +587,31 @@ namespace Zametek.ViewModel.ProjectPlan
         public bool IsMonthDay
         {
             get => m_IsMonthDay;
-            set => this.RaiseAndSetIfChanged(ref m_IsMonthDay, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref m_IsMonthDay, value);
+                if (m_IsMonthDay)
+                {
+                    IsMonthWeekday = false;
+                    BySetPosSelection = null;
+                    ByMonthWeekdaySelection = null;
+                }
+            }
         }
 
         private bool m_IsMonthWeekday;
         public bool IsMonthWeekday
         {
             get => m_IsMonthWeekday;
-            set => this.RaiseAndSetIfChanged(ref m_IsMonthWeekday, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref m_IsMonthWeekday, value);
+                if (m_IsMonthWeekday)
+                {
+                    IsMonthDay = false;
+                    ByMonthDay = null;
+                }
+            }
         }
 
         // Monthly BYMONTHDAY support: 1..31, -31..-1 as needed
@@ -568,19 +625,23 @@ namespace Zametek.ViewModel.ProjectPlan
 
         // Monthly/Yearly pattern via BYSETPOS + BYDAY
 
-        private int? m_BySetPosSelection;
-        public int? BySetPosSelection
+        private SetByIntModel? m_BySetPosSelection;
+        public SetByIntModel? BySetPosSelection
         {
             get => m_BySetPosSelection;
             set => this.RaiseAndSetIfChanged(ref m_BySetPosSelection, value);
         }
 
-        private string? m_ByMonthWeekdaySelection;
-        public string? ByMonthWeekdaySelection
+        public List<SetByIntModel> BySetPosOptions { get; }
+
+        private SetByStringModel? m_ByMonthWeekdaySelection;
+        public SetByStringModel? ByMonthWeekdaySelection
         {
             get => m_ByMonthWeekdaySelection;
             set => this.RaiseAndSetIfChanged(ref m_ByMonthWeekdaySelection, value);
         }
+
+        public List<SetByStringModel> ByMonthWeekdayOptions { get; }
 
         // Yearly
 
@@ -730,23 +791,27 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (pattern.ByMonthDay.Count != 0)
                 {
                     ByMonthDay = pattern.ByMonthDay.First();
+                    IsMonthDay = true;
                 }
                 else
                 {
                     ByMonthDay = null;
+                    IsMonthDay = false;
                 }
 
                 if (pattern.BySetPosition.Count != 0
                     && pattern.ByDay.Count != 0)
                 {
-                    BySetPosSelection = pattern.BySetPosition.First();
+                    BySetPosSelection = SetPositionToModel(pattern.BySetPosition.FirstOrDefault());
                     var wds = pattern.ByDay.Select(b => WeekDayToCode(b.DayOfWeek)).ToArray();
-                    ByMonthWeekdaySelection = string.Join(",", wds);
+                    ByMonthWeekdaySelection = MonthWeekdayToModel(string.Join(",", wds));
+                    IsMonthWeekday = true;
                 }
                 else
                 {
                     BySetPosSelection = null;
                     ByMonthWeekdaySelection = null;
+                    IsMonthWeekday = false;
                 }
             }
 
