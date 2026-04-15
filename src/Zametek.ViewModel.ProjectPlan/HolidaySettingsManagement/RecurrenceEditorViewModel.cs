@@ -43,11 +43,12 @@ namespace Zametek.ViewModel.ProjectPlan
             ByWeekDaysSunday = false;
 
             // Month-day display 1..31
-            m_ByMonthDay = 1;
             m_IsMonthDay = true;
+            m_ByMonthDay = 1;
+
             m_IsMonthWeekday = false;
 
-            BySetPosOptions = [
+            ByMonthSetPosOptions = [
                 new SetByIntModel { Name = "First", Content = 1 },
                 new SetByIntModel { Name = "Second", Content = 2 },
                 new SetByIntModel { Name = "Third", Content = 3 },
@@ -69,10 +70,48 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Yearly
 
-            m_YearlyMonthIndex = 0;
-            m_YearlyDayOfMonth = 1;
+            m_IsYearlyMonthDay = true;
 
-            m_YearlyPatternMonthIndex = 0;
+            m_IsYearlyMonthWeekday = false;
+
+            YearlySetPosOptions = [
+                new SetByIntModel { Name = "First", Content = 1 },
+                new SetByIntModel { Name = "Second", Content = 2 },
+                new SetByIntModel { Name = "Third", Content = 3 },
+                new SetByIntModel { Name = "Fourth", Content = 4 },
+                new SetByIntModel { Name = "Last", Content = -1 }
+            ];
+
+            YearlyWeekdayOptions = [
+                new SetByStringModel { Name = "Monday", Content = "MO" },
+                new SetByStringModel { Name = "Tuesday", Content = "TU" },
+                new SetByStringModel { Name = "Wednesday", Content = "WE" },
+                new SetByStringModel { Name = "Thursday", Content = "TH" },
+                new SetByStringModel { Name = "Friday", Content = "FR" },
+                new SetByStringModel { Name = "Saturday", Content = "SA" },
+                new SetByStringModel { Name = "Sunday", Content = "SU" },
+                new SetByStringModel { Name = "Week day", Content = "MO,TU,WE,TH,FR" },
+                new SetByStringModel { Name = "Weekend day", Content = "SA,SU" }
+            ];
+
+            YearlyMonthOptions = [
+                new SetByIntModel { Name = "January", Content = 1 },
+                new SetByIntModel { Name = "February", Content = 2 },
+                new SetByIntModel { Name = "March", Content = 3 },
+                new SetByIntModel { Name = "April", Content = 4 },
+                new SetByIntModel { Name = "May", Content = 5 },
+                new SetByIntModel { Name = "June", Content = 6 },
+                new SetByIntModel { Name = "July", Content = 7 },
+                new SetByIntModel { Name = "August", Content = 8 },
+                new SetByIntModel { Name = "September", Content = 9 },
+                new SetByIntModel { Name = "October", Content = 10 },
+                new SetByIntModel { Name = "November", Content = 11 },
+                new SetByIntModel { Name = "December", Content = 12 }
+            ];
+
+
+
+
 
             m_RRuleString = string.Empty;
 
@@ -108,18 +147,19 @@ namespace Zametek.ViewModel.ProjectPlan
                     x => x.IsMonthDay,
                     x => x.IsMonthWeekday,
                     x => x.ByMonthDay,
-                    x => x.BySetPosSelection,
+                    x => x.ByMonthSetPosSelection,
                     x => x.ByMonthWeekdaySelection)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => RebuildRecurrencePattern());
 
             m_ReviseRecurrencePattern04Sub = this
                 .WhenAnyValue(
-                    x => x.YearlyMonthIndex,
+                    x => x.IsYearlyMonthDay,
+                    x => x.IsYearlyMonthWeekday,
                     x => x.YearlyDayOfMonth,
                     x => x.YearlySetPosSelection,
                     x => x.YearlyWeekdaySelection,
-                    x => x.YearlyPatternMonthIndex)
+                    x => x.YearlyMonthSelection)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => RebuildRecurrencePattern());
         }
@@ -258,16 +298,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 pattern.BySetPosition.Clear();
 
                 // ByMonthDay
-                if (ByMonthDay.HasValue)
+                if (ByMonthDay.HasValue
+                    && ByMonthDay.GetValueOrDefault() > 0)
                 {
                     pattern.ByMonthDay.Add(ByMonthDay.GetValueOrDefault());
                 }
 
                 // Pattern via BySetPosSelection + ByMonthWeekdaySelection
-                if (BySetPosSelection is not null
+                if (ByMonthSetPosSelection is not null
                     && ByMonthWeekdaySelection is not null)
                 {
-                    pattern.BySetPosition.Add(BySetPosSelection.Content);
+                    pattern.BySetPosition.Add(ByMonthSetPosSelection.Content);
 
                     var tokens = ByMonthWeekdaySelection.Content.Split(',', StringSplitOptions.RemoveEmptyEntries);
                     foreach (var t in tokens)
@@ -287,23 +328,27 @@ namespace Zametek.ViewModel.ProjectPlan
                 pattern.BySetPosition.Clear();
 
                 // Specific date
-                if (YearlyMonthIndex >= 0 && YearlyMonthIndex <= 11 && YearlyDayOfMonth > 0)
+                if (YearlyMonthSelection is not null
+                    && YearlyMonthSelection.Content >= 1 && YearlyMonthSelection.Content <= 12
+                    && YearlyDayOfMonth.HasValue
+                    && YearlyDayOfMonth.GetValueOrDefault() > 0)
                 {
-                    pattern.ByMonth.Add(YearlyMonthIndex + 1);
-                    pattern.ByMonthDay.Add(YearlyDayOfMonth);
+                    pattern.ByMonth.Add(YearlyMonthSelection.Content);
+                    pattern.ByMonthDay.Add(YearlyDayOfMonth.GetValueOrDefault());
                 }
 
-                // Pattern tab
-                if (YearlyPatternMonthIndex >= 0 && YearlyPatternMonthIndex <= 11
-                    && YearlySetPosSelection.HasValue
-                    && !string.IsNullOrEmpty(YearlyWeekdaySelection))
+                // Pattern via YearlySetPosSelection + YearlyWeekdaySelection + YearlyMonthSelection
+                if (YearlyMonthSelection is not null
+                    && YearlyMonthSelection.Content >= 1 && YearlyMonthSelection.Content <= 12
+                    && YearlySetPosSelection is not null
+                    && YearlyWeekdaySelection is not null)
                 {
                     pattern.ByMonth.Clear();
-                    pattern.ByMonth.Add(YearlyPatternMonthIndex + 1);
+                    pattern.ByMonth.Add(YearlyMonthSelection.Content);
 
-                    pattern.BySetPosition.Add(YearlySetPosSelection.Value);
+                    pattern.BySetPosition.Add(YearlySetPosSelection.Content);
 
-                    var tokens = YearlyWeekdaySelection.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    var tokens = YearlyWeekdaySelection.Content.Split(',', StringSplitOptions.RemoveEmptyEntries);
                     foreach (var t in tokens)
                     {
                         var wd = ParseWeekDay(t.Trim());
@@ -313,19 +358,19 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // Other BY* fields
-            CopyList(pattern.ByHour, ByHours);
-            CopyList(pattern.ByMinute, ByMinutes);
-            CopyList(pattern.BySecond, BySeconds);
-            CopyList(pattern.ByYearDay, ByYearDays);
-            CopyList(pattern.ByWeekNo, ByWeekNumbers);
+            //CopyList(pattern.ByHour, ByHours);
+            //CopyList(pattern.ByMinute, ByMinutes);
+            //CopyList(pattern.BySecond, BySeconds);
+            //CopyList(pattern.ByYearDay, ByYearDays);
+            //CopyList(pattern.ByWeekNo, ByWeekNumbers);
             //CopyList(pattern.BySetPosition, BySetPositions);
 
             // BYMONTH (explicit)
-            pattern.ByMonth.Clear();
-            foreach (var m in ByMonths.Distinct())
-            {
-                pattern.ByMonth.Add(m);
-            }
+            //pattern.ByMonth.Clear();
+            //foreach (var m in ByMonths.Distinct())
+            //{
+            //    pattern.ByMonth.Add(m);
+            //}
 
             // RSCALE/SKIP extensions are not directly supported by iCal.NET RecurrencePattern,
             // but you can inject them into the ToString output if needed.
@@ -384,22 +429,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-        private SetByIntModel? SetPositionToModel(int position)
+        private SetByIntModel? ByMonthSetPositionToModel(int position)
         {
-            return BySetPosOptions.FirstOrDefault(s => s.Content == position);
+            return ByMonthSetPosOptions.FirstOrDefault(s => s.Content == position);
         }
 
 
 
-        private SetByStringModel? MonthWeekdayToModel(string? monthWeekday)
+        private SetByStringModel? ByMonthWeekdayToModel(string? monthWeekday)
         {
             return ByMonthWeekdayOptions.FirstOrDefault(s => s.Content.Equals(monthWeekday, StringComparison.OrdinalIgnoreCase));
         }
-
-
-
-
-
 
 
         private static string WeekDayToCode(DayOfWeek day)
@@ -418,14 +458,24 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
 
+        private SetByIntModel? YearlySetPositionToModel(int position)
+        {
+            return YearlySetPosOptions.FirstOrDefault(m => m.Content == position);
+        }
+
+
+        private SetByIntModel? YearlyMonthToModel(int month)
+        {
+            return YearlyMonthOptions.FirstOrDefault(m => m.Content == month);
+        }
 
 
 
 
-
-
-
-
+        private SetByStringModel? YearlyWeekdayToModel(string? monthWeekday)
+        {
+            return YearlyWeekdayOptions.FirstOrDefault(m => m.Content.Equals(monthWeekday, StringComparison.OrdinalIgnoreCase));
+        }
 
 
 
@@ -593,10 +643,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (m_IsMonthDay)
                 {
                     IsMonthWeekday = false;
-                    BySetPosSelection = null;
+                    ByMonthSetPosSelection = null;
                     ByMonthWeekdaySelection = null;
                 }
             }
+        }
+
+        // Monthly BYMONTHDAY support: 1..31, -31..-1 as needed
+
+        private int? m_ByMonthDay;
+        public int? ByMonthDay
+        {
+            get => m_ByMonthDay;
+            set => this.RaiseAndSetIfChanged(ref m_ByMonthDay, value);
         }
 
         private bool m_IsMonthWeekday;
@@ -614,25 +673,15 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        // Monthly BYMONTHDAY support: 1..31, -31..-1 as needed
-
-        private int? m_ByMonthDay;
-        public int? ByMonthDay
-        {
-            get => m_ByMonthDay;
-            set => this.RaiseAndSetIfChanged(ref m_ByMonthDay, value);
-        }
-
         // Monthly/Yearly pattern via BYSETPOS + BYDAY
 
-        private SetByIntModel? m_BySetPosSelection;
-        public SetByIntModel? BySetPosSelection
+        private SetByIntModel? m_ByMonthSetPosSelection;
+        public SetByIntModel? ByMonthSetPosSelection
         {
-            get => m_BySetPosSelection;
-            set => this.RaiseAndSetIfChanged(ref m_BySetPosSelection, value);
+            get => m_ByMonthSetPosSelection;
+            set => this.RaiseAndSetIfChanged(ref m_ByMonthSetPosSelection, value);
         }
-
-        public List<SetByIntModel> BySetPosOptions { get; }
+        public List<SetByIntModel> ByMonthSetPosOptions { get; }
 
         private SetByStringModel? m_ByMonthWeekdaySelection;
         public SetByStringModel? ByMonthWeekdaySelection
@@ -640,46 +689,80 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ByMonthWeekdaySelection;
             set => this.RaiseAndSetIfChanged(ref m_ByMonthWeekdaySelection, value);
         }
-
         public List<SetByStringModel> ByMonthWeekdayOptions { get; }
 
         // Yearly
 
-        // 0-11
-        private int m_YearlyMonthIndex;
-        public int YearlyMonthIndex
+        private bool m_IsYearlyMonthDay;
+        public bool IsYearlyMonthDay
         {
-            get => m_YearlyMonthIndex;
-            set => this.RaiseAndSetIfChanged(ref m_YearlyMonthIndex, value);
+            get => m_IsYearlyMonthDay;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref m_IsYearlyMonthDay, value);
+                if (m_IsYearlyMonthDay)
+                {
+                    IsYearlyMonthWeekday = false;
+                    YearlySetPosSelection = null;
+                    YearlyWeekdaySelection = null;
+                    //YearlyMonthSelection = null;
+                }
+            }
         }
 
-        private int m_YearlyDayOfMonth;
-        public int YearlyDayOfMonth
+        private int? m_YearlyDayOfMonth;
+        public int? YearlyDayOfMonth
         {
             get => m_YearlyDayOfMonth;
             set => this.RaiseAndSetIfChanged(ref m_YearlyDayOfMonth, value);
         }
 
-        private int? m_YearlySetPosSelection;
-        public int? YearlySetPosSelection
+        private bool m_IsYearlyMonthWeekday;
+        public bool IsYearlyMonthWeekday
+        {
+            get => m_IsYearlyMonthWeekday;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref m_IsYearlyMonthWeekday, value);
+                if (m_IsYearlyMonthWeekday)
+                {
+                    IsYearlyMonthDay = false;
+                    YearlyDayOfMonth = null;
+                }
+            }
+        }
+
+
+
+        private SetByIntModel? m_YearlySetPosSelection;
+        public SetByIntModel? YearlySetPosSelection
         {
             get => m_YearlySetPosSelection;
             set => this.RaiseAndSetIfChanged(ref m_YearlySetPosSelection, value);
         }
+        public List<SetByIntModel> YearlySetPosOptions { get; }
 
-        private string? m_YearlyWeekdaySelection;
-        public string? YearlyWeekdaySelection
+
+
+        private SetByStringModel? m_YearlyWeekdaySelection;
+        public SetByStringModel? YearlyWeekdaySelection
         {
             get => m_YearlyWeekdaySelection;
             set => this.RaiseAndSetIfChanged(ref m_YearlyWeekdaySelection, value);
         }
+        public List<SetByStringModel> YearlyWeekdayOptions { get; }
 
-        private int m_YearlyPatternMonthIndex;
-        public int YearlyPatternMonthIndex
+
+
+        private SetByIntModel? m_YearlyMonthSelection;
+        public SetByIntModel? YearlyMonthSelection
         {
-            get => m_YearlyPatternMonthIndex;
-            set => this.RaiseAndSetIfChanged(ref m_YearlyPatternMonthIndex, value);
+            get => m_YearlyMonthSelection;
+            set => this.RaiseAndSetIfChanged(ref m_YearlyMonthSelection, value);
         }
+        public List<SetByIntModel> YearlyMonthOptions { get; }
+
+
 
         // RRULE string preview
         private string m_RRuleString;
@@ -802,14 +885,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (pattern.BySetPosition.Count != 0
                     && pattern.ByDay.Count != 0)
                 {
-                    BySetPosSelection = SetPositionToModel(pattern.BySetPosition.FirstOrDefault());
+                    ByMonthSetPosSelection = ByMonthSetPositionToModel(pattern.BySetPosition.FirstOrDefault());
                     var wds = pattern.ByDay.Select(b => WeekDayToCode(b.DayOfWeek)).ToArray();
-                    ByMonthWeekdaySelection = MonthWeekdayToModel(string.Join(",", wds));
+                    ByMonthWeekdaySelection = ByMonthWeekdayToModel(string.Join(",", wds));
                     IsMonthWeekday = true;
                 }
                 else
                 {
-                    BySetPosSelection = null;
+                    ByMonthSetPosSelection = null;
                     ByMonthWeekdaySelection = null;
                     IsMonthWeekday = false;
                 }
@@ -818,27 +901,57 @@ namespace Zametek.ViewModel.ProjectPlan
             // Yearly
             if (RecurrenceFrequency == RecurrenceFrequencyType.Yearly)
             {
-                if (pattern.ByMonth.Any() && pattern.ByMonthDay.Any())
+
+                if (pattern.ByMonth.Count != 0
+                    && pattern.ByMonthDay.Count != 0)
                 {
-                    YearlyMonthIndex = pattern.ByMonth.First() - 1;
+                    YearlyMonthSelection = YearlyMonthToModel(pattern.ByMonth.FirstOrDefault());
+
                     YearlyDayOfMonth = pattern.ByMonthDay.First();
+                    IsYearlyMonthDay = true;
+                }
+                else
+                {
+                    YearlyDayOfMonth = null;
+                    IsYearlyMonthDay = false;
+
                 }
 
-                if (pattern.ByMonth.Any() && pattern.BySetPosition.Any() && pattern.ByDay.Any())
+                if (pattern.ByMonth.Count != 0
+                    && pattern.BySetPosition.Count != 0
+                    && pattern.ByDay.Count != 0)
                 {
-                    YearlyPatternMonthIndex = pattern.ByMonth.First() - 1;
-                    YearlySetPosSelection = pattern.BySetPosition.First();
-                    YearlyWeekdaySelection = string.Join(",", pattern.ByDay.Select(b => WeekDayToCode(b.DayOfWeek)));
+
+
+                    YearlyMonthSelection = YearlyMonthToModel(pattern.ByMonth.FirstOrDefault());
+                    YearlySetPosSelection = YearlySetPositionToModel(pattern.BySetPosition.FirstOrDefault());
+                    YearlyWeekdaySelection = YearlyWeekdayToModel(string.Join(",", pattern.ByDay.Select(b => WeekDayToCode(b.DayOfWeek))));
+
+
+
+                    //YearlyPatternMonthIndex = pattern.ByMonth.First() - 1;
+                    //YearlySetPosSelection = pattern.BySetPosition.First();
+                    //YearlyWeekdaySelection = string.Join(",", pattern.ByDay.Select(b => WeekDayToCode(b.DayOfWeek)));
+
+                    IsYearlyMonthWeekday = true;
                 }
+                else
+                {
+                    IsYearlyMonthWeekday = false;
+                    YearlySetPosSelection = null;
+                    YearlyWeekdaySelection = null;
+                }
+
+
             }
 
-            ByMonths = [.. pattern.ByMonth];
-            ByHours = [.. pattern.ByHour];
-            ByMinutes = [.. pattern.ByMinute];
-            BySeconds = [.. pattern.BySecond];
-            ByYearDays = [.. pattern.ByYearDay];
-            ByWeekNumbers = [.. pattern.ByWeekNo];
-            BySetPositions = [.. pattern.BySetPosition];
+            //ByMonths = [.. pattern.ByMonth];
+            //ByHours = [.. pattern.ByHour];
+            //ByMinutes = [.. pattern.ByMinute];
+            //BySeconds = [.. pattern.BySecond];
+            //ByYearDays = [.. pattern.ByYearDay];
+            //ByWeekNumbers = [.. pattern.ByWeekNo];
+            //BySetPositions = [.. pattern.BySetPosition];
 
             //RecurrencePattern = pattern;
             RRuleString = pattern?.ToString() ?? string.Empty;

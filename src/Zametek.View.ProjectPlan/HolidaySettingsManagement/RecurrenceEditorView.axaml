@@ -275,22 +275,6 @@
 						<Grid />
 					</DockPanel>
 
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
 					<DockPanel DockPanel.Dock="Top"
 							   Margin="0,7,0,0">
 						<RadioButton DockPanel.Dock="Left"
@@ -302,8 +286,8 @@
 
 						<ComboBox Width="120"
 								  DockPanel.Dock="Left"
-								  ItemsSource="{Binding Path=BySetPosOptions, Mode=OneWay}"
-								  SelectedValue="{Binding Path=BySetPosSelection, Mode=TwoWay}"
+								  ItemsSource="{Binding Path=ByMonthSetPosOptions, Mode=OneWay}"
+								  SelectedValue="{Binding Path=ByMonthSetPosSelection, Mode=TwoWay}"
 								  DisplayMemberBinding="{Binding Path=Name}"
 								  IsEnabled="{Binding Path=IsMonthWeekday, Mode=OneWay}">
 						</ComboBox>
@@ -329,35 +313,6 @@
 
 
 
-			</DockPanel>
-
-			<Grid/>
-		</DockPanel>
-
-
-
-
-		<DockPanel Margin="0,11,0,0">
-
-
-			<!-- RRULE string display / debug -->
-			<TextBlock DockPanel.Dock="Left"
-					   Margin="0,8,8,0"
-					   VerticalAlignment="Top"
-					   Text="RRULE:"/>
-			<TextBox Margin="0,8,0,0"
-					 IsReadOnly="True"
-					 Text="{Binding Path=RRuleString, Mode=OneWay}"/>
-
-
-
-		</DockPanel>
-		
-		
-		
-		
-		
-		<Grid/>
 
 
 
@@ -366,14 +321,118 @@
 
 
 
+				<!-- Yearly -->
+				<DockPanel IsVisible="{Binding Path=RecurrenceFrequency, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Yearly}, Mode=OneWay}">
+					<DockPanel DockPanel.Dock="Top">
+						<Label DockPanel.Dock="Left"
+							   Margin="0,0,7,0"
+							   VerticalAlignment="Center"
+							   Content="Interval:"/>
+
+						<u:NumericIntUpDown DockPanel.Dock="Left"
+											Value="{Binding Path=Interval, Mode=TwoWay}"
+											VerticalAlignment="Center"
+											ShowButtonSpinner="True"
+											Focusable="True"
+											Margin="0"
+											Padding="0"
+											Width="75"
+											Minimum="1"
+											Maximum="99"/>
+
+						<Grid />
+					</DockPanel>
+
+					<DockPanel DockPanel.Dock="Top">
+						<RadioButton DockPanel.Dock="Left"
+									 Content="Day"
+									 GroupName="MonthType"
+									 Margin="0,0,7,0"
+									 VerticalAlignment="Center"
+									 IsChecked="{Binding Path=IsYearlyMonthDay, Mode=TwoWay}"/>
+
+						<ComboBox Width="120"
+								  DockPanel.Dock="Left"
+								  ItemsSource="{Binding Path=YearlyMonthOptions, Mode=OneWay}"
+								  SelectedValue="{Binding Path=YearlyMonthSelection, Mode=TwoWay}"
+								  DisplayMemberBinding="{Binding Path=Name}"
+								  IsEnabled="{Binding Path=IsYearlyMonthDay, Mode=OneWay}">
+						</ComboBox>
+
+						<u:NumericIntUpDown DockPanel.Dock="Left"
+											Value="{Binding Path=YearlyDayOfMonth, Mode=TwoWay}"
+											VerticalAlignment="Center"
+											ShowButtonSpinner="True"
+											Focusable="True"
+											Margin="0"
+											Padding="0"
+											Width="75"
+											Minimum="1"
+											Maximum="31"
+											IsEnabled="{Binding Path=IsYearlyMonthDay, Mode=OneWay}"/>
+
+						<Grid />
+					</DockPanel>
+
+					<DockPanel DockPanel.Dock="Top"
+							   Margin="0,7,0,0">
+						<RadioButton DockPanel.Dock="Left"
+									 Content="The"
+									 GroupName="MonthType"
+									 Margin="0,0,7,0"
+									 VerticalAlignment="Center"
+									 IsChecked="{Binding Path=IsYearlyMonthWeekday, Mode=TwoWay}"/>
+
+
+						<ComboBox Width="120"
+								  DockPanel.Dock="Left"
+								  ItemsSource="{Binding Path=YearlySetPosOptions, Mode=OneWay}"
+								  SelectedValue="{Binding Path=YearlySetPosSelection, Mode=TwoWay}"
+								  DisplayMemberBinding="{Binding Path=Name}"
+								  IsEnabled="{Binding Path=IsYearlyMonthWeekday, Mode=OneWay}">
+						</ComboBox>
+
+
+						<ComboBox Width="140"
+								  DockPanel.Dock="Left"
+								  ItemsSource="{Binding Path=YearlyWeekdayOptions, Mode=OneWay}"
+								  SelectedValue="{Binding Path=YearlyWeekdaySelection, Mode=TwoWay}"
+								  DisplayMemberBinding="{Binding Path=Name}"
+								  IsEnabled="{Binding Path=IsYearlyMonthWeekday, Mode=OneWay}">
+						</ComboBox>
+
+
+						<ComboBox Width="120"
+								  DockPanel.Dock="Left"
+								  ItemsSource="{Binding Path=YearlyMonthOptions, Mode=OneWay}"
+								  SelectedValue="{Binding Path=YearlyMonthSelection, Mode=TwoWay}"
+								  DisplayMemberBinding="{Binding Path=Name}"
+								  IsEnabled="{Binding Path=IsYearlyMonthWeekday, Mode=OneWay}">
+						</ComboBox>
+						
+
+
+						<Grid />
+					</DockPanel>
+
+					<Grid />
+				</DockPanel>
 
 
 
 
 
 
-                        <!-- Yearly -->
-                        <!--<DataTrigger Binding="{Binding DetailsTemplateKey}" Value="Yearly">
+
+
+
+
+
+
+
+
+				<!-- Yearly -->
+				<!--<DataTrigger Binding="{Binding DetailsTemplateKey}" Value="Yearly">
                             <Setter Property="ContentTemplate">
                                 <Setter.Value>
                                     <DataTemplate>
@@ -478,5 +537,32 @@
 
 
 
+
+
+				<Grid />
+
+			</DockPanel>
+
+			<Grid/>
+		</DockPanel>
+
+
+
+
+		<DockPanel Margin="0,11,0,0">
+
+
+			<!-- RRULE string display / debug -->
+			<TextBlock DockPanel.Dock="Left"
+					   Margin="0,8,8,0"
+					   VerticalAlignment="Top"
+					   Text="RRULE:"/>
+			<TextBox Margin="0,8,0,0"
+					 IsReadOnly="True"
+					 Text="{Binding Path=RRuleString, Mode=OneWay}"/>
+
+		</DockPanel>
+
+		<Grid/>
 	</StackPanel>
 </UserControl>

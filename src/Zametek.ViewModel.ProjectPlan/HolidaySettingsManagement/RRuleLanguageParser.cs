@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using net.sf.mpxj.planner.schema;
+using System.Globalization;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -253,6 +254,68 @@ namespace Zametek.ViewModel.ProjectPlan
                     parts.Add("on the " + JoinList(days) + " of " + JoinList(months));
                 }
             }
+
+
+
+
+
+
+
+
+
+            // YEARLY with BYDAY, BYMONTH and BYSETPOS (e.g., 4th Sunday of March)
+            if (rule.Freq == "YEARLY" && rule.ByDay.Any() && rule.ByMonth.Any() && rule.BySetPos.Any())
+            {
+                var plainDays = rule.ByDay
+                    .Select(ParseByDayEntry)
+                    .Select(d => WeekdayMap.TryGetValue(d.Weekday, out var name) ? name : d.Weekday)
+                    .ToList();
+
+                var months = rule.ByMonth
+                     .Select(m => MonthMap.TryGetValue(m, out var name) ? name : $"month {m}")
+                     .ToList();
+
+                var ordinals = rule.BySetPos.Select(ToOrdinal).ToList();
+
+
+
+
+
+                // Single month/day pair: "Every year on the 2nd Thursday of April"
+                if (months.Count == 1 && ordinals.Count == 1)
+                {
+                    parts.Add($"on the {ordinals[0]} {plainDays[0]} of {months[0]}");
+                }
+                else
+                {
+                    // Multiple: "on the 1st and 15th of January and July"
+                    parts.Add("on the " + JoinList(ordinals) + " " + JoinList(plainDays) + " of " + JoinList(months));
+                }
+
+
+
+
+
+
+                //if (plainDays.Any() && ordinals.Any())
+                //{
+                //    parts.Add("on the " + JoinList(ordinals) + " " + JoinList(plainDays));
+                //}
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             // Count / Until
             if (rule.Count.HasValue)

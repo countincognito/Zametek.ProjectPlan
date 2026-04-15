@@ -31,37 +31,89 @@ namespace Zametek.Contract.ProjectPlan
         bool ByWeekDaysSaturday { get; set; }
         bool ByWeekDaysSunday { get; set; }
 
+
+
+
         bool IsMonthDay { get; set; }
 
-        bool IsMonthWeekday { get; set; }
 
         int? ByMonthDay { get; set; }
 
-        SetByIntModel? BySetPosSelection { get; set; }
 
 
-        List<SetByIntModel> BySetPosOptions { get; }
 
+        bool IsMonthWeekday { get; set; }
 
+        SetByIntModel? ByMonthSetPosSelection { get; set; }
+
+        List<SetByIntModel> ByMonthSetPosOptions { get; }
 
         SetByStringModel? ByMonthWeekdaySelection { get; set; }
-
-
 
         List<SetByStringModel> ByMonthWeekdayOptions { get; }
 
 
 
 
-        int YearlyMonthIndex { get; set; }
 
-        int YearlyDayOfMonth { get; set; }
 
-        int? YearlySetPosSelection { get; set; }
 
-        string? YearlyWeekdaySelection { get; set; }
 
-        int YearlyPatternMonthIndex { get; set; }
+
+
+
+
+        bool IsYearlyMonthDay { get; set; }
+
+
+        int? YearlyDayOfMonth { get; set; }
+
+
+        //int YearlyMonthIndex { get; set; }
+
+        //
+
+        //int? YearlySetPosSelection { get; set; }
+
+        //string? YearlyWeekdaySelection { get; set; }
+
+        //int YearlyPatternMonthIndex { get; set; }
+
+
+
+
+
+
+
+
+
+        bool IsYearlyMonthWeekday { get; set; }
+
+
+        SetByIntModel? YearlySetPosSelection { get; set; }
+        List<SetByIntModel> YearlySetPosOptions { get; }
+
+
+
+        SetByStringModel? YearlyWeekdaySelection { get; set; }
+        List<SetByStringModel> YearlyWeekdayOptions { get; }
+
+
+
+        SetByIntModel? YearlyMonthSelection { get; set; }
+
+        List<SetByIntModel> YearlyMonthOptions { get; }
+
+
+
+
+
+
+
+
+
+
+
 
         string RRuleString { get; }
 
