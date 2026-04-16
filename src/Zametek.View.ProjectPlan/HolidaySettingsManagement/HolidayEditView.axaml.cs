@@ -2,10 +2,10 @@ using Avalonia.Controls;
 
 namespace Zametek.View.ProjectPlan;
 
-public partial class RecurrenceEditorView
+public partial class HolidayEditView
     : UserControl
 {
-    public RecurrenceEditorView()
+    public HolidayEditView()
     {
         InitializeComponent();
     }

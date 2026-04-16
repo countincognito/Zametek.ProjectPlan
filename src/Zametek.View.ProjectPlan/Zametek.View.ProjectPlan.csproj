@@ -36,8 +36,8 @@
     <Compile Update="HolidaySettingsManagement\HolidaySettingsManagerView.axaml.cs">
       <DependentUpon>HolidaySettingsManagerView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="HolidaySettingsManagement\RecurrenceEditorView.axaml.cs">
-      <DependentUpon>RecurrenceEditorView.axaml</DependentUpon>
+    <Compile Update="HolidaySettingsManagement\HolidayEditView.axaml.cs">
+      <DependentUpon>HolidayEditView.axaml</DependentUpon>
     </Compile>
     <Compile Update="ProjectScenarioManagement\NodeNameView.axaml.cs">
       <DependentUpon>NodeNameView.axaml</DependentUpon>

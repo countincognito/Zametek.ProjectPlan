@@ -8,8 +8,8 @@
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:converters="using:Avalonia.Controls.Converters"
 			 xmlns:u="https://irihi.tech/ursa"
-			 x:DataType="vm:RecurrenceEditorViewModel"
-			 x:Class="Zametek.View.ProjectPlan.RecurrenceEditorView">
+			 x:DataType="vm:HolidayEditViewModel"
+			 x:Class="Zametek.View.ProjectPlan.HolidayEditView">
 
 	<UserControl.Resources>
 		<converters:EnumToBoolConverter x:Key="enumToBool" />
@@ -426,119 +426,6 @@
 
 
 
-
-
-
-
-
-				<!-- Yearly -->
-				<!--<DataTrigger Binding="{Binding DetailsTemplateKey}" Value="Yearly">
-                            <Setter Property="ContentTemplate">
-                                <Setter.Value>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Vertical" Spacing="6">
-                                            <TextBlock Text="Yearly pattern:"/>
-                                            <TabControl>
-                                                <TabItem Header="Specific dates">
-                                                    <StackPanel Margin="4" Spacing="4">
-                                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                                            <TextBlock Text="Month:" VerticalAlignment="Center"/>
-                                                            <ComboBox Width="140"
-                                                                      SelectedIndex="{Binding YearlyMonthIndex, Mode=TwoWay}">
-                                                                <ComboBoxItem Content="January"/>
-                                                                <ComboBoxItem Content="February"/>
-                                                                <ComboBoxItem Content="March"/>
-                                                                <ComboBoxItem Content="April"/>
-                                                                <ComboBoxItem Content="May"/>
-                                                                <ComboBoxItem Content="June"/>
-                                                                <ComboBoxItem Content="July"/>
-                                                                <ComboBoxItem Content="August"/>
-                                                                <ComboBoxItem Content="September"/>
-                                                                <ComboBoxItem Content="October"/>
-                                                                <ComboBoxItem Content="November"/>
-                                                                <ComboBoxItem Content="December"/>
-                                                            </ComboBox>
-                                                        </StackPanel>
-
-                                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                                            <TextBlock Text="Day:" VerticalAlignment="Center"/>
-                                                            <NumericUpDown Minimum="1" Maximum="31"
-                                                                           Value="{Binding YearlyDayOfMonth, Mode=TwoWay}"
-                                                                           Width="80"/>
-                                                        </StackPanel>
-                                                    </StackPanel>
-                                                </TabItem>
-
-                                                <TabItem Header="Pattern">
-                                                    <StackPanel Margin="4" Spacing="4">
-                                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                                            <TextBlock Text="Position:" VerticalAlignment="Center"/>
-                                                            <ComboBox Width="120"
-                                                                      SelectedItem="{Binding YearlySetPosSelection, Mode=TwoWay}">
-                                                                <ComboBoxItem Content="First" Tag="1"/>
-                                                                <ComboBoxItem Content="Second" Tag="2"/>
-                                                                <ComboBoxItem Content="Third" Tag="3"/>
-                                                                <ComboBoxItem Content="Fourth" Tag="4"/>
-                                                                <ComboBoxItem Content="Last" Tag="-1"/>
-                                                            </ComboBox>
-                                                        </StackPanel>
-
-                                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                                            <TextBlock Text="Day:" VerticalAlignment="Center"/>
-                                                            <ComboBox Width="140"
-                                                                      SelectedItem="{Binding YearlyWeekdaySelection, Mode=TwoWay}">
-                                                                <ComboBoxItem Content="Monday" Tag="MO"/>
-                                                                <ComboBoxItem Content="Tuesday" Tag="TU"/>
-                                                                <ComboBoxItem Content="Wednesday" Tag="WE"/>
-                                                                <ComboBoxItem Content="Thursday" Tag="TH"/>
-                                                                <ComboBoxItem Content="Friday" Tag="FR"/>
-                                                                <ComboBoxItem Content="Saturday" Tag="SA"/>
-                                                                <ComboBoxItem Content="Sunday" Tag="SU"/>
-                                                                <ComboBoxItem Content="Weekday" Tag="MO,TU,WE,TH,FR"/>
-                                                                <ComboBoxItem Content="Weekend day" Tag="SA,SU"/>
-                                                            </ComboBox>
-                                                        </StackPanel>
-
-                                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                                            <TextBlock Text="Month:" VerticalAlignment="Center"/>
-                                                            <ComboBox Width="140"
-                                                                      SelectedIndex="{Binding YearlyPatternMonthIndex, Mode=TwoWay}">
-                                                                <ComboBoxItem Content="January"/>
-                                                                <ComboBoxItem Content="February"/>
-                                                                <ComboBoxItem Content="March"/>
-                                                                <ComboBoxItem Content="April"/>
-                                                                <ComboBoxItem Content="May"/>
-                                                                <ComboBoxItem Content="June"/>
-                                                                <ComboBoxItem Content="July"/>
-                                                                <ComboBoxItem Content="August"/>
-                                                                <ComboBoxItem Content="September"/>
-                                                                <ComboBoxItem Content="October"/>
-                                                                <ComboBoxItem Content="November"/>
-                                                                <ComboBoxItem Content="December"/>
-                                                            </ComboBox>
-                                                        </StackPanel>
-                                                    </StackPanel>
-                                                </TabItem>
-                                            </TabControl>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </DataTrigger>-->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 				<Grid />
 
 			</DockPanel>
@@ -549,19 +436,21 @@
 
 
 
-		<DockPanel Margin="0,11,0,0">
+		<StackPanel Margin="0,11,0,0">
 
 
 			<!-- RRULE string display / debug -->
-			<TextBlock DockPanel.Dock="Left"
-					   Margin="0,8,8,0"
+			<TextBlock Margin="0,8,8,0"
 					   VerticalAlignment="Top"
 					   Text="RRULE:"/>
 			<TextBox Margin="0,8,0,0"
 					 IsReadOnly="True"
-					 Text="{Binding Path=RRuleString, Mode=OneWay}"/>
+					 Text="{Binding Path=RecurrencePattern, Mode=OneWay}"/>
+			<TextBox Margin="0,8,0,0"
+					 IsReadOnly="True"
+					 Text="{Binding Path=RecurrencePatternDisplay, Mode=OneWay}"/>
 
-		</DockPanel>
+		</StackPanel>
 
 		<Grid/>
 	</StackPanel>

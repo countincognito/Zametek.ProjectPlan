@@ -241,7 +241,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-                var editViewModel = new RecurrenceEditorViewModel();
+                var editViewModel = new HolidayEditViewModel();
 
 
                 editViewModel.LoadFromPattern(selectedHoliday.RecurrencePattern.ToString());
@@ -277,15 +277,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     //UpdateResourceModel updateModel = editViewModel.BuildUpdateModel();
 
+
+
+
+
+
                     var updateModel = new UpdateHolidayModel
                     {
                         Id = selectedHoliday.Id,
                         Name = selectedHoliday.Name,
-                        IsNameEdited = false, //editViewModel.IsNameEdited,
+                        IsNameEdited = false,
                         Notes = selectedHoliday.Notes,
-                        IsNotesEdited = false, //editViewModel.IsNotesEdited,
-                        RecurrencePattern = editViewModel.RRuleString,
-                        IsRecurrencePatternEdited = true, //editViewModel.IsRecurrencePatternEdited,
+                        IsNotesEdited = false,
+                        RecurrencePattern = editViewModel.RecurrencePattern,
+                        IsRecurrencePatternEdited = true,
                     };
 
 
