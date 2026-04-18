@@ -421,6 +421,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Value must be either -1 or greater than zero.
+        /// </summary>
+        public static string Message_MustBeMinusOneOrGreaterThanZero {
+            get {
+                return ResourceManager.GetString("Message_MustBeMinusOneOrGreaterThanZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Name already exists.
         /// </summary>
         public static string Message_NameAlreadyExists {

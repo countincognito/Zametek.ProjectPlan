@@ -351,4 +351,7 @@
   <data name="Message_CannotBothBeSet" xml:space="preserve">
     <value>{0} and {1} cannot both be set</value>
   </data>
+  <data name="Message_MustBeMinusOneOrGreaterThanZero" xml:space="preserve">
+    <value>Value must be either -1 or greater than zero</value>
+  </data>
 </root>

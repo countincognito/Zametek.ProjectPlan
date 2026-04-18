@@ -18,6 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Holidays.Designer.cs">
+      <DependentUpon>Holidays.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
     <Compile Update="Suffixes.Designer.cs">
       <DependentUpon>Suffixes.resx</DependentUpon>
       <DesignTime>True</DesignTime>
@@ -76,6 +81,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="Holidays.resx">
+      <LastGenOutput>Holidays.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
     <EmbeddedResource Update="Suffixes.resx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <LastGenOutput>Suffixes.Designer.cs</LastGenOutput>

@@ -46,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         [Theory]
         [MemberData(nameof(GetTestData))]
-        public void ProjectScenarioHelper_Given_InputIdsAndIdUpdates_ThenConvertsToExpectedIdUpdates(
+        public void ProjectScenarioHelper_Given_InputIdsAndIdUpdates_Then_ConvertsToExpectedIdUpdates(
             int[] inputIds,
             (int, int)[] idUpdates,
             (int, int)[] expectedIdUpdates)

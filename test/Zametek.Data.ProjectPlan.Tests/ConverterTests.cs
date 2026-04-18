@@ -75,7 +75,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_1_0_Input_ThenConvertsTo_v0_2_0()
+        public void Converter_Given_v0_1_0_Input_Then_ConvertsTo_v0_2_0()
         {
             v0_1_0.ProjectModel? project_v0_1_0 = JsonConvert.DeserializeObject<v0_1_0.ProjectModel>(m_Fixture.V0_1_0_JsonString);
             v0_2_0.ProjectModel? project_v0_2_0 = JsonConvert.DeserializeObject<v0_2_0.ProjectModel>(m_Fixture.V0_2_0_JsonString);
@@ -88,7 +88,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_2_0_Input_ThenConvertsTo_v0_2_1()
+        public void Converter_Given_v0_2_0_Input_Then_ConvertsTo_v0_2_1()
         {
             v0_2_0.ProjectModel? project_v0_2_0 = JsonConvert.DeserializeObject<v0_2_0.ProjectModel>(m_Fixture.V0_2_0_JsonString);
             v0_2_1.ProjectModel? project_v0_2_1 = JsonConvert.DeserializeObject<v0_2_1.ProjectModel>(m_Fixture.V0_2_1_JsonString);
@@ -102,7 +102,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_2_1_Input_ThenConvertsTo_v0_3_0()
+        public void Converter_Given_v0_2_1_Input_Then_ConvertsTo_v0_3_0()
         {
             v0_2_1.ProjectModel? project_v0_2_1 = JsonConvert.DeserializeObject<v0_2_1.ProjectModel>(m_Fixture.V0_2_1_JsonString);
             v0_3_0.ProjectModel? project_v0_3_0 = JsonConvert.DeserializeObject<v0_3_0.ProjectModel>(m_Fixture.V0_3_0_JsonString);
@@ -116,7 +116,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_3_0_Input_ThenConvertsTo_v0_3_1()
+        public void Converter_Given_v0_3_0_Input_Then_ConvertsTo_v0_3_1()
         {
             v0_3_0.ProjectModel? project_v0_3_0 = JsonConvert.DeserializeObject<v0_3_0.ProjectModel>(m_Fixture.V0_3_0_JsonString);
             v0_3_1.ProjectModel? project_v0_3_1 = JsonConvert.DeserializeObject<v0_3_1.ProjectModel>(m_Fixture.V0_3_1_JsonString);
@@ -130,7 +130,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_3_1_Input_ThenConvertsTo_v0_3_2()
+        public void Converter_Given_v0_3_1_Input_Then_ConvertsTo_v0_3_2()
         {
             v0_3_1.ProjectModel? project_v0_3_1 = JsonConvert.DeserializeObject<v0_3_1.ProjectModel>(m_Fixture.V0_3_1_JsonString);
             v0_3_2.ProjectModel? project_v0_3_2 = JsonConvert.DeserializeObject<v0_3_2.ProjectModel>(m_Fixture.V0_3_2_JsonString);
@@ -144,7 +144,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_3_2_Input_ThenConvertsTo_v0_4_0()
+        public void Converter_Given_v0_3_2_Input_Then_ConvertsTo_v0_4_0()
         {
             v0_3_2.ProjectModel? project_v0_3_2 = JsonConvert.DeserializeObject<v0_3_2.ProjectModel>(m_Fixture.V0_3_2a_JsonString);
             v0_4_0.ProjectModel? project_v0_4_0 = JsonConvert.DeserializeObject<v0_4_0.ProjectModel>(m_Fixture.V0_4_0a_JsonString);
@@ -158,7 +158,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_4_0_Input_ThenConvertsTo_v0_4_1()
+        public void Converter_Given_v0_4_0_Input_Then_ConvertsTo_v0_4_1()
         {
             v0_4_0.ProjectModel? project_v0_4_0 = JsonConvert.DeserializeObject<v0_4_0.ProjectModel>(m_Fixture.V0_4_0b_JsonString);
             v0_4_1.ProjectModel? project_v0_4_1 = JsonConvert.DeserializeObject<v0_4_1.ProjectModel>(m_Fixture.V0_4_1b_JsonString);
@@ -172,7 +172,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_4_1_Input_ThenConvertsTo_v0_4_2()
+        public void Converter_Given_v0_4_1_Input_Then_ConvertsTo_v0_4_2()
         {
             v0_4_1.ProjectModel? project_v0_4_1 = JsonConvert.DeserializeObject<v0_4_1.ProjectModel>(m_Fixture.V0_4_1c_JsonString);
             v0_4_2.ProjectModel? project_v0_4_2 = JsonConvert.DeserializeObject<v0_4_2.ProjectModel>(m_Fixture.V0_4_2c_JsonString);
@@ -186,7 +186,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_4_2_Input_ThenConvertsTo_v0_4_3()
+        public void Converter_Given_v0_4_2_Input_Then_ConvertsTo_v0_4_3()
         {
             v0_4_2.ProjectModel? project_v0_4_2 = JsonConvert.DeserializeObject<v0_4_2.ProjectModel>(m_Fixture.V0_4_2d_JsonString);
             v0_4_3.ProjectModel? project_v0_4_3 = JsonConvert.DeserializeObject<v0_4_3.ProjectModel>(m_Fixture.V0_4_3d_JsonString);
@@ -200,7 +200,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_4_3_Input_ThenConvertsTo_v0_4_4()
+        public void Converter_Given_v0_4_3_Input_Then_ConvertsTo_v0_4_4()
         {
             v0_4_3.ProjectModel? project_v0_4_3 = JsonConvert.DeserializeObject<v0_4_3.ProjectModel>(m_Fixture.V0_4_3d_JsonString);
             v0_4_4.ProjectModel? project_v0_4_4 = JsonConvert.DeserializeObject<v0_4_4.ProjectModel>(m_Fixture.V0_4_4d_JsonString);
@@ -214,7 +214,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_4_4_Input_ThenConvertsTo_v0_5_0()
+        public void Converter_Given_v0_4_4_Input_Then_ConvertsTo_v0_5_0()
         {
             v0_4_4.ProjectModel? project_v0_4_4 = JsonConvert.DeserializeObject<v0_4_4.ProjectModel>(m_Fixture.V0_4_4d_JsonString);
             v0_5_0.ProjectModel? project_v0_5_0 = JsonConvert.DeserializeObject<v0_5_0.ProjectModel>(m_Fixture.V0_5_0_JsonString);
@@ -228,7 +228,7 @@ namespace Zametek.Data.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Converter_Given_v0_5_0a_Input_ThenConvertsTo_v0_6_0()
+        public void Converter_Given_v0_5_0a_Input_Then_ConvertsTo_v0_6_0()
         {
             v0_5_0.ProjectModel? project_v0_5_0 = JsonConvert.DeserializeObject<v0_5_0.ProjectModel>(m_Fixture.V0_5_0a_JsonString);
             v0_6_0.ProjectModel? project_v0_6_0 = JsonConvert.DeserializeObject<v0_6_0.ProjectModel>(m_Fixture.V0_6_0_JsonString);

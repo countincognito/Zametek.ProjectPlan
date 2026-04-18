@@ -20,7 +20,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         [Theory]
         [MemberData(nameof(PhraseData))]
-        public void ToPhrase_ConvertsModelToText(RecurrenceRuleModel model, string expected)
+        public void RecurrenceRuleHelper_Given_InputModel_Then_ReturnsExpectedPhrase(RecurrenceRuleModel model, string expected)
         {
             var actual = RecurrenceRuleHelper.ToPhrase(model);
             Assert.Equal(expected, actual);

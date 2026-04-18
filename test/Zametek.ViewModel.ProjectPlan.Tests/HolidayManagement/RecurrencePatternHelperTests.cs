@@ -34,7 +34,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         [Theory]
         [MemberData(nameof(RoundTripData))]
-        public void RecurrencePatternHelper_GivenInputPattern_ThenReturnsExpectedModel(string pattern, RecurrenceRuleModel expected)
+        public void RecurrencePatternHelper_Given_InputPattern_Then_ReturnsExpectedModel(string pattern, RecurrenceRuleModel expected)
         {
             var actual = RecurrencePatternHelper.ToRule(pattern);
             CompareModels(actual, expected);
@@ -42,7 +42,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         [Theory]
         [MemberData(nameof(RoundTripData))]
-        public void RecurrencePatternHelper_GivenInputModel_ThenReturnsExpectedPattern(string expectedPattern, RecurrenceRuleModel model)
+        public void RecurrencePatternHelper_Given_InputModel_Then_ReturnsExpectedPattern(string expectedPattern, RecurrenceRuleModel model)
         {
             string actual = RecurrencePatternHelper.ToPattern(model);
             actual.ShouldBe(expectedPattern);
@@ -50,7 +50,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         [Theory]
         [MemberData(nameof(RoundTripData))]
-        public void RecurrencePatternHelper_GivenInputPattern_ThenRoundTripPreservesModel(string pattern, RecurrenceRuleModel expected)
+        public void RecurrencePatternHelper_Given_InputPattern_Then_RoundTripPreservesModel(string pattern, RecurrenceRuleModel expected)
         {
             RecurrenceRuleModel parsedRule = RecurrencePatternHelper.ToRule(pattern);
             string intermediatePattern = RecurrencePatternHelper.ToPattern(parsedRule);
