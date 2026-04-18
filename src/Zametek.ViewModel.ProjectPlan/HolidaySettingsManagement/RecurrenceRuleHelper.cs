@@ -19,63 +19,76 @@ namespace Zametek.ViewModel.ProjectPlan
                 string posText = JoinWithAnd(model.BySetPos.Select(FormatOrdinal));
                 string dayText = JoinWithAnd(model.ByDay.Select(ToDayName));
 
-                sb.Append($" on the {posText} {dayText}");
+                sb.Append(
+                    string.Format(
+                        Resource.ProjectPlan.Holidays.Holiday_BySetPosAndByDay,
+                        posText,
+                        dayText)); 
             }
             else if (model.ByDay.Count > 0)
             {
-                var dayText = JoinWithAnd(model.ByDay.Select(ToDayName));
-                sb.Append(model.Frequency is RecurrenceFrequency.Monthly or RecurrenceFrequency.Yearly
-                    ? $" on {dayText}"
-                    : $" on {dayText}");
+                string dayText = JoinWithAnd(model.ByDay.Select(ToDayName));
+
+                sb.Append(
+                    string.Format(
+                        Resource.ProjectPlan.Holidays.Holiday_ByDay,
+                        dayText));
             }
             // Handle Monthly/Yearly Days (BYMONTHDAY) - e.g., "the 15th day"
             else if (model.ByMonthDay.Count > 0)
             {
-                List<string> days = model.ByMonthDay.Select(d => FormatOrdinal(d)).ToList();
-                string daySuffix = days.Count > 1 ? "days" : "day";
-                sb.Append($" on the {JoinWithAnd(days)} {daySuffix}");
+                List<string> days = [.. model.ByMonthDay.Select(FormatOrdinal)];
+
+                string daySuffix = days.Count > 1
+                    ? Resource.ProjectPlan.Holidays.Holiday_Days
+                    : Resource.ProjectPlan.Holidays.Holiday_Day;
+
+                sb.Append(
+                    string.Format(
+                        Resource.ProjectPlan.Holidays.Holiday_ByMonthDay,
+                        JoinWithAnd(days),
+                        daySuffix));
             }
 
             // Handle Months (BYMONTH)
-            string byMonthText = model.ByMonth.Count > 0
-                ? " in " + JoinWithAnd(model.ByMonth.Select(ToMonthName))
-                : string.Empty;
+            string byMonthText = string.Empty;
+            
+            if (model.ByMonth.Count > 0)
+            {
+                byMonthText = string.Format(
+                    Resource.ProjectPlan.Holidays.Holiday_ByMonth,
+                    JoinWithAnd(model.ByMonth.Select(ToMonthName)));
+            }
 
             sb.Append(byMonthText);
 
-
-
-
-
-
-
-
-
-
-
+            // Handle Week Start (WKST)
             if (model.WeekStart.HasValue)
             {
-
-                sb.Append(" with week starting ").Append(ToDayName(model.WeekStart.Value));
+                sb.Append(
+                    string.Format(
+                        Resource.ProjectPlan.Holidays.Holiday_WeekStart,
+                        ToDayName(model.WeekStart.Value)));
             }
 
+            // Handle End Condition (COUNT or UNTIL)
             if (model.Count.HasValue)
             {
-
-                sb.Append($" for {model.Count.Value} occurrences");
+                sb.Append(
+                    string.Format(
+                        Resource.ProjectPlan.Holidays.Holiday_Count,
+                        model.Count.Value));
             }
             else if (model.Until.HasValue)
             {
-
-                sb.Append(" until ").Append(model.Until.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+                sb.Append(
+                    string.Format(
+                        Resource.ProjectPlan.Holidays.Holiday_Until,
+                        model.Until.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
             }
 
             return sb.ToString();
         }
-
-
-
-
 
         public static string ToDayName(RecurrenceDay day) => day switch
         {

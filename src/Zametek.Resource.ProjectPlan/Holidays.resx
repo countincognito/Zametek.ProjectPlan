@@ -204,4 +204,25 @@
   <data name="Holiday_JoinWithAnd" xml:space="preserve">
     <value>{0} and {1}</value>
   </data>
+  <data name="Holiday_Until" xml:space="preserve">
+    <value> until {0}</value>
+  </data>
+  <data name="Holiday_Count" xml:space="preserve">
+    <value> for {0} occurrences</value>
+  </data>
+  <data name="Holiday_WeekStart" xml:space="preserve">
+    <value> with week starting {0}</value>
+  </data>
+  <data name="Holiday_ByMonth" xml:space="preserve">
+    <value> in {0}</value>
+  </data>
+  <data name="Holiday_BySetPosAndByDay" xml:space="preserve">
+    <value> on the {0} {1}</value>
+  </data>
+  <data name="Holiday_ByDay" xml:space="preserve">
+    <value> on {0}</value>
+  </data>
+  <data name="Holiday_ByMonthDay" xml:space="preserve">
+    <value> on the {0} {1}</value>
+  </data>
 </root>

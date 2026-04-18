@@ -61,6 +61,51 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to  on {0}.
+        /// </summary>
+        public static string Holiday_ByDay {
+            get {
+                return ResourceManager.GetString("Holiday_ByDay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  in {0}.
+        /// </summary>
+        public static string Holiday_ByMonth {
+            get {
+                return ResourceManager.GetString("Holiday_ByMonth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  on the {0} {1}.
+        /// </summary>
+        public static string Holiday_ByMonthDay {
+            get {
+                return ResourceManager.GetString("Holiday_ByMonthDay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  on the {0} {1}.
+        /// </summary>
+        public static string Holiday_BySetPosAndByDay {
+            get {
+                return ResourceManager.GetString("Holiday_BySetPosAndByDay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  for {0} occurrences.
+        /// </summary>
+        public static string Holiday_Count {
+            get {
+                return ResourceManager.GetString("Holiday_Count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to day.
         /// </summary>
         public static string Holiday_Day {
@@ -223,6 +268,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to  until {0}.
+        /// </summary>
+        public static string Holiday_Until {
+            get {
+                return ResourceManager.GetString("Holiday_Until", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to week.
         /// </summary>
         public static string Holiday_Week {
@@ -300,6 +354,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Holiday_Weeks {
             get {
                 return ResourceManager.GetString("Holiday_Weeks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  with week starting {0}.
+        /// </summary>
+        public static string Holiday_WeekStart {
+            get {
+                return ResourceManager.GetString("Holiday_WeekStart", resourceCulture);
             }
         }
         
