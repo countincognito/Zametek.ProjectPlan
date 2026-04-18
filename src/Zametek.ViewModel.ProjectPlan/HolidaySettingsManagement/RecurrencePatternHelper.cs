@@ -11,8 +11,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 throw new ArgumentException("Pattern cannot be null or empty.", nameof(pattern));
 
             pattern = pattern.Trim();
-            if (pattern.StartsWith("RRULE:", StringComparison.OrdinalIgnoreCase))
-                pattern = pattern["RRULE:".Length..];
+            //if (pattern.StartsWith("RRULE:", StringComparison.OrdinalIgnoreCase))
+            //    pattern = pattern["RRULE:".Length..];
 
             var tokens = pattern.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -84,7 +84,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (model.BySetPos.Count > 0)
                 parts.Add($"BYSETPOS={string.Join(",", model.BySetPos)}");
 
-            return "RRULE:" + string.Join(";", parts);
+            return string.Join(";", parts);
         }
 
         static RecurrenceFrequency ParseFrequency(string value) => value.ToUpperInvariant() switch

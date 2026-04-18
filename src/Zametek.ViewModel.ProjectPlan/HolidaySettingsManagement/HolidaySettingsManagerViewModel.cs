@@ -8,6 +8,7 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -244,7 +245,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 var editViewModel = new HolidayEditViewModel();
 
 
-                editViewModel.LoadFromPattern(selectedHoliday.RecurrencePattern.ToString());
+                editViewModel.LoadFromPattern(selectedHoliday.RecurrencePattern);
 
 
 
@@ -339,7 +340,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
                             if (updateModel.IsRecurrencePatternEdited)
                             {
-                                holiday.RecurrencePattern = updateModel.RecurrencePattern;
+                                holiday.RecurrenceRule = RecurrencePatternHelper.Parse(updateModel.RecurrencePattern);
                             }
 
                             editable.EndEdit();

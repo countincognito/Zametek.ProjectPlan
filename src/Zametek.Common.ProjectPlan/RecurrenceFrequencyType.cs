@@ -3,7 +3,6 @@
     [Serializable]
     public enum RecurrenceFrequencyType
     {
-        None,
         Secondly,
         Minutely,
         Hourly,

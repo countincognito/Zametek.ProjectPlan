@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -11,7 +12,9 @@ namespace Zametek.Contract.ProjectPlan
 
         string Notes { get; set; }
 
-        string RecurrencePattern { get; set; }
+        RecurrenceRuleModel? RecurrenceRule { get; set; }
+
+        string RecurrencePattern { get; }
 
         string RecurrencePatternDisplay { get; }
 

@@ -20,9 +20,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         [Theory]
         [MemberData(nameof(PhraseData))]
-        public void ToEnglishPhrase_ConvertsModelToText(RecurrenceRuleModel model, string expected)
+        public void ToPhrase_ConvertsModelToText(RecurrenceRuleModel model, string expected)
         {
-            var actual = RecurrenceRuleHelper.ToEnglishPhrase(model);
+            var actual = RecurrenceRuleHelper.ToPhrase(model);
             Assert.Equal(expected, actual);
         }
     }

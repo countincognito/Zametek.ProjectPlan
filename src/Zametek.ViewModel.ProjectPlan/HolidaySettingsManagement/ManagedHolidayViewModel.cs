@@ -26,7 +26,7 @@ namespace Zametek.ViewModel.ProjectPlan
             Id = holiday.Id;
             m_Name = holiday.Name;
             m_Notes = holiday.Notes;
-            m_RecurrencePattern = holiday.RecurrencePattern;
+            m_RecurrenceRule = RecurrencePatternHelper.Parse(holiday.RecurrencePattern);
             m_IsEditMuted = false;
         }
 
@@ -58,20 +58,40 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_Notes, value);
         }
 
-        private string m_RecurrencePattern;
-        public string RecurrencePattern
+        private RecurrenceRuleModel? m_RecurrenceRule;
+        public RecurrenceRuleModel? RecurrenceRule
         {
-            get => m_RecurrencePattern;
+            get => m_RecurrenceRule;
             set
             {
-                this.RaiseAndSetIfChanged(ref m_RecurrencePattern, value);
+                this.RaiseAndSetIfChanged(ref m_RecurrenceRule, value);
+                this.RaisePropertyChanged(nameof(RecurrencePattern));
                 this.RaisePropertyChanged(nameof(RecurrencePatternDisplay));
+            }
+        }
+
+        public string RecurrencePattern
+        {
+            get
+            {
+                if (RecurrenceRule is null)
+                {
+                    return string.Empty;
+                }
+                return RecurrencePatternHelper.ToPattern(RecurrenceRule);
             }
         }
 
         public string RecurrencePatternDisplay
         {
-            get => RRuleLanguageParser.ToText(m_RecurrencePattern);
+            get
+            {
+                if (RecurrenceRule is null)
+                {
+                    return string.Empty;
+                }
+                return RecurrenceRuleHelper.ToPhrase(RecurrenceRule);
+            }
         }
 
         public bool IsEditing => m_isDirty;

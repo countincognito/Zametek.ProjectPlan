@@ -143,7 +143,7 @@ namespace Zametek.View.ProjectPlan
             new FuncValueConverter<RecurrenceFrequencyType, string>(
                 x => x switch
                 {
-                    RecurrenceFrequencyType.None => "NONE",//Enums.Enum_RecurrenceFrequencyType_None,
+                    //RecurrenceFrequencyType.None => "NONE",//Enums.Enum_RecurrenceFrequencyType_None,
                     //RecurrenceFrequencyType.Secondly => "SECONDLY",//Enums.Enum_RecurrenceFrequencyType_Secondly,
                     //RecurrenceFrequencyType.Minutely => "MINUTELY",//Enums.Enum_RecurrenceFrequencyType_Minutely,
                     //RecurrenceFrequencyType.Hourly => "HOURLY",//Enums.Enum_RecurrenceFrequencyType_Hourly,
@@ -156,7 +156,7 @@ namespace Zametek.View.ProjectPlan
 
 
 
-        
+
 
 
     }

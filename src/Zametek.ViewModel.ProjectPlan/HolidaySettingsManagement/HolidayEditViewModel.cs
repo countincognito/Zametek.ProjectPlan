@@ -25,7 +25,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public HolidayEditViewModel()
         {
             m_StartDateTime = null;
-            m_RecurrenceFrequency = RecurrenceFrequencyType.None;
+            m_RecurrenceFrequency = RecurrenceFrequencyType.Daily;
             m_Interval = 1;
             m_IsEndNever = true;
             m_IsEndUntil = false;
@@ -200,11 +200,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         void RebuildRecurrencePattern()
         {
-            if (RecurrenceFrequency == RecurrenceFrequencyType.None)
-            {
-                RecurrencePattern = string.Empty;
-                return;
-            }
+            //if (RecurrenceFrequency == RecurrenceFrequencyType.Daily)
+            //{
+            //    RecurrencePattern = string.Empty;
+            //    return;
+            //}
 
             FrequencyType frequencyType = FrequencyTypeToIcal(RecurrenceFrequency);
 
@@ -793,7 +793,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public string RecurrencePatternDisplay
         {
-            get => RRuleLanguageParser.ToText(m_RecurrencePattern);
+            get => RecurrenceRuleHelper.ToPhrase(RecurrencePatternHelper.Parse(RecurrencePattern));
         }
 
 
@@ -808,12 +808,12 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             var pattern = new RecurrencePattern(recurrencePattern);
 
-            if (pattern == null)
-            {
+            //if (pattern == null)
+            //{
 
-                RecurrenceFrequency = RecurrenceFrequencyType.None;
-                return;
-            }
+            //    RecurrenceFrequency = RecurrenceFrequencyType.None;
+            //    return;
+            //}
 
             RecurrenceFrequency = pattern.Frequency switch
             {
@@ -824,7 +824,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 FrequencyType.Weekly => RecurrenceFrequencyType.Weekly,
                 FrequencyType.Monthly => RecurrenceFrequencyType.Monthly,
                 FrequencyType.Yearly => RecurrenceFrequencyType.Yearly,
-                _ => RecurrenceFrequencyType.None
+                _ => RecurrenceFrequencyType.Daily
             };
 
             Interval = pattern.Interval <= 0 ? 1 : pattern.Interval;

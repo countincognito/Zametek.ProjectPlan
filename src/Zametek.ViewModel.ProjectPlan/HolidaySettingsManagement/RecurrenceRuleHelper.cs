@@ -6,7 +6,7 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     public static class RecurrenceRuleHelper
     {
-        public static string ToEnglishPhrase(RecurrenceRuleModel model)
+        public static string ToPhrase(RecurrenceRuleModel model)
         {
             var sb = new StringBuilder();
 

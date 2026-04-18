@@ -56,7 +56,7 @@
 			<!-- End -->
 
 			<DockPanel DockPanel.Dock="Left"
-					   IsEnabled="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsNotRecurrenceFrequencyTypeMatch}, ConverterParameter={x:Static common:RecurrenceFrequencyType.None}, Mode=OneWay}">
+					   >
 				<Label DockPanel.Dock="Top"
 					   VerticalAlignment="Center"
 					   Content="Ends:"/>
@@ -128,12 +128,12 @@
 						Margin="0,0,11,0">
 				<TextBlock>Recurrence Pattern</TextBlock>
 
-				<RadioButton Margin="0,7,0,0"
+				<!--<RadioButton Margin="0,7,0,0"
 							 GroupName="RecurrencePattern"
 							 Content="None"
 							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyTypeMatch}, ConverterParameter={x:Static common:RecurrenceFrequencyType.None}, Mode=OneWay}"
 							 Command="{Binding Path=ChangeRecurrenceFrequencyCommand, Mode=OneWay}"
-							 CommandParameter="{x:Static common:RecurrenceFrequencyType.None}"/>
+							 CommandParameter="{x:Static common:RecurrenceFrequencyType.None}"/>-->
 
 				<RadioButton Margin="0,7,0,0"
 							 GroupName="RecurrencePattern"
