@@ -122,10 +122,10 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             var formats = new[]
             {
-            "yyyyMMdd'T'HHmmss'Z'",
-            "yyyyMMdd'T'HHmmss",
-            "yyyyMMdd"
-        };
+                "yyyyMMdd'T'HHmmss'Z'",
+                "yyyyMMdd'T'HHmmss",
+                "yyyyMMdd"
+            };
 
             if (DateTime.TryParseExact(value, formats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var dt))
                 return DateTime.SpecifyKind(dt, DateTimeKind.Utc);

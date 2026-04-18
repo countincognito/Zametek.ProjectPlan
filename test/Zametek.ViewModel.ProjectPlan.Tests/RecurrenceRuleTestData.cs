@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
@@ -9,6 +8,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     {
         public static readonly List<string> InputPatterns =
         [
+            "RRULE:FREQ=SECONDLY",
+            "RRULE:FREQ=MINUTELY;INTERVAL=10",
+            "RRULE:FREQ=HOURLY;INTERVAL=3;COUNT=4",
             "RRULE:FREQ=DAILY",
             "RRULE:FREQ=DAILY;INTERVAL=2",
             "RRULE:FREQ=WEEKLY",
@@ -20,7 +22,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             "RRULE:FREQ=MONTHLY;BYDAY=MO",
             "RRULE:FREQ=MONTHLY;BYDAY=MO;BYSETPOS=1",
             "RRULE:FREQ=MONTHLY;BYMONTHDAY=-1",
+            "RRULE:FREQ=MONTHLY;BYDAY=FR;BYSETPOS=-1",
             "RRULE:FREQ=MONTHLY;INTERVAL=5;BYDAY=SU;BYSETPOS=4",
+            "RRULE:FREQ=MONTHLY;BYDAY=MO,FR;BYSETPOS=2,3",
+            "RRULE:FREQ=MONTHLY;INTERVAL=3;UNTIL=20251231T000000Z;BYMONTHDAY=10",
+            "RRULE:FREQ=MONTHLY;BYMONTHDAY=1,2,3,4,11,21,22,23",
             "RRULE:FREQ=YEARLY;BYMONTH=1",
             "RRULE:FREQ=YEARLY;BYMONTH=1,12;BYMONTHDAY=1",
             "RRULE:FREQ=YEARLY;BYMONTH=12;BYDAY=SU;BYSETPOS=-1",
@@ -30,11 +36,18 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             "RRULE:FREQ=DAILY;UNTIL=20261231T235959Z",
             "RRULE:FREQ=WEEKLY;WKST=MO;BYDAY=TU,TH",
             "RRULE:FREQ=MONTHLY;INTERVAL=3;BYMONTHDAY=1,15",
-            "RRULE:FREQ=YEARLY;INTERVAL=2;BYMONTH=4;BYDAY=SU;BYSETPOS=2"
+            "RRULE:FREQ=YEARLY;INTERVAL=2;BYMONTH=4;BYDAY=SU;BYSETPOS=2",
+            "RRULE:FREQ=YEARLY;BYMONTH=4;BYMONTHDAY=10",
+            "RRULE:FREQ=YEARLY;BYMONTH=1,7;BYMONTHDAY=1,15",
+            //"RRULE:FREQ=DAILY;BYHOUR=10;BYMINUTE=30",
+            //"RRULE:FREQ=WEEKLY;BYDAY=1SU,2MO"
         ];
 
         public static readonly List<RecurrenceRuleModel> OutputModels =
         [
+            new() { Frequency = RecurrenceFrequency.Secondly },
+            new() { Frequency = RecurrenceFrequency.Minutely, Interval = 10 },
+            new() { Frequency = RecurrenceFrequency.Hourly, Interval = 3, Count = 4 },
             new() { Frequency = RecurrenceFrequency.Daily },
             new() { Frequency = RecurrenceFrequency.Daily, Interval = 2 },
             new() { Frequency = RecurrenceFrequency.Weekly },
@@ -46,7 +59,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             new() { Frequency = RecurrenceFrequency.Monthly, ByDay = [RecurrenceDay.MO] },
             new() { Frequency = RecurrenceFrequency.Monthly, ByDay = [RecurrenceDay.MO], BySetPos = [1] },
             new() { Frequency = RecurrenceFrequency.Monthly, ByMonthDay = [-1] },
+            new() { Frequency = RecurrenceFrequency.Monthly, ByDay = [RecurrenceDay.FR], BySetPos = [-1] },
             new() { Frequency = RecurrenceFrequency.Monthly, Interval = 5, ByDay = [RecurrenceDay.SU], BySetPos = [4]},
+            new() { Frequency = RecurrenceFrequency.Monthly, ByDay = [RecurrenceDay.MO, RecurrenceDay.FR], BySetPos = [2,3]},
+            new() { Frequency = RecurrenceFrequency.Monthly, Interval = 3, ByMonthDay = [10], Until = new DateTime(2025, 12, 31, 0, 0, 0, DateTimeKind.Utc) },
+            new() { Frequency = RecurrenceFrequency.Monthly, ByMonthDay = [1, 2, 3, 4, 11, 21, 22, 23] },
             new() { Frequency = RecurrenceFrequency.Yearly, ByMonth = [1] },
             new() { Frequency = RecurrenceFrequency.Yearly, ByMonth = [1, 12], ByMonthDay = [1] },
             new() { Frequency = RecurrenceFrequency.Yearly, ByMonth = [12], ByDay = [RecurrenceDay.SU], BySetPos = [-1] },
@@ -56,11 +73,16 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             new() { Frequency = RecurrenceFrequency.Daily, Until = new DateTime(2026, 12, 31, 23, 59, 59, DateTimeKind.Utc) },
             new() { Frequency = RecurrenceFrequency.Weekly, ByDay = [RecurrenceDay.TU, RecurrenceDay.TH], WeekStart = RecurrenceDay.MO },
             new() { Frequency = RecurrenceFrequency.Monthly, Interval = 3, ByMonthDay = [1, 15] },
-            new() { Frequency = RecurrenceFrequency.Yearly, Interval = 2, ByMonth = [4], ByDay = [RecurrenceDay.SU], BySetPos = [2] }
+            new() { Frequency = RecurrenceFrequency.Yearly, Interval = 2, ByMonth = [4], ByDay = [RecurrenceDay.SU], BySetPos = [2] },
+            new() { Frequency = RecurrenceFrequency.Yearly, ByMonth = [4], ByMonthDay = [10] },
+            new() { Frequency = RecurrenceFrequency.Yearly, ByMonth = [1,7], ByMonthDay = [1, 15] }
         ];
 
         public static readonly List<string> ExpectedEnglishPhrases =
         [
+            "every second",
+            "every 10 minutes",
+            "every 3 hours for 4 occurrences",
             "every day",
             "every 2 days",
             "every week",
@@ -72,7 +94,11 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             "every month on Monday",
             "every month on the 1st Monday",
             "every month on the last day",
+            "every month on the last Friday",
             "every 5 months on the 4th Sunday",
+            "every month on the 2nd and 3rd Monday and Friday",
+            "every 3 months on the 10th day until 2025-12-31",
+            "every month on the 1st, 2nd, 3rd, 4th, 11th, 21st, 22nd and 23rd days",
             "every year in January",
             "every year on the 1st day in January and December",
             "every year on the last Sunday in December",
@@ -82,7 +108,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             "every day until 2026-12-31",
             "every week on Tuesday and Thursday with week starting Monday",
             "every 3 months on the 1st and 15th days",
-            "every 2 years on the 2nd Sunday in April"
+            "every 2 years on the 2nd Sunday in April",
+            "every year on the 10th day in April",
+            "every year on the 1st and 15th days in January and July"
         ];
     }
 }
