@@ -844,6 +844,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Start Date.
+        /// </summary>
+        public static string Label_HolidayStartDate {
+            get {
+                return ResourceManager.GetString("Label_HolidayStartDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ID.
         /// </summary>
         public static string Label_Id {

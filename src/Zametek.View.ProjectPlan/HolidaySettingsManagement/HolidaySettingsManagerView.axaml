@@ -17,6 +17,7 @@
 	<UserControl.Resources>
 		<local:ManagedHolidaySortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
 		<local:ManagedHolidaySortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
+		<local:ManagedHolidaySortComparer x:Key="startDateTimeComparer" SortMemberPath="StartDateTime"/>
 		<local:ManagedHolidaySortComparer x:Key="recurrencePatternDisplayComparer" SortMemberPath="RecurrencePatternDisplay"/>
 		<local:ManagedHolidaySortComparer x:Key="notesSortComparer" SortMemberPath="Notes"/>
 	</UserControl.Resources>
@@ -93,6 +94,13 @@
 				<!--<Style Selector="DataGridCell:selected:pointerover:current:focus Grid.editable">
 					<Setter Property="Background" Value="Green"/>
 				</Style>-->
+
+				<Style Selector="TextBox.displayOnly">
+					<Setter Property="IsHitTestVisible" Value="False"/>
+					<Setter Property="IsReadOnly" Value="False"/>
+					<Setter Property="Background" Value="Transparent"/>
+					<Setter Property="BorderThickness" Value="0"/>
+				</Style>
 			</DataGrid.Styles>
 
 			<i:Interaction.Behaviors>
@@ -102,8 +110,6 @@
 											Command="{Binding Path=SetSelectedManagedHolidaysCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />
 				</ia:EventTriggerBehavior>
-
-				<!--<local:DataGridCacheScrollBehavior />-->
 			</i:Interaction.Behaviors>
 
 			<DataGrid.Columns>
@@ -128,6 +134,7 @@
 								<TextBlock VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
+										   Classes="displayOnly"
 										   Text="{Binding Path=Id, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
@@ -170,9 +177,72 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										CustomSortComparer="{StaticResource startDateTimeComparer}"
+										Width="120">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_HolidayStartDate}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_HolidayStartDate}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
 
+								<TextBox VerticalAlignment="Center"
+										 TextAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=StartDateTime, Mode=OneWay, StringFormat={}{0:d}}}"/>
+						
+								
+								<!--<TextBox VerticalAlignment="Center"
+										 TextAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Text="{Binding Path=StartDateTime, Mode=OneWay, StringFormat={}{0:d}}}"/>-->
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<CalendarDatePicker SelectedDate="{Binding Path=StartDateTime, Mode=TwoWay}"
+													Margin="0"
+													Padding="3"
+													Focusable="True"
+													IsTodayHighlighted="True"
+													VerticalAlignment="Center"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
+				</DataGridTemplateColumn>
 
-
+				
+				
+				
+				
+				
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
@@ -193,13 +263,12 @@
 								<TextBlock VerticalAlignment="Center"
 										   Margin="0"
 										   Padding="3"
+										   Classes="displayOnly"
 										   Text="{Binding Path=RecurrencePatternDisplay, Mode=OneWay}"/>
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
-
-
 
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"

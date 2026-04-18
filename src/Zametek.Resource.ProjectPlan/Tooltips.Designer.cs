@@ -259,6 +259,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to  Start Date .
+        /// </summary>
+        public static string ToolTip_HolidayStartDate {
+            get {
+                return ResourceManager.GetString("ToolTip_HolidayStartDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Identifier.
         /// </summary>
         public static string ToolTip_Id {

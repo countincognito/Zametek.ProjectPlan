@@ -9,6 +9,8 @@
 
         public string Notes { get; init; } = string.Empty;
 
+        public DateTimeOffset? StartDateTime { get; init; }
+
         public string RecurrencePattern { get; init; } = string.Empty;
     }
 }

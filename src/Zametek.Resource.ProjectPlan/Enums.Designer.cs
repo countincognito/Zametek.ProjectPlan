@@ -295,6 +295,42 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Daily.
+        /// </summary>
+        public static string Enum_RecurrenceFrequencyType_Daily {
+            get {
+                return ResourceManager.GetString("Enum_RecurrenceFrequencyType_Daily", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Monthly.
+        /// </summary>
+        public static string Enum_RecurrenceFrequencyType_Monthly {
+            get {
+                return ResourceManager.GetString("Enum_RecurrenceFrequencyType_Monthly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Weekly.
+        /// </summary>
+        public static string Enum_RecurrenceFrequencyType_Weekly {
+            get {
+                return ResourceManager.GetString("Enum_RecurrenceFrequencyType_Weekly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Yearly.
+        /// </summary>
+        public static string Enum_RecurrenceFrequencyType_Yearly {
+            get {
+                return ResourceManager.GetString("Enum_RecurrenceFrequencyType_Yearly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Combined.
         /// </summary>
         public static string Enum_ScheduleMode_Combined {

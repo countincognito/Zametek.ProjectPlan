@@ -14,6 +14,8 @@ namespace Zametek.Contract.ProjectPlan
 
         RecurrenceRuleModel? RecurrenceRule { get; set; }
 
+        DateTime? StartDateTime { get; set; }
+
         string RecurrencePattern { get; }
 
         string RecurrencePatternDisplay { get; }

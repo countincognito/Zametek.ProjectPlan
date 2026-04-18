@@ -270,4 +270,7 @@
   <data name="ToolTip_HolidayRecurrencePatternDisplay" xml:space="preserve">
     <value>Non-Working Days</value>
   </data>
+  <data name="ToolTip_HolidayStartDate" xml:space="preserve">
+    <value> Start Date </value>
+  </data>
 </root>

@@ -303,4 +303,16 @@
   <data name="Enum_TrackedMetric_None" xml:space="preserve">
     <value>None</value>
   </data>
+  <data name="Enum_RecurrenceFrequencyType_Daily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="Enum_RecurrenceFrequencyType_Weekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
+  <data name="Enum_RecurrenceFrequencyType_Monthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="Enum_RecurrenceFrequencyType_Yearly" xml:space="preserve">
+    <value>Yearly</value>
+  </data>
 </root>

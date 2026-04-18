@@ -642,4 +642,7 @@
   <data name="Label_InsertManagedActivity" xml:space="preserve">
     <value>Insert</value>
   </data>
+  <data name="Label_HolidayStartDate" xml:space="preserve">
+    <value>Start Date</value>
+  </data>
 </root>

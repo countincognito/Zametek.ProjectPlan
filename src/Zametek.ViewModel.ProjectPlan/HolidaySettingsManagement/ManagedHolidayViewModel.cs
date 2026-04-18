@@ -11,6 +11,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly IHolidaySettingsManagerViewModel m_HolidaySettingsManagerViewModel;
+        private readonly IDateTimeCalculator m_DateTimeCalculator;
 
         #endregion
 
@@ -18,15 +19,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ManagedHolidayViewModel(
             IHolidaySettingsManagerViewModel holidaySettingsManagerViewModel,
-            HolidayModel holiday)
+            HolidayModel holiday,
+            IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(holidaySettingsManagerViewModel);
             ArgumentNullException.ThrowIfNull(holiday);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             m_HolidaySettingsManagerViewModel = holidaySettingsManagerViewModel;
+            m_DateTimeCalculator = dateTimeCalculator;
             Id = holiday.Id;
             m_Name = holiday.Name;
             m_Notes = holiday.Notes;
             m_RecurrenceRule = RecurrencePatternHelper.ToRule(holiday.RecurrencePattern);
+            m_StartDateTime = holiday.StartDateTime;
             m_IsEditMuted = false;
         }
 
@@ -70,6 +75,19 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private DateTimeOffset? m_StartDateTime;
+        public DateTime? StartDateTime
+        {
+            get => m_StartDateTime?.DateTime;
+            set
+            {
+                // Convert to local now using TimeProvider as we do not know
+                // if the input is provided as just a datetime from XAML.
+                DateTimeOffset? input = value is null ? null : m_DateTimeCalculator.GetLocalNow(value.Value);
+                this.RaiseAndSetIfChanged(ref m_StartDateTime, input);
+            }
+        }
+
         public string RecurrencePattern
         {
             get
@@ -103,6 +121,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Id = Id,
                 Name = Name,
                 Notes = Notes,
+                StartDateTime = StartDateTime,
                 RecurrencePattern = RecurrencePattern,
             };
         }

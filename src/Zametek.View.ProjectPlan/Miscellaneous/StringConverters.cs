@@ -137,27 +137,18 @@ namespace Zametek.View.ProjectPlan
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
 
-
-
         public static readonly IValueConverter RecurrenceFrequencyTypeValue =
             new FuncValueConverter<RecurrenceFrequencyType, string>(
                 x => x switch
                 {
-                    //RecurrenceFrequencyType.None => "NONE",//Enums.Enum_RecurrenceFrequencyType_None,
-                    //RecurrenceFrequencyType.Secondly => "SECONDLY",//Enums.Enum_RecurrenceFrequencyType_Secondly,
-                    //RecurrenceFrequencyType.Minutely => "MINUTELY",//Enums.Enum_RecurrenceFrequencyType_Minutely,
-                    //RecurrenceFrequencyType.Hourly => "HOURLY",//Enums.Enum_RecurrenceFrequencyType_Hourly,
-                    RecurrenceFrequencyType.Daily => "DAILY",//Enums.Enum_RecurrenceFrequencyType_Daily,
-                    RecurrenceFrequencyType.Weekly => "WEEKLY",//Enums.Enum_RecurrenceFrequencyType_Weekly,
-                    RecurrenceFrequencyType.Monthly => "MONTHLY",//Enums.Enum_RecurrenceFrequencyType_Monthly,
-                    RecurrenceFrequencyType.Yearly => "YEARLY",//Enums.Enum_RecurrenceFrequencyType_Yearly,
+                    //RecurrenceFrequencyType.Secondly => Enums.Enum_RecurrenceFrequencyType_Secondly,
+                    //RecurrenceFrequencyType.Minutely => Enums.Enum_RecurrenceFrequencyType_Minutely,
+                    //RecurrenceFrequencyType.Hourly => Enums.Enum_RecurrenceFrequencyType_Hourly,
+                    RecurrenceFrequencyType.Daily => Enums.Enum_RecurrenceFrequencyType_Daily,
+                    RecurrenceFrequencyType.Weekly => Enums.Enum_RecurrenceFrequencyType_Weekly,
+                    RecurrenceFrequencyType.Monthly => Enums.Enum_RecurrenceFrequencyType_Monthly,
+                    RecurrenceFrequencyType.Yearly => Enums.Enum_RecurrenceFrequencyType_Yearly,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
-
-
-
-
-
-
     }
 }

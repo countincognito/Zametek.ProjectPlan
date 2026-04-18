@@ -13,6 +13,8 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
+        private readonly IDateTimeCalculator m_DateTimeCalculator;
+
         private readonly IDisposable? m_ReviseRecurrencePattern01Sub;
         private readonly IDisposable? m_ReviseRecurrencePattern02Sub;
         private readonly IDisposable? m_ReviseRecurrencePattern03Sub;
@@ -22,9 +24,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public HolidayEditViewModel()
+        public HolidayEditViewModel(
+            IManagedHolidayViewModel managedHolidayViewModel,
+            IDateTimeCalculator dateTimeCalculator)
         {
-            m_StartDateTime = null;
+            ArgumentNullException.ThrowIfNull(managedHolidayViewModel);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            m_DateTimeCalculator = dateTimeCalculator;
+            m_StartDateTime = managedHolidayViewModel.StartDateTime;
+
+
             m_RecurrenceFrequency = RecurrenceFrequencyType.Daily;
             m_Interval = 1;
             m_IsEndNever = true;
@@ -162,6 +171,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     x => x.YearlyMonthSelection)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => RebuildRecurrencePattern());
+
+            LoadFromPattern(managedHolidayViewModel.RecurrencePattern);
         }
 
         #endregion
@@ -223,7 +234,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // End conditions
             if (IsEndUntil && Until.HasValue)
             {
-                pattern.Until = new CalDateTime(Until.Value, false);
+                pattern.Until = new CalDateTime(Until.Value.Date, false);
                 pattern.Count = null;
             }
             else if (IsEndCount && Count.HasValue)
@@ -503,11 +514,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-        private DateTime? m_StartDateTime;
+        private DateTimeOffset? m_StartDateTime;
         public DateTime? StartDateTime
         {
-            get => m_StartDateTime;
-            set => this.RaiseAndSetIfChanged(ref m_StartDateTime, value);
+            get => m_StartDateTime?.DateTime;
+            set
+            {
+                // Convert to local now using TimeProvider as we do not know
+                // if the input is provided as just a datetime from XAML.
+                DateTimeOffset? input = value is null ? null : m_DateTimeCalculator.GetLocalNow(value.Value);
+                this.RaiseAndSetIfChanged(ref m_StartDateTime, input);
+            }
         }
 
         private RecurrenceFrequencyType m_RecurrenceFrequency;
@@ -573,11 +590,17 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private DateTime? m_Until;
+        private DateTimeOffset? m_Until;
         public DateTime? Until
         {
-            get => m_Until;
-            set => this.RaiseAndSetIfChanged(ref m_Until, value);
+            get => m_Until?.DateTime;
+            set
+            {
+                // Convert to local now using TimeProvider as we do not know
+                // if the input is provided as just a datetime from XAML.
+                DateTimeOffset? input = value is null ? null : m_DateTimeCalculator.GetLocalNow(value.Value);
+                this.RaiseAndSetIfChanged(ref m_Until, input);
+            }
         }
 
         private int? m_Count;

@@ -8,7 +8,6 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -21,6 +20,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private HolidaySettingsModel m_Current;
 
         private readonly ICoreViewModel m_CoreViewModel;
+        private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
 
@@ -34,15 +34,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public HolidaySettingsManagerViewModel(
             ICoreViewModel coreViewModel,
+            IDateTimeCalculator dateTimeCalculator,
             ISettingService settingService,
             IDialogService dialogService)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             m_Lock = new();
             m_Current = new HolidaySettingsModel();
             m_CoreViewModel = coreViewModel;
+            m_DateTimeCalculator = dateTimeCalculator;
             m_SettingService = settingService;
             m_DialogService = dialogService;
             SelectedHolidays = new ConcurrentDictionary<int, IManagedHolidayViewModel>();
@@ -160,7 +163,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                 new HolidayModel
                                 {
                                     Id = holidayId,
-                                }));
+                                },
+                                m_DateTimeCalculator));
                     });
                 }
                 UpdateHolidaySettingsToCore();
@@ -242,10 +246,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
-                var editViewModel = new HolidayEditViewModel();
+                var editViewModel = new HolidayEditViewModel(selectedHoliday, m_DateTimeCalculator);
 
 
-                editViewModel.LoadFromPattern(selectedHoliday.RecurrencePattern);
+                //editViewModel.LoadFromPattern(selectedHoliday.RecurrencePattern);
 
 
 
@@ -290,6 +294,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         IsNameEdited = false,
                         Notes = selectedHoliday.Notes,
                         IsNotesEdited = false,
+                        StartDateTime = editViewModel.StartDateTime,
+                        IsStartDateTimeEdited = true,
                         RecurrencePattern = editViewModel.RecurrencePattern,
                         IsRecurrencePatternEdited = true,
                     };
@@ -338,6 +344,10 @@ namespace Zametek.ViewModel.ProjectPlan
                             {
                                 holiday.Notes = updateModel.Notes;
                             }
+                            if (updateModel.IsStartDateTimeEdited)
+                            {
+                                holiday.StartDateTime = updateModel.StartDateTime?.DateTime;
+                            }
                             if (updateModel.IsRecurrencePatternEdited)
                             {
                                 holiday.RecurrenceRule = RecurrencePatternHelper.ToRule(updateModel.RecurrencePattern);
@@ -362,6 +372,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Id = x.Id,
                         Name = x.Name,
                         Notes = x.Notes,
+                        StartDateTime = x.StartDateTime,
                         RecurrencePattern = x.RecurrencePattern,
                     })],
                 };
@@ -388,7 +399,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         holidays.Add(new ManagedHolidayViewModel(
                             this,
-                            holiday));
+                            holiday,
+                            m_DateTimeCalculator));
                     }
                 });
 
