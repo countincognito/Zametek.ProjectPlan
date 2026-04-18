@@ -793,7 +793,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public string RecurrencePatternDisplay
         {
-            get => RecurrenceRuleHelper.ToPhrase(RecurrencePatternHelper.Parse(RecurrencePattern));
+            get => RecurrenceRuleHelper.ToPhrase(RecurrencePatternHelper.ToRule(RecurrencePattern));
         }
 
 

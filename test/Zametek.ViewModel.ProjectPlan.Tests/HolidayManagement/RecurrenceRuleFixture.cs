@@ -4,7 +4,7 @@ using Zametek.Common.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
-    public static class RecurrenceRuleTestData
+    public static class RecurrenceRuleFixture
     {
         public static readonly List<string> InputPatterns =
         [

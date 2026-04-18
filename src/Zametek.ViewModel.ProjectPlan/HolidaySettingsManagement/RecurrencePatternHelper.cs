@@ -5,47 +5,77 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     public static class RecurrencePatternHelper
     {
-        public static RecurrenceRuleModel Parse(string pattern)
+        private const string c_FrequencyToken = "FREQ";
+        private const string c_IntervalToken = "INTERVAL";
+        private const string c_CountToken = "COUNT";
+        private const string c_UntilToken = "UNTIL";
+        private const string c_ByDayToken = "BYDAY";
+        private const string c_ByMonthDayToken = "BYMONTHDAY";
+        private const string c_ByMonthToken = "BYMONTH";
+        private const string c_BySetPosToken = "BYSETPOS";
+        private const string c_WeekStartToken = "WKST";
+
+        private const string c_FrequencySecondlyToken = "SECONDLY";
+        private const string c_FrequencyMinutelyToken = "MINUTELY";
+        private const string c_FrequencyHourlyToken = "HOURLY";
+        private const string c_FrequencyDailyToken = "DAILY";
+        private const string c_FrequencyWeeklyToken = "WEEKLY";
+        private const string c_FrequencyMonthlyToken = "MONTHLY";
+        private const string c_FrequencyYearlyToken = "YEARLY";
+
+        private const string c_DayMondayToken = "MO";
+        private const string c_DayTuesdayToken = "TU";
+        private const string c_DayWednesdayToken = "WE";
+        private const string c_DayThursdayToken = "TH";
+        private const string c_DayFridayToken = "FR";
+        private const string c_DaySaturdayToken = "SA";
+        private const string c_DaySundayToken = "SU";
+
+        public static RecurrenceRuleModel ToRule(string pattern)
         {
-            if (string.IsNullOrWhiteSpace(pattern))
-                throw new ArgumentException("Pattern cannot be null or empty.", nameof(pattern));
+            ArgumentException.ThrowIfNullOrWhiteSpace(pattern);
 
             pattern = pattern.Trim();
-            //if (pattern.StartsWith("RRULE:", StringComparison.OrdinalIgnoreCase))
-            //    pattern = pattern["RRULE:".Length..];
-
-            var tokens = pattern.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            string[] tokens = pattern.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var token in tokens)
+            foreach (string token in tokens)
             {
-                var idx = token.IndexOf('=');
-                if (idx <= 0 || idx == token.Length - 1)
-                    throw new FormatException($"Invalid RRULE part: '{token}'.");
+                int idx = token.IndexOf('=');
 
-                var key = token[..idx].Trim();
-                var value = token[(idx + 1)..].Trim();
+                if (idx <= 0
+                    || idx == token.Length - 1)
+                {
+                    throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidRRulePart, token));
+                }
+
+                string key = token[..idx].Trim();
+                string value = token[(idx + 1)..].Trim();
 
                 if (map.ContainsKey(key))
-                    throw new FormatException($"Duplicate RRULE part: '{key}'.");
+                {
+                    throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_DuplicateRRulePart, key));
+                }
 
                 map[key] = value;
             }
 
-            if (!map.TryGetValue("FREQ", out var freqValue))
-                throw new FormatException("RRULE must contain FREQ.");
+            if (!map.TryGetValue(c_FrequencyToken, out var freqValue))
+            {
+                throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_RRuleMustContain, c_FrequencyToken));
+            }
 
             var model = new RecurrenceRuleModel
             {
                 Frequency = ParseFrequency(freqValue),
-                Interval = map.TryGetValue("INTERVAL", out var intervalValue) ? ParsePositiveInt(intervalValue, "INTERVAL") : 1,
-                Count = map.TryGetValue("COUNT", out var countValue) ? ParsePositiveInt(countValue, "COUNT") : null,
-                Until = map.TryGetValue("UNTIL", out var untilValue) ? ParseUntil(untilValue) : null,
-                ByDay = map.TryGetValue("BYDAY", out var byDayValue) ? ParseDays(byDayValue) : [],
-                ByMonthDay = map.TryGetValue("BYMONTHDAY", out var byMonthDayValue) ? ParseIntList(byMonthDayValue, "BYMONTHDAY") : [],
-                ByMonth = map.TryGetValue("BYMONTH", out var byMonthValue) ? ParseIntList(byMonthValue, "BYMONTH") : [],
-                BySetPos = map.TryGetValue("BYSETPOS", out var bySetPosValue) ? ParseIntList(bySetPosValue, "BYSETPOS") : [],
-                WeekStart = map.TryGetValue("WKST", out var wkstValue) ? ParseDay(wkstValue) : null
+                Interval = map.TryGetValue(c_IntervalToken, out var intervalValue) ? ParsePositiveInt(intervalValue, c_IntervalToken) : 1,
+                Count = map.TryGetValue(c_CountToken, out var countValue) ? ParsePositiveInt(countValue, c_CountToken) : null,
+                Until = map.TryGetValue(c_UntilToken, out var untilValue) ? ParseUntil(untilValue) : null,
+                ByDay = map.TryGetValue(c_ByDayToken, out var byDayValue) ? ParseDays(byDayValue) : [],
+                ByMonthDay = map.TryGetValue(c_ByMonthDayToken, out var byMonthDayValue) ? ParseIntList(byMonthDayValue, c_ByMonthDayToken) : [],
+                ByMonth = map.TryGetValue(c_ByMonthToken, out var byMonthValue) ? ParseIntList(byMonthValue, c_ByMonthToken) : [],
+                BySetPos = map.TryGetValue(c_BySetPosToken, out var bySetPosValue) ? ParseIntList(bySetPosValue, c_BySetPosToken) : [],
+                WeekStart = map.TryGetValue(c_WeekStartToken, out var wkstValue) ? ParseDay(wkstValue) : null
             };
 
             ValidateModel(model);
@@ -57,128 +87,165 @@ namespace Zametek.ViewModel.ProjectPlan
             ValidateModel(model);
 
             var parts = new List<string>
-        {
-            $"FREQ={ToFreqToken(model.Frequency)}"
-        };
+            {
+                $@"{c_FrequencyToken}={ToFrequencyToken(model.Frequency)}"
+            };
 
             if (model.Interval != 1)
-                parts.Add($"INTERVAL={model.Interval}");
+            {
+                parts.Add($@"{c_IntervalToken}={model.Interval}");
+            }
 
-            if (model.Count is not null)
-                parts.Add($"COUNT={model.Count.Value}");
-            else if (model.Until is not null)
-                parts.Add($"UNTIL={FormatUntil(model.Until.Value)}");
+            if (model.Count.HasValue)
+            {
+                parts.Add($@"{c_CountToken}={model.Count.Value}");
+            }
+            else if (model.Until.HasValue)
+            {
+                parts.Add($@"{c_UntilToken}={FormatUntil(model.Until.Value)}");
+            }
 
             if (model.ByMonth.Count > 0)
-                parts.Add($"BYMONTH={string.Join(",", model.ByMonth)}");
+            {
+                parts.Add($@"{c_ByMonthToken}={string.Join(',', model.ByMonth)}");
+            }
 
             if (model.ByMonthDay.Count > 0)
-                parts.Add($"BYMONTHDAY={string.Join(",", model.ByMonthDay)}");
+            {
+                parts.Add($@"{c_ByMonthDayToken}={string.Join(',', model.ByMonthDay)}");
+            }
 
-            if (model.WeekStart is not null)
-                parts.Add($"WKST={model.WeekStart.Value}");
+            if (model.WeekStart.HasValue)
+            {
+                parts.Add($@"{c_WeekStartToken}={ToDayToken(model.WeekStart.Value)}");
+            }
 
             if (model.ByDay.Count > 0)
-                parts.Add($"BYDAY={string.Join(",", model.ByDay.Select(d => d.ToString()))}");
+            {
+                parts.Add($@"{c_ByDayToken}={string.Join(',', model.ByDay.Select(ToDayToken))}");
+            }
 
             if (model.BySetPos.Count > 0)
-                parts.Add($"BYSETPOS={string.Join(",", model.BySetPos)}");
+            {
+                parts.Add($@"{c_BySetPosToken}={string.Join(',', model.BySetPos)}");
+            }
 
-            return string.Join(";", parts);
+            return string.Join(';', parts);
         }
 
-        static RecurrenceFrequency ParseFrequency(string value) => value.ToUpperInvariant() switch
+        public static RecurrenceFrequency ParseFrequency(string value) => value.ToUpperInvariant() switch
         {
-            "SECONDLY" => RecurrenceFrequency.Secondly,
-            "MINUTELY" => RecurrenceFrequency.Minutely,
-            "HOURLY" => RecurrenceFrequency.Hourly,
-            "DAILY" => RecurrenceFrequency.Daily,
-            "WEEKLY" => RecurrenceFrequency.Weekly,
-            "MONTHLY" => RecurrenceFrequency.Monthly,
-            "YEARLY" => RecurrenceFrequency.Yearly,
-            _ => throw new FormatException($"Invalid FREQ value: '{value}'.")
+            c_FrequencySecondlyToken => RecurrenceFrequency.Secondly,
+            c_FrequencyMinutelyToken => RecurrenceFrequency.Minutely,
+            c_FrequencyHourlyToken => RecurrenceFrequency.Hourly,
+            c_FrequencyDailyToken => RecurrenceFrequency.Daily,
+            c_FrequencyWeeklyToken => RecurrenceFrequency.Weekly,
+            c_FrequencyMonthlyToken => RecurrenceFrequency.Monthly,
+            c_FrequencyYearlyToken => RecurrenceFrequency.Yearly,
+            _ => throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidFrequencyValue, value))
         };
 
-        static string ToFreqToken(RecurrenceFrequency frequency) => frequency switch
+        public static string ToFrequencyToken(RecurrenceFrequency frequency) => frequency switch
         {
-            RecurrenceFrequency.Secondly => "SECONDLY",
-            RecurrenceFrequency.Minutely => "MINUTELY",
-            RecurrenceFrequency.Hourly => "HOURLY",
-            RecurrenceFrequency.Daily => "DAILY",
-            RecurrenceFrequency.Weekly => "WEEKLY",
-            RecurrenceFrequency.Monthly => "MONTHLY",
-            RecurrenceFrequency.Yearly => "YEARLY",
-            _ => throw new InvalidOperationException("FREQ cannot be None.")
+            RecurrenceFrequency.Secondly => c_FrequencySecondlyToken,
+            RecurrenceFrequency.Minutely => c_FrequencyMinutelyToken,
+            RecurrenceFrequency.Hourly => c_FrequencyHourlyToken,
+            RecurrenceFrequency.Daily => c_FrequencyDailyToken,
+            RecurrenceFrequency.Weekly => c_FrequencyWeeklyToken,
+            RecurrenceFrequency.Monthly => c_FrequencyMonthlyToken,
+            RecurrenceFrequency.Yearly => c_FrequencyYearlyToken,
+            _ => throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidFrequencyValue, frequency))
         };
 
-        static int ParsePositiveInt(string value, string name)
+        public static RecurrenceDay ParseDay(string value) => value.ToUpperInvariant() switch
+        {
+            c_DayMondayToken => RecurrenceDay.MO,
+            c_DayTuesdayToken => RecurrenceDay.TU,
+            c_DayWednesdayToken => RecurrenceDay.WE,
+            c_DayThursdayToken => RecurrenceDay.TH,
+            c_DayFridayToken => RecurrenceDay.FR,
+            c_DaySaturdayToken => RecurrenceDay.SA,
+            c_DaySundayToken => RecurrenceDay.SU,
+            _ => throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidWeekdayValue, value))
+        };
+
+        public static string ToDayToken(RecurrenceDay day) => day switch
+        {
+            RecurrenceDay.MO => c_DayMondayToken,
+            RecurrenceDay.TU => c_DayTuesdayToken,
+            RecurrenceDay.WE => c_DayWednesdayToken,
+            RecurrenceDay.TH => c_DayThursdayToken,
+            RecurrenceDay.FR => c_DayFridayToken,
+            RecurrenceDay.SA => c_DaySaturdayToken,
+            RecurrenceDay.SU => c_DaySundayToken,
+            _ => throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidWeekdayValue, day))
+        };
+
+        private static int ParsePositiveInt(string value, string name)
         {
             if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result) || result <= 0)
-                throw new FormatException($"Invalid {name} value: '{value}'.");
+            {
+                throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidInputValue, name, value));
+            }
             return result;
         }
 
-        static DateTime ParseUntil(string value)
+        private static DateTime ParseUntil(string value)
         {
-            var formats = new[]
-            {
-                "yyyyMMdd'T'HHmmss'Z'",
-                "yyyyMMdd'T'HHmmss",
-                "yyyyMMdd"
-            };
+            string[] formats =
+            [
+                @"yyyyMMdd'T'HHmmss'Z'",
+                @"yyyyMMdd'T'HHmmss",
+                @"yyyyMMdd"
+            ];
 
             if (DateTime.TryParseExact(value, formats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var dt))
+            {
                 return DateTime.SpecifyKind(dt, DateTimeKind.Utc);
-
-            throw new FormatException($"Invalid UNTIL value: '{value}'.");
+            }
+            throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidInputValue, c_UntilToken, value));
         }
 
-        static string FormatUntil(DateTime value)
+        private static string FormatUntil(DateTime value)
         {
             var utc = value.Kind == DateTimeKind.Utc ? value : value.ToUniversalTime();
             return utc.ToString("yyyyMMdd'T'HHmmss'Z'", CultureInfo.InvariantCulture);
         }
 
-        static List<RecurrenceDay> ParseDays(string value) =>
-            value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                 .Select(ParseDay)
-                 .ToList();
+        private static List<RecurrenceDay> ParseDays(string value) =>
+            [.. value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(ParseDay)];
 
-        static RecurrenceDay ParseDay(string value) => value.ToUpperInvariant() switch
-        {
-            "MO" => RecurrenceDay.MO,
-            "TU" => RecurrenceDay.TU,
-            "WE" => RecurrenceDay.WE,
-            "TH" => RecurrenceDay.TH,
-            "FR" => RecurrenceDay.FR,
-            "SA" => RecurrenceDay.SA,
-            "SU" => RecurrenceDay.SU,
-            _ => throw new FormatException($"Invalid weekday value: '{value}'.")
-        };
-
-        static List<int> ParseIntList(string value, string name) =>
-            value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                 .Select(v =>
+        private static List<int> ParseIntList(string value, string name) =>
+            [.. value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(x =>
                  {
-                     if (!int.TryParse(v, NumberStyles.Integer, CultureInfo.InvariantCulture, out var n))
-                         throw new FormatException($"Invalid {name} value: '{v}'.");
-                     return n;
-                 })
-                 .ToList();
+                     if (!int.TryParse(x, NumberStyles.Integer, CultureInfo.InvariantCulture, out var output))
+                     {
+                         throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidInputValue, name, x));
+                     }
+                     return output;
+                 })];
 
-        static void ValidateModel(RecurrenceRuleModel model)
+        private static void ValidateModel(RecurrenceRuleModel model)
         {
-            //if (model.Frequency == RecurrenceFrequency.None)
-            //    throw new InvalidOperationException("Frequency must be set.");
-
             if (model.Interval <= 0)
-                throw new InvalidOperationException("Interval must be greater than zero.");
+            {
 
-            if (model.Count is not null && model.Count <= 0)
-                throw new InvalidOperationException("Count must be greater than zero.");
+                throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_MustBeGreaterThanZero, c_IntervalToken, model.Interval));
+            }
 
-            if (model.Count is not null && model.Until is not null)
-                throw new InvalidOperationException("COUNT and UNTIL cannot both be set.");
+            if (model.Count.HasValue
+                && model.Count <= 0)
+            {
+                throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_MustBeGreaterThanZero, c_CountToken, model.Count));
+            }
+
+            if (model.Count.HasValue
+                && model.Until.HasValue)
+            {
+
+                throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_CannotBothBeSet, c_CountToken, c_UntilToken));
+            }
         }
     }
 }

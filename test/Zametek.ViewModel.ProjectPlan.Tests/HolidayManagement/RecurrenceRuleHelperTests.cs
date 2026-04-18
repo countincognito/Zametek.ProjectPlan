@@ -10,9 +10,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             get
             {
                 var data = new TheoryData<RecurrenceRuleModel, string>();
-                for (var i = 0; i < RecurrenceRuleTestData.OutputModels.Count; i++)
+                for (var i = 0; i < RecurrenceRuleFixture.OutputModels.Count; i++)
                 {
-                    data.Add(RecurrenceRuleTestData.OutputModels[i], RecurrenceRuleTestData.ExpectedEnglishPhrases[i]);
+                    data.Add(RecurrenceRuleFixture.OutputModels[i], RecurrenceRuleFixture.ExpectedEnglishPhrases[i]);
                 }
                 return data;
             }

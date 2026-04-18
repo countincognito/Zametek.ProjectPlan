@@ -88,6 +88,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} and {1} cannot both be set.
+        /// </summary>
+        public static string Message_CannotBothBeSet {
+            get {
+                return ResourceManager.GetString("Message_CannotBothBeSet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot build arrow graph.
         /// </summary>
         public static string Message_CannotBuildArrowGraph {
@@ -241,6 +250,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Duplicate RRULE part: &apos;{0}&apos;.
+        /// </summary>
+        public static string Message_DuplicateRRulePart {
+            get {
+                return ResourceManager.GetString("Message_DuplicateRRulePart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select the properties to edit.
         /// </summary>
         public static string Message_EditActivities {
@@ -304,6 +322,42 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid Frequency value: &apos;{0}&apos;.
+        /// </summary>
+        public static string Message_InvalidFrequencyValue {
+            get {
+                return ResourceManager.GetString("Message_InvalidFrequencyValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid {0} value: &apos;{1}&apos;.
+        /// </summary>
+        public static string Message_InvalidInputValue {
+            get {
+                return ResourceManager.GetString("Message_InvalidInputValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid RRULE part: &apos;{0}&apos;.
+        /// </summary>
+        public static string Message_InvalidRRulePart {
+            get {
+                return ResourceManager.GetString("Message_InvalidRRulePart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid weekday value: &apos;{0}&apos;.
+        /// </summary>
+        public static string Message_InvalidWeekdayValue {
+            get {
+                return ResourceManager.GetString("Message_InvalidWeekdayValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to List of Edge IDs and Edges referenced by head Nodes do not match when building Arrow Graph.
         /// </summary>
         public static string Message_MismatchedEdgeIdsForHeadNodesInArrowGraph {
@@ -358,6 +412,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} must be greater than zero ({1}).
+        /// </summary>
+        public static string Message_MustBeGreaterThanZero {
+            get {
+                return ResourceManager.GetString("Message_MustBeGreaterThanZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Name already exists.
         /// </summary>
         public static string Message_NameAlreadyExists {
@@ -408,6 +471,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Message_ProjectUnsavedChanges {
             get {
                 return ResourceManager.GetString("Message_ProjectUnsavedChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RRule must contain &apos;{0}&apos;.
+        /// </summary>
+        public static string Message_RRuleMustContain {
+            get {
+                return ResourceManager.GetString("Message_RRuleMustContain", resourceCulture);
             }
         }
         

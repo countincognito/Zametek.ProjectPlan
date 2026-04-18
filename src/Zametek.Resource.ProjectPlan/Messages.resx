@@ -327,4 +327,28 @@
   <data name="Message_DefaultNewYearsDayName" xml:space="preserve">
     <value>New Year's Day</value>
   </data>
+  <data name="Message_InvalidRRulePart" xml:space="preserve">
+    <value>Invalid RRULE part: '{0}'</value>
+  </data>
+  <data name="Message_DuplicateRRulePart" xml:space="preserve">
+    <value>Duplicate RRULE part: '{0}'</value>
+  </data>
+  <data name="Message_RRuleMustContain" xml:space="preserve">
+    <value>RRule must contain '{0}'</value>
+  </data>
+  <data name="Message_InvalidFrequencyValue" xml:space="preserve">
+    <value>Invalid Frequency value: '{0}'</value>
+  </data>
+  <data name="Message_InvalidWeekdayValue" xml:space="preserve">
+    <value>Invalid weekday value: '{0}'</value>
+  </data>
+  <data name="Message_InvalidInputValue" xml:space="preserve">
+    <value>Invalid {0} value: '{1}'</value>
+  </data>
+  <data name="Message_MustBeGreaterThanZero" xml:space="preserve">
+    <value>{0} must be greater than zero ({1})</value>
+  </data>
+  <data name="Message_CannotBothBeSet" xml:space="preserve">
+    <value>{0} and {1} cannot both be set</value>
+  </data>
 </root>

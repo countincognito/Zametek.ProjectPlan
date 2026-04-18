@@ -11,9 +11,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             get
             {
                 var data = new TheoryData<string, RecurrenceRuleModel>();
-                for (var i = 0; i < RecurrenceRuleTestData.InputPatterns.Count; i++)
+                for (var i = 0; i < RecurrenceRuleFixture.InputPatterns.Count; i++)
                 {
-                    data.Add(RecurrenceRuleTestData.InputPatterns[i], RecurrenceRuleTestData.OutputModels[i]);
+                    data.Add(RecurrenceRuleFixture.InputPatterns[i], RecurrenceRuleFixture.OutputModels[i]);
                 }
                 return data;
             }
@@ -34,15 +34,15 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         [Theory]
         [MemberData(nameof(RoundTripData))]
-        public void Parse_ConvertsPatternToModel(string pattern, RecurrenceRuleModel expected)
+        public void RecurrencePatternHelper_GivenInputPattern_ThenReturnsExpectedModel(string pattern, RecurrenceRuleModel expected)
         {
-            var actual = RecurrencePatternHelper.Parse(pattern);
+            var actual = RecurrencePatternHelper.ToRule(pattern);
             CompareModels(actual, expected);
         }
 
         [Theory]
         [MemberData(nameof(RoundTripData))]
-        public void ToPattern_ConvertsModelToPattern(string expectedPattern, RecurrenceRuleModel model)
+        public void RecurrencePatternHelper_GivenInputModel_ThenReturnsExpectedPattern(string expectedPattern, RecurrenceRuleModel model)
         {
             string actual = RecurrencePatternHelper.ToPattern(model);
             actual.ShouldBe(expectedPattern);
@@ -50,14 +50,14 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         [Theory]
         [MemberData(nameof(RoundTripData))]
-        public void RoundTrip_PreservesModel(string pattern, RecurrenceRuleModel expected)
+        public void RecurrencePatternHelper_GivenInputPattern_ThenRoundTripPreservesModel(string pattern, RecurrenceRuleModel expected)
         {
-            RecurrenceRuleModel parsed = RecurrencePatternHelper.Parse(pattern);
-            string pattern2 = RecurrencePatternHelper.ToPattern(parsed);
-            RecurrenceRuleModel parsed2 = RecurrencePatternHelper.Parse(pattern2);
+            RecurrenceRuleModel parsedRule = RecurrencePatternHelper.ToRule(pattern);
+            string intermediatePattern = RecurrencePatternHelper.ToPattern(parsedRule);
+            RecurrenceRuleModel secondParsedRule = RecurrencePatternHelper.ToRule(intermediatePattern);
 
-            CompareModels(parsed, expected);
-            CompareModels(parsed2, parsed);
+            CompareModels(parsedRule, expected);
+            CompareModels(secondParsedRule, parsedRule);
         }
     }
 }

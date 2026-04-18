@@ -26,7 +26,7 @@ namespace Zametek.ViewModel.ProjectPlan
             Id = holiday.Id;
             m_Name = holiday.Name;
             m_Notes = holiday.Notes;
-            m_RecurrenceRule = RecurrencePatternHelper.Parse(holiday.RecurrencePattern);
+            m_RecurrenceRule = RecurrencePatternHelper.ToRule(holiday.RecurrencePattern);
             m_IsEditMuted = false;
         }
 

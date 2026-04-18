@@ -340,7 +340,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
                             if (updateModel.IsRecurrencePatternEdited)
                             {
-                                holiday.RecurrenceRule = RecurrencePatternHelper.Parse(updateModel.RecurrencePattern);
+                                holiday.RecurrenceRule = RecurrencePatternHelper.ToRule(updateModel.RecurrencePattern);
                             }
 
                             editable.EndEdit();
