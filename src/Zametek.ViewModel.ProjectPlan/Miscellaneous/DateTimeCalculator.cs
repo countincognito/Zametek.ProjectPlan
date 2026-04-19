@@ -288,7 +288,7 @@ namespace Zametek.ViewModel.ProjectPlan
             var searchStartCalDateTime = new CalDateTime(searchStartDateTime);
             var searchEndCalDateTime = new CalDateTime(searchFinishDateTime);
 
-            CalDateTime? startDateTime = null;
+            CalDateTime? startDateTime = searchStartCalDateTime;
 
             if (nonWorkingDayCalendarEvent.StartDateTime.HasValue)
             {
