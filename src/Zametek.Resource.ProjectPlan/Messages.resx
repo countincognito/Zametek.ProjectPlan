@@ -351,4 +351,7 @@
   <data name="Message_MustBeMinusOneOrGreaterThanZero" xml:space="preserve">
     <value>Value must be either -1 or greater than zero</value>
   </data>
+  <data name="Message_EditCustomCalendar" xml:space="preserve">
+    <value>Configure custom calendar</value>
+  </data>
 </root>

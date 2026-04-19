@@ -268,6 +268,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Configure custom calendar.
+        /// </summary>
+        public static string Message_EditCustomCalendar {
+            get {
+                return ResourceManager.GetString("Message_EditCustomCalendar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select the properties to edit.
         /// </summary>
         public static string Message_EditResources {

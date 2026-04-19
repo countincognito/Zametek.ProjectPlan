@@ -213,30 +213,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private async Task EditManagedHolidayAsync()
         {
-
-
-
-
-
-
-
-
-
-
-
             try
             {
-                //var editViewModel = new HolidayEditViewModel(m_CoreViewModel.WorkStreamSettings.WorkStreams);
-
-                //bool result = await m_DialogService.ShowContextAsync(
-                //    title: Resource.ProjectPlan.Titles.Title_EditResources,
-                //    header: string.Empty,
-                //    message: $@"**{Resource.ProjectPlan.Messages.Message_EditResources}**",
-                //    context: editViewModel,
-                //    markdown: true);
-
-
-
                 SelectedHolidays.TryGetValue(SelectedHolidays.Keys.First(), out IManagedHolidayViewModel? selectedHoliday);
 
                 if (selectedHoliday is null)
@@ -244,28 +222,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     return;
                 }
 
-
-
                 var editViewModel = new HolidayEditViewModel(selectedHoliday, m_DateTimeCalculator);
 
-
-                //editViewModel.LoadFromPattern(selectedHoliday.RecurrencePattern);
-
-
-
                 bool result = await m_DialogService.ShowContextAsync(
-                    title: "Calendar",
+                    title: Resource.ProjectPlan.Titles.Title_EditCustomCalendar,
                     header: string.Empty,
-                    message: "Calendar",
+                    message: $@"**{Resource.ProjectPlan.Messages.Message_EditCustomCalendar}**",
                     context: editViewModel,
                     markdown: true);
-
-
-
-
-
-
-
 
                 if (!result)
                 {
@@ -274,19 +238,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 lock (m_Lock)
                 {
-
-                    //if (resourceIds.Count == 0)
-                    //{
-                    //    return;
-                    //}
-
-                    //UpdateResourceModel updateModel = editViewModel.BuildUpdateModel();
-
-
-
-
-
-
                     var updateModel = new UpdateHolidayModel
                     {
                         Id = selectedHoliday.Id,
@@ -300,15 +251,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         IsRecurrencePatternEdited = true,
                     };
 
-
-
-
                     UpdateManagedHolidays([updateModel]);
-
-
-
-
-
                 }
                 UpdateHolidaySettingsToCore();
             }

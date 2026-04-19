@@ -1155,9 +1155,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 about.AppendLine($"{Resource.ProjectPlan.Labels.Label_Copyright}, {Resource.ProjectPlan.Labels.Label_Author}");
 
                 await m_DialogService.ShowInfoAsync(
-                    Resource.ProjectPlan.Titles.Title_ProjectPlan,
-                    Resource.ProjectPlan.Titles.Title_ProjectPlan,
-                    about.ToString(),
+                    title: Resource.ProjectPlan.Titles.Title_ProjectPlan,
+                    header: Resource.ProjectPlan.Titles.Title_ProjectPlan,
+                    height: double.NaN,
+                    width: 350,
+                    message: about.ToString(),
                     showMainPageLink: true);
             }
             catch (Exception ex)

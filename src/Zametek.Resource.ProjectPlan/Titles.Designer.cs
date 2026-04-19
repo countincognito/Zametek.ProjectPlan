@@ -106,6 +106,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edit Custom Calendar.
+        /// </summary>
+        public static string Title_EditCustomCalendar {
+            get {
+                return ResourceManager.GetString("Title_EditCustomCalendar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edit Resources.
         /// </summary>
         public static string Title_EditResources {

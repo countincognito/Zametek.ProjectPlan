@@ -189,4 +189,7 @@
   <data name="Title_HolidaySettingsView" xml:space="preserve">
     <value>Non-Working Day Settings</value>
   </data>
+  <data name="Title_EditCustomCalendar" xml:space="preserve">
+    <value>Edit Custom Calendar</value>
+  </data>
 </root>
