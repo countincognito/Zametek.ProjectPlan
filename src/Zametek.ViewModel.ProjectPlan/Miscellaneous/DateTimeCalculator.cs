@@ -22,7 +22,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly string s_DateTimeOffsetFormat = s_DateTimeFormat + (DateTimeFormatInfo.CurrentInfo.LongTimePattern.Contains('z') ? string.Empty : " zzz");
 
-        private static readonly HolidayModel s_WeekendRecurrenceCalendarEvent = new()
+        private static readonly HolidayModel s_WeekendCalendarEvent = new()
         {
             Id = 1,
             RecurrencePattern = "FREQ=WEEKLY;BYDAY=SA,SU",
@@ -99,7 +99,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                return AddNonWorkingDays(current, days, [s_WeekendRecurrenceCalendarEvent]);
+                return AddNonWorkingDays(current, days, [s_WeekendCalendarEvent]);
             }
         }
 
@@ -109,7 +109,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                return CountNonWorkingDays(current, toCompareWith, [s_WeekendRecurrenceCalendarEvent]);
+                return CountNonWorkingDays(current, toCompareWith, [s_WeekendCalendarEvent]);
             }
         }
 

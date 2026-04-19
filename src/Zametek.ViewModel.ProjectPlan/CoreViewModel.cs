@@ -1301,7 +1301,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
-                    IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                    //IsReadyToReviseTrackers = ReadyToRevise.Yes;
                 }
             }
         }
