@@ -23,19 +23,17 @@ namespace Zametek.ViewModel.ProjectPlan
         private const string c_FrequencyMonthlyToken = "MONTHLY";
         private const string c_FrequencyYearlyToken = "YEARLY";
 
-        private const string c_DayMondayToken = "MO";
-        private const string c_DayTuesdayToken = "TU";
-        private const string c_DayWednesdayToken = "WE";
-        private const string c_DayThursdayToken = "TH";
-        private const string c_DayFridayToken = "FR";
-        private const string c_DaySaturdayToken = "SA";
-        private const string c_DaySundayToken = "SU";
+        public const string DayMondayToken = "MO";
+        public const string DayTuesdayToken = "TU";
+        public const string DayWednesdayToken = "WE";
+        public const string DayThursdayToken = "TH";
+        public const string DayFridayToken = "FR";
+        public const string DaySaturdayToken = "SA";
+        public const string DaySundayToken = "SU";
 
-        public static RecurrenceRuleModel ToRule(string pattern)
+        public static RecurrenceRuleModel ToRule(string? pattern)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(pattern);
-
-            pattern = pattern.Trim();
+            pattern = pattern?.Trim() ?? string.Empty;
             string[] tokens = pattern.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -60,14 +58,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 map[key] = value;
             }
 
-            if (!map.TryGetValue(c_FrequencyToken, out var freqValue))
+            if (!map.TryGetValue(c_FrequencyToken, out var freqValue)
+                && !string.IsNullOrWhiteSpace(pattern))
             {
                 throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_RRuleMustContain, c_FrequencyToken));
             }
 
             var model = new RecurrenceRuleModel
             {
-                Frequency = ParseFrequency(freqValue),
+                Frequency = ParseFrequency(freqValue ?? string.Empty),
                 Interval = map.TryGetValue(c_IntervalToken, out var intervalValue) ? ParsePositiveInt(intervalValue, c_IntervalToken) : 1,
                 Count = map.TryGetValue(c_CountToken, out var countValue) ? ParsePositiveInt(countValue, c_CountToken) : null,
                 Until = map.TryGetValue(c_UntilToken, out var untilValue) ? ParseUntil(untilValue) : null,
@@ -84,6 +83,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public static string ToPattern(RecurrenceRuleModel model)
         {
+            if (model.Frequency == RecurrenceFrequency.None)
+            {
+                return string.Empty;
+            }
+
             ValidateModel(model);
 
             var parts = new List<string>
@@ -142,7 +146,19 @@ namespace Zametek.ViewModel.ProjectPlan
             c_FrequencyWeeklyToken => RecurrenceFrequency.Weekly,
             c_FrequencyMonthlyToken => RecurrenceFrequency.Monthly,
             c_FrequencyYearlyToken => RecurrenceFrequency.Yearly,
-            _ => throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidFrequencyValue, value))
+            _ => RecurrenceFrequency.None,
+        };
+
+        public static RecurrenceDay ParseDay(string value) => value.ToUpperInvariant() switch
+        {
+            DayMondayToken => RecurrenceDay.MO,
+            DayTuesdayToken => RecurrenceDay.TU,
+            DayWednesdayToken => RecurrenceDay.WE,
+            DayThursdayToken => RecurrenceDay.TH,
+            DayFridayToken => RecurrenceDay.FR,
+            DaySaturdayToken => RecurrenceDay.SA,
+            DaySundayToken => RecurrenceDay.SU,
+            _ => RecurrenceDay.MO,
         };
 
         public static string ToFrequencyToken(RecurrenceFrequency frequency) => frequency switch
@@ -157,28 +173,40 @@ namespace Zametek.ViewModel.ProjectPlan
             _ => throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidFrequencyValue, frequency))
         };
 
-        public static RecurrenceDay ParseDay(string value) => value.ToUpperInvariant() switch
-        {
-            c_DayMondayToken => RecurrenceDay.MO,
-            c_DayTuesdayToken => RecurrenceDay.TU,
-            c_DayWednesdayToken => RecurrenceDay.WE,
-            c_DayThursdayToken => RecurrenceDay.TH,
-            c_DayFridayToken => RecurrenceDay.FR,
-            c_DaySaturdayToken => RecurrenceDay.SA,
-            c_DaySundayToken => RecurrenceDay.SU,
-            _ => throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidWeekdayValue, value))
-        };
-
         public static string ToDayToken(RecurrenceDay day) => day switch
         {
-            RecurrenceDay.MO => c_DayMondayToken,
-            RecurrenceDay.TU => c_DayTuesdayToken,
-            RecurrenceDay.WE => c_DayWednesdayToken,
-            RecurrenceDay.TH => c_DayThursdayToken,
-            RecurrenceDay.FR => c_DayFridayToken,
-            RecurrenceDay.SA => c_DaySaturdayToken,
-            RecurrenceDay.SU => c_DaySundayToken,
-            _ => throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidWeekdayValue, day))
+            RecurrenceDay.MO => DayMondayToken,
+            RecurrenceDay.TU => DayTuesdayToken,
+            RecurrenceDay.WE => DayWednesdayToken,
+            RecurrenceDay.TH => DayThursdayToken,
+            RecurrenceDay.FR => DayFridayToken,
+            RecurrenceDay.SA => DaySaturdayToken,
+            RecurrenceDay.SU => DaySundayToken,
+            _ => DayMondayToken,
+        };
+
+        public static RecurrenceDay ToRecurrenceDay(DayOfWeek day) => day switch
+        {
+            DayOfWeek.Monday => RecurrenceDay.MO,
+            DayOfWeek.Tuesday => RecurrenceDay.TU,
+            DayOfWeek.Wednesday => RecurrenceDay.WE,
+            DayOfWeek.Thursday => RecurrenceDay.TH,
+            DayOfWeek.Friday => RecurrenceDay.FR,
+            DayOfWeek.Saturday => RecurrenceDay.SA,
+            DayOfWeek.Sunday => RecurrenceDay.SU,
+            _ => RecurrenceDay.MO,
+        };
+
+        public static DayOfWeek ToDayOfWeek(RecurrenceDay day) => day switch
+        {
+            RecurrenceDay.MO => DayOfWeek.Monday,
+            RecurrenceDay.TU => DayOfWeek.Tuesday,
+            RecurrenceDay.WE => DayOfWeek.Wednesday,
+            RecurrenceDay.TH => DayOfWeek.Thursday,
+            RecurrenceDay.FR => DayOfWeek.Friday,
+            RecurrenceDay.SA => DayOfWeek.Saturday,
+            RecurrenceDay.SU => DayOfWeek.Sunday,
+            _ => DayOfWeek.Monday,
         };
 
         private static int ParsePositiveInt(string value, string name)
@@ -230,7 +258,6 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             if (model.Interval <= 0)
             {
-
                 throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_MustBeGreaterThanZero, c_IntervalToken, model.Interval));
             }
 
@@ -243,7 +270,6 @@ namespace Zametek.ViewModel.ProjectPlan
             if (model.Count.HasValue
                 && model.Until.HasValue)
             {
-
                 throw new InvalidOperationException(string.Format(Resource.ProjectPlan.Messages.Message_CannotBothBeSet, c_CountToken, c_UntilToken));
             }
         }

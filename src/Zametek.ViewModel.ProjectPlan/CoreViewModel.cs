@@ -1285,12 +1285,24 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
+                    //// Filter out any recurrence patterns that
+                    //// represent every day.
+                    //HolidaySettingsModel holidaySettingsModel = value;
+                    //List<HolidayModel> validHolidays = [.. holidaySettingsModel.Holidays
+                    //    .Where(x =>
+                    //        !RecurrenceRuleHelper.IsRecurrenceRuleEveryDay(
+                    //            RecurrencePatternHelper.ToRule(x.RecurrencePattern)))];
+
+                    //holidaySettingsModel.Holidays.Clear();
+                    //holidaySettingsModel.Holidays.AddRange(validHolidays);
+
                     m_HolidaySettings = value;
                     m_DateTimeCalculator.SetNonWorkingDayRecurrencePatterns(
                         [.. m_HolidaySettings.Holidays.Select(x => x.RecurrencePattern)]);
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
+                    IsReadyToReviseTrackers = ReadyToRevise.Yes;
                 }
             }
         }

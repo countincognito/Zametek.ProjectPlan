@@ -3,7 +3,7 @@
     [Serializable]
     public record RecurrenceRuleModel
     {
-        public RecurrenceFrequency Frequency { get; init; } = RecurrenceFrequency.Daily;
+        public RecurrenceFrequency Frequency { get; init; } = RecurrenceFrequency.None;
 
         public int Interval { get; init; } = 1;
 

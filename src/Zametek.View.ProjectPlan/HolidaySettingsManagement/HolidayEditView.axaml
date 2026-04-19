@@ -130,37 +130,44 @@
 
 				<RadioButton Margin="0,7,0,0"
 							 GroupName="RecurrencePattern"
-							 Content="Daily"
-							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyTypeMatch}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Daily}, Mode=OneWay}"
+							 Content="NONE"
+							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyMatch}, ConverterParameter={x:Static common:RecurrenceFrequency.None}, Mode=OneWay}"
 							 Command="{Binding Path=ChangeRecurrenceFrequencyCommand, Mode=OneWay}"
-							 CommandParameter="{x:Static common:RecurrenceFrequencyType.Daily}"/>
+							 CommandParameter="{x:Static common:RecurrenceFrequency.None}"/>
+
+				<RadioButton Margin="0,7,0,0"
+							 GroupName="RecurrencePattern"
+							 Content="Daily"
+							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyMatch}, ConverterParameter={x:Static common:RecurrenceFrequency.Daily}, Mode=OneWay}"
+							 Command="{Binding Path=ChangeRecurrenceFrequencyCommand, Mode=OneWay}"
+							 CommandParameter="{x:Static common:RecurrenceFrequency.Daily}"/>
 
 				<RadioButton Margin="0,7,0,0"
 							 GroupName="RecurrencePattern"
 							 Content="Weekly"
-							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyTypeMatch}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Weekly}, Mode=OneWay}"
+							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyMatch}, ConverterParameter={x:Static common:RecurrenceFrequency.Weekly}, Mode=OneWay}"
 							 Command="{Binding Path=ChangeRecurrenceFrequencyCommand, Mode=OneWay}"
-							 CommandParameter="{x:Static common:RecurrenceFrequencyType.Weekly}"/>
+							 CommandParameter="{x:Static common:RecurrenceFrequency.Weekly}"/>
 
 				<RadioButton Margin="0,7,0,0"
 							 GroupName="RecurrencePattern"
 							 Content="Monthly"
-							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyTypeMatch}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Monthly}, Mode=OneWay}"
+							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyMatch}, ConverterParameter={x:Static common:RecurrenceFrequency.Monthly}, Mode=OneWay}"
 							 Command="{Binding Path=ChangeRecurrenceFrequencyCommand, Mode=OneWay}"
-							 CommandParameter="{x:Static common:RecurrenceFrequencyType.Monthly}"/>
+							 CommandParameter="{x:Static common:RecurrenceFrequency.Monthly}"/>
 
 				<RadioButton Margin="0,7,0,0"
 							 GroupName="RecurrencePattern"
 							 Content="Yearly"
-							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyTypeMatch}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Yearly}, Mode=OneWay}"
+							 IsChecked="{Binding Path=RecurrenceFrequency, Converter={x:Static local:EnumConverters.IsRecurrenceFrequencyMatch}, ConverterParameter={x:Static common:RecurrenceFrequency.Yearly}, Mode=OneWay}"
 							 Command="{Binding Path=ChangeRecurrenceFrequencyCommand, Mode=OneWay}"
-							 CommandParameter="{x:Static common:RecurrenceFrequencyType.Yearly}"/>
+							 CommandParameter="{x:Static common:RecurrenceFrequency.Yearly}"/>
 			</StackPanel>
 
 			<DockPanel Margin="0">
 
 				<!-- Daily -->
-				<DockPanel IsVisible="{Binding Path=RecurrenceFrequency, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Daily}, Mode=OneWay}">
+				<DockPanel IsVisible="{Binding Path=RecurrenceFrequency, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:RecurrenceFrequency.Daily}, Mode=OneWay}">
 					<DockPanel DockPanel.Dock="Top">
 						<Label DockPanel.Dock="Left"
 							   Margin="0,0,7,0"
@@ -185,7 +192,7 @@
 				</DockPanel>
 
 				<!-- Weekly -->
-				<DockPanel IsVisible="{Binding Path=RecurrenceFrequency, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Weekly}, Mode=OneWay}">
+				<DockPanel IsVisible="{Binding Path=RecurrenceFrequency, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:RecurrenceFrequency.Weekly}, Mode=OneWay}">
 					<DockPanel DockPanel.Dock="Top">
 						<Label DockPanel.Dock="Left"
 							   Margin="0,0,7,0"
@@ -225,7 +232,7 @@
 				</DockPanel>
 
 				<!-- Monthly -->
-				<DockPanel IsVisible="{Binding Path=RecurrenceFrequency, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Monthly}, Mode=OneWay}">
+				<DockPanel IsVisible="{Binding Path=RecurrenceFrequency, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:RecurrenceFrequency.Monthly}, Mode=OneWay}">
 					<DockPanel DockPanel.Dock="Top">
 						<Label DockPanel.Dock="Left"
 							   Margin="0,0,7,0"
@@ -315,7 +322,7 @@
 
 
 				<!-- Yearly -->
-				<DockPanel IsVisible="{Binding Path=RecurrenceFrequency, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:RecurrenceFrequencyType.Yearly}, Mode=OneWay}">
+				<DockPanel IsVisible="{Binding Path=RecurrenceFrequency, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:RecurrenceFrequency.Yearly}, Mode=OneWay}">
 					<DockPanel DockPanel.Dock="Top">
 						<Label DockPanel.Dock="Left"
 							   Margin="0,0,7,0"

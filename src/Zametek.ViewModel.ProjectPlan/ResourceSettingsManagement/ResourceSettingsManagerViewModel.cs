@@ -398,8 +398,6 @@ namespace Zametek.ViewModel.ProjectPlan
                             resouce));
                     }
                 });
-
-                //m_Current = resourceSettings;
             }
             AreSettingsUpdated = false;
         }

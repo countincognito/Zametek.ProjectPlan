@@ -6,8 +6,50 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     public static class RecurrenceRuleHelper
     {
+        private static readonly HashSet<RecurrenceDay> s_EveryWeekDay = [.. Enum.GetValues<RecurrenceDay>().Cast<RecurrenceDay>()];
+        private static readonly HashSet<int> s_EveryMonthDay = [.. Enumerable.Range(1, 31)];
+
+        public static bool IsRecurrenceRuleEveryDay(RecurrenceRuleModel model)
+        {
+
+            if (model.Until is null
+                && model.Count is null)
+            {
+                if (model.Frequency == RecurrenceFrequency.Daily
+                    && model.Interval <= 1)
+                {
+                    return true;
+                }
+
+                //bool isEveryWeekDay = !model.ByDay.Except(s_EveryWeekDay).Any();
+                bool isEveryWeekDay = !s_EveryWeekDay.Except(model.ByDay).Any();
+
+                if (model.Frequency == RecurrenceFrequency.Weekly
+                    && isEveryWeekDay)
+                {
+                    return true;
+                }
+
+                //bool isEveryMonthDay = !model.ByMonthDay.Except(s_EveryMonthDay).Any();
+                bool isEveryMonthDay = !s_EveryMonthDay.Except(model.ByMonthDay).Any();
+
+                if (model.Frequency == RecurrenceFrequency.Monthly
+                    && isEveryMonthDay)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public static string ToPhrase(RecurrenceRuleModel model)
         {
+            if (model.Frequency == RecurrenceFrequency.None)
+            {
+                return string.Empty;
+            }
+
             var sb = new StringBuilder();
             string frequency = ToFrequencyUnit(model.Frequency, model.Interval);
             sb.Append(frequency);
@@ -23,7 +65,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     string.Format(
                         Resource.ProjectPlan.Holidays.Holiday_BySetPosAndByDay,
                         posText,
-                        dayText)); 
+                        dayText));
             }
             else if (model.ByDay.Count > 0)
             {
@@ -52,7 +94,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Handle Months (BYMONTH)
             string byMonthText = string.Empty;
-            
+
             if (model.ByMonth.Count > 0)
             {
                 byMonthText = string.Format(

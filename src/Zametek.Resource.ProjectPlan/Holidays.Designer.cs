@@ -97,6 +97,51 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to First.
+        /// </summary>
+        public static string Holiday_BySetPosFirst {
+            get {
+                return ResourceManager.GetString("Holiday_BySetPosFirst", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fourth.
+        /// </summary>
+        public static string Holiday_BySetPosFourth {
+            get {
+                return ResourceManager.GetString("Holiday_BySetPosFourth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last.
+        /// </summary>
+        public static string Holiday_BySetPosLast {
+            get {
+                return ResourceManager.GetString("Holiday_BySetPosLast", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Second.
+        /// </summary>
+        public static string Holiday_BySetPosSecond {
+            get {
+                return ResourceManager.GetString("Holiday_BySetPosSecond", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Third.
+        /// </summary>
+        public static string Holiday_BySetPosThird {
+            get {
+                return ResourceManager.GetString("Holiday_BySetPosThird", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to  for {0} occurrences.
         /// </summary>
         public static string Holiday_Count {
@@ -241,11 +286,119 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to April.
+        /// </summary>
+        public static string Holiday_MonthApril {
+            get {
+                return ResourceManager.GetString("Holiday_MonthApril", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to August.
+        /// </summary>
+        public static string Holiday_MonthAugust {
+            get {
+                return ResourceManager.GetString("Holiday_MonthAugust", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to December.
+        /// </summary>
+        public static string Holiday_MonthDecember {
+            get {
+                return ResourceManager.GetString("Holiday_MonthDecember", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to February.
+        /// </summary>
+        public static string Holiday_MonthFebruary {
+            get {
+                return ResourceManager.GetString("Holiday_MonthFebruary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to January.
+        /// </summary>
+        public static string Holiday_MonthJanuary {
+            get {
+                return ResourceManager.GetString("Holiday_MonthJanuary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to July.
+        /// </summary>
+        public static string Holiday_MonthJuly {
+            get {
+                return ResourceManager.GetString("Holiday_MonthJuly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to June.
+        /// </summary>
+        public static string Holiday_MonthJune {
+            get {
+                return ResourceManager.GetString("Holiday_MonthJune", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to March.
+        /// </summary>
+        public static string Holiday_MonthMarch {
+            get {
+                return ResourceManager.GetString("Holiday_MonthMarch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to May.
+        /// </summary>
+        public static string Holiday_MonthMay {
+            get {
+                return ResourceManager.GetString("Holiday_MonthMay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to November.
+        /// </summary>
+        public static string Holiday_MonthNovember {
+            get {
+                return ResourceManager.GetString("Holiday_MonthNovember", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to October.
+        /// </summary>
+        public static string Holiday_MonthOctober {
+            get {
+                return ResourceManager.GetString("Holiday_MonthOctober", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to months.
         /// </summary>
         public static string Holiday_Months {
             get {
                 return ResourceManager.GetString("Holiday_Months", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to September.
+        /// </summary>
+        public static string Holiday_MonthSeptember {
+            get {
+                return ResourceManager.GetString("Holiday_MonthSeptember", resourceCulture);
             }
         }
         
@@ -345,6 +498,24 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Holiday_WeekdayWednesday {
             get {
                 return ResourceManager.GetString("Holiday_WeekdayWednesday", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Weekdays.
+        /// </summary>
+        public static string Holiday_WeekdayWeekdays {
+            get {
+                return ResourceManager.GetString("Holiday_WeekdayWeekdays", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Weekends.
+        /// </summary>
+        public static string Holiday_WeekdayWeekends {
+            get {
+                return ResourceManager.GetString("Holiday_WeekdayWeekends", resourceCulture);
             }
         }
         

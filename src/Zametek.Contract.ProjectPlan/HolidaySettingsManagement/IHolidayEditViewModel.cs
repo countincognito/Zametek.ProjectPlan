@@ -9,7 +9,7 @@ namespace Zametek.Contract.ProjectPlan
     {
         DateTime? StartDateTime { get; set; }
 
-        RecurrenceFrequencyType RecurrenceFrequency { get; set; }
+        RecurrenceFrequency RecurrenceFrequency { get; set; }
 
         int Interval { get; set; }
 
@@ -58,12 +58,12 @@ namespace Zametek.Contract.ProjectPlan
         SetByIntModel? YearlyMonthSelection { get; set; }
         List<SetByIntModel> YearlyMonthOptions { get; }
 
+        RecurrenceRuleModel RecurrenceRule { get; }
+
         string RecurrencePattern { get; }
 
         string RecurrencePatternDisplay { get; }
 
         ICommand ChangeRecurrenceFrequencyCommand { get; }
-
-        void LoadFromPattern(string recurrencePattern);
     }
 }

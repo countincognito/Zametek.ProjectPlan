@@ -297,36 +297,36 @@ namespace Zametek.Resource.ProjectPlan {
         /// <summary>
         ///   Looks up a localized string similar to Daily.
         /// </summary>
-        public static string Enum_RecurrenceFrequencyType_Daily {
+        public static string Enum_RecurrenceFrequency_Daily {
             get {
-                return ResourceManager.GetString("Enum_RecurrenceFrequencyType_Daily", resourceCulture);
+                return ResourceManager.GetString("Enum_RecurrenceFrequency_Daily", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Monthly.
         /// </summary>
-        public static string Enum_RecurrenceFrequencyType_Monthly {
+        public static string Enum_RecurrenceFrequency_Monthly {
             get {
-                return ResourceManager.GetString("Enum_RecurrenceFrequencyType_Monthly", resourceCulture);
+                return ResourceManager.GetString("Enum_RecurrenceFrequency_Monthly", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Weekly.
         /// </summary>
-        public static string Enum_RecurrenceFrequencyType_Weekly {
+        public static string Enum_RecurrenceFrequency_Weekly {
             get {
-                return ResourceManager.GetString("Enum_RecurrenceFrequencyType_Weekly", resourceCulture);
+                return ResourceManager.GetString("Enum_RecurrenceFrequency_Weekly", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Yearly.
         /// </summary>
-        public static string Enum_RecurrenceFrequencyType_Yearly {
+        public static string Enum_RecurrenceFrequency_Yearly {
             get {
-                return ResourceManager.GetString("Enum_RecurrenceFrequencyType_Yearly", resourceCulture);
+                return ResourceManager.GetString("Enum_RecurrenceFrequency_Yearly", resourceCulture);
             }
         }
         

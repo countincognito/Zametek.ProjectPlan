@@ -186,6 +186,12 @@
   <data name="Holiday_WeekdayWednesday" xml:space="preserve">
     <value>Wednesday</value>
   </data>
+  <data name="Holiday_WeekdayWeekends" xml:space="preserve">
+    <value>Weekends</value>
+  </data>
+  <data name="Holiday_WeekdayWeekdays" xml:space="preserve">
+    <value>Weekdays</value>
+  </data>
   <data name="Holiday_FormatOrdinalMinus1" xml:space="preserve">
     <value>last</value>
   </data>
@@ -224,5 +230,56 @@
   </data>
   <data name="Holiday_ByMonthDay" xml:space="preserve">
     <value> on the {0} {1}</value>
+  </data>
+  <data name="Holiday_MonthJanuary" xml:space="preserve">
+    <value>January</value>
+  </data>
+  <data name="Holiday_MonthDecember" xml:space="preserve">
+    <value>December</value>
+  </data>
+  <data name="Holiday_MonthNovember" xml:space="preserve">
+    <value>November</value>
+  </data>
+  <data name="Holiday_MonthOctober" xml:space="preserve">
+    <value>October</value>
+  </data>
+  <data name="Holiday_MonthSeptember" xml:space="preserve">
+    <value>September</value>
+  </data>
+  <data name="Holiday_MonthAugust" xml:space="preserve">
+    <value>August</value>
+  </data>
+  <data name="Holiday_MonthJuly" xml:space="preserve">
+    <value>July</value>
+  </data>
+  <data name="Holiday_MonthJune" xml:space="preserve">
+    <value>June</value>
+  </data>
+  <data name="Holiday_MonthMay" xml:space="preserve">
+    <value>May</value>
+  </data>
+  <data name="Holiday_MonthApril" xml:space="preserve">
+    <value>April</value>
+  </data>
+  <data name="Holiday_MonthMarch" xml:space="preserve">
+    <value>March</value>
+  </data>
+  <data name="Holiday_MonthFebruary" xml:space="preserve">
+    <value>February</value>
+  </data>
+  <data name="Holiday_BySetPosFirst" xml:space="preserve">
+    <value>First</value>
+  </data>
+  <data name="Holiday_BySetPosLast" xml:space="preserve">
+    <value>Last</value>
+  </data>
+  <data name="Holiday_BySetPosFourth" xml:space="preserve">
+    <value>Fourth</value>
+  </data>
+  <data name="Holiday_BySetPosThird" xml:space="preserve">
+    <value>Third</value>
+  </data>
+  <data name="Holiday_BySetPosSecond" xml:space="preserve">
+    <value>Second</value>
   </data>
 </root>

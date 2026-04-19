@@ -623,6 +623,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_CustomCalendarNonWorkingRecurrencePatterns.Add(new RecurrencePattern(pattern));
                 }
+
+                ClearNonWorkingDays();
             }
         }
 
@@ -633,8 +635,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public DateTimeOffset GetLocalNow(DateTime dateTime)
         {
-            TimeSpan offset = m_TimeProvider.LocalTimeZone.GetUtcOffset(dateTime);
-            return new(dateTime, offset);
+            var localDateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Local);
+            TimeSpan offset = m_TimeProvider.LocalTimeZone.GetUtcOffset(localDateTime);
+            return new(localDateTime, offset);
         }
 
         public (int?, DateTimeOffset?) CalculateTimeAndDateTime(

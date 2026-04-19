@@ -22,7 +22,6 @@
 		<local:ManagedHolidaySortComparer x:Key="notesSortComparer" SortMemberPath="Notes"/>
 	</UserControl.Resources>
 
-
 	<DockPanel Margin="7">
 		<ScrollViewer DockPanel.Dock="Right"
 					  VerticalScrollBarVisibility="Hidden"
@@ -177,18 +176,6 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
@@ -207,20 +194,12 @@
 						<DataTemplate>
 							<Grid VerticalAlignment="Stretch"
 								  Classes="editable">
-
 								<TextBox VerticalAlignment="Center"
 										 TextAlignment="Center"
 										 Margin="0"
 										 Padding="3"
 										 Classes="displayOnly"
 										 Text="{Binding Path=StartDateTime, Mode=OneWay, StringFormat={}{0:d}}}"/>
-						
-								
-								<!--<TextBox VerticalAlignment="Center"
-										 TextAlignment="Center"
-										 Margin="0"
-										 Padding="3"
-										 Text="{Binding Path=StartDateTime, Mode=OneWay, StringFormat={}{0:d}}}"/>-->
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
@@ -238,16 +217,11 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-				
-				
-				
-				
-				
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource recurrencePatternDisplayComparer}"
-										Width="300">
+										Width="350">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"
@@ -274,7 +248,7 @@
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource notesSortComparer}"
-										Width="120">
+										Width="200">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"

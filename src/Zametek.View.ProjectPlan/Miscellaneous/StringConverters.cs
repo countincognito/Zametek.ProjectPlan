@@ -137,17 +137,17 @@ namespace Zametek.View.ProjectPlan
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
 
-        public static readonly IValueConverter RecurrenceFrequencyTypeValue =
-            new FuncValueConverter<RecurrenceFrequencyType, string>(
+        public static readonly IValueConverter RecurrenceFrequencyValue =
+            new FuncValueConverter<RecurrenceFrequency, string>(
                 x => x switch
                 {
-                    //RecurrenceFrequencyType.Secondly => Enums.Enum_RecurrenceFrequencyType_Secondly,
-                    //RecurrenceFrequencyType.Minutely => Enums.Enum_RecurrenceFrequencyType_Minutely,
-                    //RecurrenceFrequencyType.Hourly => Enums.Enum_RecurrenceFrequencyType_Hourly,
-                    RecurrenceFrequencyType.Daily => Enums.Enum_RecurrenceFrequencyType_Daily,
-                    RecurrenceFrequencyType.Weekly => Enums.Enum_RecurrenceFrequencyType_Weekly,
-                    RecurrenceFrequencyType.Monthly => Enums.Enum_RecurrenceFrequencyType_Monthly,
-                    RecurrenceFrequencyType.Yearly => Enums.Enum_RecurrenceFrequencyType_Yearly,
+                    //RecurrenceFrequency.Secondly => Enums.Enum_RecurrenceFrequency_Secondly,
+                    //RecurrenceFrequency.Minutely => Enums.Enum_RecurrenceFrequency_Minutely,
+                    //RecurrenceFrequency.Hourly => Enums.Enum_RecurrenceFrequency_Hourly,
+                    RecurrenceFrequency.Daily => Enums.Enum_RecurrenceFrequency_Daily,
+                    RecurrenceFrequency.Weekly => Enums.Enum_RecurrenceFrequency_Weekly,
+                    RecurrenceFrequency.Monthly => Enums.Enum_RecurrenceFrequency_Monthly,
+                    RecurrenceFrequency.Yearly => Enums.Enum_RecurrenceFrequency_Yearly,
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
     }

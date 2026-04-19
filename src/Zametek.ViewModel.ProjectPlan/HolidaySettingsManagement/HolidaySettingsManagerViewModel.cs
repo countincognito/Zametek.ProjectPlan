@@ -403,8 +403,6 @@ namespace Zametek.ViewModel.ProjectPlan
                             m_DateTimeCalculator));
                     }
                 });
-
-                //m_Current = resourceSettings;
             }
             AreSettingsUpdated = false;
         }

@@ -233,7 +233,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (m_Current != graphSettings)
                 {
                     m_Current = graphSettings;
-                    m_CoreViewModel.GraphSettings = graphSettings;
+                    m_CoreViewModel.GraphSettings = m_Current;
                 }
             }
             AreSettingsUpdated = false;

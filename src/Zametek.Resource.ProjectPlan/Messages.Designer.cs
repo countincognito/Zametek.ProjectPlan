@@ -349,15 +349,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid weekday value: &apos;{0}&apos;.
-        /// </summary>
-        public static string Message_InvalidWeekdayValue {
-            get {
-                return ResourceManager.GetString("Message_InvalidWeekdayValue", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to List of Edge IDs and Edges referenced by head Nodes do not match when building Arrow Graph.
         /// </summary>
         public static string Message_MismatchedEdgeIdsForHeadNodesInArrowGraph {

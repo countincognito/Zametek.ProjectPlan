@@ -8,6 +8,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     {
         public static readonly List<string> InputPatterns =
         [
+            "",
             "FREQ=SECONDLY",
             "FREQ=MINUTELY;INTERVAL=10",
             "FREQ=HOURLY;INTERVAL=3;COUNT=4",
@@ -45,6 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         public static readonly List<RecurrenceRuleModel> OutputModels =
         [
+            new() { Frequency = RecurrenceFrequency.None },
             new() { Frequency = RecurrenceFrequency.Secondly },
             new() { Frequency = RecurrenceFrequency.Minutely, Interval = 10 },
             new() { Frequency = RecurrenceFrequency.Hourly, Interval = 3, Count = 4 },
@@ -80,6 +82,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         public static readonly List<string> ExpectedEnglishPhrases =
         [
+            "",
             "every second",
             "every 10 minutes",
             "every 3 hours for 4 occurrences",
