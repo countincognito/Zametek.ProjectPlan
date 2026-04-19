@@ -137,7 +137,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe(async _ => await BuildArrowGraphDiagramDataAsync());
 
             m_BuildArrowGraphImageSub = this
-                .ObservableForProperty(agm => agm.ArrowGraphData)
+                .WhenAnyValue(agm => agm.ArrowGraphData)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildArrowGraphDiagramAsync());
 

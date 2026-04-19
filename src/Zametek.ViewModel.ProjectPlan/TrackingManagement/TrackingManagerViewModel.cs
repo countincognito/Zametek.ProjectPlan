@@ -67,8 +67,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     tm => tm.m_DateTimeCalculator.NonWorkingDayMode,
                     tm => tm.m_CoreViewModel.TrackerIndex,
-                    tm => tm.m_CoreViewModel.IsReadyToReviseTrackers,
                     tm => tm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    tm => tm.m_CoreViewModel.HolidaySettings,
                     tm => tm.m_CoreViewModel.ProjectStart)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => RefreshDays());

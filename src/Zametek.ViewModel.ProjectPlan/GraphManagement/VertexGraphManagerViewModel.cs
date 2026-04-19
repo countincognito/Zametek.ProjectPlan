@@ -137,7 +137,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe(async _ => await BuildVertexGraphDiagramDataAsync());
 
             m_BuildVertexGraphImageSub = this
-                .ObservableForProperty(agm => agm.VertexGraphData)
+                .WhenAnyValue(agm => agm.VertexGraphData)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildVertexGraphDiagramImageAsync());
 

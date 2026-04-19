@@ -108,9 +108,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     core => core.DisplaySettingsViewModel.ShowDates,
                     core => core.ProjectStart,
                     core => core.NetworkMetrics,
+                    core => core.HolidaySettings,
                     core => core.m_DateTimeCalculator.NonWorkingDayMode,
                     core => core.m_DateTimeCalculator.DisplayMode,
-                    (bool showDates, DateTimeOffset projectStart, NetworkModel networkModel, NonWorkingDayMode _, DateTimeDisplayMode _) =>
+                    (bool showDates, DateTimeOffset projectStart, NetworkModel networkModel, HolidaySettingsModel _, NonWorkingDayMode _, DateTimeDisplayMode _) =>
                     {
                         if (networkModel.Duration is null || networkModel.Duration == 0)
                         {
@@ -204,22 +205,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
 
             m_BuildArrowGraphSub = this
-                .ObservableForProperty(core => core.GraphCompilation)
+                .WhenAnyValue(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildArrowGraph());
 
             m_BuildVertexGraphSub = this
-                .ObservableForProperty(core => core.GraphCompilation)
+                .WhenAnyValue(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildVertexGraph());
 
             m_BuildResourceSeriesSetSub = this
-                .ObservableForProperty(core => core.GraphCompilation)
+                .WhenAnyValue(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildResourceSeriesSet());
 
             m_BuildTrackingSeriesSetSub = this
-                .ObservableForProperty(core => core.GraphCompilation)
+                .WhenAnyValue(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildTrackingSeriesSet());
 
@@ -1301,7 +1302,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
-                    //IsReadyToReviseTrackers = ReadyToRevise.Yes;
                 }
             }
         }
