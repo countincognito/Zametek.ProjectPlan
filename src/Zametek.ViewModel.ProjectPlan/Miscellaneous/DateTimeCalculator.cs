@@ -22,17 +22,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly string s_DateTimeOffsetFormat = s_DateTimeFormat + (DateTimeFormatInfo.CurrentInfo.LongTimePattern.Contains('z') ? string.Empty : " zzz");
 
-        private static readonly RecurrencePattern s_WeekendRecurrencePattern = new()
+        private static readonly HolidayModel s_WeekendRecurrenceCalendarEvent = new()
         {
-            Frequency = FrequencyType.Weekly,
-            ByDay =
-                [
-                    new(DayOfWeek.Saturday),
-                    new(DayOfWeek.Sunday)
-                ]
+            Id = 1,
+            RecurrencePattern = "FREQ=WEEKLY;BYDAY=SA,SU",
         };
 
-        private readonly List<RecurrencePattern> m_CustomCalendarNonWorkingRecurrencePatterns;
+        private readonly List<HolidayModel> m_CustomCalendarNonWorkingCalendarEvents;
 
         private readonly HashSet<DateOnly> m_NonWorkingDays;
         private const int c_NonWorkingDaysSearchBuffer = 30;
@@ -47,7 +43,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TimeProvider = timeProvider;
             m_AddDaysFunc = AddAllDays;
             m_CountDaysFunc = CountAllDays;
-            m_CustomCalendarNonWorkingRecurrencePatterns = [];
+            m_CustomCalendarNonWorkingCalendarEvents = [];
             m_NonWorkingDays = [];
 
             m_DisplayEarliestStartDateFunc = DisplayDefaultEarliestStartDate;
@@ -71,10 +67,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public static string DateTimeOffsetFormat => s_DateTimeOffsetFormat;
 
-        public List<string> NonWorkingDayRecurrencePatterns =>
-            [.. m_CustomCalendarNonWorkingRecurrencePatterns
-                .Select(x => x?.ToString() ?? string.Empty)
-                .Where(x => !string.IsNullOrWhiteSpace(x))];
+        public List<HolidayModel> NonWorkingDayCalendarEvents => [.. m_CustomCalendarNonWorkingCalendarEvents];
 
         #endregion
 
@@ -106,7 +99,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                return AddNonWorkingDays(current, days, [s_WeekendRecurrencePattern]);
+                return AddNonWorkingDays(current, days, [s_WeekendRecurrenceCalendarEvent]);
             }
         }
 
@@ -116,7 +109,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                return CountNonWorkingDays(current, toCompareWith, [s_WeekendRecurrencePattern]);
+                return CountNonWorkingDays(current, toCompareWith, [s_WeekendRecurrenceCalendarEvent]);
             }
         }
 
@@ -126,7 +119,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                return AddNonWorkingDays(current, days, m_CustomCalendarNonWorkingRecurrencePatterns);
+                return AddNonWorkingDays(current, days, m_CustomCalendarNonWorkingCalendarEvents);
             }
         }
 
@@ -136,18 +129,18 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                return CountNonWorkingDays(current, toCompareWith, m_CustomCalendarNonWorkingRecurrencePatterns);
+                return CountNonWorkingDays(current, toCompareWith, m_CustomCalendarNonWorkingCalendarEvents);
             }
         }
 
         private DateTimeOffset AddNonWorkingDays(
             DateTimeOffset current,
             int days,
-            List<RecurrencePattern> nonWorkingDayRecurrencePatterns)
+            List<HolidayModel> nonWorkingDayCalendarEvents)
         {
             lock (m_Lock)
             {
-                AppendNonWorkingDays(current.Date, days + c_NonWorkingDaysSearchBuffer, nonWorkingDayRecurrencePatterns);
+                AppendNonWorkingDays(current.Date, days + c_NonWorkingDaysSearchBuffer, nonWorkingDayCalendarEvents);
 
                 int sign = Math.Sign(days);
                 int unsignedDays = Math.Abs(days);
@@ -164,7 +157,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         AppendNonWorkingDays(
                             current.Date,
                             c_NonWorkingDaysSearchBuffer,
-                            nonWorkingDayRecurrencePatterns);
+                            nonWorkingDayCalendarEvents);
                     }
 
                     if (!m_NonWorkingDays.Contains(DateOnly.FromDateTime(current.Date)))
@@ -179,19 +172,19 @@ namespace Zametek.ViewModel.ProjectPlan
         private int CountNonWorkingDays(
             DateTimeOffset current,
             DateTimeOffset toCompareWith,
-            List<RecurrencePattern> nonWorkingDayRecurrencePatterns)
+            List<HolidayModel> nonWorkingDayCalendarEvents)
         {
             lock (m_Lock)
             {
                 if (current.IsAfter(toCompareWith))
                 {
-                    return -CountNonWorkingDays(toCompareWith, current, nonWorkingDayRecurrencePatterns);
+                    return -CountNonWorkingDays(toCompareWith, current, nonWorkingDayCalendarEvents);
                 }
 
                 AppendNonWorkingDays(
                     current.Date,
                     toCompareWith.Date,
-                    nonWorkingDayPatterns: nonWorkingDayRecurrencePatterns);
+                    nonWorkingDayCalendarEvents: nonWorkingDayCalendarEvents);
 
                 int count = 0;
                 while (current.IsBefore(toCompareWith))
@@ -220,7 +213,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private void AppendNonWorkingDays(
             DateTime startDateTime,
             DateTime finishDateTime,
-            List<RecurrencePattern> nonWorkingDayPatterns)
+            List<HolidayModel> nonWorkingDayCalendarEvents)
         {
             lock (m_Lock)
             {
@@ -238,12 +231,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 DateTime bufferedStartDateTime = startDateTime.AddDays(-1).Date;
                 DateTime bufferedFinishDateTime = finishDateTime.AddDays(1).Date;
 
-                HashSet<DateOnly> newNonWorkingDays = GetNonWorkingDaysFromRecurrencePatterns(
-                    bufferedStartDateTime,
-                    bufferedFinishDateTime,
-                    nonWorkingDayPatterns);
+                foreach (HolidayModel nonWorkingDayCalendarEvent in nonWorkingDayCalendarEvents)
+                {
+                    HashSet<DateOnly> newNonWorkingDays = GetNonWorkingDaysFromCalendarEvents(
+                        bufferedStartDateTime,
+                        bufferedFinishDateTime,
+                        nonWorkingDayCalendarEvent);
 
-                m_NonWorkingDays.UnionWith(newNonWorkingDays);
+                    m_NonWorkingDays.UnionWith(newNonWorkingDays);
+                }
+
+
+
+
+
+
+
 
                 if (startDateTime.IsBeforeOrOn(NonWorkingDaysStart.Date))
                 {
@@ -259,7 +262,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private void AppendNonWorkingDays(
             DateTime startDateTime,
             int days,
-            List<RecurrencePattern> nonWorkingDayPatterns)
+            List<HolidayModel> nonWorkingDayCalendarEvents)
         {
             lock (m_Lock)
             {
@@ -268,32 +271,39 @@ namespace Zametek.ViewModel.ProjectPlan
                 AppendNonWorkingDays(
                     startDateTime,
                     finishDateTime,
-                    nonWorkingDayPatterns);
+                    nonWorkingDayCalendarEvents);
             }
         }
 
-        private static HashSet<DateOnly> GetNonWorkingDaysFromRecurrencePatterns(
-            DateTime startDateTime,
-            DateTime finishDateTime,
-            List<RecurrencePattern> nonWorkingDayPatterns)
+        private static HashSet<DateOnly> GetNonWorkingDaysFromCalendarEvents(
+            DateTime searchStartDateTime,
+            DateTime searchFinishDateTime,
+            HolidayModel nonWorkingDayCalendarEvent)
         {
-            if (startDateTime.IsAfterOrOn(finishDateTime))
+            if (searchStartDateTime.IsAfterOrOn(searchFinishDateTime))
             {
-                (startDateTime, finishDateTime) = (finishDateTime, startDateTime);
+                (searchStartDateTime, searchFinishDateTime) = (searchFinishDateTime, searchStartDateTime);
             }
 
-            var startCalDateTime = new CalDateTime(startDateTime);
-            var endCalDateTime = new CalDateTime(finishDateTime);
+            var searchStartCalDateTime = new CalDateTime(searchStartDateTime);
+            var searchEndCalDateTime = new CalDateTime(searchFinishDateTime);
+
+            CalDateTime? startDateTime = null;
+
+            if (nonWorkingDayCalendarEvent.StartDateTime.HasValue)
+            {
+                startDateTime = new CalDateTime(nonWorkingDayCalendarEvent.StartDateTime.Value.DateTime);
+            }
 
             var nonWorkingDaysEvent = new CalendarEvent
             {
-                Start = startCalDateTime,
-                RecurrenceRules = nonWorkingDayPatterns,
+                Start = startDateTime,
+                RecurrenceRules = [new RecurrencePattern(nonWorkingDayCalendarEvent.RecurrencePattern)],
             };
 
             List<Occurrence> occurrences = [.. nonWorkingDaysEvent
-                .GetOccurrences(startCalDateTime)
-                .TakeWhileBefore(endCalDateTime)];
+                .GetOccurrences(searchStartCalDateTime)
+                .TakeWhileBefore(searchEndCalDateTime)];
 
             HashSet<DateOnly> nonWorkingDays = [.. occurrences.Select(x => x.Period.StartTime.Date)];
             return nonWorkingDays;
@@ -613,15 +623,15 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void SetNonWorkingDayRecurrencePatterns(List<string> nonWorkingDayRecurrencePatterns)
+        public void SetNonWorkingDayCalendarEvents(List<HolidayModel> nonWorkingDayCalendarEvents)
         {
             lock (m_Lock)
             {
-                m_CustomCalendarNonWorkingRecurrencePatterns.Clear();
+                m_CustomCalendarNonWorkingCalendarEvents.Clear();
 
-                foreach (string pattern in nonWorkingDayRecurrencePatterns)
+                foreach (HolidayModel holiday in nonWorkingDayCalendarEvents)
                 {
-                    m_CustomCalendarNonWorkingRecurrencePatterns.Add(new RecurrencePattern(pattern));
+                    m_CustomCalendarNonWorkingCalendarEvents.Add(holiday);
                 }
 
                 ClearNonWorkingDays();

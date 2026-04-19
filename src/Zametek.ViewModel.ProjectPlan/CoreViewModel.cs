@@ -1297,8 +1297,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     //holidaySettingsModel.Holidays.AddRange(validHolidays);
 
                     m_HolidaySettings = value;
-                    m_DateTimeCalculator.SetNonWorkingDayRecurrencePatterns(
-                        [.. m_HolidaySettings.Holidays.Select(x => x.RecurrencePattern)]);
+                    m_DateTimeCalculator.SetNonWorkingDayCalendarEvents(m_HolidaySettings.Holidays);
                     IsProjectScenarioUpdated = true;
                     this.RaisePropertyChanged();
                     IsReadyToCompile = ReadyToCompile.Yes;
