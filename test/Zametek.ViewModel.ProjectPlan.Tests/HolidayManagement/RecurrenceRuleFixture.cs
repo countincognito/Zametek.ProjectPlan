@@ -82,7 +82,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         public static readonly List<string> ExpectedEnglishPhrases =
         [
-            "",
+            "no pattern",
             "every second",
             "every 10 minutes",
             "every 3 hours for 4 occurrences",

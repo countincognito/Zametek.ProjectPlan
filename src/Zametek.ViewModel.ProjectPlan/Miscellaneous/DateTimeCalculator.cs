@@ -236,17 +236,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     HashSet<DateOnly> newNonWorkingDays = GetNonWorkingDaysFromCalendarEvents(
                         bufferedStartDateTime,
                         bufferedFinishDateTime,
+                        ProjectStart,
                         nonWorkingDayCalendarEvent);
 
                     m_NonWorkingDays.UnionWith(newNonWorkingDays);
                 }
-
-
-
-
-
-
-
 
                 if (startDateTime.IsBeforeOrOn(NonWorkingDaysStart.Date))
                 {
@@ -278,6 +272,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static HashSet<DateOnly> GetNonWorkingDaysFromCalendarEvents(
             DateTime searchStartDateTime,
             DateTime searchFinishDateTime,
+            DateTimeOffset projectStart,
             HolidayModel nonWorkingDayCalendarEvent)
         {
             if (searchStartDateTime.IsAfterOrOn(searchFinishDateTime))
@@ -288,7 +283,12 @@ namespace Zametek.ViewModel.ProjectPlan
             var searchStartCalDateTime = new CalDateTime(searchStartDateTime);
             var searchEndCalDateTime = new CalDateTime(searchFinishDateTime);
 
-            CalDateTime? startDateTime = searchStartCalDateTime;
+            CalDateTime? startDateTime = new(projectStart.DateTime);
+
+            if (searchStartCalDateTime.Date.IsBeforeOrOn(startDateTime.Date))
+            {
+                startDateTime = searchStartCalDateTime;
+            }
 
             if (nonWorkingDayCalendarEvent.StartDateTime.HasValue)
             {

@@ -424,7 +424,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region IResourceSettingsManagerViewModel Members
+        #region IHolidaySettingsManagerViewModel Members
 
         private readonly ObservableAsPropertyHelper<bool> m_IsBusy;
         public bool IsBusy => m_IsBusy.Value;

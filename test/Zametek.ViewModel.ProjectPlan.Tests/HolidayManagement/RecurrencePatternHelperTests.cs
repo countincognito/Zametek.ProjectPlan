@@ -36,7 +36,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [MemberData(nameof(RoundTripData))]
         public void RecurrencePatternHelper_Given_InputPattern_Then_ReturnsExpectedModel(string pattern, RecurrenceRuleModel expected)
         {
-            var actual = RecurrencePatternHelper.ToRule(pattern);
+            RecurrenceRuleModel actual = RecurrencePatternHelper.ToRule(pattern);
             CompareModels(actual, expected);
         }
 

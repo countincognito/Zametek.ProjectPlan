@@ -47,7 +47,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             if (model.Frequency == RecurrenceFrequency.None)
             {
-                return string.Empty;
+                return Resource.ProjectPlan.Holidays.Holiday_NoPattern;
             }
 
             var sb = new StringBuilder();

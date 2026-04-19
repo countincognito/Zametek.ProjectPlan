@@ -144,6 +144,9 @@
   <data name="Holiday_Day" xml:space="preserve">
     <value>day</value>
   </data>
+  <data name="Holiday_EditDay" xml:space="preserve">
+    <value>Day</value>
+  </data>
   <data name="Holiday_Days" xml:space="preserve">
     <value>days</value>
   </data>
@@ -168,23 +171,44 @@
   <data name="Holiday_WeekdayMonday" xml:space="preserve">
     <value>Monday</value>
   </data>
+  <data name="Holiday_WeekdayMondayShort" xml:space="preserve">
+    <value>Mon</value>
+  </data>
   <data name="Holiday_WeekdayTuesday" xml:space="preserve">
     <value>Tuesday</value>
+  </data>
+  <data name="Holiday_WeekdayTuesdayShort" xml:space="preserve">
+    <value>Tue</value>
   </data>
   <data name="Holiday_WeekdaySunday" xml:space="preserve">
     <value>Sunday</value>
   </data>
+  <data name="Holiday_WeekdaySundayShort" xml:space="preserve">
+    <value>Sun</value>
+  </data>
   <data name="Holiday_WeekdaySaturday" xml:space="preserve">
     <value>Saturday</value>
+  </data>
+  <data name="Holiday_WeekdaySaturdayShort" xml:space="preserve">
+    <value>Sat</value>
   </data>
   <data name="Holiday_WeekdayFriday" xml:space="preserve">
     <value>Friday</value>
   </data>
+  <data name="Holiday_WeekdayFridayShort" xml:space="preserve">
+    <value>Fri</value>
+  </data>
   <data name="Holiday_WeekdayThursday" xml:space="preserve">
     <value>Thursday</value>
   </data>
+  <data name="Holiday_WeekdayThursdayShort" xml:space="preserve">
+    <value>Thu</value>
+  </data>
   <data name="Holiday_WeekdayWednesday" xml:space="preserve">
     <value>Wednesday</value>
+  </data>
+  <data name="Holiday_WeekdayWednesdayShort" xml:space="preserve">
+    <value>Wed</value>
   </data>
   <data name="Holiday_WeekdayWeekends" xml:space="preserve">
     <value>Weekends</value>
@@ -281,5 +305,62 @@
   </data>
   <data name="Holiday_BySetPosSecond" xml:space="preserve">
     <value>Second</value>
+  </data>
+  <data name="Holiday_NoPattern" xml:space="preserve">
+    <value>no pattern</value>
+  </data>
+  <data name="Holiday_Starts" xml:space="preserve">
+    <value>Starts:</value>
+  </data>
+  <data name="Holiday_Ends" xml:space="preserve">
+    <value>Ends:</value>
+  </data>
+  <data name="Holiday_Occurrences" xml:space="preserve">
+    <value>occurrences</value>
+  </data>
+  <data name="Holiday_After" xml:space="preserve">
+    <value>After</value>
+  </data>
+  <data name="Holiday_OnDate" xml:space="preserve">
+    <value>On date</value>
+  </data>
+  <data name="Holiday_Never" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="Holiday_RecurrencePattern" xml:space="preserve">
+    <value>Recurrence Pattern</value>
+  </data>
+  <data name="Holiday_FrequencyNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Holiday_FrequencyYearly" xml:space="preserve">
+    <value>Yearly</value>
+  </data>
+  <data name="Holiday_FrequencyMonthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="Holiday_FrequencyWeekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
+  <data name="Holiday_FrequencyDaily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="Holiday_Interval" xml:space="preserve">
+    <value>Interval:</value>
+  </data>
+  <data name="Holiday_RepeatOn" xml:space="preserve">
+    <value>Repeat on:</value>
+  </data>
+  <data name="Holiday_EditThe" xml:space="preserve">
+    <value>The</value>
+  </data>
+  <data name="Holiday_EditOf" xml:space="preserve">
+    <value>of</value>
+  </data>
+  <data name="Holiday_RecurrencePatternAsRule" xml:space="preserve">
+    <value>Recurrence Rule</value>
+  </data>
+  <data name="Holiday_RecurrencePatternAsPhrase" xml:space="preserve">
+    <value>Recurrence Rule (in English)</value>
   </data>
 </root>

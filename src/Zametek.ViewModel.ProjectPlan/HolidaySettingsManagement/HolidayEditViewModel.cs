@@ -560,7 +560,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 Interval = interval,
                 Count = count,
                 Until = until,
-                WeekStart = RecurrenceDay.MO, // Not supported in UI, defaults to Monday in iCal.NET
             };
 
             // BYDAY for weekly
