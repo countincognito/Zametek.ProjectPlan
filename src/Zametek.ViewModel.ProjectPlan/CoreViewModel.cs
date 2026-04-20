@@ -1097,7 +1097,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Convert to local now using TimeProvider as we do not know
                     // if the input is provided as just a datetime from XAML.
-                    DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow(value.DateTime);
+                    DateTimeOffset localNow = m_DateTimeCalculator.GetLocal(value.DateTime);
 
                     this.RaiseAndSetIfChanged(ref m_Today, localNow);
                 }

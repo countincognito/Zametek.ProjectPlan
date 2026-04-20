@@ -830,7 +830,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // Convert to local now using TimeProvider as we do not know
                 // if the input is provided as just a datetime from XAML.
-                DateTimeOffset? input = value is null ? null : m_DateTimeCalculator.GetLocalNow(value.Value);
+                DateTimeOffset? input = value is null ? null : m_DateTimeCalculator.GetLocal(value.Value);
                 SetMinimumEarliestStartTimes(input);
             }
         }
@@ -859,7 +859,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 // Convert to local now using TimeProvider as we do not know
                 // if the input is provided as just a datetime from XAML.
-                DateTimeOffset? input = value is null ? null : m_DateTimeCalculator.GetLocalNow(value.Value);
+                DateTimeOffset? input = value is null ? null : m_DateTimeCalculator.GetLocal(value.Value);
 
                 if (input.HasValue)
                 {

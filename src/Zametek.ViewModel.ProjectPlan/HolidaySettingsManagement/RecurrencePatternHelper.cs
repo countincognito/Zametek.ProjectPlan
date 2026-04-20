@@ -222,22 +222,21 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             string[] formats =
             [
-                @"yyyyMMdd'T'HHmmss'Z'",
                 @"yyyyMMdd'T'HHmmss",
                 @"yyyyMMdd"
             ];
 
             if (DateTime.TryParseExact(value, formats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var dt))
             {
-                return DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                return DateTime.SpecifyKind(dt, DateTimeKind.Local);
             }
             throw new FormatException(string.Format(Resource.ProjectPlan.Messages.Message_InvalidInputValue, c_UntilToken, value));
         }
 
         private static string FormatUntil(DateTime value)
         {
-            var utc = value.Kind == DateTimeKind.Utc ? value : value.ToUniversalTime();
-            return utc.ToString("yyyyMMdd'T'HHmmss'Z'", CultureInfo.InvariantCulture);
+            DateTime dt = DateTime.SpecifyKind(value, DateTimeKind.Local);
+            return dt.ToString("yyyyMMdd'T'HHmmss", CultureInfo.InvariantCulture);
         }
 
         private static List<RecurrenceDay> ParseDays(string value) =>

@@ -244,11 +244,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (startDateTime.IsBeforeOrOn(NonWorkingDaysStart.Date))
                 {
-                    NonWorkingDaysStart = startDateTime.Date;
+                    NonWorkingDaysStart = GetLocal(startDateTime);
                 }
                 if (finishDateTime.IsAfterOrOn(NonWorkingDaysFinish.Date))
                 {
-                    NonWorkingDaysFinish = finishDateTime.Date;
+                    NonWorkingDaysFinish = GetLocal(finishDateTime);
                 }
             }
         }
@@ -280,10 +280,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 (searchStartDateTime, searchFinishDateTime) = (searchFinishDateTime, searchStartDateTime);
             }
 
-            var searchStartCalDateTime = new CalDateTime(searchStartDateTime);
-            var searchEndCalDateTime = new CalDateTime(searchFinishDateTime);
+            // CalDateTime only works with DateTimeKind.Unspecified or DateTimeKind.Utc,
+            // so we need to convert our input DateTimes to one of those kinds.
+            var searchStartCalDateTime = new CalDateTime(DateTime.SpecifyKind(searchStartDateTime, DateTimeKind.Unspecified));
+            var searchEndCalDateTime = new CalDateTime(DateTime.SpecifyKind(searchFinishDateTime, DateTimeKind.Unspecified));
 
-            CalDateTime? startDateTime = new(projectStart.DateTime);
+            CalDateTime? startDateTime = new(DateTime.SpecifyKind(projectStart.DateTime, DateTimeKind.Unspecified));
 
             if (searchStartCalDateTime.Date.IsBeforeOrOn(startDateTime.Date))
             {
@@ -292,7 +294,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (nonWorkingDayCalendarEvent.StartDateTime.HasValue)
             {
-                startDateTime = new CalDateTime(nonWorkingDayCalendarEvent.StartDateTime.Value.DateTime);
+                startDateTime = new CalDateTime(DateTime.SpecifyKind(nonWorkingDayCalendarEvent.StartDateTime.Value.DateTime, DateTimeKind.Unspecified));
             }
 
             var nonWorkingDaysEvent = new CalendarEvent
@@ -469,7 +471,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     if (result < projectStart)
                     {
-                        result = projectStart.DateTime;
+                        result = GetLocal(projectStart.DateTime);
                     }
                     result = new DateTimeOffset(result.GetValueOrDefault().Date + projectStart.TimeOfDay, projectStart.Offset);
                 }
@@ -591,7 +593,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     // Convert to local now using TimeProvider as we do not know
                     // if the input is provided as just a datetime from XAML.
-                    m_ProjectStart = GetLocalNow(value.DateTime);
+                    m_ProjectStart = GetLocal(value.DateTime);
                     ClearNonWorkingDays();
                     this.RaiseAndSetIfChanged(ref m_ProjectStart, value);
                 }
@@ -643,7 +645,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return m_TimeProvider.GetLocalNow();
         }
 
-        public DateTimeOffset GetLocalNow(DateTime dateTime)
+        public DateTimeOffset GetLocal(DateTime dateTime)
         {
             var localDateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Local);
             TimeSpan offset = m_TimeProvider.LocalTimeZone.GetUtcOffset(localDateTime);
