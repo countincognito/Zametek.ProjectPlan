@@ -133,7 +133,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Create read-only view to the source list.
             m_ReadOnlyActivitiesSub = m_Activities.Connect()
-               .ObserveOn(RxApp.MainThreadScheduler)
+               .ObserveOn(RxSchedulers.MainThreadScheduler)
                .Bind(out m_ReadOnlyActivities)
                .Subscribe();
 
@@ -164,7 +164,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToObservableChangeSet()
                 .AutoRefresh(activity => activity.IsCompiled) // Subscribe only to IsCompiled property changes
                 .Filter(activity => !activity.IsCompiled)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(changeSet =>
                 {
                     if (!IsBusy && (changeSet.Replaced + changeSet.Adds) > 0)
@@ -206,29 +206,29 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_BuildArrowGraphSub = this
                 .WhenAnyValue(core => core.GraphCompilation)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => BuildArrowGraph());
 
             m_BuildVertexGraphSub = this
                 .WhenAnyValue(core => core.GraphCompilation)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => BuildVertexGraph());
 
             m_BuildResourceSeriesSetSub = this
                 .WhenAnyValue(core => core.GraphCompilation)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => BuildResourceSeriesSet());
 
             m_BuildTrackingSeriesSetSub = this
                 .WhenAnyValue(core => core.GraphCompilation)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => BuildTrackingSeriesSet());
 
             m_NetworkMetricsSub = this
                 .WhenAnyValue(
                     core => core.GraphCompilation,
                     core => core.HasCompilationErrors)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => BuildNetworkMetrics());
 
             m_BuildRiskMetricsSub = this
@@ -236,14 +236,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     core => core.GraphCompilation,
                     core => core.GraphSettings,
                     core => core.HasCompilationErrors)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => BuildRiskMetrics());
 
             m_BuildFinancialMetricsSub = this
                 .WhenAnyValue(
                     core => core.ResourceSeriesSet,
                     core => core.HasCompilationErrors)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => BuildFinancialMetrics());
         }
 

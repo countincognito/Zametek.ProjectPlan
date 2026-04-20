@@ -70,7 +70,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     tm => tm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                     tm => tm.m_CoreViewModel.HolidaySettings,
                     tm => tm.m_CoreViewModel.ProjectStart)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RefreshDays());
 
             Id = Resource.ProjectPlan.Titles.Title_TrackingView;

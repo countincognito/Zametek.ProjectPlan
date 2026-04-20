@@ -75,7 +75,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     om => om.NonWorkingDayMode,
                     om => om.ProjectStart,
                     om => om.HasCompilationErrors)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildCompilationOutputAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_Output;

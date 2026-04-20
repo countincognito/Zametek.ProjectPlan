@@ -23,8 +23,14 @@ namespace Zametek.View.ProjectPlan
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                     Margin = new Avalonia.Thickness(0),
                     Padding = new Avalonia.Thickness(0),
-                    [!TextBlock.TextProperty] = new Binding($@"Day{m_Index:D2}Title", BindingMode.OneWay),
-                    [!ToolTip.TipProperty] = new Binding($@"Day{m_Index:D2}Title", BindingMode.OneWay)
+                    [!TextBlock.TextProperty] = new ReflectionBinding($@"Day{m_Index:D2}Title")
+                    {
+                        Mode = BindingMode.OneWay,
+                    },
+                    [!ToolTip.TipProperty] = new ReflectionBinding($@"Day{m_Index:D2}Title")
+                    {
+                        Mode = BindingMode.OneWay,
+                    },
                 });
 
             var cellTemplate = new FuncDataTemplate<object>((itemModel, namescope) =>
@@ -42,8 +48,9 @@ namespace Zametek.View.ProjectPlan
                         TextAlignment = Avalonia.Media.TextAlignment.Left,
                         Margin = new Avalonia.Thickness(0),
                         Padding = new Avalonia.Thickness(3),
-                        [!TextBlock.TextProperty] = new Binding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.Day{m_Index:D2}", BindingMode.OneWay)
+                        [!TextBlock.TextProperty] = new ReflectionBinding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.Day{m_Index:D2}")
                         {
+                            Mode = BindingMode.OneWay,
                             StringFormat = @"{0:#0'%'}",
                         },
                     });
@@ -67,8 +74,9 @@ namespace Zametek.View.ProjectPlan
                         Padding = new Avalonia.Thickness(0),
                         Minimum = 0,
                         Maximum = 100,
-                        [!NumericIntUpDown.ValueProperty] = new Binding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.Day{m_Index:D2}", BindingMode.TwoWay)
+                        [!NumericIntUpDown.ValueProperty] = new ReflectionBinding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.Day{m_Index:D2}")
                         {
+                            Mode = BindingMode.TwoWay,
                             UpdateSourceTrigger = UpdateSourceTrigger.LostFocus,
                         },
                     });

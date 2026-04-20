@@ -74,7 +74,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Create read-only view to the source list.
             m_ReadOnlyLabelsSub = m_Labels.Connect()
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Bind(out m_ReadOnlyLabels)
                 .Subscribe();
 
@@ -92,7 +92,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .AutoRefresh(node => node.CreatedOn)
                 .AutoRefresh(node => node.ModifiedOn)
                 .Sort(m_NodeSortComparer)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Bind(out m_ReadOnlyChildren)
                 .Subscribe();
 
@@ -114,7 +114,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         return isUpdated;
                     })
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(isUpdated => IsUpdated = isUpdated);
 
             m_DisplayName = this

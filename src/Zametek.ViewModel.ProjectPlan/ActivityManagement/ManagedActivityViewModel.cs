@@ -107,33 +107,33 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ResourceSettingsSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.ResourceSettings)
-                //.ObserveOn(RxApp.TaskpoolScheduler)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                //.ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(x => ResourceSettings = x);
 
             m_WorkStreamSettingsSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.WorkStreamSettings)
-                //.ObserveOn(RxApp.TaskpoolScheduler)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                //.ObserveOn(RxSchedulers.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(x => WorkStreamSettings = x);
 
             m_DateTimeCalculatorCalculatorModeSub = this
                 .WhenAnyValue(
                     x => x.m_DateTimeCalculator.NonWorkingDayMode,
                     x => x.m_CoreViewModel.HolidaySettings)
-                //.ObserveOn(RxApp.TaskpoolScheduler)
+                //.ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(_ => UpdateEarliestStartAndLatestFinishDateTimes());
 
             m_DateTimeCalculatorDisplayModeSub = this
                 .WhenAnyValue(x => x.m_DateTimeCalculator.DisplayMode)
-                //.ObserveOn(RxApp.TaskpoolScheduler)
+                //.ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(_ => RefreshStartAndFinishValues());
 
             m_CompilationSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.GraphCompilation)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => SetAsCompiled());
 
             m_IsCompiled = false;

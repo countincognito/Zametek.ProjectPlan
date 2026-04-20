@@ -55,7 +55,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_HasCompilationErrors = this
                 .WhenAnyValue(am => am.m_CoreViewModel.HasCompilationErrors)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .ToProperty(this, am => am.HasCompilationErrors);
 
             m_HideCost = this
@@ -72,7 +72,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     am => am.HasActivities,
                     am => am.HasCompilationErrors,
                     (hasActivities, hasCompilationErrors) => hasActivities && !hasCompilationErrors),
-                RxApp.MainThreadScheduler);
+                RxSchedulers.MainThreadScheduler);
 
             Id = Resource.ProjectPlan.Titles.Title_ActivitiesView;
             Title = Resource.ProjectPlan.Titles.Title_ActivitiesView;

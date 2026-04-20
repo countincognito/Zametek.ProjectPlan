@@ -149,7 +149,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_SettingService.ScenarioChartCurveFittingType,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
                     rcm => rcm.m_CoreViewModel.BaseTheme)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildScenarioChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ScenarioChartView;

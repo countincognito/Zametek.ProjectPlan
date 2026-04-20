@@ -59,7 +59,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Create read-only view to the source list.
             m_ReadOnlyActivitySeveritiesSub = m_ActivitySeverities.Connect()
-               .ObserveOn(RxApp.MainThreadScheduler)
+               .ObserveOn(RxSchedulers.MainThreadScheduler)
                .Bind(out m_ReadOnlyActivitySeverities)
                .Subscribe();
 
@@ -77,7 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ProcessGraphSettingsSub = this
                 .WhenAnyValue(agsm => agsm.m_CoreViewModel.GraphSettings)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(rs =>
                 {
                     if (m_Current != rs)
@@ -88,7 +88,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_UpdateGraphSettingsSub = this
                 .WhenAnyValue(agsm => agsm.AreSettingsUpdated)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(areUpdated =>
                 {
                     if (areUpdated)

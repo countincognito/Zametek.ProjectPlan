@@ -59,7 +59,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Create read-only view to the source list.
             m_ReadOnlyWorkStreamsSub = m_WorkStreams.Connect()
-               .ObserveOn(RxApp.MainThreadScheduler)
+               .ObserveOn(RxSchedulers.MainThreadScheduler)
                .Bind(out m_ReadOnlyWorkStreams)
                .Subscribe();
 
@@ -77,7 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ProcessWorkStreamSettingsSub = this
                 .WhenAnyValue(wssm => wssm.m_CoreViewModel.WorkStreamSettings)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(rs =>
                 {
                     if (m_Current != rs)
@@ -88,7 +88,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_UpdateWorkStreamSettingsSub = this
                 .WhenAnyValue(wssm => wssm.AreSettingsUpdated)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(areUpdated =>
                 {
                     if (areUpdated)

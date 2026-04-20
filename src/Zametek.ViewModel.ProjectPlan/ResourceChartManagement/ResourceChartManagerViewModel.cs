@@ -160,7 +160,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.ShowMilestones,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
                     (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ResourceChartView;

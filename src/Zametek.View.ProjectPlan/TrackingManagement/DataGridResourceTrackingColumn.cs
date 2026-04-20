@@ -24,8 +24,14 @@ namespace Zametek.View.ProjectPlan
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                     Margin = new Avalonia.Thickness(0),
                     Padding = new Avalonia.Thickness(0),
-                    [!TextBlock.TextProperty] = new Binding($@"Day{m_Index:D2}Title", BindingMode.OneWay),
-                    [!ToolTip.TipProperty] = new Binding($@"Day{m_Index:D2}Title", BindingMode.OneWay)
+                    [!TextBlock.TextProperty] = new ReflectionBinding($@"Day{m_Index:D2}Title")
+                    {
+                        Mode = BindingMode.OneWay,
+                    },
+                    [!ToolTip.TipProperty] = new ReflectionBinding($@"Day{m_Index:D2}Title")
+                    {
+                        Mode = BindingMode.OneWay,
+                    },
                 });
 
             var cellTemplate = new FuncDataTemplate<object>((itemModel, namescope) =>
@@ -43,8 +49,14 @@ namespace Zametek.View.ProjectPlan
                         TextAlignment = Avalonia.Media.TextAlignment.Left,
                         Margin = new Avalonia.Thickness(0),
                         Padding = new Avalonia.Thickness(3),
-                        [!TextBlock.TextProperty] = new Binding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.TargetResourceActivitiesString)}", BindingMode.OneWay),
-                        [!ToolTip.TipProperty] = new Binding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.TargetResourceActivitiesString)}", BindingMode.OneWay),
+                        [!TextBlock.TextProperty] = new ReflectionBinding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.TargetResourceActivitiesString)}")
+                        {
+                            Mode = BindingMode.OneWay,
+                        },
+                        [!ToolTip.TipProperty] = new ReflectionBinding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.TargetResourceActivitiesString)}")
+                        {
+                            Mode = BindingMode.OneWay,
+                        },
                     });
 
                 return mainGrid;
@@ -63,9 +75,15 @@ namespace Zametek.View.ProjectPlan
                     MaxHeight = 200,
                     Width = double.NaN,
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
-                    [!ItemsControl.ItemsSourceProperty] = new Binding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.TargetResourceActivities)}", BindingMode.OneWay),
-                    [!MultiComboBox.SelectedItemsProperty] = new Binding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.SelectedTargetResourceActivities)}", BindingMode.OneWay),
-                    //[!ItemsControl.DisplayMemberBindingProperty] = new Binding($@"DisplayName", BindingMode.OneWay), // This didn't work.
+                    [!ItemsControl.ItemsSourceProperty] = new ReflectionBinding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.TargetResourceActivities)}")
+                    {
+                        Mode = BindingMode.OneWay,
+                    },
+                    [!MultiComboBox.SelectedItemsProperty] = new ReflectionBinding($@"{nameof(IManagedResourceViewModel.TrackerSet)}.Day{m_Index:D2}.{nameof(IResourceActivitySelectorViewModel.SelectedTargetResourceActivities)}")
+                    {
+                        Mode = BindingMode.OneWay,
+                    },
+                    //[!ItemsControl.DisplayMemberBindingProperty] = new ReflectionBinding($@"DisplayName", BindingMode.OneWay), // This didn't work.
                     IsDropDownOpen = true,
                 };
 
@@ -78,7 +96,10 @@ namespace Zametek.View.ProjectPlan
                     templateGrid.Children.Add(
                         new TextBlock
                         {
-                            [!TextBlock.TextProperty] = new Binding(nameof(ISelectableResourceActivityViewModel.Id), BindingMode.OneWay),
+                            [!TextBlock.TextProperty] = new ReflectionBinding(nameof(ISelectableResourceActivityViewModel.Id))
+                            {
+                                Mode = BindingMode.OneWay,
+                            },
                         });
                     return templateGrid;
                 });
@@ -104,8 +125,9 @@ namespace Zametek.View.ProjectPlan
                             Padding = new Avalonia.Thickness(0),
                             Minimum = 0,
                             Maximum = 200,
-                            [!NumericIntUpDown.ValueProperty] = new Binding(nameof(ISelectableResourceActivityViewModel.PercentageWorked), BindingMode.TwoWay)
+                            [!NumericIntUpDown.ValueProperty] = new ReflectionBinding(nameof(ISelectableResourceActivityViewModel.PercentageWorked))
                             {
+                                Mode = BindingMode.TwoWay,
                                 UpdateSourceTrigger = UpdateSourceTrigger.LostFocus,
                             },
                         });
@@ -114,12 +136,18 @@ namespace Zametek.View.ProjectPlan
                         new TextBlock
                         {
                             [DockPanel.DockProperty] = Avalonia.Controls.Dock.Right,
-                            [!TextBlock.TextProperty] = new Binding(nameof(ISelectableResourceActivityViewModel.Id), BindingMode.OneWay),
+                            [!TextBlock.TextProperty] = new ReflectionBinding(nameof(ISelectableResourceActivityViewModel.Id))
+                            {
+                                Mode = BindingMode.OneWay,
+                            },
                             Width = 36,
                             Padding = new Avalonia.Thickness(3, 0),
                             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
-                            [!ToolTip.TipProperty] = new Binding(nameof(ISelectableResourceActivityViewModel.DisplayName), BindingMode.OneWay),
+                            [!ToolTip.TipProperty] = new ReflectionBinding(nameof(ISelectableResourceActivityViewModel.DisplayName))
+                            {
+                                Mode = BindingMode.OneWay,
+                            },
                         });
 
                     templatePanel.Children.Add(new Grid());

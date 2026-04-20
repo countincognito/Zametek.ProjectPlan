@@ -217,7 +217,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.BoolAccumulator,
                     rcm => rcm.ActivitySelector.TargetActivitiesString,
                     (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_GanttChartView;

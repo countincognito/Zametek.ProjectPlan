@@ -62,7 +62,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Create read-only view to the source list.
             m_ReadOnlyHolidaysSub = m_Holidays.Connect()
-               .ObserveOn(RxApp.MainThreadScheduler)
+               .ObserveOn(RxSchedulers.MainThreadScheduler)
                .Bind(out m_ReadOnlyHolidays)
                .Subscribe();
 
@@ -80,7 +80,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ProcessHolidaySettingsSub = this
                 .WhenAnyValue(rsm => rsm.m_CoreViewModel.HolidaySettings)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(rs =>
                 {
                     if (m_Current != rs)
@@ -91,7 +91,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_UpdateHolidaySettingsSub = this
                 .WhenAnyValue(rsm => rsm.AreSettingsUpdated)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(areUpdated =>
                 {
                     if (areUpdated)

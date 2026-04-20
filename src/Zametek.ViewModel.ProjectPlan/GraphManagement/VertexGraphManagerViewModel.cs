@@ -133,12 +133,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     agm => agm.m_CoreViewModel.GraphSettings,
                     agm => agm.m_CoreViewModel.BaseTheme,
                     agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildVertexGraphDiagramDataAsync());
 
             m_BuildVertexGraphImageSub = this
                 .WhenAnyValue(agm => agm.VertexGraphData)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildVertexGraphDiagramImageAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_VertexGraphView;

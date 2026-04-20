@@ -133,12 +133,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     agm => agm.m_CoreViewModel.GraphSettings,
                     agm => agm.m_CoreViewModel.BaseTheme,
                     agm => agm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildArrowGraphDiagramDataAsync());
 
             m_BuildArrowGraphImageSub = this
                 .WhenAnyValue(agm => agm.ArrowGraphData)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildArrowGraphDiagramAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_ArrowGraphView;

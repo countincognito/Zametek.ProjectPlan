@@ -25,7 +25,7 @@
 
 		<semi:SemiTheme Locale="en-US" />
 		<!--<StyleInclude Source="avares://Semi.Avalonia/Themes/Index.axaml" />-->
-		<u-semi:SemiTheme Locale="en-US"/>
+		<semi:UrsaSemiTheme Locale="en-US"/>
 
 		<!--<SimpleTheme />
 		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />

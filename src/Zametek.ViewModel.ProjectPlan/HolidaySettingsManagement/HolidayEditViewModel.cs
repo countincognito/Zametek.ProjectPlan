@@ -77,7 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     x => x.IsEndUntil,
                     x => x.IsEndCount,
                     x => x.Until)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RebuildRecurrenceRule());
 
             m_ReviseRecurrencePattern02Sub = this
@@ -89,7 +89,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     x => x.ByWeekDaysFriday,
                     x => x.ByWeekDaysSaturday,
                     x => x.ByWeekDaysSunday)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RebuildRecurrenceRule());
 
             m_ReviseRecurrencePattern03Sub = this
@@ -100,7 +100,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     x => x.ByMonthDay,
                     x => x.ByMonthSetPosSelection,
                     x => x.ByMonthWeekdaySelection)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RebuildRecurrenceRule());
 
             m_ReviseRecurrencePattern04Sub = this
@@ -111,7 +111,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     x => x.YearlySetPosSelection,
                     x => x.YearlyWeekdaySelection,
                     x => x.YearlyMonthSelection)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RebuildRecurrenceRule());
 
             m_RecurrenceRule = managedHolidayViewModel.RecurrenceRule ?? new RecurrenceRuleModel();

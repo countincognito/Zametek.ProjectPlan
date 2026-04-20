@@ -149,7 +149,7 @@ namespace Zametek.ProjectPlan
             base.OnFrameworkInitializationCompleted();
 
 #if DEBUG
-            this.AttachDevTools();
+            this.AttachDeveloperTools();
 #endif
         }
     }

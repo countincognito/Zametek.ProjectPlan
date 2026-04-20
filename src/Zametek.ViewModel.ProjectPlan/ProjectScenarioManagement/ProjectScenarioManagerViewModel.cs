@@ -88,7 +88,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder),
-                    RxApp.MainThreadScheduler);
+                    RxSchedulers.MainThreadScheduler);
                 loadProjectScenarioFileCommand.IsExecuting.ToProperty(this, pm => pm.IsLoading, out m_IsLoading);
                 LoadProjectScenarioFileCommand = loadProjectScenarioFileCommand;
             }
@@ -98,7 +98,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder),
-                    RxApp.MainThreadScheduler);
+                    RxSchedulers.MainThreadScheduler);
                 loadSelectedProjectScenarioFileCommand.IsExecuting.ToProperty(this, pm => pm.IsLoading, out m_IsLoading);
                 LoadSelectedProjectScenarioFileCommand = loadSelectedProjectScenarioFileCommand;
             }
@@ -108,7 +108,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => true),
-                    RxApp.MainThreadScheduler);
+                    RxSchedulers.MainThreadScheduler);
                 createEmptyProjectScenarioFileCommand.IsExecuting.ToProperty(this, pm => pm.IsCreating, out m_IsCreating);
                 CreateEmptyProjectScenarioFileCommand = createEmptyProjectScenarioFileCommand;
             }
@@ -118,7 +118,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => true),
-                    RxApp.MainThreadScheduler);
+                    RxSchedulers.MainThreadScheduler);
                 createEmptyProjectScenarioFolderCommand.IsExecuting.ToProperty(this, pm => pm.IsCreating, out m_IsCreating);
                 CreateEmptyProjectScenarioFolderCommand = createEmptyProjectScenarioFolderCommand;
             }
@@ -128,7 +128,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
-                    RxApp.MainThreadScheduler);
+                    RxSchedulers.MainThreadScheduler);
                 renameProjectScenarioNodeCommand.IsExecuting.ToProperty(this, pm => pm.IsRenaming, out m_IsRenaming);
                 RenameProjectScenarioNodeCommand = renameProjectScenarioNodeCommand;
             }
@@ -150,7 +150,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         // If the collection isn't empty, we convert
                         // that to a boolean.
                         .Select(items => items.Count != 0),
-                    RxApp.MainThreadScheduler);
+                    RxSchedulers.MainThreadScheduler);
                 removeProjectScenarioNodeCommand.IsExecuting.ToProperty(this, pm => pm.IsRemoving, out m_IsRemoving);
                 RemoveProjectScenarioNodeCommand = removeProjectScenarioNodeCommand;
             }
@@ -160,7 +160,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => selectedNode is not null),
-                    RxApp.MainThreadScheduler);
+                    RxSchedulers.MainThreadScheduler);
                 AddNodeTagCommand = addNodeTagCommand;
             }
             {
@@ -169,7 +169,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => selectedNode is not null && selectedNode.RawLabels.Count > 0),
-                    RxApp.MainThreadScheduler);
+                    RxSchedulers.MainThreadScheduler);
                 RemoveNodeTagCommand = removeNodeTagCommand;
             }
             {
@@ -179,7 +179,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder)
                         .Merge(m_NodeActionCommandManualTrigger),
-                    RxApp.MainThreadScheduler);
+                    RxSchedulers.MainThreadScheduler);
                 CutProjectScenarioNodeCommand = cutProjectScenarioNodeCommand;
             }
             {
@@ -189,7 +189,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder)
                         .Merge(m_NodeActionCommandManualTrigger),
-                    RxApp.MainThreadScheduler);
+                    RxSchedulers.MainThreadScheduler);
                 CopyProjectScenarioNodeCommand = copyProjectScenarioNodeCommand;
             }
             {
@@ -199,7 +199,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder)
                         .Merge(m_NodeActionCommandManualTrigger),
-                    RxApp.MainThreadScheduler);
+                    RxSchedulers.MainThreadScheduler);
                 DuplicateProjectScenarioNodeCommand = duplicateProjectScenarioNodeCommand;
             }
             {
@@ -209,7 +209,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         pm => pm.SelectedNode,
                         (IManagedNodeViewModel? selectedNode) => m_NodeAction.NodeIds.Count != 0)
                         .Merge(m_NodeActionCommandManualTrigger),
-                    RxApp.MainThreadScheduler);
+                    RxSchedulers.MainThreadScheduler);
                 PasteProjectScenarioNodeCommand = pasteProjectScenarioNodeCommand;
             }
 
@@ -222,7 +222,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .AutoRefresh(node => node.CreatedOn)
                 .AutoRefresh(node => node.ModifiedOn)
                 .Sort(m_NodeSortComparer) // DynamicData listens to changes in this observable.
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Bind(out m_ReadOnlyNodes)
                 .Subscribe();
 
@@ -249,7 +249,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     pm => pm.SelectedSortMode,
                     pm => pm.SelectedSortDirection)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await ChangeSortAsync());
 
             m_AreScenariosDisplayedSub = m_ReadOnlyFlattenedNodes
@@ -258,7 +258,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .AutoRefresh(node => node.DisplayName)
                 .AutoRefresh(node => node.IsTracked)
                 //.Filter(node => !node.IsFolder && node.Scenario is not null)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ =>
                 {
                     if (!IsBusy)
@@ -272,7 +272,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_MetricsSub = this
                 .WhenAnyValue(pm => pm.m_CoreViewModel.Metrics)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ =>
                 {
                     if (!IsBusy)
@@ -286,7 +286,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_ReviseTrackedMetricsSub = this
                 .WhenAnyValue(pm => pm.IsReadyToReviseTrackedMetrics)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(isReady =>
                 {
                     if (isReady == ReadyToRevise.Yes)

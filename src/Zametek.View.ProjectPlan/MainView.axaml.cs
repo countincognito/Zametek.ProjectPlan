@@ -63,15 +63,15 @@ namespace Zametek.View.ProjectPlan
                     isClosing) =>
                         isBusy || isOpening || isSaving || isSavingAs //|| isImporting || isExporting
                         || isClosing)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(UpdateCursor);
 
                 m_UpdateThemeSub = m_ViewModel.WhenAnyValue(main => main.SelectedTheme)
-                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .ObserveOn(RxSchedulers.MainThreadScheduler)
                     .Subscribe(UpdateTheme);
 
                 m_CompilationErrorSub = m_ViewModel.WhenAnyValue(main => main.HasCompilationErrors)
-                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .ObserveOn(RxSchedulers.MainThreadScheduler)
                     .Subscribe(ShowCompilationError);
 
                 m_ViewModel.SelectedTheme = InitialTheme;

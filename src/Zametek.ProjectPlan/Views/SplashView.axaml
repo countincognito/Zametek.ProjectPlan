@@ -5,7 +5,7 @@
 		xmlns:resources="using:Zametek.Resource.ProjectPlan"
         mc:Ignorable="d"
 		Width="200" Height="120"
-		SystemDecorations="None"
+		WindowDecorations="None"
 		WindowStartupLocation="CenterScreen"
 		Background="Transparent"
 		TransparencyLevelHint="Transparent"

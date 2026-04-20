@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
+    <PackageReference Include="Riok.Mapperly" Version="5.0.0-next.6" />
   </ItemGroup>
 
   <ItemGroup>

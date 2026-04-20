@@ -1,4 +1,5 @@
-﻿using Avalonia.Threading;
+﻿using Avalonia;
+using Avalonia.Threading;
 using System;
 using Zametek.Contract.ProjectPlan;
 

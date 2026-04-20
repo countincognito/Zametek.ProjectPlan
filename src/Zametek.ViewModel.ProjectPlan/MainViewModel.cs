@@ -288,7 +288,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         return newTitle;
                     })
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(projectTitle =>
                 {
                     ProjectTitle = projectTitle;
