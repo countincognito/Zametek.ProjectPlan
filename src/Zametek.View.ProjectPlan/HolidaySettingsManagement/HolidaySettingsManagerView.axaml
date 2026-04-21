@@ -2,8 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
 			 xmlns:controls="using:Avalonia.Controls"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
@@ -102,14 +100,14 @@
 				</Style>
 			</DataGrid.Styles>
 
-			<i:Interaction.Behaviors>
-				<ia:EventTriggerBehavior EventName="SelectionChanged"
+			<Interaction.Behaviors>
+				<EventTriggerBehavior EventName="SelectionChanged"
 										 SourceObject="{Binding #holidaysGrid}">
-					<ia:InvokeCommandAction x:DataType="vm:HolidaySettingsManagerViewModel"
+					<InvokeCommandAction x:DataType="vm:HolidaySettingsManagerViewModel"
 											Command="{Binding Path=SetSelectedManagedHolidaysCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />
-				</ia:EventTriggerBehavior>
-			</i:Interaction.Behaviors>
+				</EventTriggerBehavior>
+			</Interaction.Behaviors>
 
 			<DataGrid.Columns>
 				<DataGridTemplateColumn CanUserResize="True"

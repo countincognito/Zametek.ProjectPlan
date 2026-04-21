@@ -2,8 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
@@ -86,10 +84,10 @@
 				</Style>-->
 				</DataGrid.Styles>
 				
-				<i:Interaction.Behaviors>
+				<Interaction.Behaviors>
 				
 					<!--<local:DataGridCacheScrollBehavior />-->
-				</i:Interaction.Behaviors>
+				</Interaction.Behaviors>
 				
 				<DataGrid.Columns>
 					<DataGridTemplateColumn CanUserResize="False"
@@ -223,9 +221,9 @@
 				</Style>-->
 				</DataGrid.Styles>
 				
-				<i:Interaction.Behaviors>
+				<Interaction.Behaviors>
 					<!--<local:DataGridCacheScrollBehavior />-->
-				</i:Interaction.Behaviors>
+				</Interaction.Behaviors>
 				
 				<DataGrid.Columns>
 					<DataGridTemplateColumn CanUserResize="False"

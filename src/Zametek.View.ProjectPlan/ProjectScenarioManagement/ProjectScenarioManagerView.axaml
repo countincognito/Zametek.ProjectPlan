@@ -6,8 +6,6 @@
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:common="using:Zametek.Common.ProjectPlan"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
 			 xmlns:converters="using:Avalonia.Controls.Converters"
 			 x:DataType="vm:ProjectScenarioManagerViewModel"
 			 Focusable="True"
@@ -251,17 +249,17 @@
 				</TreeDataTemplate>
 			</TreeView.ItemTemplate>
 
-			<i:Interaction.Behaviors>
-				<ia:EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #scenarioTree}">
-					<ia:InvokeCommandAction Command="{Binding Path=SetSelectedManagedNodesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
-				</ia:EventTriggerBehavior>
-				<ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #scenarioTree}">
-					<ia:InvokeCommandAction Command="{Binding Path=LoadSelectedProjectScenarioFileCommand, Mode=OneWay}" PassEventArgsToCommand="False" />
-				</ia:EventTriggerBehavior>
-				<ia:EventTriggerBehavior EventName="PointerPressed" SourceObject="{Binding #scenarioTree}">
-					<ia:InvokeCommandAction Command="{Binding Path=SetNoSelectedManagedNodesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
-				</ia:EventTriggerBehavior>
-			</i:Interaction.Behaviors>
+			<Interaction.Behaviors>
+				<EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #scenarioTree}">
+					<InvokeCommandAction Command="{Binding Path=SetSelectedManagedNodesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
+				</EventTriggerBehavior>
+				<EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #scenarioTree}">
+					<InvokeCommandAction Command="{Binding Path=LoadSelectedProjectScenarioFileCommand, Mode=OneWay}" PassEventArgsToCommand="False" />
+				</EventTriggerBehavior>
+				<EventTriggerBehavior EventName="PointerPressed" SourceObject="{Binding #scenarioTree}">
+					<InvokeCommandAction Command="{Binding Path=SetNoSelectedManagedNodesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
+				</EventTriggerBehavior>
+			</Interaction.Behaviors>
 		</TreeView>
 	</DockPanel>
 </UserControl>
