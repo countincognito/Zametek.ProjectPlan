@@ -443,7 +443,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public bool IsCompiled
         {
             get => m_IsCompiled;
-            private set
+            set
             {
                 m_IsCompiled = value;
                 this.RaisePropertyChanged();

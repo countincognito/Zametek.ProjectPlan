@@ -1940,11 +1940,20 @@ namespace Zametek.ViewModel.ProjectPlan
                     DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
+                    // Mark the display order as it was left.
+                    for (int i = 0; i < OrderableActivities.Count; i++)
+                    {
+                        OrderableActivities[i].DisplayOrder = i;
+                    }
+
+                    List<DependentActivityModel> dependentActivities =
+                        [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToDependentActivityModel)];
+
                     var plan = new ProjectScenarioModel
                     {
                         ProjectStart = ProjectStart,
                         Today = Today,
-                        DependentActivities = [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToDependentActivityModel)],
+                        DependentActivities = dependentActivities,
                         GraphSettings = GraphSettings.CloneObject(),
                         ResourceSettings = ResourceSettings.CloneObject(),
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),

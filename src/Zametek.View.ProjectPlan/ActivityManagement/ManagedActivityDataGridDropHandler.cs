@@ -24,11 +24,22 @@ namespace Zametek.View.ProjectPlan
                 // targetContext is the item we are dropping onto (or null if empty/not on a row)
                 //var targetItem = targetContext as IManagedActivityViewModel;
 
-                var targetItem = (e?.Source as Control)?.DataContext as IManagedActivityViewModel;
+                if (e is null
+                    || (e.Source as Control)?.DataContext is not IManagedActivityViewModel targetItem)
+                {
+                    return false;
+                }
 
                 // Helper method from BaseDataGridDropHandler to handle Move/Copy logic
                 // It calculates indices and moves the item in the collection
-                return RunDropAction(dg, e, execute, sourceItem, targetItem, items);
+                bool isValid = RunDropAction(dg, e, execute, sourceItem, targetItem, items);
+
+                if (isValid)
+                {
+                    targetItem.IsCompiled = false;
+                }
+
+                return isValid;
             }
             return false;
         }
