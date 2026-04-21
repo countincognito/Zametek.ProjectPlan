@@ -39,6 +39,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly IList<string> s_ActivityColumnTitles =
         [
             nameof(ActivityModel.Id),
+            nameof(ActivityModel.DisplayOrder),
             nameof(ActivityModel.Name),
             nameof(ActivityModel.TargetWorkStreams),
             nameof(ActivityModel.TargetResources),

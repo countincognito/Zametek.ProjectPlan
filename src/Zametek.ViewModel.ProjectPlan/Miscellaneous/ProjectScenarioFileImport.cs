@@ -42,6 +42,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly IList<string> s_ActivityColumnTitles =
         [
             nameof(ActivityModel.Id),
+            nameof(ActivityModel.DisplayOrder),
             nameof(ActivityModel.Name),
             nameof(ActivityModel.TargetWorkStreams),
             nameof(ActivityModel.TargetResources),
@@ -652,6 +653,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 foreach (DataRow row in dtTable.Rows)
                 {
                     int? id = 0;
+                    int? displayOrder = 0;
                     string name = string.Empty;
                     List<int> targetWorkStreams = [];
                     List<int> targetResources = [];
@@ -679,6 +681,14 @@ namespace Zametek.ViewModel.ProjectPlan
                                     if (int.TryParse(row[colName]?.ToString(), out int output))
                                     {
                                         id = output;
+                                    }
+                                })
+                            .Case(nameof(ActivityModel.DisplayOrder),
+                                colName =>
+                                {
+                                    if (int.TryParse(row[colName]?.ToString(), out int output))
+                                    {
+                                        displayOrder = output;
                                     }
                                 })
                             .Case(nameof(ActivityModel.Name),
@@ -824,11 +834,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (id is not null)
                     {
                         int idVal = id.GetValueOrDefault();
+                        int displayOrderVal = displayOrder.GetValueOrDefault();
                         dependentActivities[idVal] = new DependentActivityModel
                         {
                             Activity = new ActivityModel
                             {
                                 Id = idVal,
+                                DisplayOrder = displayOrderVal,
                                 Name = name,
                                 TargetWorkStreams = targetWorkStreams,
                                 TargetResources = targetResources,
