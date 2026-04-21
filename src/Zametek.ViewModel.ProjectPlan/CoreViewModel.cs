@@ -31,6 +31,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ProjectPlanMapper m_Mapper;
 
         private readonly IDisposable? m_ReadOnlyActivitiesSub;
+        private readonly IDisposable? m_OrderableActivitiesSub;
         private readonly IDisposable? m_NetworkMetricsSub;
         private readonly IDisposable? m_AreActivitiesUncompiledSub;
         private readonly IDisposable? m_CompileOnSettingsUpdateSub;
@@ -101,6 +102,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
             m_TrackingSeriesSet = new TrackingSeriesSetModel();
 
+            m_OrderableActivities = [];
+
             m_SelectedTheme = m_SettingService.SelectedTheme;
 
             m_ProjectFinish = this
@@ -135,6 +138,12 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ReadOnlyActivitiesSub = m_Activities.Connect()
                .ObserveOn(RxApp.MainThreadScheduler)
                .Bind(out m_ReadOnlyActivities)
+               .Subscribe();
+
+            m_OrderableActivitiesSub = m_Activities.Connect()
+               .ObserveOn(RxApp.MainThreadScheduler) // Ensure UI thread safety
+               .Bind(m_OrderableActivities)          // Bind to the mutable collection
+               .DisposeMany()                        // Clean up resources
                .Subscribe();
 
             m_HasActivities = m_ReadOnlyActivities
@@ -1230,6 +1239,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ReadOnlyObservableCollection<IManagedActivityViewModel> m_ReadOnlyActivities;
         public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_ReadOnlyActivities;
 
+        private readonly ObservableCollectionExtended<IManagedActivityViewModel> m_OrderableActivities;
+        public ObservableCollection<IManagedActivityViewModel> OrderableActivities => m_OrderableActivities;
+
         private GraphSettingsModel m_GraphSettings;
         public GraphSettingsModel GraphSettings
         {
@@ -2000,7 +2012,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         IsBusy = true;
 
-                        foreach (DependentActivityModel dependentActivity in dependentActivityModels)
+                        IOrderedEnumerable<DependentActivityModel> orderedDependentActivityModels = dependentActivityModels
+                            .OrderBy(x => x.Activity.DisplayOrder)
+                            .ThenBy(x => x.Activity.Id);
+
+                        foreach (DependentActivityModel dependentActivity in orderedDependentActivityModels)
                         {
                             var activity = new ManagedActivityViewModel(
                                 this,
@@ -2525,6 +2541,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public void KillSubscriptions()
         {
             m_ReadOnlyActivitiesSub?.Dispose();
+            m_OrderableActivitiesSub?.Dispose();
             m_NetworkMetricsSub?.Dispose();
             m_AreActivitiesUncompiledSub?.Dispose();
             m_CompileOnSettingsUpdateSub?.Dispose();

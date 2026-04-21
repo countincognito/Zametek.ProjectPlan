@@ -43,6 +43,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
 
+        ObservableCollection<IManagedActivityViewModel> OrderableActivities { get; }
+
         GraphSettingsModel GraphSettings { get; set; }
 
         ResourceSettingsModel ResourceSettings { get; set; }

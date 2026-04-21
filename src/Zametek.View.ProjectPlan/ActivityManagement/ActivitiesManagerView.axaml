@@ -13,6 +13,8 @@
 			 x:DataType="vm:ActivitiesManagerViewModel"
              x:Class="Zametek.View.ProjectPlan.ActivitiesManagerView">
 	<UserControl.Resources>
+		<local:ManagedActivityDataGridDropHandler x:Key="managedActivityDataGridDropHandler" />
+
 		<local:ManagedActivitySortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
 		<local:ManagedActivitySortComparer x:Key="durationSortComparer" SortMemberPath="Duration"/>
 		<local:ManagedActivitySortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
@@ -99,6 +101,7 @@
 			</DockPanel>
 		</ScrollViewer>
 
+		<!--Classes="DragAndDrop"-->
 		<DataGrid Name="activitiesGrid"
 				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"
@@ -110,6 +113,15 @@
 				  GridLinesVisibility="All"
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>
+				<!--<Style Selector="DataGridRow">
+					<Setter Property="(Interaction.Behaviors)">
+						<BehaviorCollectionTemplate>
+							<BehaviorCollection>
+								<ContextDragBehavior />
+							</BehaviorCollection>
+						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>-->
 				<Style Selector="DataGridRow Grid.editable">
 					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 				</Style>
@@ -144,6 +156,9 @@
 			</DataGrid.Styles>
 
 			<Interaction.Behaviors>
+				<!-- Make DataGrid a drop target -->
+				<!--<ContextDropBehavior Handler="{StaticResource managedActivityDataGridDropHandler}" />-->
+
 				<EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #activitiesGrid}">
 					<InvokeCommandAction Command="{Binding Path=SetSelectedManagedActivitiesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
 				</EventTriggerBehavior>
