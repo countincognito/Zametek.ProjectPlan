@@ -7,7 +7,7 @@ namespace Zametek.Contract.ProjectPlan
     {
         bool IsIsolated { get; }
 
-        bool IsCompiled { get; set; }
+        bool IsCompiled { get; }
 
         bool ShowDates { get; }
 

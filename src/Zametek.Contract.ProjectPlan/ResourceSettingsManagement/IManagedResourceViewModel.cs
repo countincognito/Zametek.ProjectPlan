@@ -9,6 +9,8 @@ namespace Zametek.Contract.ProjectPlan
     {
         int Id { get; }
 
+        int DisplayOrder { get; set; }
+
         string Name { get; set; }
 
         string Notes { get; set; }
@@ -30,8 +32,6 @@ namespace Zametek.Contract.ProjectPlan
         public double FixedBilling { get; set; }
 
         int AllocationOrder { get; set; }
-
-        int DisplayOrder { get; set; }
 
         ColorFormatModel ColorFormat { get; set; }
 

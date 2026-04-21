@@ -131,6 +131,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public int Id { get; }
 
+        private int m_DisplayOrder;
+        public int DisplayOrder
+        {
+            get => m_DisplayOrder;
+            set => this.RaiseAndSetIfChanged(ref m_DisplayOrder, value);
+        }
+
         private string m_Name;
         public string Name
         {
@@ -241,13 +248,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 this.RaiseAndSetIfChanged(ref m_FixedBilling, value);
             }
-        }
-
-        private int m_DisplayOrder;
-        public int DisplayOrder
-        {
-            get => m_DisplayOrder;
-            set => this.RaiseAndSetIfChanged(ref m_DisplayOrder, value);
         }
 
         private int m_AllocationOrder;

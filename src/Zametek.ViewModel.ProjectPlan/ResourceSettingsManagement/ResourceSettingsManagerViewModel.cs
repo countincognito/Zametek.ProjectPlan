@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Data;
 using DynamicData;
+using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -25,6 +26,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDialogService m_DialogService;
 
         private readonly IDisposable? m_ReadOnlyResourcesSub;
+        private readonly IDisposable? m_OrderableResourcesSub;
         private readonly IDisposable? m_ProcessResourceSettingsSub;
         private readonly IDisposable? m_UpdateResourceSettingsSub;
 
@@ -51,6 +53,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_Resources = new();
 
+            m_OrderableResources = [];
+
             SetSelectedManagedResourcesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedResources);
             AddManagedResourceCommand = ReactiveCommand.CreateFromTask(AddManagedResourceAsync);
             RemoveManagedResourcesCommand = ReactiveCommand.CreateFromTask(RemoveManagedResourcesAsync, this.WhenAnyValue(rm => rm.HasSelectedResources));
@@ -60,6 +64,12 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ReadOnlyResourcesSub = m_Resources.Connect()
                .ObserveOn(RxApp.MainThreadScheduler)
                .Bind(out m_ReadOnlyResources)
+               .Subscribe();
+
+            m_OrderableResourcesSub = m_Resources.Connect()
+               .ObserveOn(RxApp.MainThreadScheduler) // Ensure UI thread safety
+               .Bind(m_OrderableResources)          // Bind to the mutable collection
+               .DisposeMany()                        // Clean up resources
                .Subscribe();
 
             m_IsBusy = this
@@ -167,6 +177,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 new ResourceModel
                                 {
                                     Id = resourceId,
+                                    DisplayOrder = resourceId,
                                     IsExplicitTarget = false,
                                     IsInactive = false,
                                     UnitCost = DefaultUnitCost,
@@ -338,11 +349,21 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
+                // Mark the display order in reverse order of the list because
+                // the UI renders in that order and we want to reflect that.
+                int resourceCount = OrderableResources.Count;
+
+                for (int i = 0; i < resourceCount; i++)
+                {
+                    OrderableResources[i].DisplayOrder = resourceCount - i;
+                }
+
                 var resourceSettings = new ResourceSettingsModel
                 {
-                    Resources = RawResources.Select(x => new ResourceModel
+                    Resources = [.. RawResources.Select(x => new ResourceModel
                     {
                         Id = x.Id,
+                        DisplayOrder = x.DisplayOrder,
                         Name = x.Name,
                         Notes = x.Notes,
                         IsExplicitTarget = x.IsExplicitTarget,
@@ -353,10 +374,9 @@ namespace Zametek.ViewModel.ProjectPlan
                         UnitBilling = x.UnitBilling,
                         FixedCost = x.FixedCost,
                         FixedBilling = x.FixedBilling,
-                        DisplayOrder = x.DisplayOrder,
                         ColorFormat = x.ColorFormat,
                         Trackers = x.TrackerSet.Trackers,
-                    }).ToList(),
+                    })],
 
                     DefaultUnitCost = DefaultUnitCost,
                     DefaultUnitBilling = DefaultUnitBilling,
@@ -388,9 +408,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 ClearManagedResources();
 
+                // Add the resources in descending order because this is how
+                // the UI renders in that order and we want to reflect that.
+                IOrderedEnumerable<ResourceModel> orderedResourceModels = resourceSettings.Resources
+                     .OrderByDescending(x => x.DisplayOrder)
+                     .ThenByDescending(x => x.Id);
+
                 m_Resources.Edit(resources =>
                 {
-                    foreach (ResourceModel resouce in resourceSettings.Resources)
+                    foreach (ResourceModel resouce in orderedResourceModels)
                     {
                         resources.Add(new ManagedResourceViewModel(
                             m_CoreViewModel,
@@ -515,6 +541,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ReadOnlyObservableCollection<IManagedResourceViewModel> m_ReadOnlyResources;
         public ReadOnlyObservableCollection<IManagedResourceViewModel> Resources => m_ReadOnlyResources;
 
+        private readonly ObservableCollectionExtended<IManagedResourceViewModel> m_OrderableResources;
+        public ObservableCollection<IManagedResourceViewModel> OrderableResources => m_OrderableResources;
+
         public ICommand SetSelectedManagedResourcesCommand { get; }
 
         public ICommand AddManagedResourceCommand { get; }
@@ -545,6 +574,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HideCost?.Dispose();
                 m_HideBilling?.Dispose();
                 m_ReadOnlyResourcesSub?.Dispose();
+                m_OrderableResourcesSub?.Dispose();
                 m_ProcessResourceSettingsSub?.Dispose();
                 m_UpdateResourceSettingsSub?.Dispose();
                 ClearManagedResources();

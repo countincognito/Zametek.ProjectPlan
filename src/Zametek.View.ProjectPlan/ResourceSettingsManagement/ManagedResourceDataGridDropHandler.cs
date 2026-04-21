@@ -9,24 +9,23 @@ using Zametek.Contract.ProjectPlan;
 namespace Zametek.View.ProjectPlan
 {
     // https://wieslawsoltes.github.io/Xaml.Behaviors/articles/drag-and-drop-datagrid/datagrid-drag-and-drop-overview.html
-    public class ManagedActivityDataGridDropHandler
-        : BaseDataGridDropHandler<IManagedActivityViewModel>
+    public class ManagedResourceDataGridDropHandler
+        : BaseDataGridDropHandler<IManagedResourceViewModel>
     {
         protected override bool Validate(DataGrid dg, DragEventArgs e, object? sourceContext, object? targetContext, bool execute)
         {
             // Validate that we are dragging an ItemViewModel and dropping onto an ObservableCollection
-            if (sourceContext is IManagedActivityViewModel sourceItem
-                && dg.ItemsSource is ObservableCollection<IManagedActivityViewModel> items)
+            if (sourceContext is IManagedResourceViewModel sourceItem
+                && dg.ItemsSource is ObservableCollection<IManagedResourceViewModel> items)
             {
                 // If we are just validating (execute=false), return true to indicate drop is allowed
                 if (!execute) return true;
 
                 // If executing, perform the move
                 // targetContext is the item we are dropping onto (or null if empty/not on a row)
-                //var targetItem = targetContext as IManagedActivityViewModel;
 
                 if (e is null
-                    || (e.Source as Control)?.DataContext is not IManagedActivityViewModel targetItem)
+                    || (e.Source as Control)?.DataContext is not IManagedResourceViewModel targetItem)
                 {
                     return false;
                 }
@@ -49,9 +48,9 @@ namespace Zametek.View.ProjectPlan
             return false;
         }
 
-        protected override IManagedActivityViewModel MakeCopy(
-            ObservableCollection<IManagedActivityViewModel> parentCollection,
-            IManagedActivityViewModel item)
+        protected override IManagedResourceViewModel MakeCopy(
+            ObservableCollection<IManagedResourceViewModel> parentCollection,
+            IManagedResourceViewModel item)
         {
             throw new NotImplementedException();
         }

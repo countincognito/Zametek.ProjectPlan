@@ -2289,7 +2289,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     var availableResources = new List<IResource<int, int>>();
                     if (!ResourceSettings.AreDisabled)
                     {
-                        availableResources.AddRange(ResourceSettings.Resources.Select(m_Mapper.ToResource));
+                        availableResources.AddRange(ResourceSettings.Resources.OrderBy(x => x.Id).Select(m_Mapper.ToResource));
                     }
 
                     var workStreams = new List<IWorkStream<int>>();
@@ -2394,7 +2394,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         var availableResources = new List<IResource<int, int>>();
                         if (!ResourceSettings.AreDisabled)
                         {
-                            availableResources.AddRange(ResourceSettings.Resources.Select(m_Mapper.ToResource));
+                            availableResources.AddRange(ResourceSettings.Resources.OrderBy(x => x.Id).Select(m_Mapper.ToResource));
                         }
 
                         var workStreams = new List<IWorkStream<int>>();

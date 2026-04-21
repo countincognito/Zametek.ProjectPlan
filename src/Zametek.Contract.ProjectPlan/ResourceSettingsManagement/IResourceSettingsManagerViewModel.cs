@@ -27,6 +27,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadOnlyObservableCollection<IManagedResourceViewModel> Resources { get; }
 
+        ObservableCollection<IManagedResourceViewModel> OrderableResources { get; }
+
         ICommand SetSelectedManagedResourcesCommand { get; }
 
         ICommand AddManagedResourceCommand { get; }
