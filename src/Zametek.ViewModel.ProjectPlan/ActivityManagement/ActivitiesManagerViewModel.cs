@@ -337,6 +337,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_CoreViewModel.Activities;
 
+        public ObservableCollection<IManagedActivityViewModel> OrderableActivities => m_CoreViewModel.OrderableActivities;
+
         public ICommand SetSelectedManagedActivitiesCommand { get; }
 
         public ICommand AddManagedActivityCommand { get; }

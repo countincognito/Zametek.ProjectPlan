@@ -24,6 +24,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
 
+        ObservableCollection<IManagedActivityViewModel> OrderableActivities { get; }
+
         ICommand SetSelectedManagedActivitiesCommand { get; }
 
         ICommand AddManagedActivityCommand { get; }

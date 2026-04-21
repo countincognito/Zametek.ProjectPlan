@@ -101,19 +101,19 @@
 			</DockPanel>
 		</ScrollViewer>
 
-		<!--Classes="DragAndDrop"-->
 		<DataGrid Name="activitiesGrid"
 				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
-				  ItemsSource="{Binding Path=Activities, Mode=OneWay}"
+				  ItemsSource="{Binding Path=OrderableActivities, Mode=OneWay}"
 				  SelectionMode="Extended"
 				  CanUserResizeColumns="True"
 				  CanUserSortColumns="True"
 				  GridLinesVisibility="All"
+				  Classes="DragAndDrop"
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>
-				<!--<Style Selector="DataGridRow">
+				<Style Selector="DataGridRow">
 					<Setter Property="(Interaction.Behaviors)">
 						<BehaviorCollectionTemplate>
 							<BehaviorCollection>
@@ -121,7 +121,7 @@
 							</BehaviorCollection>
 						</BehaviorCollectionTemplate>
 					</Setter>
-				</Style>-->
+				</Style>
 				<Style Selector="DataGridRow Grid.editable">
 					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 				</Style>
@@ -157,7 +157,7 @@
 
 			<Interaction.Behaviors>
 				<!-- Make DataGrid a drop target -->
-				<!--<ContextDropBehavior Handler="{StaticResource managedActivityDataGridDropHandler}" />-->
+				<ContextDropBehavior Handler="{StaticResource managedActivityDataGridDropHandler}" />
 
 				<EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #activitiesGrid}">
 					<InvokeCommandAction Command="{Binding Path=SetSelectedManagedActivitiesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
