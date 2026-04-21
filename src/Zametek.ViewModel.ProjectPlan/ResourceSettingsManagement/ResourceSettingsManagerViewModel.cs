@@ -188,6 +188,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                     Trackers = []
                                 }));
                     });
+
+                    UpdateDisplayOrders();
                 }
                 UpdateResourceSettingsToCore();
             }
@@ -221,6 +223,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             resource.Dispose();
                         }
                     });
+
+                    UpdateDisplayOrders();
                 }
                 UpdateResourceSettingsToCore();
             }
@@ -349,14 +353,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                // Mark the display order in reverse order of the list because
-                // the UI renders in that order and we want to reflect that.
-                int resourceCount = OrderableResources.Count;
-
-                for (int i = 0; i < resourceCount; i++)
-                {
-                    OrderableResources[i].DisplayOrder = resourceCount - i;
-                }
+                UpdateDisplayOrders();
 
                 var resourceSettings = new ResourceSettingsModel
                 {
@@ -392,6 +389,18 @@ namespace Zametek.ViewModel.ProjectPlan
             AreSettingsUpdated = false;
         }
 
+        private void UpdateDisplayOrders()
+        {
+            // Mark the display order in reverse order of the list because
+            // the UI renders in that order and we want to reflect that.
+            int resourceCount = OrderableResources.Count;
+
+            for (int i = 0; i < resourceCount; i++)
+            {
+                OrderableResources[i].DisplayOrder = resourceCount - i;
+            }
+        }
+
         private void ProcessSettings(ResourceSettingsModel resourceSettings)
         {
             ArgumentNullException.ThrowIfNull(resourceSettings);
@@ -424,6 +433,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             resouce));
                     }
                 });
+
+                UpdateDisplayOrders();
             }
             AreSettingsUpdated = false;
         }

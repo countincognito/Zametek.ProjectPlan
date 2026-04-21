@@ -1008,6 +1008,18 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private void UpdateDisplayOrders()
+        {
+            lock (m_Lock)
+            {
+                // Mark the display order as it was left.
+                for (int i = 0; i < OrderableActivities.Count; i++)
+                {
+                    OrderableActivities[i].DisplayOrder = i;
+                }
+            }
+        }
+
         #endregion
 
         #region ICoreViewModel Members
@@ -1940,11 +1952,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
-                    // Mark the display order as it was left.
-                    for (int i = 0; i < OrderableActivities.Count; i++)
-                    {
-                        OrderableActivities[i].DisplayOrder = i;
-                    }
+                    UpdateDisplayOrders();
 
                     List<DependentActivityModel> dependentActivities =
                         [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToDependentActivityModel)];
@@ -1983,7 +1991,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public int AddManagedActivity()
+        public int AddManagedActivity(int displayOrder)
         {
             try
             {
@@ -1997,7 +2005,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             Activity = new ActivityModel
                             {
-                                Id = activityId
+                                Id = activityId,
+                                DisplayOrder = displayOrder,
                             }
                         }
                     };
@@ -2048,6 +2057,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
 
+                    UpdateDisplayOrders();
                     //IsProjectScenarioUpdated = true;
                 }
             }
@@ -2078,6 +2088,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
 
+                    UpdateDisplayOrders();
                     IsProjectScenarioUpdated = true;
                 }
             }
@@ -2174,8 +2185,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         if (upstreamActivityIds.Count != 0)
                         {
+                            int highestId = upstreamActivityIds.Max();
+                            int milestoneDisplayOrder = upstreamActivities.DefaultIfEmpty().Max(x => x?.DisplayOrder ?? 0) + 1;
+
                             // Create the milestone activity
-                            int milestoneId = AddManagedActivity();
+                            int milestoneId = AddManagedActivity(milestoneDisplayOrder);
 
                             IManagedActivityViewModel? milestoneActivity = RawActivities
                                 .FirstOrDefault(x => x.Id == milestoneId);
@@ -2285,6 +2299,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
+
+                    UpdateDisplayOrders();
 
                     var availableResources = new List<IResource<int, int>>();
                     if (!ResourceSettings.AreDisabled)

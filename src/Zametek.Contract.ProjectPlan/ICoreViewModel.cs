@@ -107,7 +107,7 @@ namespace Zametek.Contract.ProjectPlan
 
         ProjectScenarioModel BuildProjectScenario();
 
-        int AddManagedActivity();
+        int AddManagedActivity(int displayOrder);
 
         void AddManagedActivities(IEnumerable<DependentActivityModel> dependentActivityModels);
 

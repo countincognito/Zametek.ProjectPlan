@@ -175,7 +175,12 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(idUpdates);
             CheckIds(idUpdates);
 
-            List<int> originalIds = [.. projectScenarioModel.DependentActivities.Select(x => x.Activity.Id).Distinct()];
+            List<int> originalIds = [.. projectScenarioModel
+                .DependentActivities
+                .OrderBy(x => x.Activity.DisplayOrder)
+                .ThenBy(x => x.Activity.Id)
+                .Select(x => x.Activity.Id)
+                .Distinct()];
 
             // Update the ID mappings to make sure they are consistent
             // and make logical sense.

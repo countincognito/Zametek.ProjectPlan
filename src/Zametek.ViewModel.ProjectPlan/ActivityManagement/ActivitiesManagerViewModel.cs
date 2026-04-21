@@ -132,7 +132,12 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                m_CoreViewModel.AddManagedActivity();
+                int displayOrder = m_CoreViewModel
+                    .Activities
+                    .DefaultIfEmpty()
+                    .Max(x => x?.DisplayOrder ?? 0) + 1;
+
+                m_CoreViewModel.AddManagedActivity(displayOrder);
                 m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
             }
             m_CoreViewModel.RunAutoCompile();
@@ -167,7 +172,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 int lowestId = activityIds.Min();
-                int newId = m_CoreViewModel.AddManagedActivity();
+                int newDisplayOrder = SelectedActivities
+                    .Values
+                    .DefaultIfEmpty()
+                    .Min(x => x?.DisplayOrder ?? 0) - 1;
+                int newId = m_CoreViewModel.AddManagedActivity(newDisplayOrder);
 
                 m_CoreViewModel.UpdateManagedActivityIds([(newId, lowestId)]);
                 m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
