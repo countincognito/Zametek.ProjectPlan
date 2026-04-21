@@ -26,6 +26,7 @@
 	<PackageReference Include="Semi.Avalonia.DataGrid" Version="11.3.7.3" />
 	<PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
 	<PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.9.5" />
+	<PackageReference Include="Xaml.Behaviors.Interactions.DragAndDrop.DataGrid" Version="11.3.9.5" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj" />

@@ -427,6 +427,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IManagedActivityViewModel Members
 
+        public int DisplayOrder
+        {
+            get => DependentActivity.DisplayOrder;
+            set
+            {
+                DependentActivity.DisplayOrder = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         public bool IsIsolated => m_VertexGraphCompiler.IsIsolated(Id);
 
         private bool m_IsCompiled;

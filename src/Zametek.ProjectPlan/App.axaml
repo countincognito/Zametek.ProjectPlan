@@ -38,6 +38,8 @@
 		<StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml" />
 
 		<StyleInclude Source="avares://MsBox.Avalonia.Markdown/Controls/MarkdownView.axaml" />
+		
+		<StyleInclude Source="avares://Xaml.Behaviors.Interactions.DragAndDrop.DataGrid/Styles.axaml" />
 
 		<Style Selector="TextBox">
 			<Setter Property="FontSize" Value="12"/>

@@ -7,7 +7,7 @@
 
         public DateTimeOffset Today { get; init; }
 
-        public List<v0_4_4.DependentActivityModel> DependentActivities { get; init; } = [];
+        public List<DependentActivityModel> DependentActivities { get; init; } = [];
 
         public v0_5_0.GraphSettingsModel GraphSettings { get; init; } = new();
 

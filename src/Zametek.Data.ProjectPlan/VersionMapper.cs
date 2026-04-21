@@ -662,6 +662,18 @@ namespace Zametek.Data.ProjectPlan
         // v0.6.0 <-> Current and v0.5.0 / v0.4.4
         // ---------------------------------------------------------------------
 
+        public partial v0_6_0.ActivityModel FromCurrentToV0_6_0(ActivityModel src);
+        public partial ActivityModel FromV0_6_0ToCurrent(v0_6_0.ActivityModel src);
+
+        public partial v0_6_0.ActivityModel FromV0_4_4ToV0_6_0(v0_4_4.ActivityModel src);
+        public partial v0_4_4.ActivityModel FromV0_6_0ToV0_4_4(v0_6_0.ActivityModel src);
+
+        public partial v0_6_0.DependentActivityModel FromCurrentToV0_6_0(DependentActivityModel src);
+        public partial DependentActivityModel FromV0_6_0ToCurrent(v0_6_0.DependentActivityModel src);
+
+        public partial v0_6_0.DependentActivityModel FromV0_4_4ToV0_6_0(v0_4_4.DependentActivityModel src);
+        public partial v0_4_4.DependentActivityModel FromV0_6_0ToV0_4_4(v0_6_0.DependentActivityModel src);
+
         public static NonWorkingDayMode MapUseBusinessDays(bool useBusinessDays)
             => useBusinessDays ? NonWorkingDayMode.Weekends : NonWorkingDayMode.None;
 
