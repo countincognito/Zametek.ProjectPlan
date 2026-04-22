@@ -68,6 +68,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             ChangeRecurrenceFrequencyCommand = ReactiveCommand.Create<RecurrenceFrequency>(ChangeRecurrenceFrequency);
 
+            m_RecurrenceRule = managedHolidayViewModel.RecurrenceRule ?? new RecurrenceRuleModel();
+            LoadFromRecurrenceRule();
+
             m_ReviseRecurrencePattern01Sub = this
                 .WhenAnyValue(
                     x => x.StartDateTime,
@@ -114,8 +117,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => RebuildRecurrenceRule());
 
-            m_RecurrenceRule = managedHolidayViewModel.RecurrenceRule ?? new RecurrenceRuleModel();
-            LoadFromRecurrenceRule();
         }
 
         #endregion
