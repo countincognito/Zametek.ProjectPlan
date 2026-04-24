@@ -204,19 +204,6 @@ namespace Zametek.ProjectPlan
                                 GripMode = GripMode.Visible
                             }
                         ),
-
-
-                        //VisibleDockables = CreateList(
-                        //    m_ProjectScenarioManagerViewModel,
-                        //    m_ActivitiesManagerViewModel,
-                        //    m_GanttChartManagerViewModel,
-                        //    m_TrackingManagerViewModel,
-                        //    m_ArrowGraphManagerViewModel,
-                        //    m_VertexGraphManagerViewModel,
-                        //    m_ResourceChartManagerViewModel,
-                        //    m_EarnedValueChartManagerViewModel),
-                        //Alignment = Alignment.Top,
-                        //GripMode = GripMode.Visible
                     },
                     new ProportionalDockSplitter()
                     {

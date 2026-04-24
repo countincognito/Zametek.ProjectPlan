@@ -1,6 +1,11 @@
+using Avalonia.Collections;
+using Dock.Model;
 using Dock.Model.Controls;
 using Dock.Model.Core;
+using Dock.Model.ReactiveUI.Controls;
+using Dock.Serializer;
 using ReactiveUI;
+using Splat;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -92,7 +97,8 @@ namespace Zametek.ViewModel.ProjectPlan
             IProjectFileOpen projectFileOpen,
             IProjectFileSave projectFileSave,
             ISettingService settingService,
-            IDialogService dialogService)
+            IDialogService dialogService,
+            IServiceProvider serviceProvider)
         {
             ArgumentNullException.ThrowIfNull(dockFactory);
             ArgumentNullException.ThrowIfNull(projectScenarioManagerViewModel);
@@ -101,6 +107,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(projectFileSave);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
+            ArgumentNullException.ThrowIfNull(serviceProvider);
             m_Lock = new();
             m_DockFactory = dockFactory;
             m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel;
@@ -302,12 +309,57 @@ namespace Zametek.ViewModel.ProjectPlan
             DebugFactoryEvents(m_DockFactory);
 #endif
 
-            m_Layout = m_DockFactory.CreateLayout();
+
+
+
+            m_ServiceProvider = serviceProvider;
+
+            //var serializer = new Dock.Serializer.DockSerializer(typeof(RootDock));
+            //var json = serializer.Serialize(Layout);
+            //File.WriteAllText(@"C:\tmp\layout.json", json);
+
+            if (File.Exists(@"C:\tmp\layout.json"))
+            {
+
+                var json = File.ReadAllText(@"C:\tmp\layout.json");
+
+                DockSerializer serializer = new(m_ServiceProvider);
+
+                //var serializer = new Dock.Serializer.DockSerializer(typeof(AvaloniaList<>))
+                //{
+
+                //};
+
+
+                m_Layout = serializer.Deserialize<RootDock>(json);
+            }
+            else
+            {
+
+                m_Layout = m_DockFactory.CreateLayout();
+
+
+            }
+
+            //m_Layout = m_DockFactory.CreateLayout();
+
             if (m_Layout is not null)
             {
                 m_DockFactory.InitLayout(m_Layout);
             }
+
+
+            //m_Layout = m_DockFactory.CreateLayout();
+            //if (m_Layout is not null)
+            //{
+            //    m_DockFactory.InitLayout(m_Layout);
+            //}
         }
+
+
+
+        private readonly IServiceProvider m_ServiceProvider;
+
 
         #endregion
 
@@ -838,6 +890,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void CloseLayout()
         {
+            //using var write = File.OpenWrite(@"C:\tmp\layout.json");
+            ////_dockState.Save(dockControl.Layout);
+            //var serializer = new Dock.Serializer.DockSerializer(typeof(IRootDock));
+            //serializer.Save(write, Layout);
+
+            DockSerializer serializer = new(m_ServiceProvider);
+
+            //var serializer = new Dock.Serializer.DockSerializer(typeof(AvaloniaList<>));
+            var json = serializer.Serialize(Layout);
+            File.WriteAllText(@"C:\tmp\layout.json", json);
+
+
+
             if (Layout is IDock dock)
             {
                 if (dock.Close.CanExecute(null))

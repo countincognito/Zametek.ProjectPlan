@@ -1,5 +1,9 @@
-﻿using Dock.Model.Core;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using Dock.Model.Core;
+using ReactiveUI;
 using Splat;
+using Splat.Autofac;
 using System;
 using Zametek.Contract.ProjectPlan;
 using Zametek.View.ProjectPlan;
@@ -9,70 +13,215 @@ namespace Zametek.ProjectPlan
 {
     public static class Bootstrapper
     {
-        public static void RegisterSettings()
-        {
-            string settingsFilename = SettingFileHelper.DefaultFileLocation();
-            var settingService = new SettingService(settingsFilename);
-            SplatRegistrations.RegisterConstant<ISettingService>(settingService);
-        }
-
         public static void RegisterIOC()
         {
-            // ViewModels.
+            // 1. Create the Autofac builder
+            var builder = new ContainerBuilder();
 
-            SplatRegistrations.RegisterConstant(TimeProvider.System);
-            SplatRegistrations.RegisterLazySingleton<IDateTimeCalculator, DateTimeCalculator>();
-            SplatRegistrations.RegisterLazySingleton<IArrowGraphSerializer, ArrowGraphSerializer>();
-            SplatRegistrations.RegisterLazySingleton<IVertexGraphSerializer, VertexGraphSerializer>();
-            SplatRegistrations.RegisterLazySingleton<IProjectScenarioFileImport, ProjectScenarioFileImport>();
-            SplatRegistrations.RegisterLazySingleton<IProjectScenarioFileExport, ProjectScenarioFileExport>();
-            SplatRegistrations.RegisterLazySingleton<IProjectFileOpen, ProjectFileOpen>();
-            SplatRegistrations.RegisterLazySingleton<IProjectFileSave, ProjectFileSave>();
-            SplatRegistrations.RegisterLazySingleton<IDialogService, DialogService>();
-            SplatRegistrations.RegisterLazySingleton<ICoreViewModel, CoreViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IActivitiesManagerViewModel, ActivitiesManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<ITrackingManagerViewModel, TrackingManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IArrowGraphManagerViewModel, ArrowGraphManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IVertexGraphManagerViewModel, VertexGraphManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IResourceChartManagerViewModel, ResourceChartManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IGanttChartManagerViewModel, GanttChartManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IEarnedValueChartManagerViewModel, EarnedValueChartManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IMetricManagerViewModel, MetricManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IOutputManagerViewModel, OutputManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IGraphSettingsManagerViewModel, GraphSettingsManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IResourceSettingsManagerViewModel, ResourceSettingsManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IWorkStreamSettingsManagerViewModel, WorkStreamSettingsManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IHolidaySettingsManagerViewModel, HolidaySettingsManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IProjectScenarioManagerViewModel, ProjectScenarioManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IScenarioChartManagerViewModel, ScenarioChartManagerViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IMainViewModel, MainViewModel>();
-            SplatRegistrations.RegisterLazySingleton<IFactory, DockFactory>();
+            builder.Register(c => new AutofacServiceProvider(c.Resolve<ILifetimeScope>()))
+                .As<IServiceProvider>()
+                .InstancePerLifetimeScope();
+
+            // File settings.
+            string settingsFilename = SettingFileHelper.DefaultFileLocation();
+            var settingService = new SettingService(settingsFilename);
+
+            builder.RegisterInstance(settingService)
+                .As<ISettingService>()
+                .As<SettingService>();
+
+            // 2. Register services and ViewModels
+            builder.RegisterInstance(TimeProvider.System);
+            builder.RegisterType<DateTimeCalculator>()
+                .As<IDateTimeCalculator>()
+                .As<DateTimeCalculator>()
+                .SingleInstance();
+            builder.RegisterType<ArrowGraphSerializer>()
+                .As<IArrowGraphSerializer>()
+                .As<ArrowGraphSerializer>()
+                .SingleInstance();
+            builder.RegisterType<VertexGraphSerializer>()
+                .As<IVertexGraphSerializer>()
+                .As<VertexGraphSerializer>()
+                .SingleInstance();
+            builder.RegisterType<ProjectScenarioFileImport>()
+                .As<IProjectScenarioFileImport>()
+                .As<ProjectScenarioFileImport>()
+                .SingleInstance();
+            builder.RegisterType<ProjectScenarioFileExport>()
+                .As<IProjectScenarioFileExport>()
+                .As<ProjectScenarioFileExport>()
+                .SingleInstance();
+            builder.RegisterType<ProjectFileOpen>()
+                .As<IProjectFileOpen>()
+                .As<ProjectFileOpen>()
+                .SingleInstance();
+            builder.RegisterType<ProjectFileSave>()
+                .As<IProjectFileSave>()
+                .As<ProjectFileSave>()
+                .SingleInstance();
+            builder.RegisterType<DialogService>()
+                .As<IDialogService>()
+                .As<DialogService>()
+                .SingleInstance();
+            builder.RegisterType<CoreViewModel>()
+                .As<ICoreViewModel>()
+                .As<CoreViewModel>()
+                .SingleInstance();
+            builder.RegisterType<ActivitiesManagerViewModel>()
+                .As<IActivitiesManagerViewModel>()
+                .As<ActivitiesManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<TrackingManagerViewModel>()
+                .As<ITrackingManagerViewModel>()
+                .As<TrackingManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<ArrowGraphManagerViewModel>()
+                .As<IArrowGraphManagerViewModel>()
+                .As<ArrowGraphManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<VertexGraphManagerViewModel>()
+                .As<IVertexGraphManagerViewModel>()
+                .As<VertexGraphManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<ResourceChartManagerViewModel>()
+                .As<IResourceChartManagerViewModel>()
+                .As<ResourceChartManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<GanttChartManagerViewModel>()
+                .As<IGanttChartManagerViewModel>()
+                .As<GanttChartManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<EarnedValueChartManagerViewModel>()
+                .As<IEarnedValueChartManagerViewModel>()
+                .As<EarnedValueChartManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<MetricManagerViewModel>()
+                .As<IMetricManagerViewModel>()
+                .As<MetricManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<OutputManagerViewModel>()
+                .As<IOutputManagerViewModel>()
+                .As<OutputManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<GraphSettingsManagerViewModel>()
+                .As<IGraphSettingsManagerViewModel>()
+                .As<GraphSettingsManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<ResourceSettingsManagerViewModel>()
+                .As<IResourceSettingsManagerViewModel>()
+                .As<ResourceSettingsManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<WorkStreamSettingsManagerViewModel>()
+                .As<IWorkStreamSettingsManagerViewModel>()
+                .As<WorkStreamSettingsManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<HolidaySettingsManagerViewModel>()
+                .As<IHolidaySettingsManagerViewModel>()
+                .As<HolidaySettingsManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<ProjectScenarioManagerViewModel>()
+                .As<IProjectScenarioManagerViewModel>()
+                .As<ProjectScenarioManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<ScenarioChartManagerViewModel>()
+                .As<IScenarioChartManagerViewModel>()
+                .As<ScenarioChartManagerViewModel>()
+                .SingleInstance();
+            builder.RegisterType<MainViewModel>()
+                .As<IMainViewModel>()
+                .As<MainViewModel>()
+                .SingleInstance();
+            builder.RegisterType<DockFactory>()
+                .As<IFactory>()
+                .As<DockFactory>()
+                .SingleInstance();
 
             // Views.
-            SplatRegistrations.RegisterLazySingleton<ActivitiesManagerView>();
-            SplatRegistrations.RegisterLazySingleton<TrackingManagerView>();
-            SplatRegistrations.RegisterLazySingleton<ArrowGraphManagerView>();
-            SplatRegistrations.RegisterLazySingleton<VertexGraphManagerView>();
-            SplatRegistrations.RegisterLazySingleton<ResourceChartManagerView>();
-            SplatRegistrations.RegisterLazySingleton<GanttChartManagerView>();
-            SplatRegistrations.RegisterLazySingleton<EarnedValueChartManagerView>();
-            SplatRegistrations.RegisterLazySingleton<MetricManagerView>();
-            SplatRegistrations.RegisterLazySingleton<OutputManagerView>();
-            SplatRegistrations.RegisterLazySingleton<GraphSettingsManagerView>();
-            SplatRegistrations.RegisterLazySingleton<ResourceSettingsManagerView>();
-            SplatRegistrations.RegisterLazySingleton<WorkStreamSettingsManagerView>();
-            SplatRegistrations.RegisterLazySingleton<HolidaySettingsManagerView>();
-            SplatRegistrations.RegisterLazySingleton<ProjectScenarioManagerView>();
-            SplatRegistrations.RegisterLazySingleton<ScenarioChartManagerView>();
-            SplatRegistrations.RegisterLazySingleton<MainView>();
+            builder.RegisterType<ActivitiesManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<TrackingManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<ArrowGraphManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<VertexGraphManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<ResourceChartManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<GanttChartManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<EarnedValueChartManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<MetricManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<OutputManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<GraphSettingsManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<ResourceSettingsManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<WorkStreamSettingsManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<HolidaySettingsManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<ProjectScenarioManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<ScenarioChartManagerView>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<MainView>()
+                .AsSelf()
+                .SingleInstance();
 
-            SplatRegistrations.RegisterConstant(new Data.ProjectPlan.VersionMapper());
-            SplatRegistrations.RegisterConstant(new ViewModel.ProjectPlan.ProjectPlanMapper());
-            SplatRegistrations.RegisterConstant(new View.ProjectPlan.ProjectPlanMapper());
 
-            SplatRegistrations.RegisterLazySingleton<ICommitEditHandler, CommitEditHandler>();
 
-            SplatRegistrations.SetupIOC();
+
+            builder.RegisterInstance(new Data.ProjectPlan.VersionMapper());
+            builder.RegisterInstance(new ViewModel.ProjectPlan.ProjectPlanMapper());
+            builder.RegisterInstance(new View.ProjectPlan.ProjectPlanMapper());
+
+
+            builder.RegisterType<CommitEditHandler>().As<ICommitEditHandler>().SingleInstance();
+            //SplatRegistrations.SetupIOC();
+
+
+
+
+
+
+
+
+
+
+            // 3. Use the Autofac resolver for Splat
+            // This tells Splat/ReactiveUI to look into Autofac for dependencies
+            AutofacDependencyResolver autofacResolver = builder.UseAutofacDependencyResolver();
+            Locator.SetLocator(autofacResolver);
+
+            // 4. Initialize ReactiveUI/Splat integration
+            autofacResolver.InitializeSplat();
+            autofacResolver.InitializeReactiveUI();
+
+
+            // 5. Build the container and set the lifetime scope
+            IContainer container = builder.Build();
+            autofacResolver.SetLifetimeScope(container);
+
+
         }
     }
 }

@@ -1,10 +1,14 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
+using ReactiveUI;
+using ReactiveUI.Avalonia;
 using Splat;
 using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Zametek.Contract.ProjectPlan;
 using Zametek.View.ProjectPlan;
@@ -16,12 +20,9 @@ namespace Zametek.ProjectPlan
     {
         public override void Initialize()
         {
+            RxApp.MainThreadScheduler = AvaloniaScheduler.Instance;
             AvaloniaXamlLoader.Load(this);
         }
-
-        private static void RegisterSettings() => Bootstrapper.RegisterSettings();
-
-        private static void RegisterIOC() => Bootstrapper.RegisterIOC();
 
         private static T GetRequiredService<T>() =>
             Locator.Current.GetService<T>() ?? throw new NullReferenceException($"{Resource.ProjectPlan.Messages.Message_UnableToResolveType} {typeof(T).FullName}");
@@ -48,11 +49,15 @@ namespace Zametek.ProjectPlan
 
                 try
                 {
-                    await Task.Run(() =>
+                    await Task.Factory.StartNew(() =>
                     {
-                        RegisterSettings();
-                        RegisterIOC();
+                        //RegisterSettings();
+                        //Bootstrapper.RegisterIOC();
                     }, cancellationToken: splashViewModel.CancellationToken);
+
+
+
+              
 
                     ISettingService settingService = GetRequiredService<ISettingService>();
                     string selectedTheme = settingService.SelectedTheme;

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using ReactiveUI.Avalonia;
 using System;
+using System.Threading.Tasks;
 
 namespace Zametek.ProjectPlan
 {
@@ -11,8 +12,29 @@ namespace Zametek.ProjectPlan
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
         [STAThread]
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
+
+
+
+
+
+
+
+
+
+
+            //await Task.Run(() =>
+            //{
+            //    Bootstrapper.RegisterIOC();
+            //});
+
+
+
+            Bootstrapper.RegisterIOC();
+
+
+
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args, ShutdownMode.OnMainWindowClose);
         }
@@ -20,8 +42,8 @@ namespace Zametek.ProjectPlan
         // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
+                //.UseReactiveUI()
                 .UsePlatformDetect()
-                .LogToTrace()
-                .UseReactiveUI();
+                .LogToTrace();
     }
 }
