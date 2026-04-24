@@ -23,8 +23,9 @@ namespace Zametek.ProjectPlan
                 .InstancePerLifetimeScope();
 
             // File settings.
-            string settingsFilename = SettingFileHelper.DefaultFileLocation();
-            var settingService = new SettingService(settingsFilename);
+            string settingsFilename = SettingFileHelper.DefaultUserSettingsFileLocation();
+            string layoutFilename = SettingFileHelper.DefaultDockLayoutFileLocation();
+            var settingService = new SettingService(settingsFilename, layoutFilename);
 
             builder.RegisterInstance(settingService)
                 .As<ISettingService>()

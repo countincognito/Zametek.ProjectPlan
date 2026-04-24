@@ -1,10 +1,12 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using ReactiveUI;
 using System;
 using System.IO;
 using System.Threading;
 using Zametek.Common.ProjectPlan;
 using Zametek.Data.ProjectPlan;
+using Zametek.Utility;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan
@@ -15,16 +17,22 @@ namespace Zametek.ProjectPlan
         #region Fields
 
         private readonly Lock m_Lock;
+        private string m_Layout;
 
         #endregion
 
         #region Ctors
 
-        public SettingService(string settingsFilename)
+        public SettingService(
+            string settingsFilename,
+            string layoutFilename)
             : base(settingsFilename)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(settingsFilename);
+            ArgumentException.ThrowIfNullOrWhiteSpace(layoutFilename);
+            LayoutFilename = layoutFilename;
             m_Lock = new();
+            m_Layout = string.Empty;
             string? directory = Path.GetDirectoryName(SettingsFilename);
 
             if (string.IsNullOrWhiteSpace(directory))
@@ -33,9 +41,22 @@ namespace Zametek.ProjectPlan
             }
 
             Directory.CreateDirectory(directory);
+
+            if (File.Exists(LayoutFilename))
+            {
+                using StreamReader reader = File.OpenText(LayoutFilename);
+                string content = reader.ReadToEnd();
+                m_Layout = content;
+            }
         }
 
         #endregion
+
+        private void SaveLayout()
+        {
+            using StreamWriter writer = File.CreateText(LayoutFilename);
+            writer.WriteLine(Layout);
+        }
 
         private void SaveSettings()
         {
@@ -67,6 +88,22 @@ namespace Zametek.ProjectPlan
                 {
                     m_AppSettingsModel = m_AppSettingsModel with { ProjectDirectory = value };
                     SaveSettings();
+                }
+            }
+        }
+
+        public override string Layout
+        {
+            get
+            {
+                return m_Layout;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_Layout = value;
+                    SaveLayout();
                 }
             }
         }

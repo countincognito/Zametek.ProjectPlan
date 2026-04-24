@@ -11,8 +11,9 @@ namespace Zametek.ProjectPlan
         private const string c_ZametekHome = @".zametek";
         private const string c_Product = @"projectplan.net";
         private const string c_UserSettings = @"UserSettings.json";
+        private const string c_DockLayout = @"DockLayout.json";
 
-        public static string DefaultFileLocation()
+        public static string ProductSettingsFolderLocation()
         {
             // For backwards compatibility, this checks env vars first before using Env.GetFolderPath/
 
@@ -44,10 +45,22 @@ namespace Zametek.ProjectPlan
 
             if (string.IsNullOrWhiteSpace(root))
             {
-                throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_UnableToDetermineUserSettingsPath);
+                throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_UnableToDetermineProductSettingsFolderPath);
             }
 
-            return Path.Combine(root, c_Product, c_UserSettings);
+            return Path.Combine(root, c_Product);
+        }
+
+        public static string DefaultUserSettingsFileLocation()
+        {
+            string productFolderPath = ProductSettingsFolderLocation();
+            return Path.Combine(productFolderPath, c_UserSettings);
+        }
+
+        public static string DefaultDockLayoutFileLocation()
+        {
+            string productFolderPath = ProductSettingsFolderLocation();
+            return Path.Combine(productFolderPath, c_DockLayout);
         }
     }
 }

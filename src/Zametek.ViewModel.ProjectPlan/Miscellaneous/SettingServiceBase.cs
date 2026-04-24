@@ -33,6 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Version = Versions.AppSettingsLatest,
             };
             SettingsFilename = settingsFilename;
+            LayoutFilename = string.Empty;
 
             if (File.Exists(SettingsFilename))
             {
@@ -89,6 +90,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public string SettingsFilename { get; init; }
 
+        public string LayoutFilename { get; init; }
+
         private string m_ProjectTitle;
         public string ProjectTitle
         {
@@ -140,6 +143,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
         }
+
+        public abstract string Layout { get; set; }
 
         public abstract bool DefaultShowDates { get; set; }
 

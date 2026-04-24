@@ -6,6 +6,8 @@ namespace Zametek.Contract.ProjectPlan
     {
         string SettingsFilename { get; }
 
+        string LayoutFilename { get; }
+
         Guid ProjectId { get; }
 
         string ProjectTitle { get; }
@@ -15,6 +17,8 @@ namespace Zametek.Contract.ProjectPlan
         string ScenarioTitle { get; }
 
         string ProjectDirectory { get; }
+
+        string Layout { get; set; }
 
         bool DefaultShowDates { get; set; }
 

@@ -56,6 +56,17 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
+        public override string Layout
+        {
+            get
+            {
+                return string.Empty;
+            }
+            set
+            {
+            }
+        }
+
         public override bool DefaultShowDates
         {
             get
