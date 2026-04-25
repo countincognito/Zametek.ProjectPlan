@@ -17,6 +17,7 @@ namespace Zametek.ProjectPlan.CommandLine
         private bool m_DefaultHideBilling;
         private SortMode m_ProjectScenarioSortMode;
         private SortDirection m_ProjectScenarioSortDirection;
+        private bool m_ScenarioChartShowNames;
         private TrackedMetrics m_ScenarioChartTrackedMetricXAxis;
         private TrackedMetrics m_ScenarioChartTrackedMetricYAxis;
         private CurveFittingType m_ScenarioChartCurveFittingType;
@@ -168,6 +169,18 @@ namespace Zametek.ProjectPlan.CommandLine
                 lock (m_Lock)
                 {
                     m_ProjectScenarioSortDirection = value;
+                }
+            }
+        }
+
+        public override bool ScenarioChartShowNames
+        {
+            get => m_ScenarioChartShowNames;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ScenarioChartShowNames = value;
                 }
             }
         }

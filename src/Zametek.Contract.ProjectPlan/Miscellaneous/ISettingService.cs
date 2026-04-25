@@ -30,15 +30,26 @@ namespace Zametek.Contract.ProjectPlan
 
         bool DefaultHideBilling { get; set; }
 
+
+
+
+
+
         SortMode ProjectScenarioSortMode { get; set; }
 
         SortDirection ProjectScenarioSortDirection { get; set; }
+
+        bool ScenarioChartShowNames { get; set; }
 
         TrackedMetrics ScenarioChartTrackedMetricXAxis { get; set; }
 
         TrackedMetrics ScenarioChartTrackedMetricYAxis { get; set; }
 
         CurveFittingType ScenarioChartCurveFittingType { get; set; }
+
+
+
+
 
         string SelectedTheme { get; set; }
 

@@ -220,6 +220,20 @@ namespace Zametek.ProjectPlan
             }
         }
 
+        public override bool ScenarioChartShowNames
+        {
+            get => m_AppSettingsModel.ScenarioChartShowNames;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_AppSettingsModel = m_AppSettingsModel with { ScenarioChartShowNames = value };
+                    SaveSettings();
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         public override TrackedMetrics ScenarioChartTrackedMetricXAxis
         {
             get => m_AppSettingsModel.ScenarioChartTrackedMetricXAxis;

@@ -160,6 +160,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public abstract SortDirection ProjectScenarioSortDirection { get; set; }
 
+        public abstract bool ScenarioChartShowNames { get; set; }
+
         public abstract TrackedMetrics ScenarioChartTrackedMetricXAxis { get; set; }
 
         public abstract TrackedMetrics ScenarioChartTrackedMetricYAxis { get; set; }

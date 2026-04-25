@@ -129,6 +129,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, rcm => rcm.HasCompilationErrors);
 
+            m_ShowNames = this
+                .WhenAnyValue(rcm => rcm.m_SettingService.ScenarioChartShowNames)
+                .ToProperty(this, agm => agm.ShowNames);
+
             m_TrackedMetricXAxis = this
                 .WhenAnyValue(rcm => rcm.m_SettingService.ScenarioChartTrackedMetricXAxis)
                 .ToProperty(this, rcm => rcm.TrackedMetricXAxis);
@@ -144,6 +148,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_BuildScenarioChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
+                    rcm => rcm.m_SettingService.ScenarioChartShowNames,
                     rcm => rcm.m_SettingService.ScenarioChartTrackedMetricXAxis,
                     rcm => rcm.m_SettingService.ScenarioChartTrackedMetricYAxis,
                     rcm => rcm.m_SettingService.ScenarioChartCurveFittingType,
@@ -205,6 +210,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static (AvaPlot, string) BuildScenarioChartPlotModelInternal(
             TrackedMetricsSetModel trackedMetricsSet,
+            bool showNames,
             TrackedMetrics xMetric,
             TrackedMetrics yMetric,
             CurveFittingType curveFittingType,
@@ -233,6 +239,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // Gather the data points for the selected metrics.
 
             List<AnnotatedMarker> markers = [];
+            List<Text> annotations = [];
 
             foreach (TrackedMetricsModel trackedMetrics in trackedMetricsSet.TrackedMetrics)
             {
@@ -243,16 +250,41 @@ namespace Zametek.ViewModel.ProjectPlan
                     Size = 10,
                     Color = Colors.Blue,
                     Shape = MarkerShape.FilledCircle,
-                    Annotation = trackedMetrics.Path
+                    Annotation = trackedMetrics.Path,
+                };
+
+                var annotation = new Text
+                {
+                    LabelText = marker.Annotation,
+                    Location = new Coordinates(marker.X, marker.Y),
+                    OffsetX = 10,
+                    OffsetY = 10,
+                    LabelPadding = 5,
+                    //FontSize = 12,
+                    //Color = Colors.Black,
+                    //BackgroundColor = Colors.White.WithAlpha(200),
+                    //BorderColor = Colors.Black,
+                    //BorderWidth = 1,
                 };
 
                 markers.Add(marker);
+                annotations.Add(annotation);
             }
 
             markers = [.. markers.OrderBy(m => m.X).ThenBy(m => m.Y)];
             plotModel.Plot.PlottableList.AddRange(markers);
+
+            if (showNames)
+            {
+                annotations = [.. annotations.OrderBy(m => m.Location.X).ThenBy(m => m.Location.Y)];
+                plotModel.Plot.PlottableList.AddRange(annotations);
+            }
+
             string curveFittingFormula = BuildCurveFit(plotModel, markers, curveFittingType);
             plotModel.Plot.Axes.AutoScale();
+
+            plotModel.Plot.Axes.AutoScaleExpand();
+
             return (plotModel, curveFittingFormula);
         }
 
@@ -501,6 +533,16 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
+        private readonly ObservableAsPropertyHelper<bool> m_ShowNames;
+        public bool ShowNames
+        {
+            get => m_ShowNames.Value;
+            set
+            {
+                lock (m_Lock) m_SettingService.ScenarioChartShowNames = value;
+            }
+        }
+
         private readonly ObservableAsPropertyHelper<TrackedMetrics> m_TrackedMetricXAxis;
         public TrackedMetrics TrackedMetricXAxis
         {
@@ -617,6 +659,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     (plotModel, curveFittingFormula) = BuildScenarioChartPlotModelInternal(
                         m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
+                        m_SettingService.ScenarioChartShowNames,
                         m_SettingService.ScenarioChartTrackedMetricXAxis,
                         m_SettingService.ScenarioChartTrackedMetricYAxis,
                         m_SettingService.ScenarioChartCurveFittingType,

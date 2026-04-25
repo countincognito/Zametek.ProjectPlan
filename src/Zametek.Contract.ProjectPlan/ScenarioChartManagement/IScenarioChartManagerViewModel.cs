@@ -12,6 +12,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
+        bool ShowNames { get; set; }
+
         TrackedMetrics TrackedMetricXAxis { get; set; }
 
         TrackedMetrics TrackedMetricYAxis { get; set; }

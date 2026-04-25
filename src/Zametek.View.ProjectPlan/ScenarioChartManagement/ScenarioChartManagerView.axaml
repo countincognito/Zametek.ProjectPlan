@@ -109,6 +109,27 @@
 				</DockPanel>
 
 				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_ShowNames}"/>
+
+					<ToggleSwitch DockPanel.Dock="Top"
+								  IsTabStop="False"
+								  Margin="0,0,0,11"
+								  VerticalAlignment="Center"
+								  VerticalContentAlignment="Center"
+								  HorizontalAlignment="Center"
+								  HorizontalContentAlignment="Center"
+								  OffContent="{x:Static resources:Labels.Label_No}"
+								  OnContent="{x:Static resources:Labels.Label_Yes}"
+								  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"/>
+				</DockPanel>
+				
+				<DockPanel DockPanel.Dock="Top">
 					<ScrollViewer VerticalScrollBarVisibility="Auto"
 								  HorizontalScrollBarVisibility="Disabled">
 						<SelectableTextBlock Text="{Binding Path=CurveFittingFormula, Mode=OneWay}"
@@ -118,7 +139,7 @@
 											 VerticalAlignment="Stretch"/>
 					</ScrollViewer>
 				</DockPanel>
-
+				
 				<Grid/>
 			</DockPanel>
 		</ScrollViewer>
