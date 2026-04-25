@@ -249,6 +249,9 @@
 								      CommandParameter="{x:Static resources:Themes.Theme_NightSky}"
 									  ToggleType="Radio" />
 						</MenuItem>
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_ResetLayout}"
+								  Command="{Binding Path=ResetLayoutCommand, Mode=OneWay}" />
 					</MenuItem>
 
 					<MenuItem Header="{x:Static resources:Menus.Menu_Compile}">

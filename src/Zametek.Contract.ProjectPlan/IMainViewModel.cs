@@ -92,6 +92,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ChangeThemeCommand { get; }
 
+        ICommand ResetLayoutCommand { get; }
+
         ICommand CompileCommand { get; }
 
         ICommand ToggleAutoCompileCommand { get; }
@@ -110,9 +112,15 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand OpenAboutCommand { get; }
 
+        void SaveLayout();
+
+        void RestoreLayout();
+
         void CloseLayout();
 
         void ResetLayout();
+
+        Task ResetLayoutAsync();
 
         Task OpenProjectFileAsync();
 

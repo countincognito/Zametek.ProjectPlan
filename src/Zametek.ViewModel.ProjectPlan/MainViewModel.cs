@@ -1,11 +1,8 @@
-using Avalonia.Collections;
-using Dock.Model;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.ReactiveUI.Controls;
 using Dock.Serializer;
 using ReactiveUI;
-using Splat;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -119,6 +116,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
             m_ServiceProvider = serviceProvider;
             m_ProjectTitle = string.Empty;
+            m_IsMainBusy = false;
 
             {
                 ReactiveCommand<Unit, Unit> openProjectFileCommand = ReactiveCommand.CreateFromTask(OpenProjectFileAsync);
@@ -168,6 +166,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ToggleDefaultHideBillingCommand = ReactiveCommand.Create(ToggleDefaultHideBilling);
 
             ChangeThemeCommand = ReactiveCommand.CreateFromTask<string>(ChangeThemeAsync);
+            ResetLayoutCommand = ReactiveCommand.CreateFromTask(ResetLayoutAsync);
 
             CompileCommand = ReactiveCommand.CreateFromTask(ForceCompileAsync);
             ToggleAutoCompileCommand = ReactiveCommand.Create(ToggleAutoCompile);
@@ -182,9 +181,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_IsBusy = this
                 .WhenAnyValue(
+                    main => main.IsMainBusy,
                     main => main.m_CoreViewModel.IsBusy,
                     main => main.m_ProjectScenarioManagerViewModel.IsBusy,
-                    (isCoreBusy, isProjectBusy) => isCoreBusy || isProjectBusy)
+                    (isMainBusy, isCoreBusy, isProjectBusy) => isMainBusy || isCoreBusy || isProjectBusy)
                 .ToProperty(this, main => main.IsBusy);
 
             m_IsProjectUpdated = this
@@ -306,32 +306,10 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CoreViewModel.AutoCompile = true;
 
             ResetProject();
-
 #if DEBUG
             DebugFactoryEvents(m_DockFactory);
 #endif
-
-            string layoutContent = m_SettingService.Layout;
-
-            if (!string.IsNullOrWhiteSpace(layoutContent))
-            {
-                DockSerializer serializer = new(m_ServiceProvider);
-                try
-                {
-                    m_Layout = serializer.Deserialize<RootDock>(layoutContent);
-                }
-                catch (Exception ex)
-                {
-                    // TODO
-                }
-            }
-
-            m_Layout ??= m_DockFactory.CreateLayout();
-
-            if (m_Layout is not null)
-            {
-                m_DockFactory.InitLayout(m_Layout);
-            }
+            RestoreLayout();
         }
 
         #endregion
@@ -343,6 +321,13 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get => m_Layout;
             set => this.RaiseAndSetIfChanged(ref m_Layout, value);
+        }
+
+        private bool m_IsMainBusy;
+        private bool IsMainBusy
+        {
+            get => m_IsMainBusy;
+            set => this.RaiseAndSetIfChanged(ref m_IsMainBusy, value);
         }
 
         #endregion
@@ -843,6 +828,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ChangeThemeCommand { get; }
 
+        public ICommand ResetLayoutCommand { get; }
+
         public ICommand CompileCommand { get; }
 
         public ICommand ToggleAutoCompileCommand { get; }
@@ -861,36 +848,100 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand OpenAboutCommand { get; }
 
+        public void SaveLayout()
+        {
+            lock (m_Lock)
+            {
+                DockSerializer serializer = new(m_ServiceProvider);
+                string layoutContent = serializer.Serialize(Layout);
+                m_SettingService.Layout = layoutContent;
+            }
+        }
+
+        public void RestoreLayout()
+        {
+            lock (m_Lock)
+            {
+                string layoutContent = m_SettingService.Layout;
+
+                if (!string.IsNullOrWhiteSpace(layoutContent))
+                {
+                    DockSerializer serializer = new(m_ServiceProvider);
+                    try
+                    {
+                        m_Layout = serializer.Deserialize<RootDock>(layoutContent);
+                    }
+                    catch
+                    {
+                        m_Layout = null;
+                    }
+                }
+
+                m_Layout ??= m_DockFactory.CreateLayout();
+
+                if (m_Layout is not null)
+                {
+                    m_DockFactory.InitLayout(m_Layout);
+                }
+            }
+        }
+
         public void CloseLayout()
         {
-            DockSerializer serializer = new(m_ServiceProvider);
-            string layoutContent = serializer.Serialize(Layout);
-            m_SettingService.Layout = layoutContent;
-
-            if (Layout is IDock dock)
+            lock (m_Lock)
             {
-                if (dock.Close.CanExecute(null))
+                SaveLayout();
+
+                if (Layout is IDock dock)
                 {
-                    dock.Close.Execute(null);
+                    if (dock.Close.CanExecute(null))
+                    {
+                        dock.Close.Execute(null);
+                    }
                 }
             }
         }
 
         public void ResetLayout()
         {
-            if (Layout is not null)
+            lock (m_Lock)
             {
-                if (Layout.Close.CanExecute(null))
+                if (Layout is not null)
                 {
-                    Layout.Close.Execute(null);
+                    if (Layout.Close.CanExecute(null))
+                    {
+                        Layout.Close.Execute(null);
+                    }
+                }
+
+                IRootDock? layout = m_DockFactory.CreateLayout();
+                if (layout is not null)
+                {
+                    Layout = layout;
+                    m_DockFactory.InitLayout(layout);
                 }
             }
+        }
 
-            IRootDock? layout = m_DockFactory.CreateLayout();
-            if (layout is not null)
+        private async Task ResetLayoutInternalAsync() => await Task.Run(ResetLayout);
+
+        public async Task ResetLayoutAsync()
+        {
+            try
             {
-                Layout = layout;
-                m_DockFactory.InitLayout(layout);
+                IsMainBusy = true;
+                await ResetLayoutInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+            finally
+            {
+                IsMainBusy = false;
             }
         }
 
