@@ -2,6 +2,7 @@
 using Autofac.Extensions.DependencyInjection;
 using Dock.Model.Core;
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 using Splat;
 using Splat.Autofac;
 using System;
@@ -188,41 +189,34 @@ namespace Zametek.ProjectPlan
                 .AsSelf()
                 .SingleInstance();
 
-
-
-
             builder.RegisterInstance(new Data.ProjectPlan.VersionMapper());
             builder.RegisterInstance(new ViewModel.ProjectPlan.ProjectPlanMapper());
             builder.RegisterInstance(new View.ProjectPlan.ProjectPlanMapper());
 
-
-            builder.RegisterType<CommitEditHandler>().As<ICommitEditHandler>().SingleInstance();
-            //SplatRegistrations.SetupIOC();
-
-
-
-
-
-
-
-
-
+            builder.RegisterType<CommitEditHandler>()
+                .As<ICommitEditHandler>()
+                .As<CommitEditHandler>()
+                .SingleInstance();
 
             // 3. Use the Autofac resolver for Splat
             // This tells Splat/ReactiveUI to look into Autofac for dependencies
             AutofacDependencyResolver autofacResolver = builder.UseAutofacDependencyResolver();
             Locator.SetLocator(autofacResolver);
 
+            // https://stackoverflow.com/questions/65110470/how-to-use-autofac-as-di-container-in-avalonia-reactiveui
             // 4. Initialize ReactiveUI/Splat integration
             autofacResolver.InitializeSplat();
             autofacResolver.InitializeReactiveUI();
 
+            // This is important for ensuring that UI components are instantiated
+            // on the correct thread.
+            autofacResolver.RegisterConstant<IActivationForViewFetcher>(new AvaloniaActivationForViewFetcher());
+            autofacResolver.RegisterConstant<IPropertyBindingHook>(new AutoDataTemplateBindingHook());
+            RxApp.MainThreadScheduler = AvaloniaScheduler.Instance;
 
             // 5. Build the container and set the lifetime scope
             IContainer container = builder.Build();
             autofacResolver.SetLifetimeScope(container);
-
-
         }
     }
 }

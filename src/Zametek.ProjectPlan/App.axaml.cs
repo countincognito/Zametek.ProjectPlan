@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Avalonia.Threading;
 using ReactiveUI;
 using ReactiveUI.Avalonia;
 using Splat;
@@ -51,13 +50,8 @@ namespace Zametek.ProjectPlan
                 {
                     await Task.Factory.StartNew(() =>
                     {
-                        //RegisterSettings();
-                        //Bootstrapper.RegisterIOC();
+                        Bootstrapper.RegisterIOC();
                     }, cancellationToken: splashViewModel.CancellationToken);
-
-
-
-              
 
                     ISettingService settingService = GetRequiredService<ISettingService>();
                     string selectedTheme = settingService.SelectedTheme;
