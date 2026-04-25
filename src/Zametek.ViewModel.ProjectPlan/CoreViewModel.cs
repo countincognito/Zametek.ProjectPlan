@@ -66,7 +66,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ProjectScenarioFileExport = projectScenarioFileExport;
             m_SettingService = settingService;
             m_DateTimeCalculator = dateTimeCalculator;
-            m_DisplaySettingsViewModel = new DisplaySettingsViewModel(
+            m_DisplaySettingsViewModel = new ProjectScenarioDisplaySettingsViewModel(
                 m_DateTimeCalculator,
                 SetIsProjectScenarioUpdated,
                 () => IsReadyToCompile = ReadyToCompile.Yes);
@@ -1128,8 +1128,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<string> m_ProjectFinish;
         public string ProjectFinish => m_ProjectFinish.Value;
 
-        private readonly DisplaySettingsViewModel m_DisplaySettingsViewModel;
-        public IDisplaySettingsViewModel DisplaySettingsViewModel
+        private readonly ProjectScenarioDisplaySettingsViewModel m_DisplaySettingsViewModel;
+        public IProjectScenarioDisplaySettingsViewModel DisplaySettingsViewModel
         {
             get => m_DisplaySettingsViewModel;
         }
@@ -1605,7 +1605,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings,
                         HolidaySettings = m_SettingService.DefaultHolidaySettings,
                         Metrics = new(),
-                        DisplaySettings = new DisplaySettingsModel
+                        DisplaySettings = new ProjectScenarioDisplaySettingsModel
                         {
                             ShowDates = m_SettingService.DefaultShowDates,
                             UseClassicDates = m_SettingService.DefaultUseClassicDates,
@@ -1641,7 +1641,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     WorkStreamSettings = emptyPlan.WorkStreamSettings;
                     HolidaySettings = emptyPlan.HolidaySettings;
 
-                    DisplaySettingsModel defaultDisplaySettings = emptyPlan.DisplaySettings;
+                    ProjectScenarioDisplaySettingsModel defaultDisplaySettings = emptyPlan.DisplaySettings;
                     DisplaySettingsViewModel.SetValues(defaultDisplaySettings);
                 }
             }

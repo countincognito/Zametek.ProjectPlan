@@ -1,12 +1,9 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using ReactiveUI;
 using System;
 using System.IO;
 using System.Threading;
 using Zametek.Common.ProjectPlan;
 using Zametek.Data.ProjectPlan;
-using Zametek.Utility;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ProjectPlan
@@ -184,94 +181,6 @@ namespace Zametek.ProjectPlan
                 {
                     m_AppSettingsModel = m_AppSettingsModel with { DefaultHideBilling = value };
                     SaveSettings();
-                }
-            }
-        }
-
-        public override SortMode ProjectScenarioSortMode
-        {
-            get
-            {
-                return m_AppSettingsModel.ProjectScenarioSortMode;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_AppSettingsModel = m_AppSettingsModel with { ProjectScenarioSortMode = value };
-                    SaveSettings();
-                }
-            }
-        }
-
-        public override SortDirection ProjectScenarioSortDirection
-        {
-            get
-            {
-                return m_AppSettingsModel.ProjectScenarioSortDirection;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_AppSettingsModel = m_AppSettingsModel with { ProjectScenarioSortDirection = value };
-                    SaveSettings();
-                }
-            }
-        }
-
-        public override bool ScenarioChartShowNames
-        {
-            get => m_AppSettingsModel.ScenarioChartShowNames;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_AppSettingsModel = m_AppSettingsModel with { ScenarioChartShowNames = value };
-                    SaveSettings();
-                    this.RaisePropertyChanged();
-                }
-            }
-        }
-
-        public override TrackedMetrics ScenarioChartTrackedMetricXAxis
-        {
-            get => m_AppSettingsModel.ScenarioChartTrackedMetricXAxis;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_AppSettingsModel = m_AppSettingsModel with { ScenarioChartTrackedMetricXAxis = value };
-                    SaveSettings();
-                    this.RaisePropertyChanged();
-                }
-            }
-        }
-
-        public override TrackedMetrics ScenarioChartTrackedMetricYAxis
-        {
-            get => m_AppSettingsModel.ScenarioChartTrackedMetricYAxis;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_AppSettingsModel = m_AppSettingsModel with { ScenarioChartTrackedMetricYAxis = value };
-                    SaveSettings();
-                    this.RaisePropertyChanged();
-                }
-            }
-        }
-
-        public override CurveFittingType ScenarioChartCurveFittingType
-        {
-            get => m_AppSettingsModel.ScenarioChartCurveFittingType;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_AppSettingsModel = m_AppSettingsModel with { ScenarioChartCurveFittingType = value };
-                    SaveSettings();
-                    this.RaisePropertyChanged();
                 }
             }
         }

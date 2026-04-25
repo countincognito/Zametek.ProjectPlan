@@ -130,28 +130,28 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToProperty(this, rcm => rcm.HasCompilationErrors);
 
             m_ShowNames = this
-                .WhenAnyValue(rcm => rcm.m_SettingService.ScenarioChartShowNames)
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNames)
                 .ToProperty(this, agm => agm.ShowNames);
 
             m_TrackedMetricXAxis = this
-                .WhenAnyValue(rcm => rcm.m_SettingService.ScenarioChartTrackedMetricXAxis)
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis)
                 .ToProperty(this, rcm => rcm.TrackedMetricXAxis);
 
             m_TrackedMetricYAxis = this
-                .WhenAnyValue(rcm => rcm.m_SettingService.ScenarioChartTrackedMetricYAxis)
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricYAxis)
                 .ToProperty(this, rcm => rcm.TrackedMetricYAxis);
 
             m_CurveFittingType = this
-                .WhenAnyValue(rcm => rcm.m_SettingService.ScenarioChartCurveFittingType)
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType)
                 .ToProperty(this, rcm => rcm.CurveFittingType);
 
             m_BuildScenarioChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
-                    rcm => rcm.m_SettingService.ScenarioChartShowNames,
-                    rcm => rcm.m_SettingService.ScenarioChartTrackedMetricXAxis,
-                    rcm => rcm.m_SettingService.ScenarioChartTrackedMetricYAxis,
-                    rcm => rcm.m_SettingService.ScenarioChartCurveFittingType,
+                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNames,
+                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
+                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricYAxis,
+                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
                     rcm => rcm.m_CoreViewModel.BaseTheme)
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -539,7 +539,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_ShowNames.Value;
             set
             {
-                lock (m_Lock) m_SettingService.ScenarioChartShowNames = value;
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartShowNames = value;
             }
         }
 
@@ -549,7 +549,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_TrackedMetricXAxis.Value;
             set
             {
-                lock (m_Lock) m_SettingService.ScenarioChartTrackedMetricXAxis = value;
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis = value;
             }
         }
 
@@ -559,7 +559,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_TrackedMetricYAxis.Value;
             set
             {
-                lock (m_Lock) m_SettingService.ScenarioChartTrackedMetricYAxis = value;
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricYAxis = value;
             }
         }
 
@@ -569,7 +569,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_CurveFittingType.Value;
             set
             {
-                lock (m_Lock) m_SettingService.ScenarioChartCurveFittingType = value;
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType = value;
             }
         }
 
@@ -659,10 +659,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     (plotModel, curveFittingFormula) = BuildScenarioChartPlotModelInternal(
                         m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
-                        m_SettingService.ScenarioChartShowNames,
-                        m_SettingService.ScenarioChartTrackedMetricXAxis,
-                        m_SettingService.ScenarioChartTrackedMetricYAxis,
-                        m_SettingService.ScenarioChartCurveFittingType,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartShowNames,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricYAxis,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType,
                         m_CoreViewModel.BaseTheme);
                 }
             }

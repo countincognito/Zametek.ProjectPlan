@@ -2,7 +2,7 @@
 
 namespace Zametek.Contract.ProjectPlan
 {
-    public interface IDisplaySettingsViewModel
+    public interface IProjectScenarioDisplaySettingsViewModel
         : IDisposable
     {
         bool ShowDates { get; set; }
@@ -40,7 +40,7 @@ namespace Zametek.Contract.ProjectPlan
         bool EarnedValueShowMilestones { get; set; }
 
 
-        void SetValues(DisplaySettingsModel model);
-        DisplaySettingsModel GetValues();
+        void SetValues(ProjectScenarioDisplaySettingsModel model);
+        ProjectScenarioDisplaySettingsModel GetValues();
     }
 }

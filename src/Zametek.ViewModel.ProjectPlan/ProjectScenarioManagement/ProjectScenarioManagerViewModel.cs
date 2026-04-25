@@ -78,6 +78,9 @@ namespace Zametek.ViewModel.ProjectPlan
             m_IsReadyToReviseTitle = ReadyToRevise.No;
             m_IsReadyToReviseTrackedMetrics = ReadyToRevise.No;
             m_TrackedMetricsSet = new();
+            m_DisplaySettingsViewModel = new ProjectDisplaySettingsViewModel(
+                m_DateTimeCalculator,
+                SetIsProjectUpdated);
 
             SetSelectedManagedNodesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedNodes);
             SetNoSelectedManagedNodesCommand = ReactiveCommand.Create<PointerPressedEventArgs>(SetNoSelectedManagedNodes);
@@ -245,10 +248,34 @@ namespace Zametek.ViewModel.ProjectPlan
                     (isProjectUpdated, isProjectScenarioUpdated) => isProjectUpdated || isProjectScenarioUpdated)
                 .ToProperty(this, pm => pm.ProjectHasChanges);
 
+            m_ProjectScenarioSortMode = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ProjectScenarioSortMode)
+                .ToProperty(this, pm => pm.ProjectScenarioSortMode);
+
+            m_ProjectScenarioSortDirection = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ProjectScenarioSortDirection)
+                .ToProperty(this, pm => pm.ProjectScenarioSortDirection);
+
+            m_ScenarioChartShowNames = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartShowNames)
+                .ToProperty(this, pm => pm.ScenarioChartShowNames);
+
+            m_ScenarioChartTrackedMetricXAxis = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartTrackedMetricXAxis)
+                .ToProperty(this, pm => pm.ScenarioChartTrackedMetricXAxis);
+
+            m_ScenarioChartTrackedMetricYAxis = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartTrackedMetricYAxis)
+                .ToProperty(this, pm => pm.ScenarioChartTrackedMetricYAxis);
+
+            m_ScenarioChartCurveFittingType = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartCurveFittingType)
+                .ToProperty(this, pm => pm.ScenarioChartCurveFittingType);
+
             m_SortUpdateSub = this
                 .WhenAnyValue(
-                    pm => pm.SelectedSortMode,
-                    pm => pm.SelectedSortDirection)
+                    pm => pm.ProjectScenarioSortMode,
+                    pm => pm.ProjectScenarioSortDirection)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await ChangeSortAsync());
 
@@ -306,6 +333,14 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Private Methods
+
+        private void SetIsProjectUpdated(bool isProjectUpdated)
+        {
+            lock (m_Lock)
+            {
+                IsProjectUpdated = isProjectUpdated;
+            }
+        }
 
         private void ResetRootNode()
         {
@@ -1616,7 +1651,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                SelectedSortMode = sortMode;
+                ProjectScenarioSortMode = sortMode;
             }
             catch (Exception ex)
             {
@@ -1631,7 +1666,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                SelectedSortDirection = sortDirection;
+                ProjectScenarioSortDirection = sortDirection;
             }
             catch (Exception ex)
             {
@@ -1661,8 +1696,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                SortMode sortMode = SelectedSortMode;
-                SortDirection sortDirection = SelectedSortDirection;
+                SortMode sortMode = ProjectScenarioSortMode;
+                SortDirection sortDirection = ProjectScenarioSortDirection;
 
                 Func<IManagedNodeViewModel, IComparable> newSortMode =
                     (x) => x.Name;
@@ -1815,6 +1850,90 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_ProjectHasChanges;
         public bool ProjectHasChanges => m_ProjectHasChanges.Value;
 
+        private readonly ProjectDisplaySettingsViewModel m_DisplaySettingsViewModel;
+        public IProjectDisplaySettingsViewModel DisplaySettingsViewModel
+        {
+            get => m_DisplaySettingsViewModel;
+        }
+
+        private readonly ObservableAsPropertyHelper<SortMode> m_ProjectScenarioSortMode;
+        public SortMode ProjectScenarioSortMode
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ProjectScenarioSortMode;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ProjectScenarioSortMode = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<SortDirection> m_ProjectScenarioSortDirection;
+        public SortDirection ProjectScenarioSortDirection
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ProjectScenarioSortDirection;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ProjectScenarioSortDirection = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ScenarioChartShowNames;
+        public bool ScenarioChartShowNames
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ScenarioChartShowNames;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartShowNames = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<TrackedMetrics> m_ScenarioChartTrackedMetricXAxis;
+        public TrackedMetrics ScenarioChartTrackedMetricXAxis
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ScenarioChartTrackedMetricXAxis;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartTrackedMetricXAxis = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<TrackedMetrics> m_ScenarioChartTrackedMetricYAxis;
+        public TrackedMetrics ScenarioChartTrackedMetricYAxis
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ScenarioChartTrackedMetricYAxis;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartTrackedMetricYAxis = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<CurveFittingType> m_ScenarioChartCurveFittingType;
+        public CurveFittingType ScenarioChartCurveFittingType
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ScenarioChartCurveFittingType;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartCurveFittingType = value;
+            }
+        }
+
         public IManagedNodeViewModel Root { get; private set; }
 
         private readonly SourceList<IManagedNodeViewModel> m_Nodes;
@@ -1836,32 +1955,6 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get => m_SelectedNode;
             private set => this.RaiseAndSetIfChanged(ref m_SelectedNode, value);
-        }
-
-        public SortMode SelectedSortMode
-        {
-            get => m_SettingService.ProjectScenarioSortMode;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_SettingService.ProjectScenarioSortMode = value;
-                    this.RaisePropertyChanged();
-                }
-            }
-        }
-
-        public SortDirection SelectedSortDirection
-        {
-            get => m_SettingService.ProjectScenarioSortDirection;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_SettingService.ProjectScenarioSortDirection = value;
-                    this.RaisePropertyChanged();
-                }
-            }
         }
 
         private TrackedMetricsSetModel m_TrackedMetricsSet;
@@ -1947,6 +2040,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     m_SettingService.ResetProject();
 
+                    DisplaySettingsViewModel.SetValues(new ProjectDisplaySettingsModel());
+
                     // Now add the new core project scenario to the project manager.
                     ProjectScenarioModel projectScenario = m_CoreViewModel.BuildProjectScenario();
                     DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
@@ -1998,6 +2093,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     ClearProject();
 
                     m_SettingService.SetProjectId(projectModel.Id);
+                    
+                    DisplaySettingsViewModel.SetValues(projectModel.DisplaySettings);
 
                     // Root node.
                     ResetRootNode(projectModel.Root);
@@ -2183,6 +2280,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Nodes = nodes,
                         Files = files,
                         Tags = tags,
+                        DisplaySettings = DisplaySettingsViewModel.GetValues(),
                     };
 
                     return projectModel;
@@ -2232,6 +2330,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsRemoving?.Dispose();
                 m_IsProjectScenarioUpdated?.Dispose();
                 m_ProjectHasChanges?.Dispose();
+                m_ProjectScenarioSortMode?.Dispose();
+                m_ProjectScenarioSortDirection?.Dispose();
+                m_ScenarioChartShowNames?.Dispose();
+                m_ScenarioChartTrackedMetricXAxis?.Dispose();
+                m_ScenarioChartTrackedMetricYAxis?.Dispose();
+                m_ScenarioChartCurveFittingType?.Dispose();
                 m_NodeActionCommandManualTrigger?.Dispose();
             }
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

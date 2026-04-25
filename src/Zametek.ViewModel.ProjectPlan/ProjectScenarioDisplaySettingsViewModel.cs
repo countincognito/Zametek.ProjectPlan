@@ -4,8 +4,8 @@ using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class DisplaySettingsViewModel
-        : ViewModelBase, IDisplaySettingsViewModel
+    public class ProjectScenarioDisplaySettingsViewModel
+        : ViewModelBase, IProjectScenarioDisplaySettingsViewModel
     {
         #region Fields
 
@@ -18,7 +18,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public DisplaySettingsViewModel(
+        public ProjectScenarioDisplaySettingsViewModel(
             IDateTimeCalculator dateTimeCalculator,
             Action<bool, bool> setIsProjectScenarioUpdated,
             Action isReadyToCompile)
@@ -60,7 +60,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region IDisplaySettingsViewModel Members
+        #region IProjectScenarioDisplaySettingsViewModel Members
 
         private bool m_ShowDates;
         public bool ShowDates
@@ -406,7 +406,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void SetValues(DisplaySettingsModel model)
+        public void SetValues(ProjectScenarioDisplaySettingsModel model)
         {
             lock (m_Lock)
             {
@@ -515,11 +515,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public DisplaySettingsModel GetValues()
+        public ProjectScenarioDisplaySettingsModel GetValues()
         {
             lock (m_Lock)
             {
-                return new DisplaySettingsModel
+                return new ProjectScenarioDisplaySettingsModel
                 {
                     ShowDates = ShowDates,
                     UseClassicDates = UseClassicDates,

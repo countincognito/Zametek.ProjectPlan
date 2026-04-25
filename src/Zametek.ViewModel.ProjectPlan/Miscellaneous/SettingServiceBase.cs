@@ -156,18 +156,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public abstract bool DefaultHideBilling { get; set; }
 
-        public abstract SortMode ProjectScenarioSortMode { get; set; }
-
-        public abstract SortDirection ProjectScenarioSortDirection { get; set; }
-
-        public abstract bool ScenarioChartShowNames { get; set; }
-
-        public abstract TrackedMetrics ScenarioChartTrackedMetricXAxis { get; set; }
-
-        public abstract TrackedMetrics ScenarioChartTrackedMetricYAxis { get; set; }
-
-        public abstract CurveFittingType ScenarioChartCurveFittingType { get; set; }
-
         public abstract string SelectedTheme { get; set; }
 
         public abstract string ProjectDirectory { get; protected set; }

@@ -3,7 +3,7 @@
 namespace Zametek.Data.ProjectPlan.v0_6_0
 {
     [Serializable]
-    public record DisplaySettingsModel
+    public record ProjectScenarioDisplaySettingsModel
     {
         public bool ShowDates { get; init; }
 

@@ -21,7 +21,7 @@ namespace Zametek.Contract.ProjectPlan
 
         string ProjectFinish { get; }
 
-        IDisplaySettingsViewModel DisplaySettingsViewModel { get; }
+        IProjectScenarioDisplaySettingsViewModel DisplaySettingsViewModel { get; }
 
         bool DefaultShowDates { get; set; }
 

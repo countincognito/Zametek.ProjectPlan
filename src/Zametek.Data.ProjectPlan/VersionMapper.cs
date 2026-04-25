@@ -461,8 +461,8 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_4_0.ResourceActivityTrackerModel FromCurrentToV0_4_0(ResourceActivityTrackerModel src);
         public partial ResourceActivityTrackerModel FromV0_4_0ToCurrent(v0_4_0.ResourceActivityTrackerModel src);
 
-        public partial v0_4_0.DisplaySettingsModel FromCurrentToV0_4_0(DisplaySettingsModel src);
-        public partial DisplaySettingsModel FromV0_4_0ToCurrent(v0_4_0.DisplaySettingsModel src);
+        public partial v0_4_0.DisplaySettingsModel FromCurrentToV0_4_0(ProjectScenarioDisplaySettingsModel src);
+        public partial ProjectScenarioDisplaySettingsModel FromV0_4_0ToCurrent(v0_4_0.DisplaySettingsModel src);
 
         public partial v0_4_0.ProjectModel FromCurrentToV0_4_0(ProjectScenarioModel src);
         public partial ProjectScenarioModel FromV0_4_0ToCurrent(v0_4_0.ProjectModel src);
@@ -472,8 +472,8 @@ namespace Zametek.Data.ProjectPlan
         // v0.4.1 <-> Current and v0.4.0
         // ---------------------------------------------------------------------
 
-        public partial v0_4_1.DisplaySettingsModel FromCurrentToV0_4_1(DisplaySettingsModel src);
-        public partial DisplaySettingsModel FromV0_4_1ToCurrent(v0_4_1.DisplaySettingsModel src);
+        public partial v0_4_1.DisplaySettingsModel FromCurrentToV0_4_1(ProjectScenarioDisplaySettingsModel src);
+        public partial ProjectScenarioDisplaySettingsModel FromV0_4_1ToCurrent(v0_4_1.DisplaySettingsModel src);
 
         public partial v0_4_1.DisplaySettingsModel FromV0_4_0ToV0_4_1(v0_4_0.DisplaySettingsModel src);
         public partial v0_4_0.DisplaySettingsModel FromV0_4_1ToV0_4_0(v0_4_1.DisplaySettingsModel src);
@@ -586,8 +586,8 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_4_4.AppSettingsModel FromV0_4_1ToV0_4_4(v0_4_1.AppSettingsModel src);
         public partial v0_4_1.AppSettingsModel FromV0_4_4ToV0_4_1(v0_4_4.AppSettingsModel src);
 
-        public partial v0_4_4.DisplaySettingsModel FromCurrentToV0_4_4(DisplaySettingsModel src);
-        public partial DisplaySettingsModel FromV0_4_4ToCurrent(v0_4_4.DisplaySettingsModel src);
+        public partial v0_4_4.DisplaySettingsModel FromCurrentToV0_4_4(ProjectScenarioDisplaySettingsModel src);
+        public partial ProjectScenarioDisplaySettingsModel FromV0_4_4ToCurrent(v0_4_4.DisplaySettingsModel src);
 
         public partial v0_4_4.DisplaySettingsModel FromV0_4_1ToV0_4_4(v0_4_1.DisplaySettingsModel src);
         public partial v0_4_1.DisplaySettingsModel FromV0_4_4ToV0_4_1(v0_4_4.DisplaySettingsModel src);
@@ -624,8 +624,8 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_5_0.GraphSettingsModel FromCurrentToV0_5_0(GraphSettingsModel src);
         public partial GraphSettingsModel FromV0_5_0ToCurrent(v0_5_0.GraphSettingsModel src);
 
-        public partial v0_5_0.DisplaySettingsModel FromCurrentToV0_5_0(DisplaySettingsModel src);
-        public partial DisplaySettingsModel FromV0_5_0ToCurrent(v0_5_0.DisplaySettingsModel src);
+        public partial v0_5_0.DisplaySettingsModel FromCurrentToV0_5_0(ProjectScenarioDisplaySettingsModel src);
+        public partial ProjectScenarioDisplaySettingsModel FromV0_5_0ToCurrent(v0_5_0.DisplaySettingsModel src);
 
         public partial v0_5_0.DisplaySettingsModel FromV0_4_4ToV0_5_0(v0_4_4.DisplaySettingsModel src);
         public partial v0_4_4.DisplaySettingsModel FromV0_5_0ToV0_4_4(v0_5_0.DisplaySettingsModel src);
@@ -677,8 +677,8 @@ namespace Zametek.Data.ProjectPlan
         public static NonWorkingDayMode MapUseBusinessDays(bool useBusinessDays)
             => useBusinessDays ? NonWorkingDayMode.Weekends : NonWorkingDayMode.None;
 
-        [MapProperty(nameof(v0_5_0.DisplaySettingsModel.UseBusinessDays), nameof(v0_6_0.DisplaySettingsModel.NonWorkingDayMode), Use = nameof(MapUseBusinessDays))]
-        public partial v0_6_0.DisplaySettingsModel FromV0_5_0ToV0_6_0(v0_5_0.DisplaySettingsModel src);
+        [MapProperty(nameof(v0_5_0.DisplaySettingsModel.UseBusinessDays), nameof(v0_6_0.ProjectScenarioDisplaySettingsModel.NonWorkingDayMode), Use = nameof(MapUseBusinessDays))]
+        public partial v0_6_0.ProjectScenarioDisplaySettingsModel FromV0_5_0ToV0_6_0(v0_5_0.DisplaySettingsModel src);
 
         public partial v0_6_0.ProjectScenarioModel FromV0_5_0ToV0_6_0(v0_5_0.ProjectModel src);
         public partial v0_5_0.ProjectModel FromV0_6_0ToV0_5_0(v0_6_0.ProjectScenarioModel src);

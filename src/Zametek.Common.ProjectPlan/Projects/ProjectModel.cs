@@ -16,5 +16,7 @@
         public List<ProjectScenarioFileModel> Files { get; init; } = [];
 
         public List<ProjectScenarioTagModel> Tags { get; init; } = [];
+
+        public ProjectDisplaySettingsModel DisplaySettings { get; init; } = new();
     }
 }

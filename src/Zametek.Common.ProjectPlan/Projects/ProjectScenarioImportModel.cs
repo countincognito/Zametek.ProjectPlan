@@ -17,6 +17,6 @@
 
         public List<HolidayModel> Holidays { get; init; } = [];
 
-        public DisplaySettingsModel DisplaySettings { get; init; } = new DisplaySettingsModel();
+        public ProjectScenarioDisplaySettingsModel DisplaySettings { get; init; } = new ProjectScenarioDisplaySettingsModel();
     }
 }

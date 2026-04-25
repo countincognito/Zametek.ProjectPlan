@@ -1,7 +1,7 @@
 ﻿namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
-    public record DisplaySettingsModel
+    public record ProjectScenarioDisplaySettingsModel
     {
         public bool ShowDates { get; init; } = default;
 
