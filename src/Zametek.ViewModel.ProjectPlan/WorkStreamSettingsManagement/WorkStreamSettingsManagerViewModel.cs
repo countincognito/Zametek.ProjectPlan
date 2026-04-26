@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using DynamicData;
+using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -24,6 +25,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDialogService m_DialogService;
 
         private readonly IDisposable? m_ReadOnlyWorkStreamsSub;
+        private readonly IDisposable? m_OrderableWorkStreamsSub;
         private readonly IDisposable? m_ProcessWorkStreamSettingsSub;
         private readonly IDisposable? m_UpdateWorkStreamSettingsSub;
 
@@ -53,6 +55,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_WorkStreams = new();
 
+            m_OrderableWorkStreams = [];
+
             SetSelectedManagedWorkStreamsCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedWorkStreams);
             AddManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(AddManagedWorkStreamAsync);
             RemoveManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(RemoveManagedWorkStreamsAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
@@ -61,6 +65,12 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ReadOnlyWorkStreamsSub = m_WorkStreams.Connect()
                .ObserveOn(RxApp.MainThreadScheduler)
                .Bind(out m_ReadOnlyWorkStreams)
+               .Subscribe();
+
+            m_OrderableWorkStreamsSub = m_WorkStreams.Connect()
+               .ObserveOn(RxApp.MainThreadScheduler) // Ensure UI thread safety
+               .Bind(m_OrderableWorkStreams)         // Bind to the mutable collection
+               .DisposeMany()                        // Clean up resources
                .Subscribe();
 
             m_IsBusy = this
@@ -162,6 +172,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                     ColorFormat = ColorHelper.Random()
                                 }));
                     });
+                    
+                    UpdateDisplayOrders();
                 }
                 UpdateWorkStreamSettingsToCore();
             }
@@ -195,6 +207,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             workStream.Dispose();
                         }
                     });
+
+                    UpdateDisplayOrders();
                 }
 
                 UpdateWorkStreamSettingsToCore();
@@ -212,16 +226,18 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
+                UpdateDisplayOrders();
+
                 var workStreamSettings = new WorkStreamSettingsModel
                 {
-                    WorkStreams = RawWorkStreams.Select(x => new WorkStreamModel
+                    WorkStreams = [.. RawWorkStreams.Select(x => new WorkStreamModel
                     {
                         Id = x.Id,
                         Name = x.Name,
                         IsPhase = x.IsPhase,
                         DisplayOrder = x.DisplayOrder,
                         ColorFormat = x.ColorFormat
-                    }).ToList()
+                    })]
                 };
 
                 if (m_Current != workStreamSettings)
@@ -234,6 +250,18 @@ namespace Zametek.ViewModel.ProjectPlan
             AreSettingsUpdated = false;
         }
 
+        private void UpdateDisplayOrders()
+        {
+            // Mark the display order in reverse order of the list because
+            // the UI renders in that order and we want to reflect that.
+            int resourceCount = OrderableWorkStreams.Count;
+
+            for (int i = 0; i < resourceCount; i++)
+            {
+                OrderableWorkStreams[i].DisplayOrder = resourceCount - i;
+            }
+        }
+
         private void ProcessSettings(WorkStreamSettingsModel workStreamSettings)
         {
             ArgumentNullException.ThrowIfNull(workStreamSettings);
@@ -241,15 +269,23 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ClearManagedWorkStreams();
 
+                // Add the work streams in descending order because this is how
+                // the UI renders in that order and we want to reflect that.
+                IOrderedEnumerable<WorkStreamModel> orderedWorkStreamModels = workStreamSettings.WorkStreams
+                     .OrderByDescending(x => x.DisplayOrder)
+                     .ThenByDescending(x => x.Id);
+
                 m_WorkStreams.Edit(workStreams =>
                 {
-                    foreach (WorkStreamModel workStream in workStreamSettings.WorkStreams)
+                    foreach (WorkStreamModel workStream in orderedWorkStreamModels)
                     {
                         workStreams.Add(new ManagedWorkStreamViewModel(
                             this,
                             workStream));
                     }
                 });
+
+                UpdateDisplayOrders();
             }
             AreSettingsUpdated = false;
         }
@@ -309,6 +345,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ReadOnlyObservableCollection<IManagedWorkStreamViewModel> m_ReadOnlyWorkStreams;
         public ReadOnlyObservableCollection<IManagedWorkStreamViewModel> WorkStreams => m_ReadOnlyWorkStreams;
+
+        private readonly ObservableCollectionExtended<IManagedWorkStreamViewModel> m_OrderableWorkStreams;
+        public ObservableCollection<IManagedWorkStreamViewModel> OrderableWorkStreams => m_OrderableWorkStreams;
 
         public ICommand SetSelectedManagedWorkStreamsCommand { get; }
 

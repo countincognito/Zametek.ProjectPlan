@@ -13,6 +13,7 @@
 			 x:DataType="vm:ActivitiesManagerViewModel"
              x:Class="Zametek.View.ProjectPlan.ActivitiesManagerView">
 	<UserControl.Resources>
+		<!-- Make DataGrid a drop target -->
 		<local:ManagedActivityDataGridDropHandler x:Key="managedActivityDataGridDropHandler" />
 
 		<local:ManagedActivitySortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
@@ -113,6 +114,7 @@
 				  Classes="DragAndDrop"
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>
+				<!-- Make DataGrid a drop target -->
 				<Style Selector="DataGridRow">
 					<Setter Property="(Interaction.Behaviors)">
 						<BehaviorCollectionTemplate>

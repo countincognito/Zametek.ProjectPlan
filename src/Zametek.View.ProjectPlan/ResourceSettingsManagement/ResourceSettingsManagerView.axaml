@@ -13,6 +13,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ResourceSettingsManagerView">
 	<UserControl.Resources>
+		<!-- Make DataGrid a drop target -->
 		<local:ManagedResourceDataGridDropHandler x:Key="managedResourceDataGridDropHandler" />
 		
 		<local:ColorFormatToColorConverter x:Key="colorFormatToColorConverter"/>
@@ -30,8 +31,7 @@
 		<local:ManagedResourceSortComparer x:Key="colorFormatSortComparer" SortMemberPath="ColorFormat"/>
 		<local:ManagedActivitySortComparer x:Key="notesSortComparer" SortMemberPath="Notes"/>
 	</UserControl.Resources>
-
-
+	
 	<DockPanel Margin="7">
 		<ScrollViewer DockPanel.Dock="Right"
 					  VerticalScrollBarVisibility="Hidden"
@@ -137,6 +137,7 @@
 				  Classes="DragAndDrop"
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>
+				<!-- Make DataGrid a drop target -->
 				<Style Selector="DataGridRow">
 					<Setter Property="(Interaction.Behaviors)">
 						<BehaviorCollectionTemplate>

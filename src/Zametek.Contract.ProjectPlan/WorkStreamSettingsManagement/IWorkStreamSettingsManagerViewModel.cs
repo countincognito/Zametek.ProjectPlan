@@ -20,6 +20,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadOnlyObservableCollection<IManagedWorkStreamViewModel> WorkStreams { get; }
 
+        ObservableCollection<IManagedWorkStreamViewModel> OrderableWorkStreams { get; }
+
         ICommand SetSelectedManagedWorkStreamsCommand { get; }
 
         ICommand AddManagedWorkStreamCommand { get; }

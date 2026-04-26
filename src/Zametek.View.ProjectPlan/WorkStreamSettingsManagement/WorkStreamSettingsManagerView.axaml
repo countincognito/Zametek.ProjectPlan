@@ -12,11 +12,13 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.WorkStreamSettingsManagerView">
 	<UserControl.Resources>
+		<!-- Make DataGrid a drop target -->
+		<local:ManagedWorkStreamDataGridDropHandler x:Key="managedWorkStreamDataGridDropHandler" />
+
 		<local:ColorFormatToColorConverter x:Key="colorFormatToColorConverter"/>
 
 		<local:ManagedWorkStreamSortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
 		<local:ManagedWorkStreamSortComparer x:Key="isPhaseSortComparer" SortMemberPath="IsPhase"/>
-		<local:ManagedWorkStreamSortComparer x:Key="displayOrderSortComparer" SortMemberPath="DisplayOrder"/>
 		<local:ManagedWorkStreamSortComparer x:Key="colorFormatSortComparer" SortMemberPath="ColorFormat"/>
 		<local:ManagedWorkStreamSortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
 	</UserControl.Resources>
@@ -52,13 +54,23 @@
 				  FrozenColumnCount="1"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
-				  ItemsSource="{Binding Path=WorkStreams, Mode=OneWay}"
+				  ItemsSource="{Binding Path=OrderableWorkStreams, Mode=OneWay}"
 				  SelectionMode="Extended"
 				  CanUserResizeColumns="True"
 				  CanUserSortColumns="True"
 				  GridLinesVisibility="All"
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>
+				<!-- Make DataGrid a drop target -->
+				<Style Selector="DataGridRow">
+					<Setter Property="(Interaction.Behaviors)">
+						<BehaviorCollectionTemplate>
+							<BehaviorCollection>
+								<ContextDragBehavior />
+							</BehaviorCollection>
+						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
 				<Style Selector="DataGridRow Grid.editable">
 					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 				</Style>
@@ -86,6 +98,9 @@
 			</DataGrid.Styles>
 
 			<Interaction.Behaviors>
+				<!-- Make DataGrid a drop target -->
+				<ContextDropBehavior Handler="{StaticResource managedWorkStreamDataGridDropHandler}" />
+
 				<EventTriggerBehavior EventName="SelectionChanged"
 										 SourceObject="{Binding #workStreamsGrid}">
 					<InvokeCommandAction x:DataType="vm:WorkStreamSettingsManagerViewModel"
@@ -153,44 +168,6 @@
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
-				</DataGridTemplateColumn>
-
-				<DataGridTemplateColumn CanUserResize="True"
-										CanUserReorder="True"
-										CanUserSort="True"
-										CustomSortComparer="{StaticResource displayOrderSortComparer}"
-										Width="120">
-					<DataGridTemplateColumn.HeaderTemplate>
-						<DataTemplate>
-							<TextBlock VerticalAlignment="Center"
-									   Margin="0"
-									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_DisplayOrder}"
-									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_DisplayOrder}"/>
-						</DataTemplate>
-					</DataGridTemplateColumn.HeaderTemplate>
-					<DataGridTemplateColumn.CellTemplate>
-						<DataTemplate>
-							<Grid VerticalAlignment="Stretch"
-								  Classes="editable">
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Path=DisplayOrder, Mode=OneWay}"/>
-							</Grid>
-						</DataTemplate>
-					</DataGridTemplateColumn.CellTemplate>
-					<DataGridTemplateColumn.CellEditingTemplate>
-						<DataTemplate>
-							<u:NumericIntUpDown Value="{Binding Path=DisplayOrder, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-												VerticalAlignment="Center"
-												ShowButtonSpinner="False"
-												Focusable="True"
-												Margin="0"
-												Padding="0"
-												Minimum="0"/>
-						</DataTemplate>
-					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
 				<DataGridTemplateColumn CanUserResize="True"
