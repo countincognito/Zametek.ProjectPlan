@@ -56,7 +56,7 @@
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
 						Margin="0,0,0,7"
-						Height="25" Width="75"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=AddManagedActivityCommand, Mode=OneWay}"
@@ -65,7 +65,7 @@
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
 						Margin="0,0,0,7"
-						Height="25" Width="75"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=InsertManagedActivityCommand, Mode=OneWay}"
@@ -74,7 +74,7 @@
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
 						Margin="0,0,0,7"
-						Height="25" Width="75"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=RemoveManagedActivitiesCommand, Mode=OneWay}"
@@ -83,7 +83,7 @@
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
 						Margin="0,0,0,7"
-						Height="25" Width="75"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=EditManagedActivitiesCommand, Mode=OneWay}"
@@ -91,12 +91,21 @@
 
 				<Button DockPanel.Dock="Bottom"
 						IsTabStop="True"
-						Margin="0,0,0,0"
-						Height="25" Width="75"
+						Margin="0,7,0,0"
+						Height="25" Width="80"
 						VerticalContentAlignment="Center"
 						HorizontalContentAlignment="Center"
 						Command="{Binding Path=AddMilestoneCommand, Mode=OneWay}"
 						Content="{x:Static resources:Labels.Label_AddMilestone}"/>
+
+				<Button DockPanel.Dock="Bottom"
+						IsTabStop="True"
+						Margin="0,7,0,0"
+						Height="25" Width="80"
+						VerticalContentAlignment="Center"
+						HorizontalContentAlignment="Center"
+						Command="{Binding Path=RenumberActivitiesCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_RenumberActivities}"/>
 
 				<Grid/>
 			</DockPanel>

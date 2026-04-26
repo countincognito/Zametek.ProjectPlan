@@ -66,6 +66,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(am => am.m_CoreViewModel.DisplaySettingsViewModel.HideBilling)
                 .ToProperty(this, am => am.HideBilling);
 
+            RenumberActivitiesCommand = ReactiveCommand.CreateFromTask(RenumberActivitiesAsync);
+
             AddMilestoneCommand = ReactiveCommand.CreateFromTask(
                 AddMilestoneAsync,
                 this.WhenAnyValue(
@@ -271,6 +273,45 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CoreViewModel.RunAutoCompile();
         }
 
+        private async Task RenumberActivitiesAsync()
+        {
+            try
+            {
+                await RenumberActivitiesInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task RenumberActivitiesInternalAsync() =>
+            await Task.Run(RenumberActivitiesInternal);
+
+        private void RenumberActivitiesInternal()
+        {
+            lock (m_Lock)
+            {
+                List<(int oldId, int newId)> mappedIds = [];
+
+                int count = OrderableActivities.Count;
+
+                for (int i = 0; i < count; i++)
+                {
+                    int oldId = OrderableActivities[i].Id;
+                    int newId = i + 1;
+                    mappedIds.Add((oldId, newId));
+                }
+
+                m_CoreViewModel.UpdateManagedActivityIds(mappedIds);
+                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+            }
+            m_CoreViewModel.RunAutoCompile();
+        }
+
         private async Task AddMilestoneAsync()
         {
             try
@@ -287,7 +328,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private async Task AddMilestoneInternalAsync() =>
-            await Task.Run(() => AddMilestoneInternal());
+            await Task.Run(AddMilestoneInternal);
 
         private void AddMilestoneInternal()
         {
@@ -357,6 +398,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand RemoveManagedActivitiesCommand { get; }
 
         public ICommand EditManagedActivitiesCommand { get; }
+
+        public ICommand RenumberActivitiesCommand { get; }
 
         public ICommand AddMilestoneCommand { get; }
 

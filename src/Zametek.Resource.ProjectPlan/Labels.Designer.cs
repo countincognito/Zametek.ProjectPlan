@@ -1277,6 +1277,33 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Renumber.
+        /// </summary>
+        public static string Label_RenumberActivities {
+            get {
+                return ResourceManager.GetString("Label_RenumberActivities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renumber.
+        /// </summary>
+        public static string Label_RenumberResources {
+            get {
+                return ResourceManager.GetString("Label_RenumberResources", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renumber.
+        /// </summary>
+        public static string Label_RenumberWorkStreams {
+            get {
+                return ResourceManager.GetString("Label_RenumberWorkStreams", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resource.
         /// </summary>
         public static string Label_Resource {

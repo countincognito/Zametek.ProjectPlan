@@ -36,6 +36,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand EditManagedActivitiesCommand { get; }
 
+        ICommand RenumberActivitiesCommand { get; }
+
         ICommand AddMilestoneCommand { get; }
     }
 }

@@ -645,4 +645,13 @@
   <data name="Label_HolidayStartDate" xml:space="preserve">
     <value>Start Date</value>
   </data>
+  <data name="Label_RenumberActivities" xml:space="preserve">
+    <value>Renumber</value>
+  </data>
+  <data name="Label_RenumberWorkStreams" xml:space="preserve">
+    <value>Renumber</value>
+  </data>
+  <data name="Label_RenumberResources" xml:space="preserve">
+    <value>Renumber</value>
+  </data>
 </root>
