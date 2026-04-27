@@ -135,7 +135,7 @@ namespace Zametek.ViewModel.ProjectPlan
             lock (m_Lock)
             {
                 int displayOrder = m_CoreViewModel
-                    .Activities
+                    .RawActivities
                     .DefaultIfEmpty()
                     .Max(x => x?.DisplayOrder ?? 0) + 1;
 

@@ -258,7 +258,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             for (int i = 0; i < resourceCount; i++)
             {
-                OrderableWorkStreams[i].DisplayOrder = resourceCount - i;
+                OrderableWorkStreams[i].DisplayOrder = resourceCount - i - 1;
             }
         }
 

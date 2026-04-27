@@ -61,6 +61,10 @@ namespace Zametek.ViewModel.ProjectPlan
             List<int> mapIds = [.. originalIds.Union(idUpdates.Select(x => x.FromId)).Distinct().Order()];
             List<IdMap> maps = [];
 
+            // Mark a mapping as locked if the old ID is being updated to a new ID.
+            // This means that when an old ID is being updated to a new ID, the
+            // mapping for that old ID should be locked in place and not changed by
+            // subsequent mappings.
             foreach (int id in mapIds)
             {
                 int fromId = id;
@@ -74,6 +78,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 maps.Add(new IdMap { FromId = fromId, ToId = toId, Locked = locked });
             }
 
+            // Here we have to apply the mappings and see what the final mappings look
+            // like after all the necessary changes are made. This includes moving the
+            // existing IDs around to make space for the new IDs, while preserving the
+            // relative ordering of the old IDs and ensuring that the updates from old
+            // to new IDs remains as requested.
             ApplyMaps(maps);
 
             return [.. maps.OrderBy(m => m.FromId).Select(x => (x.FromId, x.ToId))];
@@ -182,8 +191,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Select(x => x.Activity.Id)
                 .Distinct()];
 
-            // Update the ID mappings to make sure they are consistent
-            // and make logical sense.
+            // Update the ID mappings to make sure they are consistent and make logical sense.
             idUpdates = UpdateIds(originalIds, idUpdates);
 
             Dictionary<int, int> idUpdatesLookup = idUpdates.ToDictionary(x => x.FromId, x => x.ToId);

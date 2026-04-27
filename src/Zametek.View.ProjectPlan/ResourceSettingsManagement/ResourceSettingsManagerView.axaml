@@ -221,7 +221,7 @@
 
 
 
-				<!--<DataGridTemplateColumn Width="100">
+				<DataGridTemplateColumn Width="100">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"
@@ -242,7 +242,7 @@
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
-				</DataGridTemplateColumn>-->
+				</DataGridTemplateColumn>
 				
 				
 				

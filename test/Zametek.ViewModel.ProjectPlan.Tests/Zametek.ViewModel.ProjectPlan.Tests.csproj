@@ -9,6 +9,15 @@
 	<Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Include="TestFiles\remapped_activities.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\input.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
 		<PackageReference Include="Shouldly" Version="4.3.0" />
