@@ -22,6 +22,7 @@
 		<local:ManagedResourceSortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
 		<local:ManagedResourceSortComparer x:Key="isExplicitTargetSortComparer" SortMemberPath="IsExplicitTarget"/>
 		<local:ManagedResourceSortComparer x:Key="isInactiveSortComparer" SortMemberPath="IsInactive"/>
+		<local:ManagedResourceSortComparer x:Key="allocationOrderSortComparer" SortMemberPath="AllocationOrder"/>
 		<local:ManagedResourceSortComparer x:Key="interActivityAllocationTypeSortComparer" SortMemberPath="InterActivityAllocationType"/>
 		<local:ManagedResourceSortComparer x:Key="workStreamSelectorTargetWorkStreamsStringSortComparer" SortMemberPath="WorkStreamSelector.TargetWorkStreamsString"/>
 		<local:ManagedResourceSortComparer x:Key="unitCostSortComparer" SortMemberPath="UnitCost"/>
@@ -357,6 +358,72 @@
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
+
+
+
+
+
+
+
+				
+
+
+
+
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										CustomSortComparer="{StaticResource allocationOrderSortComparer}"
+										IsVisible="{Binding Path=!HideCost, Mode=OneWay}"
+										Width="140">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_AllocationOrder}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_AllocationOrder}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=AllocationOrder, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<u:NumericDoubleUpDown Value="{Binding Path=AllocationOrder, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												   VerticalAlignment="Center"
+												   ShowButtonSpinner="False"
+												   Focusable="True"
+												   Margin="0"
+												   Padding="0"
+												   Minimum="0"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
+				</DataGridTemplateColumn>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"

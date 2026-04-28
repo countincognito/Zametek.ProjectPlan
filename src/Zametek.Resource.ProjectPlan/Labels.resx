@@ -654,4 +654,7 @@
   <data name="Label_RenumberResources" xml:space="preserve">
     <value>Renumber</value>
   </data>
+  <data name="Label_AllocationOrder" xml:space="preserve">
+    <value>Allocation Order</value>
+  </data>
 </root>

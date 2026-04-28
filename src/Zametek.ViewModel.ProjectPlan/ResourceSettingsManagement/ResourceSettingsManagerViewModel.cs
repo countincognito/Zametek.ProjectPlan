@@ -416,6 +416,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         UnitBilling = x.UnitBilling,
                         FixedCost = x.FixedCost,
                         FixedBilling = x.FixedBilling,
+                        AllocationOrder = x.AllocationOrder,
                         ColorFormat = x.ColorFormat,
                         Trackers = x.TrackerSet.Trackers,
                     })],

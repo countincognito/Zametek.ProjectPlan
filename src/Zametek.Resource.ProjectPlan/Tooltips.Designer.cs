@@ -88,6 +88,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to AllocationOrder.
+        /// </summary>
+        public static string ToolTip_AllocationOrder {
+            get {
+                return ResourceManager.GetString("ToolTip_AllocationOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Color.
         /// </summary>
         public static string ToolTip_ColorFormat {

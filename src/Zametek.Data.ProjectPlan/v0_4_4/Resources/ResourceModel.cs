@@ -27,6 +27,8 @@ namespace Zametek.Data.ProjectPlan.v0_4_4
 
         public double FixedBilling { get; init; }
 
+        public int AllocationOrder { get; init; }
+
         public int DisplayOrder { get; init; }
 
         public v0_1_0.ColorFormatModel ColorFormat { get; init; } = new v0_1_0.ColorFormatModel();

@@ -273,4 +273,7 @@
   <data name="ToolTip_HolidayStartDate" xml:space="preserve">
     <value> Start Date </value>
   </data>
+  <data name="ToolTip_AllocationOrder" xml:space="preserve">
+    <value>AllocationOrder</value>
+  </data>
 </root>

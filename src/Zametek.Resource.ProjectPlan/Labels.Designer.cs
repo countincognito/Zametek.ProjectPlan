@@ -205,6 +205,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allocation Order.
+        /// </summary>
+        public static string Label_AllocationOrder {
+            get {
+                return ResourceManager.GetString("Label_AllocationOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Annotation Style.
         /// </summary>
         public static string Label_AnnotationStyle {
