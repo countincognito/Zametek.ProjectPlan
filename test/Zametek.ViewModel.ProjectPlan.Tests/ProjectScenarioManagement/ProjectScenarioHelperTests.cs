@@ -23,34 +23,40 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         [Theory]
         [MemberData(nameof(IdMappingData))]
-        public void ProjectScenarioHelper_Given_InputIdsAndIdUpdates_Then_ConvertsToExpectedIdUpdates(
+        public void ProjectScenarioHelper_Given_InputIdsAndIdMaps_Then_ConvertsToExpectedIdMaps(
             int[] inputIds,
-            (int, int)[] idUpdates,
-            (int, int)[] expectedIdUpdates)
+            (int, int)[] idMaps,
+            (int, int)[] expectedIdMaps)
         {
-            List<(int, int)> newIdUpdates = ProjectScenarioHelper.UpdateIds([.. inputIds], [.. idUpdates]);
-            newIdUpdates.ShouldBe(expectedIdUpdates);
+            List<(int, int)> newIdUpdates = ProjectScenarioHelper.RefineIdMaps([.. inputIds], [.. idMaps]);
+            newIdUpdates.ShouldBe(expectedIdMaps);
         }
 
-
-
-
+        [Fact]
+        public void ProjectScenarioHelper_Given_UpdateActivityIds_Then_MappedToExpectedIds()
+        {
+            ProjectScenarioModel? input = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.Input_JsonString);
+            ProjectScenarioModel? expectedOutput = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.RemappedActivities_JsonString);
+            var remapped = ProjectScenarioHelper.UpdateActivityIds(input!, [(3, 5), (6, 8)]).ShouldNotBeNull();
+            remapped.ShouldBeEquivalentTo(expectedOutput!);
+        }
 
         [Fact]
-        public void ProjectScenarioHelper_UpdateActivityIds()
+        public void ProjectScenarioHelper_Given_UpdateResourceIds_Then_MappedToExpectedIds()
         {
+            ProjectScenarioModel? input = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.Input_JsonString);
+            ProjectScenarioModel? expectedOutput = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.RemappedResources_JsonString);
+            var remapped = ProjectScenarioHelper.UpdateResourceIds(input!, [(3, 5), (6, 8)]).ShouldNotBeNull();
+            remapped.ShouldBeEquivalentTo(expectedOutput!);
+        }
 
-
-
-
-            ProjectScenarioModel? projectScenario = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.Input_JsonString);
-
-
-
-            var remapped = ProjectScenarioHelper.UpdateActivityIds(projectScenario!, [(3, 5), (6, 8)]).ShouldNotBeNull();
-
-
-
+        [Fact]
+        public void ProjectScenarioHelper_Given_UpdateWorkStreamIds_Then_MappedToExpectedIds()
+        {
+            ProjectScenarioModel? input = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.Input_JsonString);
+            ProjectScenarioModel? expectedOutput = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.RemappedWorkStreams_JsonString);
+            var remapped = ProjectScenarioHelper.UpdateWorkStreamIds(input!, [(2, 5), (1, 2)]).ShouldNotBeNull();
+            remapped.ShouldBeEquivalentTo(expectedOutput!);
         }
     }
 }

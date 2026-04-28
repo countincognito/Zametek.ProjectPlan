@@ -40,7 +40,7 @@
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
 						Margin="0,0,0,7"
-						Height="25" Width="75"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
@@ -50,7 +50,7 @@
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
 						Margin="0,0,0,7"
-						Height="25" Width="75"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
@@ -59,13 +59,22 @@
 
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
-						Margin="0,0,0,11"
-						Height="25" Width="75"
+						Margin="0,0,0,7"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
 						Command="{Binding Path=EditManagedResourcesCommand, Mode=OneWay}"
 						Content="{x:Static resources:Labels.Label_EditManagedResources}"/>
+
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,11"
+						Height="25" Width="80"
+						VerticalContentAlignment="Center"
+						HorizontalContentAlignment="Center"
+						Command="{Binding Path=RenumberResourcesCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_RenumberResources}"/>
 
 				<Label DockPanel.Dock="Top"
 					   IsTabStop="False"
@@ -221,7 +230,7 @@
 
 
 
-				<DataGridTemplateColumn Width="100">
+				<!--<DataGridTemplateColumn Width="100">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"
@@ -242,7 +251,7 @@
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
-				</DataGridTemplateColumn>
+				</DataGridTemplateColumn>-->
 				
 				
 				

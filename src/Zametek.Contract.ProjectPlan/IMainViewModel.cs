@@ -92,6 +92,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ChangeThemeCommand { get; }
 
+        ICommand SaveLayoutCommand { get; }
+
         ICommand ResetLayoutCommand { get; }
 
         ICommand CompileCommand { get; }

@@ -31,7 +31,7 @@
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
 						Margin="0,0,0,7"
-						Height="25" Width="75"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=AddManagedWorkStreamCommand, Mode=OneWay}"
@@ -39,12 +39,21 @@
 
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
-						Margin="0,0,0,11"
-						Height="25" Width="75"
+						Margin="0,0,0,7"
+						Height="25" Width="80"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=RemoveManagedWorkStreamsCommand, Mode=OneWay}"
 						Content="{x:Static resources:Labels.Label_DeleteManagedWorkStreams}"/>
+
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,11"
+						Height="25" Width="80"
+						VerticalContentAlignment="Center"
+						HorizontalContentAlignment="Center"
+						Command="{Binding Path=RenumberWorkStreamsCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_RenumberWorkStreams}"/>
 
 				<Grid/>
 			</DockPanel>
@@ -145,7 +154,7 @@
 
 
 
-				<DataGridTemplateColumn Width="100">
+				<!--<DataGridTemplateColumn Width="100">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"
@@ -166,7 +175,7 @@
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
-				</DataGridTemplateColumn>
+				</DataGridTemplateColumn>-->
 
 
 

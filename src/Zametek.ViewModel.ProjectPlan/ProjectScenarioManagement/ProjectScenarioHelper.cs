@@ -41,24 +41,24 @@ namespace Zametek.ViewModel.ProjectPlan
         // to new ID 12 instead of new ID 11. Finally, map old ID 3 to new ID 4,
         // which requires no changes to the other mappings since the old ID 4 is
         // be updated to new ID 9.
-        public static List<(int FromId, int ToId)> UpdateIds(
+        public static List<(int FromId, int ToId)> RefineIdMaps(
             List<int> originalIds,
-            List<(int FromId, int ToId)> idUpdates)
+            List<(int FromId, int ToId)> idMaps)
         {
             ArgumentNullException.ThrowIfNull(originalIds);
-            ArgumentNullException.ThrowIfNull(idUpdates);
+            ArgumentNullException.ThrowIfNull(idMaps);
             CheckIds(originalIds);
-            CheckIds(idUpdates);
+            CheckIds(idMaps);
 
-            Dictionary<int, int> idUpdateLookup = idUpdates.ToDictionary(x => x.FromId, x => x.ToId);
+            Dictionary<int, int> idUpdateLookup = idMaps.ToDictionary(x => x.FromId, x => x.ToId);
 
             // Check all the old IDs in the ID updates exist in the original IDs.
-            foreach (var (fromId, targetToId) in idUpdates)
+            foreach (var (fromId, targetToId) in idMaps)
             {
                 Debug.Assert(originalIds.Contains(fromId));
             }
 
-            List<int> mapIds = [.. originalIds.Union(idUpdates.Select(x => x.FromId)).Distinct().Order()];
+            List<int> mapIds = [.. originalIds.Union(idMaps.Select(x => x.FromId)).Distinct().Order()];
             List<IdMap> maps = [];
 
             // Mark a mapping as locked if the old ID is being updated to a new ID.
@@ -141,19 +141,19 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static void CheckIds(List<(int FromId, int ToId)> idUpdates)
+        private static void CheckIds(List<(int FromId, int ToId)> idMaps)
         {
             // Check that all the old IDs are unique and all the
             // new IDs are unique.
-            int fromIds = idUpdates.Select(x => x.FromId).Count();
-            int toIds = idUpdates.Select(x => x.ToId).Count();
+            int fromIds = idMaps.Select(x => x.FromId).Count();
+            int toIds = idMaps.Select(x => x.ToId).Count();
 
-            Debug.Assert(fromIds == idUpdates.Select(x => x.FromId).Distinct().Count());
-            Debug.Assert(toIds == idUpdates.Select(x => x.ToId).Distinct().Count());
+            Debug.Assert(fromIds == idMaps.Select(x => x.FromId).Distinct().Count());
+            Debug.Assert(toIds == idMaps.Select(x => x.ToId).Distinct().Count());
             Debug.Assert(fromIds == toIds);
 
-            int negativeFromIds = idUpdates.Select(x => x.FromId).Count(x => x <= 0);
-            int negativeToIds = idUpdates.Select(x => x.ToId).Count(x => x <= 0);
+            int negativeFromIds = idMaps.Select(x => x.FromId).Count(x => x <= 0);
+            int negativeToIds = idMaps.Select(x => x.ToId).Count(x => x <= 0);
 
             Debug.Assert(negativeFromIds == 0);
             Debug.Assert(negativeToIds == 0);
@@ -178,11 +178,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public static ProjectScenarioModel UpdateActivityIds(
             ProjectScenarioModel projectScenarioModel,
-            List<(int FromId, int ToId)> idUpdates)
+            List<(int FromId, int ToId)> idMaps)
         {
             ArgumentNullException.ThrowIfNull(projectScenarioModel);
-            ArgumentNullException.ThrowIfNull(idUpdates);
-            CheckIds(idUpdates);
+            ArgumentNullException.ThrowIfNull(idMaps);
+            CheckIds(idMaps);
 
             List<int> originalIds = [.. projectScenarioModel
                 .DependentActivities
@@ -192,9 +192,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Distinct()];
 
             // Update the ID mappings to make sure they are consistent and make logical sense.
-            idUpdates = UpdateIds(originalIds, idUpdates);
+            idMaps = RefineIdMaps(originalIds, idMaps);
 
-            Dictionary<int, int> idUpdatesLookup = idUpdates.ToDictionary(x => x.FromId, x => x.ToId);
+            Dictionary<int, int> idUpdatesLookup = idMaps.ToDictionary(x => x.FromId, x => x.ToId);
 
             // DependencyActivities.
 
@@ -276,7 +276,199 @@ namespace Zametek.ViewModel.ProjectPlan
                 ResourceSettings = projectScenarioModel.ResourceSettings with
                 {
                     Resources = newResources,
-                }
+                },
+            };
+
+            return projectScenarioModel;
+        }
+
+        public static ProjectScenarioModel UpdateResourceIds(
+            ProjectScenarioModel projectScenarioModel,
+            List<(int FromId, int ToId)> idMaps)
+        {
+            ArgumentNullException.ThrowIfNull(projectScenarioModel);
+            ArgumentNullException.ThrowIfNull(idMaps);
+            CheckIds(idMaps);
+
+            List<int> originalIds = [.. projectScenarioModel
+                .ResourceSettings
+                .Resources
+                .OrderBy(x => x.DisplayOrder)
+                .ThenBy(x => x.Id)
+                .Select(x => x.Id)
+                .Distinct()];
+
+            // Update the ID mappings to make sure they are consistent and make logical sense.
+            idMaps = RefineIdMaps(originalIds, idMaps);
+
+            Dictionary<int, int> idUpdatesLookup = idMaps.ToDictionary(x => x.FromId, x => x.ToId);
+
+            // DependencyActivities.
+
+            List<DependentActivityModel> newDependentActivities = [.. projectScenarioModel.DependentActivities.Select(dependentActivity =>
+            {
+                List<int> newTargetResources = [.. dependentActivity.Activity.TargetResources.Select(successorId =>
+                {
+                    // Successors
+                    return idUpdatesLookup.TryGetValue(successorId, out int mappedNewSuccessorId) ? mappedNewSuccessorId : successorId;
+                })];
+
+
+                List<int> newAllocatedToResources = [.. dependentActivity.Activity.AllocatedToResources.Select(successorId =>
+                {
+                    // Successors
+                    return idUpdatesLookup.TryGetValue(successorId, out int mappedNewSuccessorId) ? mappedNewSuccessorId : successorId;
+                })];
+
+                return dependentActivity with
+                {
+                    Activity = dependentActivity.Activity with
+                    {
+                        TargetResources = newTargetResources,
+                        AllocatedToResources = newAllocatedToResources,
+                    },
+                };
+            })];
+
+            // Resources.
+
+            List<ResourceModel> oldResources = projectScenarioModel.ResourceSettings.Resources;
+
+            List<ResourceModel> newResources = [.. oldResources.Select(resource =>
+            {
+                int oldResourceId = resource.Id;
+                int newResourceId = idUpdatesLookup.TryGetValue(oldResourceId, out int mappedNewResourceId) ? mappedNewResourceId : oldResourceId;
+
+                List<ResourceTrackerModel> newResourceTrackers = [.. resource.Trackers.Select(resourceTracker =>
+                {
+                    int oldResourceTrackerId = resourceTracker.ResourceId;
+                    int newResourceTrackerId = idUpdatesLookup.TryGetValue(oldResourceTrackerId, out int mappedNewResourceId) ? mappedNewResourceId : oldResourceTrackerId;
+
+                    List<ResourceActivityTrackerModel> newActivityTrackers = [.. resourceTracker.ActivityTrackers.Select(activityTracker =>
+                    {
+                        int oldResourceActivityTrackerId = activityTracker.ResourceId;
+                        int newResourceActivityTrackerId = idUpdatesLookup.TryGetValue(oldResourceActivityTrackerId, out int mappedNewResourceId) ? mappedNewResourceId : oldResourceActivityTrackerId;
+
+                        return activityTracker with
+                        {
+                            ResourceId = newResourceActivityTrackerId,
+                        };
+                    })];
+
+                    return resourceTracker with
+                    {
+                        ResourceId = newResourceTrackerId,
+                        ActivityTrackers = newActivityTrackers
+                    };
+                })];
+
+                return resource with
+                {
+                    Id = newResourceId,
+                    Trackers = newResourceTrackers
+                };
+            })];
+
+            // Return the new project scenario model with the updated dependent activities and resources.
+
+            projectScenarioModel = projectScenarioModel with
+            {
+                DependentActivities = newDependentActivities,
+                ResourceSettings = projectScenarioModel.ResourceSettings with
+                {
+                    Resources = newResources,
+                },
+            };
+
+            return projectScenarioModel;
+        }
+
+        public static ProjectScenarioModel UpdateWorkStreamIds(
+            ProjectScenarioModel projectScenarioModel,
+            List<(int FromId, int ToId)> idMaps)
+        {
+            ArgumentNullException.ThrowIfNull(projectScenarioModel);
+            ArgumentNullException.ThrowIfNull(idMaps);
+            CheckIds(idMaps);
+
+            List<int> originalIds = [.. projectScenarioModel
+                .WorkStreamSettings
+                .WorkStreams
+                .OrderBy(x => x.DisplayOrder)
+                .ThenBy(x => x.Id)
+                .Select(x => x.Id)
+                .Distinct()];
+
+            // Update the ID mappings to make sure they are consistent and make logical sense.
+            idMaps = RefineIdMaps(originalIds, idMaps);
+
+            Dictionary<int, int> idUpdatesLookup = idMaps.ToDictionary(x => x.FromId, x => x.ToId);
+
+            // DependencyActivities.
+
+            List<DependentActivityModel> newDependentActivities = [.. projectScenarioModel.DependentActivities.Select(dependentActivity =>
+            {
+                List<int> newTargetWorkStreams = [.. dependentActivity.Activity.TargetWorkStreams.Select(successorId =>
+                {
+                    // Successors
+                    return idUpdatesLookup.TryGetValue(successorId, out int mappedNewSuccessorId) ? mappedNewSuccessorId : successorId;
+                })];
+
+                return dependentActivity with
+                {
+                    Activity = dependentActivity.Activity with
+                    {
+                        TargetWorkStreams = newTargetWorkStreams,
+                    },
+                };
+            })];
+
+            // Resources.
+
+            List<ResourceModel> oldResources = projectScenarioModel.ResourceSettings.Resources;
+
+            List<ResourceModel> newResources = [.. oldResources.Select(resource =>
+            {
+                List<int> newInterActivityPhases = [.. resource.InterActivityPhases.Select(successorId =>
+                {
+                    // InterActivityPhases
+                    return idUpdatesLookup.TryGetValue(successorId, out int mappedNewSuccessorId) ? mappedNewSuccessorId : successorId;
+                })];
+
+                return resource with
+                {
+                    InterActivityPhases = newInterActivityPhases,
+                };
+            })];
+
+            // WorkStreams.
+
+            List<WorkStreamModel> oldWorkStreams = projectScenarioModel.WorkStreamSettings.WorkStreams;
+
+            List<WorkStreamModel> newWorkStreams = [.. oldWorkStreams.Select(workStream =>
+            {
+                int oldWorkStreamId = workStream.Id;
+                int newWorkStreamId = idUpdatesLookup.TryGetValue(oldWorkStreamId, out int mappedNewWorkStreamId) ? mappedNewWorkStreamId : oldWorkStreamId;
+
+                return workStream with
+                {
+                    Id = newWorkStreamId,
+                };
+            })];
+
+            // Return the new project scenario model with the updated dependent activities and resources.
+
+            projectScenarioModel = projectScenarioModel with
+            {
+                DependentActivities = newDependentActivities,
+                ResourceSettings = projectScenarioModel.ResourceSettings with
+                {
+                    Resources = newResources,
+                },
+                WorkStreamSettings = projectScenarioModel.WorkStreamSettings with
+                {
+                    WorkStreams = newWorkStreams,
+                },
             };
 
             return projectScenarioModel;

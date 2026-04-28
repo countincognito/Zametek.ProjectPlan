@@ -107,6 +107,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 });
 
+            RenumberWorkStreamsCommand = ReactiveCommand.CreateFromTask(RenumberWorkStreamsAsync);
+
             ProcessSettings(m_SettingService.DefaultWorkStreamSettings);
 
             Id = Resource.ProjectPlan.Titles.Title_WorkStreamSettingsView;
@@ -169,6 +171,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 new WorkStreamModel
                                 {
                                     Id = id,
+                                    DisplayOrder = -1,
                                     ColorFormat = ColorHelper.Random()
                                 }));
                     });
@@ -220,6 +223,46 @@ namespace Zametek.ViewModel.ProjectPlan
                     string.Empty,
                     ex.Message);
             }
+        }
+
+        private async Task RenumberWorkStreamsAsync()
+        {
+            try
+            {
+                await RenumberWorkStreamsInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task RenumberWorkStreamsInternalAsync() =>
+            await Task.Run(RenumberWorkStreamsInternal);
+
+        private void RenumberWorkStreamsInternal()
+        {
+            lock (m_Lock)
+            {
+                UpdateDisplayOrders();
+
+                List<(int oldId, int newId)> mappedIds = [];
+
+                int count = OrderableWorkStreams.Count;
+
+                for (int i = 0; i < count; i++)
+                {
+                    int oldId = OrderableWorkStreams[i].Id;
+                    int newId = i + 1;
+                    mappedIds.Add((oldId, newId));
+                }
+
+                m_CoreViewModel.UpdateManagedWorkStreamIds(mappedIds);
+            }
+            m_CoreViewModel.RunAutoCompile();
         }
 
         private void UpdateWorkStreamSettingsToCore()
@@ -355,6 +398,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand RemoveManagedWorkStreamsCommand { get; }
 
+        public ICommand RenumberWorkStreamsCommand { get; }
+
         #endregion
 
         #region IDisposable Members
@@ -375,6 +420,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
                 m_ReadOnlyWorkStreamsSub?.Dispose();
+                m_OrderableWorkStreamsSub?.Dispose();
                 m_ProcessWorkStreamSettingsSub?.Dispose();
                 m_UpdateWorkStreamSettingsSub?.Dispose();
                 ClearManagedWorkStreams();

@@ -225,4 +225,7 @@
   <data name="Menu_ResetLayout" xml:space="preserve">
     <value>Reset Layout</value>
   </data>
+  <data name="Menu_SaveLayout" xml:space="preserve">
+    <value>Save _Layout</value>
+  </data>
 </root>

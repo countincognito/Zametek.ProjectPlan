@@ -295,6 +295,8 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
+                m_CoreViewModel.UpdateActivityDisplayOrders();
+
                 List<(int oldId, int newId)> mappedIds = [];
 
                 int count = OrderableActivities.Count;

@@ -486,6 +486,7 @@
         "DisplayOrder": 14,
         "Name": "Resource 16",
         "InterActivityPhases": [
+          1
         ],
         "Trackers": [
         ]
@@ -495,6 +496,7 @@
         "DisplayOrder": 13,
         "Name": "Resource 4",
         "InterActivityPhases": [
+          2
         ],
         "Trackers": [
         ]

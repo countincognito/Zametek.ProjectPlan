@@ -1008,18 +1008,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private void UpdateDisplayOrders()
-        {
-            lock (m_Lock)
-            {
-                // Mark the display order as it was left.
-                for (int i = 0; i < OrderableActivities.Count; i++)
-                {
-                    OrderableActivities[i].DisplayOrder = i;
-                }
-            }
-        }
-
         #endregion
 
         #region ICoreViewModel Members
@@ -1952,7 +1940,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     DateTimeDisplayMode oldDisplayMode = m_DateTimeCalculator.DisplayMode;
                     m_DateTimeCalculator.DisplayMode = DateTimeDisplayMode.Default;
 
-                    UpdateDisplayOrders();
+                    UpdateActivityDisplayOrders();
 
                     List<DependentActivityModel> dependentActivities =
                         [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToDependentActivityModel)];
@@ -2057,7 +2045,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
 
-                    UpdateDisplayOrders();
+                    UpdateActivityDisplayOrders();
                     //IsProjectScenarioUpdated = true;
                 }
             }
@@ -2088,7 +2076,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
 
-                    UpdateDisplayOrders();
+                    UpdateActivityDisplayOrders();
                     IsProjectScenarioUpdated = true;
                 }
             }
@@ -2243,7 +2231,19 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void UpdateManagedActivityIds(IEnumerable<(int OldId, int NewId)> idUpdates)
+        public void UpdateActivityDisplayOrders()
+        {
+            lock (m_Lock)
+            {
+                // Mark the display order as it was left.
+                for (int i = 0; i < OrderableActivities.Count; i++)
+                {
+                    OrderableActivities[i].DisplayOrder = i;
+                }
+            }
+        }
+
+        public void UpdateManagedActivityIds(IEnumerable<(int OldId, int NewId)> idMaps)
         {
             try
             {
@@ -2254,7 +2254,53 @@ namespace Zametek.ViewModel.ProjectPlan
                     ProjectScenarioModel projectScenarioModel = BuildProjectScenario();
                     Guid projectScenarioId = m_SettingService.ScenarioId;
                     string projectScenarioTitle = m_SettingService.ScenarioTitle;
-                    projectScenarioModel = ProjectScenarioHelper.UpdateActivityIds(projectScenarioModel, [.. idUpdates]);
+                    projectScenarioModel = ProjectScenarioHelper.UpdateActivityIds(projectScenarioModel, [.. idMaps]);
+                    ProcessProjectScenario(projectScenarioModel, projectScenarioId, projectScenarioTitle);
+
+                    IsProjectScenarioUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        public void UpdateManagedResourceIds(IEnumerable<(int OldId, int NewId)> idMaps)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+
+                    ProjectScenarioModel projectScenarioModel = BuildProjectScenario();
+                    Guid projectScenarioId = m_SettingService.ScenarioId;
+                    string projectScenarioTitle = m_SettingService.ScenarioTitle;
+                    projectScenarioModel = ProjectScenarioHelper.UpdateResourceIds(projectScenarioModel, [.. idMaps]);
+                    ProcessProjectScenario(projectScenarioModel, projectScenarioId, projectScenarioTitle);
+
+                    IsProjectScenarioUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        public void UpdateManagedWorkStreamIds(IEnumerable<(int OldId, int NewId)> idMaps)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IsBusy = true;
+
+                    ProjectScenarioModel projectScenarioModel = BuildProjectScenario();
+                    Guid projectScenarioId = m_SettingService.ScenarioId;
+                    string projectScenarioTitle = m_SettingService.ScenarioTitle;
+                    projectScenarioModel = ProjectScenarioHelper.UpdateWorkStreamIds(projectScenarioModel, [.. idMaps]);
                     ProcessProjectScenario(projectScenarioModel, projectScenarioId, projectScenarioTitle);
 
                     IsProjectScenarioUpdated = true;
@@ -2300,7 +2346,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     IsBusy = true;
 
-                    UpdateDisplayOrders();
+                    UpdateActivityDisplayOrders();
 
                     var availableResources = new List<IResource<int, int>>();
                     if (!ResourceSettings.AreDisabled)

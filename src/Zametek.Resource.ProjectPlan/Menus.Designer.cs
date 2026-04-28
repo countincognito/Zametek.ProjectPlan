@@ -277,6 +277,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Save _Layout.
+        /// </summary>
+        public static string Menu_SaveLayout {
+            get {
+                return ResourceManager.GetString("Menu_SaveLayout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Settings.
         /// </summary>
         public static string Menu_Settings {

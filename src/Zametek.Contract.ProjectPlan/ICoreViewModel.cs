@@ -117,7 +117,13 @@ namespace Zametek.Contract.ProjectPlan
 
         void AddMilestone(IEnumerable<int> dependentActivities);
 
-        void UpdateManagedActivityIds(IEnumerable<(int OldId, int NewId)> idUpdates);
+        void UpdateActivityDisplayOrders();
+
+        void UpdateManagedActivityIds(IEnumerable<(int OldId, int NewId)> idMaps);
+
+        void UpdateManagedResourceIds(IEnumerable<(int OldId, int NewId)> idMaps);
+
+        void UpdateManagedWorkStreamIds(IEnumerable<(int OldId, int NewId)> idMaps);
 
         void ClearManagedActivities();
 

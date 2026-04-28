@@ -75,13 +75,13 @@
       "ResourceDependencies": [
       ],
       "Successors": [
-        5,
-        6
+        3,
+        5
       ]
     },
     {
       "Activity": {
-        "Id": 5,
+        "Id": 3,
         "Name": "Activity 3",
         "DisplayOrder": 2,
         "TargetWorkStreams": [
@@ -89,12 +89,12 @@
         "TargetResources": [
           1,
           2,
-          3
+          5
         ],
         "AllocatedToResources": [
           1,
           2,
-          3
+          5
         ],
         "Trackers": [
         ]
@@ -121,31 +121,31 @@
         "TargetResources": [
           1,
           2,
-          3
+          5
         ],
         "AllocatedToResources": [
           1,
           2,
-          3
+          5
         ],
         "Trackers": [
         ]
       },
       "Dependencies": [
-        5
+        3
       ],
       "PlanningDependencies": [
       ],
       "ResourceDependencies": [
-        5
+        3
       ],
       "Successors": [
-        6
+        5
       ]
     },
     {
       "Activity": {
-        "Id": 6,
+        "Id": 5,
         "Name": "Activity 5",
         "DisplayOrder": 4,
         "TargetWorkStreams": [
@@ -153,7 +153,7 @@
         "TargetResources": [
           1,
           2,
-          3
+          5
         ],
         "AllocatedToResources": [
         ],
@@ -170,12 +170,12 @@
       ],
       "Successors": [
         7,
-        11
+        10
       ]
     },
     {
       "Activity": {
-        "Id": 8,
+        "Id": 6,
         "Name": "Activity 6",
         "DisplayOrder": 5,
         "TargetWorkStreams": [
@@ -197,7 +197,7 @@
       "ResourceDependencies": [
       ],
       "Successors": [
-        12
+        11
       ]
     },
     {
@@ -217,7 +217,7 @@
         ]
       },
       "Dependencies": [
-        6
+        5
       ],
       "PlanningDependencies": [
       ],
@@ -225,26 +225,26 @@
         4
       ],
       "Successors": [
+        6,
         8,
-        9,
+        13,
         14,
-        15,
-        16
+        15
       ]
     },
     {
       "Activity": {
-        "Id": 9,
+        "Id": 8,
         "Name": "Activity 8",
         "DisplayOrder": 7,
         "TargetWorkStreams": [
           1
         ],
         "TargetResources": [
-          13
+          14
         ],
         "AllocatedToResources": [
-          13
+          14
         ],
         "Trackers": [
         ]
@@ -257,38 +257,65 @@
       "ResourceDependencies": [
       ],
       "Successors": [
-        10
+        9
       ]
     },
     {
       "Activity": {
-        "Id": 10,
+        "Id": 9,
         "Name": "Activity 9",
         "DisplayOrder": 8,
         "TargetWorkStreams": [
           1
         ],
         "TargetResources": [
-          13,
-          5,
-          8
+          14,
+          6,
+          9
         ],
         "AllocatedToResources": [
-          5,
-          8,
-          13
+          6,
+          9,
+          14
         ],
         "Trackers": [
         ]
       },
       "Dependencies": [
-        9
+        8
       ],
       "PlanningDependencies": [
       ],
       "ResourceDependencies": [
-        9,
-        14
+        8,
+        13
+      ],
+      "Successors": [
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 10,
+        "Name": "Activity 10",
+        "DisplayOrder": 9,
+        "TargetWorkStreams": [
+          1
+        ],
+        "TargetResources": [
+          15
+        ],
+        "AllocatedToResources": [
+          15
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        5
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
       ],
       "Successors": [
       ]
@@ -296,33 +323,6 @@
     {
       "Activity": {
         "Id": 11,
-        "Name": "Activity 10",
-        "DisplayOrder": 9,
-        "TargetWorkStreams": [
-          1
-        ],
-        "TargetResources": [
-          14
-        ],
-        "AllocatedToResources": [
-          14
-        ],
-        "Trackers": [
-        ]
-      },
-      "Dependencies": [
-        6
-      ],
-      "PlanningDependencies": [
-      ],
-      "ResourceDependencies": [
-      ],
-      "Successors": [
-      ]
-    },
-    {
-      "Activity": {
-        "Id": 12,
         "Name": "Activity 11",
         "DisplayOrder": 10,
         "TargetWorkStreams": [
@@ -338,20 +338,20 @@
         ]
       },
       "Dependencies": [
-        8
+        6
       ],
       "PlanningDependencies": [
       ],
       "ResourceDependencies": [
-        8
+        6
       ],
       "Successors": [
-        13
+        12
       ]
     },
     {
       "Activity": {
-        "Id": 13,
+        "Id": 12,
         "Name": "Activity 12",
         "DisplayOrder": 11,
         "TargetWorkStreams": [
@@ -367,7 +367,7 @@
         ]
       },
       "Dependencies": [
-        12
+        11
       ],
       "PlanningDependencies": [
       ],
@@ -379,7 +379,7 @@
     },
     {
       "Activity": {
-        "Id": 14,
+        "Id": 13,
         "Name": "Activity 13",
         "DisplayOrder": 12,
         "TargetWorkStreams": [
@@ -387,16 +387,16 @@
           2
         ],
         "TargetResources": [
-          5,
           6,
+          8,
           7,
-          8
+          9
         ],
         "AllocatedToResources": [
-          5,
           6,
+          8,
           7,
-          8
+          9
         ],
         "Trackers": [
         ]
@@ -407,14 +407,14 @@
       "PlanningDependencies": [
       ],
       "ResourceDependencies": [
-        16
+        15
       ],
       "Successors": [
       ]
     },
     {
       "Activity": {
-        "Id": 15,
+        "Id": 14,
         "Name": "Activity 14",
         "DisplayOrder": 13,
         "TargetWorkStreams": [
@@ -443,27 +443,27 @@
     },
     {
       "Activity": {
-        "Id": 16,
+        "Id": 15,
         "Name": "Activity 15",
         "DisplayOrder": 14,
         "TargetWorkStreams": [
           1
         ],
         "TargetResources": [
-          5,
           6,
-          7,
           8,
+          7,
           9,
-          10
+          10,
+          11
         ],
         "AllocatedToResources": [
-          5,
           6,
-          7,
           8,
+          7,
           9,
-          10
+          10,
+          11
         ],
         "Trackers": [
         ]
@@ -502,7 +502,7 @@
         ]
       },
       {
-        "Id": 13,
+        "Id": 14,
         "DisplayOrder": 12,
         "Name": "Resource 13",
         "InterActivityPhases": [
@@ -511,7 +511,7 @@
         ]
       },
       {
-        "Id": 10,
+        "Id": 11,
         "DisplayOrder": 11,
         "Name": "Resource 10",
         "InterActivityPhases": [
@@ -520,7 +520,7 @@
         ]
       },
       {
-        "Id": 9,
+        "Id": 10,
         "DisplayOrder": 10,
         "Name": "Resource 9",
         "InterActivityPhases": [
@@ -529,7 +529,7 @@
         ]
       },
       {
-        "Id": 8,
+        "Id": 9,
         "DisplayOrder": 9,
         "Name": "Resource 8",
         "InterActivityPhases": [
@@ -547,7 +547,7 @@
         ]
       },
       {
-        "Id": 6,
+        "Id": 8,
         "DisplayOrder": 7,
         "Name": "Resource 6",
         "InterActivityPhases": [
@@ -556,7 +556,7 @@
         ]
       },
       {
-        "Id": 5,
+        "Id": 6,
         "DisplayOrder": 6,
         "Name": "Resource 5",
         "InterActivityPhases": [
@@ -565,7 +565,7 @@
         ]
       },
       {
-        "Id": 12,
+        "Id": 13,
         "DisplayOrder": 5,
         "Name": "Resource 12",
         "InterActivityPhases": [
@@ -574,7 +574,7 @@
         ]
       },
       {
-        "Id": 11,
+        "Id": 12,
         "DisplayOrder": 4,
         "Name": "Resource 11",
         "InterActivityPhases": [
@@ -583,7 +583,7 @@
         ]
       },
       {
-        "Id": 14,
+        "Id": 15,
         "DisplayOrder": 3,
         "Name": "Resource 14",
         "InterActivityPhases": [
@@ -661,7 +661,7 @@
         ]
       },
       {
-        "Id": 3,
+        "Id": 5,
         "DisplayOrder": 1,
         "Name": "Resource 3",
         "InterActivityPhases": [
@@ -669,11 +669,11 @@
         "Trackers": [
           {
             "Time": 0,
-            "ResourceId": 3,
+            "ResourceId": 5,
             "ActivityTrackers": [
               {
                 "Time": 0,
-                "ResourceId": 3,
+                "ResourceId": 5,
                 "ActivityId": 2,
                 "PercentageWorked": 100
               }
@@ -681,11 +681,11 @@
           },
           {
             "Time": 1,
-            "ResourceId": 3,
+            "ResourceId": 5,
             "ActivityTrackers": [
               {
                 "Time": 1,
-                "ResourceId": 3,
+                "ResourceId": 5,
                 "ActivityId": 2,
                 "PercentageWorked": 100
               }
@@ -693,11 +693,11 @@
           },
           {
             "Time": 2,
-            "ResourceId": 3,
+            "ResourceId": 5,
             "ActivityTrackers": [
               {
                 "Time": 2,
-                "ResourceId": 3,
+                "ResourceId": 5,
                 "ActivityId": 2,
                 "PercentageWorked": 100
               }
@@ -705,11 +705,11 @@
           },
           {
             "Time": 3,
-            "ResourceId": 3,
+            "ResourceId": 5,
             "ActivityTrackers": [
               {
                 "Time": 3,
-                "ResourceId": 3,
+                "ResourceId": 5,
                 "ActivityId": 2,
                 "PercentageWorked": 100
               }
@@ -717,11 +717,11 @@
           },
           {
             "Time": 4,
-            "ResourceId": 3,
+            "ResourceId": 5,
             "ActivityTrackers": [
               {
                 "Time": 4,
-                "ResourceId": 3,
+                "ResourceId": 5,
                 "ActivityId": 2,
                 "PercentageWorked": 100
               }

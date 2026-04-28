@@ -27,5 +27,7 @@ namespace Zametek.Contract.ProjectPlan
         ICommand AddManagedWorkStreamCommand { get; }
 
         ICommand RemoveManagedWorkStreamsCommand { get; }
+
+        ICommand RenumberWorkStreamsCommand { get; }
     }
 }

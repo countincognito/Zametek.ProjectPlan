@@ -45,6 +45,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public ProjectScenarioHelperFixture()
         {
             Input_JsonString = ReadJsonFile(@"TestFiles\input.json");
+            RemappedActivities_JsonString = ReadJsonFile(@"TestFiles\remapped_activities.json");
+            RemappedResources_JsonString = ReadJsonFile(@"TestFiles\remapped_resources.json");
+            RemappedWorkStreams_JsonString = ReadJsonFile(@"TestFiles\remapped_workstreams.json");
 
             static string ReadJsonFile(string filename)
             {
@@ -56,6 +59,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         public string Input_JsonString { get; init; }
+        public string RemappedActivities_JsonString { get; init; }
+        public string RemappedResources_JsonString { get; init; }
+        public string RemappedWorkStreams_JsonString { get; init; }
 
         public void Dispose()
         {

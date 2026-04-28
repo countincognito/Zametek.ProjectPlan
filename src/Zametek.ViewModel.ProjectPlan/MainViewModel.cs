@@ -166,6 +166,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ToggleDefaultHideBillingCommand = ReactiveCommand.Create(ToggleDefaultHideBilling);
 
             ChangeThemeCommand = ReactiveCommand.CreateFromTask<string>(ChangeThemeAsync);
+            SaveLayoutCommand = ReactiveCommand.CreateFromTask(SaveLayoutAsync);
             ResetLayoutCommand = ReactiveCommand.CreateFromTask(ResetLayoutAsync);
 
             CompileCommand = ReactiveCommand.CreateFromTask(ForceCompileAsync);
@@ -828,6 +829,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ChangeThemeCommand { get; }
 
+        public ICommand SaveLayoutCommand { get; }
+
         public ICommand ResetLayoutCommand { get; }
 
         public ICommand CompileCommand { get; }
@@ -855,6 +858,28 @@ namespace Zametek.ViewModel.ProjectPlan
                 DockSerializer serializer = new(m_ServiceProvider);
                 string layoutContent = serializer.Serialize(Layout);
                 m_SettingService.Layout = layoutContent;
+            }
+        }
+
+        private async Task SaveLayoutInternalAsync() => await Task.Run(SaveLayout);
+
+        public async Task SaveLayoutAsync()
+        {
+            try
+            {
+                IsMainBusy = true;
+                await SaveLayoutInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+            finally
+            {
+                IsMainBusy = false;
             }
         }
 
@@ -890,8 +915,6 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                SaveLayout();
-
                 if (Layout is IDock dock)
                 {
                     if (dock.Close.CanExecute(null))

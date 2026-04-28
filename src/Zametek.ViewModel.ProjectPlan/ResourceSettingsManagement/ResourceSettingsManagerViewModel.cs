@@ -6,6 +6,7 @@ using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -67,6 +68,7 @@ namespace Zametek.ViewModel.ProjectPlan
                .Subscribe();
 
             m_OrderableResourcesSub = m_Resources.Connect()
+                //.ObserveOn(Scheduler.CurrentThread)
                .ObserveOn(RxApp.MainThreadScheduler) // Ensure UI thread safety
                .Bind(m_OrderableResources)          // Bind to the mutable collection
                .DisposeMany()                        // Clean up resources
@@ -113,6 +115,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         UpdateResourceSettingsToCore();
                     }
                 });
+
+            RenumberResourcesCommand = ReactiveCommand.CreateFromTask(RenumberResourcesAsync);
 
             ProcessSettings(m_SettingService.DefaultResourceSettings);
 
@@ -177,7 +181,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 new ResourceModel
                                 {
                                     Id = resourceId,
-                                    DisplayOrder = resourceId,
+                                    DisplayOrder = -1,
                                     IsExplicitTarget = false,
                                     IsInactive = false,
                                     UnitCost = DefaultUnitCost,
@@ -279,6 +283,47 @@ namespace Zametek.ViewModel.ProjectPlan
                     string.Empty,
                     ex.Message);
             }
+        }
+
+        private async Task RenumberResourcesAsync()
+        {
+            try
+            {
+                await RenumberResourcesInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task RenumberResourcesInternalAsync() =>
+            await Task.Run(RenumberResourcesInternal);
+
+        private void RenumberResourcesInternal()
+        {
+            lock (m_Lock)
+            {
+                UpdateDisplayOrders();
+
+                List<(int oldId, int newId)> mappedIds = [];
+
+                int count = OrderableResources.Count;
+
+                for (int i = 0; i < count; i++)
+                {
+                    int oldId = OrderableResources[i].Id;
+                    int newId = i + 1;
+                    mappedIds.Add((oldId, newId));
+                }
+
+                m_CoreViewModel.UpdateManagedResourceIds(mappedIds);
+                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+            }
+            m_CoreViewModel.RunAutoCompile();
         }
 
         private void UpdateManagedResources(IEnumerable<UpdateResourceModel> updateModels)
@@ -562,6 +607,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand RemoveManagedResourcesCommand { get; }
 
         public ICommand EditManagedResourcesCommand { get; }
+
+        public ICommand RenumberResourcesCommand { get; }
 
         #endregion
 

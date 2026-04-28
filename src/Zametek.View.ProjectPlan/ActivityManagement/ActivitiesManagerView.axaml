@@ -89,18 +89,18 @@
 						Command="{Binding Path=EditManagedActivitiesCommand, Mode=OneWay}"
 						Content="{x:Static resources:Labels.Label_EditManagedActivities}"/>
 
-				<Button DockPanel.Dock="Bottom"
+				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
-						Margin="0,7,0,0"
+						Margin="0,0,0,7"
 						Height="25" Width="80"
 						VerticalContentAlignment="Center"
 						HorizontalContentAlignment="Center"
 						Command="{Binding Path=AddMilestoneCommand, Mode=OneWay}"
 						Content="{x:Static resources:Labels.Label_AddMilestone}"/>
 
-				<Button DockPanel.Dock="Bottom"
+				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
-						Margin="0,7,0,0"
+						Margin="0,0,0,7"
 						Height="25" Width="80"
 						VerticalContentAlignment="Center"
 						HorizontalContentAlignment="Center"
@@ -220,7 +220,7 @@
 
 
 
-				<DataGridTemplateColumn Width="100">
+				<!--<DataGridTemplateColumn Width="100">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
 							<TextBlock VerticalAlignment="Center"
@@ -241,7 +241,7 @@
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
-				</DataGridTemplateColumn>
+				</DataGridTemplateColumn>-->
 				
 				
 				
