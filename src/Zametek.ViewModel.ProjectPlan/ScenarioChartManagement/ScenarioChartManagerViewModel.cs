@@ -246,8 +246,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     X = xMetricFunction(trackedMetrics.Metrics),
                     Y = yMetricFunction(trackedMetrics.Metrics),
-                    Size = 10,
-                    Color = Colors.Blue,
+                    Size = 14.0f,
+                    LineWidth = 1.5f,
+                    MarkerFillColor = Colors.Blue,
+                    MarkerLineColor = Colors.WhiteSmoke,
                     Shape = MarkerShape.FilledCircle,
                     Annotation = trackedMetrics.Path,
                 };
