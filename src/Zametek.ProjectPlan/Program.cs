@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using System;
-using System.Threading.Tasks;
 
 namespace Zametek.ProjectPlan
 {
@@ -10,8 +9,13 @@ namespace Zametek.ProjectPlan
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
+        //
+        // If your Main method is marked as public static async Task Main, it can break the STA state
+        // even if the [STAThread] attribute is present. Especially when trying to access COM components
+        // like the clipboard.
+        // https://github.com/AvaloniaUI/Avalonia/issues/20007
         [STAThread]
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args, ShutdownMode.OnMainWindowClose);
