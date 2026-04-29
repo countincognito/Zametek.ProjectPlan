@@ -232,7 +232,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.9.3-beta.
+        ///   Looks up a localized string similar to 0.9.3-rc.1.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -313,7 +313,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Copyright (c) 2025.
+        ///   Looks up a localized string similar to Copyright (c) 2026.
         /// </summary>
         public static string Label_Copyright {
             get {

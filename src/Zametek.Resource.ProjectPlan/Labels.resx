@@ -160,7 +160,7 @@
     <value>projectplan.net</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>0.9.3-beta</value>
+    <value>0.9.3-rc.1</value>
   </data>
   <data name="Label_Author" xml:space="preserve">
     <value>R. M. Bennett-Lovsey</value>
@@ -178,7 +178,7 @@
     <value>Color</value>
   </data>
   <data name="Label_Copyright" xml:space="preserve">
-    <value>Copyright (c) 2025</value>
+    <value>Copyright (c) 2026</value>
   </data>
   <data name="Label_CriticalityRisk" xml:space="preserve">
     <value>Criticality Risk:</value>
