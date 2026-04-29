@@ -98,6 +98,17 @@
 					<Setter Property="Background" Value="Transparent"/>
 					<Setter Property="BorderThickness" Value="0"/>
 				</Style>
+
+				<!-- Make sure the caret appears at the end of a TextBox -->
+				<Style Selector="TextBox">
+					<Setter Property="(Interaction.Behaviors)">
+						<BehaviorCollectionTemplate>
+							<BehaviorCollection>
+								<local:MoveCaretToEndBehavior />
+							</BehaviorCollection>
+						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
 			</DataGrid.Styles>
 
 			<Interaction.Behaviors>

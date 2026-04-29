@@ -181,6 +181,17 @@
 				<!--<Style Selector="DataGridCell:selected:pointerover:current:focus Grid.editable">
 					<Setter Property="Background" Value="Green"/>
 				</Style>-->
+				
+				<!-- Make sure the caret appears at the end of a TextBox -->
+				<Style Selector="TextBox">
+					<Setter Property="(Interaction.Behaviors)">
+						<BehaviorCollectionTemplate>
+							<BehaviorCollection>
+								<local:MoveCaretToEndBehavior />
+							</BehaviorCollection>
+						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
 			</DataGrid.Styles>
 
 			<Interaction.Behaviors>
