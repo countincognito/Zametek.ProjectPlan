@@ -219,7 +219,6 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(trackedMetricsSet);
             var plotModel = new AvaPlot();
             plotModel.Plot.HideGrid();
-            plotModel.SetBaseTheme(baseTheme);
 
             // Now build the plot.
 
@@ -227,7 +226,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 || xMetric == TrackedMetrics.None
                 || yMetric == TrackedMetrics.None)
             {
-                return (plotModel, string.Empty);
+                return (plotModel.SetBaseTheme(baseTheme), string.Empty);
             }
 
             // Select the metric for the X axis.
@@ -285,7 +284,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             plotModel.Plot.Axes.AutoScaleExpand();
 
-            return (plotModel, curveFittingFormula);
+            return (plotModel.SetBaseTheme(baseTheme), curveFittingFormula);
         }
 
         private static string BuildCurveFit(
