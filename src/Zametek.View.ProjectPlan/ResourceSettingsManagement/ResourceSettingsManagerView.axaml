@@ -370,23 +370,10 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-
-
-
-
-
-
-				
-
-
-
-
-
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource allocationOrderSortComparer}"
-										IsVisible="{Binding Path=!HideCost, Mode=OneWay}"
 										Width="140">
 					<DataGridTemplateColumn.HeaderTemplate>
 						<DataTemplate>
@@ -420,21 +407,6 @@
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
