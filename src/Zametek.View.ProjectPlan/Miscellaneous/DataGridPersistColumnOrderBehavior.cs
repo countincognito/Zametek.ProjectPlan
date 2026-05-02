@@ -1,5 +1,4 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Avalonia.Xaml.Interactivity;
 using System;
 using System.Collections.Generic;
@@ -34,28 +33,47 @@ namespace Zametek.View.ProjectPlan
 
             m_GridName = gridName;
 
+            // Load settings once the control is ready
+            AssociatedObject.Initialized += OnInitialized;
+
             // Restore order when the DataGrid is loaded
-            AssociatedObject.Loaded += OnDataGridLoaded;
+            //AssociatedObject.Loaded += OnLoaded;
 
             // Save order whenever columns are reordered
             AssociatedObject.ColumnReordered += OnColumnReordered;
+
+            // Listen for layout changes to capture user resizing
+            AssociatedObject.LayoutUpdated += OnLayoutUpdated;
         }
 
         protected override void OnDetaching()
         {
             if (AssociatedObject is not null)
             {
-                AssociatedObject.Loaded -= OnDataGridLoaded;
+                AssociatedObject.Initialized -= OnInitialized;
+                //AssociatedObject.Loaded -= OnLoaded;
                 AssociatedObject.ColumnReordered -= OnColumnReordered;
+                AssociatedObject.LayoutUpdated -= OnLayoutUpdated;
             }
             m_GridName = string.Empty;
             base.OnDetaching();
         }
 
-
-        private void OnDataGridLoaded(
+        private void OnInitialized(
             object? sender,
-            RoutedEventArgs e)
+            EventArgs e)
+        {
+            LoadSettings();
+        }
+
+        //private void OnLoaded(
+        //    object? sender,
+        //    RoutedEventArgs e)
+        //{
+        //    LoadSettings();
+        //}
+
+        private void LoadSettings()
         {
             DataGridModel gridModel = m_SettingService.GetDataGridLayout(m_GridName);
             Dictionary<int, DataGridColumnModel> modelMap = gridModel.Columns.ToDictionary(x => x.PositionIndex, x => x);
@@ -69,6 +87,7 @@ namespace Zametek.View.ProjectPlan
                     if (modelMap.TryGetValue(i, out DataGridColumnModel? dataGridColumnModel))
                     {
                         column.DisplayIndex = dataGridColumnModel.DisplayIndex;
+                        column.Width = new DataGridLength(dataGridColumnModel.PixelWidth, DataGridLengthUnitType.Pixel);
                     }
                 }
             }
@@ -77,6 +96,18 @@ namespace Zametek.View.ProjectPlan
         private void OnColumnReordered(
             object? sender,
             DataGridColumnEventArgs e)
+        {
+            SaveSettings();
+        }
+
+        private void OnLayoutUpdated(
+            object? sender,
+            EventArgs e)
+        {
+            SaveSettings();
+        }
+
+        private void SaveSettings()
         {
             if (AssociatedObject is not null
                 && AssociatedObject.Columns.Count != 0)
@@ -90,6 +121,7 @@ namespace Zametek.View.ProjectPlan
                     {
                         PositionIndex = i,
                         DisplayIndex = dataGridColumnModel.DisplayIndex,
+                        PixelWidth = dataGridColumnModel.ActualWidth,
                     };
                 }
 
