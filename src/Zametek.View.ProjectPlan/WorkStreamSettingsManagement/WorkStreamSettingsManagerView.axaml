@@ -59,7 +59,7 @@
 			</DockPanel>
 		</ScrollViewer>
 
-		<DataGrid Name="workStreamsGrid"
+		<DataGrid Name="WorkStreamsGrid"
 				  FrozenColumnCount="1"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
@@ -122,7 +122,7 @@
 				<ContextDropBehavior Handler="{StaticResource managedWorkStreamDataGridDropHandler}" />
 
 				<EventTriggerBehavior EventName="SelectionChanged"
-										 SourceObject="{Binding #workStreamsGrid}">
+										 SourceObject="{Binding #WorkStreamsGrid}">
 					<InvokeCommandAction x:DataType="vm:WorkStreamSettingsManagerViewModel"
 											Command="{Binding Path=SetSelectedManagedWorkStreamsCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />

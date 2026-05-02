@@ -25,8 +25,9 @@ namespace Zametek.ProjectPlan
 
             // File settings.
             string settingsFilename = SettingFileHelper.DefaultUserSettingsFileLocation();
-            string layoutFilename = SettingFileHelper.DefaultDockLayoutFileLocation();
-            var settingService = new SettingService(settingsFilename, layoutFilename);
+            string dockLayoutFilename = SettingFileHelper.DefaultDockLayoutFileLocation();
+            string dataGridLayoutFilename = SettingFileHelper.DefaultDataGridLayoutFileLocation();
+            var settingService = new SettingService(settingsFilename, dockLayoutFilename, dataGridLayoutFilename);
 
             builder.RegisterInstance(settingService)
                 .As<ISettingService>()

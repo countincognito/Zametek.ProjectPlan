@@ -134,7 +134,7 @@
 			</DockPanel>
 		</ScrollViewer>
 
-		<DataGrid Name="resourcesGrid"
+		<DataGrid Name="ResourcesGrid"
 				  IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
 				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"
@@ -199,7 +199,7 @@
 				<ContextDropBehavior Handler="{StaticResource managedResourceDataGridDropHandler}" />
 
 				<EventTriggerBehavior EventName="SelectionChanged"
-										 SourceObject="{Binding #resourcesGrid}">
+										 SourceObject="{Binding #ResourcesGrid}">
 					<InvokeCommandAction x:DataType="vm:ResourceSettingsManagerViewModel"
 											Command="{Binding Path=SetSelectedManagedResourcesCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />

@@ -44,7 +44,7 @@
 		</DockPanel>
 
 		<Grid RowDefinitions="*, 4, *">
-			<DataGrid Name="resourcesGrid"
+			<DataGrid Name="TrackerResourcesGrid"
 					  IsEnabled="{Binding Path=HasResources, Mode=OneWay}"
 					  Grid.Row="0"
 					  FrozenColumnCount="25"
@@ -192,7 +192,7 @@
 
 			<GridSplitter Grid.Row="1" Background="Black" ResizeDirection="Rows"/>
 
-			<DataGrid Name="activitiesGrid"
+			<DataGrid Name="TrackerActivitiesGrid"
 					  IsEnabled="{Binding Path=HasActivities, Mode=OneWay}"
 					  Grid.Row="2"
 					  FrozenColumnCount="25"

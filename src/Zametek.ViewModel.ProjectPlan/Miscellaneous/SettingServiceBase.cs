@@ -33,7 +33,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 Version = Versions.AppSettingsLatest,
             };
             SettingsFilename = settingsFilename;
-            LayoutFilename = string.Empty;
+            DockLayoutFilename = string.Empty;
+            DataGridLayoutFilename = string.Empty;
 
             if (File.Exists(SettingsFilename))
             {
@@ -90,7 +91,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public string SettingsFilename { get; init; }
 
-        public string LayoutFilename { get; init; }
+        public string DockLayoutFilename { get; init; }
+
+        public string DataGridLayoutFilename { get; init; }
 
         private string m_ProjectTitle;
         public string ProjectTitle
@@ -144,7 +147,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public abstract string Layout { get; set; }
+        public abstract string DockLayout { get; set; }
+
+        public abstract DataGridModel GetDataGridLayout(string name);
+
+        public abstract void SetDataGridLayout(string name, DataGridModel model);
 
         public abstract bool DefaultShowDates { get; set; }
 

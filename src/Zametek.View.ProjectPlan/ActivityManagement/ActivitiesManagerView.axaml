@@ -111,7 +111,7 @@
 			</DockPanel>
 		</ScrollViewer>
 
-		<DataGrid Name="activitiesGrid"
+		<DataGrid Name="ActivitiesGrid"
 				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
@@ -181,7 +181,7 @@
 				<!-- Make DataGrid a drop target -->
 				<ContextDropBehavior Handler="{StaticResource managedActivityDataGridDropHandler}" />
 
-				<EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #activitiesGrid}">
+				<EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #ActivitiesGrid}">
 					<InvokeCommandAction Command="{Binding Path=SetSelectedManagedActivitiesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
 				</EventTriggerBehavior>
 

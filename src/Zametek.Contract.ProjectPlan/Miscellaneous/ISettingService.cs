@@ -6,7 +6,9 @@ namespace Zametek.Contract.ProjectPlan
     {
         string SettingsFilename { get; }
 
-        string LayoutFilename { get; }
+        string DockLayoutFilename { get; }
+
+        string DataGridLayoutFilename { get; }
 
         Guid ProjectId { get; }
 
@@ -18,7 +20,10 @@ namespace Zametek.Contract.ProjectPlan
 
         string ProjectDirectory { get; }
 
-        string Layout { get; set; }
+        string DockLayout { get; set; }
+
+        DataGridModel GetDataGridLayout(string name);
+        void SetDataGridLayout(string name, DataGridModel model);
 
         bool DefaultShowDates { get; set; }
 

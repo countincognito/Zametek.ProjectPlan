@@ -857,7 +857,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 DockSerializer serializer = new(m_ServiceProvider);
                 string layoutContent = serializer.Serialize(Layout);
-                m_SettingService.Layout = layoutContent;
+                m_SettingService.DockLayout = layoutContent;
             }
         }
 
@@ -887,7 +887,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                string layoutContent = m_SettingService.Layout;
+                string layoutContent = m_SettingService.DockLayout;
 
                 if (!string.IsNullOrWhiteSpace(layoutContent))
                 {

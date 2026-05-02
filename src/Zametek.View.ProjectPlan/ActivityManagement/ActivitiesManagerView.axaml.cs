@@ -1,4 +1,7 @@
 using Avalonia.Controls;
+using Avalonia.Xaml.Interactivity;
+using System;
+using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -8,6 +11,14 @@ namespace Zametek.View.ProjectPlan
         public ActivitiesManagerView()
         {
             InitializeComponent();
+        }
+
+        public ActivitiesManagerView(ISettingService settingService)
+        {
+            ArgumentNullException.ThrowIfNull(settingService);
+            InitializeComponent();
+            BehaviorCollection behaviors = Interaction.GetBehaviors(ActivitiesGrid);
+            behaviors.Add(new DataGridPersistColumnOrderBehavior(settingService));
         }
     }
 }

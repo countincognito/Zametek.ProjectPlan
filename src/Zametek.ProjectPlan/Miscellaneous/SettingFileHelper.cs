@@ -12,6 +12,7 @@ namespace Zametek.ProjectPlan
         private const string c_Product = @"projectplan.net";
         private const string c_UserSettings = @"UserSettings.json";
         private const string c_DockLayout = @"DockLayout.json";
+        private const string c_DataGridLayout = @"DataGridLayout.json";
 
         public static string ProductSettingsFolderLocation()
         {
@@ -61,6 +62,12 @@ namespace Zametek.ProjectPlan
         {
             string productFolderPath = ProductSettingsFolderLocation();
             return Path.Combine(productFolderPath, c_DockLayout);
+        }
+
+        public static string DefaultDataGridLayoutFileLocation()
+        {
+            string productFolderPath = ProductSettingsFolderLocation();
+            return Path.Combine(productFolderPath, c_DataGridLayout);
         }
     }
 }

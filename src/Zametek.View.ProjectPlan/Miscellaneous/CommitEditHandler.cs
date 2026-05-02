@@ -37,13 +37,13 @@ namespace Zametek.View.ProjectPlan
         {
             Dispatcher.UIThread.Invoke(() =>
             {
-                m_ActivitiesManagerView.activitiesGrid.CommitEdit();
-                m_TrackingManagerView.resourcesGrid.CommitEdit();
-                m_TrackingManagerView.activitiesGrid.CommitEdit();
-                m_GraphSettingsManagerView.activitySeveritiesGrid.CommitEdit();
-                m_ResourceSettingsManagerView.resourcesGrid.CommitEdit();
-                m_WorkStreamSettingsManagerView.workStreamsGrid.CommitEdit();
-                m_HolidaySettingsManagerView.holidaysGrid.CommitEdit();
+                m_ActivitiesManagerView.ActivitiesGrid.CommitEdit();
+                m_TrackingManagerView.TrackerResourcesGrid.CommitEdit();
+                m_TrackingManagerView.TrackerActivitiesGrid.CommitEdit();
+                m_GraphSettingsManagerView.ActivitySeveritiesGrid.CommitEdit();
+                m_ResourceSettingsManagerView.ResourcesGrid.CommitEdit();
+                m_WorkStreamSettingsManagerView.WorkStreamsGrid.CommitEdit();
+                m_HolidaySettingsManagerView.HolidaysGrid.CommitEdit();
             });
         }
     }

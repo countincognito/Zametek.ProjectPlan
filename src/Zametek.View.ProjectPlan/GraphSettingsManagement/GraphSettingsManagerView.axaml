@@ -47,7 +47,7 @@
 			</DockPanel>
 		</ScrollViewer>
 
-		<DataGrid Name="activitySeveritiesGrid"
+		<DataGrid Name="ActivitySeveritiesGrid"
 				  FrozenColumnCount="1"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
@@ -97,7 +97,7 @@
 
 			<Interaction.Behaviors>
 				<EventTriggerBehavior EventName="SelectionChanged"
-										 SourceObject="{Binding #activitySeveritiesGrid}">
+										 SourceObject="{Binding #ActivitySeveritiesGrid}">
 					<InvokeCommandAction x:DataType="vm:GraphSettingsManagerViewModel"
 											Command="{Binding Path=SetSelectedManagedActivitySeveritiesCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />

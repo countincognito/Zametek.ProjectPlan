@@ -56,7 +56,7 @@
 			</DockPanel>
 		</ScrollViewer>
 
-		<DataGrid Name="holidaysGrid"
+		<DataGrid Name="HolidaysGrid"
 				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
@@ -113,7 +113,7 @@
 
 			<Interaction.Behaviors>
 				<EventTriggerBehavior EventName="SelectionChanged"
-										 SourceObject="{Binding #holidaysGrid}">
+										 SourceObject="{Binding #HolidaysGrid}">
 					<InvokeCommandAction x:DataType="vm:HolidaySettingsManagerViewModel"
 											Command="{Binding Path=SetSelectedManagedHolidaysCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />

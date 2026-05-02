@@ -51,7 +51,7 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        public override string Layout
+        public override string DockLayout
         {
             get
             {
@@ -60,6 +60,19 @@ namespace Zametek.ProjectPlan.CommandLine
             set
             {
             }
+        }
+
+        public override DataGridModel GetDataGridLayout(string name)
+        {
+            return new DataGridModel
+            {
+                Name = name,
+            };
+        }
+
+        public override void SetDataGridLayout(string name, DataGridModel model)
+        {
+            throw new NotImplementedException();
         }
 
         public override bool DefaultShowDates
