@@ -244,7 +244,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(graphSettings);
             lock (m_Lock)
             {
-                m_NodeTypeFormats.Clear();
+                m_EdgeTypeFormats.Clear();
                 foreach (EdgeTypeFormatModel edgeTypeFormat in graphSettings.EdgeTypeFormats)
                 {
                     m_EdgeTypeFormats.Add(new EdgeTypeFormatModel
