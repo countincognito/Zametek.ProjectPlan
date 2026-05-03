@@ -13,12 +13,12 @@ namespace Zametek.View.ProjectPlan
             InitializeComponent();
         }
 
-        public ActivitiesManagerView(ISettingService settingService)
+        public ActivitiesManagerView(IDataGridManager dataGridManager)
         {
-            ArgumentNullException.ThrowIfNull(settingService);
+            ArgumentNullException.ThrowIfNull(dataGridManager);
             InitializeComponent();
             BehaviorCollection behaviors = Interaction.GetBehaviors(ActivitiesGrid);
-            behaviors.Add(new DataGridPersistColumnOrderBehavior(settingService));
+            behaviors.Add(new DataGridPersistBehavior(dataGridManager));
         }
     }
 }

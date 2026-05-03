@@ -16,7 +16,7 @@ namespace Zametek.ProjectPlan
 
         private readonly Lock m_Lock;
         private string m_DockLayout;
-        private readonly Dictionary<string, DataGridModel> m_DataGridLayout;
+        private readonly List<DataGridModel> m_DataGridLayouts;
 
         #endregion
 
@@ -35,7 +35,7 @@ namespace Zametek.ProjectPlan
             DataGridLayoutFilename = dataGridLayoutFilename;
             m_Lock = new();
             m_DockLayout = string.Empty;
-            m_DataGridLayout = [];
+            m_DataGridLayouts = [];
             string? directory = Path.GetDirectoryName(SettingsFilename);
 
             if (string.IsNullOrWhiteSpace(directory))
@@ -62,15 +62,12 @@ namespace Zametek.ProjectPlan
                     List<DataGridModel>? dataGridModels = JsonConvert.DeserializeObject<List<DataGridModel>>(content);
                     if (dataGridModels is not null)
                     {
-                        foreach (DataGridModel model in dataGridModels)
-                        {
-                            m_DataGridLayout[model.Name] = model;
-                        }
+                        m_DataGridLayouts.AddRange(dataGridModels);
                     }
                 }
                 catch (Exception)
                 {
-                    m_DataGridLayout.Clear();
+                    m_DataGridLayouts.Clear();
                 }
             }
         }
@@ -91,7 +88,7 @@ namespace Zametek.ProjectPlan
             lock (m_Lock)
             {
                 using StreamWriter writer = File.CreateText(DataGridLayoutFilename);
-                writer.WriteLine(JsonConvert.SerializeObject(m_DataGridLayout.Values, Formatting.Indented));
+                writer.WriteLine(JsonConvert.SerializeObject(m_DataGridLayouts, Formatting.Indented));
             }
         }
 
@@ -148,27 +145,22 @@ namespace Zametek.ProjectPlan
             }
         }
 
-        public override DataGridModel GetDataGridLayout(string name)
+        public override List<DataGridModel> GetDataGridLayout()
         {
-            if (m_DataGridLayout.TryGetValue(name, out DataGridModel? model))
+            lock (m_Lock)
             {
-                return model;
-            }
-            else
-            {
-                return new DataGridModel
-                {
-                    Name = name
-                };
+                return [.. m_DataGridLayouts];
             }
         }
 
-        public override void SetDataGridLayout(
-            string name,
-            DataGridModel model)
+        public override void SetDataGridLayout(List<DataGridModel> models)
         {
-            m_DataGridLayout[name] = model;
-            SaveDataGridLayout();
+            lock (m_Lock)
+            {
+                m_DataGridLayouts.Clear();
+                m_DataGridLayouts.AddRange(models);
+                SaveDataGridLayout();
+            }
         }
 
         public override bool DefaultShowDates

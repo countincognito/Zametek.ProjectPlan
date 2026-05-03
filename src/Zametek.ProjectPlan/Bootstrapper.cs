@@ -199,6 +199,11 @@ namespace Zametek.ProjectPlan
                 .As<CommitEditHandler>()
                 .SingleInstance();
 
+            builder.RegisterType<DataGridManager>()
+                .As<IDataGridManager>()
+                .As<DataGridManager>()
+                .SingleInstance();
+
             // 3. Use the Autofac resolver for Splat
             // This tells Splat/ReactiveUI to look into Autofac for dependencies
             AutofacDependencyResolver autofacResolver = builder.UseAutofacDependencyResolver();

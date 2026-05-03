@@ -22,8 +22,9 @@ namespace Zametek.Contract.ProjectPlan
 
         string DockLayout { get; set; }
 
-        DataGridModel GetDataGridLayout(string name);
-        void SetDataGridLayout(string name, DataGridModel model);
+        List<DataGridModel> GetDataGridLayout();
+
+        void SetDataGridLayout(List<DataGridModel> models);
 
         bool DefaultShowDates { get; set; }
 

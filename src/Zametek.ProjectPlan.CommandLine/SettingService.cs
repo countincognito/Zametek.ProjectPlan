@@ -62,15 +62,12 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
-        public override DataGridModel GetDataGridLayout(string name)
+        public override List<DataGridModel> GetDataGridLayout()
         {
-            return new DataGridModel
-            {
-                Name = name,
-            };
+            return [];
         }
 
-        public override void SetDataGridLayout(string name, DataGridModel model)
+        public override void SetDataGridLayout(List<DataGridModel> models)
         {
             throw new NotImplementedException();
         }

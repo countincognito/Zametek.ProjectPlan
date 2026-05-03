@@ -149,9 +149,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public abstract string DockLayout { get; set; }
 
-        public abstract DataGridModel GetDataGridLayout(string name);
+        public abstract List<DataGridModel> GetDataGridLayout();
 
-        public abstract void SetDataGridLayout(string name, DataGridModel model);
+        public abstract void SetDataGridLayout(List<DataGridModel> models);
 
         public abstract bool DefaultShowDates { get; set; }
 
