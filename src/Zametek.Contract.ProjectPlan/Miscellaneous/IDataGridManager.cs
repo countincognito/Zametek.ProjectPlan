@@ -5,7 +5,7 @@ namespace Zametek.Contract.ProjectPlan
     public interface IDataGridManager
         : IDisposable
     {
-        List<Action> ResetActions { get; }
+        IList<Action> ResetActions { get; }
 
         DataGridModel GetDataGridModel(string name);
 

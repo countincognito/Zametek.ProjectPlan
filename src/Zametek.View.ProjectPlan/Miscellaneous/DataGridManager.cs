@@ -26,7 +26,7 @@ namespace Zametek.View.ProjectPlan
 
         private void Initialize()
         {
-            List<DataGridModel> dataGridModels = m_SettingService.GetDataGridLayout();
+            IList<DataGridModel> dataGridModels = m_SettingService.GetDataGridLayout();
 
             foreach (DataGridModel dataGridModel in dataGridModels)
             {
@@ -38,7 +38,7 @@ namespace Zametek.View.ProjectPlan
 
         #region IDataGridManager Members
 
-        public List<Action> ResetActions { get; }
+        public IList<Action> ResetActions { get; }
 
         public DataGridModel GetDataGridModel(string name)
         {
