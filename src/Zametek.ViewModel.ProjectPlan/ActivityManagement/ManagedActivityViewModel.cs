@@ -56,9 +56,11 @@ namespace Zametek.ViewModel.ProjectPlan
             m_MaximumLatestFinishDateTime = maximumLatestFinishDateTime;
             m_VertexGraphCompiler = vertexGraphCompiler;
             m_ErrorsByPropertyName = [];
+
             ResourceSelector = new ResourceSelectorViewModel();
             m_ResourceSettings = m_CoreViewModel.ResourceSettings;
             RefreshResourceSelector();
+
             WorkStreamSelector = new WorkStreamSelectorViewModel();
             m_WorkStreamSettings = m_CoreViewModel.WorkStreamSettings;
             RefreshWorkStreamSelector();

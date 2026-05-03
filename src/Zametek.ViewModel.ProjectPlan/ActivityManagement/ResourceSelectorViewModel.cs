@@ -94,9 +94,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    return SelectedTargetResources
-                        .Select(x => x.Id)
-                        .ToList();
+                    return [.. SelectedTargetResources.Select(x => x.Id)];
                 }
             }
         }
@@ -139,9 +137,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 {
                     // Find target view models that have been removed.
-                    List<ISelectableResourceViewModel> removedViewModels = m_TargetResources
-                        .ExceptBy(targetResources.Select(x => x.Id), x => x.Id)
-                        .ToList();
+                    List<ISelectableResourceViewModel> removedViewModels = [.. m_TargetResources.ExceptBy(targetResources.Select(x => x.Id), x => x.Id)];
 
                     // Delete the removed items from the target and selected collections.
                     foreach (ISelectableResourceViewModel vm in removedViewModels)
@@ -151,9 +147,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     // Find the selected view models that have been removed.
-                    List<ISelectableResourceViewModel> removedSelectedViewModels = m_SelectedTargetResources
-                        .ExceptBy(selectedTargetResources, x => x.Id)
-                        .ToList();
+                    List<ISelectableResourceViewModel> removedSelectedViewModels = [.. m_SelectedTargetResources.ExceptBy(selectedTargetResources, x => x.Id)];
 
                     // Delete the removed selected items from the selected collections.
                     foreach (ISelectableResourceViewModel vm in removedSelectedViewModels)
@@ -163,9 +157,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 {
                     // Find the target models that have been added.
-                    List<TargetResourceModel> addedModels = targetResources
-                        .ExceptBy(m_TargetResources.Select(x => x.Id), x => x.Id)
-                        .ToList();
+                    List<TargetResourceModel> addedModels = [.. targetResources.ExceptBy(m_TargetResources.Select(x => x.Id), x => x.Id)];
 
                     List<ISelectableResourceViewModel> addedViewModels = [];
 

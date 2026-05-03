@@ -1331,6 +1331,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Resource Filter.
+        /// </summary>
+        public static string Label_ResourceFilter {
+            get {
+                return ResourceManager.GetString("Label_ResourceFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resource Name.
         /// </summary>
         public static string Label_ResourceName {

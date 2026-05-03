@@ -15,6 +15,12 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowToday { get; set; }
 
+        bool ShowMilestones { get; set; }
+
+        bool HasResources { get; }
+
+        IResourceSelectorViewModel ResourceSelector { get; }
+
         ICommand SaveEarnedValueChartImageFileCommand { get; }
 
         Task SaveEarnedValueChartImageFileAsync(string? filename, int width, int height);

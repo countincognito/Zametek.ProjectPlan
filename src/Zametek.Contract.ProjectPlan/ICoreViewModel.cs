@@ -87,6 +87,8 @@ namespace Zametek.Contract.ProjectPlan
 
         TrackingSeriesSetModel TrackingSeriesSet { get; }
 
+        TrackingSeriesSetFilterModel TrackingSeriesSetFilter { get; set; }
+
         int TrackerIndex { get; set; }
 
         ReadyToRevise IsReadyToReviseTrackers { get; set; }

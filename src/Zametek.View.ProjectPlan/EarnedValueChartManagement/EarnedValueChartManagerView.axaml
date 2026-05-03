@@ -6,6 +6,7 @@
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:u="https://irihi.tech/ursa"
 			 x:DataType="vm:EarnedValueChartManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.EarnedValueChartManagerView">
@@ -78,6 +79,36 @@
 								  OffContent="{x:Static resources:Labels.Label_No}"
 								  OnContent="{x:Static resources:Labels.Label_Yes}"
 								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"/>
+				</DockPanel>
+
+				<DockPanel DockPanel.Dock="Top">
+					<Label VerticalContentAlignment="Center"
+						   HorizontalContentAlignment="Left"
+						   Height="25"
+						   DockPanel.Dock="Top"
+						   IsTabStop="False"
+						   Margin="0,0,0,3"
+						   Content="{x:Static resources:Labels.Label_ResourceFilter}"/>
+
+					<u:MultiComboBox IsEnabled="{Binding Path=HasResources, Mode=OneWay}"
+									 MaxHeight="200"
+								     Width="140"
+								     Height="25"
+							         Margin="0,0,0,11"
+									 HorizontalAlignment="Stretch"
+									 VerticalAlignment="Stretch"
+									 Focusable="True"
+									 ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}"
+									 SelectedItems="{Binding Path=ResourceSelector.SelectedTargetResources, Mode=OneWay}"
+									 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}">
+						<u:MultiComboBox.SelectedItemTemplate>
+							<DataTemplate x:DataType="vm:SelectableResourceViewModel">
+								<Grid>
+									<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
+								</Grid>
+							</DataTemplate>
+						</u:MultiComboBox.SelectedItemTemplate>
+					</u:MultiComboBox>
 				</DockPanel>
 
 				<Grid/>

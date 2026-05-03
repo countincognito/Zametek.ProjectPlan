@@ -657,4 +657,7 @@
   <data name="Label_AllocationOrder" xml:space="preserve">
     <value>Allocation Order</value>
   </data>
+  <data name="Label_ResourceFilter" xml:space="preserve">
+    <value>Resource Filter</value>
+  </data>
 </root>
