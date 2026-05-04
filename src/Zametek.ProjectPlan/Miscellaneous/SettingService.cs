@@ -145,7 +145,7 @@ namespace Zametek.ProjectPlan
             }
         }
 
-        public override List<DataGridModel> GetDataGridLayout()
+        public override IList<DataGridModel> GetDataGridLayout()
         {
             lock (m_Lock)
             {
@@ -153,7 +153,7 @@ namespace Zametek.ProjectPlan
             }
         }
 
-        public override void SetDataGridLayout(List<DataGridModel> models)
+        public override void SetDataGridLayout(IList<DataGridModel> models)
         {
             lock (m_Lock)
             {

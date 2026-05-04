@@ -101,7 +101,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_VertexGraph = new VertexGraphModel();
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
             m_TrackingSeriesSet = new TrackingSeriesSetModel();
-            m_TrackingSeriesSetFilter = new TrackingSeriesSetFilterModel();
 
             m_OrderableActivities = [];
 
@@ -230,9 +229,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Subscribe(_ => BuildResourceSeriesSet());
 
             m_BuildTrackingSeriesSetSub = this
-                .WhenAnyValue(
-                    core => core.GraphCompilation,
-                    core => core.TrackingSeriesSetFilter)
+                .WhenAnyValue(core => core.GraphCompilation)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildTrackingSeriesSet());
 
@@ -473,7 +470,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private static TrackingSeriesSetModel CalculateTrackingSeriesSet(
             IEnumerable<ActivityModel> activities,
             ResourceSettingsModel resourceSettings,
-            TrackingSeriesSetFilterModel filterModel,
             bool hasResources)
         {
             ArgumentNullException.ThrowIfNull(activities);
@@ -486,15 +482,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Select(x => x.CloneObject())
                 .OrderBy(x => x.EarliestFinishTime.GetValueOrDefault())
                 .ThenBy(x => x.EarliestStartTime.GetValueOrDefault())];
-
-            HashSet<int> resourceIdFilter = [.. filterModel.SelectedResourceIds];
-
-            // Zero filter items means no filter.
-            if (resourceIdFilter.Count > 0)
-            {
-                resources = [.. resources.Where(x => resourceIdFilter.Contains(x.Id))];
-                orderedActivities = [.. orderedActivities.Where(x => resourceIdFilter.Intersect(x.AllocatedToResources).Any())];
-            }
 
             // Plan.
             List<TrackingPointModel> planPointSeries = [];
@@ -1569,19 +1556,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private TrackingSeriesSetFilterModel m_TrackingSeriesSetFilter;
-        public TrackingSeriesSetFilterModel TrackingSeriesSetFilter
-        {
-            get => m_TrackingSeriesSetFilter;
-            set
-            {
-                lock (m_Lock)
-                {
-                    this.RaiseAndSetIfChanged(ref m_TrackingSeriesSetFilter, value);
-                }
-            }
-        }
-
         private int m_TrackerIndex;
         public int TrackerIndex
         {
@@ -2510,16 +2484,12 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                //if (!HasCompilationErrors)
-                //{
-
                 IList<ResourceScheduleModel> resourceScheduleModels =
                     [.. m_Mapper.ToResourceScheduleModels(GraphCompilation)];
 
                 ResourceSeriesSetModel resourceSeriesSet = CalculateResourceSeriesSet(
                     resourceScheduleModels,
                     ResourceSettings);
-                //}
 
                 ResourceSeriesSet = resourceSeriesSet;
             }
@@ -2531,8 +2501,13 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var trackingSeriesSet = new TrackingSeriesSetModel();
 
-                IList<ActivityModel> activityModels = [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToActivityModel)];
-                trackingSeriesSet = CalculateTrackingSeriesSet(activityModels, ResourceSettings, TrackingSeriesSetFilter, HasResources);
+                IList<ActivityModel> activityModels =
+                    [.. RawActivities.Cast<ManagedActivityViewModel>().Select(m_Mapper.ToActivityModel)];
+
+                trackingSeriesSet = CalculateTrackingSeriesSet(
+                    activityModels,
+                    ResourceSettings,
+                    HasResources);
 
                 TrackingSeriesSet = trackingSeriesSet;
             }

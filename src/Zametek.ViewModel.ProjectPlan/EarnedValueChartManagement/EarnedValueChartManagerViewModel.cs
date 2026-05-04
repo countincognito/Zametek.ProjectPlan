@@ -78,10 +78,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDialogService m_DialogService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
 
-        private readonly HashSet<int> m_TargetResources;
-
-        private readonly IDisposable? m_ResourceSettingsSub;
-        private readonly IDisposable? m_UpdateTrackingSeriesSetFilterSub;
         private readonly IDisposable? m_BuildEarnedValueChartPlotModelSub;
 
         private const float c_ArrowHeadWidth = 6.0f;
@@ -110,11 +106,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_EarnedValueChartPlotModel = new AvaPlot();
-            m_TargetResources = [];
-
-            ResourceSelector = new ResourceSelectorViewModel();
-            m_ResourceSettings = m_CoreViewModel.ResourceSettings;
-            RefreshResourceSelector();
 
             {
                 ReactiveCommand<Unit, Unit> saveEarnedValueChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveEarnedValueChartImageFileAsync);
@@ -145,21 +136,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowMilestones)
                 .ToProperty(this, evc => evc.ShowMilestones);
 
-            m_HasResources = this
-                .WhenAnyValue(x => x.m_CoreViewModel.HasResources)
-                .ToProperty(this, x => x.HasResources);
-
-            m_ResourceSettingsSub = this
-                .WhenAnyValue(x => x.m_CoreViewModel.ResourceSettings)
-                //.ObserveOn(RxApp.TaskpoolScheduler)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(x => ResourceSettings = x);
-
-            m_UpdateTrackingSeriesSetFilterSub = this
-                .WhenAnyValue(x => x.ResourceSelector.TargetResourcesString)
-                .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(_ => UpdateTrackingSeriesSetFilterToCore());
-
             m_BuildEarnedValueChartPlotModelSub = this
                 .WhenAnyValue(
                     evc => evc.m_CoreViewModel.TrackingSeriesSet,
@@ -184,18 +160,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Properties
 
-        private ResourceSettingsModel m_ResourceSettings;
-        private ResourceSettingsModel ResourceSettings
-        {
-            get => m_ResourceSettings;
-            set
-            {
-                m_ResourceSettings = value;
-                SetNewTargetResources();
-                this.RaisePropertyChanged();
-            }
-        }
-
         private AvaPlot m_EarnedValueChartPlotModel;
         public AvaPlot EarnedValueChartPlotModel
         {
@@ -217,50 +181,6 @@ namespace Zametek.ViewModel.ProjectPlan
         #endregion
 
         #region Private Methods
-
-        private void UpdateTargetResources()
-        {
-            m_TargetResources.Clear();
-            m_TargetResources.UnionWith(ResourceSelector.SelectedResourceIds);
-            //this.RaisePropertyChanged(nameof(TargetResources));
-            this.RaisePropertyChanged(nameof(ResourceSelector));
-            //this.RaisePropertyChanged(nameof(AllocatedToResourcesString));
-        }
-
-        private void SetNewTargetResources()
-        {
-            UpdateTargetResources();
-            RefreshResourceSelector();
-            UpdateTargetResources();
-        }
-
-        private void RefreshResourceSelector()
-        {
-            var selectedTargetResources = new HashSet<int>(m_TargetResources);
-
-            IEnumerable<TargetResourceModel> targetResources = ResourceSettings
-                .Resources.Select(
-                    x => new TargetResourceModel
-                    {
-                        Id = x.Id,
-                        Name = x.Name,
-                    });
-
-            ResourceSelector.SetTargetResources(targetResources, selectedTargetResources);
-        }
-
-        private void UpdateTrackingSeriesSetFilterToCore()
-        {
-            lock (m_Lock)
-            {
-                var filter = new TrackingSeriesSetFilterModel
-                {
-                    SelectedResourceIds = [.. ResourceSelector.SelectedResourceIds],
-                };
-
-                m_CoreViewModel.TrackingSeriesSetFilter = filter;
-            }
-        }
 
         private async Task BuildEarnedValueChartPlotModelAsync()
         {
@@ -684,11 +604,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<bool> m_HasResources;
-        public bool HasResources => m_HasResources.Value;
-
-        public IResourceSelectorViewModel ResourceSelector { get; }
-
         public ICommand SaveEarnedValueChartImageFileCommand { get; }
 
         public async Task SaveEarnedValueChartImageFileAsync(
@@ -797,8 +712,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
-            m_ResourceSettingsSub?.Dispose();
-            m_UpdateTrackingSeriesSetFilterSub?.Dispose();
             m_BuildEarnedValueChartPlotModelSub?.Dispose();
         }
 
@@ -825,7 +738,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ShowProjections?.Dispose();
                 m_ShowToday?.Dispose();
                 m_ShowMilestones?.Dispose();
-                m_HasResources?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
