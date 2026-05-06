@@ -160,6 +160,17 @@ namespace Zametek.View.ProjectPlan
                 }
             }
 
+            // Scenario points.
+
+            AnnotatedMarker? annotatedMarker = plotModel.Plot.GetPlottables<AnnotatedMarker>()
+                .FirstOrDefault(marker => IsPointInMarker(plotModel.Plot, mouseLocation, marker));
+
+            if (annotatedMarker is not null)
+            {
+                m_PlotContainer.SetValue(ToolTip.TipProperty, annotatedMarker.Annotation);
+                return;
+            }
+
             // Annotations.
 
             AnnotatedRectangle? annotatedRectangle = plotModel.Plot.GetPlottables<AnnotatedRectangle>()
@@ -173,6 +184,31 @@ namespace Zametek.View.ProjectPlan
 
             // If no bar or rectangle was found, clear the tooltip.
             ClearToolTip();
+        }
+
+        private static bool IsPointInMarker(
+            Plot plot,
+            Coordinates point,
+            Marker marker)
+        {
+
+            // Get pixel location of the marker center.
+            Pixel markerPixel = plot.GetPixel(marker.Coordinates);
+
+            // Get pixel location of the point center.
+            Pixel pointPixel = plot.GetPixel(point);
+
+            // Calculate pixel rectangle based on MarkerSize (e.g. 10).
+            float halfSize = marker.MarkerStyle.Size / 2;
+            ScottPlot.PixelRect markerRect = new(
+                left: markerPixel.X - halfSize,
+                right: markerPixel.X + halfSize,
+                bottom: markerPixel.Y + halfSize,
+                top: markerPixel.Y - halfSize
+            );
+
+            // Check if the point pixel is within the marker rectangle.
+            return markerRect.Contains(pointPixel);
         }
 
         private void ClearToolTip()
