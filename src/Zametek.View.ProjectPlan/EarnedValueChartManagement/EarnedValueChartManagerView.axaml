@@ -87,8 +87,34 @@
 		<Grid>
 			<!-- ScottPlot PlotView -->
 			<ContentControl x:Name="scottplot"
-							Content="{Binding EarnedValueChartPlotModel, Mode=OneWay}"
-							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
+							Content="{Binding Path=EarnedValueChartPlotModel, Mode=OneWay}"
+							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
+				<ContentControl.ContextMenu>
+					<ContextMenu>
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowProjections}"
+								  IsChecked="{Binding Path=ShowProjections, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+						
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowToday}"
+								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowMilestones}"
+								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<Separator />
+
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+								  Command="{Binding Path=SaveEarnedValueChartImageFileCommand, Mode=OneWay}" />
+
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_Reset}" />
+						
+					</ContextMenu>
+				</ContentControl.ContextMenu>
+			</ContentControl>
 		</Grid>
 	</DockPanel>
 </UserControl>

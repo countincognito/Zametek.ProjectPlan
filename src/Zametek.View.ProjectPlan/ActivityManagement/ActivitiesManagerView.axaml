@@ -49,69 +49,11 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=AddManagedActivityCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_AddManagedActivity}"/>
 
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=InsertManagedActivityCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_InsertManagedActivity}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=RemoveManagedActivitiesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DeleteManagedActivities}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=EditManagedActivitiesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_EditManagedActivities}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalContentAlignment="Center"
-						HorizontalContentAlignment="Center"
-						Command="{Binding Path=AddMilestoneCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_AddMilestone}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalContentAlignment="Center"
-						HorizontalContentAlignment="Center"
-						Command="{Binding Path=RenumberActivitiesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_RenumberActivities}"/>
-
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
-
+		<!-- Set Background to Transparent to ensure the context menu works even when the datagrid is empty -->
+		<!-- https://github.com/AvaloniaUI/Avalonia/discussions/15118 -->
 		<DataGrid Name="ActivitiesGrid"
+				  Background="Transparent"
 				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
@@ -173,6 +115,35 @@
 								<local:MoveCaretToEndBehavior />
 							</BehaviorCollection>
 						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
+
+
+				<Style>
+					<Setter Property="ContextMenu">
+						<ContextMenu>
+							<MenuItem Header="{x:Static resources:Labels.Label_AddManagedActivity}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.AddManagedActivityCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_InsertManagedActivity}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.InsertManagedActivityCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_AddMilestone}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.AddMilestoneCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_EditManagedActivities}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.EditManagedActivitiesCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_RenumberActivities}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.RenumberActivitiesCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_DeleteManagedActivities}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedActivitiesCommand, Mode=OneWay}" />
+						</ContextMenu>
 					</Setter>
 				</Style>
 			</DataGrid.Styles>

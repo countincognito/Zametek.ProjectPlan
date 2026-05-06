@@ -14,32 +14,6 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
-				<Label VerticalContentAlignment="Center"
-					   HorizontalContentAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_ShowNames}"/>
-
-				<ToggleSwitch DockPanel.Dock="Top"
-							  IsTabStop="False"
-							  Margin="0,0,0,11"
-							  VerticalAlignment="Center"
-							  VerticalContentAlignment="Center"
-							  HorizontalAlignment="Center"
-							  HorizontalContentAlignment="Center"
-							  OffContent="{x:Static resources:Labels.Label_No}"
-							  OnContent="{x:Static resources:Labels.Label_Yes}"
-							  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"/>
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
-
 		<DockPanel>
 			<DockPanel Width="250"
 					   DockPanel.Dock="Top">
@@ -69,7 +43,11 @@
 				<ScrollViewer.ContextMenu>
 					<ContextMenu>
 						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-								  Command="{Binding Path=SaveArrowGraphImageFileCommand, Mode=OneWay}"/>
+								  Command="{Binding Path=SaveArrowGraphImageFileCommand, Mode=OneWay}" />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowNames}"
+								  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
 					</ContextMenu>
 				</ScrollViewer.ContextMenu>
 
