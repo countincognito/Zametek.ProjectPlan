@@ -30,6 +30,8 @@ namespace Zametek.Contract.ProjectPlan
 
         IActivitySelectorViewModel ActivitySelector { get; }
 
+        ICommand ResetGanttChartCommand { get; }
+
         ICommand SaveGanttChartImageFileCommand { get; }
 
         Task SaveGanttChartImageFileAsync(string? filename, int width, int height);

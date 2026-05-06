@@ -118,6 +118,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ActivitySelector = new ActivitySelectorViewModel(m_CoreViewModel, []);
             m_GanttChartPlotModel = new AvaPlot();
 
+            ResetGanttChartCommand = ReactiveCommand.Create(ResetGanttChart);
+
             {
                 ReactiveCommand<Unit, Unit> saveGanttChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveGanttChartImageFileAsync);
                 SaveGanttChartImageFileCommand = saveGanttChartImageFileCommand;
@@ -1338,6 +1340,11 @@ namespace Zametek.ViewModel.ProjectPlan
             return yAxis;
         }
 
+        private void ResetGanttChart()
+        {
+            GanttChartPlotModel.Plot.Axes.AutoScale();
+        }
+
         private async Task SaveGanttChartImageFileAsync()
         {
             try
@@ -1461,6 +1468,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public IActivitySelectorViewModel ActivitySelector { get; }
 
+        public ICommand ResetGanttChartCommand { get; }
+
         public ICommand SaveGanttChartImageFileCommand { get; }
 
         public async Task SaveGanttChartImageFileAsync(
@@ -1569,15 +1578,15 @@ namespace Zametek.ViewModel.ProjectPlan
             // Clear existing menu items.
             plotModel.Menu?.Clear();
 
-            // Add menu items with custom actions.
-            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
-            {
-                SaveGanttChartImageFileCommand.Execute(null);
-            });
-            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
-            {
-                plot.Axes.AutoScale();
-            });
+            //// Add menu items with custom actions.
+            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
+            //{
+            //    SaveGanttChartImageFileCommand.Execute(null);
+            //});
+            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
+            //{
+            //    plot.Axes.AutoScale();
+            //});
 
             GanttChartPlotModel = plotModel;
         }

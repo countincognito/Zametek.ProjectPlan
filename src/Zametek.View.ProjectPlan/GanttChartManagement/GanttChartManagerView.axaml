@@ -79,134 +79,6 @@
 					</ComboBox>
 				</DockPanel>
 
-				<DockPanel DockPanel.Dock="Top"
-						   IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowGroupLabels}"/>
-
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowGroupLabels, Mode=TwoWay}"/>
-				</DockPanel>
-
-				<DockPanel DockPanel.Dock="Top"
-						   IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowSlack}"/>
-
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowSlack, Mode=TwoWay}"/>
-				</DockPanel>
-
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowProjectFinish}"/>
-
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowProjectFinish, Mode=TwoWay}"/>
-				</DockPanel>
-
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowTracking}"/>
-
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowTracking, Mode=TwoWay}"/>
-				</DockPanel>
-
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowToday}"/>
-
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"/>
-				</DockPanel>
-
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowMilestones}"/>
-
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"/>
-				</DockPanel>
-
 				<DockPanel DockPanel.Dock="Top">
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
@@ -250,7 +122,45 @@
 			<!-- ScottPlot PlotView -->
 			<ContentControl x:Name="scottplot"
 							Content="{Binding GanttChartPlotModel, Mode=OneWay}"
-							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
+							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
+				<ContentControl.ContextMenu>
+					<ContextMenu>
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowGroupLabels}"
+								  IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}"
+								  IsChecked="{Binding Path=ShowGroupLabels, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowSlack}"
+								  IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}"
+								  IsChecked="{Binding Path=ShowSlack, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowProjectFinish}"
+								  IsChecked="{Binding Path=ShowProjectFinish, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowTracking}"
+								  IsChecked="{Binding Path=ShowTracking, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowToday}"
+								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowMilestones}"
+								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+						
+						<Separator />
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+								  Command="{Binding Path=SaveGanttChartImageFileCommand, Mode=OneWay}" />
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
+								  Command="{Binding Path=ResetGanttChartCommand, Mode=OneWay}" />
+					</ContextMenu>
+				</ContentControl.ContextMenu>
+			</ContentControl>
 		</DockPanel>
 	</DockPanel>
 </UserControl>
