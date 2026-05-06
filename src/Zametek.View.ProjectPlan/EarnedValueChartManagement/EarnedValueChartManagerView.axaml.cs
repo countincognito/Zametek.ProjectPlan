@@ -12,7 +12,7 @@ namespace Zametek.View.ProjectPlan
     public partial class EarnedValueChartManagerView
         : UserControl
     {
-        private const double c_DragThreshold = 3;
+        private const double c_DragThreshold = 5;
         private Point? m_DragStartPoint;
         private bool m_IsDragging;
 
@@ -23,8 +23,8 @@ namespace Zametek.View.ProjectPlan
             m_DragStartPoint = null;
             m_IsDragging = false;
 
-            scottplot.AddHandler(PointerPressedEvent, Scottplot_PointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
-            scottplot.AddHandler(PointerReleasedEvent, Scottplot_PointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
+            scottplot.AddHandler(PointerPressedEvent, Scottplot_PointerPressed, RoutingStrategies.Bubble, handledEventsToo: true);
+            scottplot.AddHandler(PointerReleasedEvent, Scottplot_PointerReleased, RoutingStrategies.Bubble, handledEventsToo: true);
 
             scottplot.Loaded += Scottplot_Loaded;
             scottplot.PointerExited += Scottplot_PointerExited;
@@ -39,10 +39,11 @@ namespace Zametek.View.ProjectPlan
             PointerPointProperties properties = e.GetCurrentPoint(this).Properties;
 
             // Ensure it is the right mouse button
-            if (properties.IsRightButtonPressed)
+            if (properties.PointerUpdateKind == PointerUpdateKind.RightButtonPressed)
             {
                 m_DragStartPoint = e.GetPosition(this);
                 m_IsDragging = false;
+                e.Handled = true;
             }
         }
 
@@ -50,19 +51,21 @@ namespace Zametek.View.ProjectPlan
             object? sender,
             PointerReleasedEventArgs e)
         {
-            if (m_DragStartPoint.HasValue
+            // Check if the pointer action is a click or a drag.
+            PointerPointProperties properties = e.GetCurrentPoint(this).Properties;
+
+            // Ensure it is the right mouse button
+            if (properties.PointerUpdateKind == PointerUpdateKind.RightButtonReleased
                 && !m_IsDragging)
             {
                 // Not dragging, so treat as a standard right-click.
                 OpenScottPlotContextMenu(e);
-
-
             }
+
             // Reset the dragging state.
             m_DragStartPoint = null;
             m_IsDragging = false;
-
-            e.Handled = true; ;
+            e.Handled = true;
         }
         private void CheckPointerDrag(PointerEventArgs e)
         {

@@ -17,6 +17,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowMilestones { get; set; }
 
+        ICommand ResetEarnedValueChartCommand { get; }
+
         ICommand SaveEarnedValueChartImageFileCommand { get; }
 
         Task SaveEarnedValueChartImageFileAsync(string? filename, int width, int height);

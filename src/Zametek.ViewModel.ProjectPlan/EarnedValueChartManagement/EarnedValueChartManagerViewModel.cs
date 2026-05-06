@@ -107,6 +107,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_EarnedValueChartPlotModel = new AvaPlot();
 
+            ResetEarnedValueChartCommand = ReactiveCommand.Create(ResetEarnedValueChart);
+
             {
                 ReactiveCommand<Unit, Unit> saveEarnedValueChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveEarnedValueChartImageFileAsync);
                 SaveEarnedValueChartImageFileCommand = saveEarnedValueChartImageFileCommand;
@@ -533,6 +535,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private void ResetEarnedValueChart()
+        {
+            EarnedValueChartPlotModel.Plot.Axes.AutoScale();
+        }
+
         private async Task SaveEarnedValueChartImageFileAsync()
         {
             try
@@ -603,6 +610,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowMilestones = value;
             }
         }
+
+        public ICommand ResetEarnedValueChartCommand { get; }
 
         public ICommand SaveEarnedValueChartImageFileCommand { get; }
 
