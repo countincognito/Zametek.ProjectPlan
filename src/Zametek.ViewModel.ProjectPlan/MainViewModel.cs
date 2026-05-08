@@ -905,8 +905,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         m_Layout = serializer.Deserialize<RootDock>(layoutContent);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        // The persisted dock layout is corrupt or incompatible — reset to default.
+                        Debug.WriteLine($"[MainViewModel] Failed to deserialize dock layout, resetting: {ex.Message}");
                         m_Layout = null;
                     }
                 }
