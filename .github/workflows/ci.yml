@@ -2,9 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [ master, develop ]
+    branches: [ '**' ]
   pull_request:
-    branches: [ master, develop ]
+    branches: [ develop, master ]
+
+env:
+  HUSKY: 0
 
 jobs:
   build-and-test:
