@@ -91,7 +91,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(mm => mm.m_CoreViewModel.Metrics, metrics => metrics.Network)
                 .ToProperty(this, mm => mm.NetworkMetrics);
 
-
             m_CriticalityRisk = this
                 .WhenAnyValue(mm => mm.RisksMetrics, risks => risks.Criticality)
                 .ToProperty(this, mm => mm.CriticalityRisk);
@@ -120,7 +119,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(mm => mm.RisksMetrics, risks => risks.GeometricActivity)
                 .ToProperty(this, mm => mm.GeometricActivityRisk);
 
-
             m_DirectCost = this
                 .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Direct)
                 .ToProperty(this, mm => mm.DirectCost);
@@ -136,7 +134,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TotalCost = this
                 .WhenAnyValue(mm => mm.CostsMetrics, costs => costs.Total)
                 .ToProperty(this, mm => mm.TotalCost);
-
 
             m_DirectBilling = this
                 .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Direct)
@@ -154,7 +151,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(mm => mm.BillingsMetrics, billings => billings.Total)
                 .ToProperty(this, mm => mm.TotalBilling);
 
-
             m_DirectMargin = this
                  .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Direct)
                  .ToProperty(this, mm => mm.DirectMargin);
@@ -170,7 +166,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TotalMargin = this
                  .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.Total)
                  .ToProperty(this, mm => mm.TotalMargin);
-
 
             m_DisplayDirectMargin = this
                 .WhenAnyValue(
@@ -196,7 +191,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     (double? margin) => margin is null ? string.Empty : string.Format(" ({0:P1})", margin))
                 .ToProperty(this, mm => mm.DisplayTotalMargin);
 
-
             m_DirectMarginAbsolute = this
                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.DirectAbsolute)
                 .ToProperty(this, mm => mm.DirectMarginAbsolute);
@@ -212,7 +206,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_TotalMarginAbsolute = this
                 .WhenAnyValue(mm => mm.MarginsMetrics, margins => margins.TotalAbsolute)
                 .ToProperty(this, mm => mm.TotalMarginAbsolute);
-
 
             m_DirectEffort = this
                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Direct)
@@ -238,7 +231,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(mm => mm.EffortsMetrics, efforts => efforts.Efficiency)
                 .ToProperty(this, mm => mm.EffortEfficiency);
 
-
             m_NetworkCyclomaticComplexity = this
                 .WhenAnyValue(mm => mm.NetworkMetrics, network => network.CyclomaticComplexity)
                 .ToProperty(this, mm => mm.NetworkCyclomaticComplexity);
@@ -250,7 +242,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_NetworkDurationManMonths = this
                 .WhenAnyValue(mm => mm.NetworkMetrics, network => network.DurationManMonths)
                 .ToProperty(this, mm => mm.NetworkDurationManMonths);
-
 
             m_ProjectFinish = this
                 .WhenAnyValue(mm => mm.m_CoreViewModel.ProjectFinish)
@@ -266,7 +257,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
         public bool ShowDates => m_ShowDates.Value;
-
 
         private readonly ObservableAsPropertyHelper<RisksModel> m_RisksMetrics;
         public RisksModel RisksMetrics => m_RisksMetrics.Value;
@@ -442,7 +432,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
@@ -470,9 +459,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ActivityEffort?.Dispose();
                 m_EffortEfficiency?.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

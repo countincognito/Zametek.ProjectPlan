@@ -135,19 +135,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 return;
             }
 
-            if (disposing)
-            {
-                // TODO: dispose managed state (managed objects).
-                //m_ProjectStartSub?.Dispose();
-                //m_ResourceSettingsSub?.Dispose();
-                //m_DateTimeCalculatorSub?.Dispose();
-                //m_CompilationSub?.Dispose();
-                //ResourceSelector.Dispose();
-            }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
-
             m_Disposed = true;
         }
 
