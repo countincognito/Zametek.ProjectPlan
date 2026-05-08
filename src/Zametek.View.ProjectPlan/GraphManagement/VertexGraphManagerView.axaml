@@ -14,7 +14,7 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<!--<ScrollViewer DockPanel.Dock="Right"
+		<ScrollViewer DockPanel.Dock="Right"
 					  VerticalScrollBarVisibility="Hidden"
 					  HorizontalScrollBarVisibility="Disabled">
 			<DockPanel Margin="11,0,0,0">
@@ -38,7 +38,7 @@
 							  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"/>
 				<Grid/>
 			</DockPanel>
-		</ScrollViewer>-->
+		</ScrollViewer>
 
 		<DockPanel>
 			<DockPanel Width="250"
@@ -68,6 +68,12 @@
 						  Background="{Binding Path=BaseTheme, Mode=OneWay, Converter={StaticResource themeToBackgroundConverter}}">
 				<ScrollViewer.ContextMenu>
 					<ContextMenu>
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowNames}"
+								  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<Separator />
+
 						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
 								  Command="{Binding Path=SaveVertexGraphImageFileCommand, Mode=OneWay}"/>
 					</ContextMenu>
