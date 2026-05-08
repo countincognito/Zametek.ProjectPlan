@@ -275,7 +275,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (resourceSchedules.Any())
             {
-                Dictionary<int, ColorFormatModel> colorFormatLookup = resources.ToDictionary(x => x.Id, x => x.ColorFormat);
                 int finishTime = resourceSchedules.Select(x => x.FinishTime).DefaultIfEmpty().Max();
                 int spareResourceCount = 1;
                 //var resourceScheduleLookup = resourceSchedules.ToDictionary(x => x.Resource.Id);
@@ -318,9 +317,9 @@ namespace Zametek.ViewModel.ProjectPlan
                                 stringBuilder.Append($@"{resource.Name}");
                             }
 
-                            if (colorFormatLookup.TryGetValue(resourceId, out ColorFormatModel? colorFormat))
+                            if (resource.ColorFormat is not null)
                             {
-                                color = colorFormat;
+                                color = resource.ColorFormat;
                             }
 
                             unitCost = resource.UnitCost;
