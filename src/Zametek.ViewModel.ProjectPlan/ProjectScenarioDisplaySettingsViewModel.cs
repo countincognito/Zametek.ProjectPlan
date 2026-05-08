@@ -30,6 +30,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_SetIsProjectScenarioUpdated = setIsProjectScenarioUpdated;
             m_IsReadyToCompile = isReadyToCompile;
+            m_GanttChartShowConnections = [];
         }
 
         #endregion
@@ -290,7 +291,23 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly List<int> m_GanttChartShowConnections;
+        public List<int> GanttChartShowConnections => m_GanttChartShowConnections;
 
+        private ReadyToRevise m_IsReadyToReviseGanttChartShowConnections;
+        public ReadyToRevise IsReadyToReviseGanttChartShowConnections
+        {
+            get => m_IsReadyToReviseGanttChartShowConnections;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    m_IsReadyToReviseGanttChartShowConnections = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
 
         private AllocationMode m_ResourceChartAllocationMode;
         public AllocationMode ResourceChartAllocationMode
@@ -476,6 +493,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     GanttChartShowSlack = model.GanttChartShowSlack;
                 }
+                GanttChartShowConnections.Clear();
+                GanttChartShowConnections.AddRange(model.GanttChartShowConnections);
+                IsReadyToReviseGanttChartShowConnections = ReadyToRevise.Yes;
 
 
                 if (ResourceChartAllocationMode != model.ResourceChartAllocationMode)
@@ -539,6 +559,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     GanttChartShowToday = GanttChartShowToday,
                     GanttChartShowMilestones = GanttChartShowMilestones,
                     GanttChartShowSlack = GanttChartShowSlack,
+                    GanttChartShowConnections = [.. GanttChartShowConnections],
 
                     ResourceChartAllocationMode = ResourceChartAllocationMode,
                     ResourceChartScheduleMode = ResourceChartScheduleMode,

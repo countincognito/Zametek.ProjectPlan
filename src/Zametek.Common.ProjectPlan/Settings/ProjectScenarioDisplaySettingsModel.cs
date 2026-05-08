@@ -36,6 +36,8 @@
 
         public bool GanttChartShowSlack { get; init; } = default;
 
+        public List<int> GanttChartShowConnections { get; init; } = [];
+
 
         public AllocationMode ResourceChartAllocationMode { get; init; } = default;
 

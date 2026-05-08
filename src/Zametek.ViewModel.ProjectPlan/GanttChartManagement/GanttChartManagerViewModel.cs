@@ -7,6 +7,7 @@ using ScottPlot.Plottables;
 using System.Data;
 using System.Globalization;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
 using System.Windows.Input;
@@ -82,6 +83,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
 
         private readonly IDisposable? m_BuildGanttChartPlotModelSub;
+        private readonly IDisposable? m_GanttChartActivitySelectorSub;
 
         private const double c_ExportLabelHeightCorrection = 1.2;
         private const double c_YAxisMinimum = -1.0;
@@ -115,10 +117,13 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
 
-            ActivitySelector = new ActivitySelectorViewModel(m_CoreViewModel, []);
+            ActivitySelector = new ActivitySelectorViewModel(m_CoreViewModel);
+
             m_GanttChartPlotModel = new AvaPlot();
 
-            ResetGanttChartCommand = ReactiveCommand.Create(ResetGanttChart);
+            ResetGanttChartCommand = ReactiveCommand.CreateFromTask(ResetGanttChartAsync);
+            ChangeGroupByModeCommand = ReactiveCommand.CreateFromTask<GroupByMode>(ChangeGroupByModeAsync);
+            ChangeAnnotationStyleCommand = ReactiveCommand.CreateFromTask<AnnotationStyle>(ChangeAnnotationStyleAsync);
 
             {
                 ReactiveCommand<Unit, Unit> saveGanttChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveGanttChartImageFileAsync);
@@ -221,6 +226,16 @@ namespace Zametek.ViewModel.ProjectPlan
                     (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
+
+            m_GanttChartActivitySelectorSub = this
+                .WhenAnyValue(
+                    rcm => rcm.ActivitySelector.TargetActivitiesString)
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(_ =>
+                {
+                    m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.Clear();
+                    m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.AddRange(ActivitySelector.SelectedActivityIds);
+                });
 
             Id = Resource.ProjectPlan.Titles.Title_GanttChartView;
             Title = Resource.ProjectPlan.Titles.Title_GanttChartView;
@@ -1340,9 +1355,49 @@ namespace Zametek.ViewModel.ProjectPlan
             return yAxis;
         }
 
-        private void ResetGanttChart()
+        private async Task ResetGanttChartAsync()
         {
-            GanttChartPlotModel.Plot.Axes.AutoScale();
+            try
+            {
+                GanttChartPlotModel.Plot.Axes.AutoScale();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeGroupByModeAsync(GroupByMode groupByMode)
+        {
+            try
+            {
+                GroupByMode = groupByMode;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeAnnotationStyleAsync(AnnotationStyle annotationStyle)
+        {
+            try
+            {
+                AnnotationStyle = annotationStyle;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
         }
 
         private async Task SaveGanttChartImageFileAsync()
@@ -1472,6 +1527,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand SaveGanttChartImageFileCommand { get; }
 
+        public ICommand ChangeGroupByModeCommand { get; }
+
+        public ICommand ChangeAnnotationStyleCommand { get; }
+
         public async Task SaveGanttChartImageFileAsync(
             string? filename,
             int width,
@@ -1598,6 +1657,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public void KillSubscriptions()
         {
             m_BuildGanttChartPlotModelSub?.Dispose();
+            m_GanttChartActivitySelectorSub?.Dispose();
         }
 
         #endregion
