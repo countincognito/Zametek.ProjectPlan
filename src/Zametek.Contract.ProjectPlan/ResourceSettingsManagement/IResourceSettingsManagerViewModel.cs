@@ -35,6 +35,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand RemoveManagedResourcesCommand { get; }
 
+        ICommand DuplicateManagedResourceCommand { get; }
+
         ICommand EditManagedResourcesCommand { get; }
 
         ICommand RenumberResourcesCommand { get; }

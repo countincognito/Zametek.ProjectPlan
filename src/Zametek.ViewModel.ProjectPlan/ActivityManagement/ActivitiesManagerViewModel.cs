@@ -40,6 +40,7 @@ namespace Zametek.ViewModel.ProjectPlan
             InsertManagedActivityCommand = ReactiveCommand.CreateFromTask(InsertManagedActivityAsync, this.WhenAnyValue(am => am.HasActivities));
             RemoveManagedActivitiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitiesAsync, this.WhenAnyValue(am => am.HasActivities));
             EditManagedActivitiesCommand = ReactiveCommand.CreateFromTask(EditManagedActivitiesAsync, this.WhenAnyValue(am => am.HasActivities));
+            DuplicateManagedActivityCommand = ReactiveCommand.CreateFromTask(DuplicateManagedActivityAsync, this.WhenAnyValue(am => am.HasActivities));
 
             m_IsBusy = this
                 .WhenAnyValue(am => am.m_CoreViewModel.IsBusy)
@@ -183,6 +184,42 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_CoreViewModel.UpdateManagedActivityIds([(newId, lowestId)]);
                 m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
             }
+            m_CoreViewModel.RunAutoCompile();
+        }
+
+        private async Task DuplicateManagedActivityAsync()
+        {
+            try
+            {
+                await DuplicateManagedActivityInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task DuplicateManagedActivityInternalAsync() => await Task.Run(DuplicateManagedActivityInternal);
+
+        private void DuplicateManagedActivityInternal()
+        {
+            lock (m_Lock)
+            {
+                if (SelectedActivities.Count == 0)
+                {
+                    return;
+                }
+
+                int maxDisplayOrder = SelectedActivities.Values.DefaultIfEmpty().Max(x => x?.DisplayOrder ?? 0);
+                int newDisplayOrder = maxDisplayOrder + 1;
+
+                m_CoreViewModel.AddManagedActivity(newDisplayOrder);
+                m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
+            }
+
             m_CoreViewModel.RunAutoCompile();
         }
 
@@ -400,6 +437,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand RemoveManagedActivitiesCommand { get; }
 
         public ICommand EditManagedActivitiesCommand { get; }
+
+        public ICommand DuplicateManagedActivityCommand { get; }
 
         public ICommand RenumberActivitiesCommand { get; }
 

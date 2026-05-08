@@ -59,6 +59,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SetSelectedManagedResourcesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedResources);
             AddManagedResourceCommand = ReactiveCommand.CreateFromTask(AddManagedResourceAsync);
             RemoveManagedResourcesCommand = ReactiveCommand.CreateFromTask(RemoveManagedResourcesAsync, this.WhenAnyValue(rm => rm.HasSelectedResources));
+            DuplicateManagedResourceCommand = ReactiveCommand.CreateFromTask(DuplicateManagedResourceAsync, this.WhenAnyValue(am => am.HasSelectedResources));
             EditManagedResourcesCommand = ReactiveCommand.CreateFromTask(EditManagedResourcesAsync, this.WhenAnyValue(am => am.HasSelectedResources));
 
             // Create read-only view to the source list.
@@ -230,6 +231,60 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     UpdateDisplayOrders();
                 }
+                UpdateResourceSettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task DuplicateManagedResourceAsync()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IManagedResourceViewModel? source = SelectedResources.Values.FirstOrDefault();
+
+                    if (source is null)
+                    {
+                        return;
+                    }
+
+                    m_Resources.Edit(resources =>
+                    {
+                        int id = GetNextId();
+                        resources.Add(
+                            new ManagedResourceViewModel(
+                                m_CoreViewModel,
+                                this,
+                                new ResourceModel
+                                {
+                                    Id = id,
+                                    DisplayOrder = -1,
+                                    Name = source.Name,
+                                    Notes = source.Notes,
+                                    IsExplicitTarget = source.IsExplicitTarget,
+                                    IsInactive = source.IsInactive,
+                                    InterActivityAllocationType = source.InterActivityAllocationType,
+                                    InterActivityPhases = [.. source.InterActivityPhases],
+                                    UnitCost = source.UnitCost,
+                                    UnitBilling = source.UnitBilling,
+                                    FixedCost = source.FixedCost,
+                                    FixedBilling = source.FixedBilling,
+                                    AllocationOrder = source.AllocationOrder,
+                                    ColorFormat = ColorHelper.Random(),
+                                    Trackers = []
+                                }));
+                    });
+
+                    UpdateDisplayOrders();
+                }
+
                 UpdateResourceSettingsToCore();
             }
             catch (Exception ex)
@@ -606,6 +661,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand AddManagedResourceCommand { get; }
 
         public ICommand RemoveManagedResourcesCommand { get; }
+
+        public ICommand DuplicateManagedResourceCommand { get; }
 
         public ICommand EditManagedResourcesCommand { get; }
 

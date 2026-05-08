@@ -28,6 +28,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand RemoveManagedWorkStreamsCommand { get; }
 
+        ICommand DuplicateManagedWorkStreamCommand { get; }
+
         ICommand RenumberWorkStreamsCommand { get; }
     }
 }

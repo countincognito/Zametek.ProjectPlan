@@ -60,6 +60,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SetSelectedManagedWorkStreamsCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedWorkStreams);
             AddManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(AddManagedWorkStreamAsync);
             RemoveManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(RemoveManagedWorkStreamsAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
+            DuplicateManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(DuplicateManagedWorkStreamAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
 
             // Create read-only view to the source list.
             m_ReadOnlyWorkStreamsSub = m_WorkStreams.Connect()
@@ -209,6 +210,49 @@ namespace Zametek.ViewModel.ProjectPlan
                             workStreams.Remove(workStream);
                             workStream.Dispose();
                         }
+                    });
+
+                    UpdateDisplayOrders();
+                }
+
+                UpdateWorkStreamSettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task DuplicateManagedWorkStreamAsync()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IManagedWorkStreamViewModel? source = SelectedWorkStreams.Values.FirstOrDefault();
+
+                    if (source is null)
+                    {
+                        return;
+                    }
+
+                    m_WorkStreams.Edit(workStreams =>
+                    {
+                        int id = GetNextId();
+                        workStreams.Add(
+                            new ManagedWorkStreamViewModel(
+                                this,
+                                new WorkStreamModel
+                                {
+                                    Id = id,
+                                    Name = source.Name,
+                                    IsPhase = source.IsPhase,
+                                    DisplayOrder = -1,
+                                    ColorFormat = ColorHelper.Random()
+                                }));
                     });
 
                     UpdateDisplayOrders();
@@ -397,6 +441,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand AddManagedWorkStreamCommand { get; }
 
         public ICommand RemoveManagedWorkStreamsCommand { get; }
+
+        public ICommand DuplicateManagedWorkStreamCommand { get; }
 
         public ICommand RenumberWorkStreamsCommand { get; }
 

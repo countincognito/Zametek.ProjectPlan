@@ -56,6 +56,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SetSelectedManagedActivitySeveritiesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedActivitySeverities);
             AddManagedActivitySeverityCommand = ReactiveCommand.CreateFromTask(AddManagedActivitySeverityAsync);
             RemoveManagedActivitySeveritiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitySeveritiesAsync, this.WhenAnyValue(agsm => agsm.HasActivitySeverities));
+            DuplicateManagedActivitySeverityCommand = ReactiveCommand.CreateFromTask(DuplicateManagedActivitySeverityAsync, this.WhenAnyValue(agsm => agsm.HasActivitySeverities));
 
             // Create read-only view to the source list.
             m_ReadOnlyActivitySeveritiesSub = m_ActivitySeverities.Connect()
@@ -192,6 +193,47 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 CheckForMaxSlackLimit();
+                UpdateGraphSettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task DuplicateManagedActivitySeverityAsync()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IManagedActivitySeverityViewModel? source = SelectedActivitySeverities.Values.FirstOrDefault();
+
+                    if (source is null)
+                    {
+                        return;
+                    }
+
+                    m_ActivitySeverities.Edit(activitySeverities =>
+                    {
+                        Guid id = GetNextId();
+                        activitySeverities.Add(
+                            new ManagedActivitySeverityViewModel(
+                                this,
+                                id,
+                                new ActivitySeverityModel
+                                {
+                                    SlackLimit = source.SlackLimit,
+                                    CriticalityWeight = source.CriticalityWeight,
+                                    FibonacciWeight = source.FibonacciWeight,
+                                    ColorFormat = ColorHelper.Random()
+                                }));
+                    });
+                }
+
                 UpdateGraphSettingsToCore();
             }
             catch (Exception ex)
@@ -366,6 +408,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand AddManagedActivitySeverityCommand { get; }
 
         public ICommand RemoveManagedActivitySeveritiesCommand { get; }
+
+        public ICommand DuplicateManagedActivitySeverityCommand { get; }
 
         #endregion
 

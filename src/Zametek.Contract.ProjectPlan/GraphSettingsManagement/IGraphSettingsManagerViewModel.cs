@@ -25,5 +25,7 @@ namespace Zametek.Contract.ProjectPlan
         ICommand AddManagedActivitySeverityCommand { get; }
 
         ICommand RemoveManagedActivitySeveritiesCommand { get; }
+
+        ICommand DuplicateManagedActivitySeverityCommand { get; }
     }
 }

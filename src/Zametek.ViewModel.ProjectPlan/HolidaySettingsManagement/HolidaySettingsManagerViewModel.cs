@@ -58,6 +58,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SetSelectedManagedHolidaysCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedHolidays);
             AddManagedHolidayCommand = ReactiveCommand.CreateFromTask(AddManagedHolidayAsync);
             RemoveManagedHolidaysCommand = ReactiveCommand.CreateFromTask(RemoveManagedHolidaysAsync, this.WhenAnyValue(rm => rm.HasSelectedHolidays));
+            DuplicateManagedHolidayCommand = ReactiveCommand.CreateFromTask(DuplicateManagedHolidayAsync, this.WhenAnyValue(rm => rm.HasSelectedHolidays));
             EditManagedHolidayCommand = ReactiveCommand.CreateFromTask(EditManagedHolidayAsync, this.WhenAnyValue(am => am.HasSelectedHoliday));
 
             // Create read-only view to the source list.
@@ -200,6 +201,48 @@ namespace Zametek.ViewModel.ProjectPlan
                         }
                     });
                 }
+                UpdateHolidaySettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task DuplicateManagedHolidayAsync()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IManagedHolidayViewModel? source = SelectedHolidays.Values.FirstOrDefault();
+
+                    if (source is null)
+                    {
+                        return;
+                    }
+
+                    m_Holidays.Edit(holidays =>
+                    {
+                        int id = GetNextId();
+                        holidays.Add(
+                            new ManagedHolidayViewModel(
+                                this,
+                                new HolidayModel
+                                {
+                                    Id = id,
+                                    Name = source.Name,
+                                    Notes = source.Notes,
+                                    StartDateTime = source.StartDateTime,
+                                    RecurrencePattern = source.RecurrencePattern,
+                                },
+                                m_DateTimeCalculator));
+                    });
+                }
+
                 UpdateHolidaySettingsToCore();
             }
             catch (Exception ex)
@@ -423,6 +466,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand AddManagedHolidayCommand { get; }
 
         public ICommand RemoveManagedHolidaysCommand { get; }
+
+        public ICommand DuplicateManagedHolidayCommand { get; }
 
         public ICommand EditManagedHolidayCommand { get; }
 
