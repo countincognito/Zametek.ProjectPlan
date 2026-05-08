@@ -24,6 +24,8 @@
     <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.13" />
     <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="11.3.11.22" />
     <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.15.0" />
+    <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="Splat.Autofac" Version="17.2.1" />
     <!--<PackageReference Include="Splat.Avalonia.Autofac" Version="15.5.3" />-->
     <!--<PackageReference Include="Splat.DependencyInjection.SourceGenerator" Version="2.2.2">

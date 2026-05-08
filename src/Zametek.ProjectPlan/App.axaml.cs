@@ -3,9 +3,11 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using ReactiveUI;
 using ReactiveUI.Avalonia;
+using Serilog;
 using Splat;
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -26,8 +28,28 @@ namespace Zametek.ProjectPlan
         private static T GetRequiredService<T>() =>
             Locator.Current.GetService<T>() ?? throw new NullReferenceException($"{Resource.ProjectPlan.Messages.Message_UnableToResolveType} {typeof(T).FullName}");
 
+        private static Serilog.ILogger ConfigureSerilog()
+        {
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string logDir = Path.Combine(appDataPath, "Zametek.ProjectPlan", "logs");
+            Directory.CreateDirectory(logDir);
+            string logPath = Path.Combine(logDir, "app-.log");
+            return new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.File(logPath, rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
+                .CreateLogger();
+        }
+
         public override async void OnFrameworkInitializationCompleted()
         {
+            Log.Logger = ConfigureSerilog();
+            Log.Information("Application starting up");
+
+            RxApp.DefaultExceptionHandler = System.Reactive.Observer.Create<Exception>(ex =>
+            {
+                Log.Error(ex, "Unhandled ReactiveUI exception");
+            });
+
             try
             {
                 if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
@@ -151,11 +173,16 @@ namespace Zametek.ProjectPlan
             }
             catch (Exception ex)
             {
+                Log.Fatal(ex, "Fatal startup error");
                 Console.Error.WriteLine($"Fatal startup error: {ex}");
                 if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
                     desktop.Shutdown(1);
                 }
+            }
+            finally
+            {
+                Log.CloseAndFlush();
             }
 
 #if DEBUG
