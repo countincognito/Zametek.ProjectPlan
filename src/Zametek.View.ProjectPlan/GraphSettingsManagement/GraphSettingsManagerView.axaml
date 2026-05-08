@@ -36,12 +36,21 @@
 
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
-						Margin="0,0,0,11"
+						Margin="0,0,0,7"
 						Height="25" Width="75"
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						Command="{Binding Path=RemoveManagedActivitySeveritiesCommand, Mode=OneWay}"
 						Content="{x:Static resources:Labels.Label_DeleteManagedActivitySeverities}"/>
+
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,11"
+						Height="25" Width="75"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						Command="{Binding Path=DuplicateManagedActivitySeverityCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_DuplicateManagedActivitySeverity}"/>
 
 				<Grid/>
 			</DockPanel>
@@ -91,6 +100,25 @@
 								<local:MoveCaretToEndBehavior />
 							</BehaviorCollection>
 						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
+
+				<Style>
+					<Setter Property="ContextMenu">
+						<ContextMenu>
+							<MenuItem Header="{x:Static resources:Labels.Label_AddManagedActivitySeverity}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.AddManagedActivitySeverityCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_DuplicateManagedActivitySeverity}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedActivitySeverityCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_DeleteManagedActivitySeverities}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedActivitySeveritiesCommand, Mode=OneWay}" />
+						</ContextMenu>
 					</Setter>
 				</Style>
 			</DataGrid.Styles>

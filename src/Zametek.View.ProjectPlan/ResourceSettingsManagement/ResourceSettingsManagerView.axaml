@@ -65,6 +65,16 @@
 						VerticalAlignment="Center"
 						VerticalContentAlignment="Center"
 						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
+						Command="{Binding Path=DuplicateManagedResourceCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_DuplicateManagedResource}"/>
+
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
+						Margin="0,0,0,7"
+						Height="25" Width="80"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
 						Command="{Binding Path=EditManagedResourcesCommand, Mode=OneWay}"
 						Content="{x:Static resources:Labels.Label_EditManagedResources}"/>
 
@@ -190,6 +200,31 @@
 								<local:MoveCaretToEndBehavior />
 							</BehaviorCollection>
 						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
+
+				<Style>
+					<Setter Property="ContextMenu">
+						<ContextMenu>
+							<MenuItem Header="{x:Static resources:Labels.Label_AddManagedResource}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.AddManagedResourceCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_DuplicateManagedResource}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedResourceCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_EditManagedResources}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.EditManagedResourcesCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_RenumberResources}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.RenumberResourcesCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_DeleteManagedResources}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedResourcesCommand, Mode=OneWay}" />
+						</ContextMenu>
 					</Setter>
 				</Style>
 			</DataGrid.Styles>
