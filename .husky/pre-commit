@@ -1,0 +1,34 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running pre-commit checks..."
+
+echo "-> Checking code style..."
+dotnet format style --verify-no-changes --verbosity quiet
+if [ $? -ne 0 ]; then
+  echo "Style check failed. Run 'dotnet format style' to fix."
+  exit 1
+fi
+
+echo "-> Checking analyzer rules..."
+dotnet format analyzers --verify-no-changes --verbosity quiet
+if [ $? -ne 0 ]; then
+  echo "Analyzer check failed. Run 'dotnet format analyzers' to fix."
+  exit 1
+fi
+
+echo "-> Building main app..."
+dotnet build --no-restore --configuration Debug --verbosity quiet src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj
+if [ $? -ne 0 ]; then
+  echo "Build failed. Fix compilation errors before committing."
+  exit 1
+fi
+
+echo "-> Running ViewModel tests..."
+dotnet test --no-build --configuration Debug --verbosity quiet test/Zametek.ViewModel.ProjectPlan.Tests/Zametek.ViewModel.ProjectPlan.Tests.csproj
+if [ $? -ne 0 ]; then
+  echo "Tests failed. Fix failing tests before committing."
+  exit 1
+fi
+
+echo "All pre-commit checks passed."

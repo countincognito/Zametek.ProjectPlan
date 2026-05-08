@@ -1,0 +1,11 @@
+# Normalize line endings to LF in the repository.
+# This ensures CI (Linux) and macOS both see consistent line endings.
+* text=auto eol=lf
+
+# Explicitly binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.dll binary
+*.exe binary
+*.zip binary

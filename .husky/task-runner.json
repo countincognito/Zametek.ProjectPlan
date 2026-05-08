@@ -1,0 +1,25 @@
+{
+  "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
+  "tasks": [
+    {
+      "name": "dotnet-format-style",
+      "command": "dotnet",
+      "args": ["format", "style", "--verify-no-changes", "--verbosity", "quiet"]
+    },
+    {
+      "name": "dotnet-format-analyzers",
+      "command": "dotnet",
+      "args": ["format", "analyzers", "--verify-no-changes", "--verbosity", "quiet"]
+    },
+    {
+      "name": "dotnet-build",
+      "command": "dotnet",
+      "args": ["build", "--no-restore", "--configuration", "Debug", "--verbosity", "quiet", "src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj"]
+    },
+    {
+      "name": "dotnet-test",
+      "command": "dotnet",
+      "args": ["test", "--no-build", "--configuration", "Debug", "--verbosity", "quiet", "test/Zametek.ViewModel.ProjectPlan.Tests/Zametek.ViewModel.ProjectPlan.Tests.csproj"]
+    }
+  ]
+}

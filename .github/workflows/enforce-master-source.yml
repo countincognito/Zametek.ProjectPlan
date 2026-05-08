@@ -1,0 +1,20 @@
+name: Enforce develop to master flow
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  check-source-branch:
+    name: Verify PR source is develop
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject non-develop source
+        run: |
+          echo "PR source branch: ${{ github.head_ref }}"
+          if [ "${{ github.head_ref }}" != "develop" ]; then
+            echo "PRs to master must come from the 'develop' branch."
+            echo "   Source: '${{ github.head_ref }}' is not allowed."
+            exit 1
+          fi
+          echo "Source branch is develop -- allowed."
