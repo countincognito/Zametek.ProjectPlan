@@ -55,5 +55,8 @@
     <Compile Update="ScenarioChartManagement\ScenarioChartManagerView.axaml.cs">
       <DependentUpon>ScenarioChartManagerView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="WorkStreamSettingsManagement\WorkStreamEditView.axaml.cs">
+      <DependentUpon>WorkStreamEditView.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

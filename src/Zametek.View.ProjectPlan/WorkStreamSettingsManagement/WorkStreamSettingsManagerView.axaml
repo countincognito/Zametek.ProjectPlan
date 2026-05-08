@@ -57,6 +57,15 @@
 
 				<Button DockPanel.Dock="Top"
 						IsTabStop="True"
+						Margin="0,0,0,7"
+						Height="25" Width="80"
+						VerticalAlignment="Center"
+						VerticalContentAlignment="Center"
+						Command="{Binding Path=EditManagedWorkStreamsCommand, Mode=OneWay}"
+						Content="{x:Static resources:Labels.Label_EditManagedWorkStreams}"/>
+
+				<Button DockPanel.Dock="Top"
+						IsTabStop="True"
 						Margin="0,0,0,11"
 						Height="25" Width="80"
 						VerticalContentAlignment="Center"
@@ -135,6 +144,9 @@
 
 							<MenuItem Header="{x:Static resources:Labels.Label_DuplicateManagedWorkStream}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedWorkStreamCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Labels.Label_EditManagedWorkStreams}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.EditManagedWorkStreamsCommand, Mode=OneWay}" />
 
 							<MenuItem Header="{x:Static resources:Labels.Label_RenumberWorkStreams}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.RenumberWorkStreamsCommand, Mode=OneWay}" />

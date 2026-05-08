@@ -61,6 +61,7 @@ namespace Zametek.ViewModel.ProjectPlan
             AddManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(AddManagedWorkStreamAsync);
             RemoveManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(RemoveManagedWorkStreamsAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
             DuplicateManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(DuplicateManagedWorkStreamAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
+            EditManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(EditManagedWorkStreamsAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
 
             // Create read-only view to the source list.
             m_ReadOnlyWorkStreamsSub = m_WorkStreams.Connect()
@@ -213,6 +214,60 @@ namespace Zametek.ViewModel.ProjectPlan
                     });
 
                     UpdateDisplayOrders();
+                }
+
+                UpdateWorkStreamSettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task EditManagedWorkStreamsAsync()
+        {
+            try
+            {
+                var editViewModel = new WorkStreamEditViewModel();
+
+                bool result = await m_DialogService.ShowContextAsync(
+                    title: Resource.ProjectPlan.Titles.Title_EditWorkStreams,
+                    header: string.Empty,
+                    message: $@"**{Resource.ProjectPlan.Messages.Message_EditWorkStreams}**",
+                    context: editViewModel,
+                    markdown: true);
+
+                if (!result)
+                {
+                    return;
+                }
+
+                var (isPhase, isIsPhaseEdited, colorFormat, isColorFormatActive) = editViewModel.BuildUpdateValues();
+
+                lock (m_Lock)
+                {
+                    ICollection<IManagedWorkStreamViewModel> selectedWorkStreams = SelectedWorkStreams.Values;
+
+                    if (selectedWorkStreams.Count == 0)
+                    {
+                        return;
+                    }
+
+                    foreach (IManagedWorkStreamViewModel workStream in selectedWorkStreams)
+                    {
+                        if (isIsPhaseEdited)
+                        {
+                            workStream.IsPhase = isPhase;
+                        }
+
+                        if (isColorFormatActive)
+                        {
+                            workStream.ColorFormat = colorFormat;
+                        }
+                    }
                 }
 
                 UpdateWorkStreamSettingsToCore();
@@ -443,6 +498,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand RemoveManagedWorkStreamsCommand { get; }
 
         public ICommand DuplicateManagedWorkStreamCommand { get; }
+
+        public ICommand EditManagedWorkStreamsCommand { get; }
 
         public ICommand RenumberWorkStreamsCommand { get; }
 

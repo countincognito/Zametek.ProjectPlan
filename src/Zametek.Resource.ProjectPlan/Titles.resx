@@ -138,6 +138,9 @@
   <data name="Title_EditResources" xml:space="preserve">
     <value>Edit Resources</value>
   </data>
+  <data name="Title_EditWorkStreams" xml:space="preserve">
+    <value>Edit Work Streams</value>
+  </data>
   <data name="Title_Error" xml:space="preserve">
     <value>Error</value>
   </data>

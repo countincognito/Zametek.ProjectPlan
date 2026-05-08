@@ -1,0 +1,80 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="100"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 x:DataType="vm:WorkStreamEditViewModel"
+             x:Class="Zametek.View.ProjectPlan.WorkStreamEditView">
+	<UserControl.Resources>
+		<local:ColorFormatToColorConverter x:Key="colorFormatToColorConverter"/>
+	</UserControl.Resources>
+
+	<Grid Margin="7">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="140"/>
+			<ColumnDefinition Width="80"/>
+			<ColumnDefinition Width="155"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="36"/>
+			<RowDefinition Height="36"/>
+		</Grid.RowDefinitions>
+
+		<Label Grid.Row="0" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_IsPhase}"/>
+
+		<ToggleSwitch Grid.Row="0" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsIsPhaseActive, Mode=TwoWay}"/>
+
+		<ToggleSwitch Grid.Row="0" Grid.Column="2"
+					  Margin="3"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Padding="0"
+					  OffContent="{x:Static resources:Labels.Label_No}"
+					  OnContent="{x:Static resources:Labels.Label_Yes}"
+					  IsChecked="{Binding Path=IsPhase, Mode=TwoWay}"
+					  IsEnabled="{Binding Path=IsIsPhaseActive, Mode=OneWay}"/>
+
+
+
+		<Label Grid.Row="1" Grid.Column="0"
+			   VerticalAlignment="Center"
+			   HorizontalAlignment="Right"
+			   Margin="0"
+			   Padding="7"
+			   Content="{x:Static resources:Labels.Label_ColorFormat}"/>
+
+		<ToggleSwitch Grid.Row="1" Grid.Column="1"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Margin="0"
+				      Padding="3"
+				      OffContent="{x:Static resources:Labels.Label_Off}"
+				      OnContent="{x:Static resources:Labels.Label_On}"
+					  IsChecked="{Binding Path=IsColorFormatActive, Mode=TwoWay}"/>
+
+		<ColorPicker Grid.Row="1" Grid.Column="2"
+					 Cursor="Hand"
+					 IsEnabled="{Binding Path=IsColorFormatActive, Mode=OneWay}"
+					 Color="{Binding Path=ColorFormat, Mode=TwoWay, Converter={StaticResource colorFormatToColorConverter}, UpdateSourceTrigger=LostFocus}"
+					 VerticalAlignment="Center"
+					 Focusable="True"
+					 Margin="3"
+					 Padding="0"/>
+
+	</Grid>
+</UserControl>

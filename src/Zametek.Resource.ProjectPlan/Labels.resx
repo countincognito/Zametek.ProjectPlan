@@ -510,6 +510,9 @@
   <data name="Label_EditManagedHoliday" xml:space="preserve">
     <value>Edit</value>
   </data>
+  <data name="Label_EditManagedWorkStreams" xml:space="preserve">
+    <value>Edit</value>
+  </data>
   <data name="Label_ShowNames" xml:space="preserve">
     <value>Show Names</value>
   </data>
