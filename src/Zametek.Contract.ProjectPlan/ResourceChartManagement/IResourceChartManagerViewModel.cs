@@ -22,6 +22,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand SaveResourceChartImageFileCommand { get; }
 
+        ICommand ResetResourceChartCommand { get; }
+
         Task SaveResourceChartImageFileAsync(string? filename, int width, int height);
 
         void BuildResourceChartPlotModel();

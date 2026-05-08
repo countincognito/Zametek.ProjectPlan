@@ -113,6 +113,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 SaveResourceChartImageFileCommand = saveResourceChartImageFileCommand;
             }
 
+            ResetResourceChartCommand = ReactiveCommand.Create(ResetResourceChart);
+
             m_IsBusy = this
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBusy)
                 .ToProperty(this, rcm => rcm.IsBusy);
@@ -518,6 +520,11 @@ namespace Zametek.ViewModel.ProjectPlan
             return yAxis;
         }
 
+        private void ResetResourceChart()
+        {
+            ResourceChartPlotModel.Plot.Axes.AutoScale();
+        }
+
         private async Task SaveResourceChartImageFileAsync()
         {
             try
@@ -610,6 +617,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public ICommand SaveResourceChartImageFileCommand { get; }
+
+        public ICommand ResetResourceChartCommand { get; }
 
         public async Task SaveResourceChartImageFileAsync(
             string? filename,
