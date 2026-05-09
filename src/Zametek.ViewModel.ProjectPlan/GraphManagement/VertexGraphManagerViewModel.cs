@@ -75,6 +75,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
         private readonly IVertexGraphSerializer m_VertexGraphExport;
+        private readonly IGraphImageExporter m_GraphImageExporter;
 
         private readonly IDisposable? m_BuildVertexGraphDataSub;
         private readonly IDisposable? m_BuildVertexGraphImageSub;
@@ -87,17 +88,20 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IVertexGraphSerializer vertexGraphExport)
+            IVertexGraphSerializer vertexGraphExport,
+            IGraphImageExporter graphImageExporter)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(vertexGraphExport);
+            ArgumentNullException.ThrowIfNull(graphImageExporter);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_VertexGraphExport = vertexGraphExport;
+            m_GraphImageExporter = graphImageExporter;
 
             m_VertexGraphData = string.Empty;
             m_VertexGraphImage = new SvgImage();
@@ -282,30 +286,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     string fileExtension = Path.GetExtension(filename);
                     byte[]? data = null;
+                    bool isSkiaFormat = false;
 
                     fileExtension.ValueSwitchOn()
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
-                        {
-                            using var stream = File.OpenWrite(filename);
-                            VertexGraphImage.Source?.Picture?.ToImage(
-                                stream, SKColors.White, SKEncodedImageFormat.Jpeg, quality: 100, scaleX: 4, scaleY: 4,
-                                skColorType: SKColorType.Argb4444, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb());
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
-                        {
-                            using var stream = File.OpenWrite(filename);
-                            VertexGraphImage.Source?.Picture?.ToImage(
-                                stream, SKColors.White, SKEncodedImageFormat.Png, quality: 100, scaleX: 4, scaleY: 4,
-                                skColorType: SKColorType.Argb4444, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb());
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
-                        {
-                            VertexGraphImage.Source?.Picture?.ToPdf(filename, SKColors.White, scaleX: 2, scaleY: 2);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ =>
-                        {
-                            VertexGraphImage.Source?.Picture?.ToSvg(filename, SKColors.White, scaleX: 2, scaleY: 2);
-                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ => isSkiaFormat = true)
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ => isSkiaFormat = true)
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ => isSkiaFormat = true)
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ => isSkiaFormat = true)
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
                         {
                             data = m_VertexGraphExport.BuildVertexGraphMLData(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
@@ -315,6 +302,11 @@ namespace Zametek.ViewModel.ProjectPlan
                             data = m_VertexGraphExport.BuildVertexGraphVizData(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
                         })
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
+
+                    if (isSkiaFormat && VertexGraphImage.Source?.Picture is SKPicture picture)
+                    {
+                        await m_GraphImageExporter.SaveGraphImageAsync(picture, filename, scaleX: 4, scaleY: 4);
+                    }
 
                     if (data is not null)
                     {

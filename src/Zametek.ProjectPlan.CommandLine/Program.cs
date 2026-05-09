@@ -43,6 +43,7 @@ namespace Zametek.ProjectPlan.CommandLine
                         services.AddSingleton<ISettingService, SettingService>();
                         services.AddSingleton<IDialogService, DialogService>();
                         services.AddSingleton<IDateTimeCalculator, DateTimeCalculator>();
+                        services.AddSingleton<IGraphImageExporter, GraphImageExporter>();
                         services.AddSingleton<IMsaglSvgRenderer, MsaglSvgRenderer>();
                         services.AddSingleton<IArrowGraphSerializer, ArrowGraphSerializer>();
                         services.AddSingleton<IVertexGraphSerializer, VertexGraphSerializer>();

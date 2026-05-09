@@ -39,6 +39,10 @@ namespace Zametek.ProjectPlan
                 .As<IDateTimeCalculator>()
                 .As<DateTimeCalculator>()
                 .SingleInstance();
+            builder.RegisterType<GraphImageExporter>()
+                .As<IGraphImageExporter>()
+                .As<GraphImageExporter>()
+                .SingleInstance();
             builder.RegisterType<MsaglSvgRenderer>()
                 .As<IMsaglSvgRenderer>()
                 .As<MsaglSvgRenderer>()
