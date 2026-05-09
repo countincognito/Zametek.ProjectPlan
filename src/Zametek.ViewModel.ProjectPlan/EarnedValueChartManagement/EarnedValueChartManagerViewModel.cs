@@ -77,6 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
+        private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
 
         private readonly IDisposable? m_BuildEarnedValueChartPlotModelSub;
 
@@ -94,17 +95,20 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IDateTimeCalculator dateTimeCalculator)
+            IDateTimeCalculator dateTimeCalculator,
+            IScottPlotImageExporter scottPlotImageExporter)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(scottPlotImageExporter);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
+            m_ScottPlotImageExporter = scottPlotImageExporter;
             m_EarnedValueChartPlotModel = new AvaPlot();
 
             ResetEarnedValueChartCommand = ReactiveCommand.Create(ResetEarnedValueChart);
@@ -631,38 +635,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 try
                 {
-                    string fileExtension = Path.GetExtension(filename);
-
-                    fileExtension.ValueSwitchOn()
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
-                        {
-                            EarnedValueChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
-                        {
-                            EarnedValueChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageBmpFileExtension}", _ =>
-                        {
-                            EarnedValueChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageWebpFileExtension}", _ =>
-                        {
-                            EarnedValueChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ =>
-                        {
-                            EarnedValueChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        //.Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
-                        //{
-                        //})
-                        .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
+                    await m_ScottPlotImageExporter.SavePlotImageAsync(EarnedValueChartPlotModel.Plot, filename, width, height);
                 }
                 catch (Exception ex)
                 {
