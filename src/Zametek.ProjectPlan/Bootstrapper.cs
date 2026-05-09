@@ -39,6 +39,10 @@ namespace Zametek.ProjectPlan
                 .As<IDateTimeCalculator>()
                 .As<DateTimeCalculator>()
                 .SingleInstance();
+            builder.RegisterType<MsaglSvgRenderer>()
+                .As<IMsaglSvgRenderer>()
+                .As<MsaglSvgRenderer>()
+                .SingleInstance();
             builder.RegisterType<ArrowGraphSerializer>()
                 .As<IArrowGraphSerializer>()
                 .As<ArrowGraphSerializer>()
