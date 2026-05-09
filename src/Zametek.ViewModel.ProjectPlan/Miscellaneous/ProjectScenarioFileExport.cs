@@ -1,4 +1,4 @@
-﻿using NPOI.SS.UserModel;
+using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.Collections;
 using System.Diagnostics;
@@ -111,6 +111,7 @@ namespace Zametek.ViewModel.ProjectPlan
         [
             nameof(HolidayModel.Id),
             nameof(HolidayModel.Name),
+            nameof(HolidayModel.StartDateTime),
             nameof(HolidayModel.RecurrencePattern),
             nameof(HolidayModel.Notes)
         ];

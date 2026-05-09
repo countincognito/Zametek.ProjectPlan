@@ -1,0 +1,56 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/pkg/">
+    <Project Path="pkg/Zametek.ProjectPlan.CommandLine.WapPackager/Zametek.ProjectPlan.CommandLine.WapPackager.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
+      <Deploy />
+    </Project>
+    <Project Path="pkg/Zametek.ProjectPlan.MsiPackager/Zametek.ProjectPlan.MsiPackager.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0">
+      <Platform Solution="*|Any CPU" Project="x64" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="pkg/Zametek.ProjectPlan.WapPackager/Zametek.ProjectPlan.WapPackager.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
+      <Deploy />
+    </Project>
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Zametek.Common.ProjectPlan/Zametek.Common.ProjectPlan.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
+    <Project Path="src/Zametek.Contract.ProjectPlan/Zametek.Contract.ProjectPlan.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
+    <Project Path="src/Zametek.Data.ProjectPlan/Zametek.Data.ProjectPlan.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
+    <Project Path="src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+    </Project>
+    <Project Path="src/Zametek.Resource.ProjectPlan/Zametek.Resource.ProjectPlan.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
+    <Project Path="src/Zametek.View.ProjectPlan/Zametek.View.ProjectPlan.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
+    <Project Path="src/Zametek.ViewModel.ProjectPlan/Zametek.ViewModel.ProjectPlan.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Zametek.Data.ProjectPlan.Tests/Zametek.Data.ProjectPlan.Tests.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
+    <Project Path="test/Zametek.ViewModel.ProjectPlan.Tests/Zametek.ViewModel.ProjectPlan.Tests.csproj" />
+  </Folder>
+</Solution>
