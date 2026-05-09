@@ -102,6 +102,7 @@ namespace Zametek.ViewModel.ProjectPlan
         [
             nameof(HolidayModel.Id),
             nameof(HolidayModel.Name),
+            nameof(HolidayModel.StartDateTime),
             nameof(HolidayModel.RecurrencePattern),
             nameof(HolidayModel.Notes)
         ];
@@ -752,6 +753,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     int? id = 0;
                     string name = string.Empty;
+                    DateTimeOffset? startDateTime = null;
                     string recurrencePatterm = string.Empty;
                     string notes = string.Empty;
 
@@ -768,6 +770,14 @@ namespace Zametek.ViewModel.ProjectPlan
                                 })
                             .Case(nameof(HolidayModel.Name),
                                 colName => name = row[colName]?.ToString() ?? string.Empty)
+                            .Case(nameof(HolidayModel.StartDateTime),
+                                colName =>
+                                {
+                                    if (DateTime.TryParse(row[colName]?.ToString(), out DateTime output))
+                                    {
+                                        startDateTime = new DateTimeOffset(output);
+                                    }
+                                })
                             .Case(nameof(HolidayModel.RecurrencePattern),
                                 colName => recurrencePatterm = row[colName]?.ToString() ?? string.Empty)
                             .Case(nameof(HolidayModel.Notes),
@@ -781,6 +791,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             Id = idVal,
                             Name = name,
+                            StartDateTime = startDateTime,
                             RecurrencePattern = recurrencePatterm,
                             Notes = notes,
                         };
