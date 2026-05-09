@@ -936,7 +936,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-
         private SetByIntModel? m_YearlySetPosSelection;
         public SetByIntModel? YearlySetPosSelection
         {
@@ -944,7 +943,6 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_YearlySetPosSelection, value);
         }
         public List<SetByIntModel> YearlySetPosOptions { get; }
-
 
         private SetByStringModel? m_YearlyWeekdaySelection;
         public SetByStringModel? YearlyWeekdaySelection
@@ -954,7 +952,6 @@ namespace Zametek.ViewModel.ProjectPlan
         }
         public List<SetByStringModel> YearlyWeekdayOptions { get; }
 
-
         private SetByIntModel? m_YearlyMonthSelection;
         public SetByIntModel? YearlyMonthSelection
         {
@@ -962,7 +959,6 @@ namespace Zametek.ViewModel.ProjectPlan
             set => this.RaiseAndSetIfChanged(ref m_YearlyMonthSelection, value);
         }
         public List<SetByIntModel> YearlyMonthOptions { get; }
-
 
         private RecurrenceRuleModel m_RecurrenceRule;
         public RecurrenceRuleModel RecurrenceRule
@@ -1016,12 +1012,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

@@ -1,0 +1,35 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.cs]
+indent_size = 4
+
+# Naming conventions matching existing codebase (m_ prefix for private fields)
+dotnet_naming_rule.private_fields_should_have_prefix.severity = suggestion
+dotnet_naming_rule.private_fields_should_have_prefix.symbols = private_fields
+dotnet_naming_rule.private_fields_should_have_prefix.style = prefix_m_underscore
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+dotnet_naming_style.prefix_m_underscore.required_prefix = m_
+dotnet_naming_style.prefix_m_underscore.capitalization = camel_case
+
+[*.{axaml,xaml}]
+indent_size = 2
+
+[*.{csproj,props,targets}]
+indent_size = 2
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab

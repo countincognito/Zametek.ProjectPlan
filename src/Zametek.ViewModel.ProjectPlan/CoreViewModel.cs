@@ -176,19 +176,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(changeSet =>
                 {
-                    if (!IsBusy && (changeSet.Replaced + changeSet.Adds) > 0)
+                    if ((changeSet.Replaced + changeSet.Adds) > 0)
                     {
                         lock (m_Lock)
                         {
-                            if (AutoCompile)
+                            if (!IsBusy)
                             {
-                                IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                                IsReadyToCompile = ReadyToCompile.Yes;
-                            }
-                            else
-                            {
-                                IsReadyToReviseTrackers = ReadyToRevise.No;
-                                IsReadyToCompile = ReadyToCompile.No;
+                                if (AutoCompile)
+                                {
+                                    IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                                    IsReadyToCompile = ReadyToCompile.Yes;
+                                }
+                                else
+                                {
+                                    IsReadyToReviseTrackers = ReadyToRevise.No;
+                                    IsReadyToCompile = ReadyToCompile.No;
+                                }
                             }
                         }
                     }
@@ -199,16 +202,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(isReady =>
                 {
-                    if (isReady == ReadyToCompile.Yes
-                        && !IsBusy)
+                    lock (m_Lock)
                     {
-                        lock (m_Lock)
+                        if (isReady == ReadyToCompile.Yes
+                            && !IsBusy)
                         {
-                            if (isReady == ReadyToCompile.Yes
-                                && !IsBusy)
-                            {
-                                RunAutoCompile();
-                            }
+                            RunAutoCompile();
                         }
                     }
                 });
@@ -2635,7 +2634,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_ProjectFinish?.Dispose();
                 m_HasActivities?.Dispose();
@@ -2646,9 +2644,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_Activities?.Dispose();
                 m_DisplaySettingsViewModel?.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

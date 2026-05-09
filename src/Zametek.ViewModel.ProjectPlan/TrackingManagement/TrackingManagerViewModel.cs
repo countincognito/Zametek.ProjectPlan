@@ -240,7 +240,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_IsBusy?.Dispose();
                 m_HasActivities?.Dispose();
@@ -250,9 +249,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ProjectStart?.Dispose();
                 m_HasCompilationErrors?.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }
