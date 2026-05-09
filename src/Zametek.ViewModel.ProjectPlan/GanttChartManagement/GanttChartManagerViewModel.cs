@@ -7,7 +7,6 @@ using ScottPlot.Plottables;
 using System.Data;
 using System.Globalization;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
 using System.Windows.Input;
@@ -83,7 +82,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
 
         private readonly IDisposable? m_BuildGanttChartPlotModelSub;
-        private readonly IDisposable? m_GanttChartActivitySelectorSub;
 
         private const double c_ExportLabelHeightCorrection = 1.2;
         private const double c_YAxisMinimum = -1.0;
@@ -226,16 +224,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
-
-            m_GanttChartActivitySelectorSub = this
-                .WhenAnyValue(
-                    rcm => rcm.ActivitySelector.TargetActivitiesString)
-                .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(_ =>
-                {
-                    m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.Clear();
-                    m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.AddRange(ActivitySelector.SelectedActivityIds);
-                });
 
             Id = Resource.ProjectPlan.Titles.Title_GanttChartView;
             Title = Resource.ProjectPlan.Titles.Title_GanttChartView;
@@ -1657,7 +1645,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public void KillSubscriptions()
         {
             m_BuildGanttChartPlotModelSub?.Dispose();
-            m_GanttChartActivitySelectorSub?.Dispose();
         }
 
         #endregion

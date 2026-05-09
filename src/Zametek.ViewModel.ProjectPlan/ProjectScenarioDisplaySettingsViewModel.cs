@@ -302,7 +302,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    //SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     m_IsReadyToReviseGanttChartShowConnections = value;
                     this.RaisePropertyChanged();
                 }
@@ -420,6 +420,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaiseAndSetIfChanged(ref m_EarnedValueShowMilestones, value);
                 }
+            }
+        }
+
+        public void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated)
+        {
+            lock (m_Lock)
+            {
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated, trackStaleOutputs: false);
             }
         }
 

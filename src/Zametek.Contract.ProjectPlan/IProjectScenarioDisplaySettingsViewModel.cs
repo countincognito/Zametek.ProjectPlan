@@ -42,6 +42,8 @@ namespace Zametek.Contract.ProjectPlan
         bool EarnedValueShowMilestones { get; set; }
 
 
+        void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated);
+
         void SetValues(ProjectScenarioDisplaySettingsModel model);
         ProjectScenarioDisplaySettingsModel GetValues();
     }

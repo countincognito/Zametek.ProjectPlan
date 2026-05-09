@@ -14,7 +14,9 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly Lock m_Lock;
+        private bool m_IsRevising;
         private readonly ICoreViewModel m_CoreViewModel;
+
         private static readonly EqualityComparer<ISelectableActivityViewModel> s_EqualityComparer =
             EqualityComparer<ISelectableActivityViewModel>.Create(
                     (x, y) =>
@@ -62,6 +64,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             m_Lock = new();
+            m_IsRevising = false;
             m_CoreViewModel = coreViewModel;
             m_TargetActivities = new(s_EqualityComparer);
             m_ReadOnlyTargetActivities = new(m_TargetActivities);
@@ -93,10 +96,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     if (isReadyToRevise == ReadyToRevise.Yes)
                     {
-                        ReviseActivities();
-                        SetSelectedTargetActivities(
-                            [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
-                        m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections = ReadyToRevise.No;
+                        try
+                        {
+                            m_IsRevising = true;
+                            ReviseActivities();
+                            SetSelectedTargetActivities(
+                                [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
+                            m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections = ReadyToRevise.No;
+                        }
+                        finally
+                        {
+                            m_IsRevising = false;
+                        }
                     }
                 });
         }
@@ -146,6 +157,12 @@ namespace Zametek.ViewModel.ProjectPlan
             object? sender,
             NotifyCollectionChangedEventArgs e)
         {
+            m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.Clear();
+            m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.AddRange(SelectedActivityIds);
+            if (!m_IsRevising)
+            {
+                m_CoreViewModel.DisplaySettingsViewModel.SetIsProjectScenarioUpdated(true);
+            }
             RaiseTargetActivitiesPropertiesChanged();
         }
 
