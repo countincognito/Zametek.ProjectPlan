@@ -13,12 +13,19 @@ namespace Zametek.View.ProjectPlan
         {
             if (data is not null)
             {
-                var name = data.GetType().AssemblyQualifiedName!.Replace("ViewModel", "View");
+                string? assemblyQualifiedName = data.GetType().AssemblyQualifiedName;
+                if (assemblyQualifiedName is null)
+                {
+                    return new TextBlock { Text = "Not Found: unable to resolve assembly-qualified name" };
+                }
+                var name = assemblyQualifiedName.Replace("ViewModel", "View");
                 var type = Type.GetType(name);
 
                 if (type != null)
                 {
-                    return Locator.Current.GetService(type) as Control ?? (Control)Activator.CreateInstance(type)!;
+                    Control? resolved = Locator.Current.GetService(type) as Control
+                        ?? Activator.CreateInstance(type) as Control;
+                    return resolved ?? new TextBlock { Text = "Not Found: " + name };
                 }
                 else
                 {

@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shouldly;
 using System;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 using Xunit;
 using Zametek.Common.ProjectPlan;
 using Zametek.Data.ProjectPlan;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
@@ -57,6 +59,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             return path;
         }
 
+        /// <summary>
+        /// Builds the simplest possible v0.6.0 ProjectModel to use as a fixture.
+        /// </summary>
         private static ProjectModel BuildMinimalProjectModel()
         {
             var nodeId = Guid.NewGuid();
@@ -187,6 +192,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             loaded.Nodes[0].Name.ShouldBe(expectedName);
         }
+
+        #endregion
+
+        #region Double round-trip idempotency
 
         [Fact]
         public async Task DoubleRoundTrip_Produces_Same_Version()

@@ -1,10 +1,18 @@
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using Xunit;
 using Zametek.Common.ProjectPlan;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
+    /// <summary>
+    /// Tests for DateTimeCalculator covering working-day arithmetic, non-working-day
+    /// detection, and business-day counting under each NonWorkingDayMode.
+    /// DateTimeCalculator accepts a TimeProvider via constructor so no mocking framework
+    /// is needed — we use TimeProvider.System (or a fixed fake via FakeTimeProvider).
+    /// </summary>
     public class DateTimeCalculatorTests
     {
         #region Helpers
@@ -12,6 +20,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         private static DateTimeCalculator CreateCalc() => new DateTimeCalculator(TimeProvider.System);
 
         private static readonly DateTimeOffset s_Monday = new(2025, 6, 9, 0, 0, 0, TimeSpan.Zero); // known Monday
+
+        /// <summary>Returns a DateTimeOffset at midnight local time for the given date.</summary>
+        private static DateTimeOffset Local(int year, int month, int day) =>
+            new DateTimeOffset(new DateTime(year, month, day), TimeZoneInfo.Local.GetUtcOffset(new DateTime(year, month, day)));
 
         #endregion
 
@@ -88,7 +100,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         public void AddDays_CustomCalendar_WithWeekendRule_SkipsWeekends()
         {
             var weekendHoliday = new HolidayModel
-            {
+        {
                 Id = 1,
                 RecurrencePattern = "FREQ=WEEKLY;BYDAY=SA,SU",
             };
@@ -160,7 +172,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [InlineData(5)]
         [InlineData(10)]
         public void AddDays_CountDays_Weekends_AreSymmetric(int n)
-        {
+            {
             var calc = CreateCalc();
             calc.NonWorkingDayMode = NonWorkingDayMode.Weekends;
             var result = calc.AddDays(s_Monday, n);
@@ -198,6 +210,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             dt.ShouldBeNull();
         }
 
+        #endregion
+
+        #region CalculateTimeAndDateTime
+
         [Fact]
         public void CalculateTimeAndDateTime_Int_Zero_ReturnsZeroAndProjectStart()
         {
@@ -224,6 +240,10 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             time.ShouldBeNull();
             dt.ShouldBeNull();
         }
+
+        #endregion
+
+        #region GetLocal
 
         [Fact]
         public void CalculateTimeAndDateTime_DateTime_BeforeProjectStart_ClampsToStart()

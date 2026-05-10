@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 

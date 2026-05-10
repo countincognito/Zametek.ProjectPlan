@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using System.ComponentModel;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -133,6 +133,16 @@ namespace Zametek.ViewModel.ProjectPlan
             if (m_Disposed)
             {
                 return;
+            }
+
+            if (disposing)
+            {
+                // TODO: dispose managed state (managed objects).
+                //m_ProjectStartSub?.Dispose();
+                //m_ResourceSettingsSub?.Dispose();
+                //m_DateTimeCalculatorSub?.Dispose();
+                //m_CompilationSub?.Dispose();
+                //ResourceSelector.Dispose();
             }
 
             m_Disposed = true;
