@@ -43,6 +43,8 @@ namespace Zametek.ProjectPlan.CommandLine
                         services.AddSingleton<ISettingService, SettingService>();
                         services.AddSingleton<IDialogService, DialogService>();
                         services.AddSingleton<IDateTimeCalculator, DateTimeCalculator>();
+                        services.AddSingleton<IGraphImageExporter, GraphImageExporter>();
+                        services.AddSingleton<IMsaglSvgRenderer, MsaglSvgRenderer>();
                         services.AddSingleton<IArrowGraphSerializer, ArrowGraphSerializer>();
                         services.AddSingleton<IVertexGraphSerializer, VertexGraphSerializer>();
 
@@ -59,6 +61,8 @@ namespace Zametek.ProjectPlan.CommandLine
                         services.AddSingleton<IXlsxFileImporter, XlsxFileImporter>();
                         services.AddSingleton<IProjectScenarioFileImport, ProjectScenarioFileImport>();
                         services.AddSingleton<IProjectFileSave, ProjectFileSave>();
+                        services.AddSingleton<IScottPlotImageExporter, ScottPlotImageExporter>();
+                        services.AddSingleton<IXlsxScenarioExporter, XlsxScenarioExporter>();
                         services.AddSingleton<IProjectScenarioFileExport, ProjectScenarioFileExport>();
 
                         services.AddSingleton(new Data.ProjectPlan.VersionMapper());

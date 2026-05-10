@@ -39,6 +39,14 @@ namespace Zametek.ProjectPlan
                 .As<IDateTimeCalculator>()
                 .As<DateTimeCalculator>()
                 .SingleInstance();
+            builder.RegisterType<GraphImageExporter>()
+                .As<IGraphImageExporter>()
+                .As<GraphImageExporter>()
+                .SingleInstance();
+            builder.RegisterType<MsaglSvgRenderer>()
+                .As<IMsaglSvgRenderer>()
+                .As<MsaglSvgRenderer>()
+                .SingleInstance();
             builder.RegisterType<ArrowGraphSerializer>()
                 .As<IArrowGraphSerializer>()
                 .As<ArrowGraphSerializer>()
@@ -58,6 +66,14 @@ namespace Zametek.ProjectPlan
             builder.RegisterType<ProjectScenarioFileImport>()
                 .As<IProjectScenarioFileImport>()
                 .As<ProjectScenarioFileImport>()
+                .SingleInstance();
+            builder.RegisterType<ScottPlotImageExporter>()
+                .As<IScottPlotImageExporter>()
+                .As<ScottPlotImageExporter>()
+                .SingleInstance();
+            builder.RegisterType<XlsxScenarioExporter>()
+                .As<IXlsxScenarioExporter>()
+                .As<XlsxScenarioExporter>()
                 .SingleInstance();
             builder.RegisterType<ProjectScenarioFileExport>()
                 .As<IProjectScenarioFileExport>()
