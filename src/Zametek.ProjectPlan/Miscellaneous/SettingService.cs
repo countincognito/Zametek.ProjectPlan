@@ -1,6 +1,7 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Zametek.Common.ProjectPlan;
@@ -68,7 +69,7 @@ namespace Zametek.ProjectPlan
                 catch (Exception ex)
                 {
                     // The data grid layout file is corrupt or unreadable — reset to defaults.
-                    System.Diagnostics.Debug.WriteLine($"[SettingService] Failed to deserialize data grid layout, resetting: {ex.Message}");
+                    Debug.WriteLine($"[SettingService] Failed to deserialize data grid layout, resetting: {ex.Message}");
                     m_DataGridLayouts.Clear();
                 }
             }

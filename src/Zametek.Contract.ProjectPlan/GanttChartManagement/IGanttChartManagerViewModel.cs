@@ -34,6 +34,10 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand SaveGanttChartImageFileCommand { get; }
 
+        ICommand ChangeGroupByModeCommand { get; }
+
+        ICommand ChangeAnnotationStyleCommand { get; }
+
         Task SaveGanttChartImageFileAsync(string? filename, int width, int height);
 
         void BuildGanttChartPlotModel();
