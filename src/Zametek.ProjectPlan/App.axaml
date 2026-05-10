@@ -41,85 +41,8 @@
 
 		<StyleInclude Source="avares://Xaml.Behaviors.Interactions.DragAndDrop.DataGrid/Styles.axaml" />
 
-		<!-- === UI Polish styles === -->
-
-		<!-- Typography: consistent base font size -->
-		<Style Selector="TextBox">
-			<Setter Property="FontSize" Value="12"/>
-		</Style>
-
-		<Style Selector="TextBlock">
-			<Setter Property="FontSize" Value="12"/>
-			<Setter Property="LineHeight" Value="18"/>
-		</Style>
-
-		<Style Selector="SelectableTextBlock">
-			<Setter Property="FontSize" Value="12"/>
-			<Setter Property="LineHeight" Value="18"/>
-		</Style>
-
-		<Style Selector="Label">
-			<Setter Property="FontSize" Value="12"/>
-			<Setter Property="Padding" Value="4,0"/>
-		</Style>
-
-		<Style Selector="MenuItem">
-			<Setter Property="FontSize" Value="12"/>
-			<Setter Property="Padding" Value="8,5"/>
-		</Style>
-
-		<!-- Menu item icons: consistent left-side spacing -->
-		<Style Selector="MenuItem > MenuItem">
-			<Setter Property="Padding" Value="8,4"/>
-		</Style>
-
-		<!-- Separator in menus: subtle and clean -->
-		<Style Selector="Separator">
-			<Setter Property="Margin" Value="0,2"/>
-		</Style>
-
-		<!-- ComboBox: consistent sizing and alignment -->
-		<Style Selector="ComboBox">
-			<Setter Property="VerticalAlignment" Value="Center"/>
-			<Setter Property="VerticalContentAlignment" Value="Center"/>
-			<Setter Property="HorizontalAlignment" Value="Stretch"/>
-			<Setter Property="HorizontalContentAlignment" Value="Left"/>
-			<Setter Property="MinHeight" Value="25"/>
-			<Setter Property="Padding" Value="6,3"/>
-		</Style>
-
-		<!-- Button: consistent padding and visual weight -->
-		<Style Selector="Button">
-			<Setter Property="Padding" Value="8,4"/>
-			<Setter Property="FontSize" Value="12"/>
-		</Style>
-
-		<!-- ToggleSwitch: vertically centered, compact -->
-		<Style Selector="ToggleSwitch">
-			<Setter Property="FontSize" Value="12"/>
-		</Style>
-
-		<!-- DataGrid: clear row height and header font weight -->
-		<Style Selector="DataGridColumnHeader">
-			<Setter Property="FontSize" Value="12"/>
-			<Setter Property="FontWeight" Value="SemiBold"/>
-			<Setter Property="Padding" Value="4,4"/>
-			<Setter Property="MinHeight" Value="28"/>
-		</Style>
-
-		<Style Selector="DataGridCell">
-			<Setter Property="FontSize" Value="12"/>
-		</Style>
-
-		<!-- Dock panel tab strip: slight font weight for legibility -->
-		<Style Selector="idc|RootDockControl">
-			<Setter Property="Margin" Value="0,0,0,7"/>
-		</Style>
-
-		<!-- DatePicker: vertically centered -->
-		<Style Selector="DatePicker">
-			<Setter Property="VerticalAlignment" Value="Center"/>
-		</Style>
+		<!-- === Zametek Design System === -->
+		<StyleInclude Source="avares://Zametek.View.ProjectPlan/Themes/ZametekTheme.axaml" />
 
 		<!--For some reason this isn't working at expected on Windows-->
 		<Style Selector="mbc|MsBoxStandardView Button">
@@ -139,50 +62,106 @@
 
 	<Application.Resources>
 		<ResourceDictionary>
-			<sys:Double x:Key="DefaultFontSize">12</sys:Double>
+			<sys:Double x:Key="DefaultFontSize">13</sys:Double>
 
-			<sys:Double x:Key="TextBlockFontSize">12</sys:Double>
+			<sys:Double x:Key="TextBlockFontSize">13</sys:Double>
 
-			<sys:Double x:Key="ListBoxItemCheckFontSize">12</sys:Double>
+			<sys:Double x:Key="ListBoxItemCheckFontSize">13</sys:Double>
 
-			<sys:Double x:Key="ButtonDefaultFontSize">12</sys:Double>
+			<sys:Double x:Key="ButtonDefaultFontSize">13</sys:Double>
 			<!--<FontWeight x:Key="ButtonDefaultFontWeight">550</FontWeight>-->
 			<SolidColorBrush x:Key="ButtonDefaultBackground" Opacity="0.25" Color="Gray" />
-			<Thickness x:Key="ButtonDefaultPadding">8 4</Thickness>
+			<Thickness x:Key="ButtonDefaultPadding">12 0</Thickness>
 
 			<!--This needs to be here as empty strings don't work in the English theme-->
-
 			<x:String x:Key="STRING_PAGINATION_PAGE">.</x:String>
 
 			<!--This needs to be here in order to prevent text in NumericIntUpDown being obfuscated in ComboBoxItems-->
 			<SolidColorBrush x:Key="TextBoxDefaultBackground" Color="Transparent" />
 			<SolidColorBrush x:Key="TextBoxPointeroverBackground" Color="Transparent" />
 
-			<!--
-				Polish: slightly refined editable cell palette.
-				Light: warm cream base with cleaner selected/focus states.
-				Dark: cool navy base retained, focus contrast improved.
-			-->
+			<!-- ================================================================
+			     Zametek design tokens — fallback (non-themed) values
+			     ThemeDictionaries below provide Light/Dark variants
+			     ================================================================ -->
+			<SolidColorBrush x:Key="ZBackground"    Color="#F8F9FA"/>
+			<SolidColorBrush x:Key="ZSurface"       Color="#FFFFFF"/>
+			<SolidColorBrush x:Key="ZSurface2"      Color="#F1F3F5"/>
+			<SolidColorBrush x:Key="ZBorder"        Color="#DEE2E6"/>
+			<SolidColorBrush x:Key="ZBorderStrong"  Color="#CED4DA"/>
+			<SolidColorBrush x:Key="ZTextPrimary"   Color="#212529"/>
+			<SolidColorBrush x:Key="ZTextSecondary" Color="#6C757D"/>
+			<SolidColorBrush x:Key="ZTextMuted"     Color="#ADB5BD"/>
+			<SolidColorBrush x:Key="ZAccent"        Color="#1971C2"/>
+			<SolidColorBrush x:Key="ZAccentHover"   Color="#1864AB"/>
+			<SolidColorBrush x:Key="ZAccentLight"   Color="#D0EBFF"/>
+			<SolidColorBrush x:Key="ZAccentSubtle"  Color="#E7F5FF"/>
+			<SolidColorBrush x:Key="ZError"         Color="#E03131"/>
+			<SolidColorBrush x:Key="ZWarning"       Color="#F08C00"/>
+			<SolidColorBrush x:Key="ZSuccess"       Color="#2F9E44"/>
+			<SolidColorBrush x:Key="ZToolbarBg"     Color="#FFFFFF"/>
+			<SolidColorBrush x:Key="ZStatusBar"     Color="#F1F3F5"/>
+			<SolidColorBrush x:Key="ZTabStrip"      Color="#F8F9FA"/>
+
 			<ResourceDictionary.ThemeDictionaries>
 				<ResourceDictionary x:Key="Light">
-					<!-- Editable cell: warm cream — clearly editable without being distracting -->
+					<!-- Zametek design tokens — Light -->
+					<SolidColorBrush x:Key="ZBackground"    Color="#F8F9FA"/>
+					<SolidColorBrush x:Key="ZSurface"       Color="#FFFFFF"/>
+					<SolidColorBrush x:Key="ZSurface2"      Color="#F1F3F5"/>
+					<SolidColorBrush x:Key="ZBorder"        Color="#DEE2E6"/>
+					<SolidColorBrush x:Key="ZBorderStrong"  Color="#CED4DA"/>
+					<SolidColorBrush x:Key="ZTextPrimary"   Color="#212529"/>
+					<SolidColorBrush x:Key="ZTextSecondary" Color="#6C757D"/>
+					<SolidColorBrush x:Key="ZTextMuted"     Color="#ADB5BD"/>
+					<SolidColorBrush x:Key="ZAccent"        Color="#1971C2"/>
+					<SolidColorBrush x:Key="ZAccentHover"   Color="#1864AB"/>
+					<SolidColorBrush x:Key="ZAccentLight"   Color="#D0EBFF"/>
+					<SolidColorBrush x:Key="ZAccentSubtle"  Color="#E7F5FF"/>
+					<SolidColorBrush x:Key="ZError"         Color="#E03131"/>
+					<SolidColorBrush x:Key="ZWarning"       Color="#F08C00"/>
+					<SolidColorBrush x:Key="ZSuccess"       Color="#2F9E44"/>
+					<SolidColorBrush x:Key="ZToolbarBg"     Color="#FFFFFF"/>
+					<SolidColorBrush x:Key="ZStatusBar"     Color="#F1F3F5"/>
+					<SolidColorBrush x:Key="ZTabStrip"      Color="#F8F9FA"/>
+
+					<!-- Editable cell: accent-light palette for editability signal -->
 					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">#FFFFFBEA</SolidColorBrush>
-					<!-- Hover: slightly more saturated warm tone -->
 					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">#FFFDE68A</SolidColorBrush>
-					<!-- Selected editable: golden amber, clearly selected -->
 					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">#FFCA8A04</SolidColorBrush>
-					<!-- Selected + focused: clean light blue — high contrast focus ring -->
-					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">#FFE0F2FE</SolidColorBrush>
-					<!-- Polish: panel separator / border line -->
-					<SolidColorBrush x:Key="SemiColorBorder">#FFE2E8F0</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">#D0EBFF</SolidColorBrush>
+					<!-- Semi border override — unified with ZBorder -->
+					<SolidColorBrush x:Key="SemiColorBorder">#DEE2E6</SolidColorBrush>
 				</ResourceDictionary>
+
 				<ResourceDictionary x:Key="Dark">
-					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">#FF00001f</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">#FF0f1973</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">#FF424894</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">#FF0f0700</SolidColorBrush>
-					<!-- Polish: panel separator / border line -->
-					<SolidColorBrush x:Key="SemiColorBorder">#FF334155</SolidColorBrush>
+					<!-- Zametek design tokens — Dark -->
+					<SolidColorBrush x:Key="ZBackground"    Color="#1A1B1E"/>
+					<SolidColorBrush x:Key="ZSurface"       Color="#25262B"/>
+					<SolidColorBrush x:Key="ZSurface2"      Color="#2C2E33"/>
+					<SolidColorBrush x:Key="ZBorder"        Color="#373A40"/>
+					<SolidColorBrush x:Key="ZBorderStrong"  Color="#495057"/>
+					<SolidColorBrush x:Key="ZTextPrimary"   Color="#F8F9FA"/>
+					<SolidColorBrush x:Key="ZTextSecondary" Color="#ADB5BD"/>
+					<SolidColorBrush x:Key="ZTextMuted"     Color="#6C757D"/>
+					<SolidColorBrush x:Key="ZAccent"        Color="#4DABF7"/>
+					<SolidColorBrush x:Key="ZAccentHover"   Color="#74C0FC"/>
+					<SolidColorBrush x:Key="ZAccentLight"   Color="#1C3A5E"/>
+					<SolidColorBrush x:Key="ZAccentSubtle"  Color="#1A2D45"/>
+					<SolidColorBrush x:Key="ZError"         Color="#FF6B6B"/>
+					<SolidColorBrush x:Key="ZWarning"       Color="#FFA94D"/>
+					<SolidColorBrush x:Key="ZSuccess"       Color="#69DB7C"/>
+					<SolidColorBrush x:Key="ZToolbarBg"     Color="#25262B"/>
+					<SolidColorBrush x:Key="ZStatusBar"     Color="#1A1B1E"/>
+					<SolidColorBrush x:Key="ZTabStrip"      Color="#1A1B1E"/>
+
+					<!-- Editable cell: dark navy palette -->
+					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">#1C3A5E</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">#1A2D45</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">#1864AB</SolidColorBrush>
+					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">#1971C2</SolidColorBrush>
+					<!-- Semi border override -->
+					<SolidColorBrush x:Key="SemiColorBorder">#373A40</SolidColorBrush>
 				</ResourceDictionary>
 			</ResourceDictionary.ThemeDictionaries>
 		</ResourceDictionary>

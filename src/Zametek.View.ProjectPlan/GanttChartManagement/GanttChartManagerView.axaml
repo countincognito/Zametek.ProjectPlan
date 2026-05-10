@@ -17,7 +17,7 @@
     <converters:EnumToBoolConverter x:Key="enumToBool" />
   </UserControl.Resources>
 
-  <DockPanel Margin="7">
+  <DockPanel>
     <DockPanel>
       <DockPanel DockPanel.Dock="Bottom">
         <Label VerticalContentAlignment="Center"

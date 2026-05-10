@@ -48,7 +48,7 @@
 		<local:ManagedActivitySortComparer x:Key="notesSortComparer" SortMemberPath="Notes"/>
 	</UserControl.Resources>
 
-	<DockPanel Margin="7">
+	<DockPanel Margin="0">
 
 		<!-- Set Background to Transparent to ensure the context menu works even when the datagrid is empty -->
 		<!-- https://github.com/AvaloniaUI/Avalonia/discussions/15118 -->
@@ -61,7 +61,7 @@
 				  SelectionMode="Extended"
 				  CanUserResizeColumns="True"
 				  CanUserSortColumns="True"
-				  GridLinesVisibility="All"
+				  GridLinesVisibility="Horizontal"
 				  Classes="DragAndDrop"
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>

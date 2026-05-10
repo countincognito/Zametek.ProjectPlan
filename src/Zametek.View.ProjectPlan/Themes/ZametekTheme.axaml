@@ -1,0 +1,216 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia">
+
+  <!-- =====================================================================
+       ZAMETEK DESIGN SYSTEM — ZametekTheme.axaml
+       Linear / Vercel / Modern SaaS desktop aesthetic
+       Color tokens live in App.axaml Application.Resources
+       ===================================================================== -->
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       1. TYPOGRAPHY — base font 13px, consistent line height
+       ───────────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="TextBlock">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="LineHeight" Value="20"/>
+    <Setter Property="Foreground" Value="{DynamicResource ZTextPrimary}"/>
+  </Style>
+
+  <Style Selector="SelectableTextBlock">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="LineHeight" Value="20"/>
+    <Setter Property="Foreground" Value="{DynamicResource ZTextPrimary}"/>
+  </Style>
+
+  <Style Selector="Label">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Padding" Value="4,0"/>
+    <Setter Property="Foreground" Value="{DynamicResource ZTextPrimary}"/>
+  </Style>
+
+  <Style Selector="TextBox">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="MinHeight" Value="28"/>
+    <Setter Property="CornerRadius" Value="4"/>
+  </Style>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       2. BUTTONS — clean, 28px height, consistent padding
+       ───────────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="Button">
+    <Setter Property="Height" Value="28"/>
+    <Setter Property="Padding" Value="12,0"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       3. COMBOBOX — uniform 28px height
+       ───────────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="ComboBox">
+    <Setter Property="MinHeight" Value="28"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="Padding" Value="8,3"/>
+  </Style>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       4. TOGGLE SWITCH — consistent font
+       ───────────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="ToggleSwitch">
+    <Setter Property="FontSize" Value="13"/>
+  </Style>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       5. MENU / CONTEXT MENU — 13px, proper spacing
+       ───────────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="Menu">
+    <Setter Property="Background" Value="{DynamicResource ZToolbarBg}"/>
+    <Setter Property="FontSize" Value="13"/>
+  </Style>
+
+  <Style Selector="MenuItem">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Padding" Value="8,5"/>
+    <Setter Property="Height" Value="32"/>
+  </Style>
+
+  <Style Selector="MenuItem > MenuItem">
+    <Setter Property="Padding" Value="8,4"/>
+    <Setter Property="Height" Value="32"/>
+  </Style>
+
+  <Style Selector="Separator">
+    <Setter Property="Margin" Value="4,2"/>
+  </Style>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       6. DATAGRID — professional grid with clean headers
+       ───────────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="DataGrid">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource ZBorder}"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Background" Value="{DynamicResource ZSurface}"/>
+  </Style>
+
+  <Style Selector="DataGridColumnHeader">
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Height" Value="32"/>
+    <Setter Property="MinHeight" Value="32"/>
+    <Setter Property="Background" Value="{DynamicResource ZSurface2}"/>
+    <Setter Property="Foreground" Value="{DynamicResource ZTextSecondary}"/>
+    <Setter Property="Padding" Value="8,0"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource ZBorder}"/>
+    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+  </Style>
+
+  <Style Selector="DataGridCell">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Padding" Value="8,4"/>
+  </Style>
+
+  <Style Selector="DataGridRow">
+    <Setter Property="MinHeight" Value="30"/>
+  </Style>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       7. DATE PICKER — vertically centered, compact
+       ───────────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="DatePicker">
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="FontSize" Value="12"/>
+  </Style>
+
+  <Style Selector="CalendarDatePicker">
+    <Setter Property="FontSize" Value="12"/>
+  </Style>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       8. STATUS BAR LABEL — 11px muted, consistent
+       ───────────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="DockPanel Label.status-label">
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="Foreground" Value="{DynamicResource ZTextMuted}"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       9. DOCK.AVALONIA TAB OVERRIDES
+          Clean underline style: muted inactive, primary active
+       ───────────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="TabItem">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Padding" Value="12,6"/>
+    <Setter Property="Foreground" Value="{DynamicResource ZTextSecondary}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+
+  <Style Selector="TabItem:selected">
+    <Setter Property="Foreground" Value="{DynamicResource ZTextPrimary}"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+  </Style>
+
+  <Style Selector="TabItem:pointerover">
+    <Setter Property="Foreground" Value="{DynamicResource ZTextPrimary}"/>
+  </Style>
+
+  <!-- Dock root control — remove bottom gap -->
+  <Style Selector="idc|RootDockControl">
+    <Setter Property="Margin" Value="0"/>
+  </Style>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       10. PANEL SECTION HEADERS — the 11px SemiBold label style
+           Used in chart side panels for section grouping
+       ───────────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="Label.section-header">
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource ZTextSecondary}"/>
+    <Setter Property="Opacity" Value="1"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Margin" Value="0,0,0,4"/>
+  </Style>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       11. SCROLLVIEWER — clean, thin scrollbars
+       ───────────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="ScrollViewer">
+    <Setter Property="AllowAutoHide" Value="True"/>
+  </Style>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
+       12. WINDOW ERROR INDICATOR — Border classes for compile state
+       ───────────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="Border.compile-ok">
+    <Setter Property="Background" Value="Transparent"/>
+  </Style>
+
+  <Style Selector="Border.compile-error">
+    <Setter Property="Background" Value="{DynamicResource ZError}"/>
+  </Style>
+
+</Styles>

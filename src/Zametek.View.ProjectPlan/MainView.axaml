@@ -39,47 +39,50 @@
 	</Window.KeyBindings>
 
 	<Window.Styles>
-		<Style Selector="Border.ok">
-			<Setter Property="BorderBrush" Value="Transparent"/>
+		<!-- Error indicator: thin top accent bar -->
+		<Style Selector="Border.compile-ok">
+			<Setter Property="Background" Value="Transparent"/>
 		</Style>
-		<Style Selector="Border.error">
-			<Setter Property="BorderBrush" Value="#FFDC2626"/>
-		</Style>
-		<!-- Status bar label: muted caption weight -->
-		<Style Selector="DockPanel Label.status-label">
-			<Setter Property="FontSize" Value="11"/>
-			<Setter Property="Opacity" Value="0.7"/>
-			<Setter Property="VerticalContentAlignment" Value="Center"/>
+		<Style Selector="Border.compile-error">
+			<Setter Property="Background" Value="{DynamicResource ZError}"/>
 		</Style>
 	</Window.Styles>
 
 	<u:LoadingContainer IsLoading="{Binding Path=IsBusy, Mode=OneWay}"
 						LoadingMessage="{x:Static resources:Labels.Label_PleaseWait}"
 						Name="LoadingPanel">
-		<Border BorderThickness="3">
-			<Classes.ok>
-				<MultiBinding Converter="{x:Static BoolConverters.And}">
-					<MultiBinding.Bindings>
-						<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
-						<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
-					</MultiBinding.Bindings>
-				</MultiBinding>
-			</Classes.ok>
+		<DockPanel IsEnabled="{Binding Path=!IsBusy, Mode=OneWay}"
+				   Background="{DynamicResource ZBackground}">
 
-			<Classes.error>
-				<MultiBinding Converter="{x:Static BoolConverters.Or}">
-					<MultiBinding.Bindings>
-						<Binding Path="HasCompilationErrors" Mode="OneWay"/>
-						<Binding Path="HasStaleOutputs" Mode="OneWay"/>
-					</MultiBinding.Bindings>
-				</MultiBinding>
-			</Classes.error>
+			<!-- Thin error indicator bar at the very top -->
+			<Border DockPanel.Dock="Top"
+					Height="3">
+				<Classes.compile-ok>
+					<MultiBinding Converter="{x:Static BoolConverters.And}">
+						<MultiBinding.Bindings>
+							<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+							<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+						</MultiBinding.Bindings>
+					</MultiBinding>
+				</Classes.compile-ok>
+				<Classes.compile-error>
+					<MultiBinding Converter="{x:Static BoolConverters.Or}">
+						<MultiBinding.Bindings>
+							<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+							<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+						</MultiBinding.Bindings>
+					</MultiBinding>
+				</Classes.compile-error>
+			</Border>
 
-			<DockPanel Margin="7"
-					   IsEnabled="{Binding Path=!IsBusy, Mode=OneWay}">
-				<Menu DockPanel.Dock="Top"
-					  HorizontalAlignment="Left"
-					  Padding="0">
+			<!-- Menu bar with clean bottom border -->
+			<Border DockPanel.Dock="Top"
+					Background="{DynamicResource ZToolbarBg}"
+					BorderThickness="0,0,0,1"
+					BorderBrush="{DynamicResource ZBorder}">
+				<Menu HorizontalAlignment="Left"
+					  Padding="4,0"
+					  Height="36">
 					<MenuItem Header="{x:Static resources:Menus.Menu_File}">
 						<MenuItem Header="{x:Static resources:Menus.Menu_Open}"
 								  Command="{Binding Path=OpenProjectFileCommand, Mode=OneWay}"
@@ -305,57 +308,57 @@
 						</MenuItem>
 					</MenuItem>
 				</Menu>
+			</Border>
 
-				<Border DockPanel.Dock="Bottom"
-						BorderThickness="0,1,0,0"
-						BorderBrush="{DynamicResource SemiColorBorder}"
-						Padding="0,4,0,4">
-					<DockPanel Margin="0">
+			<!-- Status bar: 30px, subtle background, 11px muted labels -->
+			<Border DockPanel.Dock="Bottom"
+					Height="30"
+					Background="{DynamicResource ZStatusBar}"
+					BorderThickness="0,1,0,0"
+					BorderBrush="{DynamicResource ZBorder}">
+				<DockPanel VerticalAlignment="Center"
+						   Margin="8,0">
+					<Label DockPanel.Dock="Left"
+						   IsTabStop="False"
+						   Classes="status-label"
+						   Content="{x:Static resources:Labels.Label_ProjectStart}"
+						   VerticalContentAlignment="Center"
+						   Margin="0,0,4,0"/>
+					<DatePicker DockPanel.Dock="Left"
+								SelectedDate="{Binding Path=ProjectStart, Mode=TwoWay}"
+								Margin="0,0,16,0"
+								Padding="3"
+								Focusable="True"
+								DayFormat="d (ddd)"
+								DayVisible="True"
+								MonthVisible="True"
+								YearVisible="True"
+								VerticalAlignment="Center"/>
 
-						<Label DockPanel.Dock="Left"
-							   IsTabStop="False"
-							   Classes="status-label"
-							   Content="{x:Static resources:Labels.Label_ProjectStart}"
-							   VerticalContentAlignment="Center"
-							   Height="25"
-							   Margin="4,0,4,0"/>
-						<DatePicker DockPanel.Dock="Left"
-									SelectedDate="{Binding Path=ProjectStart, Mode=TwoWay}"
-									Margin="0,0,12,0"
-									Padding="3"
-									Focusable="True"
-									DayFormat="d (ddd)"
-									DayVisible="True"
-									MonthVisible="True"
-									YearVisible="True"
-									VerticalAlignment="Center"/>
+					<Label DockPanel.Dock="Left"
+						   IsTabStop="False"
+						   Classes="status-label"
+						   Content="{x:Static resources:Labels.Label_Today}"
+						   VerticalContentAlignment="Center"
+						   Margin="0,0,4,0"/>
+					<DatePicker DockPanel.Dock="Left"
+								SelectedDate="{Binding Path=Today, Mode=TwoWay}"
+								Margin="0,0,16,0"
+								Padding="3"
+								Focusable="True"
+								DayFormat="d (ddd)"
+								DayVisible="True"
+								MonthVisible="True"
+								YearVisible="True"
+								VerticalAlignment="Center"/>
 
-						<Label DockPanel.Dock="Left"
-							   IsTabStop="False"
-							   Classes="status-label"
-							   Content="{x:Static resources:Labels.Label_Today}"
-							   VerticalContentAlignment="Center"
-							   Height="25"
-							   Margin="4,0,4,0"/>
+					<Grid />
+				</DockPanel>
+			</Border>
 
-						<DatePicker DockPanel.Dock="Left"
-									SelectedDate="{Binding Path=Today, Mode=TwoWay}"
-									Margin="0,0,12,0"
-									Padding="3"
-									Focusable="True"
-									DayFormat="d (ddd)"
-									DayVisible="True"
-									MonthVisible="True"
-									YearVisible="True"
-									VerticalAlignment="Center"/>
-
-						<Grid />
-					</DockPanel>
-				</Border>
-
-				<idc:DockControl Layout="{Binding Path=Layout, Mode=OneWay}"
-								 DockProperties.IsDragEnabled="False" />
-			</DockPanel>
-		</Border>
+			<!-- Dock control fills remaining space, no extra margin -->
+			<idc:DockControl Layout="{Binding Path=Layout, Mode=OneWay}"
+							 DockProperties.IsDragEnabled="False" />
+		</DockPanel>
 	</u:LoadingContainer>
 </Window>
