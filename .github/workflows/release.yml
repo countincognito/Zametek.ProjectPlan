@@ -3,7 +3,8 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
 
 permissions:
   contents: write
@@ -183,6 +184,16 @@ jobs:
         id: release-notes
         run: |
           VERSION="${{ github.ref_name }}"
+          
+          SEMVER_REGEX="^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+          
+          if [[ "$VERSION" =~ $SEMVER_REGEX ]]; then
+            echo "Valid SemVer: $VERSION"
+          else
+            echo "Invalid SemVer: $VERSION"
+            exit 1
+          fi
+
           cat > release-notes.md << EOF
           ## $VERSION
 
