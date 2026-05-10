@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
@@ -108,12 +108,12 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_ResourceChartPlotModel = new AvaPlot();
 
+            ResetResourceChartCommand = ReactiveCommand.Create(ResetResourceChart);
+
             {
                 ReactiveCommand<Unit, Unit> saveResourceChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveResourceChartImageFileAsync);
                 SaveResourceChartImageFileCommand = saveResourceChartImageFileCommand;
             }
-
-            ResetResourceChartCommand = ReactiveCommand.Create(ResetResourceChart);
 
             m_IsBusy = this
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBusy)
@@ -616,9 +616,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public ICommand SaveResourceChartImageFileCommand { get; }
-
         public ICommand ResetResourceChartCommand { get; }
+
+        public ICommand SaveResourceChartImageFileCommand { get; }
 
         public async Task SaveResourceChartImageFileAsync(
             string? filename,

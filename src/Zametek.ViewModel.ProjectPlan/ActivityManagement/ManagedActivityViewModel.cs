@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using System.Collections;
 using System.ComponentModel;
 using System.Reactive.Concurrency;
@@ -909,6 +909,48 @@ namespace Zametek.ViewModel.ProjectPlan
         public void SetAsRemovable()
         {
             DependentActivity.SetAsRemovable();
+        }
+
+        public DependentActivityModel DeepCopy()
+        {
+            var activityModel = new ActivityModel
+            {
+                Id = Id,
+                DisplayOrder = DisplayOrder,
+                Name = Name,
+                TargetWorkStreams = [.. TargetWorkStreams],
+                TargetResources = [.. TargetResources],
+                TargetResourceOperator = TargetResourceOperator,
+                AllocatedToResources = [.. AllocatedToResources],
+                CanBeRemoved = CanBeRemoved,
+                HasNoCost = HasNoCost,
+                HasNoBilling = HasNoBilling,
+                HasNoEffort = HasNoEffort,
+                HasNoRisk = HasNoRisk,
+                Duration = Duration,
+                FreeSlack = FreeSlack,
+                TotalSlack = TotalSlack,
+                EarliestStartTime = EarliestStartTime,
+                LatestStartTime = LatestStartTime,
+                EarliestFinishTime = EarliestFinishTime,
+                LatestFinishTime = LatestFinishTime,
+                MinimumFreeSlack = MinimumFreeSlack,
+                MinimumEarliestStartTime = MinimumEarliestStartTime,
+                MinimumEarliestStartDateTime = MinimumEarliestStartDateTime,
+                MaximumLatestFinishTime = MaximumLatestFinishTime,
+                MaximumLatestFinishDateTime = MaximumLatestFinishDateTime,
+                Notes = Notes,
+                Trackers = TrackerSet.CloneTrackers(),
+            };
+
+            return new DependentActivityModel
+            {
+                Activity = activityModel,
+                Dependencies = [.. Dependencies],
+                PlanningDependencies = [.. PlanningDependencies],
+                ResourceDependencies = [.. ResourceDependencies],
+                Successors = [.. Successors],
+            };
         }
 
         public object CloneObject()

@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Data;
 using DynamicData;
 using DynamicData.Binding;
@@ -6,7 +6,6 @@ using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -49,6 +48,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             SelectedResources = new ConcurrentDictionary<int, IManagedResourceViewModel>();
+            m_HasSelectedResource = false;
             m_HasSelectedResources = false;
             m_AreSettingsUpdated = false; ;
 
@@ -57,10 +57,34 @@ namespace Zametek.ViewModel.ProjectPlan
             m_OrderableResources = [];
 
             SetSelectedManagedResourcesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedResources);
-            AddManagedResourceCommand = ReactiveCommand.CreateFromTask(AddManagedResourceAsync);
-            RemoveManagedResourcesCommand = ReactiveCommand.CreateFromTask(RemoveManagedResourcesAsync, this.WhenAnyValue(rm => rm.HasSelectedResources));
-            DuplicateManagedResourceCommand = ReactiveCommand.CreateFromTask(DuplicateManagedResourceAsync, this.WhenAnyValue(am => am.HasSelectedResources));
-            EditManagedResourcesCommand = ReactiveCommand.CreateFromTask(EditManagedResourcesAsync, this.WhenAnyValue(am => am.HasSelectedResources));
+            AddManagedResourceCommand = ReactiveCommand.CreateFromTask(
+                AddManagedResourceAsync,
+                this.WhenAnyValue(
+                    rm => rm.DisableResources,
+                    (disabled) => !disabled));
+            RemoveManagedResourcesCommand = ReactiveCommand.CreateFromTask(
+                RemoveManagedResourcesAsync,
+                this.WhenAnyValue(
+                    rm => rm.HasSelectedResources,
+                    rm => rm.DisableResources,
+                    (hasSelectedResources, disabled) => hasSelectedResources && !disabled));
+            DuplicateManagedResourceCommand = ReactiveCommand.CreateFromTask(
+                DuplicateManagedResourceAsync,
+                this.WhenAnyValue(
+                    rm => rm.HasSelectedResource,
+                    rm => rm.DisableResources,
+                    (hasSelectedResource, disabled) => hasSelectedResource && !disabled));
+            EditManagedResourcesCommand = ReactiveCommand.CreateFromTask(
+                EditManagedResourcesAsync,
+                this.WhenAnyValue(
+                    rm => rm.HasSelectedResources,
+                    rm => rm.DisableResources,
+                    (hasSelectedResources, disabled) => hasSelectedResources && !disabled));
+            RenumberResourcesCommand = ReactiveCommand.CreateFromTask(
+                RenumberResourcesAsync,
+                this.WhenAnyValue(
+                    rm => rm.DisableResources,
+                    (disabled) => !disabled));
 
             // Create read-only view to the source list.
             m_ReadOnlyResourcesSub = m_Resources.Connect()
@@ -69,7 +93,7 @@ namespace Zametek.ViewModel.ProjectPlan
                .Subscribe();
 
             m_OrderableResourcesSub = m_Resources.Connect()
-                //.ObserveOn(Scheduler.CurrentThread)
+               //.ObserveOn(Scheduler.CurrentThread)
                .ObserveOn(RxApp.MainThreadScheduler) // Ensure UI thread safety
                .Bind(m_OrderableResources)          // Bind to the mutable collection
                .DisposeMany()                        // Clean up resources
@@ -117,8 +141,6 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 });
 
-            RenumberResourcesCommand = ReactiveCommand.CreateFromTask(RenumberResourcesAsync);
-
             ProcessSettings(m_SettingService.DefaultResourceSettings);
 
             Id = Resource.ProjectPlan.Titles.Title_ResourceSettingsView;
@@ -163,6 +185,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 HasSelectedResources = SelectedResources.Any();
+                HasSelectedResource = HasSelectedResources && SelectedResources.Count == 1;
             }
         }
 
@@ -248,38 +271,32 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IManagedResourceViewModel? source = SelectedResources.Values.FirstOrDefault();
+                    SelectedResources.TryGetValue(SelectedResources.Keys.First(), out IManagedResourceViewModel? selectedResource);
 
-                    if (source is null)
+                    if (selectedResource is null)
                     {
                         return;
                     }
 
+                    ResourceModel duplicateModel = selectedResource.DeepCopy();
+
                     m_Resources.Edit(resources =>
                     {
                         int id = GetNextId();
+
+                        // Clear the trackers because otherwise we would need to alter
+                        // all the IDs to correspond with the new ID.
+                        duplicateModel = duplicateModel with
+                        {
+                            Id = id,
+                            Trackers = [],
+                        };
+
                         resources.Add(
                             new ManagedResourceViewModel(
                                 m_CoreViewModel,
                                 this,
-                                new ResourceModel
-                                {
-                                    Id = id,
-                                    DisplayOrder = -1,
-                                    Name = source.Name,
-                                    Notes = source.Notes,
-                                    IsExplicitTarget = source.IsExplicitTarget,
-                                    IsInactive = source.IsInactive,
-                                    InterActivityAllocationType = source.InterActivityAllocationType,
-                                    InterActivityPhases = [.. source.InterActivityPhases],
-                                    UnitCost = source.UnitCost,
-                                    UnitBilling = source.UnitBilling,
-                                    FixedCost = source.FixedCost,
-                                    FixedBilling = source.FixedBilling,
-                                    AllocationOrder = source.AllocationOrder,
-                                    ColorFormat = ColorHelper.Random(),
-                                    Trackers = []
-                                }));
+                                duplicateModel));
                     });
 
                     UpdateDisplayOrders();
@@ -457,25 +474,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 var resourceSettings = new ResourceSettingsModel
                 {
-                    Resources = [.. RawResources.Select(x => new ResourceModel
-                    {
-                        Id = x.Id,
-                        DisplayOrder = x.DisplayOrder,
-                        Name = x.Name,
-                        Notes = x.Notes,
-                        IsExplicitTarget = x.IsExplicitTarget,
-                        IsInactive = x.IsInactive,
-                        InterActivityAllocationType = x.InterActivityAllocationType,
-                        InterActivityPhases = [.. x.InterActivityPhases],
-                        UnitCost = x.UnitCost,
-                        UnitBilling = x.UnitBilling,
-                        FixedCost = x.FixedCost,
-                        FixedBilling = x.FixedBilling,
-                        AllocationOrder = x.AllocationOrder,
-                        ColorFormat = x.ColorFormat,
-                        Trackers = x.TrackerSet.Trackers,
-                    })],
-
+                    Resources = [.. RawResources.Select(x => x.DeepCopy())],
                     DefaultUnitCost = DefaultUnitCost,
                     DefaultUnitBilling = DefaultUnitBilling,
                     AreDisabled = DisableResources
@@ -573,6 +572,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<bool> m_HideBilling;
         public bool HideBilling => m_HideBilling.Value;
+
+        private bool m_HasSelectedResource;
+        public bool HasSelectedResource
+        {
+            get => m_HasSelectedResource;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_HasSelectedResource = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
 
         private bool m_HasSelectedResources;
         public bool HasSelectedResources

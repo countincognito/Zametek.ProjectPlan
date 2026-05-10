@@ -28,6 +28,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_IsPhase = workStream.IsPhase;
             m_DisplayOrder = workStream.DisplayOrder;
             m_ColorFormat = workStream.ColorFormat;
+            m_IsEditMuted = false;
         }
 
         #endregion
@@ -82,9 +83,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public object CloneObject()
+        public WorkStreamModel DeepCopy()
         {
-            return new WorkStreamModel
+            return new()
             {
                 Id = Id,
                 Name = Name,
@@ -113,7 +114,11 @@ namespace Zametek.ViewModel.ProjectPlan
             if (m_isDirty)
             {
                 m_isDirty = false;
-                m_WorkStreamSettingsManagerViewModel.AreSettingsUpdated = true;
+
+                if (!IsEditMuted)
+                {
+                    m_WorkStreamSettingsManagerViewModel.AreSettingsUpdated = true;
+                }
             }
         }
 
@@ -123,6 +128,21 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         #endregion
+
+
+
+        #region IMuteEdits Members
+
+        private bool m_IsEditMuted;
+        public bool IsEditMuted
+        {
+            get => m_IsEditMuted;
+            set => this.RaiseAndSetIfChanged(ref m_IsEditMuted, value);
+        }
+
+        #endregion
+
+
 
         #region IDisposable Members
 

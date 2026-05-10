@@ -21,42 +21,11 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=AddManagedActivitySeverityCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_AddManagedActivitySeverity}"/>
 
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=RemoveManagedActivitySeveritiesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DeleteManagedActivitySeverities}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,11"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=DuplicateManagedActivitySeverityCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DuplicateManagedActivitySeverity}"/>
-
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
-
+    <!-- Set Background to Transparent to ensure the context menu works even when the datagrid is empty -->
+    <!-- https://github.com/AvaloniaUI/Avalonia/discussions/15118 -->
 		<DataGrid Name="ActivitySeveritiesGrid"
+				  Background="Transparent"
 				  FrozenColumnCount="1"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"

@@ -1,10 +1,10 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IManagedWorkStreamViewModel
-        : IDisposable, INotifyPropertyChanged
+        : IDisposable, INotifyPropertyChanged, IMuteEdits
     {
         int Id { get; }
 
@@ -15,5 +15,7 @@ namespace Zametek.Contract.ProjectPlan
         int DisplayOrder { get; set; }
 
         ColorFormatModel ColorFormat { get; set; }
+
+        WorkStreamModel DeepCopy();
     }
 }

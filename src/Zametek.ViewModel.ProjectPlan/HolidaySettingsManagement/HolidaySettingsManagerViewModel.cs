@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using DynamicData;
 using ReactiveUI;
 using System.Collections.Concurrent;
@@ -58,7 +58,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SetSelectedManagedHolidaysCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedHolidays);
             AddManagedHolidayCommand = ReactiveCommand.CreateFromTask(AddManagedHolidayAsync);
             RemoveManagedHolidaysCommand = ReactiveCommand.CreateFromTask(RemoveManagedHolidaysAsync, this.WhenAnyValue(rm => rm.HasSelectedHolidays));
-            DuplicateManagedHolidayCommand = ReactiveCommand.CreateFromTask(DuplicateManagedHolidayAsync, this.WhenAnyValue(rm => rm.HasSelectedHolidays));
+            DuplicateManagedHolidayCommand = ReactiveCommand.CreateFromTask(DuplicateManagedHolidayAsync, this.WhenAnyValue(rm => rm.HasSelectedHoliday));
             EditManagedHolidayCommand = ReactiveCommand.CreateFromTask(EditManagedHolidayAsync, this.WhenAnyValue(am => am.HasSelectedHoliday));
 
             // Create read-only view to the source list.
@@ -218,27 +218,27 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IManagedHolidayViewModel? source = SelectedHolidays.Values.FirstOrDefault();
+                    SelectedHolidays.TryGetValue(SelectedHolidays.Keys.FirstOrDefault(), out IManagedHolidayViewModel? selectedHoliday);
 
-                    if (source is null)
+                    if (selectedHoliday is null)
                     {
                         return;
                     }
 
+                    HolidayModel duplicateModel = selectedHoliday.DeepCopy();
+
                     m_Holidays.Edit(holidays =>
                     {
                         int id = GetNextId();
+                        duplicateModel = duplicateModel with
+                        {
+                            Id = id
+                        };
+
                         holidays.Add(
                             new ManagedHolidayViewModel(
                                 this,
-                                new HolidayModel
-                                {
-                                    Id = id,
-                                    Name = source.Name,
-                                    Notes = source.Notes,
-                                    StartDateTime = source.StartDateTime,
-                                    RecurrencePattern = source.RecurrencePattern,
-                                },
+                                duplicateModel,
                                 m_DateTimeCalculator));
                     });
                 }
@@ -258,7 +258,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                SelectedHolidays.TryGetValue(SelectedHolidays.Keys.First(), out IManagedHolidayViewModel? selectedHoliday);
+                SelectedHolidays.TryGetValue(SelectedHolidays.Keys.FirstOrDefault(), out IManagedHolidayViewModel? selectedHoliday);
 
                 if (selectedHoliday is null)
                 {

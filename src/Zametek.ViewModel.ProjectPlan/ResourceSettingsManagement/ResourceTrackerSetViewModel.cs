@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -148,38 +148,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IResourceTrackerViewModel Members
 
-        public List<ResourceTrackerModel> Trackers
-        {
-            get
-            {
-                return m_ResourceActivitySelectorLookup.Values
-                    .Where(selector => selector.SelectedResourceActivityIds.Count > 0)
-                    .OrderBy(selector => selector.Time)
-                    .Select(selector =>
-                    {
-                        List<ResourceActivityTrackerModel> resourceActivityTrackers = selector.SelectedTargetResourceActivities
-                            .Select(activity =>
-                            {
-                                return new ResourceActivityTrackerModel
-                                {
-                                    Time = selector.Time,
-                                    ResourceId = selector.ResourceId,
-                                    ActivityId = activity.Id,
-                                    ActivityName = activity.Name,
-                                    PercentageWorked = activity.PercentageWorked,
-                                };
-                            }).ToList();
-
-                        return new ResourceTrackerModel
-                        {
-                            Time = selector.Time,
-                            ResourceId = selector.ResourceId,
-                            ActivityTrackers = resourceActivityTrackers,
-                        };
-                    }).ToList();
-            }
-        }
-
         public int ResourceId { get; }
 
         public int? LastTrackerIndex
@@ -221,14 +189,45 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+
+        public List<ResourceTrackerModel> CloneTrackers()
+        {
+            lock (m_Lock)
+            {
+                return [.. m_ResourceActivitySelectorLookup.Values
+                    .Where(selector => selector.SelectedResourceActivityIds.Count > 0)
+                    .OrderBy(selector => selector.Time)
+                    .Select(selector =>
+                    {
+                        List<ResourceActivityTrackerModel> resourceActivityTrackers = [.. selector.SelectedTargetResourceActivities
+                            .Select(activity =>
+                            {
+                                return new ResourceActivityTrackerModel
+                                {
+                                    Time = selector.Time,
+                                    ResourceId = selector.ResourceId,
+                                    ActivityId = activity.Id,
+                                    ActivityName = activity.Name,
+                                    PercentageWorked = activity.PercentageWorked,
+                                };
+                            })];
+
+                        return new ResourceTrackerModel
+                        {
+                            Time = selector.Time,
+                            ResourceId = selector.ResourceId,
+                            ActivityTrackers = resourceActivityTrackers,
+                        };
+                    })];
+            }
+        }
+
         public void RefreshIndex()
         {
             lock (m_Lock)
             {
                 // Clean up any selectors with zero selections.
-                List<KeyValuePair<int, IResourceActivitySelectorViewModel>> toRemove = m_ResourceActivitySelectorLookup
-                    .Where(kvp => kvp.Value.SelectedResourceActivityIds.Count == 0)
-                    .ToList();
+                List<KeyValuePair<int, IResourceActivitySelectorViewModel>> toRemove = [.. m_ResourceActivitySelectorLookup.Where(kvp => kvp.Value.SelectedResourceActivityIds.Count == 0)];
 
                 foreach (KeyValuePair<int, IResourceActivitySelectorViewModel> kvp in toRemove)
                 {

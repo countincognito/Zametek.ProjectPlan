@@ -1,4 +1,4 @@
-﻿using System.Windows.Input;
+using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
@@ -20,9 +20,9 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowToday { get; set; }
 
-        ICommand SaveResourceChartImageFileCommand { get; }
-
         ICommand ResetResourceChartCommand { get; }
+
+        ICommand SaveResourceChartImageFileCommand { get; }
 
         Task SaveResourceChartImageFileAsync(string? filename, int width, int height);
 

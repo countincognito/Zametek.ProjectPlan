@@ -1,9 +1,10 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -50,6 +51,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             SelectedWorkStreams = new ConcurrentDictionary<int, IManagedWorkStreamViewModel>();
+            m_HasSelectedWorkStream = false;
             m_HasSelectedWorkStreams = false;
             m_AreSettingsUpdated = false; ;
 
@@ -60,7 +62,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SetSelectedManagedWorkStreamsCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedWorkStreams);
             AddManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(AddManagedWorkStreamAsync);
             RemoveManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(RemoveManagedWorkStreamsAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
-            DuplicateManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(DuplicateManagedWorkStreamAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
+            DuplicateManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(DuplicateManagedWorkStreamAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStream));
             EditManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(EditManagedWorkStreamsAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
 
             // Create read-only view to the source list.
@@ -155,6 +157,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 HasSelectedWorkStreams = SelectedWorkStreams.Any();
+                HasSelectedWorkStream = HasSelectedWorkStreams && SelectedWorkStreams.Count == 1;
             }
         }
 
@@ -177,7 +180,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                     ColorFormat = ColorHelper.Random()
                                 }));
                     });
-                    
+
                     UpdateDisplayOrders();
                 }
                 UpdateWorkStreamSettingsToCore();
@@ -245,29 +248,20 @@ namespace Zametek.ViewModel.ProjectPlan
                     return;
                 }
 
-                var (isPhase, isIsPhaseEdited, colorFormat, isColorFormatActive) = editViewModel.BuildUpdateValues();
-
                 lock (m_Lock)
                 {
-                    ICollection<IManagedWorkStreamViewModel> selectedWorkStreams = SelectedWorkStreams.Values;
+                    ICollection<int> workStreamIds = SelectedWorkStreams.Keys;
 
-                    if (selectedWorkStreams.Count == 0)
+                    if (workStreamIds.Count == 0)
                     {
                         return;
                     }
 
-                    foreach (IManagedWorkStreamViewModel workStream in selectedWorkStreams)
-                    {
-                        if (isIsPhaseEdited)
-                        {
-                            workStream.IsPhase = isPhase;
-                        }
+                    UpdateWorkStreamModel updateModel = editViewModel.BuildUpdateModel();
 
-                        if (isColorFormatActive)
-                        {
-                            workStream.ColorFormat = colorFormat;
-                        }
-                    }
+                    IEnumerable<UpdateWorkStreamModel> updateModels = [.. workStreamIds.Select(x => updateModel with { Id = x })];
+
+                    UpdateManagedWorkStreams(updateModels);
                 }
 
                 UpdateWorkStreamSettingsToCore();
@@ -287,27 +281,28 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IManagedWorkStreamViewModel? source = SelectedWorkStreams.Values.FirstOrDefault();
+                    SelectedWorkStreams.TryGetValue(SelectedWorkStreams.Keys.FirstOrDefault(), out IManagedWorkStreamViewModel? selectedWorkStream);
 
-                    if (source is null)
+                    if (selectedWorkStream is null)
                     {
                         return;
                     }
 
+                    WorkStreamModel duplicateModel = selectedWorkStream.DeepCopy();
+
                     m_WorkStreams.Edit(workStreams =>
                     {
                         int id = GetNextId();
+                        duplicateModel = duplicateModel with
+                        {
+                            Id = id,
+                            DisplayOrder = -1,
+                        };
+
                         workStreams.Add(
                             new ManagedWorkStreamViewModel(
                                 this,
-                                new WorkStreamModel
-                                {
-                                    Id = id,
-                                    Name = source.Name,
-                                    IsPhase = source.IsPhase,
-                                    DisplayOrder = -1,
-                                    ColorFormat = ColorHelper.Random()
-                                }));
+                                duplicateModel));
                     });
 
                     UpdateDisplayOrders();
@@ -362,6 +357,38 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_CoreViewModel.UpdateManagedWorkStreamIds(mappedIds);
             }
             m_CoreViewModel.RunAutoCompile();
+        }
+
+        private void UpdateManagedWorkStreams(IEnumerable<UpdateWorkStreamModel> updateModels)
+        {
+            lock (m_Lock)
+            {
+                Dictionary<int, IManagedWorkStreamViewModel> workStreamLookup = RawWorkStreams.ToDictionary(x => x.Id);
+
+                foreach (UpdateWorkStreamModel updateModel in updateModels)
+                {
+                    if (workStreamLookup.TryGetValue(updateModel.Id, out IManagedWorkStreamViewModel? workStream))
+                    {
+                        if (workStream is IEditableObject editable)
+                        {
+                            workStream.IsEditMuted = true;
+                            editable.BeginEdit();
+
+                            if (updateModel.IsIsPhaseEdited)
+                            {
+                                workStream.IsPhase = updateModel.IsPhase;
+                            }
+                            if (updateModel.IsColorFormatActive)
+                            {
+                                workStream.ColorFormat = updateModel.ColorFormat;
+                            }
+
+                            editable.EndEdit();
+                            workStream.IsEditMuted = false;
+                        }
+                    }
+                }
+            }
         }
 
         private void UpdateWorkStreamSettingsToCore()
@@ -460,6 +487,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
+
+        private bool m_HasSelectedWorkStream;
+        public bool HasSelectedWorkStream
+        {
+            get => m_HasSelectedWorkStream;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_HasSelectedWorkStream = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
 
         private bool m_HasSelectedWorkStreams;
         public bool HasSelectedWorkStreams

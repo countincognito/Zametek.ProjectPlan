@@ -1,10 +1,11 @@
 using ReactiveUI;
 using Zametek.Common.ProjectPlan;
+using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class WorkStreamEditViewModel
-        : ViewModelBase
+        : ViewModelBase, IWorkStreamEditViewModel
     {
         #region Ctors
 
@@ -15,7 +16,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region Public Members
+        #region IWorkStreamEditViewModel Members
 
         private bool m_IsPhase;
         public bool IsPhase
@@ -61,9 +62,50 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public (bool IsPhase, bool IsIsPhaseEdited, ColorFormatModel ColorFormat, bool IsColorFormatActive) BuildUpdateValues()
+        public UpdateWorkStreamModel BuildUpdateModel()
         {
-            return (IsPhase, IsIsPhaseActive, ColorFormat, IsColorFormatActive);
+            var updateModel = new UpdateWorkStreamModel
+            {
+                IsPhase = IsPhase,
+                IsIsPhaseEdited = IsIsPhaseActive,
+
+                ColorFormat = ColorFormat,
+                IsColorFormatActive = IsColorFormatActive,
+            };
+            return updateModel;
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        private bool m_Disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (m_Disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                // Dispose managed state (managed objects).
+                //m_IsBusy?.Dispose();
+            }
+
+            // Free unmanaged resources (unmanaged objects) and override a finalizer below.
+            // Set large fields to null.
+
+            m_Disposed = true;
+        }
+
+        public void Dispose()
+        {
+            // Dispose of unmanaged resources.
+            Dispose(true);
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
         }
 
         #endregion

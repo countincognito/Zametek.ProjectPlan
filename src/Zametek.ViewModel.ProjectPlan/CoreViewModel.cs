@@ -1,4 +1,4 @@
-﻿using DynamicData;
+using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.ObjectModel;
@@ -849,6 +849,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public int GetNextActivityId()
+        {
+            lock (m_Lock)
+            {
+                return m_VertexGraphCompiler.GetNextActivityId();
+            }
+        }
+
         public ProjectScenarioModel CreateEmptyProjectScenario()
         {
             try
@@ -1260,7 +1268,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     IsBusy = true;
-                    var activityId = m_VertexGraphCompiler.GetNextActivityId();
+                    var activityId = GetNextActivityId();
                     var set = new HashSet<DependentActivityModel>
                     {
                         new()

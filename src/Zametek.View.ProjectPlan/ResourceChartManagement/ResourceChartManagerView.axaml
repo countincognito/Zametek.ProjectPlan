@@ -2,12 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
-			 xmlns:local="using:Zametek.View.ProjectPlan"
-			 xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
-			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
-			 xmlns:common="using:Zametek.Common.ProjectPlan"
-			 x:DataType="vm:ResourceChartManagerViewModel"
+			       xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			       xmlns:local="using:Zametek.View.ProjectPlan"
+			       xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
+			       xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			       xmlns:common="using:Zametek.Common.ProjectPlan"
+			       x:DataType="vm:ResourceChartManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ResourceChartManagerView">
 	<UserControl.Resources>
@@ -162,10 +162,10 @@
 				<ContentControl.ContextMenu>
 					<ContextMenu>
 						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-								  Command="{Binding Path=SaveResourceChartImageFileCommand, Mode=OneWay}" />
+                      Command="{Binding Path=SaveResourceChartImageFileCommand, Mode=OneWay}" />
 
 						<MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
-								  Command="{Binding Path=ResetResourceChartCommand, Mode=OneWay}" />
+								      Command="{Binding Path=ResetResourceChartCommand, Mode=OneWay}" />
 					</ContextMenu>
 				</ContentControl.ContextMenu>
 			</ContentControl>

@@ -21,51 +21,11 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=AddManagedHolidayCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_AddManagedHoliday}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=RemoveManagedHolidaysCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DeleteManagedHolidays}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=DuplicateManagedHolidayCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DuplicateManagedHoliday}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,11"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=EditManagedHolidayCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_EditManagedHoliday}"/>
-
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
-
+    
+    <!-- Set Background to Transparent to ensure the context menu works even when the datagrid is empty -->
+    <!-- https://github.com/AvaloniaUI/Avalonia/discussions/15118 -->
 		<DataGrid Name="HolidaysGrid"
+				  Background="Transparent"
 				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
@@ -101,28 +61,6 @@
 					<Setter Property="Background" Value="Green"/>
 				</Style>-->
 
-				<Style>
-					<Setter Property="ContextMenu">
-						<ContextMenu>
-							<MenuItem Header="{x:Static resources:Labels.Label_AddManagedHoliday}"
-									  Command="{Binding Path=$parent[DataGrid].DataContext.AddManagedHolidayCommand, Mode=OneWay}" />
-
-							<Separator />
-
-							<MenuItem Header="{x:Static resources:Labels.Label_DuplicateManagedHoliday}"
-									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedHolidayCommand, Mode=OneWay}" />
-
-							<MenuItem Header="{x:Static resources:Labels.Label_EditManagedHoliday}"
-									  Command="{Binding Path=$parent[DataGrid].DataContext.EditManagedHolidayCommand, Mode=OneWay}" />
-
-							<Separator />
-
-							<MenuItem Header="{x:Static resources:Labels.Label_DeleteManagedHolidays}"
-									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedHolidaysCommand, Mode=OneWay}" />
-						</ContextMenu>
-					</Setter>
-				</Style>
-
 				<Style Selector="TextBox.displayOnly">
 					<Setter Property="IsHitTestVisible" Value="False"/>
 					<Setter Property="IsReadOnly" Value="False"/>
@@ -140,7 +78,29 @@
 						</BehaviorCollectionTemplate>
 					</Setter>
 				</Style>
-			</DataGrid.Styles>
+
+        <Style>
+          <Setter Property="ContextMenu">
+            <ContextMenu>
+              <MenuItem Header="{x:Static resources:Labels.Label_AddManagedHoliday}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.AddManagedHolidayCommand, Mode=OneWay}" />
+
+              <Separator />
+
+              <MenuItem Header="{x:Static resources:Labels.Label_DuplicateManagedHoliday}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedHolidayCommand, Mode=OneWay}" />
+
+              <MenuItem Header="{x:Static resources:Labels.Label_EditManagedHoliday}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.EditManagedHolidayCommand, Mode=OneWay}" />
+
+              <Separator />
+
+              <MenuItem Header="{x:Static resources:Labels.Label_DeleteManagedHolidays}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedHolidaysCommand, Mode=OneWay}" />
+            </ContextMenu>
+          </Setter>
+        </Style>
+      </DataGrid.Styles>
 
 			<Interaction.Behaviors>
 				<EventTriggerBehavior EventName="SelectionChanged"

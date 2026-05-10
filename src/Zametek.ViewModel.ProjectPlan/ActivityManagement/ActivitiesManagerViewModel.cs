@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -33,14 +33,15 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CoreViewModel = coreViewModel;
             m_DialogService = dialogService;
             SelectedActivities = new ConcurrentDictionary<int, IManagedActivityViewModel>();
-            m_HasActivities = false;
+            m_HasSelectedActivity = false;
+            m_HasSelectedActivities = false;
 
             SetSelectedManagedActivitiesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedActivities);
             AddManagedActivityCommand = ReactiveCommand.CreateFromTask(AddManagedActivityAsync);
-            InsertManagedActivityCommand = ReactiveCommand.CreateFromTask(InsertManagedActivityAsync, this.WhenAnyValue(am => am.HasActivities));
-            RemoveManagedActivitiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitiesAsync, this.WhenAnyValue(am => am.HasActivities));
-            EditManagedActivitiesCommand = ReactiveCommand.CreateFromTask(EditManagedActivitiesAsync, this.WhenAnyValue(am => am.HasActivities));
-            DuplicateManagedActivityCommand = ReactiveCommand.CreateFromTask(DuplicateManagedActivityAsync, this.WhenAnyValue(am => am.HasActivities));
+            InsertManagedActivityCommand = ReactiveCommand.CreateFromTask(InsertManagedActivityAsync, this.WhenAnyValue(am => am.HasSelectedActivity));
+            RemoveManagedActivitiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitiesAsync, this.WhenAnyValue(am => am.HasSelectedActivities));
+            EditManagedActivitiesCommand = ReactiveCommand.CreateFromTask(EditManagedActivitiesAsync, this.WhenAnyValue(am => am.HasSelectedActivities));
+            DuplicateManagedActivityCommand = ReactiveCommand.CreateFromTask(DuplicateManagedActivityAsync, this.WhenAnyValue(am => am.HasSelectedActivity));
 
             m_IsBusy = this
                 .WhenAnyValue(am => am.m_CoreViewModel.IsBusy)
@@ -72,7 +73,7 @@ namespace Zametek.ViewModel.ProjectPlan
             AddMilestoneCommand = ReactiveCommand.CreateFromTask(
                 AddMilestoneAsync,
                 this.WhenAnyValue(
-                    am => am.HasActivities,
+                    am => am.HasSelectedActivities,
                     am => am.HasCompilationErrors,
                     (hasActivities, hasCompilationErrors) => hasActivities && !hasCompilationErrors),
                 RxApp.MainThreadScheduler);
@@ -110,7 +111,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
-                HasActivities = SelectedActivities.Any();
+                HasSelectedActivities = SelectedActivities.Any();
+                HasSelectedActivity = HasSelectedActivities && SelectedActivities.Count == 1;
             }
         }
 
@@ -167,21 +169,18 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                ICollection<int> activityIds = SelectedActivities.Keys;
+                SelectedActivities.TryGetValue(SelectedActivities.Keys.FirstOrDefault(), out IManagedActivityViewModel? selectedActivity);
 
-                if (activityIds.Count == 0)
+                if (selectedActivity is null)
                 {
                     return;
                 }
 
-                int lowestId = activityIds.Min();
-                int newDisplayOrder = SelectedActivities
-                    .Values
-                    .DefaultIfEmpty()
-                    .Min(x => x?.DisplayOrder ?? 0) - 1;
+                int selectedId = selectedActivity.Id;
+                int newDisplayOrder = selectedActivity.DisplayOrder - 1;
                 int newId = m_CoreViewModel.AddManagedActivity(newDisplayOrder);
 
-                m_CoreViewModel.UpdateManagedActivityIds([(newId, lowestId)]);
+                m_CoreViewModel.UpdateManagedActivityIds([(newId, selectedId)]);
                 m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
             }
             m_CoreViewModel.RunAutoCompile();
@@ -208,15 +207,31 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             lock (m_Lock)
             {
-                if (SelectedActivities.Count == 0)
+                SelectedActivities.TryGetValue(SelectedActivities.Keys.FirstOrDefault(), out IManagedActivityViewModel? selectedActivity);
+
+                if (selectedActivity is null)
                 {
                     return;
                 }
 
-                int maxDisplayOrder = SelectedActivities.Values.DefaultIfEmpty().Max(x => x?.DisplayOrder ?? 0);
-                int newDisplayOrder = maxDisplayOrder + 1;
+                int newId = m_CoreViewModel.GetNextActivityId();
 
-                m_CoreViewModel.AddManagedActivity(newDisplayOrder);
+                DependentActivityModel duplicateModel = selectedActivity.DeepCopy();
+
+                // Clear the trackers because otherwise we would need to alter
+                // all the IDs to correspond with the new ID.
+                var activityModel = duplicateModel.Activity with
+                {
+                    Id = newId,
+                    Trackers = [],
+                };
+
+                duplicateModel = duplicateModel with
+                {
+                    Activity = activityModel,
+                };
+
+                m_CoreViewModel.AddManagedActivities([duplicateModel]);
                 m_CoreViewModel.IsReadyToReviseTrackers = ReadyToRevise.Yes;
             }
 
@@ -408,15 +423,29 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HideBilling;
         public bool HideBilling => m_HideBilling.Value;
 
-        private bool m_HasActivities;
-        public bool HasActivities
+        private bool m_HasSelectedActivity;
+        public bool HasSelectedActivity
         {
-            get => m_HasActivities;
+            get => m_HasSelectedActivity;
             set
             {
                 lock (m_Lock)
                 {
-                    m_HasActivities = value;
+                    m_HasSelectedActivity = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        private bool m_HasSelectedActivities;
+        public bool HasSelectedActivities
+        {
+            get => m_HasSelectedActivities;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_HasSelectedActivities = value;
                     this.RaisePropertyChanged();
                 }
             }

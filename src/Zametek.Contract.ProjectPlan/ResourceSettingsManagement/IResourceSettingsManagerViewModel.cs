@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace Zametek.Contract.ProjectPlan
@@ -14,6 +14,8 @@ namespace Zametek.Contract.ProjectPlan
         bool HideCost { get; }
 
         bool HideBilling { get; }
+
+        bool HasSelectedResource { get; }
 
         bool HasSelectedResources { get; }
 
