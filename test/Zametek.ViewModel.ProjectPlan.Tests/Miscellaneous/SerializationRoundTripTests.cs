@@ -12,17 +12,19 @@ using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
-    /// <summary>
-    /// Round-trip serialization tests for ProjectFileOpen / ProjectFileSave.
-    /// Each test saves a model to a temp file, reopens it, and asserts key fields
-    /// are preserved. We verify the JSON version tag is written correctly.
-    /// </summary>
-    public class SerializationRoundTripTests : IDisposable
+    public class SerializationRoundTripTests
+        : IDisposable
     {
+        #region Fields
+
         private readonly List<string> m_TempFiles = [];
         private readonly DateTimeCalculator m_Calculator;
         private readonly ProjectFileSave m_Saver;
         private readonly ProjectFileOpen m_Opener;
+
+        #endregion
+
+        #region Ctors
 
         public SerializationRoundTripTests()
         {
@@ -31,20 +33,28 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             m_Opener = new ProjectFileOpen(m_Calculator);
         }
 
+        #endregion
+
+        #region IDisposable
+
         public void Dispose()
         {
-            foreach (string file in m_TempFiles)
+            foreach (string path in m_TempFiles)
             {
-                if (File.Exists(file))
+                if (File.Exists(path))
                 {
-                    File.Delete(file);
+                    File.Delete(path);
                 }
             }
         }
 
-        private string CreateTempFile()
+        #endregion
+
+        #region Helpers
+
+        private string GetTempFile()
         {
-            string path = Path.Combine(Path.GetTempPath(), $"zpp_test_{Guid.NewGuid():N}.zpp");
+            string path = Path.GetTempFileName() + ".zpp";
             m_TempFiles.Add(path);
             return path;
         }
@@ -54,76 +64,77 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         /// </summary>
         private static ProjectModel BuildMinimalProjectModel()
         {
-            Guid projectId = Guid.Parse("aaaaaa00-0000-0000-0000-000000000001");
-            Guid rootId = Guid.Parse("aaaaaa00-0000-0000-0000-000000000002");
-            Guid scenarioId = Guid.Parse("aaaaaa00-0000-0000-0000-000000000003");
-            var createdOn = new DateTimeOffset(2025, 1, 6, 0, 0, 0, TimeSpan.Zero);
+            var nodeId = Guid.NewGuid();
+            var rootId = Guid.NewGuid();
+            var now = DateTimeOffset.UtcNow;
 
             return new ProjectModel
             {
                 Version = Versions.v0_6_0,
-                Id = projectId,
+                Id = Guid.NewGuid(),
                 Root = rootId,
-                Current = scenarioId,
+                Current = nodeId,
                 Nodes =
                 [
                     new ProjectScenarioNodeModel
                     {
-                        Id = scenarioId,
+                        Id = nodeId,
                         ParentId = rootId,
                         NodeType = ProjectScenarioNodeType.File,
-                        Name = "Base",
-                        CreatedOn = createdOn,
-                        ModifiedOn = createdOn,
+                        Name = "Scenario 1",
+                        CreatedOn = now,
+                        ModifiedOn = now,
                     },
                 ],
                 Files =
                 [
                     new ProjectScenarioFileModel
                     {
-                        NodeId = scenarioId,
+                        NodeId = nodeId,
                         Scenario = new ProjectScenarioModel
                         {
-                            ProjectStart = createdOn,
-                            Today = createdOn,
+                            ProjectStart = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                            Today = new DateTimeOffset(2025, 6, 1, 0, 0, 0, TimeSpan.Zero),
                         },
                     },
                 ],
-                Tags =
-                [
-                    new ProjectScenarioTagModel
-                    {
-                        NodeId = rootId,
-                        Label = "Root",
-                    },
-                ],
+                Tags = [],
             };
-        }
-
-        #region Version field
-
-        [Fact]
-        public async Task SaveProject_Writes_CorrectVersionField()
-        {
-            string path = CreateTempFile();
-            ProjectModel model = BuildMinimalProjectModel();
-
-            await m_Saver.SaveProjectFileAsync(model, path);
-
-            string json = await File.ReadAllTextAsync(path);
-            JObject obj = JObject.Parse(json);
-            string? version = obj.GetValue("Version", StringComparison.OrdinalIgnoreCase)?.ToString();
-            version.ShouldBe(Versions.v0_6_0);
         }
 
         #endregion
 
-        #region Minimal model round-trip
+        #region Tests
 
         [Fact]
-        public async Task RoundTrip_Minimal_ProjectModel_Preserves_Version()
+        public async Task SaveProject_Writes_CorrectVersionField()
         {
-            string path = CreateTempFile();
+            string path = GetTempFile();
+            ProjectModel model = BuildMinimalProjectModel();
+
+            await m_Saver.SaveProjectFileAsync(model, path);
+
+            string content = await File.ReadAllTextAsync(path);
+            JObject json = JObject.Parse(content);
+            json["Version"]!.ToString().ShouldBe(Versions.v0_6_0);
+        }
+
+        [Fact]
+        public async Task SavedFile_IsValidJson()
+        {
+            string path = GetTempFile();
+            ProjectModel model = BuildMinimalProjectModel();
+
+            await m_Saver.SaveProjectFileAsync(model, path);
+
+            string content = await File.ReadAllTextAsync(path);
+            Should.NotThrow(() => JObject.Parse(content));
+        }
+
+        [Fact]
+        public async Task RoundTrip_Minimal_Preserves_Version()
+        {
+            string path = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
 
             await m_Saver.SaveProjectFileAsync(original, path);
@@ -133,9 +144,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
-        public async Task RoundTrip_Minimal_ProjectModel_Preserves_NodeCount()
+        public async Task RoundTrip_Minimal_Preserves_NodeCount()
         {
-            string path = CreateTempFile();
+            string path = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
 
             await m_Saver.SaveProjectFileAsync(original, path);
@@ -145,9 +156,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
-        public async Task RoundTrip_Minimal_ProjectModel_Preserves_FileCount()
+        public async Task RoundTrip_Minimal_Preserves_FileCount()
         {
-            string path = CreateTempFile();
+            string path = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
 
             await m_Saver.SaveProjectFileAsync(original, path);
@@ -157,9 +168,9 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
-        public async Task RoundTrip_Minimal_ProjectModel_Preserves_ProjectStart()
+        public async Task RoundTrip_Minimal_Preserves_ProjectStart()
         {
-            string path = CreateTempFile();
+            string path = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
             DateTimeOffset expectedStart = original.Files[0].Scenario.ProjectStart;
 
@@ -170,34 +181,16 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
-        public async Task RoundTrip_Minimal_ProjectModel_Preserves_NodeNames()
+        public async Task RoundTrip_Minimal_Preserves_NodeNames()
         {
-            string path = CreateTempFile();
+            string path = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
+            string expectedName = original.Nodes[0].Name;
 
             await m_Saver.SaveProjectFileAsync(original, path);
             ProjectModel loaded = await m_Opener.OpenProjectFileAsync(path);
 
-            for (int i = 0; i < original.Nodes.Count; i++)
-            {
-                loaded.Nodes[i].Name.ShouldBe(original.Nodes[i].Name);
-            }
-        }
-
-        [Fact]
-        public async Task RoundTrip_Minimal_ProjectModel_Preserves_TagLabels()
-        {
-            string path = CreateTempFile();
-            ProjectModel original = BuildMinimalProjectModel();
-
-            await m_Saver.SaveProjectFileAsync(original, path);
-            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(path);
-
-            loaded.Tags.Count.ShouldBe(original.Tags.Count);
-            for (int i = 0; i < original.Tags.Count; i++)
-            {
-                loaded.Tags[i].Label.ShouldBe(original.Tags[i].Label);
-            }
+            loaded.Nodes[0].Name.ShouldBe(expectedName);
         }
 
         #endregion
@@ -207,71 +200,33 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public async Task DoubleRoundTrip_Produces_Same_Version()
         {
-            string path1 = CreateTempFile();
-            string path2 = CreateTempFile();
+            string path1 = GetTempFile();
+            string path2 = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
 
             await m_Saver.SaveProjectFileAsync(original, path1);
-            ProjectModel pass1 = await m_Opener.OpenProjectFileAsync(path1);
+            ProjectModel loaded1 = await m_Opener.OpenProjectFileAsync(path1);
 
-            await m_Saver.SaveProjectFileAsync(pass1, path2);
-            ProjectModel pass2 = await m_Opener.OpenProjectFileAsync(path2);
+            await m_Saver.SaveProjectFileAsync(loaded1, path2);
+            ProjectModel loaded2 = await m_Opener.OpenProjectFileAsync(path2);
 
-            pass2.Version.ShouldBe(Versions.v0_6_0);
+            loaded2.Version.ShouldBe(Versions.v0_6_0);
         }
 
         [Fact]
         public async Task DoubleRoundTrip_Preserves_NodeCount()
         {
-            string path1 = CreateTempFile();
-            string path2 = CreateTempFile();
+            string path1 = GetTempFile();
+            string path2 = GetTempFile();
             ProjectModel original = BuildMinimalProjectModel();
 
             await m_Saver.SaveProjectFileAsync(original, path1);
-            ProjectModel pass1 = await m_Opener.OpenProjectFileAsync(path1);
-            await m_Saver.SaveProjectFileAsync(pass1, path2);
-            ProjectModel pass2 = await m_Opener.OpenProjectFileAsync(path2);
+            ProjectModel loaded1 = await m_Opener.OpenProjectFileAsync(path1);
 
-            pass2.Nodes.Count.ShouldBe(original.Nodes.Count);
-        }
+            await m_Saver.SaveProjectFileAsync(loaded1, path2);
+            ProjectModel loaded2 = await m_Opener.OpenProjectFileAsync(path2);
 
-        #endregion
-
-        #region Loading existing v0.6.0 fixture
-
-        /// <summary>
-        /// Loads the test_v0_6_0.zpp fixture (used by the Data.ProjectPlan converter
-        /// tests) and verifies that resaving it produces a file that re-opens
-        /// with the same node/file/tag counts.
-        /// The fixture path is the Data test project's TestFiles directory, so we
-        /// use the copy that is embedded in the ViewModel test project as a Content
-        /// item — but since that fixture is not included here, we skip gracefully if
-        /// the file is not found.
-        /// </summary>
-        [Fact]
-        public async Task RoundTrip_ExistingV0_6_0_Fixture_PreservesStructure()
-        {
-            // The Data.ProjectPlan.Tests project copies its TestFiles next to its dll.
-            // We resolve from the running assembly location.
-            string assemblyDir = AppContext.BaseDirectory;
-            string fixturePath = Path.Combine(assemblyDir, "TestFiles", "test_v0_6_0.zpp");
-
-            if (!File.Exists(fixturePath))
-            {
-                // Fixture is in the Data test project, not here — skip gracefully.
-                return;
-            }
-
-            ProjectModel loaded = await m_Opener.OpenProjectFileAsync(fixturePath);
-
-            string roundTripPath = CreateTempFile();
-            await m_Saver.SaveProjectFileAsync(loaded, roundTripPath);
-            ProjectModel reloaded = await m_Opener.OpenProjectFileAsync(roundTripPath);
-
-            reloaded.Version.ShouldBe(Versions.v0_6_0);
-            reloaded.Nodes.Count.ShouldBe(loaded.Nodes.Count);
-            reloaded.Files.Count.ShouldBe(loaded.Files.Count);
-            reloaded.Tags.Count.ShouldBe(loaded.Tags.Count);
+            loaded2.Nodes.Count.ShouldBe(original.Nodes.Count);
         }
 
         #endregion

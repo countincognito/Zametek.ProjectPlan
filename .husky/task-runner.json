@@ -4,64 +4,22 @@
     {
       "name": "dotnet-format-style",
       "command": "dotnet",
-      "args": [
-        "format",
-        "style",
-        "--verify-no-changes",
-        "--verbosity",
-        "quiet"
-      ],
-      "include": [
-        "**/*.cs",
-        "**/*.axaml"
-      ]
+      "args": ["format", "Zametek.ProjectPlan.slnf", "style", "--verify-no-changes", "--verbosity", "quiet"]
     },
     {
       "name": "dotnet-format-analyzers",
       "command": "dotnet",
-      "args": [
-        "format",
-        "analyzers",
-        "--verify-no-changes",
-        "--verbosity",
-        "quiet"
-      ],
-      "include": [
-        "**/*.cs"
-      ]
+      "args": ["format", "Zametek.ProjectPlan.slnf", "analyzers", "--verify-no-changes", "--verbosity", "quiet"]
     },
     {
       "name": "dotnet-build",
       "command": "dotnet",
-      "args": [
-        "build",
-        "src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj",
-        "--no-restore",
-        "--configuration",
-        "Debug",
-        "--verbosity",
-        "quiet"
-      ],
-      "include": [
-        "**/*.cs",
-        "**/*.csproj",
-        "**/*.props"
-      ]
+      "args": ["build", "Zametek.ProjectPlan.slnf", "--no-restore", "--configuration", "Debug", "--verbosity", "quiet"]
     },
     {
       "name": "dotnet-test",
       "command": "dotnet",
-      "args": [
-        "test",
-        "--no-build",
-        "--configuration",
-        "Debug",
-        "--verbosity",
-        "quiet"
-      ],
-      "include": [
-        "**/*.cs"
-      ]
+      "args": ["test", "Zametek.ProjectPlan.slnf", "--no-build", "--configuration", "Debug", "--verbosity", "quiet"]
     }
   ]
 }

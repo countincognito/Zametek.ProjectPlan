@@ -1,0 +1,18 @@
+<Project>
+  <!--
+    Automatically install Husky.Net pre-commit hooks after dotnet restore.
+    This ensures new contributors get the hooks without a manual step.
+    Set HUSKY=0 in CI environments to skip installation.
+    ContinueOnError prevents a missing tool from blocking the build.
+  -->
+  <Target Name="HuskyInstall" BeforeTargets="Restore" Condition="'$(HUSKY)' != '0'">
+    <Exec Command="dotnet tool restore"
+          StandardOutputImportance="Low"
+          StandardErrorImportance="Low"
+          ContinueOnError="true" />
+    <Exec Command="dotnet husky install"
+          StandardOutputImportance="Low"
+          StandardErrorImportance="Low"
+          ContinueOnError="true" />
+  </Target>
+</Project>
