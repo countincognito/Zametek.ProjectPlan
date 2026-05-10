@@ -1,4 +1,4 @@
-﻿using Avalonia.Data;
+using Avalonia.Data;
 using ReactiveUI;
 using System.ComponentModel;
 using System.Reactive.Linq;
@@ -282,9 +282,26 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public bool IsEditing => m_isDirty;
 
-        public object CloneObject()
+        public ResourceModel DeepCopy()
         {
-            return new Resource<int, int>(Id, Name, IsExplicitTarget, IsInactive, InterActivityAllocationType, UnitCost, UnitBilling, AllocationOrder, InterActivityPhases);
+            return new()
+            {
+                Id = Id,
+                DisplayOrder = DisplayOrder,
+                Name = Name,
+                Notes = Notes,
+                IsExplicitTarget = IsExplicitTarget,
+                IsInactive = IsInactive,
+                InterActivityAllocationType = InterActivityAllocationType,
+                InterActivityPhases = [.. InterActivityPhases],
+                UnitCost = UnitCost,
+                UnitBilling = UnitBilling,
+                FixedCost = FixedCost,
+                FixedBilling = FixedBilling,
+                AllocationOrder = AllocationOrder,
+                ColorFormat = ColorFormat,
+                Trackers = TrackerSet.CloneTrackers(),
+            };
         }
 
         #endregion

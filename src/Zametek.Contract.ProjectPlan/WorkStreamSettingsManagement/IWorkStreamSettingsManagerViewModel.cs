@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace Zametek.Contract.ProjectPlan
@@ -11,6 +11,8 @@ namespace Zametek.Contract.ProjectPlan
         bool HasStaleOutputs { get; }
 
         bool HasCompilationErrors { get; }
+
+        bool HasSelectedWorkStream { get; }
 
         bool HasSelectedWorkStreams { get; }
 
@@ -27,6 +29,10 @@ namespace Zametek.Contract.ProjectPlan
         ICommand AddManagedWorkStreamCommand { get; }
 
         ICommand RemoveManagedWorkStreamsCommand { get; }
+
+        ICommand DuplicateManagedWorkStreamCommand { get; }
+
+        ICommand EditManagedWorkStreamsCommand { get; }
 
         ICommand RenumberWorkStreamsCommand { get; }
     }

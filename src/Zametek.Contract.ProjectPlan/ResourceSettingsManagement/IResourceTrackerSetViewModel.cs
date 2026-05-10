@@ -1,4 +1,4 @@
-﻿using System.Windows.Input;
+using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
@@ -6,8 +6,6 @@ namespace Zametek.Contract.ProjectPlan
     public interface IResourceTrackerSetViewModel
         : IDisposable
     {
-        List<ResourceTrackerModel> Trackers { get; }
-
         int ResourceId { get; }
 
         int? LastTrackerIndex { get; }
@@ -17,6 +15,8 @@ namespace Zametek.Contract.ProjectPlan
         string SearchSymbol { get; }
 
         void RefreshIndex();
+
+        List<ResourceTrackerModel> CloneTrackers();
 
         IResourceActivitySelectorViewModel Day00 { get; }
         IResourceActivitySelectorViewModel Day01 { get; }

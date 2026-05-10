@@ -1,10 +1,10 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
     public interface IManagedActivitySeverityViewModel
-        : IDisposable, INotifyPropertyChanged
+        : IDisposable, INotifyPropertyChanged, IMuteEdits
     {
         Guid Id { get; }
 
@@ -15,5 +15,7 @@ namespace Zametek.Contract.ProjectPlan
         double FibonacciWeight { get; set; }
 
         ColorFormatModel ColorFormat { get; set; }
+
+        ActivitySeverityModel DeepCopy();
     }
 }

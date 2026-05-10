@@ -33,27 +33,4 @@
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Update="HolidaySettingsManagement\HolidaySettingsManagerView.axaml.cs">
-      <DependentUpon>HolidaySettingsManagerView.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="HolidaySettingsManagement\HolidayEditView.axaml.cs">
-      <DependentUpon>HolidayEditView.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="ProjectScenarioManagement\NodeNameView.axaml.cs">
-      <DependentUpon>NodeNameView.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="ProjectScenarioManagement\AddNodeTagView.axaml.cs">
-      <DependentUpon>AddNodeTagView.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="ProjectScenarioManagement\ProjectScenarioManagerView.axaml.cs">
-      <DependentUpon>ProjectScenarioManagerView.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="ProjectScenarioManagement\RemoveNodeTagView.axaml.cs">
-      <DependentUpon>RemoveNodeTagView.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="ScenarioChartManagement\ScenarioChartManagerView.axaml.cs">
-      <DependentUpon>ScenarioChartManagerView.axaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
 </Project>

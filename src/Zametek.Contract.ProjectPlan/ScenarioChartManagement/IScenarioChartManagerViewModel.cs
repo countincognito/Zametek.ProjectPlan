@@ -24,6 +24,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand SaveScenarioChartImageFileCommand { get; }
 
+        ICommand ResetScenarioChartCommand { get; }
+
         Task SaveScenarioChartImageFileAsync(string? filename, int width, int height);
 
         void BuildScenarioChartPlotModel();

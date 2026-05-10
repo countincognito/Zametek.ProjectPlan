@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace Zametek.Contract.ProjectPlan
@@ -12,7 +12,9 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
-        bool HasActivitySeverities { get; }
+        bool HasSelectedActivitySeverity { get; }
+
+        bool HasSelectedActivitySeverities { get; }
 
         bool AreSettingsUpdated { get; set; }
 
@@ -25,5 +27,7 @@ namespace Zametek.Contract.ProjectPlan
         ICommand AddManagedActivitySeverityCommand { get; }
 
         ICommand RemoveManagedActivitySeveritiesCommand { get; }
+
+        ICommand DuplicateManagedActivitySeverityCommand { get; }
     }
 }

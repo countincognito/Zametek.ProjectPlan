@@ -91,6 +91,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadyToRevise IsReadyToReviseTrackers { get; set; }
 
+        int GetNextActivityId();
+
         ProjectScenarioModel CreateEmptyProjectScenario();
 
         void ClearSettings();

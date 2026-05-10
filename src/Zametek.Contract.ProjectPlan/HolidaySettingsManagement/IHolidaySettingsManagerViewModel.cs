@@ -27,6 +27,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand RemoveManagedHolidaysCommand { get; }
 
+        ICommand DuplicateManagedHolidayCommand { get; }
+
         ICommand EditManagedHolidayCommand { get; }
     }
 }

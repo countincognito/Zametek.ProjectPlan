@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -44,5 +45,7 @@ namespace Zametek.Contract.ProjectPlan
         IWorkStreamSelectorViewModel WorkStreamSelector { get; }
 
         IActivityTrackerSetViewModel TrackerSet { get; }
+
+        DependentActivityModel DeepCopy();
     }
 }

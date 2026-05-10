@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
@@ -42,5 +42,7 @@ namespace Zametek.Contract.ProjectPlan
         IResourceTrackerSetViewModel TrackerSet { get; }
 
         bool IsEditing { get; }
+
+        ResourceModel DeepCopy();
     }
 }
