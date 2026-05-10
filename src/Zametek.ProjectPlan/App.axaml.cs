@@ -30,8 +30,8 @@ namespace Zametek.ProjectPlan
 
         private static Serilog.ILogger ConfigureSerilog()
         {
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string logDir = Path.Combine(appDataPath, "Zametek.ProjectPlan", "logs");
+            string productSettingsPath = SettingFileHelper.ProductSettingsFolderLocation();
+            string logDir = Path.Combine(productSettingsPath, "logs");
             Directory.CreateDirectory(logDir);
             string logPath = Path.Combine(logDir, "app-.log");
             return new LoggerConfiguration()
