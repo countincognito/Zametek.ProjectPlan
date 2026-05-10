@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -212,6 +212,16 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(LastTrackerIndex));
             this.RaisePropertyChanged(nameof(LastTrackerValue));
             this.RaisePropertyChanged(nameof(SearchSymbol));
+        }
+
+        public List<ActivityTrackerModel> CloneTrackers()
+        {
+            lock (m_Lock)
+            {
+                return [.. m_ActivityTrackerLookup.Values
+                    .OrderBy(x => x.Time)
+                    .Select(selector => selector with { })];
+            }
         }
 
         public int? Day00

@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
@@ -111,6 +111,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_ResourceChartPlotModel = new AvaPlot();
+
+            ResetResourceChartCommand = ReactiveCommand.Create(ResetResourceChart);
 
             {
                 ReactiveCommand<Unit, Unit> saveResourceChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveResourceChartImageFileAsync);
@@ -522,6 +524,11 @@ namespace Zametek.ViewModel.ProjectPlan
             return yAxis;
         }
 
+        private void ResetResourceChart()
+        {
+            ResourceChartPlotModel.Plot.Axes.AutoScale();
+        }
+
         private async Task SaveResourceChartImageFileAsync()
         {
             try
@@ -612,6 +619,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.ResourceChartShowMilestones = value;
             }
         }
+
+        public ICommand ResetResourceChartCommand { get; }
 
         public ICommand SaveResourceChartImageFileCommand { get; }
 

@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
@@ -90,6 +90,8 @@ namespace Zametek.Contract.ProjectPlan
         int TrackerIndex { get; set; }
 
         ReadyToRevise IsReadyToReviseTrackers { get; set; }
+
+        int GetNextActivityId();
 
         ProjectScenarioModel CreateEmptyProjectScenario();
 

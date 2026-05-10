@@ -150,6 +150,21 @@
   <data name="Label_AddMilestone" xml:space="preserve">
     <value>Milestone</value>
   </data>
+  <data name="Label_DuplicateManagedActivity" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Label_DuplicateManagedActivitySeverity" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Label_DuplicateManagedHoliday" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Label_DuplicateManagedResource" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Label_DuplicateManagedWorkStream" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
   <data name="Label_AllocatedToResources" xml:space="preserve">
     <value>Allocated to Resources</value>
   </data>
@@ -493,6 +508,9 @@
     <value>Edit</value>
   </data>
   <data name="Label_EditManagedHoliday" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Label_EditManagedWorkStreams" xml:space="preserve">
     <value>Edit</value>
   </data>
   <data name="Label_ShowNames" xml:space="preserve">

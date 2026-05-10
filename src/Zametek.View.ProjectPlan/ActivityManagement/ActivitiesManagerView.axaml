@@ -136,6 +136,9 @@
 							<MenuItem Header="{x:Static resources:Labels.Label_EditManagedActivities}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.EditManagedActivitiesCommand, Mode=OneWay}" />
 
+							<MenuItem Header="{x:Static resources:Labels.Label_DuplicateManagedActivity}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedActivityCommand, Mode=OneWay}" />
+
 							<MenuItem Header="{x:Static resources:Labels.Label_RenumberActivities}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.RenumberActivitiesCommand, Mode=OneWay}" />
 

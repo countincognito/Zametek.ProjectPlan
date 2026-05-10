@@ -36,7 +36,11 @@ namespace Zametek.View.ProjectPlan
         {
             return await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                standardParams.WindowIcon = m_Parent!.Icon ?? throw new ArgumentNullException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable);
+                if (m_Parent is null)
+                {
+                    throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable);
+                }
+                standardParams.WindowIcon = m_Parent.Icon ?? throw new ArgumentNullException(Resource.ProjectPlan.Messages.Message_NoWindowIconAvailable);
                 IMsBox<ButtonResult>? msg = MessageBoxManager.GetMessageBoxStandard(standardParams);
                 return msg.ShowWindowDialogAsync(m_Parent);
             });

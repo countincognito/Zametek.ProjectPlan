@@ -261,6 +261,9 @@
   <data name="Message_EditResources" xml:space="preserve">
     <value>Select the properties to edit</value>
   </data>
+  <data name="Message_EditWorkStreams" xml:space="preserve">
+    <value>Select the properties to edit</value>
+  </data>
   <data name="Message_EditActivities" xml:space="preserve">
     <value>Select the properties to edit</value>
   </data>

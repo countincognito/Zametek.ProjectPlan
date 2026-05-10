@@ -635,7 +635,61 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_EditManagedResources", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Edit.
+        /// </summary>
+        public static string Label_EditManagedWorkStreams {
+            get {
+                return ResourceManager.GetString("Label_EditManagedWorkStreams", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Label_DuplicateManagedActivity {
+            get {
+                return ResourceManager.GetString("Label_DuplicateManagedActivity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Label_DuplicateManagedActivitySeverity {
+            get {
+                return ResourceManager.GetString("Label_DuplicateManagedActivitySeverity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Label_DuplicateManagedHoliday {
+            get {
+                return ResourceManager.GetString("Label_DuplicateManagedHoliday", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Label_DuplicateManagedResource {
+            get {
+                return ResourceManager.GetString("Label_DuplicateManagedResource", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Label_DuplicateManagedWorkStream {
+            get {
+                return ResourceManager.GetString("Label_DuplicateManagedWorkStream", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Effort.
         /// </summary>

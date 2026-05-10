@@ -1,4 +1,4 @@
-﻿using System.Windows.Input;
+using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
@@ -19,6 +19,8 @@ namespace Zametek.Contract.ProjectPlan
         DisplayStyle DisplayStyle { get; set; }
 
         bool ShowToday { get; set; }
+
+        ICommand ResetResourceChartCommand { get; }
 
         ICommand SaveResourceChartImageFileCommand { get; }
 

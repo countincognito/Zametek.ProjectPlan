@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using Xunit;
@@ -44,14 +44,15 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         public ProjectScenarioHelperFixture()
         {
-            Input_JsonString = ReadJsonFile(@"TestFiles\input.json");
-            RemappedActivities_JsonString = ReadJsonFile(@"TestFiles\remapped_activities.json");
-            RemappedResources_JsonString = ReadJsonFile(@"TestFiles\remapped_resources.json");
-            RemappedWorkStreams_JsonString = ReadJsonFile(@"TestFiles\remapped_workstreams.json");
+            Input_JsonString = ReadJsonFile(@"input.json");
+            RemappedActivities_JsonString = ReadJsonFile(@"remapped_activities.json");
+            RemappedResources_JsonString = ReadJsonFile(@"remapped_resources.json");
+            RemappedWorkStreams_JsonString = ReadJsonFile(@"remapped_workstreams.json");
 
             static string ReadJsonFile(string filename)
             {
-                using StreamReader reader = File.OpenText(filename);
+                string path = Path.Combine(@"TestFiles", filename);
+                using StreamReader reader = File.OpenText(path);
                 string content = reader.ReadToEnd();
                 JObject json = JObject.Parse(content);
                 return json.ToString();

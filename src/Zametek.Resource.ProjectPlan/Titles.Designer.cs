@@ -122,7 +122,16 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Title_EditResources", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Work Streams.
+        /// </summary>
+        public static string Title_EditWorkStreams {
+            get {
+                return ResourceManager.GetString("Title_EditWorkStreams", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Error.
         /// </summary>

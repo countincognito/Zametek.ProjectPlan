@@ -2,14 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:controls="using:Avalonia.Controls"
-			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
-			 xmlns:local="using:Zametek.View.ProjectPlan"
+			       xmlns:controls="using:Avalonia.Controls"
+			       xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			       xmlns:local="using:Zametek.View.ProjectPlan"
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
-			 xmlns:sys="using:System"
-			 xmlns:u="https://irihi.tech/ursa"
-			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
-			 x:DataType="vm:ResourceSettingsManagerViewModel"
+			       xmlns:sys="using:System"
+			       xmlns:u="https://irihi.tech/ursa"
+			       xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			       x:DataType="vm:ResourceSettingsManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ResourceSettingsManagerView">
 	<UserControl.Resources>
@@ -32,51 +32,47 @@
 		<local:ManagedResourceSortComparer x:Key="colorFormatSortComparer" SortMemberPath="ColorFormat"/>
 		<local:ManagedActivitySortComparer x:Key="notesSortComparer" SortMemberPath="Notes"/>
 	</UserControl.Resources>
-	
-	<DockPanel Margin="7">
+
+  <!-- Context menu is included here because otherwise it won't work when the datagrid is disabled. -->
+	<DockPanel Margin="7"
+             Background="Transparent">
+    <DockPanel.Styles>
+      <Style>
+        <Setter Property="ContextMenu">
+          <ContextMenu>
+            <MenuItem Header="{x:Static resources:Labels.Label_AddManagedResource}"
+                  Command="{Binding Path=$parent[DockPanel].DataContext.AddManagedResourceCommand, Mode=OneWay}" />
+
+            <Separator />
+
+            <MenuItem Header="{x:Static resources:Labels.Label_DuplicateManagedResource}"
+                  Command="{Binding Path=$parent[DockPanel].DataContext.DuplicateManagedResourceCommand, Mode=OneWay}" />
+
+            <MenuItem Header="{x:Static resources:Labels.Label_EditManagedResources}"
+                  Command="{Binding Path=$parent[DockPanel].DataContext.EditManagedResourcesCommand, Mode=OneWay}" />
+
+            <MenuItem Header="{x:Static resources:Labels.Label_RenumberResources}"
+                  Command="{Binding Path=$parent[DockPanel].DataContext.RenumberResourcesCommand, Mode=OneWay}" />
+
+            <Separator />
+
+            <MenuItem Header="{x:Static resources:Labels.Label_DeleteManagedResources}"
+                  Command="{Binding Path=$parent[DockPanel].DataContext.RemoveManagedResourcesCommand, Mode=OneWay}" />
+
+            <Separator />
+
+            <MenuItem Header="{x:Static resources:Labels.Label_DisableResources}"
+								  IsChecked="{Binding Path=DisableResources, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+          </ContextMenu>
+        </Setter>
+      </Style>
+    </DockPanel.Styles>
+
 		<ScrollViewer DockPanel.Dock="Right"
 					  VerticalScrollBarVisibility="Hidden"
 					  HorizontalScrollBarVisibility="Disabled">
 			<DockPanel Margin="11,0,0,0">
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
-						Command="{Binding Path=AddManagedResourceCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_AddManagedResource}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
-						Command="{Binding Path=RemoveManagedResourcesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DeleteManagedResources}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="80"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
-						Command="{Binding Path=EditManagedResourcesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_EditManagedResources}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,11"
-						Height="25" Width="80"
-						VerticalContentAlignment="Center"
-						HorizontalContentAlignment="Center"
-						Command="{Binding Path=RenumberResourcesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_RenumberResources}"/>
-
 				<Label DockPanel.Dock="Top"
 					   IsTabStop="False"
 					   VerticalAlignment="Center"
@@ -111,30 +107,14 @@
 									   Padding="0"
 									   Minimum="0"/>
 
-				<Label DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   VerticalAlignment="Center"
-					   VerticalContentAlignment="Center"
-					   Content="{x:Static resources:Labels.Label_DisableResources}"
-					   Height="25"
-					   Margin="0,0,0,0"/>
-
-				<ToggleSwitch DockPanel.Dock="Top"
-							  IsTabStop="True"
-							  Margin="0,0,0,11"
-							  VerticalAlignment="Center"
-							  VerticalContentAlignment="Center"
-							  HorizontalAlignment="Center"
-							  HorizontalContentAlignment="Center"
-							  OffContent="{x:Static resources:Labels.Label_No}"
-							  OnContent="{x:Static resources:Labels.Label_Yes}"
-							  IsChecked="{Binding Path=DisableResources, Mode=TwoWay}"/>
-
 				<Grid/>
 			</DockPanel>
 		</ScrollViewer>
 
+    <!-- Set Background to Transparent to ensure the context menu works even when the datagrid is empty -->
+    <!-- https://github.com/AvaloniaUI/Avalonia/discussions/15118 -->
 		<DataGrid Name="ResourcesGrid"
+				  Background="Transparent"
 				  IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
 				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"

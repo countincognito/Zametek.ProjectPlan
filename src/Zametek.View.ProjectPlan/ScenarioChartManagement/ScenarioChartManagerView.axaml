@@ -144,11 +144,21 @@
 			</DockPanel>
 		</ScrollViewer>
 
-		<Grid>
+		<DockPanel>
 			<!-- ScottPlot PlotView -->
 			<ContentControl x:Name="scottplot"
 							Content="{Binding ScenarioChartPlotModel, Mode=OneWay}"
-							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
-		</Grid>
+							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
+				<ContentControl.ContextMenu>
+					<ContextMenu>
+						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+								  Command="{Binding Path=SaveScenarioChartImageFileCommand, Mode=OneWay}" />
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
+								  Command="{Binding Path=ResetScenarioChartCommand, Mode=OneWay}" />
+					</ContextMenu>
+				</ContentControl.ContextMenu>
+			</ContentControl>
+		</DockPanel>
 	</DockPanel>
 </UserControl>

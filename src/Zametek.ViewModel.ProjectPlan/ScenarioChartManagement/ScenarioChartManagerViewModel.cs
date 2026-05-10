@@ -114,6 +114,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 SaveScenarioChartImageFileCommand = saveScenarioChartImageFileCommand;
             }
 
+            ResetScenarioChartCommand = ReactiveCommand.Create(ResetScenarioChart);
+
             m_IsBusy = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.IsBusy,
@@ -493,6 +495,11 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
+        private void ResetScenarioChart()
+        {
+            ScenarioChartPlotModel.Plot.Axes.AutoScale();
+        }
+
         private async Task SaveScenarioChartImageFileAsync()
         {
             try
@@ -575,6 +582,8 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public ICommand SaveScenarioChartImageFileCommand { get; }
+
+        public ICommand ResetScenarioChartCommand { get; }
 
         public async Task SaveScenarioChartImageFileAsync(
             string? filename,
