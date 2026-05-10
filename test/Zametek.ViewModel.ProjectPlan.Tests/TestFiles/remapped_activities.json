@@ -813,5 +813,10 @@
         "Name": "WorkStream 2"
       }
     ]
+  },
+  "DisplaySettings": {
+    "GanttChartShowConnections": [
+      5
+    ]
   }
 }

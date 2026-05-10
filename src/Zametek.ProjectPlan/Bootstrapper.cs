@@ -47,6 +47,14 @@ namespace Zametek.ProjectPlan
                 .As<IVertexGraphSerializer>()
                 .As<VertexGraphSerializer>()
                 .SingleInstance();
+            builder.RegisterType<MicrosoftProjectFileImporter>()
+                .As<IMicrosoftProjectFileImporter>()
+                .As<MicrosoftProjectFileImporter>()
+                .SingleInstance();
+            builder.RegisterType<XlsxFileImporter>()
+                .As<IXlsxFileImporter>()
+                .As<XlsxFileImporter>()
+                .SingleInstance();
             builder.RegisterType<ProjectScenarioFileImport>()
                 .As<IProjectScenarioFileImport>()
                 .As<ProjectScenarioFileImport>()
