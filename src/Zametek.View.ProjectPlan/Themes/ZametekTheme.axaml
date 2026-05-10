@@ -15,19 +15,16 @@
   <Style Selector="TextBlock">
     <Setter Property="FontSize" Value="13"/>
     <Setter Property="LineHeight" Value="20"/>
-    <Setter Property="Foreground" Value="{DynamicResource ZTextPrimary}"/>
   </Style>
 
   <Style Selector="SelectableTextBlock">
     <Setter Property="FontSize" Value="13"/>
     <Setter Property="LineHeight" Value="20"/>
-    <Setter Property="Foreground" Value="{DynamicResource ZTextPrimary}"/>
   </Style>
 
   <Style Selector="Label">
     <Setter Property="FontSize" Value="13"/>
     <Setter Property="Padding" Value="4,0"/>
-    <Setter Property="Foreground" Value="{DynamicResource ZTextPrimary}"/>
   </Style>
 
   <Style Selector="TextBox">
@@ -105,7 +102,6 @@
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="BorderBrush" Value="{DynamicResource ZBorder}"/>
     <Setter Property="CornerRadius" Value="4"/>
-    <Setter Property="Background" Value="{DynamicResource ZSurface}"/>
   </Style>
 
   <Style Selector="DataGridColumnHeader">
@@ -113,8 +109,6 @@
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="Height" Value="32"/>
     <Setter Property="MinHeight" Value="32"/>
-    <Setter Property="Background" Value="{DynamicResource ZSurface2}"/>
-    <Setter Property="Foreground" Value="{DynamicResource ZTextSecondary}"/>
     <Setter Property="Padding" Value="8,0"/>
     <Setter Property="BorderBrush" Value="{DynamicResource ZBorder}"/>
     <Setter Property="BorderThickness" Value="0,0,0,1"/>

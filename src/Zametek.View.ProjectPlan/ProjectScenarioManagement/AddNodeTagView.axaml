@@ -28,7 +28,7 @@
 		
 		<TextBox Grid.Row="0" Grid.Column="1"
 				 Text="{Binding Path=Tag, Mode=TwoWay}"
-				 BorderBrush="Gray"
+				 BorderBrush="{DynamicResource ZBorder}"
 				 BorderThickness="1"/>
 	</Grid>
 </UserControl>

@@ -80,29 +80,6 @@
 			<SolidColorBrush x:Key="TextBoxDefaultBackground" Color="Transparent" />
 			<SolidColorBrush x:Key="TextBoxPointeroverBackground" Color="Transparent" />
 
-			<!-- ================================================================
-			     Zametek design tokens — fallback (non-themed) values
-			     ThemeDictionaries below provide Light/Dark variants
-			     ================================================================ -->
-			<SolidColorBrush x:Key="ZBackground"    Color="#F8F9FA"/>
-			<SolidColorBrush x:Key="ZSurface"       Color="#FFFFFF"/>
-			<SolidColorBrush x:Key="ZSurface2"      Color="#F1F3F5"/>
-			<SolidColorBrush x:Key="ZBorder"        Color="#DEE2E6"/>
-			<SolidColorBrush x:Key="ZBorderStrong"  Color="#CED4DA"/>
-			<SolidColorBrush x:Key="ZTextPrimary"   Color="#212529"/>
-			<SolidColorBrush x:Key="ZTextSecondary" Color="#6C757D"/>
-			<SolidColorBrush x:Key="ZTextMuted"     Color="#ADB5BD"/>
-			<SolidColorBrush x:Key="ZAccent"        Color="#1971C2"/>
-			<SolidColorBrush x:Key="ZAccentHover"   Color="#1864AB"/>
-			<SolidColorBrush x:Key="ZAccentLight"   Color="#D0EBFF"/>
-			<SolidColorBrush x:Key="ZAccentSubtle"  Color="#E7F5FF"/>
-			<SolidColorBrush x:Key="ZError"         Color="#E03131"/>
-			<SolidColorBrush x:Key="ZWarning"       Color="#F08C00"/>
-			<SolidColorBrush x:Key="ZSuccess"       Color="#2F9E44"/>
-			<SolidColorBrush x:Key="ZToolbarBg"     Color="#FFFFFF"/>
-			<SolidColorBrush x:Key="ZStatusBar"     Color="#F1F3F5"/>
-			<SolidColorBrush x:Key="ZTabStrip"      Color="#F8F9FA"/>
-
 			<ResourceDictionary.ThemeDictionaries>
 				<ResourceDictionary x:Key="Light">
 					<!-- Zametek design tokens — Light -->
