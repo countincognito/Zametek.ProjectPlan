@@ -733,18 +733,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
             plotModel ??= new AvaPlot();
 
-            // Clear existing menu items.
+            // Clear ScottPlot's built-in menu entirely — Save As and Reset are
+            // exposed through the Avalonia ContextMenu on the ContentControl instead,
+            // preventing the double-menu that occurs when both menus are open simultaneously.
             plotModel.Menu?.Clear();
-
-            // Add menu items with custom actions.
-            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
-            {
-                SaveResourceChartImageFileCommand.Execute(null);
-            });
-            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
-            {
-                plot.Axes.AutoScale();
-            });
 
             //plotModel.Plot.Axes.AutoScale();
             ResourceChartPlotModel = plotModel;
