@@ -14,7 +14,9 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly Lock m_Lock;
+        private bool m_IsRevising;
         private readonly ICoreViewModel m_CoreViewModel;
+
         private static readonly EqualityComparer<ISelectableActivityViewModel> s_EqualityComparer =
             EqualityComparer<ISelectableActivityViewModel>.Create(
                     (x, y) =>
@@ -52,17 +54,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     });
 
         private readonly IDisposable? m_ReviseActivitiesSub;
+        private readonly IDisposable? m_ShowConnectionsSub;
 
         #endregion
 
         #region Ctors
 
-        public ActivitySelectorViewModel(
-            ICoreViewModel coreViewModel,
-            IList<TargetActivityModel> targetActivities)
+        public ActivitySelectorViewModel(ICoreViewModel coreViewModel)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             m_Lock = new();
+            m_IsRevising = false;
             m_CoreViewModel = coreViewModel;
             m_TargetActivities = new(s_EqualityComparer);
             m_ReadOnlyTargetActivities = new(m_TargetActivities);
@@ -71,7 +73,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SelectedTargetActivities.CollectionChanged += SelectedTargetActivities_CollectionChanged;
 
             // Initial set up.
-            ReviseActivities(targetActivities);
+            ReviseActivities();
 
             // This needs to be on the current thread because all the tracker updates
             // need to be completed before a compilation can start.
@@ -83,6 +85,29 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (isReadyToRevise == ReadyToRevise.Yes)
                     {
                         ReviseActivities();
+                    }
+                });
+
+            m_ShowConnectionsSub = this
+                .WhenAnyValue(
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections)
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(isReadyToRevise =>
+                {
+                    if (isReadyToRevise == ReadyToRevise.Yes)
+                    {
+                        try
+                        {
+                            m_IsRevising = true;
+                            ReviseActivities();
+                            SetSelectedTargetActivities(
+                                [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
+                            m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections = ReadyToRevise.No;
+                        }
+                        finally
+                        {
+                            m_IsRevising = false;
+                        }
                     }
                 });
         }
@@ -132,34 +157,13 @@ namespace Zametek.ViewModel.ProjectPlan
             object? sender,
             NotifyCollectionChangedEventArgs e)
         {
-            RaiseTargetActivitiesPropertiesChanged();
-        }
-
-        private void ReviseActivities(IList<TargetActivityModel> targetActivities)
-        {
-            lock (m_Lock)
+            m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.Clear();
+            m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.AddRange(SelectedActivityIds);
+            if (!m_IsRevising)
             {
-                HashSet<int> selectedActivityIds = targetActivities.Select(x => x.Id).ToHashSet();
-
-                Dictionary<int, TargetActivityModel> activityLookup = targetActivities.ToDictionary(x => x.Id);
-
-                List<TargetActivityModel> newActivities =
-                    [.. m_CoreViewModel.RawActivities
-                        .Select(activity => new TargetActivityModel
-                        {
-                            Id = activity.Id,
-                            Name = activity.Name
-                        })];
-
-                foreach (TargetActivityModel activity in newActivities)
-                {
-                    activityLookup[activity.Id] = activity;
-                }
-
-                SetTargetActivities(
-                    activityLookup.Values,
-                    selectedActivityIds);
+                m_CoreViewModel.DisplaySettingsViewModel.SetIsProjectScenarioUpdated(true);
             }
+            RaiseTargetActivitiesPropertiesChanged();
         }
 
         private void ReviseActivities()
@@ -311,6 +315,7 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 m_ReviseActivitiesSub?.Dispose();
+                m_ShowConnectionsSub?.Dispose();
             }
 
             m_Disposed = true;

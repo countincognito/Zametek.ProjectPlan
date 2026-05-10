@@ -1735,7 +1735,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         NodeId = x.Id,
                         Name = x.Name,
                         Path = GetNodePath(x.Id),
-                        Metrics = x.Scenario!.Metrics,
+                        Metrics = x.Scenario!.Metrics, // Safe: Where clause above guarantees Scenario is not null.
                     })
                     .ToDictionary(x => x.NodeId);
 

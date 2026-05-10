@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Zametek.Common.ProjectPlan;
+using Zametek.Maths.Graphs;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -268,6 +269,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 return resource with { Trackers = newResourceTrackers };
             })];
 
+            // DisplaySettings.
+
+            List<int> newGanttChartShowConnections = [.. projectScenarioModel.DisplaySettings.GanttChartShowConnections.Select(showConnectionsId =>
+            {
+                return idUpdatesLookup.TryGetValue(showConnectionsId, out int mappedNewShowConnectionsId) ? mappedNewShowConnectionsId : showConnectionsId;
+            })];
+
             // Return the new project scenario model with the updated dependent activities and resources.
 
             projectScenarioModel = projectScenarioModel with
@@ -277,6 +285,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     Resources = newResources,
                 },
+                DisplaySettings = projectScenarioModel.DisplaySettings with
+                {
+                    GanttChartShowConnections = newGanttChartShowConnections,
+                }
             };
 
             return projectScenarioModel;

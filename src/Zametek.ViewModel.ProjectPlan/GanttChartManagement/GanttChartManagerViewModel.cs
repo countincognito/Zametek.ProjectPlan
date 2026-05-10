@@ -115,10 +115,13 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
 
-            ActivitySelector = new ActivitySelectorViewModel(m_CoreViewModel, []);
+            ActivitySelector = new ActivitySelectorViewModel(m_CoreViewModel);
+
             m_GanttChartPlotModel = new AvaPlot();
 
-            ResetGanttChartCommand = ReactiveCommand.Create(ResetGanttChart);
+            ResetGanttChartCommand = ReactiveCommand.CreateFromTask(ResetGanttChartAsync);
+            ChangeGroupByModeCommand = ReactiveCommand.CreateFromTask<GroupByMode>(ChangeGroupByModeAsync);
+            ChangeAnnotationStyleCommand = ReactiveCommand.CreateFromTask<AnnotationStyle>(ChangeAnnotationStyleAsync);
 
             {
                 ReactiveCommand<Unit, Unit> saveGanttChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveGanttChartImageFileAsync);
@@ -489,10 +492,11 @@ namespace Zametek.ViewModel.ProjectPlan
                                 .LastOrDefault()?.FinishTime ?? 0)
                             .ToList();
 
+                        Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
+
                         foreach ((string resourceName, ColorFormatModel colorFormat, int displayOrder, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
                         {
                             IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
-                            Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
                             ScheduledActivityModel? firstItem = orderedScheduledActivities.OrderBy(x => x.StartTime).FirstOrDefault();
                             ScheduledActivityModel? lastItem = orderedScheduledActivities.OrderByDescending(x => x.FinishTime).FirstOrDefault();
@@ -694,10 +698,11 @@ namespace Zametek.ViewModel.ProjectPlan
                             .Select(x => (x.Key, x.Value))
                             .ToList();
 
+                        Dictionary<int, IDependentActivity> workStreamActivityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
+
                         foreach ((int workStreamId, IList<ScheduledActivityModel> scheduledActivities) in orderedActivitiesByWorkStream)
                         {
                             IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
-                            Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
                             ScheduledActivityModel? firstItem = orderedScheduledActivities.OrderBy(x => x.StartTime).FirstOrDefault();
                             ScheduledActivityModel? lastItem = orderedScheduledActivities.OrderByDescending(x => x.FinishTime).FirstOrDefault();
@@ -710,7 +715,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 // Extend the annotation to the latest finish time of the last activity, if it has one.
                                 if (lastItem is not null)
                                 {
-                                    if (activityLookup.TryGetValue(lastItem.Id, out IDependentActivity? activity)
+                                    if (workStreamActivityLookup.TryGetValue(lastItem.Id, out IDependentActivity? activity)
                                         && activity.LatestFinishTime.HasValue
                                         && workStreamFinishTime < activity.LatestFinishTime)
                                     {
@@ -725,7 +730,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             foreach (ScheduledActivityModel scheduledActivity in orderedScheduledActivities)
                             {
-                                if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity? activity))
+                                if (workStreamActivityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity? activity))
                                 {
                                     AddBarItemToSeries(
                                         dateTimeCalculator,
@@ -1340,9 +1345,49 @@ namespace Zametek.ViewModel.ProjectPlan
             return yAxis;
         }
 
-        private void ResetGanttChart()
+        private async Task ResetGanttChartAsync()
         {
-            GanttChartPlotModel.Plot.Axes.AutoScale();
+            try
+            {
+                GanttChartPlotModel.Plot.Axes.AutoScale();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeGroupByModeAsync(GroupByMode groupByMode)
+        {
+            try
+            {
+                GroupByMode = groupByMode;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeAnnotationStyleAsync(AnnotationStyle annotationStyle)
+        {
+            try
+            {
+                AnnotationStyle = annotationStyle;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
         }
 
         private async Task SaveGanttChartImageFileAsync()
@@ -1471,6 +1516,10 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand ResetGanttChartCommand { get; }
 
         public ICommand SaveGanttChartImageFileCommand { get; }
+
+        public ICommand ChangeGroupByModeCommand { get; }
+
+        public ICommand ChangeAnnotationStyleCommand { get; }
 
         public async Task SaveGanttChartImageFileAsync(
             string? filename,

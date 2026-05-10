@@ -1,0 +1,17 @@
+{
+  "solution": {
+    "path": "Zametek.ProjectPlan.slnx",
+    "projects": [
+      "src\\Zametek.Common.ProjectPlan\\Zametek.Common.ProjectPlan.csproj",
+      "src\\Zametek.Contract.ProjectPlan\\Zametek.Contract.ProjectPlan.csproj",
+      "src\\Zametek.Data.ProjectPlan\\Zametek.Data.ProjectPlan.csproj",
+      "src\\Zametek.ProjectPlan.CommandLine\\Zametek.ProjectPlan.CommandLine.csproj",
+      "src\\Zametek.ProjectPlan\\Zametek.ProjectPlan.csproj",
+      "src\\Zametek.Resource.ProjectPlan\\Zametek.Resource.ProjectPlan.csproj",
+      "src\\Zametek.View.ProjectPlan\\Zametek.View.ProjectPlan.csproj",
+      "src\\Zametek.ViewModel.ProjectPlan\\Zametek.ViewModel.ProjectPlan.csproj",
+      "test\\Zametek.Data.ProjectPlan.Tests\\Zametek.Data.ProjectPlan.Tests.csproj",
+      "test\\Zametek.ViewModel.ProjectPlan.Tests\\Zametek.ViewModel.ProjectPlan.Tests.csproj"
+    ]
+  }
+}
