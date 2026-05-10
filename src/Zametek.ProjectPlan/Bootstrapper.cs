@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Dock.Model.Core;
 using ReactiveUI;
@@ -74,6 +74,18 @@ namespace Zametek.ProjectPlan
             builder.RegisterType<DialogService>()
                 .As<IDialogService>()
                 .As<DialogService>()
+                .SingleInstance();
+            builder.RegisterType<GraphCompilationService>()
+                .As<IGraphCompilationService>()
+                .As<GraphCompilationService>()
+                .SingleInstance();
+            builder.RegisterType<ResourceSchedulingService>()
+                .As<IResourceSchedulingService>()
+                .As<ResourceSchedulingService>()
+                .SingleInstance();
+            builder.RegisterType<MetricCalculationService>()
+                .As<IMetricCalculationService>()
+                .As<MetricCalculationService>()
                 .SingleInstance();
             builder.RegisterType<CoreViewModel>()
                 .As<ICoreViewModel>()
