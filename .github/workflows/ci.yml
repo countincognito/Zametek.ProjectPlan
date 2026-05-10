@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ '**' ]
-  pull_request:
     branches: [ develop, master ]
+  pull_request:
+    branches: [ develop ]
 
 env:
   HUSKY: 0
