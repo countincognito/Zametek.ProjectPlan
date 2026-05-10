@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ develop, master ]
 
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
     name: Build, Lint, Format & Test
@@ -39,27 +42,20 @@ jobs:
         # from transitive dependency System.Security.Cryptography.Xml 8.0.2 would break CI.
         # Re-enable once the upstream dependency is updated or suppressed.
         run: |
-          dotnet build --no-restore --configuration Release src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj
-          dotnet build --no-restore --configuration Release src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj
+          dotnet build --no-restore --configuration Release Zametek.ProjectPlan.slnf
 
-      - name: Run ViewModel tests
-        run: |
-          dotnet test --no-build --configuration Release --verbosity normal \
-            --logger "trx;LogFileName=viewmodel-test-results.trx" --results-directory ./TestResults \
-            test/Zametek.ViewModel.ProjectPlan.Tests/Zametek.ViewModel.ProjectPlan.Tests.csproj
-
-      - name: Run Data tests
+      - name: Run tests
         # NOTE: 1 test (Converter_Given_v0_2_1_Input_Then_ConvertsTo_v0_3_0) has a pre-existing
         # timezone-sensitive failure. continue-on-error keeps CI green while showing the failure.
         continue-on-error: true
         run: |
           dotnet test --no-build --configuration Release --verbosity normal \
-            --logger "trx;LogFileName=data-test-results.trx" --results-directory ./TestResults \
-            test/Zametek.Data.ProjectPlan.Tests/Zametek.Data.ProjectPlan.Tests.csproj
+            --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults \
+            Zametek.ProjectPlan.slnf
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results
-          path: ./TestResults/*.trx
+          path: ./TestResults/test-results.trx
