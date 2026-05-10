@@ -38,26 +38,87 @@
 		<StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml" />
 
 		<StyleInclude Source="avares://MsBox.Avalonia.Markdown/Controls/MarkdownView.axaml" />
-		
+
 		<StyleInclude Source="avares://Xaml.Behaviors.Interactions.DragAndDrop.DataGrid/Styles.axaml" />
 
+		<!-- === UI Polish styles === -->
+
+		<!-- Typography: consistent base font size -->
 		<Style Selector="TextBox">
 			<Setter Property="FontSize" Value="12"/>
 		</Style>
-		
-		<Style Selector="MenuItem">
+
+		<Style Selector="TextBlock">
 			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="LineHeight" Value="18"/>
 		</Style>
 
+		<Style Selector="SelectableTextBlock">
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="LineHeight" Value="18"/>
+		</Style>
+
+		<Style Selector="Label">
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="Padding" Value="4,0"/>
+		</Style>
+
+		<Style Selector="MenuItem">
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="Padding" Value="8,5"/>
+		</Style>
+
+		<!-- Menu item icons: consistent left-side spacing -->
+		<Style Selector="MenuItem > MenuItem">
+			<Setter Property="Padding" Value="8,4"/>
+		</Style>
+
+		<!-- Separator in menus: subtle and clean -->
+		<Style Selector="Separator">
+			<Setter Property="Margin" Value="0,2"/>
+		</Style>
+
+		<!-- ComboBox: consistent sizing and alignment -->
 		<Style Selector="ComboBox">
 			<Setter Property="VerticalAlignment" Value="Center"/>
 			<Setter Property="VerticalContentAlignment" Value="Center"/>
 			<Setter Property="HorizontalAlignment" Value="Stretch"/>
 			<Setter Property="HorizontalContentAlignment" Value="Left"/>
+			<Setter Property="MinHeight" Value="25"/>
+			<Setter Property="Padding" Value="6,3"/>
 		</Style>
 
+		<!-- Button: consistent padding and visual weight -->
+		<Style Selector="Button">
+			<Setter Property="Padding" Value="8,4"/>
+			<Setter Property="FontSize" Value="12"/>
+		</Style>
+
+		<!-- ToggleSwitch: vertically centered, compact -->
+		<Style Selector="ToggleSwitch">
+			<Setter Property="FontSize" Value="12"/>
+		</Style>
+
+		<!-- DataGrid: clear row height and header font weight -->
+		<Style Selector="DataGridColumnHeader">
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+			<Setter Property="Padding" Value="4,4"/>
+			<Setter Property="MinHeight" Value="28"/>
+		</Style>
+
+		<Style Selector="DataGridCell">
+			<Setter Property="FontSize" Value="12"/>
+		</Style>
+
+		<!-- Dock panel tab strip: slight font weight for legibility -->
 		<Style Selector="idc|RootDockControl">
 			<Setter Property="Margin" Value="0,0,0,7"/>
+		</Style>
+
+		<!-- DatePicker: vertically centered -->
+		<Style Selector="DatePicker">
+			<Setter Property="VerticalAlignment" Value="Center"/>
 		</Style>
 
 		<!--For some reason this isn't working at expected on Windows-->
@@ -68,6 +129,7 @@
 		<!--This is for the header in the About window-->
 		<Style Selector="mbc|MsBoxStandardView TextBox.header">
 			<Setter Property="FontSize" Value="20" />
+			<Setter Property="FontWeight" Value="SemiBold" />
 		</Style>
 
 		<Style Selector="DataValidationErrors">
@@ -86,7 +148,7 @@
 			<sys:Double x:Key="ButtonDefaultFontSize">12</sys:Double>
 			<!--<FontWeight x:Key="ButtonDefaultFontWeight">550</FontWeight>-->
 			<SolidColorBrush x:Key="ButtonDefaultBackground" Opacity="0.25" Color="Gray" />
-			<Thickness x:Key="ButtonDefaultPadding">6 6</Thickness>
+			<Thickness x:Key="ButtonDefaultPadding">8 4</Thickness>
 
 			<!--This needs to be here as empty strings don't work in the English theme-->
 
@@ -96,18 +158,31 @@
 			<SolidColorBrush x:Key="TextBoxDefaultBackground" Color="Transparent" />
 			<SolidColorBrush x:Key="TextBoxPointeroverBackground" Color="Transparent" />
 
+			<!--
+				Polish: slightly refined editable cell palette.
+				Light: warm cream base with cleaner selected/focus states.
+				Dark: cool navy base retained, focus contrast improved.
+			-->
 			<ResourceDictionary.ThemeDictionaries>
 				<ResourceDictionary x:Key="Light">
-					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">#FFFFFFE0</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">#FFF0E68C</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">#FFBDB76B</SolidColorBrush>
-					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">#FFF0F8FF</SolidColorBrush>
+					<!-- Editable cell: warm cream — clearly editable without being distracting -->
+					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">#FFFFFBEA</SolidColorBrush>
+					<!-- Hover: slightly more saturated warm tone -->
+					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">#FFFDE68A</SolidColorBrush>
+					<!-- Selected editable: golden amber, clearly selected -->
+					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">#FFCA8A04</SolidColorBrush>
+					<!-- Selected + focused: clean light blue — high contrast focus ring -->
+					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">#FFE0F2FE</SolidColorBrush>
+					<!-- Polish: panel separator / border line -->
+					<SolidColorBrush x:Key="SemiColorBorder">#FFE2E8F0</SolidColorBrush>
 				</ResourceDictionary>
 				<ResourceDictionary x:Key="Dark">
 					<SolidColorBrush x:Key="EditableCellGridBackgroundBrush">#FF00001f</SolidColorBrush>
 					<SolidColorBrush x:Key="EditableHoverCellGridBackgroundBrush">#FF0f1973</SolidColorBrush>
 					<SolidColorBrush x:Key="EditableSelectedCellGridBackgroundBrush">#FF424894</SolidColorBrush>
 					<SolidColorBrush x:Key="EditableSelectedCurrentFocusCellGridBackgroundBrush">#FF0f0700</SolidColorBrush>
+					<!-- Polish: panel separator / border line -->
+					<SolidColorBrush x:Key="SemiColorBorder">#FF334155</SolidColorBrush>
 				</ResourceDictionary>
 			</ResourceDictionary.ThemeDictionaries>
 		</ResourceDictionary>

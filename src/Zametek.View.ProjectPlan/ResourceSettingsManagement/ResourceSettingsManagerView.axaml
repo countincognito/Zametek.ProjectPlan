@@ -69,47 +69,56 @@
       </Style>
     </DockPanel.Styles>
 
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
+		<Border DockPanel.Dock="Right"
+				BorderThickness="1,0,0,0"
+				BorderBrush="{DynamicResource SemiColorBorder}">
+		<ScrollViewer VerticalScrollBarVisibility="Hidden"
 					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
+			<DockPanel Margin="12,8,8,8">
 				<Label DockPanel.Dock="Top"
 					   IsTabStop="False"
 					   VerticalAlignment="Center"
 					   VerticalContentAlignment="Center"
+					   FontSize="11"
+					   FontWeight="SemiBold"
+					   Opacity="0.65"
 					   Content="{x:Static resources:Labels.Label_DefaultUnitCost}"
-					   Height="25"
-					   Margin="0,0,0,0"/>
+					   Height="22"
+					   Margin="0,0,0,2"/>
 
 				<u:NumericDoubleUpDown DockPanel.Dock="Top"
-									   Height="25" Width="75"
+									   Height="25" Width="80"
 									   Value="{Binding Path=DefaultUnitCost, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 									   VerticalAlignment="Center"
 									   ShowButtonSpinner="False"
-									   Margin="0,0,0,11"
-									   Padding="0"
+									   Margin="0,0,0,12"
+									   Padding="4,0"
 									   Minimum="0"/>
 
 				<Label DockPanel.Dock="Top"
 					   IsTabStop="False"
 					   VerticalAlignment="Center"
 					   VerticalContentAlignment="Center"
+					   FontSize="11"
+					   FontWeight="SemiBold"
+					   Opacity="0.65"
 					   Content="{x:Static resources:Labels.Label_DefaultUnitBilling}"
-					   Height="25"
-					   Margin="0,0,0,0"/>
+					   Height="22"
+					   Margin="0,0,0,2"/>
 
 				<u:NumericDoubleUpDown DockPanel.Dock="Top"
-									   Height="25" Width="75"
+									   Height="25" Width="80"
 									   Value="{Binding Path=DefaultUnitBilling, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
 									   VerticalAlignment="Center"
 									   ShowButtonSpinner="False"
-									   Margin="0,0,0,11"
-									   Padding="0"
+									   Margin="0,0,0,12"
+									   Padding="4,0"
 									   Minimum="0"/>
 
 				<Grid/>
 			</DockPanel>
 		</ScrollViewer>
+		</Border>
 
     <!-- Set Background to Transparent to ensure the context menu works even when the datagrid is empty -->
     <!-- https://github.com/AvaloniaUI/Avalonia/discussions/15118 -->

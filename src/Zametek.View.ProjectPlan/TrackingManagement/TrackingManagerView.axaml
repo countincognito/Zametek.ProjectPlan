@@ -190,7 +190,7 @@
 				</DataGrid.Columns>
 			</DataGrid>
 
-			<GridSplitter Grid.Row="1" Background="Black" ResizeDirection="Rows"/>
+			<GridSplitter Grid.Row="1" Background="{DynamicResource SemiColorBorder}" ResizeDirection="Rows"/>
 
 			<DataGrid Name="TrackerActivitiesGrid"
 					  IsEnabled="{Binding Path=HasActivities, Mode=OneWay}"

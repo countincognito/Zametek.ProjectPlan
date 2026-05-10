@@ -16,19 +16,24 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Auto"
+		<Border DockPanel.Dock="Right"
+				BorderThickness="1,0,0,0"
+				BorderBrush="{DynamicResource SemiColorBorder}">
+		<ScrollViewer VerticalScrollBarVisibility="Auto"
 					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel MinWidth="120"
-					   Margin="11,0,0,0">
+			<DockPanel MinWidth="128"
+					   Margin="12,8,8,8">
 
 				<DockPanel DockPanel.Dock="Top">
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
-						   Height="25"
+						   Height="22"
 						   DockPanel.Dock="Top"
 						   IsTabStop="False"
-						   Margin="0,0,0,3"
+						   FontSize="11"
+						   FontWeight="SemiBold"
+						   Opacity="0.65"
+						   Margin="0,0,0,2"
 						   Content="{x:Static resources:Labels.Label_AllocationMode}"/>
 
 					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:AllocationMode}}}"
@@ -37,7 +42,7 @@
 							  BorderThickness="1"
 							  DockPanel.Dock="Top"
 							  IsTabStop="False"
-							  Margin="0,0,0,11"
+							  Margin="0,0,0,12"
 							  Height="25">
 						<ComboBox.ItemTemplate>
 							<DataTemplate>
@@ -55,10 +60,13 @@
 				<DockPanel DockPanel.Dock="Top">
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
-						   Height="25"
+						   Height="22"
 						   DockPanel.Dock="Top"
 						   IsTabStop="False"
-						   Margin="0,0,0,3"
+						   FontSize="11"
+						   FontWeight="SemiBold"
+						   Opacity="0.65"
+						   Margin="0,0,0,2"
 						   Content="{x:Static resources:Labels.Label_ScheduleMode}"/>
 
 					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:ScheduleMode}}}"
@@ -67,7 +75,7 @@
 							  BorderThickness="1"
 							  DockPanel.Dock="Top"
 							  IsTabStop="False"
-							  Margin="0,0,0,11"
+							  Margin="0,0,0,12"
 							  Height="25">
 						<ComboBox.ItemTemplate>
 							<DataTemplate>
@@ -84,10 +92,13 @@
 				<DockPanel DockPanel.Dock="Top">
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
-						   Height="25"
+						   Height="22"
 						   DockPanel.Dock="Top"
 						   IsTabStop="False"
-						   Margin="0,0,0,3"
+						   FontSize="11"
+						   FontWeight="SemiBold"
+						   Opacity="0.65"
+						   Margin="0,0,0,2"
 						   Content="{x:Static resources:Labels.Label_DisplayStyle}"/>
 
 					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:DisplayStyle}}}"
@@ -96,7 +107,7 @@
 							  BorderThickness="1"
 							  DockPanel.Dock="Top"
 							  IsTabStop="False"
-							  Margin="0,0,0,11"
+							  Margin="0,0,0,12"
 							  Height="25">
 						<ComboBox.ItemTemplate>
 							<DataTemplate>
@@ -113,19 +124,22 @@
 				<DockPanel DockPanel.Dock="Top">
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
-						   Height="25"
+						   Height="22"
 						   DockPanel.Dock="Top"
 						   IsTabStop="False"
-						   Margin="0,0,0,3"
+						   FontSize="11"
+						   FontWeight="SemiBold"
+						   Opacity="0.65"
+						   Margin="0,0,0,2"
 						   Content="{x:Static resources:Labels.Label_ShowToday}"/>
 
 					<ToggleSwitch DockPanel.Dock="Top"
 								  IsTabStop="False"
-								  Margin="0,0,0,11"
+								  Margin="0,0,0,12"
 								  VerticalAlignment="Center"
 								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
+								  HorizontalAlignment="Left"
+								  HorizontalContentAlignment="Left"
 								  OffContent="{x:Static resources:Labels.Label_No}"
 								  OnContent="{x:Static resources:Labels.Label_Yes}"
 								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"/>
@@ -134,19 +148,22 @@
 				<DockPanel DockPanel.Dock="Top">
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
-						   Height="25"
+						   Height="22"
 						   DockPanel.Dock="Top"
 						   IsTabStop="False"
-						   Margin="0,0,0,3"
+						   FontSize="11"
+						   FontWeight="SemiBold"
+						   Opacity="0.65"
+						   Margin="0,0,0,2"
 						   Content="{x:Static resources:Labels.Label_ShowMilestones}"/>
 
 					<ToggleSwitch DockPanel.Dock="Top"
 								  IsTabStop="False"
-								  Margin="0,0,0,11"
+								  Margin="0,0,0,12"
 								  VerticalAlignment="Center"
 								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
+								  HorizontalAlignment="Left"
+								  HorizontalContentAlignment="Left"
 								  OffContent="{x:Static resources:Labels.Label_No}"
 								  OnContent="{x:Static resources:Labels.Label_Yes}"
 								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"/>
@@ -155,6 +172,7 @@
 				<Grid/>
 			</DockPanel>
 		</ScrollViewer>
+		</Border>
 
 		<DockPanel>
 			<!-- ScottPlot PlotView -->
