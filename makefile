@@ -42,13 +42,13 @@ hooks: ## Install pre-commit hooks (run once after cloning)
 	dotnet husky install
 
 format: ## Apply code formatting (style rules only)
-	dotnet format style
+	dotnet format style Zametek.ProjectPlan.slnf
 
 format-check: ## Check code style without modifying files
-	dotnet format style --verify-no-changes
+	dotnet format style --verify-no-changes Zametek.ProjectPlan.slnf
 
 lint: ## Build the solution (NU1903 warnings logged but not errors)
-	dotnet build --configuration Release
+	dotnet build --configuration Release Zametek.ProjectPlan.slnf
 
 test: ## Run all tests
-	dotnet test --configuration Release
+	dotnet test --configuration Release Zametek.ProjectPlan.slnf

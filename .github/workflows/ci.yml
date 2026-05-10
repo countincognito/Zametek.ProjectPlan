@@ -27,10 +27,10 @@ jobs:
         # Uses 'style' subcommand to skip OS-specific line-ending enforcement.
         # The editorconfig uses end_of_line=crlf but Linux CI checks out LF;
         # running the full 'dotnet format --verify-no-changes' would fail on every file.
-        run: dotnet format style --verify-no-changes --verbosity diagnostic
+        run: dotnet format style --verify-no-changes --verbosity diagnostic Zametek.ProjectPlan.slnf
 
       - name: Check analyzer rules
-        run: dotnet format analyzers --verify-no-changes --verbosity diagnostic
+        run: dotnet format analyzers --verify-no-changes --verbosity diagnostic Zametek.ProjectPlan.slnf
 
       - name: Build
         # The WapPackager projects are Windows-only (require Windows App Packaging SDK)
