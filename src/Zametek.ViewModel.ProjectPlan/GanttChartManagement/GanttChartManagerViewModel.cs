@@ -1118,6 +1118,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     Value = end,
                     FillColor = backgroundColor,
                     Size = c_BarSize,
+                    ActivityId = activity.Id,
+                    ActivityStartTime = activity.EarliestStartTime.GetValueOrDefault(),
+                    ActivityDuration = activity.Duration,
                 };
 
                 series.Add(item);
@@ -1612,6 +1615,26 @@ namespace Zametek.ViewModel.ProjectPlan
             //});
 
             GanttChartPlotModel = plotModel;
+        }
+
+        public void SetActivityDuration(int activityId, int newDuration)
+        {
+            if (newDuration < 1)
+            {
+                newDuration = 1;
+            }
+
+            IManagedActivityViewModel? activity = m_CoreViewModel.RawActivities
+                .FirstOrDefault(a => a.Id == activityId);
+
+            if (activity is null)
+            {
+                return;
+            }
+
+            activity.Duration = newDuration;
+            m_CoreViewModel.IsProjectScenarioUpdated = true;
+            m_CoreViewModel.RunAutoCompile();
         }
 
         #endregion

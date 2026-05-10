@@ -41,5 +41,7 @@ namespace Zametek.Contract.ProjectPlan
         Task SaveGanttChartImageFileAsync(string? filename, int width, int height);
 
         void BuildGanttChartPlotModel();
+
+        void SetActivityDuration(int activityId, int newDuration);
     }
 }

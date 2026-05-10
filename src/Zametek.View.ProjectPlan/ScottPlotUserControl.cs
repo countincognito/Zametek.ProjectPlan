@@ -17,12 +17,18 @@ namespace Zametek.View.ProjectPlan
         private Point? m_DragStartPoint;
         private bool m_IsDragging;
 
+        // Left-button drag state (for subclasses).
+        private Point? m_LeftDragStartPoint;
+        private bool m_IsLeftDragging;
+
         protected ContentControl? m_PlotContainer;
 
         public ScottPlotUserControl()
         {
             m_DragStartPoint = null;
             m_IsDragging = false;
+            m_LeftDragStartPoint = null;
+            m_IsLeftDragging = false;
         }
 
         public void InitializePlotContainer(ContentControl plotContainer)
@@ -30,6 +36,8 @@ namespace Zametek.View.ProjectPlan
             m_PlotContainer = plotContainer;
             m_DragStartPoint = null;
             m_IsDragging = false;
+            m_LeftDragStartPoint = null;
+            m_IsLeftDragging = false;
 
             m_PlotContainer.AddHandler(PointerPressedEvent, PlotContainer_PointerPressed, RoutingStrategies.Bubble, handledEventsToo: true);
             m_PlotContainer.AddHandler(PointerReleasedEvent, PlotContainer_PointerReleased, RoutingStrategies.Bubble, handledEventsToo: true);
@@ -45,6 +53,18 @@ namespace Zametek.View.ProjectPlan
         {
             // Check if the pointer action is a click or a drag.
             PointerPointProperties properties = e.GetCurrentPoint(this).Properties;
+
+            if (properties.PointerUpdateKind == PointerUpdateKind.LeftButtonPressed)
+            {
+                m_LeftDragStartPoint = e.GetPosition(this);
+                m_IsLeftDragging = false;
+
+                if (m_PlotContainer?.Content is AvaPlot plotModel)
+                {
+                    Point pos = e.GetPosition(plotModel);
+                    OnLeftPointerPressed(plotModel, pos, e);
+                }
+            }
 
             // Ensure it is the right mouse button
             if (properties.PointerUpdateKind == PointerUpdateKind.RightButtonPressed)
@@ -62,6 +82,25 @@ namespace Zametek.View.ProjectPlan
             // Check if the pointer action is a click or a drag.
             PointerPointProperties properties = e.GetCurrentPoint(this).Properties;
 
+            if (properties.PointerUpdateKind == PointerUpdateKind.LeftButtonReleased)
+            {
+                if (m_PlotContainer?.Content is AvaPlot plotModel)
+                {
+                    Point pos = e.GetPosition(plotModel);
+                    if (m_IsLeftDragging)
+                    {
+                        OnLeftDragCompleted(plotModel, pos, e);
+                    }
+                    else
+                    {
+                        OnLeftPointerReleased(plotModel, pos, e);
+                    }
+                }
+
+                m_LeftDragStartPoint = null;
+                m_IsLeftDragging = false;
+            }
+
             // Ensure it is the right mouse button
             if (properties.PointerUpdateKind == PointerUpdateKind.RightButtonReleased
                 && !m_IsDragging)
@@ -75,8 +114,20 @@ namespace Zametek.View.ProjectPlan
             m_IsDragging = false;
             e.Handled = true;
         }
+
         private void CheckPointerDrag(PointerEventArgs e)
         {
+            if (m_LeftDragStartPoint.HasValue)
+            {
+                Point currentPosition = e.GetPosition(this);
+                double distance = Vector.Distance(m_LeftDragStartPoint.Value, currentPosition);
+
+                if (distance > c_DragThreshold && !m_IsLeftDragging)
+                {
+                    m_IsLeftDragging = true;
+                }
+            }
+
             if (m_DragStartPoint.HasValue)
             {
                 Point currentPosition = e.GetPosition(this);
@@ -91,6 +142,31 @@ namespace Zametek.View.ProjectPlan
                 }
             }
         }
+
+        /// <summary>
+        /// Called when the left mouse button is pressed on the plot. Override to implement custom behaviour.
+        /// </summary>
+        protected virtual void OnLeftPointerPressed(AvaPlot plotModel, Point plotPosition, PointerPressedEventArgs e) { }
+
+        /// <summary>
+        /// Called when the left mouse button is released after a drag. Override to commit the drag action.
+        /// </summary>
+        protected virtual void OnLeftDragCompleted(AvaPlot plotModel, Point plotPosition, PointerReleasedEventArgs e) { }
+
+        /// <summary>
+        /// Called when the left mouse button is released without a drag (i.e. a simple click). Override to cancel any pending state.
+        /// </summary>
+        protected virtual void OnLeftPointerReleased(AvaPlot plotModel, Point plotPosition, PointerReleasedEventArgs e) { }
+
+        /// <summary>
+        /// Called on every PointerMoved event while a left drag is in progress. Override for live preview.
+        /// </summary>
+        protected virtual void OnLeftDragging(AvaPlot plotModel, Point plotPosition, PointerEventArgs e) { }
+
+        /// <summary>
+        /// True while a left-button drag is active.
+        /// </summary>
+        protected bool IsLeftDragging => m_IsLeftDragging;
 
         private void OpenPlotContainerContextMenu(PointerReleasedEventArgs e)
         {
@@ -124,6 +200,14 @@ namespace Zametek.View.ProjectPlan
             }
 
             Point pos = e.GetPosition(plotModel);
+
+            // Notify subclass of active left drag.
+            if (m_IsLeftDragging)
+            {
+                OnLeftDragging(plotModel, pos, e);
+                return;
+            }
+
             Pixel mousePixel = new(pos.X, pos.Y);
             Coordinates mouseLocation = plotModel.Plot.GetCoordinates(mousePixel);
 
