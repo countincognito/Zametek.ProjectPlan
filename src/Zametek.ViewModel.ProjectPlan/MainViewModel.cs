@@ -83,6 +83,14 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDialogService m_DialogService;
         private readonly IServiceProvider m_ServiceProvider;
 
+        private readonly IActivitiesManagerViewModel m_ActivitiesManagerViewModel;
+        private readonly IGanttChartManagerViewModel m_GanttChartManagerViewModel;
+        private readonly IResourceChartManagerViewModel m_ResourceChartManagerViewModel;
+        private readonly IScenarioChartManagerViewModel m_ScenarioChartManagerViewModel;
+        private readonly IArrowGraphManagerViewModel m_ArrowGraphManagerViewModel;
+        private readonly IVertexGraphManagerViewModel m_VertexGraphManagerViewModel;
+        private readonly ITrackingManagerViewModel m_TrackingManagerViewModel;
+
         private readonly IDisposable? m_ProjectTitleUpdateSub;
 
         #endregion
@@ -98,7 +106,14 @@ namespace Zametek.ViewModel.ProjectPlan
             IProjectFileSave projectFileSave,
             ISettingService settingService,
             IDialogService dialogService,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            IActivitiesManagerViewModel activitiesManagerViewModel,
+            IGanttChartManagerViewModel ganttChartManagerViewModel,
+            IResourceChartManagerViewModel resourceChartManagerViewModel,
+            IScenarioChartManagerViewModel scenarioChartManagerViewModel,
+            IArrowGraphManagerViewModel arrowGraphManagerViewModel,
+            IVertexGraphManagerViewModel vertexGraphManagerViewModel,
+            ITrackingManagerViewModel trackingManagerViewModel)
         {
             ArgumentNullException.ThrowIfNull(dockFactory);
             ArgumentNullException.ThrowIfNull(dataGridManager);
@@ -109,6 +124,13 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(serviceProvider);
+            ArgumentNullException.ThrowIfNull(activitiesManagerViewModel);
+            ArgumentNullException.ThrowIfNull(ganttChartManagerViewModel);
+            ArgumentNullException.ThrowIfNull(resourceChartManagerViewModel);
+            ArgumentNullException.ThrowIfNull(scenarioChartManagerViewModel);
+            ArgumentNullException.ThrowIfNull(arrowGraphManagerViewModel);
+            ArgumentNullException.ThrowIfNull(vertexGraphManagerViewModel);
+            ArgumentNullException.ThrowIfNull(trackingManagerViewModel);
             m_Lock = new();
             m_DockFactory = dockFactory;
             m_DataGridManager = dataGridManager;
@@ -119,6 +141,13 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_ServiceProvider = serviceProvider;
+            m_ActivitiesManagerViewModel = activitiesManagerViewModel;
+            m_GanttChartManagerViewModel = ganttChartManagerViewModel;
+            m_ResourceChartManagerViewModel = resourceChartManagerViewModel;
+            m_ScenarioChartManagerViewModel = scenarioChartManagerViewModel;
+            m_ArrowGraphManagerViewModel = arrowGraphManagerViewModel;
+            m_VertexGraphManagerViewModel = vertexGraphManagerViewModel;
+            m_TrackingManagerViewModel = trackingManagerViewModel;
             m_ProjectTitle = string.Empty;
             m_IsMainBusy = false;
 
@@ -334,6 +363,34 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_IsMainBusy;
             set => this.RaiseAndSetIfChanged(ref m_IsMainBusy, value);
         }
+
+        private ShellView m_ActiveShellView;
+        public ShellView ActiveShellView
+        {
+            get => m_ActiveShellView;
+            set => this.RaiseAndSetIfChanged(ref m_ActiveShellView, value);
+        }
+
+        private bool m_IsCommandPaletteOpen;
+        public bool IsCommandPaletteOpen
+        {
+            get => m_IsCommandPaletteOpen;
+            set => this.RaiseAndSetIfChanged(ref m_IsCommandPaletteOpen, value);
+        }
+
+        public IActivitiesManagerViewModel ActivitiesManagerViewModel => m_ActivitiesManagerViewModel;
+
+        public IGanttChartManagerViewModel GanttChartManagerViewModel => m_GanttChartManagerViewModel;
+
+        public IResourceChartManagerViewModel ResourceChartManagerViewModel => m_ResourceChartManagerViewModel;
+
+        public IScenarioChartManagerViewModel ScenarioChartManagerViewModel => m_ScenarioChartManagerViewModel;
+
+        public IArrowGraphManagerViewModel ArrowGraphManagerViewModel => m_ArrowGraphManagerViewModel;
+
+        public IVertexGraphManagerViewModel VertexGraphManagerViewModel => m_VertexGraphManagerViewModel;
+
+        public ITrackingManagerViewModel TrackingManagerViewModel => m_TrackingManagerViewModel;
 
         #endregion
 

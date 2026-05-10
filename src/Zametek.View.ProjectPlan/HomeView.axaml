@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="using:Zametek.View.ProjectPlan"
+             xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+             x:DataType="vm:MainViewModel"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
+             x:Class="Zametek.View.ProjectPlan.HomeView">
+
+  <!-- Split: Activities (left 40%) | Gantt (right 60%) -->
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="2*" />
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="3*" />
+    </Grid.ColumnDefinitions>
+
+    <!-- Left: Activities DataGrid -->
+    <ContentControl Grid.Column="0"
+                    Content="{Binding ActivitiesManagerViewModel, Mode=OneWay}" />
+
+    <!-- Splitter -->
+    <GridSplitter Grid.Column="1"
+                  Width="4"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Stretch"
+                  Background="{DynamicResource ZBorder}" />
+
+    <!-- Right: Gantt Chart -->
+    <ContentControl Grid.Column="2"
+                    Content="{Binding GanttChartManagerViewModel, Mode=OneWay}" />
+  </Grid>
+</UserControl>

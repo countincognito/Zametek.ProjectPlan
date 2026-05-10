@@ -13,5 +13,8 @@ namespace Zametek.View.ProjectPlan
 
         public static readonly IValueConverter IsNotRecurrenceFrequencyMatch =
             new FuncValueConverter<RecurrenceFrequency, RecurrenceFrequency, bool>((x, y) => x != y);
+
+        public static readonly IValueConverter IsShellViewMatch =
+            new FuncValueConverter<ShellView, ShellView, bool>((x, y) => x == y);
     }
 }

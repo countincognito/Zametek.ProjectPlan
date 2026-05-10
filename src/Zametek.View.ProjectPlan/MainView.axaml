@@ -2,11 +2,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
         x:Class="Zametek.View.ProjectPlan.MainView"
 		xmlns:resources="using:Zametek.Resource.ProjectPlan"
 		xmlns:controls="using:Avalonia.Controls"
-		xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
 		xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 		xmlns:local="using:Zametek.View.ProjectPlan"
 		xmlns:common="using:Zametek.Common.ProjectPlan"
@@ -14,6 +13,7 @@
         Icon="resm:Zametek.Resource.ProjectPlan.Icons.zpp.ico?assembly=Zametek.Resource.ProjectPlan"
 		xmlns:u="https://irihi.tech/ursa"
         Title="{Binding Path=ProjectTitle, Mode=OneWay}">
+
 	<Window.KeyBindings>
 		<KeyBinding x:DataType="vm:MainViewModel"
 					Command="{Binding Path=OpenProjectFileCommand, Mode=OneWay}"
@@ -39,326 +39,737 @@
 	</Window.KeyBindings>
 
 	<Window.Styles>
-		<!-- Error indicator: thin top accent bar -->
+		<!-- Error indicator styles -->
 		<Style Selector="Border.compile-ok">
 			<Setter Property="Background" Value="Transparent"/>
 		</Style>
 		<Style Selector="Border.compile-error">
 			<Setter Property="Background" Value="{DynamicResource ZError}"/>
 		</Style>
+
+		<!-- Sidebar nav button base -->
+		<Style Selector="Button.nav-btn">
+			<Setter Property="Width" Value="52"/>
+			<Setter Property="Height" Value="48"/>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="Padding" Value="0"/>
+			<Setter Property="CornerRadius" Value="0"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+			<Setter Property="VerticalContentAlignment" Value="Center"/>
+			<Setter Property="Foreground" Value="{DynamicResource ZTextMuted}"/>
+		</Style>
+		<Style Selector="Button.nav-btn:pointerover">
+			<Setter Property="Background" Value="{DynamicResource ZSurface2}"/>
+			<Setter Property="Foreground" Value="{DynamicResource ZTextSecondary}"/>
+		</Style>
+		<Style Selector="Button.nav-btn.nav-active">
+			<Setter Property="Foreground" Value="{DynamicResource ZAccent}"/>
+			<Setter Property="Background" Value="{DynamicResource ZAccentSubtle}"/>
+		</Style>
+
+		<!-- Toolbar action buttons -->
+		<Style Selector="Button.toolbar-btn">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="Height" Value="28"/>
+			<Setter Property="Padding" Value="8,0"/>
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="Foreground" Value="{DynamicResource ZTextSecondary}"/>
+		</Style>
+		<Style Selector="Button.toolbar-btn:pointerover">
+			<Setter Property="Background" Value="{DynamicResource ZSurface2}"/>
+			<Setter Property="Foreground" Value="{DynamicResource ZTextPrimary}"/>
+		</Style>
+
+		<!-- Status label style -->
+		<Style Selector="Label.status-label">
+			<Setter Property="FontSize" Value="11"/>
+			<Setter Property="Foreground" Value="{DynamicResource ZTextSecondary}"/>
+			<Setter Property="Padding" Value="0"/>
+		</Style>
+
+		<!-- Command palette overlay -->
+		<Style Selector="Border.palette-overlay">
+			<Setter Property="Width" Value="480"/>
+			<Setter Property="MaxHeight" Value="420"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="BoxShadow" Value="0 8 32 0 #40000000"/>
+			<Setter Property="Background" Value="{DynamicResource ZSurface}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource ZBorder}"/>
+			<Setter Property="BorderThickness" Value="1"/>
+		</Style>
+
+		<!-- Command palette item -->
+		<Style Selector="Button.palette-item">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="HorizontalAlignment" Value="Stretch"/>
+			<Setter Property="HorizontalContentAlignment" Value="Left"/>
+			<Setter Property="Padding" Value="12,6"/>
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="Height" Value="36"/>
+			<Setter Property="FontSize" Value="13"/>
+			<Setter Property="Foreground" Value="{DynamicResource ZTextPrimary}"/>
+		</Style>
+		<Style Selector="Button.palette-item:pointerover">
+			<Setter Property="Background" Value="{DynamicResource ZAccentSubtle}"/>
+			<Setter Property="Foreground" Value="{DynamicResource ZAccent}"/>
+		</Style>
 	</Window.Styles>
 
 	<u:LoadingContainer IsLoading="{Binding Path=IsBusy, Mode=OneWay}"
 						LoadingMessage="{x:Static resources:Labels.Label_PleaseWait}"
 						Name="LoadingPanel">
-		<DockPanel IsEnabled="{Binding Path=!IsBusy, Mode=OneWay}"
-				   Background="{DynamicResource ZBackground}">
+		<Grid IsEnabled="{Binding Path=!IsBusy, Mode=OneWay}"
+			  Background="{DynamicResource ZBackground}">
+			<DockPanel>
 
-			<!-- Thin error indicator bar at the very top -->
-			<Border DockPanel.Dock="Top"
-					Height="3">
-				<Classes.compile-ok>
-					<MultiBinding Converter="{x:Static BoolConverters.And}">
-						<MultiBinding.Bindings>
-							<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
-							<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
-						</MultiBinding.Bindings>
-					</MultiBinding>
-				</Classes.compile-ok>
-				<Classes.compile-error>
-					<MultiBinding Converter="{x:Static BoolConverters.Or}">
-						<MultiBinding.Bindings>
-							<Binding Path="HasCompilationErrors" Mode="OneWay"/>
-							<Binding Path="HasStaleOutputs" Mode="OneWay"/>
-						</MultiBinding.Bindings>
-					</MultiBinding>
-				</Classes.compile-error>
-			</Border>
+				<!-- ── Error bar (3px, top) ── -->
+				<Border DockPanel.Dock="Top" Height="3">
+					<Classes.compile-ok>
+						<MultiBinding Converter="{x:Static BoolConverters.And}">
+							<MultiBinding.Bindings>
+								<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</Classes.compile-ok>
+					<Classes.compile-error>
+						<MultiBinding Converter="{x:Static BoolConverters.Or}">
+							<MultiBinding.Bindings>
+								<Binding Path="HasCompilationErrors" Mode="OneWay"/>
+								<Binding Path="HasStaleOutputs" Mode="OneWay"/>
+							</MultiBinding.Bindings>
+						</MultiBinding>
+					</Classes.compile-error>
+				</Border>
 
-			<!-- Menu bar with clean bottom border -->
-			<Border DockPanel.Dock="Top"
-					Background="{DynamicResource ZToolbarBg}"
-					BorderThickness="0,0,0,1"
-					BorderBrush="{DynamicResource ZBorder}">
-				<Menu HorizontalAlignment="Left"
-					  Padding="4,0"
-					  Height="36">
-					<MenuItem Header="{x:Static resources:Menus.Menu_File}">
-						<MenuItem Header="{x:Static resources:Menus.Menu_Open}"
-								  Command="{Binding Path=OpenProjectFileCommand, Mode=OneWay}"
-								  InputGesture="Ctrl+O"/>
-						<Separator />
-						<MenuItem Header="{x:Static resources:Menus.Menu_Save}"
-								  Command="{Binding Path=SaveProjectFileCommand, Mode=OneWay}"
-								  InputGesture="Ctrl+S"/>
-						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-								  Command="{Binding Path=SaveAsProjectFileCommand, Mode=OneWay}"/>
-						<Separator />
-						<MenuItem Header="{x:Static resources:Menus.Menu_Import}"
-								  Command="{Binding Path=ImportProjectScenarioFileCommand, Mode=OneWay}"/>
-						<MenuItem Header="{x:Static resources:Menus.Menu_Export}"
-								  Command="{Binding Path=ExportProjectScenarioFileCommand, Mode=OneWay}"/>
-						<Separator />
-						<MenuItem Header="{x:Static resources:Menus.Menu_Close}"
-								  Command="{Binding Path=CloseProjectCommand, Mode=OneWay}"/>
-					</MenuItem>
+				<!-- ── Toolbar (40px) ── -->
+				<Border DockPanel.Dock="Top"
+						Height="40"
+						Background="{DynamicResource ZToolbarBg}"
+						BorderBrush="{DynamicResource ZBorder}"
+						BorderThickness="0,0,0,1">
+					<DockPanel VerticalAlignment="Center">
 
-					<MenuItem Header="{x:Static resources:Menus.Menu_Settings}">
-						<MenuItem Header="{x:Static resources:Menus.Menu_ShowDates}"
-								  Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}"
-								  InputGesture="Ctrl+D">
-							<MenuItem.Icon>
-								<CheckBox BorderThickness="0"
-										  Theme="{StaticResource SimpleCheckBox}"
-										  IsHitTestVisible="False"
-										  IsChecked="{Binding Path=ShowDates, Mode=OneWay}" />
-							</MenuItem.Icon>
-						</MenuItem>
-						<MenuItem Header="{x:Static resources:Menus.Menu_UseClassicDates}"
-								  Command="{Binding Path=ToggleUseClassicDatesCommand, Mode=OneWay}"
-								  IsEnabled="{Binding Path=ShowDates, Mode=OneWay}"
-								  InputGesture="Ctrl+F">
-							<MenuItem.Icon>
-								<CheckBox BorderThickness="0"
-										  Theme="{StaticResource SimpleCheckBox}"
-										  IsHitTestVisible="False"
-										  IsChecked="{Binding Path=UseClassicDates, Mode=OneWay}" />
-							</MenuItem.Icon>
-						</MenuItem>
-
-						<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysSettings}">
-							<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysNone}"
-									  IsChecked="{Binding Path=NonWorkingDayMode, Converter={x:Static local:EnumConverters.IsNonWorkingDayModeMatch}, ConverterParameter={x:Static common:NonWorkingDayMode.None}, Mode=OneWay}"
-									  Command="{Binding Path=ChangeNonWorkingDayModeCommand, Mode=OneWay}"
-								      CommandParameter="{x:Static common:NonWorkingDayMode.None}"
-									  ToggleType="Radio"/>
-							<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysWeekends}"
-									  IsChecked="{Binding Path=NonWorkingDayMode, Converter={x:Static local:EnumConverters.IsNonWorkingDayModeMatch}, ConverterParameter={x:Static common:NonWorkingDayMode.Weekends}, Mode=OneWay}"
-									  Command="{Binding Path=ChangeNonWorkingDayModeCommand, Mode=OneWay}"
-								      CommandParameter="{x:Static common:NonWorkingDayMode.Weekends}"
-									  ToggleType="Radio"/>
-							<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysCustomCalendar}"
-									  IsChecked="{Binding Path=NonWorkingDayMode, Converter={x:Static local:EnumConverters.IsNonWorkingDayModeMatch}, ConverterParameter={x:Static common:NonWorkingDayMode.CustomCalendar}, Mode=OneWay}"
-									  Command="{Binding Path=ChangeNonWorkingDayModeCommand, Mode=OneWay}"
-								      CommandParameter="{x:Static common:NonWorkingDayMode.CustomCalendar}"
-									  ToggleType="Radio"/>
-						</MenuItem>
-
-						<MenuItem Header="{x:Static resources:Menus.Menu_HideCost}"
-								  Command="{Binding Path=ToggleHideCostCommand, Mode=OneWay}"
-								  InputGesture="Ctrl+W">
-							<MenuItem.Icon>
-								<CheckBox BorderThickness="0"
-										  Theme="{StaticResource SimpleCheckBox}"
-										  IsHitTestVisible="False"
-										  IsChecked="{Binding Path=HideCost, Mode=OneWay}" />
-							</MenuItem.Icon>
-						</MenuItem>
-						<MenuItem Header="{x:Static resources:Menus.Menu_HideBilling}"
-								  Command="{Binding Path=ToggleHideBillingCommand, Mode=OneWay}"
-								  InputGesture="Ctrl+E">
-							<MenuItem.Icon>
-								<CheckBox BorderThickness="0"
-										  Theme="{StaticResource SimpleCheckBox}"
-										  IsHitTestVisible="False"
-										  IsChecked="{Binding Path=HideBilling, Mode=OneWay}" />
-							</MenuItem.Icon>
-						</MenuItem>
-						<Separator />
-						<MenuItem Header="{x:Static resources:Menus.Menu_DefaultSettings}">
-							<MenuItem Header="{x:Static resources:Menus.Menu_ShowDates}"
-									  Command="{Binding Path=ToggleDefaultShowDatesCommand, Mode=OneWay}">
-								<MenuItem.Icon>
-									<CheckBox BorderThickness="0"
-											  Theme="{StaticResource SimpleCheckBox}"
-											  IsHitTestVisible="False"
-											  IsChecked="{Binding Path=DefaultShowDates, Mode=OneWay}" />
-								</MenuItem.Icon>
-							</MenuItem>
-							<MenuItem Header="{x:Static resources:Menus.Menu_UseClassicDates}"
-									  Command="{Binding Path=ToggleDefaultUseClassicDatesCommand, Mode=OneWay}"
-									  IsEnabled="{Binding Path=DefaultShowDates, Mode=OneWay}">
-								<MenuItem.Icon>
-									<CheckBox BorderThickness="0"
-											  Theme="{StaticResource SimpleCheckBox}"
-											  IsHitTestVisible="False"
-											  IsChecked="{Binding Path=DefaultUseClassicDates, Mode=OneWay}" />
-								</MenuItem.Icon>
+						<!-- Menu bar (left) -->
+						<Menu DockPanel.Dock="Left"
+							  VerticalAlignment="Center"
+							  Padding="4,0"
+							  Height="40">
+							<MenuItem Header="{x:Static resources:Menus.Menu_File}">
+								<MenuItem Header="{x:Static resources:Menus.Menu_Open}"
+										  Command="{Binding Path=OpenProjectFileCommand, Mode=OneWay}"
+										  InputGesture="Ctrl+O"/>
+								<Separator />
+								<MenuItem Header="{x:Static resources:Menus.Menu_Save}"
+										  Command="{Binding Path=SaveProjectFileCommand, Mode=OneWay}"
+										  InputGesture="Ctrl+S"/>
+								<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+										  Command="{Binding Path=SaveAsProjectFileCommand, Mode=OneWay}"/>
+								<Separator />
+								<MenuItem Header="{x:Static resources:Menus.Menu_Import}"
+										  Command="{Binding Path=ImportProjectScenarioFileCommand, Mode=OneWay}"/>
+								<MenuItem Header="{x:Static resources:Menus.Menu_Export}"
+										  Command="{Binding Path=ExportProjectScenarioFileCommand, Mode=OneWay}"/>
+								<Separator />
+								<MenuItem Header="{x:Static resources:Menus.Menu_Close}"
+										  Command="{Binding Path=CloseProjectCommand, Mode=OneWay}"/>
 							</MenuItem>
 
-							<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysSettings}">
-								<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysNone}"
-										  IsChecked="{Binding Path=DefaultNonWorkingDayMode, Converter={x:Static local:EnumConverters.IsNonWorkingDayModeMatch}, ConverterParameter={x:Static common:NonWorkingDayMode.None}, Mode=OneWay}"
-										  Command="{Binding Path=ChangeDefaultNonWorkingDayModeCommand, Mode=OneWay}"
-										  CommandParameter="{x:Static common:NonWorkingDayMode.None}"
-										  ToggleType="Radio"/>
-								<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysWeekends}"
-										  IsChecked="{Binding Path=DefaultNonWorkingDayMode, Converter={x:Static local:EnumConverters.IsNonWorkingDayModeMatch}, ConverterParameter={x:Static common:NonWorkingDayMode.Weekends}, Mode=OneWay}"
-										  Command="{Binding Path=ChangeDefaultNonWorkingDayModeCommand, Mode=OneWay}"
-										  CommandParameter="{x:Static common:NonWorkingDayMode.Weekends}"
-										  ToggleType="Radio"/>
-								<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysCustomCalendar}"
-										  IsChecked="{Binding Path=DefaultNonWorkingDayMode, Converter={x:Static local:EnumConverters.IsNonWorkingDayModeMatch}, ConverterParameter={x:Static common:NonWorkingDayMode.CustomCalendar}, Mode=OneWay}"
-										  Command="{Binding Path=ChangeDefaultNonWorkingDayModeCommand, Mode=OneWay}"
-										  CommandParameter="{x:Static common:NonWorkingDayMode.CustomCalendar}"
-										  ToggleType="Radio"/>
+							<MenuItem Header="{x:Static resources:Menus.Menu_Settings}">
+								<MenuItem Header="{x:Static resources:Menus.Menu_ShowDates}"
+										  Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}"
+										  InputGesture="Ctrl+D">
+									<MenuItem.Icon>
+										<CheckBox BorderThickness="0"
+												  Theme="{StaticResource SimpleCheckBox}"
+												  IsHitTestVisible="False"
+												  IsChecked="{Binding Path=ShowDates, Mode=OneWay}" />
+									</MenuItem.Icon>
+								</MenuItem>
+								<MenuItem Header="{x:Static resources:Menus.Menu_UseClassicDates}"
+										  Command="{Binding Path=ToggleUseClassicDatesCommand, Mode=OneWay}"
+										  IsEnabled="{Binding Path=ShowDates, Mode=OneWay}"
+										  InputGesture="Ctrl+F">
+									<MenuItem.Icon>
+										<CheckBox BorderThickness="0"
+												  Theme="{StaticResource SimpleCheckBox}"
+												  IsHitTestVisible="False"
+												  IsChecked="{Binding Path=UseClassicDates, Mode=OneWay}" />
+									</MenuItem.Icon>
+								</MenuItem>
+
+								<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysSettings}">
+									<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysNone}"
+											  IsChecked="{Binding Path=NonWorkingDayMode, Converter={x:Static local:EnumConverters.IsNonWorkingDayModeMatch}, ConverterParameter={x:Static common:NonWorkingDayMode.None}, Mode=OneWay}"
+											  Command="{Binding Path=ChangeNonWorkingDayModeCommand, Mode=OneWay}"
+										      CommandParameter="{x:Static common:NonWorkingDayMode.None}"
+											  ToggleType="Radio"/>
+									<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysWeekends}"
+											  IsChecked="{Binding Path=NonWorkingDayMode, Converter={x:Static local:EnumConverters.IsNonWorkingDayModeMatch}, ConverterParameter={x:Static common:NonWorkingDayMode.Weekends}, Mode=OneWay}"
+											  Command="{Binding Path=ChangeNonWorkingDayModeCommand, Mode=OneWay}"
+										      CommandParameter="{x:Static common:NonWorkingDayMode.Weekends}"
+											  ToggleType="Radio"/>
+									<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysCustomCalendar}"
+											  IsChecked="{Binding Path=NonWorkingDayMode, Converter={x:Static local:EnumConverters.IsNonWorkingDayModeMatch}, ConverterParameter={x:Static common:NonWorkingDayMode.CustomCalendar}, Mode=OneWay}"
+											  Command="{Binding Path=ChangeNonWorkingDayModeCommand, Mode=OneWay}"
+										      CommandParameter="{x:Static common:NonWorkingDayMode.CustomCalendar}"
+											  ToggleType="Radio"/>
+								</MenuItem>
+
+								<MenuItem Header="{x:Static resources:Menus.Menu_HideCost}"
+										  Command="{Binding Path=ToggleHideCostCommand, Mode=OneWay}"
+										  InputGesture="Ctrl+W">
+									<MenuItem.Icon>
+										<CheckBox BorderThickness="0"
+												  Theme="{StaticResource SimpleCheckBox}"
+												  IsHitTestVisible="False"
+												  IsChecked="{Binding Path=HideCost, Mode=OneWay}" />
+									</MenuItem.Icon>
+								</MenuItem>
+								<MenuItem Header="{x:Static resources:Menus.Menu_HideBilling}"
+										  Command="{Binding Path=ToggleHideBillingCommand, Mode=OneWay}"
+										  InputGesture="Ctrl+E">
+									<MenuItem.Icon>
+										<CheckBox BorderThickness="0"
+												  Theme="{StaticResource SimpleCheckBox}"
+												  IsHitTestVisible="False"
+												  IsChecked="{Binding Path=HideBilling, Mode=OneWay}" />
+									</MenuItem.Icon>
+								</MenuItem>
+								<Separator />
+								<MenuItem Header="{x:Static resources:Menus.Menu_DefaultSettings}">
+									<MenuItem Header="{x:Static resources:Menus.Menu_ShowDates}"
+											  Command="{Binding Path=ToggleDefaultShowDatesCommand, Mode=OneWay}">
+										<MenuItem.Icon>
+											<CheckBox BorderThickness="0"
+													  Theme="{StaticResource SimpleCheckBox}"
+													  IsHitTestVisible="False"
+													  IsChecked="{Binding Path=DefaultShowDates, Mode=OneWay}" />
+										</MenuItem.Icon>
+									</MenuItem>
+									<MenuItem Header="{x:Static resources:Menus.Menu_UseClassicDates}"
+											  Command="{Binding Path=ToggleDefaultUseClassicDatesCommand, Mode=OneWay}"
+											  IsEnabled="{Binding Path=DefaultShowDates, Mode=OneWay}">
+										<MenuItem.Icon>
+											<CheckBox BorderThickness="0"
+													  Theme="{StaticResource SimpleCheckBox}"
+													  IsHitTestVisible="False"
+													  IsChecked="{Binding Path=DefaultUseClassicDates, Mode=OneWay}" />
+										</MenuItem.Icon>
+									</MenuItem>
+
+									<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysSettings}">
+										<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysNone}"
+												  IsChecked="{Binding Path=DefaultNonWorkingDayMode, Converter={x:Static local:EnumConverters.IsNonWorkingDayModeMatch}, ConverterParameter={x:Static common:NonWorkingDayMode.None}, Mode=OneWay}"
+												  Command="{Binding Path=ChangeDefaultNonWorkingDayModeCommand, Mode=OneWay}"
+												  CommandParameter="{x:Static common:NonWorkingDayMode.None}"
+												  ToggleType="Radio"/>
+										<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysWeekends}"
+												  IsChecked="{Binding Path=DefaultNonWorkingDayMode, Converter={x:Static local:EnumConverters.IsNonWorkingDayModeMatch}, ConverterParameter={x:Static common:NonWorkingDayMode.Weekends}, Mode=OneWay}"
+												  Command="{Binding Path=ChangeDefaultNonWorkingDayModeCommand, Mode=OneWay}"
+												  CommandParameter="{x:Static common:NonWorkingDayMode.Weekends}"
+												  ToggleType="Radio"/>
+										<MenuItem Header="{x:Static resources:Menus.Menu_NonWorkingDaysCustomCalendar}"
+												  IsChecked="{Binding Path=DefaultNonWorkingDayMode, Converter={x:Static local:EnumConverters.IsNonWorkingDayModeMatch}, ConverterParameter={x:Static common:NonWorkingDayMode.CustomCalendar}, Mode=OneWay}"
+												  Command="{Binding Path=ChangeDefaultNonWorkingDayModeCommand, Mode=OneWay}"
+												  CommandParameter="{x:Static common:NonWorkingDayMode.CustomCalendar}"
+												  ToggleType="Radio"/>
+									</MenuItem>
+
+									<MenuItem Header="{x:Static resources:Menus.Menu_HideCost}"
+											  Command="{Binding Path=ToggleDefaultHideCostCommand, Mode=OneWay}">
+										<MenuItem.Icon>
+											<CheckBox BorderThickness="0"
+													  Theme="{StaticResource SimpleCheckBox}"
+													  IsHitTestVisible="False"
+													  IsChecked="{Binding Path=DefaultHideCost, Mode=OneWay}" />
+										</MenuItem.Icon>
+									</MenuItem>
+									<MenuItem Header="{x:Static resources:Menus.Menu_HideBilling}"
+											  Command="{Binding Path=ToggleDefaultHideBillingCommand, Mode=OneWay}">
+										<MenuItem.Icon>
+											<CheckBox BorderThickness="0"
+													  Theme="{StaticResource SimpleCheckBox}"
+													  IsHitTestVisible="False"
+													  IsChecked="{Binding Path=DefaultHideBilling, Mode=OneWay}" />
+										</MenuItem.Icon>
+									</MenuItem>
+								</MenuItem>
+								<Separator />
+								<MenuItem Header="{x:Static resources:Menus.Menu_Themes}">
+									<MenuItem Header="{x:Static resources:Themes.Theme_Default}"
+											  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Default}, Mode=OneWay}"
+											  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+										      CommandParameter="{x:Static resources:Themes.Theme_Default}"
+											  ToggleType="Radio" />
+									<MenuItem Header="{x:Static resources:Themes.Theme_Light}"
+											  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Light}, Mode=OneWay}"
+											  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+										      CommandParameter="{x:Static resources:Themes.Theme_Light}"
+											  ToggleType="Radio" />
+									<MenuItem Header="{x:Static resources:Themes.Theme_Dark}"
+											  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Dark}, Mode=OneWay}"
+											  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+										      CommandParameter="{x:Static resources:Themes.Theme_Dark}"
+											  ToggleType="Radio" />
+									<MenuItem Header="{x:Static resources:Themes.Theme_Aquatic}"
+											  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Aquatic}, Mode=OneWay}"
+											  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+										      CommandParameter="{x:Static resources:Themes.Theme_Aquatic}"
+											  ToggleType="Radio" />
+									<MenuItem Header="{x:Static resources:Themes.Theme_Desert}"
+											  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Desert}, Mode=OneWay}"
+											  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+										      CommandParameter="{x:Static resources:Themes.Theme_Desert}"
+											  ToggleType="Radio" />
+									<MenuItem Header="{x:Static resources:Themes.Theme_Dusk}"
+											  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Dusk}, Mode=OneWay}"
+											  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+										      CommandParameter="{x:Static resources:Themes.Theme_Dusk}"
+											  ToggleType="Radio" />
+									<MenuItem Header="{x:Static resources:Themes.Theme_NightSky}"
+											  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_NightSky}, Mode=OneWay}"
+											  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
+										      CommandParameter="{x:Static resources:Themes.Theme_NightSky}"
+											  ToggleType="Radio" />
+								</MenuItem>
+
+								<MenuItem Header="{x:Static resources:Menus.Menu_SaveLayout}"
+										  Command="{Binding Path=SaveLayoutCommand, Mode=OneWay}"
+										  InputGesture="Ctrl+L"/>
+
+								<MenuItem Header="{x:Static resources:Menus.Menu_ResetLayout}"
+										  Command="{Binding Path=ResetLayoutCommand, Mode=OneWay}" />
 							</MenuItem>
 
-							<MenuItem Header="{x:Static resources:Menus.Menu_HideCost}"
-									  Command="{Binding Path=ToggleDefaultHideCostCommand, Mode=OneWay}">
-								<MenuItem.Icon>
-									<CheckBox BorderThickness="0"
-											  Theme="{StaticResource SimpleCheckBox}"
-											  IsHitTestVisible="False"
-											  IsChecked="{Binding Path=DefaultHideCost, Mode=OneWay}" />
-								</MenuItem.Icon>
+							<MenuItem Header="{x:Static resources:Menus.Menu_Compile}">
+								<MenuItem Header="{x:Static resources:Menus.Menu_Compile}"
+										  Command="{Binding Path=CompileCommand, Mode=OneWay}"/>
+								<MenuItem Header="{x:Static resources:Menus.Menu_AutoCompile}"
+										  Command="{Binding Path=ToggleAutoCompileCommand, Mode=OneWay}">
+									<MenuItem.Icon>
+										<CheckBox BorderThickness="0"
+												  Theme="{StaticResource SimpleCheckBox}"
+												  IsHitTestVisible="False"
+												  IsChecked="{Binding Path=AutoCompile, Mode=OneWay}" />
+									</MenuItem.Icon>
+								</MenuItem>
+								<MenuItem Header="{x:Static resources:Menus.Menu_TransitiveReduction}"
+										  Command="{Binding Path=TransitiveReductionCommand, Mode=OneWay}"/>
 							</MenuItem>
-							<MenuItem Header="{x:Static resources:Menus.Menu_HideBilling}"
-									  Command="{Binding Path=ToggleDefaultHideBillingCommand, Mode=OneWay}">
-								<MenuItem.Icon>
-									<CheckBox BorderThickness="0"
-											  Theme="{StaticResource SimpleCheckBox}"
-											  IsHitTestVisible="False"
-											  IsChecked="{Binding Path=DefaultHideBilling, Mode=OneWay}" />
-								</MenuItem.Icon>
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_Help}">
+								<MenuItem Header="{x:Static resources:Menus.Menu_Documentation}"
+										  Command="{Binding Path=OpenDocumentationCommand, Mode=OneWay}"/>
+								<Separator />
+								<MenuItem Header="{x:Static resources:Menus.Menu_ReportIssue}"
+										  Command="{Binding Path=OpenReportIssueCommand, Mode=OneWay}"/>
+								<Separator />
+								<MenuItem Header="{x:Static resources:Menus.Menu_Donate}"
+										  Command="{Binding Path=OpenDonateCommand, Mode=OneWay}"/>
+								<MenuItem Header="{x:Static resources:Menus.Menu_ViewLicense}"
+										  Command="{Binding Path=OpenViewLicenseCommand, Mode=OneWay}"/>
+								<Separator />
+								<MenuItem Command="{Binding Path=OpenAboutCommand, Mode=OneWay}">
+									<MenuItem.Header>
+										<TextBlock>
+											<Run Text="{x:Static resources:Menus.Menu_About}"></Run>
+											<Run Text="{x:Static resources:Labels.Label_AppName}"></Run>
+										</TextBlock>
+									</MenuItem.Header>
+								</MenuItem>
 							</MenuItem>
-						</MenuItem>
-						<Separator />
-						<MenuItem Header="{x:Static resources:Menus.Menu_Themes}">
-							<MenuItem Header="{x:Static resources:Themes.Theme_Default}"
-									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Default}, Mode=OneWay}"
-									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
-								      CommandParameter="{x:Static resources:Themes.Theme_Default}"
-									  ToggleType="Radio" />
-							<MenuItem Header="{x:Static resources:Themes.Theme_Light}"
-									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Light}, Mode=OneWay}"
-									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
-								      CommandParameter="{x:Static resources:Themes.Theme_Light}"
-									  ToggleType="Radio" />
-							<MenuItem Header="{x:Static resources:Themes.Theme_Dark}"
-									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Dark}, Mode=OneWay}"
-									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
-								      CommandParameter="{x:Static resources:Themes.Theme_Dark}"
-									  ToggleType="Radio" />
-							<MenuItem Header="{x:Static resources:Themes.Theme_Aquatic}"
-									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Aquatic}, Mode=OneWay}"
-									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
-								      CommandParameter="{x:Static resources:Themes.Theme_Aquatic}"
-									  ToggleType="Radio" />
-							<MenuItem Header="{x:Static resources:Themes.Theme_Desert}"
-									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Desert}, Mode=OneWay}"
-									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
-								      CommandParameter="{x:Static resources:Themes.Theme_Desert}"
-									  ToggleType="Radio" />
-							<MenuItem Header="{x:Static resources:Themes.Theme_Dusk}"
-									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_Dusk}, Mode=OneWay}"
-									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
-								      CommandParameter="{x:Static resources:Themes.Theme_Dusk}"
-									  ToggleType="Radio" />
-							<MenuItem Header="{x:Static resources:Themes.Theme_NightSky}"
-									  IsChecked="{Binding Path=SelectedTheme, Converter={x:Static local:StringConverters.IsMatch}, ConverterParameter={x:Static resources:Themes.Theme_NightSky}, Mode=OneWay}"
-									  Command="{Binding Path=ChangeThemeCommand, Mode=OneWay}"
-								      CommandParameter="{x:Static resources:Themes.Theme_NightSky}"
-									  ToggleType="Radio" />
-						</MenuItem>
+						</Menu>
 
-						<MenuItem Header="{x:Static resources:Menus.Menu_SaveLayout}"
-								  Command="{Binding Path=SaveLayoutCommand, Mode=OneWay}"
-								  InputGesture="Ctrl+L"/>
+						<!-- Divider -->
+						<Separator DockPanel.Dock="Left"
+								   Width="1"
+								   Margin="2,8"
+								   Background="{DynamicResource ZBorder}" />
 
-						<MenuItem Header="{x:Static resources:Menus.Menu_ResetLayout}"
-								  Command="{Binding Path=ResetLayoutCommand, Mode=OneWay}" />
-					</MenuItem>
+						<!-- Action buttons (left-center) -->
+						<StackPanel DockPanel.Dock="Left"
+									Orientation="Horizontal"
+									Spacing="2"
+									VerticalAlignment="Center"
+									Margin="4,0">
+							<Button Classes="toolbar-btn"
+									Content="+ Activity"
+									Command="{Binding Path=ActivitiesManagerViewModel.AddManagedActivityCommand, Mode=OneWay}"
+									ToolTip.Tip="Add Activity" />
+							<Button Classes="toolbar-btn"
+									Content="&#9889; Compile"
+									Command="{Binding Path=CompileCommand, Mode=OneWay}"
+									IsVisible="{Binding Path=!AutoCompile, Mode=OneWay}"
+									ToolTip.Tip="Compile Project" />
+							<Button Classes="toolbar-btn"
+									ToolTip.Tip="Toggle Dates"
+									Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}">
+								<TextBlock Text="&#128197;" FontSize="14" VerticalAlignment="Center"/>
+							</Button>
+							<Button Classes="toolbar-btn"
+									ToolTip.Tip="Toggle Cost"
+									Command="{Binding Path=ToggleHideCostCommand, Mode=OneWay}">
+								<TextBlock Text="&#128176;" FontSize="14" VerticalAlignment="Center"/>
+							</Button>
+						</StackPanel>
 
-					<MenuItem Header="{x:Static resources:Menus.Menu_Compile}">
-						<MenuItem Header="{x:Static resources:Menus.Menu_Compile}"
-								  Command="{Binding Path=CompileCommand, Mode=OneWay}"/>
-						<MenuItem Header="{x:Static resources:Menus.Menu_AutoCompile}"
-								  Command="{Binding Path=ToggleAutoCompileCommand, Mode=OneWay}">
-							<MenuItem.Icon>
-								<CheckBox BorderThickness="0"
-										  Theme="{StaticResource SimpleCheckBox}"
-										  IsHitTestVisible="False"
-										  IsChecked="{Binding Path=AutoCompile, Mode=OneWay}" />
-							</MenuItem.Icon>
-						</MenuItem>
-						<MenuItem Header="{x:Static resources:Menus.Menu_TransitiveReduction}"
-								  Command="{Binding Path=TransitiveReductionCommand, Mode=OneWay}"/>
-					</MenuItem>
-					
-					<MenuItem Header="{x:Static resources:Menus.Menu_Help}">
-						<MenuItem Header="{x:Static resources:Menus.Menu_Documentation}"
-								  Command="{Binding Path=OpenDocumentationCommand, Mode=OneWay}"/>
-						<Separator />
-						<MenuItem Header="{x:Static resources:Menus.Menu_ReportIssue}"
-								  Command="{Binding Path=OpenReportIssueCommand, Mode=OneWay}"/>
-						<Separator />
-						<MenuItem Header="{x:Static resources:Menus.Menu_Donate}"
-								  Command="{Binding Path=OpenDonateCommand, Mode=OneWay}"/>
-						<MenuItem Header="{x:Static resources:Menus.Menu_ViewLicense}"
-								  Command="{Binding Path=OpenViewLicenseCommand, Mode=OneWay}"/>
-						<Separator />
-						<MenuItem Command="{Binding Path=OpenAboutCommand, Mode=OneWay}">
-							<MenuItem.Header>
-								<TextBlock>
-									<Run Text="{x:Static resources:Menus.Menu_About}"></Run>
-									<Run Text="{x:Static resources:Labels.Label_AppName}"></Run>
-								</TextBlock>
-							</MenuItem.Header>
-						</MenuItem>
-					</MenuItem>
-				</Menu>
-			</Border>
+						<!-- Command palette trigger (right) -->
+						<Border DockPanel.Dock="Right"
+								Margin="8,6"
+								VerticalAlignment="Center"
+								Width="200"
+								Background="{DynamicResource ZSurface2}"
+								CornerRadius="4"
+								BorderBrush="{DynamicResource ZBorder}"
+								BorderThickness="1"
+								Cursor="Hand"
+								Name="CommandPaletteTrigger">
+							<TextBlock Text="&#8984;K  Search commands..."
+									   FontSize="11"
+									   Foreground="{DynamicResource ZTextMuted}"
+									   VerticalAlignment="Center"
+									   Margin="8,0" />
+						</Border>
 
-			<!-- Status bar: 30px, subtle background, 11px muted labels -->
-			<Border DockPanel.Dock="Bottom"
-					Height="30"
-					Background="{DynamicResource ZStatusBar}"
-					BorderThickness="0,1,0,0"
-					BorderBrush="{DynamicResource ZBorder}">
-				<DockPanel VerticalAlignment="Center"
-						   Margin="8,0">
-					<Label DockPanel.Dock="Left"
-						   IsTabStop="False"
-						   Classes="status-label"
-						   Content="{x:Static resources:Labels.Label_ProjectStart}"
-						   VerticalContentAlignment="Center"
-						   Margin="0,0,4,0"/>
-					<DatePicker DockPanel.Dock="Left"
-								SelectedDate="{Binding Path=ProjectStart, Mode=TwoWay}"
-								Margin="0,0,16,0"
-								Padding="3"
-								Focusable="True"
-								DayFormat="d (ddd)"
-								DayVisible="True"
-								MonthVisible="True"
-								YearVisible="True"
-								VerticalAlignment="Center"/>
+						<!-- Spacer -->
+						<Grid DockPanel.Dock="Right" />
+					</DockPanel>
+				</Border>
 
-					<Label DockPanel.Dock="Left"
-						   IsTabStop="False"
-						   Classes="status-label"
-						   Content="{x:Static resources:Labels.Label_Today}"
-						   VerticalContentAlignment="Center"
-						   Margin="0,0,4,0"/>
-					<DatePicker DockPanel.Dock="Left"
-								SelectedDate="{Binding Path=Today, Mode=TwoWay}"
-								Margin="0,0,16,0"
-								Padding="3"
-								Focusable="True"
-								DayFormat="d (ddd)"
-								DayVisible="True"
-								MonthVisible="True"
-								YearVisible="True"
-								VerticalAlignment="Center"/>
+				<!-- ── Stats bar (28px) ── -->
+				<Border DockPanel.Dock="Top"
+						Height="28"
+						Background="{DynamicResource ZSurface2}"
+						BorderBrush="{DynamicResource ZBorder}"
+						BorderThickness="0,0,0,1">
+					<StackPanel Orientation="Horizontal"
+								VerticalAlignment="Center"
+								Margin="60,0,8,0"
+								Spacing="0">
+						<TextBlock Text="Project:"
+								   FontSize="11"
+								   Foreground="{DynamicResource ZTextSecondary}"
+								   VerticalAlignment="Center"
+								   Margin="0,0,4,0" />
+						<TextBlock Text="{Binding Path=ProjectTitle, Mode=OneWay}"
+								   FontSize="11"
+								   Foreground="{DynamicResource ZTextPrimary}"
+								   VerticalAlignment="Center"
+								   MaxWidth="240"
+								   TextTrimming="CharacterEllipsis" />
+						<Separator Width="1" Height="14" Margin="12,0" Background="{DynamicResource ZBorder}" />
+						<TextBlock Text="Errors"
+								   FontSize="11"
+								   Foreground="{DynamicResource ZError}"
+								   VerticalAlignment="Center"
+								   IsVisible="{Binding Path=HasCompilationErrors, Mode=OneWay}" />
+						<TextBlock Text="Stale"
+								   FontSize="11"
+								   Foreground="{DynamicResource ZTextMuted}"
+								   VerticalAlignment="Center"
+								   IsVisible="{Binding Path=HasStaleOutputs, Mode=OneWay}" />
+						<TextBlock Text="OK"
+								   FontSize="11"
+								   Foreground="{DynamicResource ZAccent}"
+								   VerticalAlignment="Center">
+							<TextBlock.IsVisible>
+								<MultiBinding Converter="{x:Static BoolConverters.And}">
+									<Binding Path="!HasCompilationErrors" Mode="OneWay"/>
+									<Binding Path="!HasStaleOutputs" Mode="OneWay"/>
+								</MultiBinding>
+							</TextBlock.IsVisible>
+						</TextBlock>
+					</StackPanel>
+				</Border>
 
-					<Grid />
-				</DockPanel>
-			</Border>
+				<!-- ── Status bar (30px, bottom) ── -->
+				<Border DockPanel.Dock="Bottom"
+						Height="30"
+						Background="{DynamicResource ZStatusBar}"
+						BorderThickness="0,1,0,0"
+						BorderBrush="{DynamicResource ZBorder}">
+					<DockPanel VerticalAlignment="Center" Margin="8,0">
+						<Label DockPanel.Dock="Left"
+							   IsTabStop="False"
+							   Classes="status-label"
+							   Content="{x:Static resources:Labels.Label_ProjectStart}"
+							   VerticalContentAlignment="Center"
+							   Margin="0,0,4,0"/>
+						<DatePicker DockPanel.Dock="Left"
+									SelectedDate="{Binding Path=ProjectStart, Mode=TwoWay}"
+									Margin="0,0,16,0"
+									Padding="3"
+									Focusable="True"
+									DayFormat="d (ddd)"
+									DayVisible="True"
+									MonthVisible="True"
+									YearVisible="True"
+									VerticalAlignment="Center"/>
 
-			<!-- Dock control fills remaining space, no extra margin -->
-			<idc:DockControl Layout="{Binding Path=Layout, Mode=OneWay}"
-							 DockProperties.IsDragEnabled="False" />
-		</DockPanel>
+						<Label DockPanel.Dock="Left"
+							   IsTabStop="False"
+							   Classes="status-label"
+							   Content="{x:Static resources:Labels.Label_Today}"
+							   VerticalContentAlignment="Center"
+							   Margin="0,0,4,0"/>
+						<DatePicker DockPanel.Dock="Left"
+									SelectedDate="{Binding Path=Today, Mode=TwoWay}"
+									Margin="0,0,16,0"
+									Padding="3"
+									Focusable="True"
+									DayFormat="d (ddd)"
+									DayVisible="True"
+									MonthVisible="True"
+									YearVisible="True"
+									VerticalAlignment="Center"/>
+
+						<Grid />
+					</DockPanel>
+				</Border>
+
+				<!-- ── Main body: sidebar + content ── -->
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="52" />
+						<ColumnDefinition Width="*" />
+					</Grid.ColumnDefinitions>
+
+					<!-- Left sidebar (52px) -->
+					<Border Grid.Column="0"
+							Background="{DynamicResource ZSurface}"
+							BorderBrush="{DynamicResource ZBorder}"
+							BorderThickness="0,0,1,0">
+						<StackPanel Orientation="Vertical">
+
+							<!-- Activities + Gantt (home) -->
+							<Button Classes="nav-btn"
+									Name="NavActivitiesGantt"
+									ToolTip.Tip="Activities + Gantt"
+									Click="NavActivitiesGantt_Click">
+								<Grid>
+									<!-- Active accent bar -->
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.ActivitiesGantt}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#9776;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+							<!-- Resources -->
+							<Button Classes="nav-btn"
+									Name="NavResources"
+									ToolTip.Tip="Resources"
+									Click="NavResources_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Resources}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#128202;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+							<!-- Scenario -->
+							<Button Classes="nav-btn"
+									Name="NavScenario"
+									ToolTip.Tip="Scenario"
+									Click="NavScenario_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Scenario}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#128200;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+							<!-- Arrow Graph -->
+							<Button Classes="nav-btn"
+									Name="NavArrowGraph"
+									ToolTip.Tip="Arrow Graph"
+									Click="NavArrowGraph_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.ArrowGraph}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#8594;"
+											   FontSize="20"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+							<!-- Vertex Graph -->
+							<Button Classes="nav-btn"
+									Name="NavVertexGraph"
+									ToolTip.Tip="Vertex Graph"
+									Click="NavVertexGraph_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.VertexGraph}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#9711;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+							<!-- Tracking -->
+							<Button Classes="nav-btn"
+									Name="NavTracking"
+									ToolTip.Tip="Tracking"
+									Click="NavTracking_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Tracking}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#10003;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+						</StackPanel>
+					</Border>
+
+					<!-- Main content area -->
+					<Grid Grid.Column="1">
+
+						<!-- Home: Activities + Gantt split view -->
+						<local:HomeView
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.ActivitiesGantt}, Mode=OneWay}"
+							DataContext="{Binding}" />
+
+						<!-- Resources chart -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Resources}, Mode=OneWay}"
+							Content="{Binding Path=ResourceChartManagerViewModel, Mode=OneWay}" />
+
+						<!-- Scenario chart -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Scenario}, Mode=OneWay}"
+							Content="{Binding Path=ScenarioChartManagerViewModel, Mode=OneWay}" />
+
+						<!-- Arrow graph -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.ArrowGraph}, Mode=OneWay}"
+							Content="{Binding Path=ArrowGraphManagerViewModel, Mode=OneWay}" />
+
+						<!-- Vertex graph -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.VertexGraph}, Mode=OneWay}"
+							Content="{Binding Path=VertexGraphManagerViewModel, Mode=OneWay}" />
+
+						<!-- Tracking -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Tracking}, Mode=OneWay}"
+							Content="{Binding Path=TrackingManagerViewModel, Mode=OneWay}" />
+
+						<!-- Command Palette Overlay -->
+						<Border Name="PaletteOverlay"
+								IsVisible="{Binding Path=IsCommandPaletteOpen, Mode=OneWay}"
+								ZIndex="100"
+								HorizontalAlignment="Center"
+								VerticalAlignment="Top"
+								Margin="0,40,0,0"
+								Classes="palette-overlay">
+							<DockPanel>
+								<!-- Search box -->
+								<Border DockPanel.Dock="Top"
+										BorderBrush="{DynamicResource ZBorder}"
+										BorderThickness="0,0,0,1"
+										Padding="12,8">
+									<DockPanel>
+										<TextBlock DockPanel.Dock="Left"
+												   Text="&#128269;"
+												   FontSize="14"
+												   VerticalAlignment="Center"
+												   Margin="0,0,8,0"
+												   Foreground="{DynamicResource ZTextMuted}" />
+										<TextBox Name="PaletteSearchBox"
+												 Watermark="Search commands..."
+												 BorderThickness="0"
+												 Background="Transparent"
+												 FontSize="13"
+												 Padding="0"
+												 VerticalAlignment="Center"
+												 MinHeight="0"
+												 Height="24"
+												 TextChanged="PaletteSearch_TextChanged"
+												 KeyDown="PaletteSearch_KeyDown" />
+									</DockPanel>
+								</Border>
+
+								<!-- Command list -->
+								<ScrollViewer DockPanel.Dock="Top"
+											  MaxHeight="340"
+											  VerticalScrollBarVisibility="Auto">
+									<ItemsControl Name="PaletteItemsControl"
+												  Margin="4">
+										<ItemsControl.ItemTemplate>
+											<DataTemplate x:DataType="local:PaletteCommand">
+												<Button Classes="palette-item"
+														Command="{Binding ExecuteCommand}"
+														CommandParameter="{Binding}">
+													<Grid>
+														<Grid.ColumnDefinitions>
+															<ColumnDefinition Width="*" />
+															<ColumnDefinition Width="Auto" />
+														</Grid.ColumnDefinitions>
+														<TextBlock Grid.Column="0"
+																   Text="{Binding Label}"
+																   VerticalAlignment="Center" />
+														<TextBlock Grid.Column="1"
+																   Text="{Binding Gesture}"
+																   FontSize="11"
+																   Foreground="{DynamicResource ZTextMuted}"
+																   VerticalAlignment="Center"
+																   Margin="8,0,0,0" />
+													</Grid>
+												</Button>
+											</DataTemplate>
+										</ItemsControl.ItemTemplate>
+									</ItemsControl>
+								</ScrollViewer>
+							</DockPanel>
+						</Border>
+
+					</Grid>
+				</Grid>
+
+			</DockPanel>
+		</Grid>
 	</u:LoadingContainer>
 </Window>

@@ -8,6 +8,24 @@ namespace Zametek.Contract.ProjectPlan
     {
         string ProjectTitle { get; }
 
+        ShellView ActiveShellView { get; set; }
+
+        bool IsCommandPaletteOpen { get; set; }
+
+        IActivitiesManagerViewModel ActivitiesManagerViewModel { get; }
+
+        IGanttChartManagerViewModel GanttChartManagerViewModel { get; }
+
+        IResourceChartManagerViewModel ResourceChartManagerViewModel { get; }
+
+        IScenarioChartManagerViewModel ScenarioChartManagerViewModel { get; }
+
+        IArrowGraphManagerViewModel ArrowGraphManagerViewModel { get; }
+
+        IVertexGraphManagerViewModel VertexGraphManagerViewModel { get; }
+
+        ITrackingManagerViewModel TrackingManagerViewModel { get; }
+
         bool IsBusy { get; }
 
         bool IsOpening { get; }
