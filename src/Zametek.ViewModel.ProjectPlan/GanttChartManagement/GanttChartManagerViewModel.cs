@@ -492,10 +492,11 @@ namespace Zametek.ViewModel.ProjectPlan
                                 .LastOrDefault()?.FinishTime ?? 0)
                             .ToList();
 
+                        Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
+
                         foreach ((string resourceName, ColorFormatModel colorFormat, int displayOrder, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
                         {
                             IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
-                            Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
                             ScheduledActivityModel? firstItem = orderedScheduledActivities.OrderBy(x => x.StartTime).FirstOrDefault();
                             ScheduledActivityModel? lastItem = orderedScheduledActivities.OrderByDescending(x => x.FinishTime).FirstOrDefault();
@@ -697,10 +698,11 @@ namespace Zametek.ViewModel.ProjectPlan
                             .Select(x => (x.Key, x.Value))
                             .ToList();
 
+                        Dictionary<int, IDependentActivity> workStreamActivityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
+
                         foreach ((int workStreamId, IList<ScheduledActivityModel> scheduledActivities) in orderedActivitiesByWorkStream)
                         {
                             IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
-                            Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
                             ScheduledActivityModel? firstItem = orderedScheduledActivities.OrderBy(x => x.StartTime).FirstOrDefault();
                             ScheduledActivityModel? lastItem = orderedScheduledActivities.OrderByDescending(x => x.FinishTime).FirstOrDefault();
@@ -713,7 +715,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 // Extend the annotation to the latest finish time of the last activity, if it has one.
                                 if (lastItem is not null)
                                 {
-                                    if (activityLookup.TryGetValue(lastItem.Id, out IDependentActivity? activity)
+                                    if (workStreamActivityLookup.TryGetValue(lastItem.Id, out IDependentActivity? activity)
                                         && activity.LatestFinishTime.HasValue
                                         && workStreamFinishTime < activity.LatestFinishTime)
                                     {
@@ -728,7 +730,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             foreach (ScheduledActivityModel scheduledActivity in orderedScheduledActivities)
                             {
-                                if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity? activity))
+                                if (workStreamActivityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity? activity))
                                 {
                                     AddBarItemToSeries(
                                         dateTimeCalculator,
