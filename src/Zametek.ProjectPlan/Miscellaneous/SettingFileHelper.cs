@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace Zametek.ProjectPlan
@@ -14,34 +14,59 @@ namespace Zametek.ProjectPlan
         private const string c_DockLayout = @"DockLayout.json";
         private const string c_DataGridLayout = @"DataGridLayout.json";
 
+        public static string? UserProfileFolderLocation()
+        {
+            // For Windows this should be "C:\Users\<user>\"
+            // For Linux/Mac this should be "/home/<user>/"
+            return Environment.GetEnvironmentVariable(c_Home)
+                ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        }
+
+        public static string? ZametekUserProfileFolderLocation()
+        {
+            string? root = UserProfileFolderLocation();
+
+            if (!string.IsNullOrWhiteSpace(root))
+            {
+                root = Path.Combine(root, c_ZametekHome);
+            }
+
+            return root;
+        }
+
+        public static string? AppDataFolderLocation()
+        {
+            // For Windows this should be "C:\Users\<user>\AppData\Roaming\"
+            // For Linux/Mac this should be "/home/<user>/.config/"
+            return Environment.GetEnvironmentVariable(c_AppData)
+                ?? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        }
+
+        public static string ZametekAppDataFolderLocation()
+        {
+            string? root = AppDataFolderLocation();
+
+            if (string.IsNullOrWhiteSpace(root))
+            {
+                root = AppContext.BaseDirectory; // This fallback if everything else fails.
+            }
+            else
+            {
+                root = Path.Combine(root, c_Zametek);
+            }
+
+            return root;
+        }
+
         public static string ProductSettingsFolderLocation()
         {
             // For backwards compatibility, this checks env vars first before using Env.GetFolderPath/
 
-            // For Windows this should be "C:\Users\<user>\"
-            // For Linux/Mac this should be "/home/<user>/"
-            string? root = Environment.GetEnvironmentVariable(c_Home)
-                ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string? root = ZametekUserProfileFolderLocation();
 
             if (string.IsNullOrWhiteSpace(root))
             {
-                // For Windows this should be "C:\Users\<user>\AppData\Roaming\"
-                // For Linux/Mac this should be "/home/<user>/.config/"
-                root = Environment.GetEnvironmentVariable(c_AppData)
-                    ?? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-
-                if (string.IsNullOrWhiteSpace(root))
-                {
-                    root = AppContext.BaseDirectory; // This fallback if everything else fails.
-                }
-                else
-                {
-                    root = Path.Combine(root, c_Zametek);
-                }
-            }
-            else
-            {
-                root = Path.Combine(root, c_ZametekHome);
+                root = ZametekAppDataFolderLocation();
             }
 
             if (string.IsNullOrWhiteSpace(root))
