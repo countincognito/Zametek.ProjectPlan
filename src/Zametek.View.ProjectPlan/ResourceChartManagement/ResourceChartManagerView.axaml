@@ -7,15 +7,17 @@
 			       xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
 			       xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 			       xmlns:common="using:Zametek.Common.ProjectPlan"
+			       xmlns:converters="using:Avalonia.Controls.Converters"
 			       x:DataType="vm:ResourceChartManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ResourceChartManagerView">
 	<UserControl.Resources>
+		<converters:EnumToBoolConverter x:Key="enumToBool" />
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
 		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
+					  VerticalScrollBarVisibility="Auto"
 					  HorizontalScrollBarVisibility="Disabled">
 			<DockPanel MinWidth="120"
 					   Margin="11,0,0,0">
@@ -128,7 +130,7 @@
 								  OnContent="{x:Static resources:Labels.Label_Yes}"
 								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"/>
 				</DockPanel>
-				
+
 				<DockPanel DockPanel.Dock="Top">
 					<Label VerticalContentAlignment="Center"
 						   HorizontalContentAlignment="Left"
@@ -161,11 +163,87 @@
 							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
 				<ContentControl.ContextMenu>
 					<ContextMenu>
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowToday}"
+								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowMilestones}"
+								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<Separator />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_AllocationMode}">
+							<MenuItem Header="{x:Static resources:Enums.Enum_AllocationMode_Activity}"
+									  IsChecked="{Binding Path=AllocationMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AllocationMode.Activity}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeAllocationModeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:AllocationMode.Activity}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_AllocationMode_Cost}"
+									  IsChecked="{Binding Path=AllocationMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AllocationMode.Cost}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeAllocationModeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:AllocationMode.Cost}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_AllocationMode_Billing}"
+									  IsChecked="{Binding Path=AllocationMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AllocationMode.Billing}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeAllocationModeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:AllocationMode.Billing}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_AllocationMode_Effort}"
+									  IsChecked="{Binding Path=AllocationMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AllocationMode.Effort}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeAllocationModeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:AllocationMode.Effort}"
+									  ToggleType="Radio" />
+						</MenuItem>
+
+						<Separator />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_ScheduleMode}">
+							<MenuItem Header="{x:Static resources:Enums.Enum_ScheduleMode_Combined}"
+									  IsChecked="{Binding Path=ScheduleMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:ScheduleMode.Combined}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeScheduleModeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:ScheduleMode.Combined}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_ScheduleMode_Scheduled}"
+									  IsChecked="{Binding Path=ScheduleMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:ScheduleMode.Scheduled}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeScheduleModeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:ScheduleMode.Scheduled}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_ScheduleMode_Unscheduled}"
+									  IsChecked="{Binding Path=ScheduleMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:ScheduleMode.Unscheduled}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeScheduleModeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:ScheduleMode.Unscheduled}"
+									  ToggleType="Radio" />
+						</MenuItem>
+
+						<Separator />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_DisplayStyle}">
+							<MenuItem Header="{x:Static resources:Enums.Enum_DisplayStyle_Slanted}"
+									  IsChecked="{Binding Path=DisplayStyle, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:DisplayStyle.Slanted}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeDisplayStyleCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:DisplayStyle.Slanted}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_DisplayStyle_Block}"
+									  IsChecked="{Binding Path=DisplayStyle, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:DisplayStyle.Block}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeDisplayStyleCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:DisplayStyle.Block}"
+									  ToggleType="Radio" />
+						</MenuItem>
+
+						<Separator />
+
 						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-                      Command="{Binding Path=SaveResourceChartImageFileCommand, Mode=OneWay}" />
+								  Command="{Binding Path=SaveResourceChartImageFileCommand, Mode=OneWay}" />
 
 						<MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
-								      Command="{Binding Path=ResetResourceChartCommand, Mode=OneWay}" />
+								  Command="{Binding Path=ResetResourceChartCommand, Mode=OneWay}" />
 					</ContextMenu>
 				</ContentControl.ContextMenu>
 			</ContentControl>

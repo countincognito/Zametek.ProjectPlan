@@ -26,6 +26,12 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ResetScenarioChartCommand { get; }
 
+        ICommand ChangeTrackedMetricXAxisCommand { get; }
+
+        ICommand ChangeTrackedMetricYAxisCommand { get; }
+
+        ICommand ChangeCurveFittingTypeCommand { get; }
+
         Task SaveScenarioChartImageFileAsync(string? filename, int width, int height);
 
         void BuildScenarioChartPlotModel();

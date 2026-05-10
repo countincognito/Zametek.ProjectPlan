@@ -7,15 +7,17 @@
 			 xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 			 xmlns:common="using:Zametek.Common.ProjectPlan"
+			 xmlns:converters="using:Avalonia.Controls.Converters"
 			 x:DataType="vm:ScenarioChartManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ScenarioChartManagerView">
 	<UserControl.Resources>
+		<converters:EnumToBoolConverter x:Key="enumToBool" />
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
 		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
+					  VerticalScrollBarVisibility="Auto"
 					  HorizontalScrollBarVisibility="Disabled">
 			<DockPanel Width="205"
 					   Margin="11,0,0,0">
@@ -128,7 +130,7 @@
 								  OnContent="{x:Static resources:Labels.Label_Yes}"
 								  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"/>
 				</DockPanel>
-				
+
 				<DockPanel DockPanel.Dock="Top">
 					<ScrollViewer VerticalScrollBarVisibility="Auto"
 								  HorizontalScrollBarVisibility="Disabled">
@@ -139,7 +141,7 @@
 											 VerticalAlignment="Stretch"/>
 					</ScrollViewer>
 				</DockPanel>
-				
+
 				<Grid/>
 			</DockPanel>
 		</ScrollViewer>
@@ -151,6 +153,468 @@
 							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
 				<ContentControl.ContextMenu>
 					<ContextMenu>
+						<MenuItem Header="{x:Static resources:Labels.Label_ShowNames}"
+								  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<Separator />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_TrackedMetricXAxis}">
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_None}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.None}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.None}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksCriticality}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksCriticality}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksCriticality}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksFibonacci}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksFibonacci}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksFibonacci}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksActivity}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksActivity}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksActivity}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksActivityStdDevCorrection}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksActivityStdDevCorrection}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksActivityStdDevCorrection}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksGeometricCriticality}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksGeometricCriticality}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksGeometricCriticality}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksGeometricFibonacci}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksGeometricFibonacci}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksGeometricFibonacci}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksGeometricActivity}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksGeometricActivity}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksGeometricActivity}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_CostsDirect}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.CostsDirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.CostsDirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_CostsIndirect}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.CostsIndirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.CostsIndirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_CostsOther}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.CostsOther}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.CostsOther}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_CostsTotal}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.CostsTotal}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.CostsTotal}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_BillingsDirect}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.BillingsDirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.BillingsDirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_BillingsIndirect}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.BillingsIndirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.BillingsIndirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_BillingsOther}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.BillingsOther}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.BillingsOther}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_BillingsTotal}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.BillingsTotal}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.BillingsTotal}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsDirect}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsDirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsDirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsDirectAbsolute}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsDirectAbsolute}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsDirectAbsolute}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsIndirect}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsIndirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsIndirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsIndirectAbsolute}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsIndirectAbsolute}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsIndirectAbsolute}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsOther}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsOther}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsOther}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsOtherAbsolute}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsOtherAbsolute}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsOtherAbsolute}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsTotal}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsTotal}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsTotal}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsTotalAbsolute}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsTotalAbsolute}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsTotalAbsolute}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_EffortsDirect}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.EffortsDirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.EffortsDirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_EffortsIndirect}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.EffortsIndirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.EffortsIndirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_EffortsOther}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.EffortsOther}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.EffortsOther}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_EffortsTotal}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.EffortsTotal}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.EffortsTotal}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_EffortsActivity}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.EffortsActivity}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.EffortsActivity}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_EffortsEfficiency}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.EffortsEfficiency}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.EffortsEfficiency}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_NetworkCyclomaticComplexity}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.NetworkCyclomaticComplexity}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.NetworkCyclomaticComplexity}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_NetworkDuration}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.NetworkDuration}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.NetworkDuration}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_NetworkDurationManMonths}"
+									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.NetworkDurationManMonths}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.NetworkDurationManMonths}"
+									  ToggleType="Radio" />
+						</MenuItem>
+
+						<Separator />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_TrackedMetricYAxis}">
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_None}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.None}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.None}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksCriticality}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksCriticality}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksCriticality}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksFibonacci}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksFibonacci}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksFibonacci}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksActivity}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksActivity}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksActivity}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksActivityStdDevCorrection}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksActivityStdDevCorrection}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksActivityStdDevCorrection}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksGeometricCriticality}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksGeometricCriticality}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksGeometricCriticality}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksGeometricFibonacci}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksGeometricFibonacci}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksGeometricFibonacci}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_RisksGeometricActivity}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.RisksGeometricActivity}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.RisksGeometricActivity}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_CostsDirect}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.CostsDirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.CostsDirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_CostsIndirect}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.CostsIndirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.CostsIndirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_CostsOther}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.CostsOther}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.CostsOther}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_CostsTotal}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.CostsTotal}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.CostsTotal}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_BillingsDirect}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.BillingsDirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.BillingsDirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_BillingsIndirect}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.BillingsIndirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.BillingsIndirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_BillingsOther}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.BillingsOther}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.BillingsOther}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_BillingsTotal}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.BillingsTotal}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.BillingsTotal}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsDirect}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsDirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsDirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsDirectAbsolute}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsDirectAbsolute}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsDirectAbsolute}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsIndirect}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsIndirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsIndirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsIndirectAbsolute}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsIndirectAbsolute}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsIndirectAbsolute}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsOther}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsOther}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsOther}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsOtherAbsolute}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsOtherAbsolute}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsOtherAbsolute}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsTotal}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsTotal}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsTotal}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_MarginsTotalAbsolute}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.MarginsTotalAbsolute}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.MarginsTotalAbsolute}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_EffortsDirect}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.EffortsDirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.EffortsDirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_EffortsIndirect}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.EffortsIndirect}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.EffortsIndirect}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_EffortsOther}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.EffortsOther}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.EffortsOther}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_EffortsTotal}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.EffortsTotal}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.EffortsTotal}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_EffortsActivity}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.EffortsActivity}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.EffortsActivity}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_EffortsEfficiency}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.EffortsEfficiency}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.EffortsEfficiency}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_NetworkCyclomaticComplexity}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.NetworkCyclomaticComplexity}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.NetworkCyclomaticComplexity}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_NetworkDuration}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.NetworkDuration}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.NetworkDuration}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_NetworkDurationManMonths}"
+									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.NetworkDurationManMonths}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:TrackedMetrics.NetworkDurationManMonths}"
+									  ToggleType="Radio" />
+						</MenuItem>
+
+						<Separator />
+
+						<MenuItem Header="{x:Static resources:Labels.Label_CurveFittingType}">
+							<MenuItem Header="{x:Static resources:Enums.Enum_CurveFittingType_None}"
+									  IsChecked="{Binding Path=CurveFittingType, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:CurveFittingType.None}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeCurveFittingTypeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:CurveFittingType.None}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_CurveFittingType_Linear}"
+									  IsChecked="{Binding Path=CurveFittingType, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:CurveFittingType.Linear}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeCurveFittingTypeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:CurveFittingType.Linear}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_CurveFittingType_Exponential}"
+									  IsChecked="{Binding Path=CurveFittingType, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:CurveFittingType.Exponential}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeCurveFittingTypeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:CurveFittingType.Exponential}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_CurveFittingType_Logarithmic}"
+									  IsChecked="{Binding Path=CurveFittingType, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:CurveFittingType.Logarithmic}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeCurveFittingTypeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:CurveFittingType.Logarithmic}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_CurveFittingType_Power}"
+									  IsChecked="{Binding Path=CurveFittingType, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:CurveFittingType.Power}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeCurveFittingTypeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:CurveFittingType.Power}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_CurveFittingType_PolynomialOrder2}"
+									  IsChecked="{Binding Path=CurveFittingType, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:CurveFittingType.PolynomialOrder2}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeCurveFittingTypeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:CurveFittingType.PolynomialOrder2}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_CurveFittingType_PolynomialOrder3}"
+									  IsChecked="{Binding Path=CurveFittingType, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:CurveFittingType.PolynomialOrder3}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeCurveFittingTypeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:CurveFittingType.PolynomialOrder3}"
+									  ToggleType="Radio" />
+
+							<MenuItem Header="{x:Static resources:Enums.Enum_CurveFittingType_PolynomialOrder4}"
+									  IsChecked="{Binding Path=CurveFittingType, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:CurveFittingType.PolynomialOrder4}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeCurveFittingTypeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:CurveFittingType.PolynomialOrder4}"
+									  ToggleType="Radio" />
+						</MenuItem>
+
+						<Separator />
+
 						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
 								  Command="{Binding Path=SaveScenarioChartImageFileCommand, Mode=OneWay}" />
 

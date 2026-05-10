@@ -119,6 +119,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 SaveResourceChartImageFileCommand = saveResourceChartImageFileCommand;
             }
 
+            ChangeAllocationModeCommand = ReactiveCommand.CreateFromTask<AllocationMode>(ChangeAllocationModeAsync);
+            ChangeScheduleModeCommand = ReactiveCommand.CreateFromTask<ScheduleMode>(ChangeScheduleModeAsync);
+            ChangeDisplayStyleCommand = ReactiveCommand.CreateFromTask<DisplayStyle>(ChangeDisplayStyleAsync);
+
             m_IsBusy = this
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBusy)
                 .ToProperty(this, rcm => rcm.IsBusy);
@@ -529,6 +533,51 @@ namespace Zametek.ViewModel.ProjectPlan
             ResourceChartPlotModel.Plot.Axes.AutoScale();
         }
 
+        private async Task ChangeAllocationModeAsync(AllocationMode allocationMode)
+        {
+            try
+            {
+                AllocationMode = allocationMode;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeScheduleModeAsync(ScheduleMode scheduleMode)
+        {
+            try
+            {
+                ScheduleMode = scheduleMode;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeDisplayStyleAsync(DisplayStyle displayStyle)
+        {
+            try
+            {
+                DisplayStyle = displayStyle;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
         private async Task SaveResourceChartImageFileAsync()
         {
             try
@@ -623,6 +672,12 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand ResetResourceChartCommand { get; }
 
         public ICommand SaveResourceChartImageFileCommand { get; }
+
+        public ICommand ChangeAllocationModeCommand { get; }
+
+        public ICommand ChangeScheduleModeCommand { get; }
+
+        public ICommand ChangeDisplayStyleCommand { get; }
 
         public async Task SaveResourceChartImageFileAsync(
             string? filename,
