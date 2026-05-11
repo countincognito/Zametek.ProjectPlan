@@ -89,7 +89,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private const double c_BarSize = 0.5;
         private const double c_TrackerCorrection = c_BarSize / 2.0;
 
-        private const double c_ArrowHeadDelta = 0.03;
+        private const double c_ArrowHeadDelta = 0.5;
         private const float c_ArrowHeadWidth = 6.0f;
         private const float c_ArrowHeadLength = 14.0f;
         private const float c_ArrowHeadHeight = 8.0f;
@@ -1214,8 +1214,10 @@ namespace Zametek.ViewModel.ProjectPlan
             Dictionary<int, (double Start, double End)> activityBarPositions,
             Dictionary<int, double> activityBarYPosition)
         {
-            // Draw a thin grey arrow from the end of each predecessor bar to the start of each successor bar.
+            // Draw elbow connectors (3 segments) from predecessor bar end to successor bar start.
+            // Routing: right from predecessor end → vertical to successor row → to successor start.
             Color connectionColor = Colors.Grey.WithAlpha(180);
+            const double c_ElbowBuffer = 0.5; // time units to extend right before turning
 
             foreach (IDependentActivity activity in graphCompilation.DependentActivities)
             {
@@ -1239,14 +1241,29 @@ namespace Zametek.ViewModel.ProjectPlan
                         continue;
                     }
 
-                    // Draw arrow from end of predecessor to start of successor.
-                    var basePoint = new Coordinates(fromPos.End, fromY);
-                    var tipPoint = new Coordinates(toPos.Start, toY);
+                    // viaX: the x-coordinate of the elbow turn.
+                    // Always buffer right of the predecessor end so the connector exits cleanly.
+                    double viaX = fromPos.End + c_ElbowBuffer;
 
+                    // Segment 1: horizontal right from predecessor bar end to the elbow.
+                    ScottPlot.Plottables.LinePlot seg1 = plotModel.Plot.Add.Line(fromPos.End, fromY, viaX, fromY);
+                    seg1.Color = connectionColor;
+                    seg1.LineWidth = c_ConnectionArrowLineWidth;
+
+                    // Segment 2: vertical from predecessor row to successor row (only if rows differ).
+                    if (Math.Abs(fromY - toY) > 0.01)
+                    {
+                        ScottPlot.Plottables.LinePlot seg2 = plotModel.Plot.Add.Line(viaX, fromY, viaX, toY);
+                        seg2.Color = connectionColor;
+                        seg2.LineWidth = c_ConnectionArrowLineWidth;
+                    }
+
+                    // Segment 3: horizontal arrow from elbow to successor bar start, arrowhead at start.
+                    // Arrow.Base = elbow point, Arrow.Tip = successor start (arrowhead lands here).
                     var arrow = new Arrow
                     {
-                        Base = basePoint,
-                        Tip = tipPoint,
+                        Base = new Coordinates(viaX, toY),
+                        Tip = new Coordinates(toPos.Start, toY),
                         ArrowLineColor = connectionColor,
                         ArrowFillColor = connectionColor,
                         ArrowShape = ArrowShape.Arrowhead.GetShape(),
@@ -1254,7 +1271,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         ArrowheadLength = c_ConnectionArrowHeadLength,
                         ArrowLineWidth = c_ConnectionArrowLineWidth,
                     };
-
                     plotModel.Plot.PlottableList.Add(arrow);
                 }
             }

@@ -28,6 +28,10 @@ namespace Zametek.Contract.ProjectPlan
 
         ObservableCollection<IManagedActivityViewModel> OrderableActivities { get; }
 
+        int ScrollToActivityId { get; }
+
+        void SelectActivityById(int activityId);
+
         ICommand SetSelectedManagedActivitiesCommand { get; }
 
         ICommand AddManagedActivityCommand { get; }

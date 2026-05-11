@@ -12,8 +12,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {EdgeWeightStyle.Normal, c_NormalStrokeWeight},
                 {EdgeWeightStyle.Bold, c_BoldStrokeWeight}
             };
-        private const double c_NormalStrokeWeight = 1.0;
-        private const double c_BoldStrokeWeight = 2.0;
+        private const double c_NormalStrokeWeight = 1.5;
+        private const double c_BoldStrokeWeight = 2.5;
 
         private readonly Dictionary<EdgeType, EdgeDashStyle> m_EdgeTypeDashLookup;
         private readonly Dictionary<EdgeType, double> m_EdgeTypeWeightLookup;

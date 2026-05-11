@@ -1393,6 +1393,12 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void SelectActivity(int activityId)
+        {
+            ActiveShellView = ShellView.ActivitiesGantt;
+            m_ActivitiesManagerViewModel.SelectActivityById(activityId);
+        }
+
         #endregion
 
         #region IKillSubscriptions Members

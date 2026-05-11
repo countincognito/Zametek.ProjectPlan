@@ -457,6 +457,29 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ObservableCollection<IManagedActivityViewModel> OrderableActivities => m_CoreViewModel.OrderableActivities;
 
+        private int m_ScrollToActivityId;
+        public int ScrollToActivityId
+        {
+            get => m_ScrollToActivityId;
+            private set => this.RaiseAndSetIfChanged(ref m_ScrollToActivityId, value);
+        }
+
+        public void SelectActivityById(int activityId)
+        {
+            lock (m_Lock)
+            {
+                IManagedActivityViewModel? activity = RawActivities.FirstOrDefault(a => a.Id == activityId);
+                if (activity is not null)
+                {
+                    SelectedActivities.Clear();
+                    SelectedActivities[activityId] = activity;
+                    HasSelectedActivities = true;
+                    HasSelectedActivity = true;
+                    ScrollToActivityId = activityId;
+                }
+            }
+        }
+
         public ICommand SetSelectedManagedActivitiesCommand { get; }
 
         public ICommand AddManagedActivityCommand { get; }

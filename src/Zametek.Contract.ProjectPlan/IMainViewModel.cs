@@ -158,6 +158,8 @@ namespace Zametek.Contract.ProjectPlan
 
         Task ResetLayoutAsync();
 
+        void SelectActivity(int activityId);
+
         Task OpenProjectFileAsync();
 
         Task OpenProjectFileAsync(string? filename);
