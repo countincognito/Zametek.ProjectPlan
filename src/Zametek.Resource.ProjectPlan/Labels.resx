@@ -588,6 +588,9 @@
   <data name="Label_ShowSlack" xml:space="preserve">
     <value>Show Slack</value>
   </data>
+  <data name="Label_ShowAllConnections" xml:space="preserve">
+    <value>Show All Connections</value>
+  </data>
   <data name="Label_RootNode" xml:space="preserve">
     <value>Root</value>
   </data>

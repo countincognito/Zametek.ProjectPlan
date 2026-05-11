@@ -32,6 +32,34 @@ namespace Zametek.View.ProjectPlan
 
         #region Private Methods
 
+        /// <summary>
+        /// Builds a FilePickerFileType from a FileFilter, ensuring AppleUniformTypeIdentifiers
+        /// are set so macOS doesn't grey out files with unregistered extensions (e.g. .zpp).
+        /// </summary>
+        private static FilePickerFileType BuildFilePickerFileType(FileFilter filter)
+        {
+            // Extract bare extensions from patterns like "*.zpp" → "zpp"
+            var extensions = filter.Patterns
+                .Where(p => p.StartsWith("*.") && p.Length > 2)
+                .Select(p => p[2..])
+                .ToList();
+
+            // On macOS, Avalonia maps AppleUniformTypeIdentifiers to NSOpenPanel allowedContentTypes.
+            // Without this, files with unrecognised extensions are greyed out.
+            // "public.data" is a catch-all UTI that allows any binary data file to be selected.
+            // "public.item" is even broader (includes directories), so we prefer public.data.
+            string[] appleUtis = extensions.Count > 0
+                ? ["public.data"]
+                : ["public.item"];
+
+            return new FilePickerFileType(filter.Name)
+            {
+                Patterns = filter.Patterns,
+                AppleUniformTypeIdentifiers = appleUtis,
+                MimeTypes = ["application/octet-stream"]
+            };
+        }
+
         private async Task<ButtonResult> ShowMessageBoxAsync(MessageBoxStandardParams standardParams)
         {
             return await Dispatcher.UIThread.InvokeAsync(() =>
@@ -250,7 +278,7 @@ namespace Zametek.View.ProjectPlan
                 return null;
             }
 
-            List<FilePickerFileType> filters = [.. fileFilters.Cast<FileFilter>().Select(m_Mapper.ToFilePickerFileType)];
+            List<FilePickerFileType> filters = [.. fileFilters.Cast<FileFilter>().Select(BuildFilePickerFileType)];
 
             var options = new FilePickerOpenOptions
             {
@@ -284,7 +312,7 @@ namespace Zametek.View.ProjectPlan
                 return null;
             }
 
-            List<FilePickerFileType> filters = [.. fileFilters.Cast<FileFilter>().Select(m_Mapper.ToFilePickerFileType)];
+            List<FilePickerFileType> filters = [.. fileFilters.Cast<FileFilter>().Select(BuildFilePickerFileType)];
 
             var options = new FilePickerSaveOptions
             {

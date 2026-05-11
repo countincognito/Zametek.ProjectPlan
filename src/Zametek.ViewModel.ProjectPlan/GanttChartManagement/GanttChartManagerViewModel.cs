@@ -95,6 +95,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private const float c_ArrowHeadHeight = 8.0f;
 
         private const float c_VerticalLineWidth = 2.0f;
+        private const float c_ConnectionArrowLineWidth = 1.0f;
+        private const float c_ConnectionArrowHeadWidth = 5.0f;
+        private const float c_ConnectionArrowHeadLength = 10.0f;
 
         #endregion
 
@@ -211,6 +214,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     })
                 .ToProperty(this, rcm => rcm.BoolAccumulator);
 
+            this.WhenAnyValue(rcm => rcm.ShowAllConnections)
+                .Subscribe(_ => BuildGanttChartPlotModel());
+
             m_BuildGanttChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
@@ -264,6 +270,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public object? ImageBounds { get; set; }
 
+        private bool m_ShowAllConnections;
+        public bool ShowAllConnections
+        {
+            get => m_ShowAllConnections;
+            set
+            {
+                lock (m_Lock)
+                {
+                    this.RaiseAndSetIfChanged(ref m_ShowAllConnections, value);
+                }
+            }
+        }
+
         #endregion
 
         #region Private Methods
@@ -310,6 +329,7 @@ namespace Zametek.ViewModel.ProjectPlan
             bool showProjectFinish,
             bool showTracking,
             IEnumerable<int> highlightActivityConnections,
+            bool showAllConnections,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
@@ -355,6 +375,7 @@ namespace Zametek.ViewModel.ProjectPlan
             var bars = new List<Bar>();
             var highlights = new List<IPlottable>();
             var labels = new List<string>();
+            var activityBarPositions = new Dictionary<int, (double Start, double End)>();
 
             switch (groupByMode)
             {
@@ -395,7 +416,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                 labels,
                                 highlights,
                                 activity,
-                                highlightActivityConnections);
+                                highlightActivityConnections,
+                                activityBarPositions);
 
                             switch (annotationStyle)
                             {
@@ -540,7 +562,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                         labels,
                                         highlights,
                                         activity,
-                                        highlightActivityConnections);
+                                        highlightActivityConnections,
+                                        activityBarPositions);
                                 }
                             }
 
@@ -746,7 +769,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                         labels,
                                         highlights,
                                         activity,
-                                        highlightActivityConnections);
+                                        highlightActivityConnections,
+                                        activityBarPositions);
                                 }
                             }
 
@@ -845,14 +869,30 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // Enumerate the bar series and set the position of each bar.
+            // Also build a position lookup for connection arrow drawing.
+            var activityBarYPosition = new Dictionary<int, double>();
             for (int i = 0; i < bars.Count; i++)
             {
                 var bar = bars[i];
                 bar.Position = i + 1;
+                if (bar is AnnotatedBar ab && ab.ActivityId != 0)
+                {
+                    activityBarYPosition[ab.ActivityId] = i + 1;
+                }
             }
 
             BarPlot barPlot = plotModel.Plot.Add.Bars(bars);
             barPlot.Horizontal = true;
+
+            // Draw "show all connections" arrows between dependent activity bars.
+            if (showAllConnections)
+            {
+                AddAllConnectionArrows(
+                    plotModel,
+                    graphCompilation,
+                    activityBarPositions,
+                    activityBarYPosition);
+            }
 
             // Highlights (above the bar plot).
             plotModel.Plot.PlottableList.AddRange(highlights);
@@ -1043,7 +1083,8 @@ namespace Zametek.ViewModel.ProjectPlan
             List<string> labels,
             List<IPlottable> highlights,
             IDependentActivity activity,
-            IEnumerable<int> highlightActivityConnections)
+            IEnumerable<int> highlightActivityConnections,
+            Dictionary<int, (double Start, double End)>? activityBarPositions = null)
         {
             if (activity.EarliestStartTime.HasValue
                 && activity.EarliestFinishTime.HasValue
@@ -1126,6 +1167,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 series.Add(item);
                 labels.Add(label);
 
+                if (activityBarPositions is not null)
+                {
+                    activityBarPositions[activity.Id] = (start, end);
+                }
+
                 int labelCount = labels.Count;
 
                 if (highlightAsDependency)
@@ -1158,6 +1204,58 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         highlights.Add(rectangle);
                     }
+                }
+            }
+        }
+
+        private static void AddAllConnectionArrows(
+            AvaPlot plotModel,
+            IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
+            Dictionary<int, (double Start, double End)> activityBarPositions,
+            Dictionary<int, double> activityBarYPosition)
+        {
+            // Draw a thin grey arrow from the end of each predecessor bar to the start of each successor bar.
+            Color connectionColor = Colors.Grey.WithAlpha(180);
+
+            foreach (IDependentActivity activity in graphCompilation.DependentActivities)
+            {
+                // activity.Successors = list of successor IDs
+                foreach (int successorId in activity.Successors)
+                {
+                    if (!activityBarPositions.TryGetValue(activity.Id, out (double Start, double End) fromPos))
+                    {
+                        continue;
+                    }
+                    if (!activityBarPositions.TryGetValue(successorId, out (double Start, double End) toPos))
+                    {
+                        continue;
+                    }
+                    if (!activityBarYPosition.TryGetValue(activity.Id, out double fromY))
+                    {
+                        continue;
+                    }
+                    if (!activityBarYPosition.TryGetValue(successorId, out double toY))
+                    {
+                        continue;
+                    }
+
+                    // Draw arrow from end of predecessor to start of successor.
+                    var basePoint = new Coordinates(fromPos.End, fromY);
+                    var tipPoint = new Coordinates(toPos.Start, toY);
+
+                    var arrow = new Arrow
+                    {
+                        Base = basePoint,
+                        Tip = tipPoint,
+                        ArrowLineColor = connectionColor,
+                        ArrowFillColor = connectionColor,
+                        ArrowShape = ArrowShape.Arrowhead.GetShape(),
+                        ArrowheadWidth = c_ConnectionArrowHeadWidth,
+                        ArrowheadLength = c_ConnectionArrowHeadLength,
+                        ArrowLineWidth = c_ConnectionArrowLineWidth,
+                    };
+
+                    plotModel.Plot.PlottableList.Add(arrow);
                 }
             }
         }
@@ -1596,6 +1694,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     ShowProjectFinish,
                     ShowTracking,
                     ActivitySelector.SelectedActivityIds,
+                    ShowAllConnections,
                     m_CoreViewModel.BaseTheme);
             }
 
@@ -1633,6 +1732,34 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             activity.Duration = newDuration;
+            m_CoreViewModel.IsProjectScenarioUpdated = true;
+            m_CoreViewModel.RunAutoCompile();
+        }
+
+        public void AddActivityDependency(int fromActivityId, int toActivityId)
+        {
+            if (fromActivityId == toActivityId)
+            {
+                return;
+            }
+
+            IManagedActivityViewModel? fromActivity = m_CoreViewModel.RawActivities
+                .FirstOrDefault(a => a.Id == fromActivityId);
+
+            if (fromActivity is null)
+            {
+                return;
+            }
+
+            // Parse existing dependencies and add the new one if not already present.
+            HashSet<int> deps = [.. fromActivity.Dependencies];
+            if (deps.Contains(toActivityId))
+            {
+                return;
+            }
+
+            deps.Add(toActivityId);
+            fromActivity.DependenciesString = string.Join(",", deps.OrderBy(x => x));
             m_CoreViewModel.IsProjectScenarioUpdated = true;
             m_CoreViewModel.RunAutoCompile();
         }

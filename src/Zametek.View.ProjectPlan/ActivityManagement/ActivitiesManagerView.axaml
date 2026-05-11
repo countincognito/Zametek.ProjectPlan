@@ -50,6 +50,20 @@
 
 	<DockPanel Margin="0">
 
+		<!-- Column-group toggle toolbar -->
+		<WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="2,2,2,2">
+			<ToggleButton x:Name="ToggleTiming" Content="Timing" Margin="2" Padding="4,2"
+						  IsCheckedChanged="ToggleTiming_IsCheckedChanged" />
+			<ToggleButton x:Name="ToggleSlack" Content="Slack" Margin="2" Padding="4,2"
+						  IsCheckedChanged="ToggleSlack_IsCheckedChanged" />
+			<ToggleButton x:Name="ToggleFlags" Content="Flags" Margin="2" Padding="4,2"
+						  IsCheckedChanged="ToggleFlags_IsCheckedChanged" />
+			<ToggleButton x:Name="ToggleResourcesDetail" Content="Resources Detail" Margin="2" Padding="4,2"
+						  IsCheckedChanged="ToggleResourcesDetail_IsCheckedChanged" />
+			<ToggleButton x:Name="ToggleNotes" Content="Notes" Margin="2" Padding="4,2"
+						  IsCheckedChanged="ToggleNotes_IsCheckedChanged" />
+		</WrapPanel>
+
 		<!-- Set Background to Transparent to ensure the context menu works even when the datagrid is empty -->
 		<!-- https://github.com/AvaloniaUI/Avalonia/discussions/15118 -->
 		<DataGrid Name="ActivitiesGrid"
@@ -65,6 +79,11 @@
 				  Classes="DragAndDrop"
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>
+				<!-- Alternating row background -->
+				<Style Selector="DataGridRow:nth-child(even)">
+					<Setter Property="Background" Value="{DynamicResource ZSurface}"/>
+				</Style>
+
 				<!-- Make DataGrid a drop target -->
 				<Style Selector="DataGridRow">
 					<Setter Property="(Interaction.Behaviors)">
@@ -77,6 +96,7 @@
 				</Style>
 				<Style Selector="DataGridRow Grid.editable">
 					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
+					<Setter Property="Cursor" Value="Hand"/>
 				</Style>
 				<Style Selector="DataGridRow:not(:pointerover) Grid.editable">
 					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
@@ -391,10 +411,12 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColResourceDependencies"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource resourceDependenciesStringSortComparer}"
 										Width="180">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -418,10 +440,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColSuccessors"
+									CanUserResize="True"
 									CanUserReorder="True"
 									CanUserSort="True"
 									IsReadOnly="True"
+									IsVisible="False"
 									CustomSortComparer="{StaticResource successorsStringSortComparer}"
 									Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -445,10 +469,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColIsDummy"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource isDummySortComparer}"
 										Width="85">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -474,10 +500,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColIsIsolated"
+									CanUserResize="True"
 									CanUserReorder="True"
 									CanUserSort="True"
 									IsReadOnly="True"
+									IsVisible="False"
 									CustomSortComparer="{StaticResource isIsolatedSortComparer}"
 									Width="85">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -503,10 +531,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColIsCritical"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource isCriticalSortComparer}"
 										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -532,10 +562,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColEarliestStartTime"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource earliestStartTimeSortComparer}"
 										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -567,10 +599,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColLatestStartTime"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource latestStartTimeSortComparer}"
 										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -602,10 +636,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColEarliestFinishTime"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource earliestFinishTimeSortComparer}"
 										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -637,10 +673,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColLatestFinishTime"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource latestFinishTimeSortComparer}"
 										Width="80">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -672,10 +710,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColTotalSlack"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource totalSlackSortComparer}"
 										Width="55">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -700,10 +740,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColFreeSlack"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource freeSlackSortComparer}"
 										Width="55">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -728,10 +770,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColInterferingSlack"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource interferingSlackSortComparer}"
 										Width="55">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -756,9 +800,11 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColMinimumFreeSlack"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource minimumFreeSlackSortComparer}"
 										Width="115">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -796,9 +842,11 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColMinimumEarliestStartTime"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource minimumEarliestStartTimeSortComparer}"
 										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -855,9 +903,11 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColMaximumLatestFinishTime"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource maximumLatestFinishTimeSortComparer}"
 										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -1021,7 +1071,8 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColHasNoCost"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
@@ -1053,7 +1104,8 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColHasNoBilling"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
@@ -1085,10 +1137,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColHasNoEffort"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource hasNoEffortSortComparer}"
 										Width="115">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -1116,10 +1170,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColHasNoRisk"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource hasNoRiskSortComparer}"
 										Width="115">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -1147,9 +1203,11 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColTargetResourceOperator"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource targetResourceOperatorSortComparer}"
 										Width="150">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -1198,10 +1256,12 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColAllocatedToResources"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource allocatedToResourcesStringSortComparer}"
 										Width="165">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -1225,10 +1285,12 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColPercentageCompleted"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										IsReadOnly="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource lastTrackerValueSortComparer}"
 										Width="95">
 					<DataGridTemplateColumn.HeaderTemplate>
@@ -1253,9 +1315,11 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				<DataGridTemplateColumn Tag="ColNotes"
+										CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
+										IsVisible="False"
 										CustomSortComparer="{StaticResource notesSortComparer}"
 										Width="120">
 					<DataGridTemplateColumn.HeaderTemplate>

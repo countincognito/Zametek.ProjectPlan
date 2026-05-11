@@ -1509,6 +1509,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ShowSlack", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show All Connections.
+        /// </summary>
+        public static string Label_ShowAllConnections {
+            get {
+                return ResourceManager.GetString("Label_ShowAllConnections", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Show Today.

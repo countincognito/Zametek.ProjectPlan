@@ -28,6 +28,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowSlack { get; set; }
 
+        bool ShowAllConnections { get; set; }
+
         IActivitySelectorViewModel ActivitySelector { get; }
 
         ICommand ResetGanttChartCommand { get; }
@@ -43,5 +45,7 @@ namespace Zametek.Contract.ProjectPlan
         void BuildGanttChartPlotModel();
 
         void SetActivityDuration(int activityId, int newDuration);
+
+        void AddActivityDependency(int fromActivityId, int toActivityId);
     }
 }

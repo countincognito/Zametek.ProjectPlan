@@ -20,6 +20,10 @@ namespace Zametek.View.ProjectPlan
         private AnnotatedBar? m_DragBar;
         private VerticalLine? m_DragPreviewLine;
 
+        // State for Ctrl+drag dependency creation.
+        private int m_DepSourceActivityId;
+        private AnnotatedBar? m_DepSourceBar;
+
         public GanttChartManagerView()
         {
             InitializeComponent();
@@ -181,6 +185,85 @@ namespace Zametek.View.ProjectPlan
                 m_DragBar = null;
                 plotModel.Refresh();
 
+                e.Pointer.Capture(null);
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// Hit-test: is the pixel position inside any annotated activity bar?
+        /// </summary>
+        private AnnotatedBar? HitTestBar(AvaPlot plotModel, Point plotPosition)
+        {
+            BarPlot? barPlot = plotModel.Plot.GetPlottables<BarPlot>().FirstOrDefault();
+            if (barPlot is null)
+            {
+                return null;
+            }
+
+            Pixel mousePixel = new(plotPosition.X, plotPosition.Y);
+            Coordinates mouseCoord = plotModel.Plot.GetCoordinates(mousePixel);
+
+            foreach (Bar bar in barPlot.Bars)
+            {
+                if (bar is not AnnotatedBar annotatedBar || annotatedBar.ActivityId == 0)
+                {
+                    continue;
+                }
+
+                if (bar.Rect.Contains(mouseCoord))
+                {
+                    return annotatedBar;
+                }
+            }
+
+            return null;
+        }
+
+        protected override void OnCtrlLeftDragStart(AvaPlot plotModel, Point plotPosition, PointerPressedEventArgs e)
+        {
+            AnnotatedBar? hit = HitTestBar(plotModel, plotPosition);
+            if (hit is null)
+            {
+                return;
+            }
+
+            m_DepSourceActivityId = hit.ActivityId;
+            m_DepSourceBar = hit;
+            e.Pointer.Capture(scottplot);
+            e.Handled = true;
+        }
+
+        protected override void OnCtrlLeftDragging(AvaPlot plotModel, Point plotPosition, PointerEventArgs e)
+        {
+            // No live preview for simplicity — cursor change is sufficient feedback.
+            e.Handled = true;
+        }
+
+        protected override void OnCtrlLeftDragCompleted(AvaPlot plotModel, Point plotPosition, PointerReleasedEventArgs e)
+        {
+            try
+            {
+                if (m_DepSourceActivityId == 0)
+                {
+                    return;
+                }
+
+                AnnotatedBar? targetBar = HitTestBar(plotModel, plotPosition);
+                if (targetBar is null || targetBar.ActivityId == m_DepSourceActivityId)
+                {
+                    return;
+                }
+
+                if (DataContext is IGanttChartManagerViewModel vm)
+                {
+                    vm.AddActivityDependency(m_DepSourceActivityId, targetBar.ActivityId);
+                }
+            }
+            finally
+            {
+                m_DepSourceActivityId = 0;
+                m_DepSourceBar = null;
                 e.Pointer.Capture(null);
                 e.Handled = true;
             }

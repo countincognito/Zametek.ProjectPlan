@@ -18,6 +18,8 @@
 
     <!-- Left: Activities DataGrid -->
     <ContentControl Grid.Column="0"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
                     Content="{Binding ActivitiesManagerViewModel, Mode=OneWay}" />
 
     <!-- Splitter -->
@@ -29,6 +31,8 @@
 
     <!-- Right: Gantt Chart -->
     <ContentControl Grid.Column="2"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
                     Content="{Binding GanttChartManagerViewModel, Mode=OneWay}" />
   </Grid>
 </UserControl>
