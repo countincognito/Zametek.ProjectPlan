@@ -90,6 +90,13 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IArrowGraphManagerViewModel m_ArrowGraphManagerViewModel;
         private readonly IVertexGraphManagerViewModel m_VertexGraphManagerViewModel;
         private readonly ITrackingManagerViewModel m_TrackingManagerViewModel;
+        private readonly IResourceSettingsManagerViewModel m_ResourceSettingsManagerViewModel;
+        private readonly IWorkStreamSettingsManagerViewModel m_WorkStreamSettingsManagerViewModel;
+        private readonly IGraphSettingsManagerViewModel m_GraphSettingsManagerViewModel;
+        private readonly IHolidaySettingsManagerViewModel m_HolidaySettingsManagerViewModel;
+        private readonly IMetricManagerViewModel m_MetricManagerViewModel;
+        private readonly IEarnedValueChartManagerViewModel m_EarnedValueChartManagerViewModel;
+        private readonly IOutputManagerViewModel m_OutputManagerViewModel;
 
         private readonly IDisposable? m_ProjectTitleUpdateSub;
 
@@ -113,7 +120,14 @@ namespace Zametek.ViewModel.ProjectPlan
             IScenarioChartManagerViewModel scenarioChartManagerViewModel,
             IArrowGraphManagerViewModel arrowGraphManagerViewModel,
             IVertexGraphManagerViewModel vertexGraphManagerViewModel,
-            ITrackingManagerViewModel trackingManagerViewModel)
+            ITrackingManagerViewModel trackingManagerViewModel,
+            IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
+            IWorkStreamSettingsManagerViewModel workStreamSettingsManagerViewModel,
+            IGraphSettingsManagerViewModel graphSettingsManagerViewModel,
+            IHolidaySettingsManagerViewModel holidaySettingsManagerViewModel,
+            IMetricManagerViewModel metricManagerViewModel,
+            IEarnedValueChartManagerViewModel earnedValueChartManagerViewModel,
+            IOutputManagerViewModel outputManagerViewModel)
         {
             ArgumentNullException.ThrowIfNull(dockFactory);
             ArgumentNullException.ThrowIfNull(dataGridManager);
@@ -131,6 +145,13 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(arrowGraphManagerViewModel);
             ArgumentNullException.ThrowIfNull(vertexGraphManagerViewModel);
             ArgumentNullException.ThrowIfNull(trackingManagerViewModel);
+            ArgumentNullException.ThrowIfNull(resourceSettingsManagerViewModel);
+            ArgumentNullException.ThrowIfNull(workStreamSettingsManagerViewModel);
+            ArgumentNullException.ThrowIfNull(graphSettingsManagerViewModel);
+            ArgumentNullException.ThrowIfNull(holidaySettingsManagerViewModel);
+            ArgumentNullException.ThrowIfNull(metricManagerViewModel);
+            ArgumentNullException.ThrowIfNull(earnedValueChartManagerViewModel);
+            ArgumentNullException.ThrowIfNull(outputManagerViewModel);
             m_Lock = new();
             m_DockFactory = dockFactory;
             m_DataGridManager = dataGridManager;
@@ -148,6 +169,13 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ArrowGraphManagerViewModel = arrowGraphManagerViewModel;
             m_VertexGraphManagerViewModel = vertexGraphManagerViewModel;
             m_TrackingManagerViewModel = trackingManagerViewModel;
+            m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;
+            m_WorkStreamSettingsManagerViewModel = workStreamSettingsManagerViewModel;
+            m_GraphSettingsManagerViewModel = graphSettingsManagerViewModel;
+            m_HolidaySettingsManagerViewModel = holidaySettingsManagerViewModel;
+            m_MetricManagerViewModel = metricManagerViewModel;
+            m_EarnedValueChartManagerViewModel = earnedValueChartManagerViewModel;
+            m_OutputManagerViewModel = outputManagerViewModel;
             m_ProjectTitle = string.Empty;
             m_IsMainBusy = false;
 
@@ -391,6 +419,22 @@ namespace Zametek.ViewModel.ProjectPlan
         public IVertexGraphManagerViewModel VertexGraphManagerViewModel => m_VertexGraphManagerViewModel;
 
         public ITrackingManagerViewModel TrackingManagerViewModel => m_TrackingManagerViewModel;
+
+        public IResourceSettingsManagerViewModel ResourceSettingsManagerViewModel => m_ResourceSettingsManagerViewModel;
+
+        public IWorkStreamSettingsManagerViewModel WorkStreamSettingsManagerViewModel => m_WorkStreamSettingsManagerViewModel;
+
+        public IGraphSettingsManagerViewModel GraphSettingsManagerViewModel => m_GraphSettingsManagerViewModel;
+
+        public IHolidaySettingsManagerViewModel HolidaySettingsManagerViewModel => m_HolidaySettingsManagerViewModel;
+
+        public IMetricManagerViewModel MetricManagerViewModel => m_MetricManagerViewModel;
+
+        public IEarnedValueChartManagerViewModel EarnedValueChartManagerViewModel => m_EarnedValueChartManagerViewModel;
+
+        public IProjectScenarioManagerViewModel ProjectScenarioManagerViewModel => m_ProjectScenarioManagerViewModel;
+
+        public IOutputManagerViewModel OutputManagerViewModel => m_OutputManagerViewModel;
 
         #endregion
 

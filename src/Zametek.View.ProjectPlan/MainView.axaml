@@ -12,7 +12,10 @@
 		x:DataType="vm:MainViewModel"
         Icon="resm:Zametek.Resource.ProjectPlan.Icons.zpp.ico?assembly=Zametek.Resource.ProjectPlan"
 		xmlns:u="https://irihi.tech/ursa"
-        Title="{Binding Path=ProjectTitle, Mode=OneWay}">
+        Title="{Binding Path=ProjectTitle, Mode=OneWay}"
+        Width="1400" Height="860"
+        MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterScreen">
 
 	<Window.KeyBindings>
 		<KeyBinding x:DataType="vm:MainViewModel"
@@ -121,8 +124,12 @@
 
 	<u:LoadingContainer IsLoading="{Binding Path=IsBusy, Mode=OneWay}"
 						LoadingMessage="{x:Static resources:Labels.Label_PleaseWait}"
-						Name="LoadingPanel">
+						Name="LoadingPanel"
+						HorizontalContentAlignment="Stretch"
+						VerticalContentAlignment="Stretch">
 		<Grid IsEnabled="{Binding Path=!IsBusy, Mode=OneWay}"
+			  HorizontalAlignment="Stretch"
+			  VerticalAlignment="Stretch"
 			  Background="{DynamicResource ZBackground}">
 			<DockPanel>
 
@@ -661,6 +668,161 @@
 								</Grid>
 							</Button>
 
+							<!-- Separator between charts and settings panels -->
+							<Separator Margin="4,8" Background="{DynamicResource ZBorder}" Height="1"/>
+
+							<!-- Resource Settings -->
+							<Button Classes="nav-btn"
+									Name="NavResourceSettings"
+									ToolTip.Tip="Resource Settings"
+									Click="NavResourceSettings_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.ResourceSettings}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#128100;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+							<!-- Work Streams -->
+							<Button Classes="nav-btn"
+									Name="NavWorkStreams"
+									ToolTip.Tip="Work Streams"
+									Click="NavWorkStreams_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.WorkStreams}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#8801;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+							<!-- Graph Settings -->
+							<Button Classes="nav-btn"
+									Name="NavGraphSettings"
+									ToolTip.Tip="Graph Settings"
+									Click="NavGraphSettings_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.GraphSettings}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#9998;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+							<!-- Holidays -->
+							<Button Classes="nav-btn"
+									Name="NavHolidays"
+									ToolTip.Tip="Holidays"
+									Click="NavHolidays_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Holidays}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#128197;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+							<!-- Metrics -->
+							<Button Classes="nav-btn"
+									Name="NavMetrics"
+									ToolTip.Tip="Metrics"
+									Click="NavMetrics_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Metrics}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#128200;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+							<!-- Earned Value -->
+							<Button Classes="nav-btn"
+									Name="NavEarnedValue"
+									ToolTip.Tip="Earned Value"
+									Click="NavEarnedValue_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.EarnedValue}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#128176;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+							<!-- Project Scenario -->
+							<Button Classes="nav-btn"
+									Name="NavProjectScenario"
+									ToolTip.Tip="Project Scenario"
+									Click="NavProjectScenario_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.ProjectScenario}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#8644;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
+							<!-- Output -->
+							<Button Classes="nav-btn"
+									Name="NavOutput"
+									ToolTip.Tip="Output"
+									Click="NavOutput_Click">
+								<Grid>
+									<Border HorizontalAlignment="Left"
+											Width="3"
+											VerticalAlignment="Stretch"
+											Background="{DynamicResource ZAccent}"
+											IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Output}, Mode=OneWay}"
+											CornerRadius="0,2,2,0" />
+									<TextBlock Text="&#128196;"
+											   FontSize="18"
+											   HorizontalAlignment="Center"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</Button>
+
 						</StackPanel>
 					</Border>
 
@@ -675,27 +837,93 @@
 						<!-- Resources chart -->
 						<ContentControl
 							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Resources}, Mode=OneWay}"
-							Content="{Binding Path=ResourceChartManagerViewModel, Mode=OneWay}" />
+							Content="{Binding Path=ResourceChartManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
 
 						<!-- Scenario chart -->
 						<ContentControl
 							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Scenario}, Mode=OneWay}"
-							Content="{Binding Path=ScenarioChartManagerViewModel, Mode=OneWay}" />
+							Content="{Binding Path=ScenarioChartManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
 
 						<!-- Arrow graph -->
 						<ContentControl
 							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.ArrowGraph}, Mode=OneWay}"
-							Content="{Binding Path=ArrowGraphManagerViewModel, Mode=OneWay}" />
+							Content="{Binding Path=ArrowGraphManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
 
 						<!-- Vertex graph -->
 						<ContentControl
 							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.VertexGraph}, Mode=OneWay}"
-							Content="{Binding Path=VertexGraphManagerViewModel, Mode=OneWay}" />
+							Content="{Binding Path=VertexGraphManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
 
 						<!-- Tracking -->
 						<ContentControl
 							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Tracking}, Mode=OneWay}"
-							Content="{Binding Path=TrackingManagerViewModel, Mode=OneWay}" />
+							Content="{Binding Path=TrackingManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
+
+						<!-- Resource Settings -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.ResourceSettings}, Mode=OneWay}"
+							Content="{Binding Path=ResourceSettingsManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
+
+						<!-- Work Streams -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.WorkStreams}, Mode=OneWay}"
+							Content="{Binding Path=WorkStreamSettingsManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
+
+						<!-- Graph Settings -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.GraphSettings}, Mode=OneWay}"
+							Content="{Binding Path=GraphSettingsManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
+
+						<!-- Holidays -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Holidays}, Mode=OneWay}"
+							Content="{Binding Path=HolidaySettingsManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
+
+						<!-- Metrics -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Metrics}, Mode=OneWay}"
+							Content="{Binding Path=MetricManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
+
+						<!-- Earned Value -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.EarnedValue}, Mode=OneWay}"
+							Content="{Binding Path=EarnedValueChartManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
+
+						<!-- Project Scenario -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.ProjectScenario}, Mode=OneWay}"
+							Content="{Binding Path=ProjectScenarioManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
+
+						<!-- Output -->
+						<ContentControl
+							IsVisible="{Binding Path=ActiveShellView, Converter={x:Static local:EnumConverters.IsShellViewMatch}, ConverterParameter={x:Static common:ShellView.Output}, Mode=OneWay}"
+							Content="{Binding Path=OutputManagerViewModel, Mode=OneWay}"
+							HorizontalContentAlignment="Stretch"
+							VerticalContentAlignment="Stretch" />
 
 						<!-- Command Palette Overlay -->
 						<Border Name="PaletteOverlay"

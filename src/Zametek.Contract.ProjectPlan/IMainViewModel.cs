@@ -26,6 +26,22 @@ namespace Zametek.Contract.ProjectPlan
 
         ITrackingManagerViewModel TrackingManagerViewModel { get; }
 
+        IResourceSettingsManagerViewModel ResourceSettingsManagerViewModel { get; }
+
+        IWorkStreamSettingsManagerViewModel WorkStreamSettingsManagerViewModel { get; }
+
+        IGraphSettingsManagerViewModel GraphSettingsManagerViewModel { get; }
+
+        IHolidaySettingsManagerViewModel HolidaySettingsManagerViewModel { get; }
+
+        IMetricManagerViewModel MetricManagerViewModel { get; }
+
+        IEarnedValueChartManagerViewModel EarnedValueChartManagerViewModel { get; }
+
+        IProjectScenarioManagerViewModel ProjectScenarioManagerViewModel { get; }
+
+        IOutputManagerViewModel OutputManagerViewModel { get; }
+
         bool IsBusy { get; }
 
         bool IsOpening { get; }

@@ -104,6 +104,14 @@ namespace Zametek.View.ProjectPlan
                 new PaletteCommand("Switch to Arrow Graph", "", new RelayCommand(() => m_ViewModel.ActiveShellView = ShellView.ArrowGraph), ClosePalette),
                 new PaletteCommand("Switch to Vertex Graph", "", new RelayCommand(() => m_ViewModel.ActiveShellView = ShellView.VertexGraph), ClosePalette),
                 new PaletteCommand("Switch to Tracking", "", new RelayCommand(() => m_ViewModel.ActiveShellView = ShellView.Tracking), ClosePalette),
+                new PaletteCommand("Switch to Resource Settings", "", new RelayCommand(() => m_ViewModel.ActiveShellView = ShellView.ResourceSettings), ClosePalette),
+                new PaletteCommand("Switch to Work Streams", "", new RelayCommand(() => m_ViewModel.ActiveShellView = ShellView.WorkStreams), ClosePalette),
+                new PaletteCommand("Switch to Graph Settings", "", new RelayCommand(() => m_ViewModel.ActiveShellView = ShellView.GraphSettings), ClosePalette),
+                new PaletteCommand("Switch to Holidays", "", new RelayCommand(() => m_ViewModel.ActiveShellView = ShellView.Holidays), ClosePalette),
+                new PaletteCommand("Switch to Metrics", "", new RelayCommand(() => m_ViewModel.ActiveShellView = ShellView.Metrics), ClosePalette),
+                new PaletteCommand("Switch to Earned Value", "", new RelayCommand(() => m_ViewModel.ActiveShellView = ShellView.EarnedValue), ClosePalette),
+                new PaletteCommand("Switch to Project Scenario", "", new RelayCommand(() => m_ViewModel.ActiveShellView = ShellView.ProjectScenario), ClosePalette),
+                new PaletteCommand("Switch to Output", "", new RelayCommand(() => m_ViewModel.ActiveShellView = ShellView.Output), ClosePalette),
                 new PaletteCommand("Add Activity", "", m_ViewModel.ActivitiesManagerViewModel.AddManagedActivityCommand, ClosePalette),
                 new PaletteCommand("Documentation", "", m_ViewModel.OpenDocumentationCommand, ClosePalette),
                 new PaletteCommand("Report Issue", "", m_ViewModel.OpenReportIssueCommand, ClosePalette),
@@ -281,6 +289,46 @@ namespace Zametek.View.ProjectPlan
         private void NavTracking_Click(object? sender, RoutedEventArgs e)
         {
             if (m_ViewModel is not null) m_ViewModel.ActiveShellView = ShellView.Tracking;
+        }
+
+        private void NavResourceSettings_Click(object? sender, RoutedEventArgs e)
+        {
+            if (m_ViewModel is not null) m_ViewModel.ActiveShellView = ShellView.ResourceSettings;
+        }
+
+        private void NavWorkStreams_Click(object? sender, RoutedEventArgs e)
+        {
+            if (m_ViewModel is not null) m_ViewModel.ActiveShellView = ShellView.WorkStreams;
+        }
+
+        private void NavGraphSettings_Click(object? sender, RoutedEventArgs e)
+        {
+            if (m_ViewModel is not null) m_ViewModel.ActiveShellView = ShellView.GraphSettings;
+        }
+
+        private void NavHolidays_Click(object? sender, RoutedEventArgs e)
+        {
+            if (m_ViewModel is not null) m_ViewModel.ActiveShellView = ShellView.Holidays;
+        }
+
+        private void NavMetrics_Click(object? sender, RoutedEventArgs e)
+        {
+            if (m_ViewModel is not null) m_ViewModel.ActiveShellView = ShellView.Metrics;
+        }
+
+        private void NavEarnedValue_Click(object? sender, RoutedEventArgs e)
+        {
+            if (m_ViewModel is not null) m_ViewModel.ActiveShellView = ShellView.EarnedValue;
+        }
+
+        private void NavProjectScenario_Click(object? sender, RoutedEventArgs e)
+        {
+            if (m_ViewModel is not null) m_ViewModel.ActiveShellView = ShellView.ProjectScenario;
+        }
+
+        private void NavOutput_Click(object? sender, RoutedEventArgs e)
+        {
+            if (m_ViewModel is not null) m_ViewModel.ActiveShellView = ShellView.Output;
         }
 
         // ── Palette handlers ──
