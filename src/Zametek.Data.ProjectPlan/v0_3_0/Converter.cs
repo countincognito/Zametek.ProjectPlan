@@ -56,7 +56,9 @@ namespace Zametek.Data.ProjectPlan.v0_3_0
 
             return new ProjectModel
             {
-                ProjectStart = project.ProjectStart,
+                // v0_2_1 stored ProjectStart as DateTime (no offset). Treat it as UTC when
+                // promoting to DateTimeOffset so the conversion is timezone-independent.
+                ProjectStart = new DateTimeOffset(project.ProjectStart, TimeSpan.Zero),
                 DependentActivities = [.. project.DependentActivities.Select(mapper.FromV0_2_1ToV0_3_0)],
                 ArrowGraphSettings = project.ArrowGraphSettings ?? new v0_1_0.ArrowGraphSettingsModel(),
                 ResourceSettings = project.ResourceSettings ?? new v0_1_0.ResourceSettingsModel(),

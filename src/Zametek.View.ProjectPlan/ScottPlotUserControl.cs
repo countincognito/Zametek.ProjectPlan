@@ -48,12 +48,17 @@ namespace Zametek.View.ProjectPlan
             m_IsCtrlLeftDragging = false;
             m_CtrlWasHeldOnPress = false;
 
-            m_PlotContainer.AddHandler(PointerPressedEvent, PlotContainer_PointerPressed, RoutingStrategies.Bubble, handledEventsToo: true);
-            m_PlotContainer.AddHandler(PointerReleasedEvent, PlotContainer_PointerReleased, RoutingStrategies.Bubble, handledEventsToo: true);
+            // Tunnel routing fires at ContentControl BEFORE AvaPlot's handlers, so we can mark
+            // events as handled before ScottPlot sees them — preventing ScottPlot from entering
+            // its own pan/zoom mode when we're handling the interaction ourselves.
+            m_PlotContainer.AddHandler(PointerPressedEvent, PlotContainer_PointerPressed, RoutingStrategies.Tunnel);
+            m_PlotContainer.AddHandler(PointerReleasedEvent, PlotContainer_PointerReleased, RoutingStrategies.Tunnel);
 
             m_PlotContainer.Loaded += PlotContainer_Loaded;
             m_PlotContainer.PointerExited += PlotContainer_PointerExited;
-            m_PlotContainer.PointerMoved += PlotContainer_PointerMoved;
+            // handledEventsToo: true so we still receive PointerMoved even if ScottPlot marks it
+            // handled (e.g. during hover feedback rendering inside AvaPlot).
+            m_PlotContainer.AddHandler(PointerMovedEvent, PlotContainer_PointerMoved, RoutingStrategies.Bubble, handledEventsToo: true);
         }
 
         private void PlotContainer_PointerPressed(

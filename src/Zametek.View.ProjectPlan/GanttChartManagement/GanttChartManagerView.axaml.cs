@@ -91,10 +91,11 @@ namespace Zametek.View.ProjectPlan
             {
                 m_DragBar = hit;
                 // Preview line is deferred to first OnLeftDragging call so a plain click leaves no artifact.
-                // Capture to the AvaPlot (not the ContentControl wrapper) so ScottPlot still receives
-                // its own release event via bubbling — capturing to the parent ContentControl bypasses
-                // AvaPlot on release, leaving ScottPlot permanently in "button held" state.
-                e.Pointer.Capture(plotModel);
+                // Capture to the ContentControl so our PointerMoved handler keeps firing for the full drag,
+                // even if the pointer leaves the AvaPlot bounds. ScottPlot never enters pan mode because
+                // PointerPressed is intercepted via Tunnel routing in ScottPlotUserControl before it reaches
+                // AvaPlot — so there is no "sticky pan" state to worry about on release.
+                e.Pointer.Capture(m_PlotContainer);
             }
 
             // Always claim left-click so ScottPlot never enters its own pan mode.
@@ -259,7 +260,7 @@ namespace Zametek.View.ProjectPlan
 
             m_DepSourceActivityId = hit.ActivityId;
             m_DepSourceBar = hit;
-            e.Pointer.Capture(plotModel); // Capture to AvaPlot so ScottPlot still gets its release via bubbling.
+            e.Pointer.Capture(m_PlotContainer);
             e.Handled = true;
             return true;
         }
