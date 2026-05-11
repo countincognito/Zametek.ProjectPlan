@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using AvaloniaCursor = Avalonia.Input.Cursor;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
@@ -83,34 +84,38 @@ namespace Zametek.View.ProjectPlan
             return null;
         }
 
-        protected override void OnLeftPointerPressed(AvaPlot plotModel, Point plotPosition, PointerPressedEventArgs e)
+        protected override bool OnLeftPointerPressed(AvaPlot plotModel, Point plotPosition, PointerPressedEventArgs e)
         {
             AnnotatedBar? hit = HitTestRightEdge(plotModel, plotPosition);
-            if (hit is null)
+            if (hit is not null)
             {
-                return;
+                m_DragBar = hit;
+                // Preview line is deferred to first OnLeftDragging call so a plain click leaves no artifact.
+                // Capture to the AvaPlot (not the ContentControl wrapper) so ScottPlot still receives
+                // its own release event via bubbling — capturing to the parent ContentControl bypasses
+                // AvaPlot on release, leaving ScottPlot permanently in "button held" state.
+                e.Pointer.Capture(plotModel);
             }
 
-            m_DragBar = hit;
-
-            // Add a preview vertical line at the current right edge.
-            m_DragPreviewLine = plotModel.Plot.Add.VerticalLine(
-                hit.Value,
-                width: 2,
-                pattern: ScottPlot.LinePattern.Dashed);
-
-            plotModel.Refresh();
-
-            // Capture so we keep receiving events.
-            e.Pointer.Capture(scottplot);
+            // Always claim left-click so ScottPlot never enters its own pan mode.
             e.Handled = true;
+            return true;
         }
 
         protected override void OnLeftDragging(AvaPlot plotModel, Point plotPosition, PointerEventArgs e)
         {
-            if (m_DragBar is null || m_DragPreviewLine is null)
+            if (m_DragBar is null)
             {
                 return;
+            }
+
+            // Add the preview line on the first dragging call (not on press, so clicks are clean).
+            if (m_DragPreviewLine is null)
+            {
+                m_DragPreviewLine = plotModel.Plot.Add.VerticalLine(
+                    m_DragBar.Value,
+                    width: 2,
+                    pattern: ScottPlot.LinePattern.Dashed);
             }
 
             Pixel mousePixel = new(plotPosition.X, plotPosition.Y);
@@ -142,6 +147,13 @@ namespace Zametek.View.ProjectPlan
                 plotModel.Plot.Remove(m_DragPreviewLine);
                 m_DragPreviewLine = null;
                 plotModel.Refresh();
+            }
+
+            if (m_DragBar is not null)
+            {
+                // Capture was set in OnLeftPointerPressed — must release it here,
+                // otherwise subsequent clicks (e.g. double-click) are routed incorrectly.
+                e.Pointer.Capture(null);
             }
 
             m_DragBar = null;
@@ -190,6 +202,23 @@ namespace Zametek.View.ProjectPlan
             }
         }
 
+        protected override AvaloniaCursor? GetHoverCursor(AvaPlot plotModel, Point plotPosition)
+        {
+            // Resize handle: near the right edge of any bar.
+            if (HitTestRightEdge(plotModel, plotPosition) is not null)
+            {
+                return new AvaloniaCursor(StandardCursorType.SizeWestEast);
+            }
+
+            // Hand cursor: hovering over the body of any bar (Ctrl+drag to create dependency).
+            if (HitTestBar(plotModel, plotPosition) is not null)
+            {
+                return new AvaloniaCursor(StandardCursorType.Hand);
+            }
+
+            return AvaloniaCursor.Default;
+        }
+
         /// <summary>
         /// Hit-test: is the pixel position inside any annotated activity bar?
         /// </summary>
@@ -220,18 +249,19 @@ namespace Zametek.View.ProjectPlan
             return null;
         }
 
-        protected override void OnCtrlLeftDragStart(AvaPlot plotModel, Point plotPosition, PointerPressedEventArgs e)
+        protected override bool OnCtrlLeftDragStart(AvaPlot plotModel, Point plotPosition, PointerPressedEventArgs e)
         {
             AnnotatedBar? hit = HitTestBar(plotModel, plotPosition);
             if (hit is null)
             {
-                return;
+                return false;
             }
 
             m_DepSourceActivityId = hit.ActivityId;
             m_DepSourceBar = hit;
-            e.Pointer.Capture(scottplot);
+            e.Pointer.Capture(plotModel); // Capture to AvaPlot so ScottPlot still gets its release via bubbling.
             e.Handled = true;
+            return true;
         }
 
         protected override void OnCtrlLeftDragging(AvaPlot plotModel, Point plotPosition, PointerEventArgs e)
