@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Zametek.View.ProjectPlan.ConfirmationDialog"
+        Title=""
+        Width="360"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="24,20,24,16" Spacing="16">
+
+        <!-- Message -->
+        <TextBlock x:Name="MessageText"
+                   TextWrapping="Wrap"
+                   FontSize="13"
+                   LineHeight="20" />
+
+        <!-- Buttons -->
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button x:Name="NoButton"
+                    Content="No"
+                    Width="80"
+                    Click="NoButton_Click" />
+            <Button x:Name="YesButton"
+                    Content="Yes"
+                    Width="80"
+                    Classes="accent"
+                    Click="YesButton_Click" />
+        </StackPanel>
+
+    </StackPanel>
+</Window>

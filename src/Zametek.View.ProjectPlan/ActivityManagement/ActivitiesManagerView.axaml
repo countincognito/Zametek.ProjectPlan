@@ -50,6 +50,19 @@
 
 	<DockPanel Margin="0">
 
+		<!-- Action toolbar: primary activity operations, always visible -->
+		<WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="2,4,2,2">
+			<Button Content="＋ Add Activity"
+					Command="{Binding AddManagedActivityCommand, Mode=OneWay}"
+					Margin="2" Padding="8,3" />
+			<Button Content="Insert"
+					Command="{Binding InsertManagedActivityCommand, Mode=OneWay}"
+					Margin="2" Padding="8,3" />
+			<Button Content="＋ Milestone"
+					Command="{Binding AddMilestoneCommand, Mode=OneWay}"
+					Margin="2" Padding="8,3" />
+		</WrapPanel>
+
 		<!-- Column-group toggle toolbar -->
 		<WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="2,2,2,2">
 			<ToggleButton x:Name="ToggleTiming" Content="Timing" Margin="2" Padding="4,2"

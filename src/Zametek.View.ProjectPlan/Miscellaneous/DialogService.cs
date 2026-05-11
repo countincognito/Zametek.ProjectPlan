@@ -253,18 +253,22 @@ namespace Zametek.View.ProjectPlan
             string message,
             bool markdown = false)
         {
-            ButtonResult result = await ShowMessageBoxAsync(new MessageBoxStandardParams
+            return await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                SizeToContent = SizeToContent.WidthAndHeight,
-                ContentTitle = title,
-                ContentHeader = header,
-                ContentMessage = message,
-                ButtonDefinitions = ButtonEnum.YesNo,
-                Icon = Icon.Info,
-                Markdown = markdown
+                if (m_Parent is null)
+                {
+                    return false;
+                }
+
+                // Combine header + message into one string for the custom dialog.
+                string body = string.IsNullOrWhiteSpace(header)
+                    ? message
+                    : $"{header}\n\n{message}";
+
+                var dialog = new ConfirmationDialog(title, body);
+                await dialog.ShowDialog(m_Parent);
+                return dialog.Result;
             });
-            return result == ButtonResult.Yes;
         }
 
         public async Task<string?> ShowOpenFileDialogAsync(

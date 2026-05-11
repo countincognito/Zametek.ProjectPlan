@@ -405,24 +405,10 @@
 									VerticalAlignment="Center"
 									Margin="4,0">
 							<Button Classes="toolbar-btn"
-									Content="+ Activity"
-									Command="{Binding Path=ActivitiesManagerViewModel.AddManagedActivityCommand, Mode=OneWay}"
-									ToolTip.Tip="Add Activity" />
-							<Button Classes="toolbar-btn"
-									Content="&#9889; Compile"
+									Content="Compile"
 									Command="{Binding Path=CompileCommand, Mode=OneWay}"
 									IsVisible="{Binding Path=!AutoCompile, Mode=OneWay}"
-									ToolTip.Tip="Compile Project" />
-							<Button Classes="toolbar-btn"
-									ToolTip.Tip="Toggle Dates"
-									Command="{Binding Path=ToggleShowDatesCommand, Mode=OneWay}">
-								<TextBlock Text="&#128197;" FontSize="14" VerticalAlignment="Center"/>
-							</Button>
-							<Button Classes="toolbar-btn"
-									ToolTip.Tip="Toggle Cost"
-									Command="{Binding Path=ToggleHideCostCommand, Mode=OneWay}">
-								<TextBlock Text="&#128176;" FontSize="14" VerticalAlignment="Center"/>
-							</Button>
+									ToolTip.Tip="Compile Project (also in Compile menu)" />
 						</StackPanel>
 
 						<!-- Command palette trigger (right) -->
