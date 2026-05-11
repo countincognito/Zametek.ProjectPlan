@@ -18,6 +18,8 @@ namespace Zametek.Contract.ProjectPlan
 
         BaseTheme BaseTheme { get; }
 
+        IReadOnlyList<GraphNodeHitRect> NodeHitRects { get; }
+
         ICommand SaveVertexGraphImageFileCommand { get; }
 
         Task SaveVertexGraphImageFileAsync(string? filename);
@@ -25,5 +27,7 @@ namespace Zametek.Contract.ProjectPlan
         void BuildVertexGraphDiagramData();
 
         void BuildVertexGraphDiagramImage();
+
+        void NavigateToActivity(int activityId);
     }
 }

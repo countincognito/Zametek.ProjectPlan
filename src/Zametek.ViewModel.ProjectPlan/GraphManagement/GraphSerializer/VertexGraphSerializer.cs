@@ -25,8 +25,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {NodeBorderDashStyle.Dashed, Microsoft.Msagl.Drawing.Style.Dashed}
              };
 
-        private static readonly double s_SvgNodeWidth = 38.0;
-        private static readonly double s_SvgNodeHeight = 30.0;
+        private static readonly double s_SvgNodeWidth = 52.0;
+        private static readonly double s_SvgNodeHeight = 44.0;
         private static readonly double s_SvgNodeLabelWidth = 30.0;
         private static readonly double s_SvgNodeLabelLines = 3.0;
         private static readonly double s_SvgRadiusInXDirection = 3.0;
@@ -45,12 +45,14 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly double s_SvgConsolasLabelWidthCorrectionFactor = s_SvgNodeLabelLines * s_SvgNodeLabelWidth / 11.5;
         private static readonly double s_SvgConsolasLabelHeightCorrectionFactor = 3;
 
-        private static readonly Color s_NodeFillColor = Colors.LightGray;
-        private static readonly Color s_NodeBorderColor = Colors.Black;
+        private static readonly Color s_NodeFillColor = Color.FromRgb(0x1E, 0x29, 0x3B);   // dark slate
+        private static readonly Color s_NodeBorderColor = Color.FromRgb(0x3B, 0x82, 0xF6); // blue (fallback only)
+        private static readonly Microsoft.Msagl.Drawing.Color s_NodeLabelColor = new(0xF1, 0xF5, 0xF9); // near-white
+        private static readonly Microsoft.Msagl.Drawing.Color s_EdgeDefaultColor = new(0x64, 0x74, 0x8B); // muted slate
 
         private const double c_PxPerInch = 96;
         private const double c_PtPerInch = 72;
-        private const string c_FontName = @"Consolas";
+        private const string c_FontName = @"Inter";
 
         private readonly IMsaglSvgRenderer m_MsaglSvgRenderer;
 
@@ -243,20 +245,49 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static Microsoft.Msagl.Drawing.Color EdgeFontColor(BaseTheme baseTheme)
         {
-            if (baseTheme == BaseTheme.Light)
-            {
-                return Microsoft.Msagl.Drawing.Color.Black;
-            }
-            if (baseTheme == BaseTheme.Dark)
-            {
-                return Microsoft.Msagl.Drawing.Color.White;
-            }
-            return Microsoft.Msagl.Drawing.Color.Black;
+            // Muted slate — readable on both light and dark SVG backgrounds.
+            return new Microsoft.Msagl.Drawing.Color(0x94, 0xA3, 0xB8);
         }
 
         #endregion
 
-        public byte[] BuildVertexGraphSvgData(
+        // Margin used by SvgGraphWriter when computing node positions in SVG space.
+        private const double c_SvgMargin = 1.0;
+
+        private static IReadOnlyList<GraphNodeHitRect> ComputeHitRects(
+            Microsoft.Msagl.Drawing.Graph drawingGraph,
+            Dictionary<string, int> nodeIdToActivityId)
+        {
+            var hitRects = new List<GraphNodeHitRect>();
+
+            Microsoft.Msagl.Core.Geometry.Rectangle bb = drawingGraph.GeometryGraph.BoundingBox;
+            double svgHeight = bb.Height + 2.0 * c_SvgMargin;
+
+            foreach (Microsoft.Msagl.Drawing.Node drawingNode in drawingGraph.Nodes)
+            {
+                if (!nodeIdToActivityId.TryGetValue(drawingNode.Id, out int activityId))
+                {
+                    continue;
+                }
+
+                Microsoft.Msagl.Core.Geometry.Rectangle nodeBb = drawingNode.GeometryNode.BoundingBox;
+                double cx = nodeBb.Center.X - bb.Left + c_SvgMargin;
+                double cy = bb.Top - nodeBb.Center.Y + c_SvgMargin;
+                double w = nodeBb.Width;
+                double h = nodeBb.Height;
+
+                hitRects.Add(new GraphNodeHitRect(
+                    activityId,
+                    X: cx - w / 2.0,
+                    Y: cy - h / 2.0,
+                    Width: w,
+                    Height: h));
+            }
+
+            return hitRects.AsReadOnly();
+        }
+
+        public (byte[] SvgData, IReadOnlyList<GraphNodeHitRect> NodeHitRects) BuildVertexGraphSvgData(
             VertexGraphModel vertexGraph,
             GraphSettingsModel graphSettings,
             BaseTheme baseTheme,
@@ -269,10 +300,15 @@ namespace Zametek.ViewModel.ProjectPlan
             // Fill the graph.
             var drawingGraph = new Microsoft.Msagl.Drawing.Graph();
 
+            // Build a mapping from MSAGL node string ID -> activity int ID for hit-rect computation.
+            var nodeIdToActivityId = new Dictionary<string, int>();
+
             foreach (DiagramNodeModel diagramNode in diagramGraph.Nodes)
             {
-                var drawingGraphNode = new Microsoft.Msagl.Drawing.Node($@"{diagramNode.Id}");
+                string nodeKey = $@"{diagramNode.Id}";
+                var drawingGraphNode = new Microsoft.Msagl.Drawing.Node(nodeKey);
                 drawingGraph.AddNode(drawingGraphNode);
+                nodeIdToActivityId[nodeKey] = diagramNode.Id;
             }
 
             Dictionary<string, Microsoft.Msagl.Drawing.Node> drawingNodeLookup = drawingGraph.Nodes.ToDictionary(x => x.Id);
@@ -286,7 +322,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 edge.Attr.ClearStyles();
                 edge.Attr.AddStyle(s_EdgeDashMsaglLookup[diagramEdge.DashStyle]);
-                edge.Attr.Color = HtmlHexCodeToMsaglColor(diagramEdge.ForegroundColorHexCode) ?? Microsoft.Msagl.Drawing.Color.Black;
+                edge.Attr.Color = HtmlHexCodeToMsaglColor(diagramEdge.ForegroundColorHexCode) ?? s_EdgeDefaultColor;
                 edge.Attr.LineWidth = diagramEdge.StrokeThickness;
                 edge.LabelText = diagramEdge.Label;
                 edge.Label.IsVisible = diagramEdge.ShowLabel;
@@ -335,6 +371,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 drawingGraphNode.Label.FontStyle = s_SvgNodeFontStyle;
 
                 drawingGraphNode.Label.FontName = c_FontName;
+                drawingGraphNode.Label.FontColor = s_NodeLabelColor;
                 drawingGraphNode.Attr.AddStyle(s_NodeBorderDashMsaglLookup[diagramNode.BorderDashStyle]);
                 drawingGraphNode.Attr.FillColor = HtmlHexCodeToMsaglColor(diagramNode.FillColorHexCode) ?? Microsoft.Msagl.Drawing.Color.LightGray;
                 drawingGraphNode.Attr.Color = HtmlHexCodeToMsaglColor(diagramNode.BorderColorHexCode) ?? Microsoft.Msagl.Drawing.Color.Black;
@@ -356,7 +393,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
             Microsoft.Msagl.Miscellaneous.LayoutHelpers.CalculateLayout(drawingGraph.GeometryGraph, drawingGraph.LayoutAlgorithmSettings, null);
 
-            return m_MsaglSvgRenderer.RenderToSvg(drawingGraph, baseTheme);
+            byte[] svgData = m_MsaglSvgRenderer.RenderToSvg(drawingGraph, baseTheme);
+            IReadOnlyList<GraphNodeHitRect> nodeHitRects = ComputeHitRects(drawingGraph, nodeIdToActivityId);
+
+            return (svgData, nodeHitRects);
         }
 
         public byte[] BuildVertexGraphMLData(

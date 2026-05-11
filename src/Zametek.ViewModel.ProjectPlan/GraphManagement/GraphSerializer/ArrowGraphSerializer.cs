@@ -25,8 +25,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 {NodeBorderDashStyle.Dashed, Microsoft.Msagl.Drawing.Style.Dashed}
              };
 
-        private static readonly double s_SvgNodeWidth = 40.0;
-        private static readonly double s_SvgNodeHeight = 34.0;
+        private static readonly double s_SvgNodeWidth = 48.0;
+        private static readonly double s_SvgNodeHeight = 38.0;
         private static readonly double s_SvgNodeLabelWidth = 34.0;
         private static readonly double s_SvgNodeLabelLines = 1.0;
         private static readonly double s_SvgRadiusInXDirection = 3.0;
@@ -45,12 +45,13 @@ namespace Zametek.ViewModel.ProjectPlan
         private static readonly double s_SvgConsolasLabelWidthCorrectionFactor = s_SvgNodeLabelLines * s_SvgNodeLabelWidth / 14;
         private static readonly double s_SvgConsolasLabelHeightCorrectionFactor = 0.7;
 
-        private static readonly Color s_NodeFillColor = Colors.LightGray;
-        private static readonly Color s_NodeBorderColor = Colors.Black;
+        private static readonly Color s_NodeFillColor = Color.FromRgb(0x1E, 0x29, 0x3B);   // dark slate
+        private static readonly Color s_NodeBorderColor = Color.FromRgb(0x3B, 0x82, 0xF6); // blue
+        private static readonly Microsoft.Msagl.Drawing.Color s_NodeLabelColor = new(0xF1, 0xF5, 0xF9); // near-white
 
         private const double c_PxPerInch = 96;
         private const double c_PtPerInch = 72;
-        private const string c_FontName = @"Consolas";
+        private const string c_FontName = @"Inter";
 
         private readonly IMsaglSvgRenderer m_MsaglSvgRenderer;
 
@@ -339,20 +340,58 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static Microsoft.Msagl.Drawing.Color EdgeFontColor(BaseTheme baseTheme)
         {
-            if (baseTheme == BaseTheme.Light)
-            {
-                return Microsoft.Msagl.Drawing.Color.Black;
-            }
-            if (baseTheme == BaseTheme.Dark)
-            {
-                return Microsoft.Msagl.Drawing.Color.White;
-            }
-            return Microsoft.Msagl.Drawing.Color.Black;
+            // Muted slate — readable on both light and dark SVG backgrounds.
+            return new Microsoft.Msagl.Drawing.Color(0x94, 0xA3, 0xB8);
         }
 
         #endregion
 
-        public byte[] BuildArrowGraphSvgData(
+        // Margin used by SvgGraphWriter when computing positions in SVG space.
+        private const double c_SvgMargin = 1.0;
+
+        private static IReadOnlyList<GraphEdgeHitRect> ComputeEdgeHitRects(
+            Microsoft.Msagl.Drawing.Graph drawingGraph,
+            Dictionary<Microsoft.Msagl.Drawing.Edge, int> edgeToActivityId)
+        {
+            var hitRects = new List<GraphEdgeHitRect>();
+
+            Microsoft.Msagl.Core.Geometry.Rectangle bb = drawingGraph.GeometryGraph.BoundingBox;
+
+            foreach (Microsoft.Msagl.Drawing.Edge drawingEdge in drawingGraph.Edges)
+            {
+                if (!edgeToActivityId.TryGetValue(drawingEdge, out int activityId))
+                {
+                    continue;
+                }
+
+                if (drawingEdge.Label is null || !drawingEdge.Label.IsVisible)
+                {
+                    continue;
+                }
+
+                Microsoft.Msagl.Core.Layout.Label? geomLabel = drawingEdge.Label.GeometryLabel;
+                if (geomLabel is null)
+                {
+                    continue;
+                }
+
+                double w = geomLabel.Width;
+                double h = geomLabel.Height;
+                double cx = geomLabel.Center.X - bb.Left + c_SvgMargin;
+                double cy = bb.Top - geomLabel.Center.Y + c_SvgMargin;
+
+                hitRects.Add(new GraphEdgeHitRect(
+                    activityId,
+                    LabelX: cx - w / 2.0,
+                    LabelY: cy - h / 2.0,
+                    LabelWidth: w,
+                    LabelHeight: h));
+            }
+
+            return hitRects.AsReadOnly();
+        }
+
+        public (byte[] SvgData, IReadOnlyList<GraphEdgeHitRect> EdgeHitRects) BuildArrowGraphSvgData(
             ArrowGraphModel arrowGraph,
             GraphSettingsModel graphSettings,
             BaseTheme baseTheme,
@@ -373,6 +412,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             Dictionary<string, Microsoft.Msagl.Drawing.Node> drawingNodeLookup = drawingGraph.Nodes.ToDictionary(x => x.Id);
 
+            // Track edge -> activity ID for hit-rect computation.
+            var edgeToActivityId = new Dictionary<Microsoft.Msagl.Drawing.Edge, int>();
+
             foreach (DiagramEdgeModel diagramEdge in diagramGraph.Edges)
             {
                 var edge = new Microsoft.Msagl.Drawing.Edge(
@@ -389,6 +431,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 edge.Label.FontColor = EdgeFontColor(baseTheme);
 
                 drawingGraph.AddPrecalculatedEdge(edge);
+                edgeToActivityId[edge] = diagramEdge.Id;
             }
 
             drawingGraph.LayoutAlgorithmSettings = drawingGraph.CreateLayoutSettings();
@@ -431,6 +474,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 drawingGraphNode.Label.FontStyle = s_SvgNodeFontStyle;
 
                 drawingGraphNode.Label.FontName = c_FontName;
+                drawingGraphNode.Label.FontColor = s_NodeLabelColor;
                 drawingGraphNode.Attr.AddStyle(s_NodeBorderDashMsaglLookup[diagramNode.BorderDashStyle]);
                 drawingGraphNode.Attr.FillColor = HtmlHexCodeToMsaglColor(diagramNode.FillColorHexCode) ?? Microsoft.Msagl.Drawing.Color.LightGray;
                 drawingGraphNode.Attr.Color = HtmlHexCodeToMsaglColor(diagramNode.BorderColorHexCode) ?? Microsoft.Msagl.Drawing.Color.Black;
@@ -452,7 +496,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
             Microsoft.Msagl.Miscellaneous.LayoutHelpers.CalculateLayout(drawingGraph.GeometryGraph, drawingGraph.LayoutAlgorithmSettings, null);
 
-            return m_MsaglSvgRenderer.RenderToSvg(drawingGraph, baseTheme);
+            byte[] svgData = m_MsaglSvgRenderer.RenderToSvg(drawingGraph, baseTheme);
+            IReadOnlyList<GraphEdgeHitRect> edgeHitRects = ComputeEdgeHitRects(drawingGraph, edgeToActivityId);
+
+            return (svgData, edgeHitRects);
         }
 
         public byte[] BuildArrowGraphMLData(

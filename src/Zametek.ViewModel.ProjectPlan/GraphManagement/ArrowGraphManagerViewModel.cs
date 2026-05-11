@@ -76,9 +76,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDialogService m_DialogService;
         private readonly IArrowGraphSerializer m_ArrowGraphExport;
         private readonly IGraphImageExporter m_GraphImageExporter;
+        private readonly Lazy<IMainViewModel> m_MainViewModel;
 
         private readonly IDisposable? m_BuildArrowGraphDataSub;
         private readonly IDisposable? m_BuildArrowGraphImageSub;
+
+        private IReadOnlyList<GraphEdgeHitRect> m_EdgeHitRects = [];
 
         #endregion
 
@@ -89,19 +92,22 @@ namespace Zametek.ViewModel.ProjectPlan
             ISettingService settingService,
             IDialogService dialogService,
             IArrowGraphSerializer arrowGraphExport,
-            IGraphImageExporter graphImageExporter)
+            IGraphImageExporter graphImageExporter,
+            Lazy<IMainViewModel> mainViewModel)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(arrowGraphExport);
             ArgumentNullException.ThrowIfNull(graphImageExporter);
+            ArgumentNullException.ThrowIfNull(mainViewModel);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_ArrowGraphExport = arrowGraphExport;
             m_GraphImageExporter = graphImageExporter;
+            m_MainViewModel = mainViewModel;
 
             m_ArrowGraphData = string.Empty;
             m_ArrowGraphImage = new SvgImage();
@@ -266,6 +272,17 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<BaseTheme> m_BaseTheme;
         public BaseTheme BaseTheme => m_BaseTheme.Value;
 
+        public IReadOnlyList<GraphEdgeHitRect> EdgeHitRects
+        {
+            get
+            {
+                lock (m_Lock)
+                {
+                    return m_EdgeHitRects;
+                }
+            }
+        }
+
         public ICommand SaveArrowGraphImageFileCommand { get; }
 
         public async Task SaveArrowGraphImageFileAsync(string? filename)
@@ -324,20 +341,33 @@ namespace Zametek.ViewModel.ProjectPlan
         public void BuildArrowGraphDiagramData()
         {
             byte[]? data = null;
+            IReadOnlyList<GraphEdgeHitRect> hitRects = [];
 
             lock (m_Lock)
             {
                 if (!HasCompilationErrors)
                 {
-                    data = m_ArrowGraphExport.BuildArrowGraphSvgData(
+                    (byte[] svgData, IReadOnlyList<GraphEdgeHitRect> rects) = m_ArrowGraphExport.BuildArrowGraphSvgData(
                         m_CoreViewModel.ArrowGraph,
                         m_CoreViewModel.GraphSettings,
                         m_CoreViewModel.BaseTheme,
                         m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
+                    data = svgData;
+                    hitRects = rects;
                 }
             }
 
+            lock (m_Lock)
+            {
+                m_EdgeHitRects = hitRects;
+            }
+
             ArrowGraphData = data?.ByteArrayToString() ?? string.Empty;
+        }
+
+        public void NavigateToActivity(int activityId)
+        {
+            m_MainViewModel.Value.SelectActivity(activityId);
         }
 
         public void BuildArrowGraphDiagramImage()

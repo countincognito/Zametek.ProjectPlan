@@ -4,7 +4,7 @@ namespace Zametek.Contract.ProjectPlan
 {
     public interface IVertexGraphSerializer
     {
-        byte[] BuildVertexGraphSvgData(VertexGraphModel vertexGraph, GraphSettingsModel graphSettings, BaseTheme baseTheme, bool viewNames);
+        (byte[] SvgData, IReadOnlyList<GraphNodeHitRect> NodeHitRects) BuildVertexGraphSvgData(VertexGraphModel vertexGraph, GraphSettingsModel graphSettings, BaseTheme baseTheme, bool viewNames);
 
         byte[] BuildVertexGraphMLData(VertexGraphModel vertexGraph, GraphSettingsModel graphSettings, bool viewNames);
 

@@ -18,6 +18,8 @@ namespace Zametek.Contract.ProjectPlan
 
         BaseTheme BaseTheme { get; }
 
+        IReadOnlyList<GraphEdgeHitRect> EdgeHitRects { get; }
+
         ICommand SaveArrowGraphImageFileCommand { get; }
 
         Task SaveArrowGraphImageFileAsync(string? filename);
@@ -25,5 +27,7 @@ namespace Zametek.Contract.ProjectPlan
         void BuildArrowGraphDiagramData();
 
         void BuildArrowGraphDiagramImage();
+
+        void NavigateToActivity(int activityId);
     }
 }
