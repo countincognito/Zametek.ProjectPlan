@@ -68,92 +68,109 @@
         </u:MultiComboBox>
       </DockPanel>
 
-      <!-- ScottPlot PlotView -->
-      <ContentControl x:Name="scottplot"
-							Content="{Binding GanttChartPlotModel, Mode=OneWay}"
-							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
-        <ContentControl.ContextMenu>
-          <ContextMenu>
+      <!-- ScottPlot PlotView with drag-resize tooltip overlay -->
+      <Grid>
+        <ContentControl x:Name="scottplot"
+							  Content="{Binding GanttChartPlotModel, Mode=OneWay}"
+							  Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
+          <ContentControl.ContextMenu>
+            <ContextMenu>
             <MenuItem Header="{x:Static resources:Labels.Label_ShowGroupLabels}"
-								  IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}"
-								  IsChecked="{Binding Path=ShowGroupLabels, Mode=TwoWay}"
-								  ToggleType="CheckBox" />
+								    IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}"
+								    IsChecked="{Binding Path=ShowGroupLabels, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-            <MenuItem Header="{x:Static resources:Labels.Label_ShowSlack}"
-								  IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}"
-								  IsChecked="{Binding Path=ShowSlack, Mode=TwoWay}"
-								  ToggleType="CheckBox" />
+              <MenuItem Header="{x:Static resources:Labels.Label_ShowSlack}"
+								    IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}"
+								    IsChecked="{Binding Path=ShowSlack, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-            <MenuItem Header="{x:Static resources:Labels.Label_ShowProjectFinish}"
-								  IsChecked="{Binding Path=ShowProjectFinish, Mode=TwoWay}"
-								  ToggleType="CheckBox" />
+              <MenuItem Header="{x:Static resources:Labels.Label_ShowProjectFinish}"
+								    IsChecked="{Binding Path=ShowProjectFinish, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-            <MenuItem Header="{x:Static resources:Labels.Label_ShowTracking}"
-								  IsChecked="{Binding Path=ShowTracking, Mode=TwoWay}"
-								  ToggleType="CheckBox" />
+              <MenuItem Header="{x:Static resources:Labels.Label_ShowTracking}"
+								    IsChecked="{Binding Path=ShowTracking, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-            <MenuItem Header="{x:Static resources:Labels.Label_ShowToday}"
-								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"
-								  ToggleType="CheckBox" />
+              <MenuItem Header="{x:Static resources:Labels.Label_ShowToday}"
+								    IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-            <MenuItem Header="{x:Static resources:Labels.Label_ShowMilestones}"
-								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
-								  ToggleType="CheckBox" />
+              <MenuItem Header="{x:Static resources:Labels.Label_ShowMilestones}"
+								    IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-            <Separator />
+              <Separator />
 
-            <MenuItem Header="{x:Static resources:Labels.Label_GroupByMode}">
-              <MenuItem Header="{x:Static resources:Enums.Enum_GroupByMode_None}"
+              <MenuItem Header="{x:Static resources:Labels.Label_GroupByMode}">
+                <MenuItem Header="{x:Static resources:Enums.Enum_GroupByMode_None}"
 									  IsChecked="{Binding Path=GroupByMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:GroupByMode.None}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeGroupByModeCommand, Mode=OneWay}"
 									  CommandParameter="{x:Static common:GroupByMode.None}"
 									  ToggleType="Radio" />
 
-              <MenuItem Header="{x:Static resources:Enums.Enum_GroupByMode_Resource}"
+                <MenuItem Header="{x:Static resources:Enums.Enum_GroupByMode_Resource}"
 									  IsChecked="{Binding Path=GroupByMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:GroupByMode.Resource}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeGroupByModeCommand, Mode=OneWay}"
 									  CommandParameter="{x:Static common:GroupByMode.Resource}"
 									  ToggleType="Radio" />
 
-              <MenuItem Header="{x:Static resources:Enums.Enum_GroupByMode_WorkStream}"
+                <MenuItem Header="{x:Static resources:Enums.Enum_GroupByMode_WorkStream}"
 									  IsChecked="{Binding Path=GroupByMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:GroupByMode.WorkStream}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeGroupByModeCommand, Mode=OneWay}"
 									  CommandParameter="{x:Static common:GroupByMode.WorkStream}"
 									  ToggleType="Radio" />
-            </MenuItem>
+              </MenuItem>
 
-            <Separator />
+              <Separator />
 
-            <MenuItem Header="{x:Static resources:Labels.Label_AnnotationStyle}">
-              <MenuItem Header="{x:Static resources:Enums.Enum_AnnotationStyle_None}"
+              <MenuItem Header="{x:Static resources:Labels.Label_AnnotationStyle}">
+                <MenuItem Header="{x:Static resources:Enums.Enum_AnnotationStyle_None}"
 									  IsChecked="{Binding Path=AnnotationStyle, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AnnotationStyle.None}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeAnnotationStyleCommand, Mode=OneWay}"
 									  CommandParameter="{x:Static common:AnnotationStyle.None}"
 									  ToggleType="Radio" />
 
-              <MenuItem Header="{x:Static resources:Enums.Enum_AnnotationStyle_Plain}"
+                <MenuItem Header="{x:Static resources:Enums.Enum_AnnotationStyle_Plain}"
 									  IsChecked="{Binding Path=AnnotationStyle, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AnnotationStyle.Plain}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeAnnotationStyleCommand, Mode=OneWay}"
 									  CommandParameter="{x:Static common:AnnotationStyle.Plain}"
 									  ToggleType="Radio" />
 
-              <MenuItem Header="{x:Static resources:Enums.Enum_AnnotationStyle_Color}"
+                <MenuItem Header="{x:Static resources:Enums.Enum_AnnotationStyle_Color}"
 									  IsChecked="{Binding Path=AnnotationStyle, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AnnotationStyle.Color}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeAnnotationStyleCommand, Mode=OneWay}"
 									  CommandParameter="{x:Static common:AnnotationStyle.Color}"
 									  ToggleType="Radio" />
-            </MenuItem>
+              </MenuItem>
 
-            <Separator />
+              <Separator />
 
-            <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-								  Command="{Binding Path=SaveGanttChartImageFileCommand, Mode=OneWay}" />
+              <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+								    Command="{Binding Path=SaveGanttChartImageFileCommand, Mode=OneWay}" />
 
-            <MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
-								  Command="{Binding Path=ResetGanttChartCommand, Mode=OneWay}" />
-          </ContextMenu>
-        </ContentControl.ContextMenu>
-      </ContentControl>
+              <MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
+								    Command="{Binding Path=ResetGanttChartCommand, Mode=OneWay}" />
+            </ContextMenu>
+          </ContentControl.ContextMenu>
+        </ContentControl>
+
+        <!-- Drag-resize duration tooltip: absolutely positioned over the chart, no hit-testing -->
+        <Canvas IsHitTestVisible="False">
+          <Border x:Name="dragTooltipBorder"
+                  IsVisible="False"
+                  IsHitTestVisible="False"
+                  Background="{DynamicResource ToolTipBackground}"
+                  BorderBrush="{DynamicResource ToolTipBorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="3"
+                  Padding="6,3">
+            <TextBlock x:Name="dragTooltipText"
+                       Foreground="{DynamicResource ToolTipForeground}" />
+          </Border>
+        </Canvas>
+      </Grid>
     </DockPanel>
   </DockPanel>
 </UserControl>
