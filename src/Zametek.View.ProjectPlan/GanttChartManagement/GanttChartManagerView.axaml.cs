@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using ScottPlot;
@@ -23,6 +24,9 @@ namespace Zametek.View.ProjectPlan
         private int? m_ResizeActivityDuration;
         private int? m_ResizeActivityStartTime;
         private AnnotatedBar? m_ResizingBar;
+
+        private static readonly AvaloniaInput.Cursor s_SizeWestEastCursor = new(StandardCursorType.SizeWestEast);
+        private static readonly AvaloniaInput.Cursor s_HandCursor = new(StandardCursorType.Hand);
 
         public GanttChartManagerView(IDateTimeCalculator dateTimeCalculator)
         {
@@ -76,7 +80,9 @@ namespace Zametek.View.ProjectPlan
             e.Handled = true;
         }
 
-        private void Gantt_PointerMoved(object? sender, PointerEventArgs e)
+        private void Gantt_PointerMoved(
+            object? sender,
+            PointerEventArgs e)
         {
             if (m_PlotContainer?.Content is not AvaPlot plot)
             {
@@ -86,31 +92,45 @@ namespace Zametek.View.ProjectPlan
             Avalonia.Point pos = e.GetPosition(plot);
             Pixel mousePixel = new(pos.X, pos.Y);
 
-            if (m_IsResizeDragging && m_ResizingBar is not null)
+            if (m_IsResizeDragging
+                && m_ResizingBar is not null)
             {
                 Coordinates coords = plot.Plot.GetCoordinates(mousePixel);
                 double newRightEdge = Math.Max(m_ResizingBar.ValueBase + 1, coords.X);
                 m_ResizingBar.Value = newRightEdge;
                 plot.Refresh();
-                return;
+
+                if (DataContext is IGanttChartManagerViewModel vm
+                    && m_ResizeActivityStartTime is not null)
+                {
+                    int newDuration = CalculateNewDuration(newRightEdge, m_ResizeActivityStartTime.GetValueOrDefault(), vm);
+                    Canvas.SetLeft(dragTooltipBorder, pos.X + 16);
+                    Canvas.SetTop(dragTooltipBorder, pos.Y + 4);
+                    dragTooltipText.Text = $@"{Resource.ProjectPlan.Labels.Label_Duration}: {newDuration}";
+                    dragTooltipBorder.IsVisible = true;
+                }
             }
+
+            AnnotatedBar? hit = HitTestBarRightEdge(plot, mousePixel);
+            AvaloniaInput.Cursor hoverCursor = s_HandCursor;
 
             // Cursor hint when hovering near a bar's right edge while Shift is held.
             if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
             {
-                AnnotatedBar? hit = HitTestBarRightEdge(plot, mousePixel);
-                Cursor = hit is not null
-                    ? new AvaloniaInput.Cursor(StandardCursorType.SizeWestEast)
-                    : AvaloniaInput.Cursor.Default;
+                hoverCursor = s_SizeWestEastCursor;
             }
-            else
-            {
-                Cursor = AvaloniaInput.Cursor.Default;
-            }
+
+            Cursor = hit is not null
+                ? hoverCursor
+                : AvaloniaInput.Cursor.Default;
         }
 
-        private void Gantt_PointerReleased(object? sender, PointerReleasedEventArgs e)
+        private void Gantt_PointerReleased(
+            object? sender,
+            PointerReleasedEventArgs e)
         {
+            dragTooltipBorder.IsVisible = false;
+
             if (!m_IsResizeDragging)
             {
                 return;
@@ -131,28 +151,7 @@ namespace Zametek.View.ProjectPlan
                     : coords.X;
 
                 int startTimeUnit = m_ResizeActivityStartTime.GetValueOrDefault();
-                int newDuration = m_ResizeActivityDuration.GetValueOrDefault();
-                int? finishTimeUnit = startTimeUnit + newDuration;
-
-                if (vm.ShowDates)
-                {
-                    // ShowDates=true: X is an OLE Automation date. Convert back to a day/time unit.
-                    DateTime newFinishDate = DateTime.FromOADate(finalX);
-                    (finishTimeUnit, _) = m_DateTimeCalculator
-                        .CalculateTimeAndDateTime(
-                            vm.ProjectStart,
-                            new DateTimeOffset(newFinishDate));
-                }
-                else
-                {
-                    int newFinishDate = (int)Math.Round(finalX);
-                    (finishTimeUnit, _) = m_DateTimeCalculator
-                        .CalculateTimeAndDateTime(
-                            vm.ProjectStart,
-                            newFinishDate);
-                }
-
-                newDuration = Math.Max(1, (finishTimeUnit ?? startTimeUnit + 1) - startTimeUnit);
+                int newDuration = CalculateNewDuration(finalX, startTimeUnit, vm);
                 vm.SetActivityDuration(m_ResizeActivityId.GetValueOrDefault(), newDuration);
             }
 
@@ -164,7 +163,37 @@ namespace Zametek.View.ProjectPlan
             Cursor = AvaloniaInput.Cursor.Default;
         }
 
-        private static AnnotatedBar? HitTestBarRightEdge(AvaPlot plot, Pixel mousePixel)
+        private int CalculateNewDuration(
+            double finalX,
+            int startTimeUnit,
+            IGanttChartManagerViewModel vm)
+        {
+            int? finishTimeUnit;
+
+            if (vm.ShowDates)
+            {
+                // ShowDates=true: X is an OLE Automation date. Convert back to a time unit.
+                DateTime newFinishDate = DateTime.FromOADate(finalX);
+                (finishTimeUnit, _) = m_DateTimeCalculator
+                    .CalculateTimeAndDateTime(
+                        vm.ProjectStart,
+                        new DateTimeOffset(newFinishDate));
+            }
+            else
+            {
+                int newFinishDate = (int)Math.Round(finalX);
+                (finishTimeUnit, _) = m_DateTimeCalculator
+                    .CalculateTimeAndDateTime(
+                        vm.ProjectStart,
+                        newFinishDate);
+            }
+
+            return Math.Max(1, (finishTimeUnit ?? startTimeUnit + 1) - startTimeUnit);
+        }
+
+        private static AnnotatedBar? HitTestBarRightEdge(
+            AvaPlot plot,
+            Pixel mousePixel)
         {
             BarPlot? barPlot = plot.Plot.GetPlottables<BarPlot>().FirstOrDefault();
 
