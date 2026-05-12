@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
@@ -13,7 +13,6 @@ using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
-using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -1114,6 +1113,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 var item = new AnnotatedBar
                 {
                     Annotation = barAnnotation,
+                    ActivityId = activity.Id,
+                    StartTime = activity.EarliestStartTime,
+                    Duration = activity.Duration,
                     ValueBase = start,
                     Value = end,
                     FillColor = backgroundColor,
@@ -1515,6 +1517,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public bool ShowDates => m_CoreViewModel.DisplaySettingsViewModel.ShowDates;
+
+        public DateTimeOffset ProjectStart => m_CoreViewModel.ProjectStart;
+
         public IActivitySelectorViewModel ActivitySelector { get; }
 
         public ICommand ResetGanttChartCommand { get; }
@@ -1563,6 +1569,14 @@ namespace Zametek.ViewModel.ProjectPlan
                         string.Empty,
                         ex.Message);
                 }
+            }
+        }
+
+        public void SetActivityDuration(int activityId, int newDuration)
+        {
+            lock (m_Lock)
+            {
+                m_CoreViewModel.SetActivityDuration(activityId, newDuration);
             }
         }
 

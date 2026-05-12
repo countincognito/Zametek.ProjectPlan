@@ -1620,6 +1620,32 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public void SetActivityDuration(int activityId, int newDuration)
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    IManagedActivityViewModel? activity = RawActivities.FirstOrDefault(a => a.Id == activityId);
+
+                    if (activity is not IEditableObject editable)
+                    {
+                        return;
+                    }
+
+                    editable.BeginEdit();
+                    activity.Duration = Math.Max(1, newDuration);
+                    editable.EndEdit();
+
+                    IsProjectScenarioUpdated = true;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
         public void RunCompile()
         {
             try

@@ -129,6 +129,8 @@ namespace Zametek.Contract.ProjectPlan
 
         void ClearManagedActivities();
 
+        void SetActivityDuration(int activityId, int newDuration);
+
         void RunCompile();
 
         void RunAutoCompile();
