@@ -20,9 +20,17 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowToday { get; set; }
 
+        bool ShowMilestones { get; set; }
+
         ICommand ResetResourceChartCommand { get; }
 
         ICommand SaveResourceChartImageFileCommand { get; }
+
+        ICommand ChangeAllocationModeCommand { get; }
+
+        ICommand ChangeScheduleModeCommand { get; }
+
+        ICommand ChangeDisplayStyleCommand { get; }
 
         Task SaveResourceChartImageFileAsync(string? filename, int width, int height);
 

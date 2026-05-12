@@ -1,4 +1,4 @@
-﻿using System.Windows.Input;
+using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
@@ -28,6 +28,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowSlack { get; set; }
 
+        bool ShowDates { get; }
+
+        DateTimeOffset ProjectStart { get; }
+
         IActivitySelectorViewModel ActivitySelector { get; }
 
         ICommand ResetGanttChartCommand { get; }
@@ -39,6 +43,8 @@ namespace Zametek.Contract.ProjectPlan
         ICommand ChangeAnnotationStyleCommand { get; }
 
         Task SaveGanttChartImageFileAsync(string? filename, int width, int height);
+
+        void SetActivityDuration(int activityId, int newDuration);
 
         void BuildGanttChartPlotModel();
     }

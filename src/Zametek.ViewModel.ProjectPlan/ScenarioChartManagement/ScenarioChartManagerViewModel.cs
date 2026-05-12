@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
@@ -115,6 +115,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             ResetScenarioChartCommand = ReactiveCommand.Create(ResetScenarioChart);
+
+            ChangeTrackedMetricXAxisCommand = ReactiveCommand.CreateFromTask<TrackedMetrics>(ChangeTrackedMetricXAxisAsync);
+            ChangeTrackedMetricYAxisCommand = ReactiveCommand.CreateFromTask<TrackedMetrics>(ChangeTrackedMetricYAxisAsync);
+            ChangeCurveFittingTypeCommand = ReactiveCommand.CreateFromTask<CurveFittingType>(ChangeCurveFittingTypeAsync);
 
             m_IsBusy = this
                 .WhenAnyValue(
@@ -500,6 +504,51 @@ namespace Zametek.ViewModel.ProjectPlan
             ScenarioChartPlotModel.Plot.Axes.AutoScale();
         }
 
+        private async Task ChangeTrackedMetricXAxisAsync(TrackedMetrics trackedMetric)
+        {
+            try
+            {
+                TrackedMetricXAxis = trackedMetric;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeTrackedMetricYAxisAsync(TrackedMetrics trackedMetric)
+        {
+            try
+            {
+                TrackedMetricYAxis = trackedMetric;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeCurveFittingTypeAsync(CurveFittingType curveFittingType)
+        {
+            try
+            {
+                CurveFittingType = curveFittingType;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
         private async Task SaveScenarioChartImageFileAsync()
         {
             try
@@ -584,6 +633,12 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand SaveScenarioChartImageFileCommand { get; }
 
         public ICommand ResetScenarioChartCommand { get; }
+
+        public ICommand ChangeTrackedMetricXAxisCommand { get; }
+
+        public ICommand ChangeTrackedMetricYAxisCommand { get; }
+
+        public ICommand ChangeCurveFittingTypeCommand { get; }
 
         public async Task SaveScenarioChartImageFileAsync(
             string? filename,
@@ -682,15 +737,15 @@ namespace Zametek.ViewModel.ProjectPlan
             // Clear existing menu items.
             plotModel.Menu?.Clear();
 
-            // Add menu items with custom actions.
-            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
-            {
-                SaveScenarioChartImageFileCommand.Execute(null);
-            });
-            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
-            {
-                plot.Axes.AutoScale();
-            });
+            //// Add menu items with custom actions.
+            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
+            //{
+            //    SaveScenarioChartImageFileCommand.Execute(null);
+            //});
+            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
+            //{
+            //    plot.Axes.AutoScale();
+            //});
 
             //plotModel.Plot.Axes.AutoScale();
             ScenarioChartPlotModel = plotModel;
