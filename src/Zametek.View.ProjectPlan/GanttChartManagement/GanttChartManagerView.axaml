@@ -24,7 +24,7 @@
 					   HorizontalContentAlignment="Left"
 					   Height="25"
 					   DockPanel.Dock="Left"
-			           IsTabStop="False"
+			       IsTabStop="False"
 					   Margin="0,0,11,0"
 					   Content="{x:Static resources:Labels.Label_ShowConnections}"/>
 
@@ -34,7 +34,7 @@
 								 VerticalAlignment="Stretch"
 								 Focusable="True"
 								 Height="25"
-					             Margin="0,0,11,0"
+					       Margin="0,0,11,0"
 								 ItemsSource="{Binding Path=ActivitySelector.TargetActivities, Mode=OneWay}"
 								 SelectedItems="{Binding Path=ActivitySelector.SelectedTargetActivities, Mode=OneWay}">
           <u:MultiComboBox.SelectedItemTemplate>

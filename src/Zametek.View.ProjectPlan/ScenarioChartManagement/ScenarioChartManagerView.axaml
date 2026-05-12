@@ -16,137 +16,19 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Auto"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Width="205"
-					   Margin="11,0,0,0">
-
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_TrackedMetricXAxis}"/>
-
-					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:TrackedMetrics}}}"
-							  SelectedItem="{Binding Path=TrackedMetricXAxis, Mode=TwoWay}"
-							  BorderBrush="Gray"
-							  BorderThickness="1"
-							  DockPanel.Dock="Top"
-							  IsTabStop="False"
-							  Margin="0,0,0,11"
-							  Height="25">
-						<ComboBox.ItemTemplate>
-							<DataTemplate>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Left"
-										   Margin="0"
-										   Padding="3"
-										   Classes="displayOnly"
-										   Text="{Binding Converter={x:Static local:StringConverters.TrackedMetricsValue}, Mode=OneWay}"/>
-							</DataTemplate>
-						</ComboBox.ItemTemplate>
-					</ComboBox>
-				</DockPanel>
-
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_TrackedMetricYAxis}"/>
-
-					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:TrackedMetrics}}}"
-							  SelectedItem="{Binding Path=TrackedMetricYAxis, Mode=TwoWay}"
-							  BorderBrush="Gray"
-							  BorderThickness="1"
-							  DockPanel.Dock="Top"
-							  IsTabStop="False"
-							  Margin="0,0,0,11"
-							  Height="25">
-						<ComboBox.ItemTemplate>
-							<DataTemplate>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Left"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Converter={x:Static local:StringConverters.TrackedMetricsValue}, Mode=OneWay}"/>
-							</DataTemplate>
-						</ComboBox.ItemTemplate>
-					</ComboBox>
-				</DockPanel>
-
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_CurveFittingType}"/>
-
-					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:CurveFittingType}}}"
-							  SelectedItem="{Binding Path=CurveFittingType, Mode=TwoWay}"
-							  BorderBrush="Gray"
-							  BorderThickness="1"
-							  DockPanel.Dock="Top"
-							  IsTabStop="False"
-							  Margin="0,0,0,11"
-							  Height="25">
-						<ComboBox.ItemTemplate>
-							<DataTemplate>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Left"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Converter={x:Static local:StringConverters.CurveFittingTypeValue}, Mode=OneWay}"/>
-							</DataTemplate>
-						</ComboBox.ItemTemplate>
-					</ComboBox>
-				</DockPanel>
-
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowNames}"/>
-
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"/>
-				</DockPanel>
-
-				<DockPanel DockPanel.Dock="Top">
-					<ScrollViewer VerticalScrollBarVisibility="Auto"
-								  HorizontalScrollBarVisibility="Disabled">
-						<SelectableTextBlock Text="{Binding Path=CurveFittingFormula, Mode=OneWay}"
-											 TextWrapping="Wrap"
-											 FontWeight="Bold"
-											 Margin="0,0,0,11"
-											 VerticalAlignment="Stretch"/>
-					</ScrollViewer>
-				</DockPanel>
-
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
-
 		<DockPanel>
+      <DockPanel DockPanel.Dock="Bottom">
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                HorizontalScrollBarVisibility="Disabled">
+          <SelectableTextBlock Text="{Binding Path=CurveFittingFormula, Mode=OneWay}"
+                     TextWrapping="Wrap"
+                     FontWeight="Bold"
+                     Height="25"
+                     Margin="11,0,0,0"
+                     VerticalAlignment="Stretch"/>
+        </ScrollViewer>
+      </DockPanel>
+      
 			<!-- ScottPlot PlotView -->
 			<ContentControl x:Name="scottplot"
 							Content="{Binding ScenarioChartPlotModel, Mode=OneWay}"
