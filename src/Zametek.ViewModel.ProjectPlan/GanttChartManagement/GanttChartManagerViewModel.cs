@@ -355,6 +355,10 @@ namespace Zametek.ViewModel.ProjectPlan
             var highlights = new List<IPlottable>();
             var labels = new List<string>();
 
+            // Pad out the bottom of the chart.
+            bars.Add(BuildEmptyBar(maxXValue));
+            labels.Add(string.Empty);
+
             switch (groupByMode)
             {
                 case GroupByMode.None:
@@ -824,6 +828,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // Collect non-working day shade rectangles when the x-axis is date-based.
             // These are inserted behind all other plottables after the bar plot is created.
             var nonWorkingDayShades = new List<IPlottable>();
+
             if (showDates)
             {
                 DateTime iterDate = DateTime.FromOADate(minXValue).Date;
@@ -832,7 +837,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 while (iterDate < endDate)
                 {
-                    DateTimeOffset iterDateOffset = new(iterDate, projectStart.Offset);
+                    DateTimeOffset iterDateOffset = dateTimeCalculator.GetLocal(iterDate);
 
                     if (dateTimeCalculator.IsNonWorkingDay(iterDateOffset))
                     {
@@ -840,9 +845,9 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             X1 = iterDate.ToOADate(),
                             X2 = iterDate.ToOADate() + 1.0,
-                            Y1 = c_YAxisMinimum,
+                            Y1 = 1,
                             Y2 = shadingTop,
-                            FillColor = Colors.Gray.WithAlpha(ColorHelper.AnnotationAMedium),
+                            FillColor = Colors.Gray.WithAlpha(ColorHelper.AnnotationAHoliday),
                             LineColor = Colors.Transparent,
                             LineWidth = 0,
                         });
