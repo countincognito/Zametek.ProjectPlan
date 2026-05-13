@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -674,5 +674,8 @@
   </data>
   <data name="Label_AllocationOrder" xml:space="preserve">
     <value>Allocation Order</value>
+  </data>
+  <data name="Label_ShowNonWorkingDays" xml:space="preserve">
+    <value>Show Non-Working Days</value>
   </data>
 </root>

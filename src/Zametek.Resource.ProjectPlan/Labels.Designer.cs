@@ -567,6 +567,51 @@ namespace Zametek.Resource.ProjectPlan {
         /// <summary>
         ///   Looks up a localized string similar to Duplicate.
         /// </summary>
+        public static string Label_DuplicateManagedActivity {
+            get {
+                return ResourceManager.GetString("Label_DuplicateManagedActivity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Label_DuplicateManagedActivitySeverity {
+            get {
+                return ResourceManager.GetString("Label_DuplicateManagedActivitySeverity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Label_DuplicateManagedHoliday {
+            get {
+                return ResourceManager.GetString("Label_DuplicateManagedHoliday", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Label_DuplicateManagedResource {
+            get {
+                return ResourceManager.GetString("Label_DuplicateManagedResource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Label_DuplicateManagedWorkStream {
+            get {
+                return ResourceManager.GetString("Label_DuplicateManagedWorkStream", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
         public static string Label_DuplicateNode {
             get {
                 return ResourceManager.GetString("Label_DuplicateNode", resourceCulture);
@@ -635,7 +680,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_EditManagedResources", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Edit.
         /// </summary>
@@ -644,52 +689,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_EditManagedWorkStreams", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Duplicate.
-        /// </summary>
-        public static string Label_DuplicateManagedActivity {
-            get {
-                return ResourceManager.GetString("Label_DuplicateManagedActivity", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Duplicate.
-        /// </summary>
-        public static string Label_DuplicateManagedActivitySeverity {
-            get {
-                return ResourceManager.GetString("Label_DuplicateManagedActivitySeverity", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Duplicate.
-        /// </summary>
-        public static string Label_DuplicateManagedHoliday {
-            get {
-                return ResourceManager.GetString("Label_DuplicateManagedHoliday", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Duplicate.
-        /// </summary>
-        public static string Label_DuplicateManagedResource {
-            get {
-                return ResourceManager.GetString("Label_DuplicateManagedResource", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Duplicate.
-        /// </summary>
-        public static string Label_DuplicateManagedWorkStream {
-            get {
-                return ResourceManager.GetString("Label_DuplicateManagedWorkStream", resourceCulture);
-            }
-        }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Effort.
         /// </summary>
@@ -1480,6 +1480,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_ShowNames {
             get {
                 return ResourceManager.GetString("Label_ShowNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Non-Working Days.
+        /// </summary>
+        public static string Label_ShowNonWorkingDays {
+            get {
+                return ResourceManager.GetString("Label_ShowNonWorkingDays", resourceCulture);
             }
         }
         

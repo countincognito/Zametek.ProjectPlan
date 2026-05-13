@@ -85,6 +85,11 @@
 								    IsChecked="{Binding Path=ShowSlack, Mode=TwoWay}"
 								    ToggleType="CheckBox" />
 
+              <MenuItem Header="{x:Static resources:Labels.Label_ShowNonWorkingDays}"
+								    IsEnabled="{Binding Path=ShowDates, Mode=OneWay}"
+								    IsChecked="{Binding Path=ShowNonWorkingDays, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
+
               <MenuItem Header="{x:Static resources:Labels.Label_ShowProjectFinish}"
 								    IsChecked="{Binding Path=ShowProjectFinish, Mode=TwoWay}"
 								    ToggleType="CheckBox" />

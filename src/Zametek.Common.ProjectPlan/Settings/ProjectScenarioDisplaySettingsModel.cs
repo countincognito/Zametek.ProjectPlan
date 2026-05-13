@@ -1,4 +1,4 @@
-﻿namespace Zametek.Common.ProjectPlan
+namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
     public record ProjectScenarioDisplaySettingsModel
@@ -35,6 +35,8 @@
         public bool GanttChartShowMilestones { get; init; } = default;
 
         public bool GanttChartShowSlack { get; init; } = default;
+
+        public bool GanttChartShowNonWorkingDays { get; init; } = default;
 
         public List<int> GanttChartShowConnections { get; init; } = [];
 

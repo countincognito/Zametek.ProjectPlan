@@ -1,4 +1,4 @@
-﻿using Zametek.Common.ProjectPlan;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Data.ProjectPlan.v0_6_0
 {
@@ -40,6 +40,8 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
         public bool GanttChartShowMilestones { get; init; } = default;
 
         public bool GanttChartShowSlack { get; init; } = default;
+
+        public bool GanttChartShowNonWorkingDays { get; init; } = default;
 
         public List<int> GanttChartShowConnections { get; init; } = [];
 

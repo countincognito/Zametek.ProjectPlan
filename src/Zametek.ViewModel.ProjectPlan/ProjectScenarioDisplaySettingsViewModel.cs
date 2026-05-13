@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -291,6 +291,20 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_GanttChartShowNonWorkingDays;
+        public bool GanttChartShowNonWorkingDays
+        {
+            get => m_GanttChartShowNonWorkingDays;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaiseAndSetIfChanged(ref m_GanttChartShowNonWorkingDays, value);
+                }
+            }
+        }
+
         private readonly List<int> m_GanttChartShowConnections;
         public List<int> GanttChartShowConnections => m_GanttChartShowConnections;
 
@@ -501,6 +515,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     GanttChartShowSlack = model.GanttChartShowSlack;
                 }
+                if (GanttChartShowNonWorkingDays != model.GanttChartShowNonWorkingDays)
+                {
+                    GanttChartShowNonWorkingDays = model.GanttChartShowNonWorkingDays;
+                }
+
                 GanttChartShowConnections.Clear();
                 GanttChartShowConnections.AddRange(model.GanttChartShowConnections);
                 IsReadyToReviseGanttChartShowConnections = ReadyToRevise.Yes;
@@ -567,6 +586,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     GanttChartShowToday = GanttChartShowToday,
                     GanttChartShowMilestones = GanttChartShowMilestones,
                     GanttChartShowSlack = GanttChartShowSlack,
+                    GanttChartShowNonWorkingDays = GanttChartShowNonWorkingDays,
                     GanttChartShowConnections = [.. GanttChartShowConnections],
 
                     ResourceChartAllocationMode = ResourceChartAllocationMode,

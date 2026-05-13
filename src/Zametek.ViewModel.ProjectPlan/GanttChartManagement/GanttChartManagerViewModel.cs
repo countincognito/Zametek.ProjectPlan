@@ -175,6 +175,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowSlack)
                 .ToProperty(this, rcm => rcm.ShowSlack);
 
+            m_ShowNonWorkingDays = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowNonWorkingDays)
+                .ToProperty(this, rcm => rcm.ShowNonWorkingDays);
+
+            m_ShowDates = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates)
+                .ToProperty(this, rcm => rcm.ShowDates);
+
             m_IsGrouped = this
                 .WhenAnyValue(
                     rcm => rcm.GroupByMode,
@@ -191,7 +199,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // https://github.com/reactiveui/ReactiveUI/issues/3846
             m_BoolAccumulator = this
                 .WhenAnyValue(
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    rcm => rcm.ShowDates,
                     rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
                     rcm => rcm.ShowGroupLabels,
                     rcm => rcm.ShowProjectFinish,
@@ -199,7 +207,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.ShowToday,
                     rcm => rcm.ShowMilestones,
                     rcm => rcm.ShowSlack,
-                    (x, _, _, _, _, _, _, _) =>
+                    rcm => rcm.ShowNonWorkingDays,
+                    (x, _, _, _, _, _, _, _, _) =>
                     {
                         if (m_BoolAccumulator is null
                             || m_BoolAccumulator.Value == BoolToggle.Up)
@@ -302,6 +311,7 @@ namespace Zametek.ViewModel.ProjectPlan
             bool showMilestones,
             bool showSlack,
             bool showDates,
+            bool showNonWorkingDays,
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
             GroupByMode groupByMode,
             AnnotationStyle annotationStyle,
@@ -829,7 +839,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // These are inserted behind all other plottables after the bar plot is created.
             var nonWorkingDayShades = new List<IPlottable>();
 
-            if (showDates)
+            if (showDates && showNonWorkingDays)
             {
                 DateTime iterDate = DateTime.FromOADate(minXValue).Date;
                 DateTime endDate = DateTime.FromOADate(maxXValue).Date;
@@ -1559,7 +1569,18 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public bool ShowDates => m_CoreViewModel.DisplaySettingsViewModel.ShowDates;
+        private readonly ObservableAsPropertyHelper<bool> m_ShowNonWorkingDays;
+        public bool ShowNonWorkingDays
+        {
+            get => m_ShowNonWorkingDays.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowNonWorkingDays = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
+        public bool ShowDates => m_ShowDates.Value;
 
         public DateTimeOffset ProjectStart => m_CoreViewModel.ProjectStart;
 
@@ -1641,7 +1662,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     ShowToday,
                     ShowMilestones,
                     ShowSlack,
-                    m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    ShowDates,
+                    ShowNonWorkingDays,
                     m_CoreViewModel.GraphCompilation,
                     GroupByMode,
                     AnnotationStyle,
@@ -1706,6 +1728,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ShowToday?.Dispose();
                 m_ShowMilestones?.Dispose();
                 m_ShowSlack?.Dispose();
+                m_ShowNonWorkingDays?.Dispose();
+                m_ShowDates?.Dispose();
                 m_IsGrouped?.Dispose();
                 m_IsAnnotated?.Dispose();
                 m_BoolAccumulator?.Dispose();

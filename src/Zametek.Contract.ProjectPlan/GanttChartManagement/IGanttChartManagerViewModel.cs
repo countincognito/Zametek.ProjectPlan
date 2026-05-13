@@ -28,6 +28,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowSlack { get; set; }
 
+        bool ShowNonWorkingDays { get; set; }
+
         bool ShowDates { get; }
 
         DateTimeOffset ProjectStart { get; }
