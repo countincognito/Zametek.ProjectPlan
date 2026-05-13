@@ -706,6 +706,12 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public bool IsNonWorkingDay(DateTimeOffset date)
+        {
+            // CountDays from (date - 1 calendar day) to date returns 0 when date is non-working.
+            return CountDays(date.AddDays(-1), date) == 0;
+        }
+
         private Func<DateTimeOffset, DateTimeOffset, int, DateTimeOffset> m_DisplayEarliestStartDateFunc;
         public DateTimeOffset DisplayEarliestStartDate(
             DateTimeOffset projectStart,

@@ -1,4 +1,4 @@
-﻿using Avalonia.Media;
+using Avalonia.Media;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Zametek.Common.ProjectPlan;
@@ -12,6 +12,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public const byte AnnotationAMedium = 100;
         public const byte AnnotationALight = 40;
         public const byte AnnotationATransparent = 10;
+
+        public const byte AnnotationAHoliday = AnnotationAMedium;
 
         public const byte AnnotationATrackerOverlay = 232;
 
