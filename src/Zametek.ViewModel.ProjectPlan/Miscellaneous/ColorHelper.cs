@@ -13,6 +13,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public const byte AnnotationALight = 40;
         public const byte AnnotationATransparent = 10;
 
+        public const byte AnnotationAHoliday = 25;
+
         public const byte AnnotationATrackerOverlay = 232;
 
         // These all match.

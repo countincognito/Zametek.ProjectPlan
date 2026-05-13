@@ -30,6 +30,8 @@ namespace Zametek.Contract.ProjectPlan
 
         int CountDays(DateTimeOffset current, DateTimeOffset toCompareWith);
 
+        bool IsNonWorkingDay(DateTimeOffset date);
+
         DateTimeOffset DisplayEarliestStartDate(DateTimeOffset projectStart, DateTimeOffset earliestStart, int duration);
 
         DateTimeOffset DisplayLatestStartDate(DateTimeOffset earliestStart, DateTimeOffset latestStart, int duration);

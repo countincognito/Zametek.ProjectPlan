@@ -821,6 +821,37 @@ namespace Zametek.ViewModel.ProjectPlan
                     throw new ArgumentOutOfRangeException(nameof(groupByMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownGroupByMode} {groupByMode}");
             }
 
+            // Collect non-working day shade rectangles when the x-axis is date-based.
+            // These are inserted behind all other plottables after the bar plot is created.
+            var nonWorkingDayShades = new List<IPlottable>();
+            if (showDates)
+            {
+                DateTime iterDate = DateTime.FromOADate(minXValue).Date;
+                DateTime endDate = DateTime.FromOADate(maxXValue).Date;
+                double shadingTop = labels.Count + 1.0;
+
+                while (iterDate < endDate)
+                {
+                    DateTimeOffset iterDateOffset = new(iterDate, projectStart.Offset);
+
+                    if (dateTimeCalculator.IsNonWorkingDay(iterDateOffset))
+                    {
+                        nonWorkingDayShades.Add(new Rectangle
+                        {
+                            X1 = iterDate.ToOADate(),
+                            X2 = iterDate.ToOADate() + 1.0,
+                            Y1 = c_YAxisMinimum,
+                            Y2 = shadingTop,
+                            FillColor = Colors.Gray.WithAlpha(ColorHelper.AnnotationAMedium),
+                            LineColor = Colors.Transparent,
+                            LineWidth = 0,
+                        });
+                    }
+
+                    iterDate = iterDate.AddDays(1);
+                }
+            }
+
             // Add an extra row for to ensure the graph has a right edge near the project finish time.
             bars.Add(BuildEmptyBar(maxXValue));
 
@@ -852,6 +883,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
             BarPlot barPlot = plotModel.Plot.Add.Bars(bars);
             barPlot.Horizontal = true;
+
+            // Non-working day shades go at the lowest level so they render behind everything.
+            for (int i = 0; i < nonWorkingDayShades.Count; i++)
+            {
+                plotModel.Plot.PlottableList.Insert(i, nonWorkingDayShades[i]);
+            }
 
             // Highlights (above the bar plot).
             plotModel.Plot.PlottableList.AddRange(highlights);
