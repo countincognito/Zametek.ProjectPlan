@@ -122,29 +122,29 @@
 				<Style>
 					<Setter Property="ContextMenu">
 						<ContextMenu>
-							<MenuItem Header="{x:Static resources:Labels.Label_AddManagedActivity}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_AddManagedActivity}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.AddManagedActivityCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_InsertManagedActivity}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_InsertManagedActivity}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.InsertManagedActivityCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_AddMilestone}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_AddMilestone}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.AddMilestoneCommand, Mode=OneWay}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_EditManagedActivities}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_EditManagedActivities}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.EditManagedActivitiesCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_DuplicateManagedActivity}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_DuplicateManagedActivity}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedActivityCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_RenumberActivities}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_RenumberActivities}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.RenumberActivitiesCommand, Mode=OneWay}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_DeleteManagedActivities}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_DeleteManagedActivities}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedActivitiesCommand, Mode=OneWay}" />
 						</ContextMenu>
 					</Setter>

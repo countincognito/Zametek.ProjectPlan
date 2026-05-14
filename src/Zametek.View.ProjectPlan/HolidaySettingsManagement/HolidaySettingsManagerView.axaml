@@ -82,20 +82,20 @@
         <Style>
           <Setter Property="ContextMenu">
             <ContextMenu>
-              <MenuItem Header="{x:Static resources:Labels.Label_AddManagedHoliday}"
+              <MenuItem Header="{x:Static resources:Menus.Menu_AddManagedHoliday}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.AddManagedHolidayCommand, Mode=OneWay}" />
 
               <Separator />
 
-              <MenuItem Header="{x:Static resources:Labels.Label_DuplicateManagedHoliday}"
+              <MenuItem Header="{x:Static resources:Menus.Menu_DuplicateManagedHoliday}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedHolidayCommand, Mode=OneWay}" />
 
-              <MenuItem Header="{x:Static resources:Labels.Label_EditManagedHoliday}"
+              <MenuItem Header="{x:Static resources:Menus.Menu_EditManagedHoliday}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.EditManagedHolidayCommand, Mode=OneWay}" />
 
               <Separator />
 
-              <MenuItem Header="{x:Static resources:Labels.Label_DeleteManagedHolidays}"
+              <MenuItem Header="{x:Static resources:Menus.Menu_DeleteManagedHolidays}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedHolidaysCommand, Mode=OneWay}" />
             </ContextMenu>
           </Setter>

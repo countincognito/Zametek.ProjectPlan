@@ -40,28 +40,28 @@
       <Style>
         <Setter Property="ContextMenu">
           <ContextMenu>
-            <MenuItem Header="{x:Static resources:Labels.Label_AddManagedResource}"
+            <MenuItem Header="{x:Static resources:Menus.Menu_AddManagedResource}"
                   Command="{Binding Path=$parent[DockPanel].DataContext.AddManagedResourceCommand, Mode=OneWay}" />
 
             <Separator />
 
-            <MenuItem Header="{x:Static resources:Labels.Label_DuplicateManagedResource}"
+            <MenuItem Header="{x:Static resources:Menus.Menu_DuplicateManagedResource}"
                   Command="{Binding Path=$parent[DockPanel].DataContext.DuplicateManagedResourceCommand, Mode=OneWay}" />
 
-            <MenuItem Header="{x:Static resources:Labels.Label_EditManagedResources}"
+            <MenuItem Header="{x:Static resources:Menus.Menu_EditManagedResources}"
                   Command="{Binding Path=$parent[DockPanel].DataContext.EditManagedResourcesCommand, Mode=OneWay}" />
 
-            <MenuItem Header="{x:Static resources:Labels.Label_RenumberResources}"
+            <MenuItem Header="{x:Static resources:Menus.Menu_RenumberResources}"
                   Command="{Binding Path=$parent[DockPanel].DataContext.RenumberResourcesCommand, Mode=OneWay}" />
 
             <Separator />
 
-            <MenuItem Header="{x:Static resources:Labels.Label_DeleteManagedResources}"
+            <MenuItem Header="{x:Static resources:Menus.Menu_DeleteManagedResources}"
                   Command="{Binding Path=$parent[DockPanel].DataContext.RemoveManagedResourcesCommand, Mode=OneWay}" />
 
             <Separator />
 
-            <MenuItem Header="{x:Static resources:Labels.Label_DisableResources}"
+            <MenuItem Header="{x:Static resources:Menus.Menu_DisableResources}"
 								  IsChecked="{Binding Path=DisableResources, Mode=TwoWay}"
 								  ToggleType="CheckBox" />
           </ContextMenu>

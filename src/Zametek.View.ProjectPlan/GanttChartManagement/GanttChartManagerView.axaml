@@ -75,40 +75,40 @@
 							  Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
           <ContentControl.ContextMenu>
             <ContextMenu>
-            <MenuItem Header="{x:Static resources:Labels.Label_ShowGroupLabels}"
+            <MenuItem Header="{x:Static resources:Menus.Menu_ShowGroupLabels}"
 								    IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}"
 								    IsChecked="{Binding Path=ShowGroupLabels, Mode=TwoWay}"
 								    ToggleType="CheckBox" />
 
-              <MenuItem Header="{x:Static resources:Labels.Label_ShowSlack}"
+              <MenuItem Header="{x:Static resources:Menus.Menu_ShowSlack}"
 								    IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}"
 								    IsChecked="{Binding Path=ShowSlack, Mode=TwoWay}"
 								    ToggleType="CheckBox" />
 
-              <MenuItem Header="{x:Static resources:Labels.Label_ShowNonWorkingDays}"
+              <MenuItem Header="{x:Static resources:Menus.Menu_ShowNonWorkingDays}"
 								    IsEnabled="{Binding Path=ShowDates, Mode=OneWay}"
 								    IsChecked="{Binding Path=ShowNonWorkingDays, Mode=TwoWay}"
 								    ToggleType="CheckBox" />
 
-              <MenuItem Header="{x:Static resources:Labels.Label_ShowProjectFinish}"
+              <MenuItem Header="{x:Static resources:Menus.Menu_ShowProjectFinish}"
 								    IsChecked="{Binding Path=ShowProjectFinish, Mode=TwoWay}"
 								    ToggleType="CheckBox" />
 
-              <MenuItem Header="{x:Static resources:Labels.Label_ShowTracking}"
+              <MenuItem Header="{x:Static resources:Menus.Menu_ShowTracking}"
 								    IsChecked="{Binding Path=ShowTracking, Mode=TwoWay}"
 								    ToggleType="CheckBox" />
 
-              <MenuItem Header="{x:Static resources:Labels.Label_ShowToday}"
+              <MenuItem Header="{x:Static resources:Menus.Menu_ShowToday}"
 								    IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"
 								    ToggleType="CheckBox" />
 
-              <MenuItem Header="{x:Static resources:Labels.Label_ShowMilestones}"
+              <MenuItem Header="{x:Static resources:Menus.Menu_ShowMilestones}"
 								    IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
 								    ToggleType="CheckBox" />
 
               <Separator />
 
-              <MenuItem Header="{x:Static resources:Labels.Label_GroupByMode}">
+              <MenuItem Header="{x:Static resources:Menus.Menu_GroupByMode}">
                 <MenuItem Header="{x:Static resources:Enums.Enum_GroupByMode_None}"
 									  IsChecked="{Binding Path=GroupByMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:GroupByMode.None}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeGroupByModeCommand, Mode=OneWay}"
@@ -130,7 +130,7 @@
 
               <Separator />
 
-              <MenuItem Header="{x:Static resources:Labels.Label_AnnotationStyle}">
+              <MenuItem Header="{x:Static resources:Menus.Menu_AnnotationStyle}">
                 <MenuItem Header="{x:Static resources:Enums.Enum_AnnotationStyle_None}"
 									  IsChecked="{Binding Path=AnnotationStyle, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AnnotationStyle.None}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeAnnotationStyleCommand, Mode=OneWay}"

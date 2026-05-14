@@ -23,17 +23,17 @@
 							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
 				<ContentControl.ContextMenu>
 					<ContextMenu>
-						<MenuItem Header="{x:Static resources:Labels.Label_ShowToday}"
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowToday}"
 								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"
 								  ToggleType="CheckBox" />
 
-						<MenuItem Header="{x:Static resources:Labels.Label_ShowMilestones}"
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowMilestones}"
 								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
 								  ToggleType="CheckBox" />
 
 						<Separator />
 
-						<MenuItem Header="{x:Static resources:Labels.Label_AllocationMode}">
+						<MenuItem Header="{x:Static resources:Menus.Menu_AllocationMode}">
 							<MenuItem Header="{x:Static resources:Enums.Enum_AllocationMode_Activity}"
 									  IsChecked="{Binding Path=AllocationMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AllocationMode.Activity}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeAllocationModeCommand, Mode=OneWay}"
@@ -61,7 +61,7 @@
 
 						<Separator />
 
-						<MenuItem Header="{x:Static resources:Labels.Label_ScheduleMode}">
+						<MenuItem Header="{x:Static resources:Menus.Menu_ScheduleMode}">
 							<MenuItem Header="{x:Static resources:Enums.Enum_ScheduleMode_Combined}"
 									  IsChecked="{Binding Path=ScheduleMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:ScheduleMode.Combined}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeScheduleModeCommand, Mode=OneWay}"
@@ -83,7 +83,7 @@
 
 						<Separator />
 
-						<MenuItem Header="{x:Static resources:Labels.Label_DisplayStyle}">
+						<MenuItem Header="{x:Static resources:Menus.Menu_DisplayStyle}">
 							<MenuItem Header="{x:Static resources:Enums.Enum_DisplayStyle_Slanted}"
 									  IsChecked="{Binding Path=DisplayStyle, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:DisplayStyle.Slanted}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeDisplayStyleCommand, Mode=OneWay}"

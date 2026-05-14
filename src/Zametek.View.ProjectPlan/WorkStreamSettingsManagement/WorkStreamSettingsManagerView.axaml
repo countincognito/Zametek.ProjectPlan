@@ -87,23 +87,23 @@
 				<Style>
 					<Setter Property="ContextMenu">
 						<ContextMenu>
-							<MenuItem Header="{x:Static resources:Labels.Label_AddManagedWorkStream}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_AddManagedWorkStream}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.AddManagedWorkStreamCommand, Mode=OneWay}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_DuplicateManagedWorkStream}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_DuplicateManagedWorkStream}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedWorkStreamCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_EditManagedWorkStreams}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_EditManagedWorkStreams}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.EditManagedWorkStreamsCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_RenumberWorkStreams}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_RenumberWorkStreams}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.RenumberWorkStreamsCommand, Mode=OneWay}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_DeleteManagedWorkStreams}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_DeleteManagedWorkStreams}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedWorkStreamsCommand, Mode=OneWay}" />
 						</ContextMenu>
 					</Setter>

@@ -49,15 +49,15 @@
 				<Style>
 					<Setter Property="ContextMenu">
 						<ContextMenu>
-							<MenuItem Header="{x:Static resources:Labels.Label_NewScenario}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_NewScenario}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectScenarioFileCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_NewScenarioFolder}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_NewScenarioFolder}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectScenarioFolderCommand, Mode=OneWay}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_PasteNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_PasteNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.PasteProjectScenarioNodeCommand, Mode=OneWay}" />
 
 							<Separator />
@@ -117,30 +117,30 @@
 					
 					<Setter Property="ContextMenu">
 						<ContextMenu>
-							<MenuItem Header="{x:Static resources:Labels.Label_SelectManagedScenario}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_SelectManagedScenario}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.LoadProjectScenarioFileCommand, Mode=OneWay}"
 									  CommandParameter="{Binding .}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_NewScenario}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_NewScenario}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectScenarioFileCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_NewScenarioFolder}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_NewScenarioFolder}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectScenarioFolderCommand, Mode=OneWay}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_CutNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_CutNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CutProjectScenarioNodeCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_CopyNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_CopyNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CopyProjectScenarioNodeCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_DuplicateNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_DuplicateNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.DuplicateProjectScenarioNodeCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_PasteNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_PasteNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.PasteProjectScenarioNodeCommand, Mode=OneWay}" />
 
 							<Separator />
@@ -182,18 +182,18 @@
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_RenameNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_RenameNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.RenameProjectScenarioNodeCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_DeleteNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_DeleteNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.RemoveProjectScenarioNodeCommand, Mode=OneWay}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_AddTag}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_AddTag}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.AddNodeTagCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_DeleteTag}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_DeleteTag}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.RemoveNodeTagCommand, Mode=OneWay}" />
 						</ContextMenu>
 					</Setter>

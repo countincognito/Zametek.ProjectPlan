@@ -35,13 +35,13 @@
 							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
 				<ContentControl.ContextMenu>
 					<ContextMenu>
-						<MenuItem Header="{x:Static resources:Labels.Label_ShowNames}"
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowNames}"
 								  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"
 								  ToggleType="CheckBox" />
 
 						<Separator />
 
-						<MenuItem Header="{x:Static resources:Labels.Label_TrackedMetricXAxis}">
+						<MenuItem Header="{x:Static resources:Menus.Menu_TrackedMetricXAxis}">
 							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_None}"
 									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.None}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeTrackedMetricXAxisCommand, Mode=OneWay}"
@@ -243,7 +243,7 @@
 
 						<Separator />
 
-						<MenuItem Header="{x:Static resources:Labels.Label_TrackedMetricYAxis}">
+						<MenuItem Header="{x:Static resources:Menus.Menu_TrackedMetricYAxis}">
 							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_None}"
 									  IsChecked="{Binding Path=TrackedMetricYAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.None}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeTrackedMetricYAxisCommand, Mode=OneWay}"
@@ -445,7 +445,7 @@
 
 						<Separator />
 
-						<MenuItem Header="{x:Static resources:Labels.Label_CurveFittingType}">
+						<MenuItem Header="{x:Static resources:Menus.Menu_CurveFittingType}">
 							<MenuItem Header="{x:Static resources:Enums.Enum_CurveFittingType_None}"
 									  IsChecked="{Binding Path=CurveFittingType, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:CurveFittingType.None}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeCurveFittingTypeCommand, Mode=OneWay}"

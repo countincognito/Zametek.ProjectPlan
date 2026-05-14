@@ -20,15 +20,15 @@
 							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
 				<ContentControl.ContextMenu>
 					<ContextMenu>
-						<MenuItem Header="{x:Static resources:Labels.Label_ShowProjections}"
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowProjections}"
 								  IsChecked="{Binding Path=ShowProjections, Mode=TwoWay}"
 								  ToggleType="CheckBox" />
-						
-						<MenuItem Header="{x:Static resources:Labels.Label_ShowToday}"
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowToday}"
 								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"
 								  ToggleType="CheckBox" />
 
-						<MenuItem Header="{x:Static resources:Labels.Label_ShowMilestones}"
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowMilestones}"
 								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
 								  ToggleType="CheckBox" />
 

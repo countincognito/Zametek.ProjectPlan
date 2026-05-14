@@ -1,4 +1,4 @@
-﻿using CommandLine;
+using CommandLine;
 using CommandLine.Text;
 using ConsoleTables;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +42,11 @@ namespace Zametek.ProjectPlan.CommandLine
                         services.AddSingleton<ICoreViewModel, CoreViewModel>();
                         services.AddSingleton<ISettingService, SettingService>();
                         services.AddSingleton<IDialogService, DialogService>();
+
+                        services.AddSingleton<IGraphCompilationService, GraphCompilationService>();
+                        services.AddSingleton<IResourceSchedulingService, ResourceSchedulingService>();
+                        services.AddSingleton<IMetricCalculationService, MetricCalculationService>();
+
                         services.AddSingleton<IDateTimeCalculator, DateTimeCalculator>();
                         services.AddSingleton<IGraphImageExporter, GraphImageExporter>();
                         services.AddSingleton<IMsaglSvgRenderer, MsaglSvgRenderer>();

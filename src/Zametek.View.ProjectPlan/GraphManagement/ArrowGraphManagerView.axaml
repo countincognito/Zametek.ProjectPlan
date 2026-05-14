@@ -45,7 +45,7 @@
 						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
 								  Command="{Binding Path=SaveArrowGraphImageFileCommand, Mode=OneWay}" />
 
-						<MenuItem Header="{x:Static resources:Labels.Label_ShowNames}"
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowNames}"
 								  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"
 								  ToggleType="CheckBox" />
 					</ContextMenu>

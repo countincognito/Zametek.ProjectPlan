@@ -228,4 +228,163 @@
   <data name="Menu_SaveLayout" xml:space="preserve">
     <value>Save _Layout</value>
   </data>
+  <data name="Menu_AddManagedActivity" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Menu_AddManagedActivitySeverity" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Menu_AddManagedHoliday" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Menu_AddManagedResource" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Menu_AddManagedWorkStream" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Menu_AddMilestone" xml:space="preserve">
+    <value>Milestone</value>
+  </data>
+  <data name="Menu_AddTag" xml:space="preserve">
+    <value>Add Tag</value>
+  </data>
+  <data name="Menu_AllocationMode" xml:space="preserve">
+    <value>Allocation</value>
+  </data>
+  <data name="Menu_AnnotationStyle" xml:space="preserve">
+    <value>Annotation Style</value>
+  </data>
+  <data name="Menu_CopyNode" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Menu_CurveFittingType" xml:space="preserve">
+    <value>Curve Fitting</value>
+  </data>
+  <data name="Menu_CutNode" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="Menu_DeleteManagedActivities" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Menu_DeleteManagedActivitySeverities" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Menu_DeleteManagedHolidays" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Menu_DeleteManagedResources" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Menu_DeleteManagedWorkStreams" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Menu_DeleteNode" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Menu_DeleteTag" xml:space="preserve">
+    <value>Delete Tag</value>
+  </data>
+  <data name="Menu_DisableResources" xml:space="preserve">
+    <value>Disable Resources</value>
+  </data>
+  <data name="Menu_DisplayStyle" xml:space="preserve">
+    <value>Display style</value>
+  </data>
+  <data name="Menu_DuplicateManagedActivity" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Menu_DuplicateManagedActivitySeverity" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Menu_DuplicateManagedHoliday" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Menu_DuplicateManagedResource" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Menu_DuplicateManagedWorkStream" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Menu_DuplicateNode" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Menu_EditManagedActivities" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Menu_EditManagedHoliday" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Menu_EditManagedResources" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Menu_EditManagedWorkStreams" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Menu_GroupByMode" xml:space="preserve">
+    <value>Group by</value>
+  </data>
+  <data name="Menu_InsertManagedActivity" xml:space="preserve">
+    <value>Insert</value>
+  </data>
+  <data name="Menu_NewScenario" xml:space="preserve">
+    <value>New Scenario</value>
+  </data>
+  <data name="Menu_NewScenarioFolder" xml:space="preserve">
+    <value>New Folder</value>
+  </data>
+  <data name="Menu_PasteNode" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="Menu_RenameNode" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Menu_RenumberActivities" xml:space="preserve">
+    <value>Renumber</value>
+  </data>
+  <data name="Menu_RenumberResources" xml:space="preserve">
+    <value>Renumber</value>
+  </data>
+  <data name="Menu_RenumberWorkStreams" xml:space="preserve">
+    <value>Renumber</value>
+  </data>
+  <data name="Menu_ScheduleMode" xml:space="preserve">
+    <value>Schedule</value>
+  </data>
+  <data name="Menu_SelectManagedScenario" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="Menu_ShowGroupLabels" xml:space="preserve">
+    <value>Show Group Labels</value>
+  </data>
+  <data name="Menu_ShowMilestones" xml:space="preserve">
+    <value>Show Milestones</value>
+  </data>
+  <data name="Menu_ShowNames" xml:space="preserve">
+    <value>Show Names</value>
+  </data>
+  <data name="Menu_ShowNonWorkingDays" xml:space="preserve">
+    <value>Show Non-Working Days</value>
+  </data>
+  <data name="Menu_ShowProjectFinish" xml:space="preserve">
+    <value>Show Project Finish</value>
+  </data>
+  <data name="Menu_ShowProjections" xml:space="preserve">
+    <value>Show Projections</value>
+  </data>
+  <data name="Menu_ShowSlack" xml:space="preserve">
+    <value>Show Slack</value>
+  </data>
+  <data name="Menu_ShowToday" xml:space="preserve">
+    <value>Show Today</value>
+  </data>
+  <data name="Menu_ShowTracking" xml:space="preserve">
+    <value>Show Tracking</value>
+  </data>
+  <data name="Menu_TrackedMetricXAxis" xml:space="preserve">
+    <value>X Axis Metric</value>
+  </data>
+  <data name="Menu_TrackedMetricYAxis" xml:space="preserve">
+    <value>Y Axis Metric</value>
+  </data>
 </root>
