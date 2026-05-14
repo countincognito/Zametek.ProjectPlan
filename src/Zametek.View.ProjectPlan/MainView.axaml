@@ -329,7 +329,7 @@
 
 					<DatePicker DockPanel.Dock="Left"
 								SelectedDate="{Binding Path=Today, Mode=TwoWay}"
-								Margin="0,0,11,0"
+								Margin="0,0,4,0"
 								Padding="3"
 								Focusable="True"
 								DayFormat="d (ddd)"
@@ -337,6 +337,16 @@
 								MonthVisible="True"
 								YearVisible="True"
 								VerticalAlignment="Center"/>
+
+					<Button DockPanel.Dock="Left"
+							Command="{Binding Path=SyncTodayCommand, Mode=OneWay}"
+							ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_SyncToday}"
+							Content="↺"
+							FontSize="14"
+							Padding="4,2"
+							Margin="0,0,7,0"
+							VerticalAlignment="Center"
+							VerticalContentAlignment="Center" />
 
 					<Grid />
 				</DockPanel>

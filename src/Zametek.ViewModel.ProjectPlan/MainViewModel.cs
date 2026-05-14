@@ -176,6 +176,7 @@ namespace Zametek.ViewModel.ProjectPlan
             CompileCommand = ReactiveCommand.CreateFromTask(ForceCompileAsync);
             ToggleAutoCompileCommand = ReactiveCommand.Create(ToggleAutoCompile);
             TransitiveReductionCommand = ReactiveCommand.Create(RunTransitiveReductionAsync);
+            SyncTodayCommand = ReactiveCommand.Create(SyncToday);
 
             OpenDocumentationCommand = ReactiveCommand.CreateFromTask(OpenDocumentationAsync);
             OpenDonateCommand = ReactiveCommand.CreateFromTask(OpenDonateAsync);
@@ -482,6 +483,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private void ToggleDefaultHideBilling() => DefaultHideBilling = !DefaultHideBilling;
 
         private void ToggleAutoCompile() => AutoCompile = !AutoCompile;
+
+        private void SyncToday() => Today = new DateTimeOffset(DateTime.Today);
 
         private async Task ProjectScenarioImportAsync(string filename) =>
             await Task.Run(() => ProjectScenarioImport(filename));
@@ -842,6 +845,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public ICommand ToggleAutoCompileCommand { get; }
 
         public ICommand TransitiveReductionCommand { get; }
+
+        public ICommand SyncTodayCommand { get; }
 
         public ICommand OpenDocumentationCommand { get; }
 

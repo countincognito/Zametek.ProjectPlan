@@ -851,13 +851,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (dateTimeCalculator.IsNonWorkingDay(iterDateOffset))
                     {
-                        nonWorkingDayShades.Add(new Rectangle
+                        nonWorkingDayShades.Add(new HolidayRectangle
                         {
                             X1 = iterDate.ToOADate(),
                             X2 = iterDate.ToOADate() + 1.0,
                             Y1 = 1,
                             Y2 = shadingTop,
-                            FillColor = Colors.Gray.WithAlpha(ColorHelper.AnnotationAHoliday),
+                            FillColor = Colors.Black.WithAlpha(ColorHelper.AnnotationAHoliday),
                             LineColor = Colors.Transparent,
                             LineWidth = 0,
                         });

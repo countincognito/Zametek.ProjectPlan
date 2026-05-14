@@ -102,6 +102,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand TransitiveReductionCommand { get; }
 
+        ICommand SyncTodayCommand { get; }
+
         ICommand OpenDocumentationCommand { get; }
 
         ICommand OpenDonateCommand { get; }

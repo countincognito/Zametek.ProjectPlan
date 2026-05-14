@@ -6,6 +6,7 @@ using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
 using System;
 using System.Linq;
+using System.Text;
 using Zametek.Contract.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 using AvaloniaInput = Avalonia.Input;
@@ -106,7 +107,19 @@ namespace Zametek.View.ProjectPlan
                     int newDuration = CalculateNewDuration(newRightEdge, m_ResizeActivityStartTime.GetValueOrDefault(), vm);
                     Canvas.SetLeft(dragTooltipBorder, pos.X + 16);
                     Canvas.SetTop(dragTooltipBorder, pos.Y + 4);
-                    dragTooltipText.Text = $@"{Resource.ProjectPlan.Labels.Label_Duration}: {newDuration}";
+
+                    var tooltipText = new StringBuilder($@"{Resource.ProjectPlan.Labels.Label_Duration}: {newDuration}");
+
+                    if (m_ResizeActivityDuration is not null)
+                    {
+                        int diff = newDuration - m_ResizeActivityDuration.GetValueOrDefault();
+                        if (diff != 0)
+                        {
+                            tooltipText.Append($@" ({diff})");
+                        }
+                    }
+
+                    dragTooltipText.Text = tooltipText.ToString();
                     dragTooltipBorder.IsVisible = true;
                 }
             }

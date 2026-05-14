@@ -475,6 +475,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sync to current date.
+        /// </summary>
+        public static string ToolTip_SyncToday {
+            get {
+                return ResourceManager.GetString("ToolTip_SyncToday", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resource Operator.
         /// </summary>
         public static string ToolTip_TargetResourceOperator {
