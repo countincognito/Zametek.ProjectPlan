@@ -225,7 +225,7 @@ jobs:
 
           **Windows:** Extract the zip file and run \`projectplandotnet.exe\` (Desktop) or \`zpp.exe\` (CLI).
 
-          **Linux/macOS:** Extract the tar.gz, make executable (`chmod +x projectplandotnet` or `chmod +x zpp`), and run.
+          **Linux/macOS:** Extract the tar.gz, make executable (\`chmod +x projectplandotnet\` or \`chmod +x zpp\`), and run.
           EOF
 
       - name: Create GitHub Release
