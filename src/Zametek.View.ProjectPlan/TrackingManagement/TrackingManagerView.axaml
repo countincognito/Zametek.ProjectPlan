@@ -292,12 +292,26 @@
 						</DataGridTemplateColumn.HeaderTemplate>
 						<DataGridTemplateColumn.CellTemplate>
 							<DataTemplate>
-								<Grid VerticalAlignment="Stretch">
+								<DockPanel VerticalAlignment="Stretch">
+                  <Border BorderBrush="Gray"
+                          BorderThickness="2"
+                          CornerRadius="5"
+                          DockPanel.Dock="Right"
+                          Padding="2"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center">
+                    <TextBlock VerticalAlignment="Center"
+                               TextAlignment="Right"
+                               Margin="0"
+                               Padding="3"
+                               Width="40"
+                               Text="{Binding Path=TrackerSet.LastTrackerValue, Mode=OneWay, StringFormat={}{0:#0\'%\'}}}"/>
+                  </Border>
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
 											   Text="{Binding Path=Name, Mode=OneWay}"/>
-								</Grid>
+								</DockPanel>
 							</DataTemplate>
 						</DataGridTemplateColumn.CellTemplate>
 					</DataGridTemplateColumn>
