@@ -223,9 +223,9 @@ jobs:
 
           ## Installation
 
-          **Windows:** Extract the zip file and run \`projectplandotnet.exe\` (Desktop) or \`zpp.exe\` (CLI). No installer required — self-contained, no .NET runtime needed.
+          **Windows:** Extract the zip file and run \`projectplandotnet.exe\` (Desktop) or \`zpp.exe\` (CLI).
 
-          **Linux/macOS:** Extract the tar.gz, make executable (\`chmod +x projectplandotnet\`), and run. Self-contained, no .NET runtime needed.
+          **Linux/macOS:** Extract the tar.gz, make executable (`chmod +x projectplandotnet` or `chmod +x zpp`), and run.
           EOF
 
       - name: Create GitHub Release
