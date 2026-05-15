@@ -195,11 +195,9 @@ jobs:
           fi
 
           cat > release-notes.md << EOF
-          ## $VERSION
+          ## Downloads
 
-          ### Downloads
-
-          #### projectplan.net Desktop
+          ### projectplan.net Desktop
 
           | Platform | Architecture | Download |
           |----------|-------------|---------|
@@ -211,7 +209,7 @@ jobs:
           | macOS | x64 (Intel) | \`projectplandotnet-${VERSION}-osx-x64.tar.gz\` |
           | macOS | arm64 (Apple Silicon) | \`projectplandotnet-${VERSION}-osx-arm64.tar.gz\` |
 
-          #### zpp CLI
+          ### zpp CLI
 
           | Platform | Architecture | Download |
           |----------|-------------|---------|
@@ -223,7 +221,7 @@ jobs:
           | macOS | x64 (Intel) | \`zpp-${VERSION}-osx-x64.tar.gz\` |
           | macOS | arm64 (Apple Silicon) | \`zpp-${VERSION}-osx-arm64.tar.gz\` |
 
-          ### Installation
+          ## Installation
 
           **Windows:** Extract the zip file and run \`projectplandotnet.exe\` (Desktop) or \`zpp.exe\` (CLI). No installer required — self-contained, no .NET runtime needed.
 
