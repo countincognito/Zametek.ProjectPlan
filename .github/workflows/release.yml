@@ -33,13 +33,13 @@ jobs:
 
       - name: Publish Desktop
         run: |
-          dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os win --arch ${{ matrix.arch }} src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output artifacts/desktop/win-${{ matrix.arch }}
+          dotnet publish --self-contained=true -c Release --os win --arch ${{ matrix.arch }} src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output artifacts/desktop/win-${{ matrix.arch }}
         env:
           HUSKY: 0
 
       - name: Publish CLI
         run: |
-          dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os win --arch ${{ matrix.arch }} src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output artifacts/cli/win-${{ matrix.arch }}
+          dotnet publish --self-contained=true -c Release --os win --arch ${{ matrix.arch }} src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output artifacts/cli/win-${{ matrix.arch }}
         env:
           HUSKY: 0
 
@@ -85,13 +85,13 @@ jobs:
 
       - name: Publish Desktop
         run: |
-          dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os linux --arch ${{ matrix.arch }} src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output artifacts/desktop/linux-${{ matrix.arch }}
+          dotnet publish --self-contained=true -c Release --os linux --arch ${{ matrix.arch }} src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output artifacts/desktop/linux-${{ matrix.arch }}
         env:
           HUSKY: 0
 
       - name: Publish CLI
         run: |
-          dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os linux --arch ${{ matrix.arch }} src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output artifacts/cli/linux-${{ matrix.arch }}
+          dotnet publish --self-contained=true -c Release --os linux --arch ${{ matrix.arch }} src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output artifacts/cli/linux-${{ matrix.arch }}
         env:
           HUSKY: 0
 
@@ -135,13 +135,13 @@ jobs:
 
       - name: Publish Desktop
         run: |
-          dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os osx --arch ${{ matrix.arch }} src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output artifacts/desktop/osx-${{ matrix.arch }}
+          dotnet publish --self-contained=true -c Release --os osx --arch ${{ matrix.arch }} src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output artifacts/desktop/osx-${{ matrix.arch }}
         env:
           HUSKY: 0
 
       - name: Publish CLI
         run: |
-          dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os osx --arch ${{ matrix.arch }} src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output artifacts/cli/osx-${{ matrix.arch }}
+          dotnet publish --self-contained=true -c Release --os osx --arch ${{ matrix.arch }} src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output artifacts/cli/osx-${{ matrix.arch }}
         env:
           HUSKY: 0
 
