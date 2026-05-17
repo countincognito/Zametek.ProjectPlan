@@ -8,13 +8,14 @@ namespace Zametek.View.ProjectPlan
     public partial class ProjectScenarioManagerView
         : UserControl
     {
-        private readonly ICommitEditHandler m_CommitEditHandler;
+        public ProjectScenarioManagerView()
+        {
+            InitializeComponent();
+        }
 
         public ProjectScenarioManagerView(ICommitEditHandler commitEditHandler)
         {
             ArgumentNullException.ThrowIfNull(commitEditHandler);
-            m_CommitEditHandler = commitEditHandler;
-
             InitializeComponent();
 
             // This is to ensure that all datagrids are committed on any
@@ -23,7 +24,7 @@ namespace Zametek.View.ProjectPlan
             // This setup will also catch pointer presses on treeview items.
             scenarioTree.AddHandler(PointerPressedEvent, (sender, e) =>
             {
-                m_CommitEditHandler.CommitEdit();
+                commitEditHandler.CommitEdit();
             }, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
         }
     }

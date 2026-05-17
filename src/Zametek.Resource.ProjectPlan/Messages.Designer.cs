@@ -284,7 +284,16 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Message_EditResources", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Select the properties to edit.
+        /// </summary>
+        public static string Message_EditWorkStreams {
+            get {
+                return ResourceManager.GetString("Message_EditWorkStreams", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Empty filename.
         /// </summary>
@@ -547,20 +556,29 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to determine file directory for User Settings.
+        ///   Looks up a localized string similar to Unable to determine directory for Dock Layout.
         /// </summary>
-        public static string Message_UnableToDetermineUserSettingsDirectory {
+        public static string Message_UnableToDetermineDockLayoutDirectory {
             get {
-                return ResourceManager.GetString("Message_UnableToDetermineUserSettingsDirectory", resourceCulture);
+                return ResourceManager.GetString("Message_UnableToDetermineDockLayoutDirectory", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to determine file path for User Settings.
+        ///   Looks up a localized string similar to Unable to determine folder path for product settings.
         /// </summary>
-        public static string Message_UnableToDetermineUserSettingsPath {
+        public static string Message_UnableToDetermineProductSettingsFolderPath {
             get {
-                return ResourceManager.GetString("Message_UnableToDetermineUserSettingsPath", resourceCulture);
+                return ResourceManager.GetString("Message_UnableToDetermineProductSettingsFolderPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to determine directory for User Settings.
+        /// </summary>
+        public static string Message_UnableToDetermineUserSettingsDirectory {
+            get {
+                return ResourceManager.GetString("Message_UnableToDetermineUserSettingsDirectory", resourceCulture);
             }
         }
         

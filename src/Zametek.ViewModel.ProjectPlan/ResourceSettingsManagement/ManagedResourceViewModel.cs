@@ -1,4 +1,4 @@
-﻿using Avalonia.Data;
+using Avalonia.Data;
 using ReactiveUI;
 using System.ComponentModel;
 using System.Reactive.Linq;
@@ -131,6 +131,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public int Id { get; }
 
+        private int m_DisplayOrder;
+        public int DisplayOrder
+        {
+            get => m_DisplayOrder;
+            set => this.RaiseAndSetIfChanged(ref m_DisplayOrder, value);
+        }
+
         private string m_Name;
         public string Name
         {
@@ -243,13 +250,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private int m_DisplayOrder;
-        public int DisplayOrder
-        {
-            get => m_DisplayOrder;
-            set => this.RaiseAndSetIfChanged(ref m_DisplayOrder, value);
-        }
-
         private int m_AllocationOrder;
         public int AllocationOrder
         {
@@ -282,9 +282,26 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public bool IsEditing => m_isDirty;
 
-        public object CloneObject()
+        public ResourceModel DeepCopy()
         {
-            return new Resource<int, int>(Id, Name, IsExplicitTarget, IsInactive, InterActivityAllocationType, UnitCost, UnitBilling, AllocationOrder, InterActivityPhases);
+            return new()
+            {
+                Id = Id,
+                DisplayOrder = DisplayOrder,
+                Name = Name,
+                Notes = Notes,
+                IsExplicitTarget = IsExplicitTarget,
+                IsInactive = IsInactive,
+                InterActivityAllocationType = InterActivityAllocationType,
+                InterActivityPhases = [.. InterActivityPhases],
+                UnitCost = UnitCost,
+                UnitBilling = UnitBilling,
+                FixedCost = FixedCost,
+                FixedBilling = FixedBilling,
+                AllocationOrder = AllocationOrder,
+                ColorFormat = ColorFormat,
+                Trackers = TrackerSet.CloneTrackers(),
+            };
         }
 
         #endregion
@@ -356,15 +373,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_HasPhases?.Dispose();
                 TrackerSet.Dispose();
                 m_InterActivityAllocationIsIndirect?.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

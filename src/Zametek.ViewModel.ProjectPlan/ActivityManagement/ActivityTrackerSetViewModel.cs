@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -214,6 +214,16 @@ namespace Zametek.ViewModel.ProjectPlan
             this.RaisePropertyChanged(nameof(SearchSymbol));
         }
 
+        public List<ActivityTrackerModel> CloneTrackers()
+        {
+            lock (m_Lock)
+            {
+                return [.. m_ActivityTrackerLookup.Values
+                    .OrderBy(x => x.Time)
+                    .Select(selector => selector with { })];
+            }
+        }
+
         public int? Day00
         {
             get => GetDayPercentageCompleted(0);
@@ -394,12 +404,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 m_DaysSub?.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

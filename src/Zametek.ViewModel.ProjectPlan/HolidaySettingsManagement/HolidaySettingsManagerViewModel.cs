@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using DynamicData;
 using ReactiveUI;
 using System.Collections.Concurrent;
@@ -58,6 +58,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SetSelectedManagedHolidaysCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedHolidays);
             AddManagedHolidayCommand = ReactiveCommand.CreateFromTask(AddManagedHolidayAsync);
             RemoveManagedHolidaysCommand = ReactiveCommand.CreateFromTask(RemoveManagedHolidaysAsync, this.WhenAnyValue(rm => rm.HasSelectedHolidays));
+            DuplicateManagedHolidayCommand = ReactiveCommand.CreateFromTask(DuplicateManagedHolidayAsync, this.WhenAnyValue(rm => rm.HasSelectedHoliday));
             EditManagedHolidayCommand = ReactiveCommand.CreateFromTask(EditManagedHolidayAsync, this.WhenAnyValue(am => am.HasSelectedHoliday));
 
             // Create read-only view to the source list.
@@ -211,11 +212,53 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private async Task DuplicateManagedHolidayAsync()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    SelectedHolidays.TryGetValue(SelectedHolidays.Keys.FirstOrDefault(), out IManagedHolidayViewModel? selectedHoliday);
+
+                    if (selectedHoliday is null)
+                    {
+                        return;
+                    }
+
+                    HolidayModel duplicateModel = selectedHoliday.DeepCopy();
+
+                    m_Holidays.Edit(holidays =>
+                    {
+                        int id = GetNextId();
+                        duplicateModel = duplicateModel with
+                        {
+                            Id = id
+                        };
+
+                        holidays.Add(
+                            new ManagedHolidayViewModel(
+                                this,
+                                duplicateModel,
+                                m_DateTimeCalculator));
+                    });
+                }
+
+                UpdateHolidaySettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
         private async Task EditManagedHolidayAsync()
         {
             try
             {
-                SelectedHolidays.TryGetValue(SelectedHolidays.Keys.First(), out IManagedHolidayViewModel? selectedHoliday);
+                SelectedHolidays.TryGetValue(SelectedHolidays.Keys.FirstOrDefault(), out IManagedHolidayViewModel? selectedHoliday);
 
                 if (selectedHoliday is null)
                 {
@@ -424,6 +467,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand RemoveManagedHolidaysCommand { get; }
 
+        public ICommand DuplicateManagedHolidayCommand { get; }
+
         public ICommand EditManagedHolidayCommand { get; }
 
         #endregion
@@ -441,7 +486,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
@@ -450,9 +494,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_UpdateHolidaySettingsSub?.Dispose();
                 ClearManagedHolidays();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

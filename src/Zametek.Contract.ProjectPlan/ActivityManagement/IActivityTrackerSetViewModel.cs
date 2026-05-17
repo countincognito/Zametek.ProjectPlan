@@ -1,4 +1,4 @@
-﻿using System.Windows.Input;
+using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
@@ -19,6 +19,8 @@ namespace Zametek.Contract.ProjectPlan
         string SearchSymbol { get; }
 
         void RefreshIndex();
+
+        List<ActivityTrackerModel> CloneTrackers();
 
         int? Day00 { get; set; }
         int? Day01 { get; set; }

@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
@@ -21,7 +21,7 @@ namespace Zametek.Contract.ProjectPlan
 
         string ProjectFinish { get; }
 
-        IDisplaySettingsViewModel DisplaySettingsViewModel { get; }
+        IProjectScenarioDisplaySettingsViewModel DisplaySettingsViewModel { get; }
 
         bool DefaultShowDates { get; set; }
 
@@ -42,6 +42,8 @@ namespace Zametek.Contract.ProjectPlan
         IReadOnlyList<IManagedActivityViewModel> RawActivities { get; }
 
         ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
+
+        ObservableCollection<IManagedActivityViewModel> OrderableActivities { get; }
 
         GraphSettingsModel GraphSettings { get; set; }
 
@@ -89,6 +91,8 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadyToRevise IsReadyToReviseTrackers { get; set; }
 
+        int GetNextActivityId();
+
         ProjectScenarioModel CreateEmptyProjectScenario();
 
         void ClearSettings();
@@ -105,7 +109,7 @@ namespace Zametek.Contract.ProjectPlan
 
         ProjectScenarioModel BuildProjectScenario();
 
-        int AddManagedActivity();
+        int AddManagedActivity(int displayOrder);
 
         void AddManagedActivities(IEnumerable<DependentActivityModel> dependentActivityModels);
 
@@ -115,9 +119,17 @@ namespace Zametek.Contract.ProjectPlan
 
         void AddMilestone(IEnumerable<int> dependentActivities);
 
-        void UpdateManagedActivityIds(IEnumerable<(int OldId, int NewId)> idUpdates);
+        void UpdateActivityDisplayOrders();
+
+        void UpdateManagedActivityIds(IEnumerable<(int OldId, int NewId)> idMaps);
+
+        void UpdateManagedResourceIds(IEnumerable<(int OldId, int NewId)> idMaps);
+
+        void UpdateManagedWorkStreamIds(IEnumerable<(int OldId, int NewId)> idMaps);
 
         void ClearManagedActivities();
+
+        void SetActivityDuration(int activityId, int newDuration);
 
         void RunCompile();
 

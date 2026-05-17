@@ -2,8 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
 			 xmlns:controls="using:Avalonia.Controls"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
@@ -14,53 +12,42 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.WorkStreamSettingsManagerView">
 	<UserControl.Resources>
+		<!-- Make DataGrid a drop target -->
+		<local:ManagedWorkStreamDataGridDropHandler x:Key="managedWorkStreamDataGridDropHandler" />
+
 		<local:ColorFormatToColorConverter x:Key="colorFormatToColorConverter"/>
 
 		<local:ManagedWorkStreamSortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
 		<local:ManagedWorkStreamSortComparer x:Key="isPhaseSortComparer" SortMemberPath="IsPhase"/>
-		<local:ManagedWorkStreamSortComparer x:Key="displayOrderSortComparer" SortMemberPath="DisplayOrder"/>
 		<local:ManagedWorkStreamSortComparer x:Key="colorFormatSortComparer" SortMemberPath="ColorFormat"/>
 		<local:ManagedWorkStreamSortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=AddManagedWorkStreamCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_AddManagedWorkStream}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,11"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=RemoveManagedWorkStreamsCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DeleteManagedWorkStreams}"/>
-
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
-
-		<DataGrid Name="workStreamsGrid"
+    <!-- Set Background to Transparent to ensure the context menu works even when the datagrid is empty -->
+    <!-- https://github.com/AvaloniaUI/Avalonia/discussions/15118 -->
+		<DataGrid Name="WorkStreamsGrid"
+				  Background="Transparent"
 				  FrozenColumnCount="1"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
-				  ItemsSource="{Binding Path=WorkStreams, Mode=OneWay}"
+				  ItemsSource="{Binding Path=OrderableWorkStreams, Mode=OneWay}"
 				  SelectionMode="Extended"
 				  CanUserResizeColumns="True"
 				  CanUserSortColumns="True"
 				  GridLinesVisibility="All"
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>
+				<!-- Make DataGrid a drop target -->
+				<Style Selector="DataGridRow">
+					<Setter Property="(Interaction.Behaviors)">
+						<BehaviorCollectionTemplate>
+							<BehaviorCollection>
+								<ContextDragBehavior />
+							</BehaviorCollection>
+						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
 				<Style Selector="DataGridRow Grid.editable">
 					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 				</Style>
@@ -85,18 +72,57 @@
 				<!--<Style Selector="DataGridCell:selected:pointerover:current:focus Grid.editable">
 					<Setter Property="Background" Value="Green"/>
 				</Style>-->
+
+				<!-- Make sure the caret appears at the end of a TextBox -->
+				<Style Selector="TextBox">
+					<Setter Property="(Interaction.Behaviors)">
+						<BehaviorCollectionTemplate>
+							<BehaviorCollection>
+								<local:MoveCaretToEndBehavior />
+							</BehaviorCollection>
+						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
+
+				<Style>
+					<Setter Property="ContextMenu">
+						<ContextMenu>
+							<MenuItem Header="{x:Static resources:Menus.Menu_AddManagedWorkStream}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.AddManagedWorkStreamCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_DuplicateManagedWorkStream}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedWorkStreamCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_EditManagedWorkStreams}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.EditManagedWorkStreamsCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_RenumberWorkStreams}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.RenumberWorkStreamsCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_DeleteManagedWorkStreams}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedWorkStreamsCommand, Mode=OneWay}" />
+						</ContextMenu>
+					</Setter>
+				</Style>
 			</DataGrid.Styles>
 
-			<i:Interaction.Behaviors>
-				<ia:EventTriggerBehavior EventName="SelectionChanged"
-										 SourceObject="{Binding #workStreamsGrid}">
-					<ia:InvokeCommandAction x:DataType="vm:WorkStreamSettingsManagerViewModel"
+			<Interaction.Behaviors>
+				<!-- Make DataGrid a drop target -->
+				<ContextDropBehavior Handler="{StaticResource managedWorkStreamDataGridDropHandler}" />
+
+				<EventTriggerBehavior EventName="SelectionChanged"
+										 SourceObject="{Binding #WorkStreamsGrid}">
+					<InvokeCommandAction x:DataType="vm:WorkStreamSettingsManagerViewModel"
 											Command="{Binding Path=SetSelectedManagedWorkStreamsCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />
-				</ia:EventTriggerBehavior>
+				</EventTriggerBehavior>
 
 				<!--<local:DataGridCacheScrollBehavior />-->
-			</i:Interaction.Behaviors>
+			</Interaction.Behaviors>
 
 			<DataGrid.Columns>
 				<DataGridTemplateColumn CanUserResize="True"
@@ -125,6 +151,49 @@
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
+
+
+
+
+
+
+
+				<!--<DataGridTemplateColumn Width="100">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_DisplayOrder}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_DisplayOrder}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=DisplayOrder, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
@@ -155,44 +224,6 @@
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
-				</DataGridTemplateColumn>
-
-				<DataGridTemplateColumn CanUserResize="True"
-										CanUserReorder="True"
-										CanUserSort="True"
-										CustomSortComparer="{StaticResource displayOrderSortComparer}"
-										Width="120">
-					<DataGridTemplateColumn.HeaderTemplate>
-						<DataTemplate>
-							<TextBlock VerticalAlignment="Center"
-									   Margin="0"
-									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_DisplayOrder}"
-									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_DisplayOrder}"/>
-						</DataTemplate>
-					</DataGridTemplateColumn.HeaderTemplate>
-					<DataGridTemplateColumn.CellTemplate>
-						<DataTemplate>
-							<Grid VerticalAlignment="Stretch"
-								  Classes="editable">
-								<TextBlock VerticalAlignment="Center"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Path=DisplayOrder, Mode=OneWay}"/>
-							</Grid>
-						</DataTemplate>
-					</DataGridTemplateColumn.CellTemplate>
-					<DataGridTemplateColumn.CellEditingTemplate>
-						<DataTemplate>
-							<u:NumericIntUpDown Value="{Binding Path=DisplayOrder, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-												VerticalAlignment="Center"
-												ShowButtonSpinner="False"
-												Focusable="True"
-												Margin="0"
-												Padding="0"
-												Minimum="0"/>
-						</DataTemplate>
-					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
 				<DataGridTemplateColumn CanUserResize="True"

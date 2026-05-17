@@ -1,0 +1,822 @@
+{
+  "DependentActivities": [
+    {
+      "Activity": {
+        "Id": 1,
+        "Name": "Activity 1",
+        "DisplayOrder": 0,
+        "TargetWorkStreams": [
+        ],
+        "TargetResources": [
+        ],
+        "AllocatedToResources": [
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+      ],
+      "Successors": [
+        2
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 2,
+        "Name": "Activity 2",
+        "DisplayOrder": 1,
+        "TargetWorkStreams": [
+        ],
+        "TargetResources": [
+          1,
+          2
+        ],
+        "AllocatedToResources": [
+          1,
+          2
+        ],
+        "Trackers": [
+          {
+            "Time": 0,
+            "ActivityId": 2,
+            "PercentageComplete": 5
+          },
+          {
+            "Time": 1,
+            "ActivityId": 2,
+            "PercentageComplete": 10
+          },
+          {
+            "Time": 2,
+            "ActivityId": 2,
+            "PercentageComplete": 15
+          },
+          {
+            "Time": 3,
+            "ActivityId": 2,
+            "PercentageComplete": 20
+          },
+          {
+            "Time": 4,
+            "ActivityId": 2,
+            "PercentageComplete": 25
+          }
+        ]
+      },
+      "Dependencies": [
+        1
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+      ],
+      "Successors": [
+        3,
+        5
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 3,
+        "Name": "Activity 3",
+        "DisplayOrder": 2,
+        "TargetWorkStreams": [
+        ],
+        "TargetResources": [
+          1,
+          2,
+          3
+        ],
+        "AllocatedToResources": [
+          1,
+          2,
+          3
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        2
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+        2
+      ],
+      "Successors": [
+        4
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 4,
+        "Name": "Activity 4",
+        "DisplayOrder": 3,
+        "TargetWorkStreams": [
+        ],
+        "TargetResources": [
+          1,
+          2,
+          3
+        ],
+        "AllocatedToResources": [
+          1,
+          2,
+          3
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        3
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+        3
+      ],
+      "Successors": [
+        5
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 5,
+        "Name": "Activity 5",
+        "DisplayOrder": 4,
+        "TargetWorkStreams": [
+        ],
+        "TargetResources": [
+          1,
+          2,
+          3
+        ],
+        "AllocatedToResources": [
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        2,
+        4
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+      ],
+      "Successors": [
+        7,
+        10
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 6,
+        "Name": "Activity 6",
+        "DisplayOrder": 5,
+        "TargetWorkStreams": [
+        ],
+        "TargetResources": [
+          4
+        ],
+        "AllocatedToResources": [
+          4
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        7
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+      ],
+      "Successors": [
+        11
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 7,
+        "Name": "Activity 7",
+        "DisplayOrder": 6,
+        "TargetWorkStreams": [
+        ],
+        "TargetResources": [
+          2
+        ],
+        "AllocatedToResources": [
+          2
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        5
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+        4
+      ],
+      "Successors": [
+        6,
+        8,
+        13,
+        14,
+        15
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 8,
+        "Name": "Activity 8",
+        "DisplayOrder": 7,
+        "TargetWorkStreams": [
+          2
+        ],
+        "TargetResources": [
+          13
+        ],
+        "AllocatedToResources": [
+          13
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        7
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+      ],
+      "Successors": [
+        9
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 9,
+        "Name": "Activity 9",
+        "DisplayOrder": 8,
+        "TargetWorkStreams": [
+          2
+        ],
+        "TargetResources": [
+          13,
+          5,
+          8
+        ],
+        "AllocatedToResources": [
+          5,
+          8,
+          13
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        8
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+        8,
+        13
+      ],
+      "Successors": [
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 10,
+        "Name": "Activity 10",
+        "DisplayOrder": 9,
+        "TargetWorkStreams": [
+          2
+        ],
+        "TargetResources": [
+          14
+        ],
+        "AllocatedToResources": [
+          14
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        5
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+      ],
+      "Successors": [
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 11,
+        "Name": "Activity 11",
+        "DisplayOrder": 10,
+        "TargetWorkStreams": [
+          5
+        ],
+        "TargetResources": [
+          4
+        ],
+        "AllocatedToResources": [
+          4
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        6
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+        6
+      ],
+      "Successors": [
+        12
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 12,
+        "Name": "Activity 12",
+        "DisplayOrder": 11,
+        "TargetWorkStreams": [
+          5
+        ],
+        "TargetResources": [
+          1
+        ],
+        "AllocatedToResources": [
+          1
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        11
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+        4
+      ],
+      "Successors": [
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 13,
+        "Name": "Activity 13",
+        "DisplayOrder": 12,
+        "TargetWorkStreams": [
+          2,
+          5
+        ],
+        "TargetResources": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "AllocatedToResources": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        7
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+        15
+      ],
+      "Successors": [
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 14,
+        "Name": "Activity 14",
+        "DisplayOrder": 13,
+        "TargetWorkStreams": [
+          2,
+          5
+        ],
+        "TargetResources": [
+          2
+        ],
+        "AllocatedToResources": [
+          2
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        7
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+        7
+      ],
+      "Successors": [
+      ]
+    },
+    {
+      "Activity": {
+        "Id": 15,
+        "Name": "Activity 15",
+        "DisplayOrder": 14,
+        "TargetWorkStreams": [
+          2
+        ],
+        "TargetResources": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "AllocatedToResources": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "Trackers": [
+        ]
+      },
+      "Dependencies": [
+        7
+      ],
+      "PlanningDependencies": [
+      ],
+      "ResourceDependencies": [
+      ],
+      "Successors": [
+      ]
+    }
+  ],
+  "ResourceSettings": {
+    "Resources": [
+      {
+        "Id": 16,
+        "DisplayOrder": 14,
+        "Name": "Resource 16",
+        "InterActivityPhases": [
+          2
+        ],
+        "Trackers": [
+        ]
+      },
+      {
+        "Id": 4,
+        "DisplayOrder": 13,
+        "Name": "Resource 4",
+        "InterActivityPhases": [
+          5
+        ],
+        "Trackers": [
+        ]
+      },
+      {
+        "Id": 13,
+        "DisplayOrder": 12,
+        "Name": "Resource 13",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+        ]
+      },
+      {
+        "Id": 10,
+        "DisplayOrder": 11,
+        "Name": "Resource 10",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+        ]
+      },
+      {
+        "Id": 9,
+        "DisplayOrder": 10,
+        "Name": "Resource 9",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+        ]
+      },
+      {
+        "Id": 8,
+        "DisplayOrder": 9,
+        "Name": "Resource 8",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+        ]
+      },
+      {
+        "Id": 7,
+        "DisplayOrder": 8,
+        "Name": "Resource 7",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+        ]
+      },
+      {
+        "Id": 6,
+        "DisplayOrder": 7,
+        "Name": "Resource 6",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+        ]
+      },
+      {
+        "Id": 5,
+        "DisplayOrder": 6,
+        "Name": "Resource 5",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+        ]
+      },
+      {
+        "Id": 12,
+        "DisplayOrder": 5,
+        "Name": "Resource 12",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+        ]
+      },
+      {
+        "Id": 11,
+        "DisplayOrder": 4,
+        "Name": "Resource 11",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+        ]
+      },
+      {
+        "Id": 14,
+        "DisplayOrder": 3,
+        "Name": "Resource 14",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+        ]
+      },
+      {
+        "Id": 1,
+        "DisplayOrder": 2,
+        "Name": "Resource 1",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+          {
+            "Time": 0,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 0,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 1,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 1,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 2,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 2,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 3,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 3,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 4,
+            "ResourceId": 1,
+            "ActivityTrackers": [
+              {
+                "Time": 4,
+                "ResourceId": 1,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "Id": 3,
+        "DisplayOrder": 1,
+        "Name": "Resource 3",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+          {
+            "Time": 0,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 0,
+                "ResourceId": 3,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 1,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 1,
+                "ResourceId": 3,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 2,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 2,
+                "ResourceId": 3,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 3,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 3,
+                "ResourceId": 3,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 4,
+            "ResourceId": 3,
+            "ActivityTrackers": [
+              {
+                "Time": 4,
+                "ResourceId": 3,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "Id": 2,
+        "DisplayOrder": 0,
+        "Name": "Resource 2",
+        "InterActivityPhases": [
+        ],
+        "Trackers": [
+          {
+            "Time": 0,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 0,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 1,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 1,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 2,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 2,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 3,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 3,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          },
+          {
+            "Time": 4,
+            "ResourceId": 2,
+            "ActivityTrackers": [
+              {
+                "Time": 4,
+                "ResourceId": 2,
+                "ActivityId": 2,
+                "PercentageWorked": 100
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "WorkStreamSettings": {
+    "WorkStreams": [
+      {
+        "Id": 2,
+        "DisplayOrder": 1,
+        "Name": "WorkStream 1"
+      },
+      {
+        "Id": 5,
+        "DisplayOrder": 0,
+        "Name": "WorkStream 2"
+      }
+    ]
+  },
+  "DisplaySettings": {
+    "GanttChartShowConnections": [
+      3
+    ]
+  }
+}

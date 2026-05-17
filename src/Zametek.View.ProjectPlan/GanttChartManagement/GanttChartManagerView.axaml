@@ -2,257 +2,180 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
-			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
-			 xmlns:local="using:Zametek.View.ProjectPlan"
-			 xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
-			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
-			 xmlns:common="using:Zametek.Common.ProjectPlan"
-			 x:DataType="vm:GanttChartManagerViewModel"
-			 xmlns:sys="using:System"
-			 xmlns:u="https://irihi.tech/ursa"
+			       xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			       xmlns:local="using:Zametek.View.ProjectPlan"
+			       xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
+			       xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			       xmlns:common="using:Zametek.Common.ProjectPlan"
+			       x:DataType="vm:GanttChartManagerViewModel"
+			       xmlns:converters="using:Avalonia.Controls.Converters"
+			       xmlns:sys="using:System"
+			       xmlns:u="https://irihi.tech/ursa"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.GanttChartManagerView">
-	<UserControl.Resources>
-	</UserControl.Resources>
+  <UserControl.Resources>
+    <converters:EnumToBoolConverter x:Key="enumToBool" />
+  </UserControl.Resources>
 
-	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0"
-					   Width="120">
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_GroupByMode}"/>
+  <DockPanel Margin="7">
+    <DockPanel>
+      <DockPanel DockPanel.Dock="Bottom">
+        <Label VerticalContentAlignment="Center"
+					   HorizontalContentAlignment="Left"
+					   Height="25"
+					   DockPanel.Dock="Left"
+			       IsTabStop="False"
+					   Margin="0,0,11,0"
+					   Content="{x:Static resources:Labels.Label_ShowConnections}"/>
 
-					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:GroupByMode}}}"
-							  SelectedItem="{Binding Path=GroupByMode, Mode=TwoWay}"
-							  BorderBrush="Gray"
-							  BorderThickness="1"
-							  DockPanel.Dock="Top"
-							  IsTabStop="False"
-							  Margin="0,0,0,11"
-							  Height="25">
-						<ComboBox.ItemTemplate>
-							<DataTemplate>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Left"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Converter={x:Static local:StringConverters.GroupByModeValue}, Mode=OneWay}"/>
-							</DataTemplate>
-						</ComboBox.ItemTemplate>
-					</ComboBox>
-				</DockPanel>
+        <u:MultiComboBox MaxHeight="200"
+								 Width="{x:Static sys:Double.NaN}"
+								 HorizontalAlignment="Stretch"
+								 VerticalAlignment="Stretch"
+								 Focusable="True"
+								 Height="25"
+					       Margin="0,0,11,0"
+								 ItemsSource="{Binding Path=ActivitySelector.TargetActivities, Mode=OneWay}"
+								 SelectedItems="{Binding Path=ActivitySelector.SelectedTargetActivities, Mode=OneWay}">
+          <u:MultiComboBox.SelectedItemTemplate>
+            <DataTemplate x:DataType="vm:SelectableActivityViewModel">
+              <Grid>
+                <TextBlock>
+                  <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0} - {1}">
+                      <Binding Path="Id" Mode="OneWay"/>
+                      <Binding Path="DisplayName" Mode="OneWay"/>
+                    </MultiBinding>
+                  </TextBlock.Text>
+                </TextBlock>
+              </Grid>
+            </DataTemplate>
+          </u:MultiComboBox.SelectedItemTemplate>
+          <u:MultiComboBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:SelectableActivityViewModel">
+              <Grid>
+                <TextBlock ToolTip.Tip="{Binding Path=DisplayName, Mode=OneWay}">
+                  <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0} - {1}">
+                      <Binding Path="Id" Mode="OneWay"/>
+                      <Binding Path="DisplayName" Mode="OneWay"/>
+                    </MultiBinding>
+                  </TextBlock.Text>
+                </TextBlock>
+              </Grid>
+            </DataTemplate>
+          </u:MultiComboBox.ItemTemplate>
+        </u:MultiComboBox>
+      </DockPanel>
 
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_AnnotationStyle}"/>
+      <!-- ScottPlot PlotView with drag-resize tooltip overlay -->
+      <Grid>
+        <ContentControl x:Name="scottplot"
+							  Content="{Binding GanttChartPlotModel, Mode=OneWay}"
+							  Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
+          <ContentControl.ContextMenu>
+            <ContextMenu>
+            <MenuItem Header="{x:Static resources:Menus.Menu_ShowGroupLabels}"
+								    IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}"
+								    IsChecked="{Binding Path=ShowGroupLabels, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-					<ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:AnnotationStyle}}}"
-							  SelectedItem="{Binding Path=AnnotationStyle, Mode=TwoWay}"
-							  BorderBrush="Gray"
-							  BorderThickness="1"
-							  DockPanel.Dock="Top"
-							  IsTabStop="False"
-							  Margin="0,0,0,11"
-							  Height="25">
-						<ComboBox.ItemTemplate>
-							<DataTemplate>
-								<TextBlock VerticalAlignment="Center"
-										   TextAlignment="Left"
-										   Margin="0"
-										   Padding="3"
-										   Text="{Binding Converter={x:Static local:StringConverters.AnnotationStyleValue}, Mode=OneWay}"/>
-							</DataTemplate>
-						</ComboBox.ItemTemplate>
-					</ComboBox>
-				</DockPanel>
+              <MenuItem Header="{x:Static resources:Menus.Menu_ShowSlack}"
+								    IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}"
+								    IsChecked="{Binding Path=ShowSlack, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-				<DockPanel DockPanel.Dock="Top"
-						   IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowGroupLabels}"/>
+              <MenuItem Header="{x:Static resources:Menus.Menu_ShowNonWorkingDays}"
+								    IsEnabled="{Binding Path=ShowDates, Mode=OneWay}"
+								    IsChecked="{Binding Path=ShowNonWorkingDays, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowGroupLabels, Mode=TwoWay}"/>
-				</DockPanel>
+              <MenuItem Header="{x:Static resources:Menus.Menu_ShowProjectFinish}"
+								    IsChecked="{Binding Path=ShowProjectFinish, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-				<DockPanel DockPanel.Dock="Top"
-						   IsEnabled="{Binding Path=IsAnnotated, Mode=OneWay}">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowSlack}"/>
+              <MenuItem Header="{x:Static resources:Menus.Menu_ShowTracking}"
+								    IsChecked="{Binding Path=ShowTracking, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowSlack, Mode=TwoWay}"/>
-				</DockPanel>
+              <MenuItem Header="{x:Static resources:Menus.Menu_ShowToday}"
+								    IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowProjectFinish}"/>
+              <MenuItem Header="{x:Static resources:Menus.Menu_ShowMilestones}"
+								    IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
+								    ToggleType="CheckBox" />
 
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowProjectFinish, Mode=TwoWay}"/>
-				</DockPanel>
+              <Separator />
 
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowTracking}"/>
+              <MenuItem Header="{x:Static resources:Menus.Menu_GroupByMode}">
+                <MenuItem Header="{x:Static resources:Enums.Enum_GroupByMode_None}"
+									  IsChecked="{Binding Path=GroupByMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:GroupByMode.None}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeGroupByModeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:GroupByMode.None}"
+									  ToggleType="Radio" />
 
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowTracking, Mode=TwoWay}"/>
-				</DockPanel>
+                <MenuItem Header="{x:Static resources:Enums.Enum_GroupByMode_Resource}"
+									  IsChecked="{Binding Path=GroupByMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:GroupByMode.Resource}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeGroupByModeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:GroupByMode.Resource}"
+									  ToggleType="Radio" />
 
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowToday}"/>
+                <MenuItem Header="{x:Static resources:Enums.Enum_GroupByMode_WorkStream}"
+									  IsChecked="{Binding Path=GroupByMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:GroupByMode.WorkStream}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeGroupByModeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:GroupByMode.WorkStream}"
+									  ToggleType="Radio" />
+              </MenuItem>
 
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"/>
-				</DockPanel>
+              <Separator />
 
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowMilestones}"/>
+              <MenuItem Header="{x:Static resources:Menus.Menu_AnnotationStyle}">
+                <MenuItem Header="{x:Static resources:Enums.Enum_AnnotationStyle_None}"
+									  IsChecked="{Binding Path=AnnotationStyle, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AnnotationStyle.None}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeAnnotationStyleCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:AnnotationStyle.None}"
+									  ToggleType="Radio" />
 
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"/>
-				</DockPanel>
+                <MenuItem Header="{x:Static resources:Enums.Enum_AnnotationStyle_Plain}"
+									  IsChecked="{Binding Path=AnnotationStyle, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AnnotationStyle.Plain}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeAnnotationStyleCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:AnnotationStyle.Plain}"
+									  ToggleType="Radio" />
 
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowConnections}"/>
+                <MenuItem Header="{x:Static resources:Enums.Enum_AnnotationStyle_Color}"
+									  IsChecked="{Binding Path=AnnotationStyle, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AnnotationStyle.Color}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeAnnotationStyleCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:AnnotationStyle.Color}"
+									  ToggleType="Radio" />
+              </MenuItem>
 
-					<u:MultiComboBox MaxHeight="200"
-									 Width="{x:Static sys:Double.NaN}"
-									 HorizontalAlignment="Stretch"
-									 VerticalAlignment="Stretch"
-									 Focusable="True"
-									 Height="25"
-									 ItemsSource="{Binding Path=ActivitySelector.TargetActivities, Mode=OneWay}"
-									 SelectedItems="{Binding Path=ActivitySelector.SelectedTargetActivities, Mode=OneWay}">
-						<u:MultiComboBox.SelectedItemTemplate>
-							<DataTemplate x:DataType="vm:SelectableActivityViewModel">
-								<Grid>
-									<TextBlock Text="{Binding Path=Id, Mode=OneWay}"/>
-								</Grid>
-							</DataTemplate>
-						</u:MultiComboBox.SelectedItemTemplate>
-						<u:MultiComboBox.ItemTemplate>
-							<DataTemplate x:DataType="vm:SelectableActivityViewModel">
-								<Grid>
-									<TextBlock Text="{Binding Path=Id, Mode=OneWay}"
-											   ToolTip.Tip="{Binding Path=DisplayName, Mode=OneWay}"/>
-								</Grid>
-							</DataTemplate>
-						</u:MultiComboBox.ItemTemplate>
-					</u:MultiComboBox>
-				</DockPanel>
+              <Separator />
 
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
+              <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+								    Command="{Binding Path=SaveGanttChartImageFileCommand, Mode=OneWay}" />
 
-		<DockPanel>
-			<!-- ScottPlot PlotView -->
-			<ContentControl x:Name="scottplot"
-							Content="{Binding GanttChartPlotModel, Mode=OneWay}"
-							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
-		</DockPanel>
-	</DockPanel>
+              <MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
+								    Command="{Binding Path=ResetGanttChartCommand, Mode=OneWay}" />
+            </ContextMenu>
+          </ContentControl.ContextMenu>
+        </ContentControl>
+
+        <!-- Drag-resize duration tooltip: absolutely positioned over the chart, no hit-testing -->
+        <Canvas IsHitTestVisible="False">
+          <Border x:Name="dragTooltipBorder"
+                  IsVisible="False"
+                  IsHitTestVisible="False"
+                  Background="{DynamicResource ToolTipBackground}"
+                  BorderBrush="{DynamicResource ToolTipBorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="3"
+                  Padding="6,3">
+            <TextBlock x:Name="dragTooltipText"
+                       Foreground="{DynamicResource ToolTipForeground}" />
+          </Border>
+        </Canvas>
+      </Grid>
+    </DockPanel>
+  </DockPanel>
 </UserControl>

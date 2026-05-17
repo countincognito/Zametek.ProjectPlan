@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -272,5 +272,11 @@
   </data>
   <data name="ToolTip_HolidayStartDate" xml:space="preserve">
     <value> Start Date </value>
+  </data>
+  <data name="ToolTip_AllocationOrder" xml:space="preserve">
+    <value>AllocationOrder</value>
+  </data>
+  <data name="ToolTip_SyncToday" xml:space="preserve">
+    <value>Sync to current date</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
@@ -21,5 +21,7 @@ namespace Zametek.Contract.ProjectPlan
         string RecurrencePatternDisplay { get; }
 
         bool IsEditing { get; }
+
+        HolidayModel DeepCopy();
     }
 }

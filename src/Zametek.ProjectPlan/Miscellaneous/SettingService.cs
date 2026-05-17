@@ -1,6 +1,7 @@
-﻿using Newtonsoft.Json;
-using ReactiveUI;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Zametek.Common.ProjectPlan;
@@ -15,16 +16,27 @@ namespace Zametek.ProjectPlan
         #region Fields
 
         private readonly Lock m_Lock;
+        private string m_DockLayout;
+        private readonly List<DataGridModel> m_DataGridLayouts;
 
         #endregion
 
         #region Ctors
 
-        public SettingService(string settingsFilename)
+        public SettingService(
+            string settingsFilename,
+            string dockLayoutFilename,
+            string dataGridLayoutFilename)
             : base(settingsFilename)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(settingsFilename);
+            ArgumentException.ThrowIfNullOrWhiteSpace(dockLayoutFilename);
+            ArgumentException.ThrowIfNullOrWhiteSpace(dataGridLayoutFilename);
+            DockLayoutFilename = dockLayoutFilename;
+            DataGridLayoutFilename = dataGridLayoutFilename;
             m_Lock = new();
+            m_DockLayout = string.Empty;
+            m_DataGridLayouts = [];
             string? directory = Path.GetDirectoryName(SettingsFilename);
 
             if (string.IsNullOrWhiteSpace(directory))
@@ -33,21 +45,70 @@ namespace Zametek.ProjectPlan
             }
 
             Directory.CreateDirectory(directory);
+
+            if (File.Exists(DockLayoutFilename))
+            {
+                using StreamReader reader = File.OpenText(DockLayoutFilename);
+                string content = reader.ReadToEnd();
+                m_DockLayout = content;
+            }
+
+            if (File.Exists(DataGridLayoutFilename))
+            {
+                using StreamReader reader = File.OpenText(DataGridLayoutFilename);
+                string content = reader.ReadToEnd();
+
+                try
+                {
+                    List<DataGridModel>? dataGridModels = JsonConvert.DeserializeObject<List<DataGridModel>>(content);
+                    if (dataGridModels is not null)
+                    {
+                        m_DataGridLayouts.AddRange(dataGridModels);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // The data grid layout file is corrupt or unreadable — reset to defaults.
+                    Debug.WriteLine($"[SettingService] Failed to deserialize data grid layout, resetting: {ex.Message}");
+                    m_DataGridLayouts.Clear();
+                }
+            }
         }
 
         #endregion
 
+        private void SaveDockLayout()
+        {
+            lock (m_Lock)
+            {
+                using StreamWriter writer = File.CreateText(DockLayoutFilename);
+                writer.WriteLine(DockLayout);
+            }
+        }
+
+        private void SaveDataGridLayout()
+        {
+            lock (m_Lock)
+            {
+                using StreamWriter writer = File.CreateText(DataGridLayoutFilename);
+                writer.WriteLine(JsonConvert.SerializeObject(m_DataGridLayouts, Formatting.Indented));
+            }
+        }
+
         private void SaveSettings()
         {
-            using StreamWriter writer = File.CreateText(SettingsFilename);
-            var jsonSerializer = JsonSerializer.Create(
-                new JsonSerializerSettings
-                {
-                    Formatting = Formatting.Indented,
-                    NullValueHandling = NullValueHandling.Ignore,
-                });
-            Data.ProjectPlan.v0_6_0.AppSettingsModel output = Converter.Format(m_AppSettingsModel);
-            jsonSerializer.Serialize(writer, output, output.GetType());
+            lock (m_Lock)
+            {
+                using StreamWriter writer = File.CreateText(SettingsFilename);
+                var jsonSerializer = JsonSerializer.Create(
+                    new JsonSerializerSettings
+                    {
+                        Formatting = Formatting.Indented,
+                        NullValueHandling = NullValueHandling.Ignore,
+                    });
+                Data.ProjectPlan.v0_6_0.AppSettingsModel output = Converter.Format(m_AppSettingsModel);
+                jsonSerializer.Serialize(writer, output, output.GetType());
+            }
         }
 
         #region ISettingService Members
@@ -68,6 +129,40 @@ namespace Zametek.ProjectPlan
                     m_AppSettingsModel = m_AppSettingsModel with { ProjectDirectory = value };
                     SaveSettings();
                 }
+            }
+        }
+
+        public override string DockLayout
+        {
+            get
+            {
+                return m_DockLayout;
+            }
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_DockLayout = value;
+                    SaveDockLayout();
+                }
+            }
+        }
+
+        public override IList<DataGridModel> GetDataGridLayout()
+        {
+            lock (m_Lock)
+            {
+                return [.. m_DataGridLayouts];
+            }
+        }
+
+        public override void SetDataGridLayout(IList<DataGridModel> models)
+        {
+            lock (m_Lock)
+            {
+                m_DataGridLayouts.Clear();
+                m_DataGridLayouts.AddRange(models);
+                SaveDataGridLayout();
             }
         }
 
@@ -147,80 +242,6 @@ namespace Zametek.ProjectPlan
                 {
                     m_AppSettingsModel = m_AppSettingsModel with { DefaultHideBilling = value };
                     SaveSettings();
-                }
-            }
-        }
-
-        public override SortMode ProjectScenarioSortMode
-        {
-            get
-            {
-                return m_AppSettingsModel.ProjectScenarioSortMode;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_AppSettingsModel = m_AppSettingsModel with { ProjectScenarioSortMode = value };
-                    SaveSettings();
-                }
-            }
-        }
-
-        public override SortDirection ProjectScenarioSortDirection
-        {
-            get
-            {
-                return m_AppSettingsModel.ProjectScenarioSortDirection;
-            }
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_AppSettingsModel = m_AppSettingsModel with { ProjectScenarioSortDirection = value };
-                    SaveSettings();
-                }
-            }
-        }
-
-        public override TrackedMetrics ScenarioChartTrackedMetricXAxis
-        {
-            get => m_AppSettingsModel.ScenarioChartTrackedMetricXAxis;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_AppSettingsModel = m_AppSettingsModel with { ScenarioChartTrackedMetricXAxis = value };
-                    SaveSettings();
-                    this.RaisePropertyChanged();
-                }
-            }
-        }
-
-        public override TrackedMetrics ScenarioChartTrackedMetricYAxis
-        {
-            get => m_AppSettingsModel.ScenarioChartTrackedMetricYAxis;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_AppSettingsModel = m_AppSettingsModel with { ScenarioChartTrackedMetricYAxis = value };
-                    SaveSettings();
-                    this.RaisePropertyChanged();
-                }
-            }
-        }
-
-        public override CurveFittingType ScenarioChartCurveFittingType
-        {
-            get => m_AppSettingsModel.ScenarioChartCurveFittingType;
-            set
-            {
-                lock (m_Lock)
-                {
-                    m_AppSettingsModel = m_AppSettingsModel with { ScenarioChartCurveFittingType = value };
-                    SaveSettings();
-                    this.RaisePropertyChanged();
                 }
             }
         }

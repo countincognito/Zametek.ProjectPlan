@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using System.ComponentModel;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -114,9 +114,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public bool IsEditing => m_isDirty;
 
-        public object CloneObject()
+        public HolidayModel DeepCopy()
         {
-            return new HolidayModel
+            return new()
             {
                 Id = Id,
                 Name = Name,
@@ -192,12 +192,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

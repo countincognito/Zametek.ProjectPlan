@@ -1,4 +1,4 @@
-﻿using Avalonia.Data;
+using Avalonia.Data;
 using ReactiveUI;
 using System.ComponentModel;
 using Zametek.Common.ProjectPlan;
@@ -30,6 +30,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CriticalityWeight = activitySeverity.CriticalityWeight;
             m_FibonacciWeight = activitySeverity.FibonacciWeight;
             m_ColorFormat = activitySeverity.ColorFormat;
+            m_IsEditMuted = false;
         }
 
         #endregion
@@ -96,14 +97,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public object CloneObject()
+        public ActivitySeverityModel DeepCopy()
         {
-            return new ActivitySeverityModel
+            return new()
             {
-                 SlackLimit = SlackLimit,
-                 CriticalityWeight = CriticalityWeight,
-                 FibonacciWeight = FibonacciWeight,
-                 ColorFormat = ColorFormat,
+                SlackLimit = SlackLimit,
+                CriticalityWeight = CriticalityWeight,
+                FibonacciWeight = FibonacciWeight,
+                ColorFormat = ColorFormat,
             };
         }
 
@@ -126,13 +127,28 @@ namespace Zametek.ViewModel.ProjectPlan
             if (m_isDirty)
             {
                 m_isDirty = false;
-                m_GraphSettingsManagerViewModel.AreSettingsUpdated = true;
+
+                if (!IsEditMuted)
+                {
+                    m_GraphSettingsManagerViewModel.AreSettingsUpdated = true;
+                }
             }
         }
 
         public void CancelEdit()
         {
             m_isDirty = false;
+        }
+
+        #endregion
+
+        #region IMuteEdits Members
+
+        private bool m_IsEditMuted;
+        public bool IsEditMuted
+        {
+            get => m_IsEditMuted;
+            set => this.RaiseAndSetIfChanged(ref m_IsEditMuted, value);
         }
 
         #endregion
@@ -150,16 +166,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 //m_ProjectStartSub?.Dispose();
                 //m_ResourceSettingsSub?.Dispose();
                 //m_DateTimeCalculatorSub?.Dispose();
                 //m_CompilationSub?.Dispose();
                 //ResourceSelector.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

@@ -2,8 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
@@ -11,56 +9,30 @@
 			 x:DataType="vm:VertexGraphManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.VertexGraphManagerView">
-	<UserControl.Resources>
-		<local:ThemeToBackgroundConverter x:Key="themeToBackgroundConverter"/>
-	</UserControl.Resources>
+  <UserControl.Resources>
+    <local:ThemeToBackgroundConverter x:Key="themeToBackgroundConverter"/>
+  </UserControl.Resources>
 
-	<DockPanel Margin="7">
-		<!--<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
-				<Label VerticalContentAlignment="Center"
-					   HorizontalContentAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_ShowNames}"/>
-
-				<ToggleSwitch DockPanel.Dock="Top"
-							  IsTabStop="False"
-							  Margin="0,0,0,11"
-							  VerticalAlignment="Center"
-							  VerticalContentAlignment="Center"
-							  HorizontalAlignment="Center"
-							  HorizontalContentAlignment="Center"
-							  OffContent="{x:Static resources:Labels.Label_No}"
-							  OnContent="{x:Static resources:Labels.Label_Yes}"
-							  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"/>
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>-->
-
-		<DockPanel>
-			<DockPanel Width="250"
+  <DockPanel Margin="7">
+    <DockPanel>
+      <DockPanel Width="250"
 					   DockPanel.Dock="Top">
-				<TextBlock Margin="0,11,11,11"
+        <TextBlock Margin="0,11,11,11"
 						   DockPanel.Dock="Right"
 						   Text="x"/>
-				<TextBlock Margin="0,11,0,11"
+        <TextBlock Margin="0,11,0,11"
 						   DockPanel.Dock="Right"
 						   Text="{Binding ElementName=zoomer, Path=Value, Mode=OneWay, StringFormat=\{0:N1\}}"/>
-				<Slider Name="zoomer"
+        <Slider Name="zoomer"
 						Orientation="Horizontal"
 						Value="1"
 						PointerWheelChanged="Zoom_PointerWheelChanged"
 						ValueChanged="Slider_ValueChanged"
 						Minimum="0.1" Maximum="5"
 						Margin="11"/>
-			</DockPanel>
+      </DockPanel>
 
-			<ScrollViewer PointerPressed="ScrollViewer_PointerPressed"
+      <ScrollViewer PointerPressed="ScrollViewer_PointerPressed"
 						  PointerReleased="ScrollViewer_PointerReleased"
 						  PointerMoved="ScrollViewer_PointerMoved"
 						  PointerWheelChanged="Zoom_PointerWheelChanged"
@@ -68,30 +40,30 @@
 						  VerticalScrollBarVisibility="Auto"
 						  Name="viewer"
 						  Background="{Binding Path=BaseTheme, Mode=OneWay, Converter={StaticResource themeToBackgroundConverter}}">
-				<ScrollViewer.ContextMenu>
-					<ContextMenu>
-						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-								  Command="{Binding Path=SaveVertexGraphImageFileCommand, Mode=OneWay}"/>
-					</ContextMenu>
-				</ScrollViewer.ContextMenu>
+        <ScrollViewer.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+                      Command="{Binding Path=SaveVertexGraphImageFileCommand, Mode=OneWay}"/>
+          </ContextMenu>
+        </ScrollViewer.ContextMenu>
 
-				<!--Use the Grid to ensure the image is centered during zoom-->
-				<Grid HorizontalAlignment="Center"
+        <!--Use the Grid to ensure the image is centered during zoom-->
+        <Grid HorizontalAlignment="Center"
 					  VerticalAlignment="Center">
-					<LayoutTransformControl Classes="screen pdf">
-						<LayoutTransformControl.LayoutTransform>
-							<ScaleTransform ScaleX="{Binding Value, ElementName=zoomer, Mode=TwoWay}"
+          <LayoutTransformControl Classes="screen pdf">
+            <LayoutTransformControl.LayoutTransform>
+              <ScaleTransform ScaleX="{Binding Value, ElementName=zoomer, Mode=TwoWay}"
 											ScaleY="{Binding Value, ElementName=zoomer, Mode=TwoWay}"/>
-						</LayoutTransformControl.LayoutTransform>
+            </LayoutTransformControl.LayoutTransform>
 
-						<Image Stretch="None"
+            <Image Stretch="None"
 							   PointerWheelChanged="Zoom_PointerWheelChanged"
 							   Source="{Binding Path=VertexGraphImage, Mode=OneWay}"
 							   RenderTransformOrigin="0.5,0.5">
-						</Image>
-					</LayoutTransformControl>
-				</Grid>
-			</ScrollViewer>
-		</DockPanel>
-	</DockPanel>
+            </Image>
+          </LayoutTransformControl>
+        </Grid>
+      </ScrollViewer>
+    </DockPanel>
+  </DockPanel>
 </UserControl>

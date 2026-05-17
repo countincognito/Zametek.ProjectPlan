@@ -70,11 +70,6 @@ namespace Zametek.Data.ProjectPlan.v0_6_0
                 DefaultNonWorkingDayMode = appSettingsModel.DefaultUseBusinessDays ? NonWorkingDayMode.Weekends : NonWorkingDayMode.None,
                 DefaultHideCost = appSettingsModel.DefaultHideCost,
                 DefaultHideBilling = appSettingsModel.DefaultHideBilling,
-                ProjectScenarioSortMode = default,
-                ProjectScenarioSortDirection = default,
-                ScenarioChartTrackedMetricXAxis = default,
-                ScenarioChartTrackedMetricYAxis = default,
-                ScenarioChartCurveFittingType = default,
                 SelectedTheme = appSettingsModel.SelectedTheme,
             };
         }

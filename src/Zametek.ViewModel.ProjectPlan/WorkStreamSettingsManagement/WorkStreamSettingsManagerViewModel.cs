@@ -1,8 +1,10 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using DynamicData;
+using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
@@ -24,6 +26,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDialogService m_DialogService;
 
         private readonly IDisposable? m_ReadOnlyWorkStreamsSub;
+        private readonly IDisposable? m_OrderableWorkStreamsSub;
         private readonly IDisposable? m_ProcessWorkStreamSettingsSub;
         private readonly IDisposable? m_UpdateWorkStreamSettingsSub;
 
@@ -48,19 +51,30 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             SelectedWorkStreams = new ConcurrentDictionary<int, IManagedWorkStreamViewModel>();
+            m_HasSelectedWorkStream = false;
             m_HasSelectedWorkStreams = false;
             m_AreSettingsUpdated = false; ;
 
             m_WorkStreams = new();
 
+            m_OrderableWorkStreams = [];
+
             SetSelectedManagedWorkStreamsCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedWorkStreams);
             AddManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(AddManagedWorkStreamAsync);
             RemoveManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(RemoveManagedWorkStreamsAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
+            DuplicateManagedWorkStreamCommand = ReactiveCommand.CreateFromTask(DuplicateManagedWorkStreamAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStream));
+            EditManagedWorkStreamsCommand = ReactiveCommand.CreateFromTask(EditManagedWorkStreamsAsync, this.WhenAnyValue(wssm => wssm.HasSelectedWorkStreams));
 
             // Create read-only view to the source list.
             m_ReadOnlyWorkStreamsSub = m_WorkStreams.Connect()
                .ObserveOn(RxSchedulers.MainThreadScheduler)
                .Bind(out m_ReadOnlyWorkStreams)
+               .Subscribe();
+
+            m_OrderableWorkStreamsSub = m_WorkStreams.Connect()
+               .ObserveOn(RxApp.MainThreadScheduler) // Ensure UI thread safety
+               .Bind(m_OrderableWorkStreams)         // Bind to the mutable collection
+               .DisposeMany()                        // Clean up resources
                .Subscribe();
 
             m_IsBusy = this
@@ -96,6 +110,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         UpdateWorkStreamSettingsToCore();
                     }
                 });
+
+            RenumberWorkStreamsCommand = ReactiveCommand.CreateFromTask(RenumberWorkStreamsAsync);
 
             ProcessSettings(m_SettingService.DefaultWorkStreamSettings);
 
@@ -141,6 +157,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 HasSelectedWorkStreams = SelectedWorkStreams.Any();
+                HasSelectedWorkStream = HasSelectedWorkStreams && SelectedWorkStreams.Count == 1;
             }
         }
 
@@ -159,9 +176,12 @@ namespace Zametek.ViewModel.ProjectPlan
                                 new WorkStreamModel
                                 {
                                     Id = id,
+                                    DisplayOrder = -1,
                                     ColorFormat = ColorHelper.Random()
                                 }));
                     });
+
+                    UpdateDisplayOrders();
                 }
                 UpdateWorkStreamSettingsToCore();
             }
@@ -195,6 +215,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             workStream.Dispose();
                         }
                     });
+
+                    UpdateDisplayOrders();
                 }
 
                 UpdateWorkStreamSettingsToCore();
@@ -208,20 +230,183 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private async Task EditManagedWorkStreamsAsync()
+        {
+            try
+            {
+                var editViewModel = new WorkStreamEditViewModel();
+
+                bool result = await m_DialogService.ShowContextAsync(
+                    title: Resource.ProjectPlan.Titles.Title_EditWorkStreams,
+                    header: string.Empty,
+                    message: $@"**{Resource.ProjectPlan.Messages.Message_EditWorkStreams}**",
+                    context: editViewModel,
+                    markdown: true);
+
+                if (!result)
+                {
+                    return;
+                }
+
+                lock (m_Lock)
+                {
+                    ICollection<int> workStreamIds = SelectedWorkStreams.Keys;
+
+                    if (workStreamIds.Count == 0)
+                    {
+                        return;
+                    }
+
+                    UpdateWorkStreamModel updateModel = editViewModel.BuildUpdateModel();
+
+                    IEnumerable<UpdateWorkStreamModel> updateModels = [.. workStreamIds.Select(x => updateModel with { Id = x })];
+
+                    UpdateManagedWorkStreams(updateModels);
+                }
+
+                UpdateWorkStreamSettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task DuplicateManagedWorkStreamAsync()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    SelectedWorkStreams.TryGetValue(SelectedWorkStreams.Keys.FirstOrDefault(), out IManagedWorkStreamViewModel? selectedWorkStream);
+
+                    if (selectedWorkStream is null)
+                    {
+                        return;
+                    }
+
+                    WorkStreamModel duplicateModel = selectedWorkStream.DeepCopy();
+
+                    m_WorkStreams.Edit(workStreams =>
+                    {
+                        int id = GetNextId();
+                        duplicateModel = duplicateModel with
+                        {
+                            Id = id,
+                            DisplayOrder = -1,
+                        };
+
+                        workStreams.Add(
+                            new ManagedWorkStreamViewModel(
+                                this,
+                                duplicateModel));
+                    });
+
+                    UpdateDisplayOrders();
+                }
+
+                UpdateWorkStreamSettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task RenumberWorkStreamsAsync()
+        {
+            try
+            {
+                await RenumberWorkStreamsInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task RenumberWorkStreamsInternalAsync() =>
+            await Task.Run(RenumberWorkStreamsInternal);
+
+        private void RenumberWorkStreamsInternal()
+        {
+            lock (m_Lock)
+            {
+                UpdateDisplayOrders();
+
+                List<(int oldId, int newId)> mappedIds = [];
+
+                int count = OrderableWorkStreams.Count;
+
+                for (int i = 0; i < count; i++)
+                {
+                    int oldId = OrderableWorkStreams[i].Id;
+                    int newId = i + 1;
+                    mappedIds.Add((oldId, newId));
+                }
+
+                m_CoreViewModel.UpdateManagedWorkStreamIds(mappedIds);
+            }
+            m_CoreViewModel.RunAutoCompile();
+        }
+
+        private void UpdateManagedWorkStreams(IEnumerable<UpdateWorkStreamModel> updateModels)
+        {
+            lock (m_Lock)
+            {
+                Dictionary<int, IManagedWorkStreamViewModel> workStreamLookup = RawWorkStreams.ToDictionary(x => x.Id);
+
+                foreach (UpdateWorkStreamModel updateModel in updateModels)
+                {
+                    if (workStreamLookup.TryGetValue(updateModel.Id, out IManagedWorkStreamViewModel? workStream))
+                    {
+                        if (workStream is IEditableObject editable)
+                        {
+                            workStream.IsEditMuted = true;
+                            editable.BeginEdit();
+
+                            if (updateModel.IsIsPhaseEdited)
+                            {
+                                workStream.IsPhase = updateModel.IsPhase;
+                            }
+                            if (updateModel.IsColorFormatActive)
+                            {
+                                workStream.ColorFormat = updateModel.ColorFormat;
+                            }
+
+                            editable.EndEdit();
+                            workStream.IsEditMuted = false;
+                        }
+                    }
+                }
+            }
+        }
+
         private void UpdateWorkStreamSettingsToCore()
         {
             lock (m_Lock)
             {
+                UpdateDisplayOrders();
+
                 var workStreamSettings = new WorkStreamSettingsModel
                 {
-                    WorkStreams = RawWorkStreams.Select(x => new WorkStreamModel
+                    WorkStreams = [.. RawWorkStreams.Select(x => new WorkStreamModel
                     {
                         Id = x.Id,
                         Name = x.Name,
                         IsPhase = x.IsPhase,
                         DisplayOrder = x.DisplayOrder,
                         ColorFormat = x.ColorFormat
-                    }).ToList()
+                    })]
                 };
 
                 if (m_Current != workStreamSettings)
@@ -234,6 +419,18 @@ namespace Zametek.ViewModel.ProjectPlan
             AreSettingsUpdated = false;
         }
 
+        private void UpdateDisplayOrders()
+        {
+            // Mark the display order in reverse order of the list because
+            // the UI renders in that order and we want to reflect that.
+            int resourceCount = OrderableWorkStreams.Count;
+
+            for (int i = 0; i < resourceCount; i++)
+            {
+                OrderableWorkStreams[i].DisplayOrder = resourceCount - i - 1;
+            }
+        }
+
         private void ProcessSettings(WorkStreamSettingsModel workStreamSettings)
         {
             ArgumentNullException.ThrowIfNull(workStreamSettings);
@@ -241,15 +438,23 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ClearManagedWorkStreams();
 
+                // Add the work streams in descending order because this is how
+                // the UI renders in that order and we want to reflect that.
+                IOrderedEnumerable<WorkStreamModel> orderedWorkStreamModels = workStreamSettings.WorkStreams
+                     .OrderByDescending(x => x.DisplayOrder)
+                     .ThenByDescending(x => x.Id);
+
                 m_WorkStreams.Edit(workStreams =>
                 {
-                    foreach (WorkStreamModel workStream in workStreamSettings.WorkStreams)
+                    foreach (WorkStreamModel workStream in orderedWorkStreamModels)
                     {
                         workStreams.Add(new ManagedWorkStreamViewModel(
                             this,
                             workStream));
                     }
                 });
+
+                UpdateDisplayOrders();
             }
             AreSettingsUpdated = false;
         }
@@ -283,6 +488,20 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
+        private bool m_HasSelectedWorkStream;
+        public bool HasSelectedWorkStream
+        {
+            get => m_HasSelectedWorkStream;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_HasSelectedWorkStream = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         private bool m_HasSelectedWorkStreams;
         public bool HasSelectedWorkStreams
         {
@@ -310,11 +529,20 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ReadOnlyObservableCollection<IManagedWorkStreamViewModel> m_ReadOnlyWorkStreams;
         public ReadOnlyObservableCollection<IManagedWorkStreamViewModel> WorkStreams => m_ReadOnlyWorkStreams;
 
+        private readonly ObservableCollectionExtended<IManagedWorkStreamViewModel> m_OrderableWorkStreams;
+        public ObservableCollection<IManagedWorkStreamViewModel> OrderableWorkStreams => m_OrderableWorkStreams;
+
         public ICommand SetSelectedManagedWorkStreamsCommand { get; }
 
         public ICommand AddManagedWorkStreamCommand { get; }
 
         public ICommand RemoveManagedWorkStreamsCommand { get; }
+
+        public ICommand DuplicateManagedWorkStreamCommand { get; }
+
+        public ICommand EditManagedWorkStreamsCommand { get; }
+
+        public ICommand RenumberWorkStreamsCommand { get; }
 
         #endregion
 
@@ -331,19 +559,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
                 m_ReadOnlyWorkStreamsSub?.Dispose();
+                m_OrderableWorkStreamsSub?.Dispose();
                 m_ProcessWorkStreamSettingsSub?.Dispose();
                 m_UpdateWorkStreamSettingsSub?.Dispose();
                 ClearManagedWorkStreams();
                 m_WorkStreams?.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

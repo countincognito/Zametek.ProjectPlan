@@ -27,6 +27,20 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ProjectHasChanges { get; }
 
+        IProjectDisplaySettingsViewModel DisplaySettingsViewModel { get; }
+
+        SortMode ProjectScenarioSortMode { get; set; }
+
+        SortDirection ProjectScenarioSortDirection { get; set; }
+
+        bool ScenarioChartShowNames { get; set; }
+
+        TrackedMetrics ScenarioChartTrackedMetricXAxis { get; set; }
+
+        TrackedMetrics ScenarioChartTrackedMetricYAxis { get; set; }
+
+        CurveFittingType ScenarioChartCurveFittingType { get; set; }
+
         IManagedNodeViewModel Root { get; }
 
         IReadOnlyList<IManagedNodeViewModel> RawNodes { get; }
@@ -40,10 +54,6 @@ namespace Zametek.Contract.ProjectPlan
         ObservableCollection<IManagedNodeViewModel> SelectedNodes { get; }
 
         IManagedNodeViewModel? SelectedNode { get; }
-
-        SortMode SelectedSortMode { get; set; }
-
-        SortDirection SelectedSortDirection { get; set; }
 
         TrackedMetricsSetModel TrackedMetricsSet { get; }
 

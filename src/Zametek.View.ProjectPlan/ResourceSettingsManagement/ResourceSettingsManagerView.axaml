@@ -2,72 +2,77 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
-			 xmlns:controls="using:Avalonia.Controls"
-			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
-			 xmlns:local="using:Zametek.View.ProjectPlan"
+			       xmlns:controls="using:Avalonia.Controls"
+			       xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			       xmlns:local="using:Zametek.View.ProjectPlan"
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
-			 xmlns:sys="using:System"
-			 xmlns:u="https://irihi.tech/ursa"
-			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
-			 x:DataType="vm:ResourceSettingsManagerViewModel"
+			       xmlns:sys="using:System"
+			       xmlns:u="https://irihi.tech/ursa"
+			       xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			       x:DataType="vm:ResourceSettingsManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ResourceSettingsManagerView">
 	<UserControl.Resources>
+		<!-- Make DataGrid a drop target -->
+		<local:ManagedResourceDataGridDropHandler x:Key="managedResourceDataGridDropHandler" />
+		
 		<local:ColorFormatToColorConverter x:Key="colorFormatToColorConverter"/>
 
 		<local:ManagedResourceSortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
 		<local:ManagedResourceSortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
 		<local:ManagedResourceSortComparer x:Key="isExplicitTargetSortComparer" SortMemberPath="IsExplicitTarget"/>
 		<local:ManagedResourceSortComparer x:Key="isInactiveSortComparer" SortMemberPath="IsInactive"/>
+		<local:ManagedResourceSortComparer x:Key="allocationOrderSortComparer" SortMemberPath="AllocationOrder"/>
 		<local:ManagedResourceSortComparer x:Key="interActivityAllocationTypeSortComparer" SortMemberPath="InterActivityAllocationType"/>
 		<local:ManagedResourceSortComparer x:Key="workStreamSelectorTargetWorkStreamsStringSortComparer" SortMemberPath="WorkStreamSelector.TargetWorkStreamsString"/>
 		<local:ManagedResourceSortComparer x:Key="unitCostSortComparer" SortMemberPath="UnitCost"/>
 		<local:ManagedResourceSortComparer x:Key="unitBillingSortComparer" SortMemberPath="UnitBilling"/>
 		<local:ManagedResourceSortComparer x:Key="fixedCostSortComparer" SortMemberPath="FixedCost"/>
 		<local:ManagedResourceSortComparer x:Key="fixedBillingSortComparer" SortMemberPath="FixedBilling"/>
-		<local:ManagedResourceSortComparer x:Key="displayOrderSortComparer" SortMemberPath="DisplayOrder"/>
 		<local:ManagedResourceSortComparer x:Key="colorFormatSortComparer" SortMemberPath="ColorFormat"/>
 		<local:ManagedActivitySortComparer x:Key="notesSortComparer" SortMemberPath="Notes"/>
 	</UserControl.Resources>
 
+  <!-- Context menu is included here because otherwise it won't work when the datagrid is disabled. -->
+	<DockPanel Margin="7"
+             Background="Transparent">
+    <DockPanel.Styles>
+      <Style>
+        <Setter Property="ContextMenu">
+          <ContextMenu>
+            <MenuItem Header="{x:Static resources:Menus.Menu_AddManagedResource}"
+                  Command="{Binding Path=$parent[DockPanel].DataContext.AddManagedResourceCommand, Mode=OneWay}" />
 
-	<DockPanel Margin="7">
+            <Separator />
+
+            <MenuItem Header="{x:Static resources:Menus.Menu_DuplicateManagedResource}"
+                  Command="{Binding Path=$parent[DockPanel].DataContext.DuplicateManagedResourceCommand, Mode=OneWay}" />
+
+            <MenuItem Header="{x:Static resources:Menus.Menu_EditManagedResources}"
+                  Command="{Binding Path=$parent[DockPanel].DataContext.EditManagedResourcesCommand, Mode=OneWay}" />
+
+            <MenuItem Header="{x:Static resources:Menus.Menu_RenumberResources}"
+                  Command="{Binding Path=$parent[DockPanel].DataContext.RenumberResourcesCommand, Mode=OneWay}" />
+
+            <Separator />
+
+            <MenuItem Header="{x:Static resources:Menus.Menu_DeleteManagedResources}"
+                  Command="{Binding Path=$parent[DockPanel].DataContext.RemoveManagedResourcesCommand, Mode=OneWay}" />
+
+            <Separator />
+
+            <MenuItem Header="{x:Static resources:Menus.Menu_DisableResources}"
+								  IsChecked="{Binding Path=DisableResources, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+          </ContextMenu>
+        </Setter>
+      </Style>
+    </DockPanel.Styles>
+
 		<ScrollViewer DockPanel.Dock="Right"
 					  VerticalScrollBarVisibility="Hidden"
 					  HorizontalScrollBarVisibility="Disabled">
 			<DockPanel Margin="11,0,0,0">
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
-						Command="{Binding Path=AddManagedResourceCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_AddManagedResource}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
-						Command="{Binding Path=RemoveManagedResourcesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DeleteManagedResources}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,11"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
-						Command="{Binding Path=EditManagedResourcesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_EditManagedResources}"/>
-
 				<Label DockPanel.Dock="Top"
 					   IsTabStop="False"
 					   VerticalAlignment="Center"
@@ -102,41 +107,36 @@
 									   Padding="0"
 									   Minimum="0"/>
 
-				<Label DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   VerticalAlignment="Center"
-					   VerticalContentAlignment="Center"
-					   Content="{x:Static resources:Labels.Label_DisableResources}"
-					   Height="25"
-					   Margin="0,0,0,0"/>
-
-				<ToggleSwitch DockPanel.Dock="Top"
-							  IsTabStop="True"
-							  Margin="0,0,0,11"
-							  VerticalAlignment="Center"
-							  VerticalContentAlignment="Center"
-							  HorizontalAlignment="Center"
-							  HorizontalContentAlignment="Center"
-							  OffContent="{x:Static resources:Labels.Label_No}"
-							  OnContent="{x:Static resources:Labels.Label_Yes}"
-							  IsChecked="{Binding Path=DisableResources, Mode=TwoWay}"/>
-
 				<Grid/>
 			</DockPanel>
 		</ScrollViewer>
 
-		<DataGrid Name="resourcesGrid"
+    <!-- Set Background to Transparent to ensure the context menu works even when the datagrid is empty -->
+    <!-- https://github.com/AvaloniaUI/Avalonia/discussions/15118 -->
+		<DataGrid Name="ResourcesGrid"
+				  Background="Transparent"
 				  IsEnabled="{Binding Path=!DisableResources, Mode=OneWay}"
 				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
-				  ItemsSource="{Binding Path=Resources, Mode=OneWay}"
+				  ItemsSource="{Binding Path=OrderableResources, Mode=OneWay}"
 				  SelectionMode="Extended"
 				  CanUserResizeColumns="True"
 				  CanUserSortColumns="True"
 				  GridLinesVisibility="All"
+				  Classes="DragAndDrop"
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>
+				<!-- Make DataGrid a drop target -->
+				<Style Selector="DataGridRow">
+					<Setter Property="(Interaction.Behaviors)">
+						<BehaviorCollectionTemplate>
+							<BehaviorCollection>
+								<ContextDragBehavior />
+							</BehaviorCollection>
+						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
 				<Style Selector="DataGridRow Grid.editable">
 					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 				</Style>
@@ -161,18 +161,32 @@
 				<!--<Style Selector="DataGridCell:selected:pointerover:current:focus Grid.editable">
 					<Setter Property="Background" Value="Green"/>
 				</Style>-->
+				
+				<!-- Make sure the caret appears at the end of a TextBox -->
+				<Style Selector="TextBox">
+					<Setter Property="(Interaction.Behaviors)">
+						<BehaviorCollectionTemplate>
+							<BehaviorCollection>
+								<local:MoveCaretToEndBehavior />
+							</BehaviorCollection>
+						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
 			</DataGrid.Styles>
 
-			<i:Interaction.Behaviors>
-				<ia:EventTriggerBehavior EventName="SelectionChanged"
-										 SourceObject="{Binding #resourcesGrid}">
-					<ia:InvokeCommandAction x:DataType="vm:ResourceSettingsManagerViewModel"
+			<Interaction.Behaviors>
+				<!-- Make DataGrid a drop target -->
+				<ContextDropBehavior Handler="{StaticResource managedResourceDataGridDropHandler}" />
+
+				<EventTriggerBehavior EventName="SelectionChanged"
+										 SourceObject="{Binding #ResourcesGrid}">
+					<InvokeCommandAction x:DataType="vm:ResourceSettingsManagerViewModel"
 											Command="{Binding Path=SetSelectedManagedResourcesCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />
-				</ia:EventTriggerBehavior>
+				</EventTriggerBehavior>
 
 				<!--<local:DataGridCacheScrollBehavior />-->
-			</i:Interaction.Behaviors>
+			</Interaction.Behaviors>
 
 			<DataGrid.Columns>
 				<DataGridTemplateColumn CanUserResize="True"
@@ -202,6 +216,42 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
+
+
+
+
+
+
+				<!--<DataGridTemplateColumn Width="100">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_DisplayOrder}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_DisplayOrder}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=DisplayOrder, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>-->
+				
+				
+				
+				
+				
+				
+				
+				
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
@@ -298,6 +348,44 @@
 							</Grid>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										CustomSortComparer="{StaticResource allocationOrderSortComparer}"
+										Width="140">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_AllocationOrder}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_AllocationOrder}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=AllocationOrder, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+					<DataGridTemplateColumn.CellEditingTemplate>
+						<DataTemplate>
+							<u:NumericDoubleUpDown Value="{Binding Path=AllocationOrder, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+												   VerticalAlignment="Center"
+												   ShowButtonSpinner="False"
+												   Focusable="True"
+												   Margin="0"
+												   Padding="0"
+												   Minimum="0"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
 				<DataGridTemplateColumn CanUserResize="True"
@@ -554,7 +642,11 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+				
+				
+				
+				
+				<!--<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource displayOrderSortComparer}"
@@ -590,8 +682,18 @@
 												Minimum="0"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellEditingTemplate>
-				</DataGridTemplateColumn>
+				</DataGridTemplateColumn>-->
 
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"

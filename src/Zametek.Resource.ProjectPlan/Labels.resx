@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -150,6 +150,21 @@
   <data name="Label_AddMilestone" xml:space="preserve">
     <value>Milestone</value>
   </data>
+  <data name="Label_DuplicateManagedActivity" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Label_DuplicateManagedActivitySeverity" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Label_DuplicateManagedHoliday" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Label_DuplicateManagedResource" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="Label_DuplicateManagedWorkStream" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
   <data name="Label_AllocatedToResources" xml:space="preserve">
     <value>Allocated to Resources</value>
   </data>
@@ -160,7 +175,7 @@
     <value>projectplan.net</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>0.9.3-beta</value>
+    <value>0.9.3-rc.2</value>
   </data>
   <data name="Label_Author" xml:space="preserve">
     <value>R. M. Bennett-Lovsey</value>
@@ -178,7 +193,7 @@
     <value>Color</value>
   </data>
   <data name="Label_Copyright" xml:space="preserve">
-    <value>Copyright (c) 2025</value>
+    <value>Copyright (c) 2026</value>
   </data>
   <data name="Label_CriticalityRisk" xml:space="preserve">
     <value>Criticality Risk:</value>
@@ -495,6 +510,9 @@
   <data name="Label_EditManagedHoliday" xml:space="preserve">
     <value>Edit</value>
   </data>
+  <data name="Label_EditManagedWorkStreams" xml:space="preserve">
+    <value>Edit</value>
+  </data>
   <data name="Label_ShowNames" xml:space="preserve">
     <value>Show Names</value>
   </data>
@@ -644,5 +662,20 @@
   </data>
   <data name="Label_HolidayStartDate" xml:space="preserve">
     <value>Start Date</value>
+  </data>
+  <data name="Label_RenumberActivities" xml:space="preserve">
+    <value>Renumber</value>
+  </data>
+  <data name="Label_RenumberWorkStreams" xml:space="preserve">
+    <value>Renumber</value>
+  </data>
+  <data name="Label_RenumberResources" xml:space="preserve">
+    <value>Renumber</value>
+  </data>
+  <data name="Label_AllocationOrder" xml:space="preserve">
+    <value>Allocation Order</value>
+  </data>
+  <data name="Label_ShowNonWorkingDays" xml:space="preserve">
+    <value>Show Non-Working Days</value>
   </data>
 </root>

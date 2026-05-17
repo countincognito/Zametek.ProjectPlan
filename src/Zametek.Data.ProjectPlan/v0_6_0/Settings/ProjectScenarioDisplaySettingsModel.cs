@@ -1,7 +1,9 @@
-﻿namespace Zametek.Common.ProjectPlan
+using Zametek.Common.ProjectPlan;
+
+namespace Zametek.Data.ProjectPlan.v0_6_0
 {
     [Serializable]
-    public record DisplaySettingsModel
+    public record ProjectScenarioDisplaySettingsModel
     {
         public bool ShowDates { get; init; } = default;
 
@@ -14,10 +16,13 @@
         public bool HideBilling { get; init; } = default;
 
 
+
         public bool ArrowGraphShowNames { get; init; } = default;
 
 
+
         public bool VertexGraphShowNames { get; init; } = default;
+
 
 
         public GroupByMode GanttChartGroupByMode { get; init; } = default;
@@ -36,6 +41,11 @@
 
         public bool GanttChartShowSlack { get; init; } = default;
 
+        public bool GanttChartShowNonWorkingDays { get; init; } = default;
+
+        public List<int> GanttChartShowConnections { get; init; } = [];
+
+
 
         public AllocationMode ResourceChartAllocationMode { get; init; } = default;
 
@@ -46,6 +56,7 @@
         public bool ResourceChartShowToday { get; init; } = default;
 
         public bool ResourceChartShowMilestones { get; init; } = default;
+
 
 
         public bool EarnedValueShowProjections { get; init; } = default;

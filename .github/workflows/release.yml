@@ -1,0 +1,282 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows (${{ matrix.arch }})
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, x86, arm64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore
+        run: dotnet restore
+        env:
+          HUSKY: 0
+
+      - name: Publish Desktop
+        run: |
+          dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os win --arch ${{ matrix.arch }} src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output artifacts/desktop/win-${{ matrix.arch }}
+        env:
+          HUSKY: 0
+
+      - name: Publish CLI
+        run: |
+          dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os win --arch ${{ matrix.arch }} src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output artifacts/cli/win-${{ matrix.arch }}
+        env:
+          HUSKY: 0
+
+      - name: Package Desktop
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}"
+          Compress-Archive -Path artifacts/desktop/win-${{ matrix.arch }}/* -DestinationPath "projectplandotnet-${version}-win-${{ matrix.arch }}.zip"
+
+      - name: Package CLI
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}"
+          Compress-Archive -Path artifacts/cli/win-${{ matrix.arch }}/* -DestinationPath "zpp-${version}-win-${{ matrix.arch }}.zip"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ matrix.arch }}
+          path: "*.zip"
+          retention-days: 1
+
+  build-linux:
+    name: Build Linux (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore
+        run: dotnet restore
+        env:
+          HUSKY: 0
+
+      - name: Publish Desktop
+        run: |
+          dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os linux --arch ${{ matrix.arch }} src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output artifacts/desktop/linux-${{ matrix.arch }}
+        env:
+          HUSKY: 0
+
+      - name: Publish CLI
+        run: |
+          dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=true -c Release --os linux --arch ${{ matrix.arch }} src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output artifacts/cli/linux-${{ matrix.arch }}
+        env:
+          HUSKY: 0
+
+      - name: Package Desktop
+        run: |
+          VERSION="${{ github.ref_name }}"
+          tar -czf "projectplandotnet-${VERSION}-linux-${{ matrix.arch }}.tar.gz" -C artifacts/desktop/linux-${{ matrix.arch }} .
+
+      - name: Package CLI
+        run: |
+          VERSION="${{ github.ref_name }}"
+          tar -czf "zpp-${VERSION}-linux-${{ matrix.arch }}.tar.gz" -C artifacts/cli/linux-${{ matrix.arch }} .
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}
+          path: "*.tar.gz"
+          retention-days: 1
+
+  build-macos:
+    name: Build macOS (${{ matrix.arch }})
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore
+        run: dotnet restore
+        env:
+          HUSKY: 0
+
+      - name: Publish Desktop
+        run: |
+          dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true  --self-contained=true -c Release --os osx --arch ${{ matrix.arch }} src/Zametek.ProjectPlan/Zametek.ProjectPlan.csproj --output artifacts/desktop/osx-${{ matrix.arch }}
+        env:
+          HUSKY: 0
+
+      - name: Publish CLI
+        run: |
+          dotnet publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true  --self-contained=true -c Release --os osx --arch ${{ matrix.arch }} src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj --output artifacts/cli/osx-${{ matrix.arch }}
+        env:
+          HUSKY: 0
+
+      - name: Package Desktop
+        run: |
+          VERSION="${{ github.ref_name }}"
+          tar -czf "projectplandotnet-${VERSION}-osx-${{ matrix.arch }}.tar.gz" -C artifacts/desktop/osx-${{ matrix.arch }} .
+
+      - name: Package CLI
+        run: |
+          VERSION="${{ github.ref_name }}"
+          tar -czf "zpp-${VERSION}-osx-${{ matrix.arch }}.tar.gz" -C artifacts/cli/osx-${{ matrix.arch }} .
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}
+          path: "*.tar.gz"
+          retention-days: 1
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-linux, build-macos]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -la release-artifacts/
+
+      - name: Generate release notes
+        id: release-notes
+        run: |
+          VERSION="${{ github.ref_name }}"
+          
+          SEMVER_REGEX="^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$"
+          
+          if [[ "$VERSION" =~ $SEMVER_REGEX ]]; then
+            echo "Valid SemVer: $VERSION"
+          else
+            echo "Invalid SemVer: $VERSION"
+            exit 1
+          fi
+
+          cat > release-notes.md << EOF
+          ## Downloads
+
+          ### projectplan.net Desktop
+
+          | Platform | Architecture | Download |
+          |----------|-------------|---------|
+          | Windows | x64 | \`projectplandotnet-${VERSION}-win-x64.zip\` |
+          | Windows | x86 | \`projectplandotnet-${VERSION}-win-x86.zip\` |
+          | Windows | arm64 | \`projectplandotnet-${VERSION}-win-arm64.zip\` |
+          | Linux | x64 | \`projectplandotnet-${VERSION}-linux-x64.tar.gz\` |
+          | Linux | arm64 | \`projectplandotnet-${VERSION}-linux-arm64.tar.gz\` |
+          | macOS | x64 (Intel) | \`projectplandotnet-${VERSION}-osx-x64.tar.gz\` |
+          | macOS | arm64 (Apple Silicon) | \`projectplandotnet-${VERSION}-osx-arm64.tar.gz\` |
+
+          ### zpp CLI
+
+          | Platform | Architecture | Download |
+          |----------|-------------|---------|
+          | Windows | x64 | \`zpp-${VERSION}-win-x64.zip\` |
+          | Windows | x86 | \`zpp-${VERSION}-win-x86.zip\` |
+          | Windows | arm64 | \`zpp-${VERSION}-win-arm64.zip\` |
+          | Linux | x64 | \`zpp-${VERSION}-linux-x64.tar.gz\` |
+          | Linux | arm64 | \`zpp-${VERSION}-linux-arm64.tar.gz\` |
+          | macOS | x64 (Intel) | \`zpp-${VERSION}-osx-x64.tar.gz\` |
+          | macOS | arm64 (Apple Silicon) | \`zpp-${VERSION}-osx-arm64.tar.gz\` |
+
+          ## Installation
+
+          **Windows:** Extract the zip file and run \`projectplandotnet.exe\` (Desktop) or \`zpp.exe\` (CLI).
+
+          **Linux/macOS:** Extract the tar.gz, make executable (\`chmod +x projectplandotnet\` or \`chmod +x zpp\`), and run.
+          EOF
+
+      - name: Create GitHub Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const releaseNotes = fs.readFileSync('release-notes.md', 'utf8');
+            const tag = context.ref.replace('refs/tags/', '');
+
+            // Create the release
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name: tag,
+              body: releaseNotes,
+              draft: false,
+              prerelease: tag.includes('-'),
+            });
+
+            // Upload all artifacts
+            const artifactsDir = 'release-artifacts';
+            const files = fs.readdirSync(artifactsDir);
+
+            for (const file of files) {
+              const filePath = path.join(artifactsDir, file);
+              const stat = fs.statSync(filePath);
+              if (!stat.isFile()) continue;
+
+              const contentType = file.endsWith('.zip')
+                ? 'application/zip'
+                : 'application/gzip';
+
+              console.log(`Uploading ${file} (${stat.size} bytes)...`);
+
+              await github.rest.repos.uploadReleaseAsset({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: release.data.id,
+                name: file,
+                data: fs.readFileSync(filePath),
+                headers: {
+                  'content-type': contentType,
+                  'content-length': stat.size,
+                },
+              });
+
+              console.log(`Uploaded ${file}`);
+            }
+
+            console.log(`Release ${tag} created: ${release.data.html_url}`);

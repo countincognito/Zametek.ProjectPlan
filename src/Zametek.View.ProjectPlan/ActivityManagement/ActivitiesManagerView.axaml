@@ -2,8 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
 		     xmlns:controls="using:Avalonia.Controls"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
@@ -15,6 +13,9 @@
 			 x:DataType="vm:ActivitiesManagerViewModel"
              x:Class="Zametek.View.ProjectPlan.ActivitiesManagerView">
 	<UserControl.Resources>
+		<!-- Make DataGrid a drop target -->
+		<local:ManagedActivityDataGridDropHandler x:Key="managedActivityDataGridDropHandler" />
+
 		<local:ManagedActivitySortComparer x:Key="idSortComparer" SortMemberPath="Id"/>
 		<local:ManagedActivitySortComparer x:Key="durationSortComparer" SortMemberPath="Duration"/>
 		<local:ManagedActivitySortComparer x:Key="nameSortComparer" SortMemberPath="Name"/>
@@ -48,70 +49,32 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=AddManagedActivityCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_AddManagedActivity}"/>
 
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=InsertManagedActivityCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_InsertManagedActivity}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=RemoveManagedActivitiesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DeleteManagedActivities}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=EditManagedActivitiesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_EditManagedActivities}"/>
-
-				<Button DockPanel.Dock="Bottom"
-						IsTabStop="True"
-						Margin="0,0,0,0"
-						Height="25" Width="75"
-						VerticalContentAlignment="Center"
-						HorizontalContentAlignment="Center"
-						Command="{Binding Path=AddMilestoneCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_AddMilestone}"/>
-
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
-
-		<DataGrid Name="activitiesGrid"
+		<!-- Set Background to Transparent to ensure the context menu works even when the datagrid is empty -->
+		<!-- https://github.com/AvaloniaUI/Avalonia/discussions/15118 -->
+		<DataGrid Name="ActivitiesGrid"
+				  Background="Transparent"
 				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
-				  ItemsSource="{Binding Path=Activities, Mode=OneWay}"
+				  ItemsSource="{Binding Path=OrderableActivities, Mode=OneWay}"
 				  SelectionMode="Extended"
 				  CanUserResizeColumns="True"
 				  CanUserSortColumns="True"
 				  GridLinesVisibility="All"
+				  Classes="DragAndDrop"
 				  CanUserReorderColumns="True">
 			<DataGrid.Styles>
+				<!-- Make DataGrid a drop target -->
+				<Style Selector="DataGridRow">
+					<Setter Property="(Interaction.Behaviors)">
+						<BehaviorCollectionTemplate>
+							<BehaviorCollection>
+								<ContextDragBehavior />
+							</BehaviorCollection>
+						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
 				<Style Selector="DataGridRow Grid.editable">
 					<Setter Property="Background" Value="{DynamicResource EditableCellGridBackgroundBrush}"/>
 				</Style>
@@ -143,15 +106,61 @@
 					<Setter Property="Background" Value="Transparent"/>
 					<Setter Property="BorderThickness" Value="0"/>
 				</Style>
+
+				<!-- Make sure the caret appears at the end of a TextBox -->
+				<Style Selector="TextBox">
+					<Setter Property="(Interaction.Behaviors)">
+						<BehaviorCollectionTemplate>
+							<BehaviorCollection>
+								<local:MoveCaretToEndBehavior />
+							</BehaviorCollection>
+						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
+
+
+				<Style>
+					<Setter Property="ContextMenu">
+						<ContextMenu>
+							<MenuItem Header="{x:Static resources:Menus.Menu_AddManagedActivity}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.AddManagedActivityCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_InsertManagedActivity}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.InsertManagedActivityCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_AddMilestone}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.AddMilestoneCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_EditManagedActivities}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.EditManagedActivitiesCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_DuplicateManagedActivity}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedActivityCommand, Mode=OneWay}" />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_RenumberActivities}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.RenumberActivitiesCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_DeleteManagedActivities}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedActivitiesCommand, Mode=OneWay}" />
+						</ContextMenu>
+					</Setter>
+				</Style>
 			</DataGrid.Styles>
 
-			<i:Interaction.Behaviors>
-				<ia:EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #activitiesGrid}">
-					<ia:InvokeCommandAction Command="{Binding Path=SetSelectedManagedActivitiesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
-				</ia:EventTriggerBehavior>
+			<Interaction.Behaviors>
+				<!-- Make DataGrid a drop target -->
+				<ContextDropBehavior Handler="{StaticResource managedActivityDataGridDropHandler}" />
+
+				<EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #ActivitiesGrid}">
+					<InvokeCommandAction Command="{Binding Path=SetSelectedManagedActivitiesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
+				</EventTriggerBehavior>
 
 				<!--<local:DataGridCacheScrollBehavior />-->
-			</i:Interaction.Behaviors>
+			</Interaction.Behaviors>
 
 			<DataGrid.Columns>
 				<DataGridTemplateColumn CanUserResize="True"
@@ -181,6 +190,57 @@
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<!--<DataGridTemplateColumn Width="100">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_DisplayOrder}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_DisplayOrder}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBox VerticalAlignment="Center"
+										 Margin="0"
+										 Padding="3"
+										 Classes="displayOnly"
+										 Text="{Binding Path=DisplayOrder, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>-->
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"

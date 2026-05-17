@@ -7,7 +7,7 @@
 
         public DateTimeOffset Today { get; init; }
 
-        public List<v0_4_4.DependentActivityModel> DependentActivities { get; init; } = [];
+        public List<DependentActivityModel> DependentActivities { get; init; } = [];
 
         public v0_5_0.GraphSettingsModel GraphSettings { get; init; } = new();
 
@@ -19,6 +19,6 @@
 
         public v0_5_0.MetricsModel Metrics { get; init; } = new();
 
-        public DisplaySettingsModel DisplaySettings { get; init; } = new();
+        public ProjectScenarioDisplaySettingsModel DisplaySettings { get; init; } = new();
     }
 }

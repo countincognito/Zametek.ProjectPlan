@@ -55,6 +55,7 @@ namespace Zametek.Data.ProjectPlan.Tests
             {
                 model1.Nodes[i].NodeType.ShouldBe(model2.Nodes[i].NodeType);
                 model1.Nodes[i].Name.ShouldBe(model2.Nodes[i].Name);
+
                 //model1.Nodes[i].CreatedOn.ShouldBe(model2.Nodes[i].CreatedOn);
                 //model1.Nodes[i].ModifiedOn.ShouldBe(model2.Nodes[i].ModifiedOn);
             }

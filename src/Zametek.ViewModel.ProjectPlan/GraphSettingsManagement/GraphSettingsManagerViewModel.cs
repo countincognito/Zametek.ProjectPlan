@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using DynamicData;
 using ReactiveUI;
 using System.Collections.Concurrent;
@@ -48,14 +48,16 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             SelectedActivitySeverities = new ConcurrentDictionary<Guid, IManagedActivitySeverityViewModel>();
-            m_HasActivitySeverities = false;
+            m_HasSelectedActivitySeverity = false;
+            m_HasSelectedActivitySeverities = false;
             m_AreSettingsUpdated = false; ;
 
             m_ActivitySeverities = new();
 
             SetSelectedManagedActivitySeveritiesCommand = ReactiveCommand.Create<SelectionChangedEventArgs>(SetSelectedManagedActivitySeverities);
             AddManagedActivitySeverityCommand = ReactiveCommand.CreateFromTask(AddManagedActivitySeverityAsync);
-            RemoveManagedActivitySeveritiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitySeveritiesAsync, this.WhenAnyValue(agsm => agsm.HasActivitySeverities));
+            RemoveManagedActivitySeveritiesCommand = ReactiveCommand.CreateFromTask(RemoveManagedActivitySeveritiesAsync, this.WhenAnyValue(agsm => agsm.HasSelectedActivitySeverities));
+            DuplicateManagedActivitySeverityCommand = ReactiveCommand.CreateFromTask(DuplicateManagedActivitySeverityAsync, this.WhenAnyValue(agsm => agsm.HasSelectedActivitySeverity));
 
             // Create read-only view to the source list.
             m_ReadOnlyActivitySeveritiesSub = m_ActivitySeverities.Connect()
@@ -134,7 +136,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
-                HasActivitySeverities = SelectedActivitySeverities.Any();
+                HasSelectedActivitySeverities = SelectedActivitySeverities.Any();
+                HasSelectedActivitySeverity = HasSelectedActivitySeverities && SelectedActivitySeverities.Count == 1;
             }
         }
 
@@ -203,6 +206,43 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private async Task DuplicateManagedActivitySeverityAsync()
+        {
+            try
+            {
+                lock (m_Lock)
+                {
+                    SelectedActivitySeverities.TryGetValue(SelectedActivitySeverities.Keys.First(), out IManagedActivitySeverityViewModel? selectedActivitySeverity);
+
+                    if (selectedActivitySeverity is null)
+                    {
+                        return;
+                    }
+
+                    ActivitySeverityModel duplicateModel = selectedActivitySeverity.DeepCopy();
+
+                    m_ActivitySeverities.Edit(activitySeverities =>
+                    {
+                        Guid id = GetNextId();
+                        activitySeverities.Add(
+                            new ManagedActivitySeverityViewModel(
+                                this,
+                                id,
+                                duplicateModel));
+                    });
+                }
+
+                UpdateGraphSettingsToCore();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
         private void UpdateGraphSettingsToCore()
         {
             lock (m_Lock)
@@ -244,7 +284,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(graphSettings);
             lock (m_Lock)
             {
-                m_NodeTypeFormats.Clear();
+                m_EdgeTypeFormats.Clear();
                 foreach (EdgeTypeFormatModel edgeTypeFormat in graphSettings.EdgeTypeFormats)
                 {
                     m_EdgeTypeFormats.Add(new EdgeTypeFormatModel
@@ -334,15 +374,29 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
-        private bool m_HasActivitySeverities;
-        public bool HasActivitySeverities
+        private bool m_HasSelectedActivitySeverity;
+        public bool HasSelectedActivitySeverity
         {
-            get => m_HasActivitySeverities;
+            get => m_HasSelectedActivitySeverity;
             set
             {
                 lock (m_Lock)
                 {
-                    m_HasActivitySeverities = value;
+                    m_HasSelectedActivitySeverity = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        private bool m_HasSelectedActivitySeverities;
+        public bool HasSelectedActivitySeverities
+        {
+            get => m_HasSelectedActivitySeverities;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_HasSelectedActivitySeverities = value;
                     this.RaisePropertyChanged();
                 }
             }
@@ -367,6 +421,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand RemoveManagedActivitySeveritiesCommand { get; }
 
+        public ICommand DuplicateManagedActivitySeverityCommand { get; }
+
         #endregion
 
         #region IDisposable Members
@@ -382,7 +438,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
@@ -392,9 +447,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 ClearManagedActivitySeverities();
                 m_ActivitySeverities?.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

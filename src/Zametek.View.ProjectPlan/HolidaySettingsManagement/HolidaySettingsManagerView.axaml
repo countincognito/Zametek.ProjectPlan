@@ -2,8 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
 			 xmlns:controls="using:Avalonia.Controls"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
@@ -23,42 +21,11 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=AddManagedHolidayCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_AddManagedHoliday}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=RemoveManagedHolidaysCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DeleteManagedHolidays}"/>
-
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,11"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=EditManagedHolidayCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_EditManagedHoliday}"/>
-
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
-
-		<DataGrid Name="holidaysGrid"
+    
+    <!-- Set Background to Transparent to ensure the context menu works even when the datagrid is empty -->
+    <!-- https://github.com/AvaloniaUI/Avalonia/discussions/15118 -->
+		<DataGrid Name="HolidaysGrid"
+				  Background="Transparent"
 				  FrozenColumnCount="2"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
@@ -100,16 +67,49 @@
 					<Setter Property="Background" Value="Transparent"/>
 					<Setter Property="BorderThickness" Value="0"/>
 				</Style>
-			</DataGrid.Styles>
 
-			<i:Interaction.Behaviors>
-				<ia:EventTriggerBehavior EventName="SelectionChanged"
-										 SourceObject="{Binding #holidaysGrid}">
-					<ia:InvokeCommandAction x:DataType="vm:HolidaySettingsManagerViewModel"
+				<!-- Make sure the caret appears at the end of a TextBox -->
+				<Style Selector="TextBox">
+					<Setter Property="(Interaction.Behaviors)">
+						<BehaviorCollectionTemplate>
+							<BehaviorCollection>
+								<local:MoveCaretToEndBehavior />
+							</BehaviorCollection>
+						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
+
+        <Style>
+          <Setter Property="ContextMenu">
+            <ContextMenu>
+              <MenuItem Header="{x:Static resources:Menus.Menu_AddManagedHoliday}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.AddManagedHolidayCommand, Mode=OneWay}" />
+
+              <Separator />
+
+              <MenuItem Header="{x:Static resources:Menus.Menu_DuplicateManagedHoliday}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedHolidayCommand, Mode=OneWay}" />
+
+              <MenuItem Header="{x:Static resources:Menus.Menu_EditManagedHoliday}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.EditManagedHolidayCommand, Mode=OneWay}" />
+
+              <Separator />
+
+              <MenuItem Header="{x:Static resources:Menus.Menu_DeleteManagedHolidays}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedHolidaysCommand, Mode=OneWay}" />
+            </ContextMenu>
+          </Setter>
+        </Style>
+      </DataGrid.Styles>
+
+			<Interaction.Behaviors>
+				<EventTriggerBehavior EventName="SelectionChanged"
+										 SourceObject="{Binding #HolidaysGrid}">
+					<InvokeCommandAction x:DataType="vm:HolidaySettingsManagerViewModel"
 											Command="{Binding Path=SetSelectedManagedHolidaysCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />
-				</ia:EventTriggerBehavior>
-			</i:Interaction.Behaviors>
+				</EventTriggerBehavior>
+			</Interaction.Behaviors>
 
 			<DataGrid.Columns>
 				<DataGridTemplateColumn CanUserResize="True"

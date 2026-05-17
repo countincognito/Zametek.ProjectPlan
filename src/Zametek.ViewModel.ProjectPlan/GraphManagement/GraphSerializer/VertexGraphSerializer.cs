@@ -1,6 +1,5 @@
-﻿using Avalonia.Media;
+using Avalonia.Media;
 using System.Text;
-using System.Xml;
 using System.Xml.Serialization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -52,6 +51,18 @@ namespace Zametek.ViewModel.ProjectPlan
         private const double c_PxPerInch = 96;
         private const double c_PtPerInch = 72;
         private const string c_FontName = @"Consolas";
+
+        private readonly IMsaglSvgRenderer m_MsaglSvgRenderer;
+
+        #endregion
+
+        #region Ctors
+
+        public VertexGraphSerializer(IMsaglSvgRenderer msaglSvgRenderer)
+        {
+            ArgumentNullException.ThrowIfNull(msaglSvgRenderer);
+            m_MsaglSvgRenderer = msaglSvgRenderer;
+        }
 
         #endregion
 
@@ -243,65 +254,6 @@ namespace Zametek.ViewModel.ProjectPlan
             return Microsoft.Msagl.Drawing.Color.Black;
         }
 
-        private static byte[] GraphToByteArray(
-            Microsoft.Msagl.Drawing.Graph graph,
-            BaseTheme baseTheme)
-        {
-            using var ms = new MemoryStream();
-            using var writer = new StreamWriter(ms);
-
-            var svgWriter = new CustomSvgGraphWriter(writer.BaseStream, graph);
-            svgWriter.Write();
-            ms.Position = 0;
-            using var sr = new StreamReader(ms);
-
-            using var xmlReader = XmlReader.Create(sr);
-
-            XmlDocument doc = new();
-            doc.Load(xmlReader);
-
-            // Set the background to transparent so it 
-            string? height = doc.DocumentElement?.GetAttribute("height");
-            string? width = doc.DocumentElement?.GetAttribute("width");
-
-            var rect = doc.CreateElement(@"rect");
-            rect.SetAttribute(@"height", height);
-            rect.SetAttribute(@"width", width);
-
-            if (baseTheme == BaseTheme.Light)
-            {
-                rect.SetAttribute(@"fill", ColorHelper.SvgLightThemeBackground);
-            }
-            if (baseTheme == BaseTheme.Dark)
-            {
-                rect.SetAttribute(@"fill", ColorHelper.SvgDarkThemeBackground);
-            }
-
-            // Only show the background if there is a graph to display.
-            if (graph.NodeCount > 0)
-            {
-                rect.SetAttribute(@"fill-opacity", "1.0");
-            }
-            else
-            {
-                rect.SetAttribute(@"fill-opacity", "0.0");
-            }
-
-            // Add the background to the top of the XML tree.
-            doc.DocumentElement?.PrependChild(rect);
-
-            using var stringWriter = new StringWriter();
-            using var xmlTextWriter = XmlWriter.Create(stringWriter);
-
-            doc.WriteTo(xmlTextWriter);
-            xmlTextWriter.Flush();
-
-            return stringWriter
-                .GetStringBuilder()
-                .ToString()
-                .StringToByteArray();
-        }
-
         #endregion
 
         public byte[] BuildVertexGraphSvgData(
@@ -359,7 +311,6 @@ namespace Zametek.ViewModel.ProjectPlan
             foreach (Microsoft.Msagl.Drawing.Node drawingGraphNode in drawingGraph.Nodes)
             {
                 DiagramNodeModel diagramNode = diagramNodeLookup[drawingGraphNode.Id];
-                //EventNodeModel nodeModel = nodeModelLookup[drawingGraphNode.Id];
 
                 // Make sure this is set before the label is updated.
                 drawingGraphNode.LabelText = diagramNode.Text ?? string.Empty;
@@ -405,7 +356,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             Microsoft.Msagl.Miscellaneous.LayoutHelpers.CalculateLayout(drawingGraph.GeometryGraph, drawingGraph.LayoutAlgorithmSettings, null);
 
-            return GraphToByteArray(drawingGraph, baseTheme);
+            return m_MsaglSvgRenderer.RenderToSvg(drawingGraph, baseTheme);
         }
 
         public byte[] BuildVertexGraphMLData(

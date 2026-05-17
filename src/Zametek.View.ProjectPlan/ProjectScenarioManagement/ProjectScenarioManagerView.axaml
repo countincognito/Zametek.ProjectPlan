@@ -6,8 +6,6 @@
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:common="using:Zametek.Common.ProjectPlan"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
 			 xmlns:converters="using:Avalonia.Controls.Converters"
 			 x:DataType="vm:ProjectScenarioManagerViewModel"
 			 Focusable="True"
@@ -51,34 +49,34 @@
 				<Style>
 					<Setter Property="ContextMenu">
 						<ContextMenu>
-							<MenuItem Header="{x:Static resources:Labels.Label_NewScenario}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_NewScenario}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectScenarioFileCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_NewScenarioFolder}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_NewScenarioFolder}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectScenarioFolderCommand, Mode=OneWay}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_PasteNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_PasteNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.PasteProjectScenarioNodeCommand, Mode=OneWay}" />
 
 							<Separator />
 
 							<MenuItem Header="{x:Static resources:Menus.Menu_Sort}">
 								<MenuItem Header="{x:Static resources:Menus.Menu_SortModeName}"
-										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.Name}, Mode=OneWay}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.ProjectScenarioSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.Name}, Mode=OneWay}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortModeCommand, Mode=OneWay}"
 										  CommandParameter="{x:Static common:SortMode.Name}"
 										  ToggleType="Radio" />
 
 								<MenuItem Header="{x:Static resources:Menus.Menu_SortModeCreatedOn}"
-										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.CreatedOn}, Mode=OneWay}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.ProjectScenarioSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.CreatedOn}, Mode=OneWay}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortModeCommand, Mode=OneWay}"
 										  CommandParameter="{x:Static common:SortMode.CreatedOn}"
 										  ToggleType="Radio" />
 
 								<MenuItem Header="{x:Static resources:Menus.Menu_SortModeModifiedOn}"
-										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.ModifiedOn}, Mode=OneWay}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.ProjectScenarioSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.ModifiedOn}, Mode=OneWay}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortModeCommand, Mode=OneWay}"
 										  CommandParameter="{x:Static common:SortMode.ModifiedOn}"
 										  ToggleType="Radio" />
@@ -86,14 +84,14 @@
 								<Separator />
 
 								<MenuItem Header="{x:Static resources:Menus.Menu_SortDirectionAscending}"
-										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortDirection, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortDirection.Ascending}, Mode=OneWay}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.ProjectScenarioSortDirection, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortDirection.Ascending}, Mode=OneWay}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortDirectionCommand, Mode=OneWay}"
 										  CommandParameter="{x:Static common:SortDirection.Ascending}"
 										  ToggleType="Radio" />
 
 
 								<MenuItem Header="{x:Static resources:Menus.Menu_SortDirectionDescending}"
-										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortDirection, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortDirection.Descending}, Mode=OneWay}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.ProjectScenarioSortDirection, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortDirection.Descending}, Mode=OneWay}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortDirectionCommand, Mode=OneWay}"
 										  CommandParameter="{x:Static common:SortDirection.Descending}"
 										  ToggleType="Radio" />
@@ -119,49 +117,49 @@
 					
 					<Setter Property="ContextMenu">
 						<ContextMenu>
-							<MenuItem Header="{x:Static resources:Labels.Label_SelectManagedScenario}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_SelectManagedScenario}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.LoadProjectScenarioFileCommand, Mode=OneWay}"
 									  CommandParameter="{Binding .}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_NewScenario}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_NewScenario}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectScenarioFileCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_NewScenarioFolder}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_NewScenarioFolder}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CreateEmptyProjectScenarioFolderCommand, Mode=OneWay}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_CutNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_CutNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CutProjectScenarioNodeCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_CopyNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_CopyNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.CopyProjectScenarioNodeCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_DuplicateNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_DuplicateNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.DuplicateProjectScenarioNodeCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_PasteNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_PasteNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.PasteProjectScenarioNodeCommand, Mode=OneWay}" />
 
 							<Separator />
 
 							<MenuItem Header="{x:Static resources:Menus.Menu_Sort}">
 								<MenuItem Header="{x:Static resources:Menus.Menu_SortModeName}"
-										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.Name}, Mode=OneWay}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.ProjectScenarioSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.Name}, Mode=OneWay}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortModeCommand, Mode=OneWay}"
 										  CommandParameter="{x:Static common:SortMode.Name}"
 										  ToggleType="Radio" />
 
 								<MenuItem Header="{x:Static resources:Menus.Menu_SortModeCreatedOn}"
-										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.CreatedOn}, Mode=OneWay}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.ProjectScenarioSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.CreatedOn}, Mode=OneWay}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortModeCommand, Mode=OneWay}"
 										  CommandParameter="{x:Static common:SortMode.CreatedOn}"
 										  ToggleType="Radio" />
 
 								<MenuItem Header="{x:Static resources:Menus.Menu_SortModeModifiedOn}"
-										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.ModifiedOn}, Mode=OneWay}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.ProjectScenarioSortMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortMode.ModifiedOn}, Mode=OneWay}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortModeCommand, Mode=OneWay}"
 										  CommandParameter="{x:Static common:SortMode.ModifiedOn}"
 										  ToggleType="Radio" />
@@ -169,14 +167,14 @@
 								<Separator />
 
 								<MenuItem Header="{x:Static resources:Menus.Menu_SortDirectionAscending}"
-										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortDirection, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortDirection.Ascending}, Mode=OneWay}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.ProjectScenarioSortDirection, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortDirection.Ascending}, Mode=OneWay}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortDirectionCommand, Mode=OneWay}"
 										  CommandParameter="{x:Static common:SortDirection.Ascending}"
 										  ToggleType="Radio" />
 
 
 								<MenuItem Header="{x:Static resources:Menus.Menu_SortDirectionDescending}"
-										  IsChecked="{Binding Path=$parent[TreeView].DataContext.SelectedSortDirection, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortDirection.Descending}, Mode=OneWay}"
+										  IsChecked="{Binding Path=$parent[TreeView].DataContext.ProjectScenarioSortDirection, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:SortDirection.Descending}, Mode=OneWay}"
 										  Command="{Binding Path=$parent[TreeView].DataContext.ChangeSortDirectionCommand, Mode=OneWay}"
 										  CommandParameter="{x:Static common:SortDirection.Descending}"
 										  ToggleType="Radio" />
@@ -184,18 +182,18 @@
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_RenameNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_RenameNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.RenameProjectScenarioNodeCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_DeleteNode}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_DeleteNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.RemoveProjectScenarioNodeCommand, Mode=OneWay}" />
 
 							<Separator />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_AddTag}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_AddTag}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.AddNodeTagCommand, Mode=OneWay}" />
 
-							<MenuItem Header="{x:Static resources:Labels.Label_DeleteTag}"
+							<MenuItem Header="{x:Static resources:Menus.Menu_DeleteTag}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.RemoveNodeTagCommand, Mode=OneWay}" />
 						</ContextMenu>
 					</Setter>
@@ -251,17 +249,17 @@
 				</TreeDataTemplate>
 			</TreeView.ItemTemplate>
 
-			<i:Interaction.Behaviors>
-				<ia:EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #scenarioTree}">
-					<ia:InvokeCommandAction Command="{Binding Path=SetSelectedManagedNodesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
-				</ia:EventTriggerBehavior>
-				<ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #scenarioTree}">
-					<ia:InvokeCommandAction Command="{Binding Path=LoadSelectedProjectScenarioFileCommand, Mode=OneWay}" PassEventArgsToCommand="False" />
-				</ia:EventTriggerBehavior>
-				<ia:EventTriggerBehavior EventName="PointerPressed" SourceObject="{Binding #scenarioTree}">
-					<ia:InvokeCommandAction Command="{Binding Path=SetNoSelectedManagedNodesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
-				</ia:EventTriggerBehavior>
-			</i:Interaction.Behaviors>
+			<Interaction.Behaviors>
+				<EventTriggerBehavior EventName="SelectionChanged" SourceObject="{Binding #scenarioTree}">
+					<InvokeCommandAction Command="{Binding Path=SetSelectedManagedNodesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
+				</EventTriggerBehavior>
+				<EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #scenarioTree}">
+					<InvokeCommandAction Command="{Binding Path=LoadSelectedProjectScenarioFileCommand, Mode=OneWay}" PassEventArgsToCommand="False" />
+				</EventTriggerBehavior>
+				<EventTriggerBehavior EventName="PointerPressed" SourceObject="{Binding #scenarioTree}">
+					<InvokeCommandAction Command="{Binding Path=SetNoSelectedManagedNodesCommand, Mode=OneWay}" PassEventArgsToCommand="True" />
+				</EventTriggerBehavior>
+			</Interaction.Behaviors>
 		</TreeView>
 	</DockPanel>
 </UserControl>

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
@@ -8,6 +8,8 @@ namespace Zametek.Contract.ProjectPlan
         : IDisposable, INotifyPropertyChanged, IKillSubscriptions, IMuteEdits
     {
         int Id { get; }
+
+        int DisplayOrder { get; set; }
 
         string Name { get; set; }
 
@@ -31,8 +33,6 @@ namespace Zametek.Contract.ProjectPlan
 
         int AllocationOrder { get; set; }
 
-        int DisplayOrder { get; set; }
-
         ColorFormatModel ColorFormat { get; set; }
 
         IWorkStreamSelectorViewModel WorkStreamSelector { get; }
@@ -42,5 +42,7 @@ namespace Zametek.Contract.ProjectPlan
         IResourceTrackerSetViewModel TrackerSet { get; }
 
         bool IsEditing { get; }
+
+        ResourceModel DeepCopy();
     }
 }

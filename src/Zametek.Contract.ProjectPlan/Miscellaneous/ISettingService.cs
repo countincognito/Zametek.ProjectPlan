@@ -6,6 +6,10 @@ namespace Zametek.Contract.ProjectPlan
     {
         string SettingsFilename { get; }
 
+        string DockLayoutFilename { get; }
+
+        string DataGridLayoutFilename { get; }
+
         Guid ProjectId { get; }
 
         string ProjectTitle { get; }
@@ -16,6 +20,12 @@ namespace Zametek.Contract.ProjectPlan
 
         string ProjectDirectory { get; }
 
+        string DockLayout { get; set; }
+
+        IList<DataGridModel> GetDataGridLayout();
+
+        void SetDataGridLayout(IList<DataGridModel> models);
+
         bool DefaultShowDates { get; set; }
 
         bool DefaultUseClassicDates { get; set; }
@@ -25,16 +35,6 @@ namespace Zametek.Contract.ProjectPlan
         bool DefaultHideCost { get; set; }
 
         bool DefaultHideBilling { get; set; }
-
-        SortMode ProjectScenarioSortMode { get; set; }
-
-        SortDirection ProjectScenarioSortDirection { get; set; }
-
-        TrackedMetrics ScenarioChartTrackedMetricXAxis { get; set; }
-
-        TrackedMetrics ScenarioChartTrackedMetricYAxis { get; set; }
-
-        CurveFittingType ScenarioChartCurveFittingType { get; set; }
 
         string SelectedTheme { get; set; }
 

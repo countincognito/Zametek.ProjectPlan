@@ -250,6 +250,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reset Layout.
+        /// </summary>
+        public static string Menu_ResetLayout {
+            get {
+                return ResourceManager.GetString("Menu_ResetLayout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Save.
         /// </summary>
         public static string Menu_Save {
@@ -264,6 +273,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Menu_SaveAs {
             get {
                 return ResourceManager.GetString("Menu_SaveAs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save _Layout.
+        /// </summary>
+        public static string Menu_SaveLayout {
+            get {
+                return ResourceManager.GetString("Menu_SaveLayout", resourceCulture);
             }
         }
         
@@ -372,6 +390,483 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Menu_ViewLicense {
             get {
                 return ResourceManager.GetString("Menu_ViewLicense", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string Menu_AddManagedActivity {
+            get {
+                return ResourceManager.GetString("Menu_AddManagedActivity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string Menu_AddManagedActivitySeverity {
+            get {
+                return ResourceManager.GetString("Menu_AddManagedActivitySeverity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string Menu_AddManagedHoliday {
+            get {
+                return ResourceManager.GetString("Menu_AddManagedHoliday", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string Menu_AddManagedResource {
+            get {
+                return ResourceManager.GetString("Menu_AddManagedResource", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string Menu_AddManagedWorkStream {
+            get {
+                return ResourceManager.GetString("Menu_AddManagedWorkStream", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Milestone.
+        /// </summary>
+        public static string Menu_AddMilestone {
+            get {
+                return ResourceManager.GetString("Menu_AddMilestone", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Add Tag.
+        /// </summary>
+        public static string Menu_AddTag {
+            get {
+                return ResourceManager.GetString("Menu_AddTag", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Allocation.
+        /// </summary>
+        public static string Menu_AllocationMode {
+            get {
+                return ResourceManager.GetString("Menu_AllocationMode", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Annotation Style.
+        /// </summary>
+        public static string Menu_AnnotationStyle {
+            get {
+                return ResourceManager.GetString("Menu_AnnotationStyle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        public static string Menu_CopyNode {
+            get {
+                return ResourceManager.GetString("Menu_CopyNode", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Curve Fitting.
+        /// </summary>
+        public static string Menu_CurveFittingType {
+            get {
+                return ResourceManager.GetString("Menu_CurveFittingType", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Cut.
+        /// </summary>
+        public static string Menu_CutNode {
+            get {
+                return ResourceManager.GetString("Menu_CutNode", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Menu_DeleteManagedActivities {
+            get {
+                return ResourceManager.GetString("Menu_DeleteManagedActivities", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Menu_DeleteManagedActivitySeverities {
+            get {
+                return ResourceManager.GetString("Menu_DeleteManagedActivitySeverities", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Menu_DeleteManagedHolidays {
+            get {
+                return ResourceManager.GetString("Menu_DeleteManagedHolidays", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Menu_DeleteManagedResources {
+            get {
+                return ResourceManager.GetString("Menu_DeleteManagedResources", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Menu_DeleteManagedWorkStreams {
+            get {
+                return ResourceManager.GetString("Menu_DeleteManagedWorkStreams", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete.
+        /// </summary>
+        public static string Menu_DeleteNode {
+            get {
+                return ResourceManager.GetString("Menu_DeleteNode", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Tag.
+        /// </summary>
+        public static string Menu_DeleteTag {
+            get {
+                return ResourceManager.GetString("Menu_DeleteTag", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Disable Resources.
+        /// </summary>
+        public static string Menu_DisableResources {
+            get {
+                return ResourceManager.GetString("Menu_DisableResources", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Display style.
+        /// </summary>
+        public static string Menu_DisplayStyle {
+            get {
+                return ResourceManager.GetString("Menu_DisplayStyle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Menu_DuplicateManagedActivity {
+            get {
+                return ResourceManager.GetString("Menu_DuplicateManagedActivity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Menu_DuplicateManagedActivitySeverity {
+            get {
+                return ResourceManager.GetString("Menu_DuplicateManagedActivitySeverity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Menu_DuplicateManagedHoliday {
+            get {
+                return ResourceManager.GetString("Menu_DuplicateManagedHoliday", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Menu_DuplicateManagedResource {
+            get {
+                return ResourceManager.GetString("Menu_DuplicateManagedResource", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Menu_DuplicateManagedWorkStream {
+            get {
+                return ResourceManager.GetString("Menu_DuplicateManagedWorkStream", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate.
+        /// </summary>
+        public static string Menu_DuplicateNode {
+            get {
+                return ResourceManager.GetString("Menu_DuplicateNode", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Edit.
+        /// </summary>
+        public static string Menu_EditManagedActivities {
+            get {
+                return ResourceManager.GetString("Menu_EditManagedActivities", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Edit.
+        /// </summary>
+        public static string Menu_EditManagedHoliday {
+            get {
+                return ResourceManager.GetString("Menu_EditManagedHoliday", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Edit.
+        /// </summary>
+        public static string Menu_EditManagedResources {
+            get {
+                return ResourceManager.GetString("Menu_EditManagedResources", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Edit.
+        /// </summary>
+        public static string Menu_EditManagedWorkStreams {
+            get {
+                return ResourceManager.GetString("Menu_EditManagedWorkStreams", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Group by.
+        /// </summary>
+        public static string Menu_GroupByMode {
+            get {
+                return ResourceManager.GetString("Menu_GroupByMode", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Insert.
+        /// </summary>
+        public static string Menu_InsertManagedActivity {
+            get {
+                return ResourceManager.GetString("Menu_InsertManagedActivity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to New Scenario.
+        /// </summary>
+        public static string Menu_NewScenario {
+            get {
+                return ResourceManager.GetString("Menu_NewScenario", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to New Folder.
+        /// </summary>
+        public static string Menu_NewScenarioFolder {
+            get {
+                return ResourceManager.GetString("Menu_NewScenarioFolder", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Paste.
+        /// </summary>
+        public static string Menu_PasteNode {
+            get {
+                return ResourceManager.GetString("Menu_PasteNode", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Rename.
+        /// </summary>
+        public static string Menu_RenameNode {
+            get {
+                return ResourceManager.GetString("Menu_RenameNode", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Renumber.
+        /// </summary>
+        public static string Menu_RenumberActivities {
+            get {
+                return ResourceManager.GetString("Menu_RenumberActivities", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Renumber.
+        /// </summary>
+        public static string Menu_RenumberResources {
+            get {
+                return ResourceManager.GetString("Menu_RenumberResources", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Renumber.
+        /// </summary>
+        public static string Menu_RenumberWorkStreams {
+            get {
+                return ResourceManager.GetString("Menu_RenumberWorkStreams", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Schedule.
+        /// </summary>
+        public static string Menu_ScheduleMode {
+            get {
+                return ResourceManager.GetString("Menu_ScheduleMode", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Select.
+        /// </summary>
+        public static string Menu_SelectManagedScenario {
+            get {
+                return ResourceManager.GetString("Menu_SelectManagedScenario", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Group Labels.
+        /// </summary>
+        public static string Menu_ShowGroupLabels {
+            get {
+                return ResourceManager.GetString("Menu_ShowGroupLabels", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Milestones.
+        /// </summary>
+        public static string Menu_ShowMilestones {
+            get {
+                return ResourceManager.GetString("Menu_ShowMilestones", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Names.
+        /// </summary>
+        public static string Menu_ShowNames {
+            get {
+                return ResourceManager.GetString("Menu_ShowNames", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Non-Working Days.
+        /// </summary>
+        public static string Menu_ShowNonWorkingDays {
+            get {
+                return ResourceManager.GetString("Menu_ShowNonWorkingDays", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Project Finish.
+        /// </summary>
+        public static string Menu_ShowProjectFinish {
+            get {
+                return ResourceManager.GetString("Menu_ShowProjectFinish", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Projections.
+        /// </summary>
+        public static string Menu_ShowProjections {
+            get {
+                return ResourceManager.GetString("Menu_ShowProjections", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Slack.
+        /// </summary>
+        public static string Menu_ShowSlack {
+            get {
+                return ResourceManager.GetString("Menu_ShowSlack", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Today.
+        /// </summary>
+        public static string Menu_ShowToday {
+            get {
+                return ResourceManager.GetString("Menu_ShowToday", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Tracking.
+        /// </summary>
+        public static string Menu_ShowTracking {
+            get {
+                return ResourceManager.GetString("Menu_ShowTracking", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to X Axis Metric.
+        /// </summary>
+        public static string Menu_TrackedMetricXAxis {
+            get {
+                return ResourceManager.GetString("Menu_TrackedMetricXAxis", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Y Axis Metric.
+        /// </summary>
+        public static string Menu_TrackedMetricYAxis {
+            get {
+                return ResourceManager.GetString("Menu_TrackedMetricYAxis", resourceCulture);
             }
         }
     }

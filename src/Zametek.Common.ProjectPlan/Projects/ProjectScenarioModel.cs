@@ -19,6 +19,6 @@
 
         public MetricsModel Metrics { get; init; } = new();
 
-        public DisplaySettingsModel DisplaySettings { get; init; } = new();
+        public ProjectScenarioDisplaySettingsModel DisplaySettings { get; init; } = new();
     }
 }

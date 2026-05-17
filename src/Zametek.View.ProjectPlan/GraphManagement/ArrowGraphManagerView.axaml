@@ -2,8 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
@@ -16,32 +14,6 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
-				<Label VerticalContentAlignment="Center"
-					   HorizontalContentAlignment="Left"
-					   Height="25"
-					   DockPanel.Dock="Top"
-					   IsTabStop="False"
-					   Margin="0,0,0,3"
-					   Content="{x:Static resources:Labels.Label_ShowNames}"/>
-
-				<ToggleSwitch DockPanel.Dock="Top"
-							  IsTabStop="False"
-							  Margin="0,0,0,11"
-							  VerticalAlignment="Center"
-							  VerticalContentAlignment="Center"
-							  HorizontalAlignment="Center"
-							  HorizontalContentAlignment="Center"
-							  OffContent="{x:Static resources:Labels.Label_No}"
-							  OnContent="{x:Static resources:Labels.Label_Yes}"
-							  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"/>
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
-
 		<DockPanel>
 			<DockPanel Width="250"
 					   DockPanel.Dock="Top">
@@ -71,7 +43,11 @@
 				<ScrollViewer.ContextMenu>
 					<ContextMenu>
 						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-								  Command="{Binding Path=SaveArrowGraphImageFileCommand, Mode=OneWay}"/>
+								  Command="{Binding Path=SaveArrowGraphImageFileCommand, Mode=OneWay}" />
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowNames}"
+								  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
 					</ContextMenu>
 				</ScrollViewer.ContextMenu>
 

@@ -1,11 +1,11 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class DisplaySettingsViewModel
-        : ViewModelBase, IDisplaySettingsViewModel
+    public class ProjectScenarioDisplaySettingsViewModel
+        : ViewModelBase, IProjectScenarioDisplaySettingsViewModel
     {
         #region Fields
 
@@ -18,7 +18,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public DisplaySettingsViewModel(
+        public ProjectScenarioDisplaySettingsViewModel(
             IDateTimeCalculator dateTimeCalculator,
             Action<bool, bool> setIsProjectScenarioUpdated,
             Action isReadyToCompile)
@@ -30,6 +30,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_SetIsProjectScenarioUpdated = setIsProjectScenarioUpdated;
             m_IsReadyToCompile = isReadyToCompile;
+            m_GanttChartShowConnections = [];
         }
 
         #endregion
@@ -60,7 +61,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region IDisplaySettingsViewModel Members
+        #region IProjectScenarioDisplaySettingsViewModel Members
 
         private bool m_ShowDates;
         public bool ShowDates
@@ -290,7 +291,37 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_GanttChartShowNonWorkingDays;
+        public bool GanttChartShowNonWorkingDays
+        {
+            get => m_GanttChartShowNonWorkingDays;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaiseAndSetIfChanged(ref m_GanttChartShowNonWorkingDays, value);
+                }
+            }
+        }
 
+        private readonly List<int> m_GanttChartShowConnections;
+        public List<int> GanttChartShowConnections => m_GanttChartShowConnections;
+
+        private ReadyToRevise m_IsReadyToReviseGanttChartShowConnections;
+        public ReadyToRevise IsReadyToReviseGanttChartShowConnections
+        {
+            get => m_IsReadyToReviseGanttChartShowConnections;
+            set
+            {
+                lock (m_Lock)
+                {
+                    //SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    m_IsReadyToReviseGanttChartShowConnections = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
 
         private AllocationMode m_ResourceChartAllocationMode;
         public AllocationMode ResourceChartAllocationMode
@@ -406,7 +437,15 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public void SetValues(DisplaySettingsModel model)
+        public void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated)
+        {
+            lock (m_Lock)
+            {
+                SetIsProjectScenarioUpdated(isProjectScenarioUpdated, trackStaleOutputs: false);
+            }
+        }
+
+        public void SetValues(ProjectScenarioDisplaySettingsModel model)
         {
             lock (m_Lock)
             {
@@ -476,6 +515,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     GanttChartShowSlack = model.GanttChartShowSlack;
                 }
+                if (GanttChartShowNonWorkingDays != model.GanttChartShowNonWorkingDays)
+                {
+                    GanttChartShowNonWorkingDays = model.GanttChartShowNonWorkingDays;
+                }
+
+                GanttChartShowConnections.Clear();
+                GanttChartShowConnections.AddRange(model.GanttChartShowConnections);
+                IsReadyToReviseGanttChartShowConnections = ReadyToRevise.Yes;
 
 
                 if (ResourceChartAllocationMode != model.ResourceChartAllocationMode)
@@ -515,11 +562,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public DisplaySettingsModel GetValues()
+        public ProjectScenarioDisplaySettingsModel GetValues()
         {
             lock (m_Lock)
             {
-                return new DisplaySettingsModel
+                return new ProjectScenarioDisplaySettingsModel
                 {
                     ShowDates = ShowDates,
                     UseClassicDates = UseClassicDates,
@@ -539,6 +586,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     GanttChartShowToday = GanttChartShowToday,
                     GanttChartShowMilestones = GanttChartShowMilestones,
                     GanttChartShowSlack = GanttChartShowSlack,
+                    GanttChartShowNonWorkingDays = GanttChartShowNonWorkingDays,
+                    GanttChartShowConnections = [.. GanttChartShowConnections],
 
                     ResourceChartAllocationMode = ResourceChartAllocationMode,
                     ResourceChartScheduleMode = ResourceChartScheduleMode,
@@ -568,13 +617,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 m_SetIsProjectScenarioUpdated = null;
                 m_IsReadyToCompile = null;
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

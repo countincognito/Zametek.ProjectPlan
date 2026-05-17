@@ -1,8 +1,8 @@
-﻿using Zametek.Common.ProjectPlan;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
-    public interface IDisplaySettingsViewModel
+    public interface IProjectScenarioDisplaySettingsViewModel
         : IDisposable
     {
         bool ShowDates { get; set; }
@@ -26,6 +26,9 @@ namespace Zametek.Contract.ProjectPlan
         bool GanttChartShowToday { get; set; }
         bool GanttChartShowMilestones { get; set; }
         bool GanttChartShowSlack { get; set; }
+        bool GanttChartShowNonWorkingDays { get; set; }
+        List<int> GanttChartShowConnections { get; }
+        ReadyToRevise IsReadyToReviseGanttChartShowConnections { get; set; }
 
 
         AllocationMode ResourceChartAllocationMode { get; set; }
@@ -40,7 +43,9 @@ namespace Zametek.Contract.ProjectPlan
         bool EarnedValueShowMilestones { get; set; }
 
 
-        void SetValues(DisplaySettingsModel model);
-        DisplaySettingsModel GetValues();
+        void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated);
+
+        void SetValues(ProjectScenarioDisplaySettingsModel model);
+        ProjectScenarioDisplaySettingsModel GetValues();
     }
 }

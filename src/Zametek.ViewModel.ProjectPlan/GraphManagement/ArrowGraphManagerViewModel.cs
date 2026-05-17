@@ -75,6 +75,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
         private readonly IArrowGraphSerializer m_ArrowGraphExport;
+        private readonly IGraphImageExporter m_GraphImageExporter;
 
         private readonly IDisposable? m_BuildArrowGraphDataSub;
         private readonly IDisposable? m_BuildArrowGraphImageSub;
@@ -87,17 +88,20 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IArrowGraphSerializer arrowGraphExport)
+            IArrowGraphSerializer arrowGraphExport,
+            IGraphImageExporter graphImageExporter)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(arrowGraphExport);
+            ArgumentNullException.ThrowIfNull(graphImageExporter);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_ArrowGraphExport = arrowGraphExport;
+            m_GraphImageExporter = graphImageExporter;
 
             m_ArrowGraphData = string.Empty;
             m_ArrowGraphImage = new SvgImage();
@@ -279,30 +283,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     string fileExtension = Path.GetExtension(filename);
                     byte[]? data = null;
+                    bool isSkiaFormat = false;
 
                     fileExtension.ValueSwitchOn()
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
-                        {
-                            using var stream = File.OpenWrite(filename);
-                            ArrowGraphImage.Source?.Picture?.ToImage(
-                                stream, SKColors.White, SKEncodedImageFormat.Jpeg, quality: 100, scaleX: 2, scaleY: 2,
-                                skColorType: SKColorType.Argb4444, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb());
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
-                        {
-                            using var stream = File.OpenWrite(filename);
-                            ArrowGraphImage.Source?.Picture?.ToImage(
-                                stream, SKColors.White, SKEncodedImageFormat.Png, quality: 100, scaleX: 2, scaleY: 2,
-                                skColorType: SKColorType.Argb4444, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb());
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
-                        {
-                            ArrowGraphImage.Source?.Picture?.ToPdf(filename, SKColors.White, scaleX: 2, scaleY: 2);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ =>
-                        {
-                            ArrowGraphImage.Source?.Picture?.ToSvg(filename, SKColors.White, scaleX: 2, scaleY: 2);
-                        })
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ => isSkiaFormat = true)
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ => isSkiaFormat = true)
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ => isSkiaFormat = true)
+                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ => isSkiaFormat = true)
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
                         {
                             data = m_ArrowGraphExport.BuildArrowGraphMLData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
@@ -312,6 +299,11 @@ namespace Zametek.ViewModel.ProjectPlan
                             data = m_ArrowGraphExport.BuildArrowGraphVizData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
                         })
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
+
+                    if (isSkiaFormat && ArrowGraphImage.Source?.Picture is SKPicture picture)
+                    {
+                        await m_GraphImageExporter.SaveGraphImageAsync(picture, filename, scaleX: 2, scaleY: 2);
+                    }
 
                     if (data is not null)
                     {
@@ -396,7 +388,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
@@ -404,9 +395,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ShowNames?.Dispose();
                 m_BaseTheme?.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

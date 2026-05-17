@@ -77,6 +77,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
+        private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
 
         private readonly IDisposable? m_BuildEarnedValueChartPlotModelSub;
 
@@ -94,18 +95,23 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IDateTimeCalculator dateTimeCalculator)
+            IDateTimeCalculator dateTimeCalculator,
+            IScottPlotImageExporter scottPlotImageExporter)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(scottPlotImageExporter);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
+            m_ScottPlotImageExporter = scottPlotImageExporter;
             m_EarnedValueChartPlotModel = new AvaPlot();
+
+            ResetEarnedValueChartCommand = ReactiveCommand.Create(ResetEarnedValueChart);
 
             {
                 ReactiveCommand<Unit, Unit> saveEarnedValueChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveEarnedValueChartImageFileAsync);
@@ -533,6 +539,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private void ResetEarnedValueChart()
+        {
+            EarnedValueChartPlotModel.Plot.Axes.AutoScale();
+        }
+
         private async Task SaveEarnedValueChartImageFileAsync()
         {
             try
@@ -604,6 +615,8 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public ICommand ResetEarnedValueChartCommand { get; }
+
         public ICommand SaveEarnedValueChartImageFileCommand { get; }
 
         public async Task SaveEarnedValueChartImageFileAsync(
@@ -622,38 +635,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 try
                 {
-                    string fileExtension = Path.GetExtension(filename);
-
-                    fileExtension.ValueSwitchOn()
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
-                        {
-                            EarnedValueChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
-                        {
-                            EarnedValueChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageBmpFileExtension}", _ =>
-                        {
-                            EarnedValueChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageWebpFileExtension}", _ =>
-                        {
-                            EarnedValueChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ =>
-                        {
-                            EarnedValueChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        //.Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
-                        //{
-                        //})
-                        .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
+                    await m_ScottPlotImageExporter.SavePlotImageAsync(EarnedValueChartPlotModel.Plot, filename, width, height);
                 }
                 catch (Exception ex)
                 {
@@ -692,17 +674,16 @@ namespace Zametek.ViewModel.ProjectPlan
             // Clear existing menu items.
             plotModel.Menu?.Clear();
 
-            // Add menu items with custom actions.
-            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
-            {
-                SaveEarnedValueChartImageFileCommand.Execute(null);
-            });
-            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
-            {
-                plot.Axes.AutoScale();
-            });
+            //// Add menu items with custom actions.
+            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
+            //{
+            //    SaveEarnedValueChartImageFileCommand.Execute(null);
+            //});
+            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
+            //{
+            //    plot.Axes.AutoScale();
+            //});
 
-            //plotModel.Plot.Axes.AutoScale();
             EarnedValueChartPlotModel = plotModel;
         }
 
@@ -730,7 +711,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
@@ -739,9 +719,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ShowToday?.Dispose();
                 m_ShowMilestones?.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

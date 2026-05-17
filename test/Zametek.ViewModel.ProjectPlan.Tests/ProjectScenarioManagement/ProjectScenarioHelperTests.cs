@@ -1,58 +1,62 @@
-﻿using Shouldly;
-using System;
+﻿using Newtonsoft.Json;
+using Shouldly;
 using System.Collections.Generic;
 using Xunit;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan.Tests
 {
     public class ProjectScenarioHelperTests
+        : IClassFixture<ProjectScenarioHelperFixture>
     {
-        public static IEnumerable<object[]> GetTestData()
+        private readonly ProjectScenarioHelperFixture m_Fixture;
+
+        public ProjectScenarioHelperTests(ProjectScenarioHelperFixture fixture)
         {
-            return
-            [
-                [
-                    new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
-                    Array.Empty<(int, int)>(),
-                    new[] { (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7), (8, 8), (9, 9), (10, 10)  },
-                ],
-                [
-                    new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
-                    new[] { (3, 4), (4, 9), (5, 8) },
-                    new[] { (1, 1), (2, 2), (3, 4), (4, 9), (5, 8), (6, 6), (7, 7), (8, 10), (9, 11), (10, 12)  },
-                ],
-                [
-                    new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
-                    new[] { (8, 4), (9, 5), (10, 6) },
-                    new[] { (1, 1), (2, 2), (3, 3), (4, 7), (5, 8), (6, 9), (7, 10), (8, 4), (9, 5), (10, 6)  },
-                ],
-                [
-                    new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
-                    new[] { (7, 9), (9, 4), (10, 12) },
-                    new[] { (1, 1), (2, 2), (3, 3), (4, 5), (5, 6), (6, 7), (7, 9), (8, 8), (9, 4), (10, 12)  },
-                ],
-                [
-                    new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
-                    new[] { (7, 13), (9, 12), (10, 11) },
-                    new[] { (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 13), (8, 8), (9, 12), (10, 11)  },
-                ],
-                [
-                    new[] { 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 },
-                    new[] { (11, 1), (12, 2), (13, 3) },
-                    new[] { (4, 4), (5, 5), (6, 6), (7, 7), (8, 8), (9, 9), (10, 10), (11, 1), (12, 2), (13, 3)  },
-                ],
-            ];
+            m_Fixture = fixture;
+        }
+
+        public static TheoryData<int[], (int, int)[], (int, int)[]> IdMappingData()
+        {
+            return ProjectScenarioHelperFixture.IdMappingData;
         }
 
         [Theory]
-        [MemberData(nameof(GetTestData))]
-        public void ProjectScenarioHelper_Given_InputIdsAndIdUpdates_Then_ConvertsToExpectedIdUpdates(
+        [MemberData(nameof(IdMappingData))]
+        public void ProjectScenarioHelper_Given_InputIdsAndIdMaps_Then_ConvertsToExpectedIdMaps(
             int[] inputIds,
-            (int, int)[] idUpdates,
-            (int, int)[] expectedIdUpdates)
+            (int, int)[] idMaps,
+            (int, int)[] expectedIdMaps)
         {
-            List<(int, int)> newIdUpdates = ProjectScenarioHelper.UpdateIds([.. inputIds], [.. idUpdates]);
-            newIdUpdates.ShouldBe(expectedIdUpdates);
+            List<(int, int)> newIdUpdates = ProjectScenarioHelper.RefineIdMaps([.. inputIds], [.. idMaps]);
+            newIdUpdates.ShouldBe(expectedIdMaps);
+        }
+
+        [Fact]
+        public void ProjectScenarioHelper_Given_UpdateActivityIds_Then_MappedToExpectedIds()
+        {
+            ProjectScenarioModel? input = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.Input_JsonString);
+            ProjectScenarioModel? expectedOutput = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.RemappedActivities_JsonString);
+            var remapped = ProjectScenarioHelper.UpdateActivityIds(input!, [(3, 5), (6, 8)]).ShouldNotBeNull();
+            remapped.ShouldBeEquivalentTo(expectedOutput!);
+        }
+
+        [Fact]
+        public void ProjectScenarioHelper_Given_UpdateResourceIds_Then_MappedToExpectedIds()
+        {
+            ProjectScenarioModel? input = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.Input_JsonString);
+            ProjectScenarioModel? expectedOutput = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.RemappedResources_JsonString);
+            var remapped = ProjectScenarioHelper.UpdateResourceIds(input!, [(3, 5), (6, 8)]).ShouldNotBeNull();
+            remapped.ShouldBeEquivalentTo(expectedOutput!);
+        }
+
+        [Fact]
+        public void ProjectScenarioHelper_Given_UpdateWorkStreamIds_Then_MappedToExpectedIds()
+        {
+            ProjectScenarioModel? input = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.Input_JsonString);
+            ProjectScenarioModel? expectedOutput = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.RemappedWorkStreams_JsonString);
+            var remapped = ProjectScenarioHelper.UpdateWorkStreamIds(input!, [(2, 5), (1, 2)]).ShouldNotBeNull();
+            remapped.ShouldBeEquivalentTo(expectedOutput!);
         }
     }
 }

@@ -1,5 +1,7 @@
 using Dock.Model.Controls;
 using Dock.Model.Core;
+using Dock.Model.ReactiveUI.Controls;
+using Dock.Serializer.SystemTextJson;
 using ReactiveUI;
 using System.Diagnostics;
 using System.Reactive;
@@ -72,12 +74,15 @@ namespace Zametek.ViewModel.ProjectPlan
             ];
 
         private readonly IFactory m_DockFactory;
+        private readonly IDockSerializer m_DockSerializer;
+        private readonly IDataGridManager m_DataGridManager;
         private readonly IProjectScenarioManagerViewModel m_ProjectScenarioManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectFileOpen m_ProjectFileOpen;
         private readonly IProjectFileSave m_ProjectFileSave;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
+        private readonly IServiceProvider m_ServiceProvider;
 
         private readonly IDisposable? m_ProjectTitleUpdateSub;
 
@@ -87,29 +92,39 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public MainViewModel(
             IFactory dockFactory,
+            IDockSerializer dockSerializer,
+            IDataGridManager dataGridManager,
             IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
             ICoreViewModel coreViewModel,
             IProjectFileOpen projectFileOpen,
             IProjectFileSave projectFileSave,
             ISettingService settingService,
-            IDialogService dialogService)
+            IDialogService dialogService,
+            IServiceProvider serviceProvider)
         {
             ArgumentNullException.ThrowIfNull(dockFactory);
+            ArgumentNullException.ThrowIfNull(dockSerializer);
+            ArgumentNullException.ThrowIfNull(dataGridManager);
             ArgumentNullException.ThrowIfNull(projectScenarioManagerViewModel);
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(projectFileOpen);
             ArgumentNullException.ThrowIfNull(projectFileSave);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
+            ArgumentNullException.ThrowIfNull(serviceProvider);
             m_Lock = new();
             m_DockFactory = dockFactory;
+            m_DockSerializer = dockSerializer;
+            m_DataGridManager = dataGridManager;
             m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel;
             m_CoreViewModel = coreViewModel;
             m_ProjectFileOpen = projectFileOpen;
             m_ProjectFileSave = projectFileSave;
             m_SettingService = settingService;
             m_DialogService = dialogService;
+            m_ServiceProvider = serviceProvider;
             m_ProjectTitle = string.Empty;
+            m_IsMainBusy = false;
 
             {
                 ReactiveCommand<Unit, Unit> openProjectFileCommand = ReactiveCommand.CreateFromTask(OpenProjectFileAsync);
@@ -159,10 +174,13 @@ namespace Zametek.ViewModel.ProjectPlan
             ToggleDefaultHideBillingCommand = ReactiveCommand.Create(ToggleDefaultHideBilling);
 
             ChangeThemeCommand = ReactiveCommand.CreateFromTask<string>(ChangeThemeAsync);
+            SaveLayoutCommand = ReactiveCommand.CreateFromTask(SaveLayoutAsync);
+            ResetLayoutCommand = ReactiveCommand.CreateFromTask(ResetLayoutAsync);
 
             CompileCommand = ReactiveCommand.CreateFromTask(ForceCompileAsync);
             ToggleAutoCompileCommand = ReactiveCommand.Create(ToggleAutoCompile);
             TransitiveReductionCommand = ReactiveCommand.Create(RunTransitiveReductionAsync);
+            SyncTodayCommand = ReactiveCommand.Create(SyncToday);
 
             OpenDocumentationCommand = ReactiveCommand.CreateFromTask(OpenDocumentationAsync);
             OpenDonateCommand = ReactiveCommand.CreateFromTask(OpenDonateAsync);
@@ -173,9 +191,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_IsBusy = this
                 .WhenAnyValue(
+                    main => main.IsMainBusy,
                     main => main.m_CoreViewModel.IsBusy,
                     main => main.m_ProjectScenarioManagerViewModel.IsBusy,
-                    (isCoreBusy, isProjectBusy) => isCoreBusy || isProjectBusy)
+                    (isMainBusy, isCoreBusy, isProjectBusy) => isMainBusy || isCoreBusy || isProjectBusy)
                 .ToProperty(this, main => main.IsBusy);
 
             m_IsProjectUpdated = this
@@ -297,16 +316,10 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CoreViewModel.AutoCompile = true;
 
             ResetProject();
-
 #if DEBUG
             DebugFactoryEvents(m_DockFactory);
 #endif
-
-            m_Layout = m_DockFactory.CreateLayout();
-            if (m_Layout is not null)
-            {
-                m_DockFactory.InitLayout(m_Layout);
-            }
+            RestoreLayout();
         }
 
         #endregion
@@ -318,6 +331,13 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             get => m_Layout;
             set => this.RaiseAndSetIfChanged(ref m_Layout, value);
+        }
+
+        private bool m_IsMainBusy;
+        private bool IsMainBusy
+        {
+            get => m_IsMainBusy;
+            set => this.RaiseAndSetIfChanged(ref m_IsMainBusy, value);
         }
 
         #endregion
@@ -467,6 +487,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private void ToggleDefaultHideBilling() => DefaultHideBilling = !DefaultHideBilling;
 
         private void ToggleAutoCompile() => AutoCompile = !AutoCompile;
+
+        private void SyncToday() => Today = new DateTimeOffset(DateTime.Today);
 
         private async Task ProjectScenarioImportAsync(string filename) =>
             await Task.Run(() => ProjectScenarioImport(filename));
@@ -818,11 +840,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ChangeThemeCommand { get; }
 
+        public ICommand SaveLayoutCommand { get; }
+
+        public ICommand ResetLayoutCommand { get; }
+
         public ICommand CompileCommand { get; }
 
         public ICommand ToggleAutoCompileCommand { get; }
 
         public ICommand TransitiveReductionCommand { get; }
+
+        public ICommand SyncTodayCommand { get; }
 
         public ICommand OpenDocumentationCommand { get; }
 
@@ -836,32 +864,134 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand OpenAboutCommand { get; }
 
+        public void SaveLayout()
+        {
+            lock (m_Lock)
+            {
+                // Docks.
+                //DockSerializer serializer = new(m_ServiceProvider);
+                string layoutContent = m_DockSerializer.Serialize(Layout);
+                m_SettingService.DockLayout = layoutContent;
+
+                // DataGrids.
+                m_DataGridManager.SaveDataGridModels();
+            }
+        }
+
+        private async Task SaveLayoutInternalAsync() => await Task.Run(SaveLayout);
+
+        public async Task SaveLayoutAsync()
+        {
+            try
+            {
+                IsMainBusy = true;
+                await SaveLayoutInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+            finally
+            {
+                IsMainBusy = false;
+            }
+        }
+
+        public void RestoreLayout()
+        {
+            lock (m_Lock)
+            {
+                // Docks.
+                string layoutContent = m_SettingService.DockLayout;
+
+                if (!string.IsNullOrWhiteSpace(layoutContent))
+                {
+                    //DockSerializer serializer = new(m_ServiceProvider);
+                    try
+                    {
+                        m_Layout = m_DockSerializer.Deserialize<RootDock>(layoutContent);
+                    }
+                    catch (Exception ex)
+                    {
+                        // The persisted dock layout is corrupt or incompatible — reset to default.
+                        Debug.WriteLine($"[MainViewModel] Failed to deserialize dock layout, resetting: {ex.Message}");
+                        m_Layout = null;
+                    }
+                }
+
+                m_Layout ??= m_DockFactory.CreateLayout();
+
+                if (m_Layout is not null)
+                {
+                    m_DockFactory.InitLayout(m_Layout);
+                }
+
+                // DataGrids.
+                // DataGrids are restored automatically during initialization.
+            }
+        }
+
         public void CloseLayout()
         {
-            if (Layout is IDock dock)
+            lock (m_Lock)
             {
-                if (dock.Close.CanExecute(null))
+                if (Layout is IDock dock)
                 {
-                    dock.Close.Execute(null);
+                    if (dock.Close.CanExecute(null))
+                    {
+                        dock.Close.Execute(null);
+                    }
                 }
             }
         }
 
         public void ResetLayout()
         {
-            if (Layout is not null)
+            lock (m_Lock)
             {
-                if (Layout.Close.CanExecute(null))
+                // Docks.
+                if (Layout is not null)
                 {
-                    Layout.Close.Execute(null);
+                    if (Layout.Close.CanExecute(null))
+                    {
+                        Layout.Close.Execute(null);
+                    }
                 }
-            }
 
-            IRootDock? layout = m_DockFactory.CreateLayout();
-            if (layout is not null)
+                IRootDock? layout = m_DockFactory.CreateLayout();
+                if (layout is not null)
+                {
+                    Layout = layout;
+                    m_DockFactory.InitLayout(layout);
+                }
+
+                // DataGrids.
+                m_DataGridManager.ResetDataGridModels();
+            }
+        }
+
+        private async Task ResetLayoutInternalAsync() => await Task.Run(ResetLayout);
+
+        public async Task ResetLayoutAsync()
+        {
+            try
             {
-                Layout = layout;
-                m_DockFactory.InitLayout(layout);
+                IsMainBusy = true;
+                await ResetLayoutInternalAsync();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+            finally
+            {
+                IsMainBusy = false;
             }
         }
 
@@ -1195,7 +1325,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_IsBusy?.Dispose();
                 m_IsProjectUpdated?.Dispose();
@@ -1211,10 +1340,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_AutoCompile?.Dispose();
                 m_SelectedTheme?.Dispose();
                 m_BaseTheme?.Dispose();
+                m_DataGridManager?.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

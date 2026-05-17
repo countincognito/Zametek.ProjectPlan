@@ -2,8 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
@@ -46,7 +44,7 @@
 		</DockPanel>
 
 		<Grid RowDefinitions="*, 4, *">
-			<DataGrid Name="resourcesGrid"
+			<DataGrid Name="TrackerResourcesGrid"
 					  IsEnabled="{Binding Path=HasResources, Mode=OneWay}"
 					  Grid.Row="0"
 					  FrozenColumnCount="25"
@@ -84,12 +82,23 @@
 					<!--<Style Selector="DataGridCell:selected:pointerover:current:focus Grid.editable">
 					<Setter Property="Background" Value="Green"/>
 				</Style>-->
+
+					<!-- Make sure the caret appears at the end of a TextBox -->
+					<Style Selector="TextBox">
+						<Setter Property="(Interaction.Behaviors)">
+							<BehaviorCollectionTemplate>
+								<BehaviorCollection>
+									<local:MoveCaretToEndBehavior />
+								</BehaviorCollection>
+							</BehaviorCollectionTemplate>
+						</Setter>
+					</Style>
 				</DataGrid.Styles>
 				
-				<i:Interaction.Behaviors>
+				<Interaction.Behaviors>
 				
 					<!--<local:DataGridCacheScrollBehavior />-->
-				</i:Interaction.Behaviors>
+				</Interaction.Behaviors>
 				
 				<DataGrid.Columns>
 					<DataGridTemplateColumn CanUserResize="False"
@@ -183,7 +192,7 @@
 
 			<GridSplitter Grid.Row="1" Background="Black" ResizeDirection="Rows"/>
 
-			<DataGrid Name="activitiesGrid"
+			<DataGrid Name="TrackerActivitiesGrid"
 					  IsEnabled="{Binding Path=HasActivities, Mode=OneWay}"
 					  Grid.Row="2"
 					  FrozenColumnCount="25"
@@ -221,11 +230,22 @@
 					<!--<Style Selector="DataGridCell:selected:pointerover:current:focus Grid.editable">
 					<Setter Property="Background" Value="Green"/>
 				</Style>-->
+
+					<!-- Make sure the caret appears at the end of a TextBox -->
+					<Style Selector="TextBox">
+						<Setter Property="(Interaction.Behaviors)">
+							<BehaviorCollectionTemplate>
+								<BehaviorCollection>
+									<local:MoveCaretToEndBehavior />
+								</BehaviorCollection>
+							</BehaviorCollectionTemplate>
+						</Setter>
+					</Style>
 				</DataGrid.Styles>
 				
-				<i:Interaction.Behaviors>
+				<Interaction.Behaviors>
 					<!--<local:DataGridCacheScrollBehavior />-->
-				</i:Interaction.Behaviors>
+				</Interaction.Behaviors>
 				
 				<DataGrid.Columns>
 					<DataGridTemplateColumn CanUserResize="False"
@@ -272,12 +292,26 @@
 						</DataGridTemplateColumn.HeaderTemplate>
 						<DataGridTemplateColumn.CellTemplate>
 							<DataTemplate>
-								<Grid VerticalAlignment="Stretch">
+								<DockPanel VerticalAlignment="Stretch">
+                  <Border BorderBrush="Gray"
+                          BorderThickness="2"
+                          CornerRadius="5"
+                          DockPanel.Dock="Right"
+                          Padding="2"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center">
+                    <TextBlock VerticalAlignment="Center"
+                               TextAlignment="Right"
+                               Margin="0"
+                               Padding="3"
+                               Width="40"
+                               Text="{Binding Path=TrackerSet.LastTrackerValue, Mode=OneWay, StringFormat={}{0:#0\'%\'}}}"/>
+                  </Border>
 									<TextBlock VerticalAlignment="Center"
 											   Margin="0"
 											   Padding="3"
 											   Text="{Binding Path=Name, Mode=OneWay}"/>
-								</Grid>
+								</DockPanel>
 							</DataTemplate>
 						</DataGridTemplateColumn.CellTemplate>
 					</DataGridTemplateColumn>

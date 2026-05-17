@@ -106,6 +106,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public DependentActivity ToDependentActivity(DependentActivityModel src)
             => new(
                     id: src.Activity.Id,
+                    displayOrder: src.Activity.DisplayOrder,
                     name: src.Activity.Name,
                     notes: src.Activity.Notes,
                     targetWorkStreams: src.Activity.TargetWorkStreams,

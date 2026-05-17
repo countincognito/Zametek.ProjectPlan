@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
@@ -13,7 +13,6 @@ using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
-using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -80,6 +79,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
+        private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
 
         private readonly IDisposable? m_BuildGanttChartPlotModelSub;
 
@@ -103,20 +103,28 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IDateTimeCalculator dateTimeCalculator)
+            IDateTimeCalculator dateTimeCalculator,
+            IScottPlotImageExporter scottPlotImageExporter)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(scottPlotImageExporter);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
+            m_ScottPlotImageExporter = scottPlotImageExporter;
 
-            ActivitySelector = new ActivitySelectorViewModel(m_CoreViewModel, []);
+            ActivitySelector = new ActivitySelectorViewModel(m_CoreViewModel);
+
             m_GanttChartPlotModel = new AvaPlot();
+
+            ResetGanttChartCommand = ReactiveCommand.CreateFromTask(ResetGanttChartAsync);
+            ChangeGroupByModeCommand = ReactiveCommand.CreateFromTask<GroupByMode>(ChangeGroupByModeAsync);
+            ChangeAnnotationStyleCommand = ReactiveCommand.CreateFromTask<AnnotationStyle>(ChangeAnnotationStyleAsync);
 
             {
                 ReactiveCommand<Unit, Unit> saveGanttChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveGanttChartImageFileAsync);
@@ -167,6 +175,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowSlack)
                 .ToProperty(this, rcm => rcm.ShowSlack);
 
+            m_ShowNonWorkingDays = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowNonWorkingDays)
+                .ToProperty(this, rcm => rcm.ShowNonWorkingDays);
+
+            m_ShowDates = this
+                .WhenAnyValue(rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates)
+                .ToProperty(this, rcm => rcm.ShowDates);
+
             m_IsGrouped = this
                 .WhenAnyValue(
                     rcm => rcm.GroupByMode,
@@ -183,7 +199,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // https://github.com/reactiveui/ReactiveUI/issues/3846
             m_BoolAccumulator = this
                 .WhenAnyValue(
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    rcm => rcm.ShowDates,
                     rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
                     rcm => rcm.ShowGroupLabels,
                     rcm => rcm.ShowProjectFinish,
@@ -191,7 +207,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.ShowToday,
                     rcm => rcm.ShowMilestones,
                     rcm => rcm.ShowSlack,
-                    (x, _, _, _, _, _, _, _) =>
+                    rcm => rcm.ShowNonWorkingDays,
+                    (x, _, _, _, _, _, _, _, _) =>
                     {
                         if (m_BoolAccumulator is null
                             || m_BoolAccumulator.Value == BoolToggle.Up)
@@ -294,6 +311,7 @@ namespace Zametek.ViewModel.ProjectPlan
             bool showMilestones,
             bool showSlack,
             bool showDates,
+            bool showNonWorkingDays,
             IGraphCompilation<int, int, int, IDependentActivity> graphCompilation,
             GroupByMode groupByMode,
             AnnotationStyle annotationStyle,
@@ -346,6 +364,10 @@ namespace Zametek.ViewModel.ProjectPlan
             var bars = new List<Bar>();
             var highlights = new List<IPlottable>();
             var labels = new List<string>();
+
+            // Pad out the bottom of the chart.
+            bars.Add(BuildEmptyBar(maxXValue));
+            labels.Add(string.Empty);
 
             switch (groupByMode)
             {
@@ -487,10 +509,11 @@ namespace Zametek.ViewModel.ProjectPlan
                                 .LastOrDefault()?.FinishTime ?? 0)
                             .ToList();
 
+                        Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
+
                         foreach ((string resourceName, ColorFormatModel colorFormat, int displayOrder, IList<ScheduledActivityModel> scheduledActivities) in orderedScheduledResourceActivitiesSet)
                         {
                             IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
-                            Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
                             ScheduledActivityModel? firstItem = orderedScheduledActivities.OrderBy(x => x.StartTime).FirstOrDefault();
                             ScheduledActivityModel? lastItem = orderedScheduledActivities.OrderByDescending(x => x.FinishTime).FirstOrDefault();
@@ -692,10 +715,11 @@ namespace Zametek.ViewModel.ProjectPlan
                             .Select(x => (x.Key, x.Value))
                             .ToList();
 
+                        Dictionary<int, IDependentActivity> workStreamActivityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
+
                         foreach ((int workStreamId, IList<ScheduledActivityModel> scheduledActivities) in orderedActivitiesByWorkStream)
                         {
                             IEnumerable<ScheduledActivityModel> orderedScheduledActivities = scheduledActivities;
-                            Dictionary<int, IDependentActivity> activityLookup = graphCompilation.DependentActivities.ToDictionary(x => x.Id);
 
                             ScheduledActivityModel? firstItem = orderedScheduledActivities.OrderBy(x => x.StartTime).FirstOrDefault();
                             ScheduledActivityModel? lastItem = orderedScheduledActivities.OrderByDescending(x => x.FinishTime).FirstOrDefault();
@@ -708,7 +732,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 // Extend the annotation to the latest finish time of the last activity, if it has one.
                                 if (lastItem is not null)
                                 {
-                                    if (activityLookup.TryGetValue(lastItem.Id, out IDependentActivity? activity)
+                                    if (workStreamActivityLookup.TryGetValue(lastItem.Id, out IDependentActivity? activity)
                                         && activity.LatestFinishTime.HasValue
                                         && workStreamFinishTime < activity.LatestFinishTime)
                                     {
@@ -723,7 +747,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                             foreach (ScheduledActivityModel scheduledActivity in orderedScheduledActivities)
                             {
-                                if (activityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity? activity))
+                                if (workStreamActivityLookup.TryGetValue(scheduledActivity.Id, out IDependentActivity? activity))
                                 {
                                     AddBarItemToSeries(
                                         dateTimeCalculator,
@@ -811,6 +835,38 @@ namespace Zametek.ViewModel.ProjectPlan
                     throw new ArgumentOutOfRangeException(nameof(groupByMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownGroupByMode} {groupByMode}");
             }
 
+            // Collect non-working day shade rectangles when the x-axis is date-based.
+            // These are inserted behind all other plottables after the bar plot is created.
+            var nonWorkingDayShades = new List<IPlottable>();
+
+            if (showDates && showNonWorkingDays)
+            {
+                DateTime iterDate = DateTime.FromOADate(minXValue).Date;
+                DateTime endDate = DateTime.FromOADate(maxXValue).Date;
+                double shadingTop = labels.Count + 1.0;
+
+                while (iterDate < endDate)
+                {
+                    DateTimeOffset iterDateOffset = dateTimeCalculator.GetLocal(iterDate);
+
+                    if (dateTimeCalculator.IsNonWorkingDay(iterDateOffset))
+                    {
+                        nonWorkingDayShades.Add(new HolidayRectangle
+                        {
+                            X1 = iterDate.ToOADate(),
+                            X2 = iterDate.ToOADate() + 1.0,
+                            Y1 = 1,
+                            Y2 = shadingTop,
+                            FillColor = Colors.Black.WithAlpha(ColorHelper.AnnotationAHoliday),
+                            LineColor = Colors.Transparent,
+                            LineWidth = 0,
+                        });
+                    }
+
+                    iterDate = iterDate.AddDays(1);
+                }
+            }
+
             // Add an extra row for to ensure the graph has a right edge near the project finish time.
             bars.Add(BuildEmptyBar(maxXValue));
 
@@ -842,6 +898,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
             BarPlot barPlot = plotModel.Plot.Add.Bars(bars);
             barPlot.Horizontal = true;
+
+            // Non-working day shades go at the lowest level so they render behind everything.
+            for (int i = 0; i < nonWorkingDayShades.Count; i++)
+            {
+                plotModel.Plot.PlottableList.Insert(i, nonWorkingDayShades[i]);
+            }
 
             // Highlights (above the bar plot).
             plotModel.Plot.PlottableList.AddRange(highlights);
@@ -1103,6 +1165,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 var item = new AnnotatedBar
                 {
                     Annotation = barAnnotation,
+                    ActivityId = activity.Id,
+                    StartTime = activity.EarliestStartTime,
+                    Duration = activity.Duration,
                     ValueBase = start,
                     Value = end,
                     FillColor = backgroundColor,
@@ -1338,6 +1403,51 @@ namespace Zametek.ViewModel.ProjectPlan
             return yAxis;
         }
 
+        private async Task ResetGanttChartAsync()
+        {
+            try
+            {
+                GanttChartPlotModel.Plot.Axes.AutoScale();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeGroupByModeAsync(GroupByMode groupByMode)
+        {
+            try
+            {
+                GroupByMode = groupByMode;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeAnnotationStyleAsync(AnnotationStyle annotationStyle)
+        {
+            try
+            {
+                AnnotationStyle = annotationStyle;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
         private async Task SaveGanttChartImageFileAsync()
         {
             try
@@ -1459,9 +1569,30 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_ShowNonWorkingDays;
+        public bool ShowNonWorkingDays
+        {
+            get => m_ShowNonWorkingDays.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowNonWorkingDays = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ShowDates;
+        public bool ShowDates => m_ShowDates.Value;
+
+        public DateTimeOffset ProjectStart => m_CoreViewModel.ProjectStart;
+
         public IActivitySelectorViewModel ActivitySelector { get; }
 
+        public ICommand ResetGanttChartCommand { get; }
+
         public ICommand SaveGanttChartImageFileCommand { get; }
+
+        public ICommand ChangeGroupByModeCommand { get; }
+
+        public ICommand ChangeAnnotationStyleCommand { get; }
 
         public async Task SaveGanttChartImageFileAsync(
             string? filename,
@@ -1479,7 +1610,6 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 try
                 {
-                    string fileExtension = Path.GetExtension(filename);
                     int calculatedHeight = 0;
 
                     if (GanttChartPlotModel.Plot.GetPlottables<BarPlot>().FirstOrDefault() is BarPlot barPlot)
@@ -1493,36 +1623,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         calculatedHeight = height;
                     }
 
-                    fileExtension.ValueSwitchOn()
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
-                        {
-                            GanttChartPlotModel.Plot.Save(
-                                filename, width, calculatedHeight, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
-                        {
-                            GanttChartPlotModel.Plot.Save(
-                                filename, width, calculatedHeight, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageBmpFileExtension}", _ =>
-                        {
-                            GanttChartPlotModel.Plot.Save(
-                                filename, width, calculatedHeight, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageWebpFileExtension}", _ =>
-                        {
-                            GanttChartPlotModel.Plot.Save(
-                                filename, width, calculatedHeight, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ =>
-                        {
-                            GanttChartPlotModel.Plot.Save(
-                                filename, width, calculatedHeight, ImageFormats.FromFilename(filename), 100);
-                        })
-                        //.Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
-                        //{
-                        //})
-                        .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
+                    await m_ScottPlotImageExporter.SavePlotImageAsync(GanttChartPlotModel.Plot, filename, width, calculatedHeight);
                 }
                 catch (Exception ex)
                 {
@@ -1531,6 +1632,14 @@ namespace Zametek.ViewModel.ProjectPlan
                         string.Empty,
                         ex.Message);
                 }
+            }
+        }
+
+        public void SetActivityDuration(int activityId, int newDuration)
+        {
+            lock (m_Lock)
+            {
+                m_CoreViewModel.SetActivityDuration(activityId, newDuration);
             }
         }
 
@@ -1553,7 +1662,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     ShowToday,
                     ShowMilestones,
                     ShowSlack,
-                    m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                    ShowDates,
+                    ShowNonWorkingDays,
                     m_CoreViewModel.GraphCompilation,
                     GroupByMode,
                     AnnotationStyle,
@@ -1569,15 +1679,15 @@ namespace Zametek.ViewModel.ProjectPlan
             // Clear existing menu items.
             plotModel.Menu?.Clear();
 
-            // Add menu items with custom actions.
-            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
-            {
-                SaveGanttChartImageFileCommand.Execute(null);
-            });
-            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
-            {
-                plot.Axes.AutoScale();
-            });
+            //// Add menu items with custom actions.
+            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
+            //{
+            //    SaveGanttChartImageFileCommand.Execute(null);
+            //});
+            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
+            //{
+            //    plot.Axes.AutoScale();
+            //});
 
             GanttChartPlotModel = plotModel;
         }
@@ -1606,7 +1716,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
@@ -1619,14 +1728,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ShowToday?.Dispose();
                 m_ShowMilestones?.Dispose();
                 m_ShowSlack?.Dispose();
+                m_ShowNonWorkingDays?.Dispose();
+                m_ShowDates?.Dispose();
                 m_IsGrouped?.Dispose();
                 m_IsAnnotated?.Dispose();
                 m_BoolAccumulator?.Dispose();
                 ActivitySelector?.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

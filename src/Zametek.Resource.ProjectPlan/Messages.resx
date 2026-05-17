@@ -177,8 +177,8 @@
   <data name="Message_TrackerCountMustBeEqualOrGreaterThanZero" xml:space="preserve">
     <value>Tracker Count must be equal or greater than 0</value>
   </data>
-  <data name="Message_UnableToDetermineUserSettingsPath" xml:space="preserve">
-    <value>Unable to determine file path for User Settings</value>
+  <data name="Message_UnableToDetermineProductSettingsFolderPath" xml:space="preserve">
+    <value>Unable to determine folder path for product settings</value>
   </data>
   <data name="Message_UnableToExportFile" xml:space="preserve">
     <value>Unable to export file:</value>
@@ -247,7 +247,10 @@
     <value>Unknown DisplayStyle value:</value>
   </data>
   <data name="Message_UnableToDetermineUserSettingsDirectory" xml:space="preserve">
-    <value>Unable to determine file directory for User Settings</value>
+    <value>Unable to determine directory for User Settings</value>
+  </data>
+  <data name="Message_UnableToDetermineDockLayoutDirectory" xml:space="preserve">
+    <value>Unable to determine directory for Dock Layout</value>
   </data>
   <data name="Message_UnitBillingMustBeZeroOrGreater" xml:space="preserve">
     <value>Unit Billing must be equal to or greater than 0 </value>
@@ -256,6 +259,9 @@
     <value>Fixed Billing must be equal to or greater than 0 </value>
   </data>
   <data name="Message_EditResources" xml:space="preserve">
+    <value>Select the properties to edit</value>
+  </data>
+  <data name="Message_EditWorkStreams" xml:space="preserve">
     <value>Select the properties to edit</value>
   </data>
   <data name="Message_EditActivities" xml:space="preserve">

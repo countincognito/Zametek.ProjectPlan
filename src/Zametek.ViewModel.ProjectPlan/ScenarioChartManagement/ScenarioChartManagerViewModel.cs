@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
@@ -114,6 +114,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 SaveScenarioChartImageFileCommand = saveScenarioChartImageFileCommand;
             }
 
+            ResetScenarioChartCommand = ReactiveCommand.Create(ResetScenarioChart);
+
+            ChangeTrackedMetricXAxisCommand = ReactiveCommand.CreateFromTask<TrackedMetrics>(ChangeTrackedMetricXAxisAsync);
+            ChangeTrackedMetricYAxisCommand = ReactiveCommand.CreateFromTask<TrackedMetrics>(ChangeTrackedMetricYAxisAsync);
+            ChangeCurveFittingTypeCommand = ReactiveCommand.CreateFromTask<CurveFittingType>(ChangeCurveFittingTypeAsync);
+
             m_IsBusy = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.IsBusy,
@@ -129,24 +135,29 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, rcm => rcm.HasCompilationErrors);
 
+            m_ShowNames = this
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNames)
+                .ToProperty(this, agm => agm.ShowNames);
+
             m_TrackedMetricXAxis = this
-                .WhenAnyValue(rcm => rcm.m_SettingService.ScenarioChartTrackedMetricXAxis)
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis)
                 .ToProperty(this, rcm => rcm.TrackedMetricXAxis);
 
             m_TrackedMetricYAxis = this
-                .WhenAnyValue(rcm => rcm.m_SettingService.ScenarioChartTrackedMetricYAxis)
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricYAxis)
                 .ToProperty(this, rcm => rcm.TrackedMetricYAxis);
 
             m_CurveFittingType = this
-                .WhenAnyValue(rcm => rcm.m_SettingService.ScenarioChartCurveFittingType)
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType)
                 .ToProperty(this, rcm => rcm.CurveFittingType);
 
             m_BuildScenarioChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
-                    rcm => rcm.m_SettingService.ScenarioChartTrackedMetricXAxis,
-                    rcm => rcm.m_SettingService.ScenarioChartTrackedMetricYAxis,
-                    rcm => rcm.m_SettingService.ScenarioChartCurveFittingType,
+                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNames,
+                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
+                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricYAxis,
+                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
                     rcm => rcm.m_CoreViewModel.BaseTheme)
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
@@ -205,6 +216,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static (AvaPlot, string) BuildScenarioChartPlotModelInternal(
             TrackedMetricsSetModel trackedMetricsSet,
+            bool showNames,
             TrackedMetrics xMetric,
             TrackedMetrics yMetric,
             CurveFittingType curveFittingType,
@@ -213,7 +225,6 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(trackedMetricsSet);
             var plotModel = new AvaPlot();
             plotModel.Plot.HideGrid();
-            plotModel.SetBaseTheme(baseTheme);
 
             // Now build the plot.
 
@@ -221,7 +232,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 || xMetric == TrackedMetrics.None
                 || yMetric == TrackedMetrics.None)
             {
-                return (plotModel, string.Empty);
+                return (plotModel.SetBaseTheme(baseTheme), string.Empty);
             }
 
             // Select the metric for the X axis.
@@ -233,6 +244,7 @@ namespace Zametek.ViewModel.ProjectPlan
             // Gather the data points for the selected metrics.
 
             List<AnnotatedMarker> markers = [];
+            List<Text> annotations = [];
 
             foreach (TrackedMetricsModel trackedMetrics in trackedMetricsSet.TrackedMetrics)
             {
@@ -240,20 +252,47 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     X = xMetricFunction(trackedMetrics.Metrics),
                     Y = yMetricFunction(trackedMetrics.Metrics),
-                    Size = 10,
-                    Color = Colors.Blue,
+                    Size = 14.0f,
+                    LineWidth = 1.5f,
+                    MarkerFillColor = Colors.Blue,
+                    MarkerLineColor = Colors.WhiteSmoke,
                     Shape = MarkerShape.FilledCircle,
-                    Annotation = trackedMetrics.Path
+                    Annotation = trackedMetrics.Path,
+                };
+
+                var annotation = new Text
+                {
+                    LabelText = marker.Annotation,
+                    Location = new Coordinates(marker.X, marker.Y),
+                    OffsetX = 10,
+                    OffsetY = 10,
+                    LabelPadding = 5,
+                    //FontSize = 12,
+                    //Color = Colors.Black,
+                    //BackgroundColor = Colors.White.WithAlpha(200),
+                    //BorderColor = Colors.Black,
+                    //BorderWidth = 1,
                 };
 
                 markers.Add(marker);
+                annotations.Add(annotation);
             }
 
             markers = [.. markers.OrderBy(m => m.X).ThenBy(m => m.Y)];
             plotModel.Plot.PlottableList.AddRange(markers);
+
+            if (showNames)
+            {
+                annotations = [.. annotations.OrderBy(m => m.Location.X).ThenBy(m => m.Location.Y)];
+                plotModel.Plot.PlottableList.AddRange(annotations);
+            }
+
             string curveFittingFormula = BuildCurveFit(plotModel, markers, curveFittingType);
             plotModel.Plot.Axes.AutoScale();
-            return (plotModel, curveFittingFormula);
+
+            plotModel.Plot.Axes.AutoScaleExpand();
+
+            return (plotModel.SetBaseTheme(baseTheme), curveFittingFormula);
         }
 
         private static string BuildCurveFit(
@@ -460,6 +499,56 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
+        private void ResetScenarioChart()
+        {
+            ScenarioChartPlotModel.Plot.Axes.AutoScale();
+        }
+
+        private async Task ChangeTrackedMetricXAxisAsync(TrackedMetrics trackedMetric)
+        {
+            try
+            {
+                TrackedMetricXAxis = trackedMetric;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeTrackedMetricYAxisAsync(TrackedMetrics trackedMetric)
+        {
+            try
+            {
+                TrackedMetricYAxis = trackedMetric;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeCurveFittingTypeAsync(CurveFittingType curveFittingType)
+        {
+            try
+            {
+                CurveFittingType = curveFittingType;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
         private async Task SaveScenarioChartImageFileAsync()
         {
             try
@@ -501,13 +590,23 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
+        private readonly ObservableAsPropertyHelper<bool> m_ShowNames;
+        public bool ShowNames
+        {
+            get => m_ShowNames.Value;
+            set
+            {
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartShowNames = value;
+            }
+        }
+
         private readonly ObservableAsPropertyHelper<TrackedMetrics> m_TrackedMetricXAxis;
         public TrackedMetrics TrackedMetricXAxis
         {
             get => m_TrackedMetricXAxis.Value;
             set
             {
-                lock (m_Lock) m_SettingService.ScenarioChartTrackedMetricXAxis = value;
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis = value;
             }
         }
 
@@ -517,7 +616,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_TrackedMetricYAxis.Value;
             set
             {
-                lock (m_Lock) m_SettingService.ScenarioChartTrackedMetricYAxis = value;
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricYAxis = value;
             }
         }
 
@@ -527,11 +626,19 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_CurveFittingType.Value;
             set
             {
-                lock (m_Lock) m_SettingService.ScenarioChartCurveFittingType = value;
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType = value;
             }
         }
 
         public ICommand SaveScenarioChartImageFileCommand { get; }
+
+        public ICommand ResetScenarioChartCommand { get; }
+
+        public ICommand ChangeTrackedMetricXAxisCommand { get; }
+
+        public ICommand ChangeTrackedMetricYAxisCommand { get; }
+
+        public ICommand ChangeCurveFittingTypeCommand { get; }
 
         public async Task SaveScenarioChartImageFileAsync(
             string? filename,
@@ -617,9 +724,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     (plotModel, curveFittingFormula) = BuildScenarioChartPlotModelInternal(
                         m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
-                        m_SettingService.ScenarioChartTrackedMetricXAxis,
-                        m_SettingService.ScenarioChartTrackedMetricYAxis,
-                        m_SettingService.ScenarioChartCurveFittingType,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartShowNames,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricYAxis,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType,
                         m_CoreViewModel.BaseTheme);
                 }
             }
@@ -629,15 +737,15 @@ namespace Zametek.ViewModel.ProjectPlan
             // Clear existing menu items.
             plotModel.Menu?.Clear();
 
-            // Add menu items with custom actions.
-            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
-            {
-                SaveScenarioChartImageFileCommand.Execute(null);
-            });
-            plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
-            {
-                plot.Axes.AutoScale();
-            });
+            //// Add menu items with custom actions.
+            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
+            //{
+            //    SaveScenarioChartImageFileCommand.Execute(null);
+            //});
+            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
+            //{
+            //    plot.Axes.AutoScale();
+            //});
 
             //plotModel.Plot.Axes.AutoScale();
             ScenarioChartPlotModel = plotModel;
@@ -668,7 +776,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
                 KillSubscriptions();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
@@ -677,9 +784,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_TrackedMetricYAxis?.Dispose();
                 m_CurveFittingType?.Dispose();
             }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
 
             m_Disposed = true;
         }

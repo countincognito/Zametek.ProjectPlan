@@ -2,8 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
@@ -15,82 +13,35 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowProjections}"/>
-
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowProjections, Mode=TwoWay}"/>
-				</DockPanel>
-
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowToday}"/>
-
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"/>
-				</DockPanel>
-
-				<DockPanel DockPanel.Dock="Top">
-					<Label VerticalContentAlignment="Center"
-						   HorizontalContentAlignment="Left"
-						   Height="25"
-						   DockPanel.Dock="Top"
-						   IsTabStop="False"
-						   Margin="0,0,0,3"
-						   Content="{x:Static resources:Labels.Label_ShowMilestones}"/>
-
-					<ToggleSwitch DockPanel.Dock="Top"
-								  IsTabStop="False"
-								  Margin="0,0,0,11"
-								  VerticalAlignment="Center"
-								  VerticalContentAlignment="Center"
-								  HorizontalAlignment="Center"
-								  HorizontalContentAlignment="Center"
-								  OffContent="{x:Static resources:Labels.Label_No}"
-								  OnContent="{x:Static resources:Labels.Label_Yes}"
-								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"/>
-				</DockPanel>
-
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
-
 		<Grid>
 			<!-- ScottPlot PlotView -->
 			<ContentControl x:Name="scottplot"
-							Content="{Binding EarnedValueChartPlotModel, Mode=OneWay}"
-							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}"/>
+							Content="{Binding Path=EarnedValueChartPlotModel, Mode=OneWay}"
+							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
+				<ContentControl.ContextMenu>
+					<ContextMenu>
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowProjections}"
+								  IsChecked="{Binding Path=ShowProjections, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowToday}"
+								  IsChecked="{Binding Path=ShowToday, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowMilestones}"
+								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<Separator />
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+								  Command="{Binding Path=SaveEarnedValueChartImageFileCommand, Mode=OneWay}" />
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
+								  Command="{Binding Path=ResetEarnedValueChartCommand, Mode=OneWay}" />
+					</ContextMenu>
+				</ContentControl.ContextMenu>
+			</ContentControl>
 		</Grid>
 	</DockPanel>
 </UserControl>

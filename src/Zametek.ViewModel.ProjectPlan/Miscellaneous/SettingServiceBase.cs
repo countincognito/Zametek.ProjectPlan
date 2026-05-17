@@ -33,6 +33,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 Version = Versions.AppSettingsLatest,
             };
             SettingsFilename = settingsFilename;
+            DockLayoutFilename = string.Empty;
+            DataGridLayoutFilename = string.Empty;
 
             if (File.Exists(SettingsFilename))
             {
@@ -89,6 +91,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public string SettingsFilename { get; init; }
 
+        public string DockLayoutFilename { get; init; }
+
+        public string DataGridLayoutFilename { get; init; }
+
         private string m_ProjectTitle;
         public string ProjectTitle
         {
@@ -141,6 +147,12 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        public abstract string DockLayout { get; set; }
+
+        public abstract IList<DataGridModel> GetDataGridLayout();
+
+        public abstract void SetDataGridLayout(IList<DataGridModel> models);
+
         public abstract bool DefaultShowDates { get; set; }
 
         public abstract bool DefaultUseClassicDates { get; set; }
@@ -150,16 +162,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public abstract bool DefaultHideCost { get; set; }
 
         public abstract bool DefaultHideBilling { get; set; }
-
-        public abstract SortMode ProjectScenarioSortMode { get; set; }
-
-        public abstract SortDirection ProjectScenarioSortDirection { get; set; }
-
-        public abstract TrackedMetrics ScenarioChartTrackedMetricXAxis { get; set; }
-
-        public abstract TrackedMetrics ScenarioChartTrackedMetricYAxis { get; set; }
-
-        public abstract CurveFittingType ScenarioChartCurveFittingType { get; set; }
 
         public abstract string SelectedTheme { get; set; }
 

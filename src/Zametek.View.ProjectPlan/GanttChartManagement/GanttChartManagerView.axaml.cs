@@ -1,98 +1,242 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
+using System;
 using System.Linq;
+using System.Text;
+using Zametek.Contract.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
+using AvaloniaInput = Avalonia.Input;
 
 namespace Zametek.View.ProjectPlan
 {
     public partial class GanttChartManagerView
-        : UserControl
+        : ScottPlotUserControl
     {
-        public GanttChartManagerView()
+        private const double c_ResizeEdgePixelTolerance = 8.0;
+
+        private readonly IDateTimeCalculator m_DateTimeCalculator;
+
+        private bool m_IsResizeDragging;
+        private int? m_ResizeActivityId;
+        private int? m_ResizeActivityDuration;
+        private int? m_ResizeActivityStartTime;
+        private AnnotatedBar? m_ResizingBar;
+
+        private static readonly AvaloniaInput.Cursor s_SizeWestEastCursor = new(StandardCursorType.SizeWestEast);
+        private static readonly AvaloniaInput.Cursor s_HandCursor = new(StandardCursorType.Hand);
+
+        public GanttChartManagerView(IDateTimeCalculator dateTimeCalculator)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             InitializeComponent();
-            scottplot.Loaded += Scottplot_Loaded;
-            scottplot.PointerExited += Scottplot_PointerExited;
-            scottplot.PointerMoved += Scottplot_PointerMoved;
+            InitializePlotContainer(scottplot);
+            m_DateTimeCalculator = dateTimeCalculator;
+            m_IsResizeDragging = false;
+            m_ResizeActivityId = null;
+            m_ResizeActivityDuration = null;
+            m_ResizeActivityStartTime = null;
+            m_ResizingBar = null;
+
+            scottplot.AddHandler(PointerPressedEvent, Gantt_PointerPressed, RoutingStrategies.Tunnel, handledEventsToo: false);
+            scottplot.PointerMoved += Gantt_PointerMoved;
+            scottplot.AddHandler(PointerReleasedEvent, Gantt_PointerReleased, RoutingStrategies.Bubble, handledEventsToo: true);
         }
 
-        private void Scottplot_Loaded(object? sender, RoutedEventArgs e)
+        private void Gantt_PointerPressed(object? sender, PointerPressedEventArgs e)
         {
-            ClearToolTip();
-        }
+            PointerPointProperties props = e.GetCurrentPoint(this).Properties;
 
-        private void Scottplot_PointerExited(object? sender, RoutedEventArgs e)
-        {
-            ClearToolTip();
-        }
-
-        private void Scottplot_PointerMoved(object? sender, PointerEventArgs e)
-        {
-            if (scottplot.Content is not AvaPlot plotModel)
+            if (!props.IsLeftButtonPressed
+                || !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
             {
                 return;
             }
 
-            Point pos = e.GetPosition(plotModel);
+            if (m_PlotContainer?.Content is not AvaPlot plot)
+            {
+                return;
+            }
+
+            Avalonia.Point pos = e.GetPosition(plot);
             Pixel mousePixel = new(pos.X, pos.Y);
-            Coordinates mouseLocation = plotModel.Plot.GetCoordinates(mousePixel);
 
-            // Milestones.
+            AnnotatedBar? hit = HitTestBarRightEdge(plot, mousePixel);
 
-            AnnotatedVerticalLine? annotatedVerticalLine = plotModel.Plot.GetPlottables<AnnotatedVerticalLine>()
-                .FirstOrDefault(arrow => arrow.CoordinateRect.Contains(mouseLocation));
-
-            if (annotatedVerticalLine is not null)
+            if (hit is null)
             {
-                scottplot.SetValue(ToolTip.TipProperty, annotatedVerticalLine.Annotation);
                 return;
             }
 
-            AnnotatedArrow? annotatedArrow = plotModel.Plot.GetPlottables<AnnotatedArrow>()
-                .FirstOrDefault(rect => rect.CoordinateRect.Contains(mouseLocation));
+            m_IsResizeDragging = true;
+            m_ResizeActivityId = hit.ActivityId;
+            m_ResizeActivityDuration = hit.Duration;
+            m_ResizeActivityStartTime = hit.StartTime;
+            m_ResizingBar = hit;
 
-            if (annotatedArrow is not null)
+            // Suppress ScottPlot's default left-drag pan.
+            e.Handled = true;
+        }
+
+        private void Gantt_PointerMoved(
+            object? sender,
+            PointerEventArgs e)
+        {
+            if (m_PlotContainer?.Content is not AvaPlot plot)
             {
-                scottplot.SetValue(ToolTip.TipProperty, annotatedArrow.Annotation);
                 return;
             }
 
-            // Activity bars.
+            Avalonia.Point pos = e.GetPosition(plot);
+            Pixel mousePixel = new(pos.X, pos.Y);
 
-            if (plotModel.Plot.GetPlottables<BarPlot>().FirstOrDefault() is BarPlot barPlot)
+            if (m_IsResizeDragging
+                && m_ResizingBar is not null)
             {
-                Bar? bar = barPlot.Bars.FirstOrDefault(bar => bar.Rect.Contains(mouseLocation));
+                Coordinates coords = plot.Plot.GetCoordinates(mousePixel);
+                double newRightEdge = Math.Max(m_ResizingBar.ValueBase + 1, coords.X);
+                m_ResizingBar.Value = newRightEdge;
+                plot.Refresh();
 
-                if (bar is AnnotatedBar annotatedBar)
+                if (DataContext is IGanttChartManagerViewModel vm
+                    && m_ResizeActivityStartTime is not null)
                 {
-                    scottplot.SetValue(ToolTip.TipProperty, annotatedBar.Annotation);
-                    return;
+                    int newDuration = CalculateNewDuration(newRightEdge, m_ResizeActivityStartTime.GetValueOrDefault(), vm);
+                    Canvas.SetLeft(dragTooltipBorder, pos.X + 16);
+                    Canvas.SetTop(dragTooltipBorder, pos.Y + 4);
+
+                    var tooltipText = new StringBuilder($@"{Resource.ProjectPlan.Labels.Label_Duration}: {newDuration}");
+
+                    if (m_ResizeActivityDuration is not null)
+                    {
+                        int diff = newDuration - m_ResizeActivityDuration.GetValueOrDefault();
+                        if (diff != 0)
+                        {
+                            tooltipText.Append($@" ({diff})");
+                        }
+                    }
+
+                    dragTooltipText.Text = tooltipText.ToString();
+                    dragTooltipBorder.IsVisible = true;
                 }
             }
 
-            // Annotations.
+            AnnotatedBar? hit = HitTestBarRightEdge(plot, mousePixel);
+            AvaloniaInput.Cursor hoverCursor = s_HandCursor;
 
-            AnnotatedRectangle? annotatedRectangle = plotModel.Plot.GetPlottables<AnnotatedRectangle>()
-                .FirstOrDefault(rect => rect.CoordinateRect.Contains(mouseLocation));
-
-            if (annotatedRectangle is not null)
+            // Cursor hint when hovering near a bar's right edge while Shift is held.
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
             {
-                scottplot.SetValue(ToolTip.TipProperty, annotatedRectangle.Annotation);
+                hoverCursor = s_SizeWestEastCursor;
+            }
+
+            Cursor = hit is not null
+                ? hoverCursor
+                : AvaloniaInput.Cursor.Default;
+        }
+
+        private void Gantt_PointerReleased(
+            object? sender,
+            PointerReleasedEventArgs e)
+        {
+            dragTooltipBorder.IsVisible = false;
+
+            if (!m_IsResizeDragging)
+            {
                 return;
             }
 
-            // If no bar or rectangle was found, clear the tooltip.
-            ClearToolTip();
+            if (m_PlotContainer?.Content is AvaPlot plot
+                && m_ResizeActivityId is not null
+                && m_ResizeActivityDuration is not null
+                && m_ResizeActivityStartTime is not null
+                && DataContext is IGanttChartManagerViewModel vm)
+            {
+                Avalonia.Point pos = e.GetPosition(plot);
+                Pixel mousePixel = new(pos.X, pos.Y);
+                Coordinates coords = plot.Plot.GetCoordinates(mousePixel);
+
+                double finalX = m_ResizingBar is not null
+                    ? Math.Max(m_ResizingBar.ValueBase + 1, coords.X)
+                    : coords.X;
+
+                int startTimeUnit = m_ResizeActivityStartTime.GetValueOrDefault();
+                int newDuration = CalculateNewDuration(finalX, startTimeUnit, vm);
+                vm.SetActivityDuration(m_ResizeActivityId.GetValueOrDefault(), newDuration);
+            }
+
+            m_IsResizeDragging = false;
+            m_ResizeActivityId = null;
+            m_ResizeActivityDuration = null;
+            m_ResizeActivityStartTime = null;
+            m_ResizingBar = null;
+            Cursor = AvaloniaInput.Cursor.Default;
         }
 
-        private void ClearToolTip()
+        private int CalculateNewDuration(
+            double finalX,
+            int startTimeUnit,
+            IGanttChartManagerViewModel vm)
         {
-            scottplot.ClearValue(ToolTip.TipProperty);
+            int? finishTimeUnit;
+
+            if (vm.ShowDates)
+            {
+                // ShowDates=true: X is an OLE Automation date. Convert back to a time unit.
+                DateTime newFinishDate = DateTime.FromOADate(finalX);
+                (finishTimeUnit, _) = m_DateTimeCalculator
+                    .CalculateTimeAndDateTime(
+                        vm.ProjectStart,
+                        new DateTimeOffset(newFinishDate));
+            }
+            else
+            {
+                int newFinishDate = (int)Math.Round(finalX);
+                (finishTimeUnit, _) = m_DateTimeCalculator
+                    .CalculateTimeAndDateTime(
+                        vm.ProjectStart,
+                        newFinishDate);
+            }
+
+            return Math.Max(1, (finishTimeUnit ?? startTimeUnit + 1) - startTimeUnit);
+        }
+
+        private static AnnotatedBar? HitTestBarRightEdge(
+            AvaPlot plot,
+            Pixel mousePixel)
+        {
+            BarPlot? barPlot = plot.Plot.GetPlottables<BarPlot>().FirstOrDefault();
+
+            if (barPlot is null)
+            {
+                return null;
+            }
+
+            foreach (AnnotatedBar bar in barPlot.Bars.OfType<AnnotatedBar>())
+            {
+                if (bar.ActivityId == 0)
+                {
+                    continue;
+                }
+
+                Pixel rightEdgePixel = plot.Plot.GetPixel(new Coordinates(bar.Value, bar.Position));
+                Pixel topPixel = plot.Plot.GetPixel(new Coordinates(bar.Value, bar.Position + 0.25));
+                Pixel botPixel = plot.Plot.GetPixel(new Coordinates(bar.Value, bar.Position - 0.25));
+
+                bool nearRightEdge = Math.Abs(mousePixel.X - rightEdgePixel.X) <= c_ResizeEdgePixelTolerance;
+                bool withinBarY = mousePixel.Y >= Math.Min(topPixel.Y, botPixel.Y)
+                               && mousePixel.Y <= Math.Max(topPixel.Y, botPixel.Y);
+
+                if (nearRightEdge && withinBarY)
+                {
+                    return bar;
+                }
+            }
+
+            return null;
         }
     }
 }

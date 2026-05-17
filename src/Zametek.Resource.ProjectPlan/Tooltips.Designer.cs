@@ -88,6 +88,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to AllocationOrder.
+        /// </summary>
+        public static string ToolTip_AllocationOrder {
+            get {
+                return ResourceManager.GetString("ToolTip_AllocationOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Color.
         /// </summary>
         public static string ToolTip_ColorFormat {
@@ -462,6 +471,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string ToolTip_Successors {
             get {
                 return ResourceManager.GetString("ToolTip_Successors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sync to current date.
+        /// </summary>
+        public static string ToolTip_SyncToday {
+            get {
+                return ResourceManager.GetString("ToolTip_SyncToday", resourceCulture);
             }
         }
         

@@ -9,14 +9,16 @@
 
   <ItemGroup>
 	<PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
-    <PackageReference Include="Dock.Model.ReactiveUI" Version="12.0.0.1" />
-    <PackageReference Include="Ical.Net" Version="5.2.1" />
+    <PackageReference Include="Dock.Model.ReactiveUI" Version="12.0.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Dock.Serializer.SystemTextJson" Version="12.0.0.2" />
+    <PackageReference Include="Ical.Net" Version="5.2.2" />
     <PackageReference Include="net.sf.mpxj-for-csharp" Version="13.12.0" />
     <PackageReference Include="NPOI" Version="[2.7.6,2.8.0)" />
 	<PackageReference Include="ScottPlot.Avalonia" Version="5.1.58" />
-	<PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+	<!--<PackageReference Include="SixLabors.ImageSharp" Version="4.0.0" />-->
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.3-preview.1.1" />
-    <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.4" />
+    <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.9" />
     <PackageReference Include="System.Drawing.Common" Version="11.0.0-preview.3.26207.106" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="11.0.0-preview.3.26207.106" />
     <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="2.4.8" />

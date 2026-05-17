@@ -2,8 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:i="using:Avalonia.Xaml.Interactivity"
-	         xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
 			 xmlns:controls="using:Avalonia.Controls"
 			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
@@ -23,33 +21,11 @@
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">
-		<ScrollViewer DockPanel.Dock="Right"
-					  VerticalScrollBarVisibility="Hidden"
-					  HorizontalScrollBarVisibility="Disabled">
-			<DockPanel Margin="11,0,0,0">
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,7"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=AddManagedActivitySeverityCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_AddManagedActivitySeverity}"/>
 
-				<Button DockPanel.Dock="Top"
-						IsTabStop="True"
-						Margin="0,0,0,11"
-						Height="25" Width="75"
-						VerticalAlignment="Center"
-						VerticalContentAlignment="Center"
-						Command="{Binding Path=RemoveManagedActivitySeveritiesCommand, Mode=OneWay}"
-						Content="{x:Static resources:Labels.Label_DeleteManagedActivitySeverities}"/>
-
-				<Grid/>
-			</DockPanel>
-		</ScrollViewer>
-
-		<DataGrid Name="activitySeveritiesGrid"
+    <!-- Set Background to Transparent to ensure the context menu works even when the datagrid is empty -->
+    <!-- https://github.com/AvaloniaUI/Avalonia/discussions/15118 -->
+		<DataGrid Name="ActivitySeveritiesGrid"
+				  Background="Transparent"
 				  FrozenColumnCount="1"
 				  AutoGenerateColumns="False"
 				  RowHeight="30"
@@ -84,18 +60,48 @@
 				<!--<Style Selector="DataGridCell:selected:pointerover:current:focus Grid.editable">
 					<Setter Property="Background" Value="Green"/>
 				</Style>-->
+
+				<!-- Make sure the caret appears at the end of a TextBox -->
+				<Style Selector="TextBox">
+					<Setter Property="(Interaction.Behaviors)">
+						<BehaviorCollectionTemplate>
+							<BehaviorCollection>
+								<local:MoveCaretToEndBehavior />
+							</BehaviorCollection>
+						</BehaviorCollectionTemplate>
+					</Setter>
+				</Style>
+
+				<Style>
+					<Setter Property="ContextMenu">
+						<ContextMenu>
+							<MenuItem Header="{x:Static resources:Menus.Menu_AddManagedActivitySeverity}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.AddManagedActivitySeverityCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_DuplicateManagedActivitySeverity}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.DuplicateManagedActivitySeverityCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_DeleteManagedActivitySeverities}"
+									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedActivitySeveritiesCommand, Mode=OneWay}" />
+						</ContextMenu>
+					</Setter>
+				</Style>
 			</DataGrid.Styles>
 
-			<i:Interaction.Behaviors>
-				<ia:EventTriggerBehavior EventName="SelectionChanged"
-										 SourceObject="{Binding #activitySeveritiesGrid}">
-					<ia:InvokeCommandAction x:DataType="vm:GraphSettingsManagerViewModel"
+			<Interaction.Behaviors>
+				<EventTriggerBehavior EventName="SelectionChanged"
+										 SourceObject="{Binding #ActivitySeveritiesGrid}">
+					<InvokeCommandAction x:DataType="vm:GraphSettingsManagerViewModel"
 											Command="{Binding Path=SetSelectedManagedActivitySeveritiesCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />
-				</ia:EventTriggerBehavior>
+				</EventTriggerBehavior>
 
 				<!--<local:DataGridCacheScrollBehavior />-->
-			</i:Interaction.Behaviors>
+			</Interaction.Behaviors>
 
 			<DataGrid.Columns>
 				<!--This needs to be added due to an issue with Avalonia not allowing editing in the first column-->
@@ -137,11 +143,11 @@
 								  VerticalAlignment="Stretch"
 								  Classes="editable">
 
-								<i:Interaction.Behaviors>
-									<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
-										<ia:ChangePropertyAction TargetObject="{Binding #slackLimitGrid}" PropertyName="Background" Value="Transparent" />
-									</ia:DataTriggerBehavior>
-								</i:Interaction.Behaviors>
+								<Interaction.Behaviors>
+									<DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
+										<ChangePropertyAction TargetObject="{Binding #slackLimitGrid}" PropertyName="Background" Value="Transparent" />
+									</DataTriggerBehavior>
+								</Interaction.Behaviors>
 
 								<TextBlock Name="slackLimitTextBlock"
 										   VerticalAlignment="Center"
@@ -149,14 +155,14 @@
 										   Padding="3"
 										   IsVisible="True"
 										   Text="{Binding Path=SlackLimit, Mode=OneWay}">
-									<i:Interaction.Behaviors>
-										<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
-											<ia:ChangePropertyAction TargetObject="{Binding #slackLimitTextBlock}" PropertyName="IsVisible" Value="False" />
-										</ia:DataTriggerBehavior>
-										<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="NotEqual" Value="{x:Static sys:Int32.MaxValue}">
-											<ia:ChangePropertyAction TargetObject="{Binding #slackLimitTextBlock}" PropertyName="IsVisible" Value="True" />
-										</ia:DataTriggerBehavior>
-									</i:Interaction.Behaviors>
+									<Interaction.Behaviors>
+										<DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
+											<ChangePropertyAction TargetObject="{Binding #slackLimitTextBlock}" PropertyName="IsVisible" Value="False" />
+										</DataTriggerBehavior>
+										<DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="NotEqual" Value="{x:Static sys:Int32.MaxValue}">
+											<ChangePropertyAction TargetObject="{Binding #slackLimitTextBlock}" PropertyName="IsVisible" Value="True" />
+										</DataTriggerBehavior>
+									</Interaction.Behaviors>
 								</TextBlock>
 
 								<TextBlock Name="maxTextBlock"
@@ -165,14 +171,14 @@
 										   Padding="3"
 										   IsVisible="False"
 										   Text="{x:Static resources:Labels.Label_Max}">
-									<i:Interaction.Behaviors>
-										<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
-											<ia:ChangePropertyAction TargetObject="{Binding #maxTextBlock}" PropertyName="IsVisible" Value="True" />
-										</ia:DataTriggerBehavior>
-										<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="NotEqual" Value="{x:Static sys:Int32.MaxValue}">
-											<ia:ChangePropertyAction TargetObject="{Binding #maxTextBlock}" PropertyName="IsVisible" Value="False" />
-										</ia:DataTriggerBehavior>
-									</i:Interaction.Behaviors>
+									<Interaction.Behaviors>
+										<DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
+											<ChangePropertyAction TargetObject="{Binding #maxTextBlock}" PropertyName="IsVisible" Value="True" />
+										</DataTriggerBehavior>
+										<DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="NotEqual" Value="{x:Static sys:Int32.MaxValue}">
+											<ChangePropertyAction TargetObject="{Binding #maxTextBlock}" PropertyName="IsVisible" Value="False" />
+										</DataTriggerBehavior>
+									</Interaction.Behaviors>
 								</TextBlock>
 							</Grid>
 						</DataTemplate>
@@ -183,11 +189,11 @@
 							<Grid Name="slackLimitEditableGrid"
 								  VerticalAlignment="Stretch">
 
-								<i:Interaction.Behaviors>
-									<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
-										<ia:ChangePropertyAction TargetObject="{Binding #slackLimitEditableGrid}" PropertyName="Background" Value="Transparent" />
-									</ia:DataTriggerBehavior>
-								</i:Interaction.Behaviors>
+								<Interaction.Behaviors>
+									<DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
+										<ChangePropertyAction TargetObject="{Binding #slackLimitEditableGrid}" PropertyName="Background" Value="Transparent" />
+									</DataTriggerBehavior>
+								</Interaction.Behaviors>
 
 								<u:NumericIntUpDown Name="slackLimitTextBox"
 													Value="{Binding Path=SlackLimit, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
@@ -197,14 +203,14 @@
 												    Margin="0"
 												    Padding="0"
 												    Minimum="0">
-									<i:Interaction.Behaviors>
-										<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
-											<ia:ChangePropertyAction TargetObject="{Binding #slackLimitTextBox}" PropertyName="IsVisible" Value="False" />
-										</ia:DataTriggerBehavior>
-										<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="NotEqual" Value="{x:Static sys:Int32.MaxValue}">
-											<ia:ChangePropertyAction TargetObject="{Binding #slackLimitTextBox}" PropertyName="IsVisible" Value="True" />
-										</ia:DataTriggerBehavior>
-									</i:Interaction.Behaviors>
+									<Interaction.Behaviors>
+										<DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
+											<ChangePropertyAction TargetObject="{Binding #slackLimitTextBox}" PropertyName="IsVisible" Value="False" />
+										</DataTriggerBehavior>
+										<DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="NotEqual" Value="{x:Static sys:Int32.MaxValue}">
+											<ChangePropertyAction TargetObject="{Binding #slackLimitTextBox}" PropertyName="IsVisible" Value="True" />
+										</DataTriggerBehavior>
+									</Interaction.Behaviors>
 								</u:NumericIntUpDown>
 
 								<TextBlock Name="maxEditableTextBlock"
@@ -213,14 +219,14 @@
 										   Padding="3"
 										   IsVisible="False"
 										   Text="{x:Static resources:Labels.Label_Max}">
-									<i:Interaction.Behaviors>
-										<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
-											<ia:ChangePropertyAction TargetObject="{Binding #maxEditableTextBlock}" PropertyName="IsVisible" Value="True" />
-										</ia:DataTriggerBehavior>
-										<ia:DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="NotEqual" Value="{x:Static sys:Int32.MaxValue}">
-											<ia:ChangePropertyAction TargetObject="{Binding #maxEditableTextBlock}" PropertyName="IsVisible" Value="False" />
-										</ia:DataTriggerBehavior>
-									</i:Interaction.Behaviors>
+									<Interaction.Behaviors>
+										<DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="Equal" Value="{x:Static sys:Int32.MaxValue}">
+											<ChangePropertyAction TargetObject="{Binding #maxEditableTextBlock}" PropertyName="IsVisible" Value="True" />
+										</DataTriggerBehavior>
+										<DataTriggerBehavior Binding="{Binding Path=SlackLimit}" ComparisonCondition="NotEqual" Value="{x:Static sys:Int32.MaxValue}">
+											<ChangePropertyAction TargetObject="{Binding #maxEditableTextBlock}" PropertyName="IsVisible" Value="False" />
+										</DataTriggerBehavior>
+									</Interaction.Behaviors>
 								</TextBlock>
 							</Grid>
 						</DataTemplate>
