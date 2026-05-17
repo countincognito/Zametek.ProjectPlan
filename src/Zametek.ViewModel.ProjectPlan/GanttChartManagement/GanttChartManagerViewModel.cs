@@ -1,8 +1,10 @@
 using Avalonia;
 using Avalonia.Threading;
+using Microsoft.VisualBasic;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
+using ScottPlot.Interactivity;
 using ScottPlot.Plottables;
 using System.Data;
 using System.Globalization;
@@ -1675,20 +1677,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             plotModel ??= new AvaPlot();
-
-            // Clear existing menu items.
-            plotModel.Menu?.Clear();
-
-            //// Add menu items with custom actions.
-            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
-            //{
-            //    SaveGanttChartImageFileCommand.Execute(null);
-            //});
-            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
-            //{
-            //    plot.Axes.AutoScale();
-            //});
-
+            plotModel.ClearContextMenu();
             GanttChartPlotModel = plotModel;
         }
 

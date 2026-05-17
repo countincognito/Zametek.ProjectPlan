@@ -1,7 +1,8 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
@@ -43,6 +44,8 @@ namespace Zametek.View.ProjectPlan
             object? sender,
             PointerPressedEventArgs e)
         {
+            ClosePlotContainerContextMenu();
+
             // Check if the pointer action is a click or a drag.
             PointerPointProperties properties = e.GetCurrentPoint(this).Properties;
 
@@ -94,14 +97,57 @@ namespace Zametek.View.ProjectPlan
 
         private void OpenPlotContainerContextMenu(PointerReleasedEventArgs e)
         {
-            // Manually open the ContextMenu assigned to this container
-            if (m_PlotContainer?.ContextMenu != null)
+            if (m_PlotContainer?.ContextMenu is not ContextMenu menu)
             {
-                m_PlotContainer.ContextMenu.Open(m_PlotContainer);
-
-                // Mark as handled to prevent ScottPlot from doing anything else
-                e.Handled = true;
+                return;
             }
+
+            menu.Open(m_PlotContainer);
+            // Mark as handled to prevent ScottPlot from doing anything else
+            e.Handled = true;
+
+            // ScottPlot's AvaPlot captures pointer events, so ContextMenu's built-in
+            // light-dismiss never sees outside clicks. Watch at the TopLevel in the
+            // tunnel phase with handledEventsToo so the click is observed regardless
+            // of who marked it handled.
+            TopLevel? topLevel = TopLevel.GetTopLevel(m_PlotContainer);
+            if (topLevel is null)
+            {
+                return;
+            }
+
+            void OnTopLevelPointerPressed(object? _, PointerPressedEventArgs args)
+            {
+                if (args.Source is Visual src
+                    && src.FindAncestorOfType<ContextMenu>(includeSelf: true) == menu)
+                {
+                    return;
+                }
+                menu.Close();
+            }
+
+            void OnMenuClosed(object? _, RoutedEventArgs args)
+            {
+                topLevel.RemoveHandler(PointerPressedEvent, OnTopLevelPointerPressed);
+                menu.Closed -= OnMenuClosed;
+            }
+
+            topLevel.AddHandler(
+                PointerPressedEvent,
+                OnTopLevelPointerPressed,
+                RoutingStrategies.Tunnel,
+                handledEventsToo: true);
+
+            menu.Closed += OnMenuClosed;
+        }
+
+        private void ClosePlotContainerContextMenu()
+        {
+            m_PlotContainer?.ContextMenu?.Close();
+            //if (m_PlotContainer?.ContextMenu is not null)
+            //{
+            //    m_PlotContainer.ContextMenu.Close();
+            //}
         }
 
         private void PlotContainer_Loaded(object? sender, RoutedEventArgs e)
