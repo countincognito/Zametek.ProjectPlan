@@ -105,6 +105,7 @@ namespace Zametek.View.ProjectPlan
                     && m_ResizeActivityStartTime is not null)
                 {
                     int newDuration = CalculateNewDuration(newRightEdge, m_ResizeActivityStartTime.GetValueOrDefault(), vm);
+
                     Canvas.SetLeft(dragTooltipBorder, pos.X + 16);
                     Canvas.SetTop(dragTooltipBorder, pos.Y + 4);
 
@@ -115,7 +116,7 @@ namespace Zametek.View.ProjectPlan
                         int diff = newDuration - m_ResizeActivityDuration.GetValueOrDefault();
                         if (diff != 0)
                         {
-                            tooltipText.Append($@" ({diff})");
+                            tooltipText.Append($@" ({diff:+#;-#;0})");
                         }
                     }
 
