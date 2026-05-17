@@ -678,4 +678,7 @@
   <data name="Label_ShowNonWorkingDays" xml:space="preserve">
     <value>Show Non-Working Days</value>
   </data>
+  <data name="Label_CurveFitting" xml:space="preserve">
+    <value>Curve Fitting</value>
+  </data>
 </root>

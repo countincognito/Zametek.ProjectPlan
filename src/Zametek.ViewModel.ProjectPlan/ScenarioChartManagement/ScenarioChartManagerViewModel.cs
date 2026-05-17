@@ -287,6 +287,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 plotModel.Plot.PlottableList.AddRange(annotations);
             }
 
+            // X Axis title.
+            IXAxis xAxis = plotModel.Plot.Axes.Bottom;
+            xAxis.Label.Text = StringConverters.TrackedMetricsValue(xMetric);
+            xAxis.Label.FontSize = PlotHelper.FontSize;
+            xAxis.Label.Bold = false;
+
+            // Y Axis title.
+            IYAxis yAxis = plotModel.Plot.Axes.Left;
+            yAxis.Label.Text = StringConverters.TrackedMetricsValue(yMetric);
+            yAxis.Label.FontSize = PlotHelper.FontSize;
+            yAxis.Label.Bold = false;
+
+            // Build the curve fitting if requested.
             string curveFittingFormula = BuildCurveFit(plotModel, markers, curveFittingType);
             plotModel.Plot.Axes.AutoScale();
 
