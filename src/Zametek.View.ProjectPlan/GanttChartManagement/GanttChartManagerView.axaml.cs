@@ -17,6 +17,8 @@ namespace Zametek.View.ProjectPlan
         : ScottPlotUserControl
     {
         private const double c_ResizeEdgePixelTolerance = 8.0;
+        private const double c_DragTooltipLeftOffset = 16.0;
+        private const double c_DragTooltipTopOffset = 4.0;
 
         private readonly IDateTimeCalculator m_DateTimeCalculator;
 
@@ -26,8 +28,8 @@ namespace Zametek.View.ProjectPlan
         private int? m_ResizeActivityStartTime;
         private AnnotatedBar? m_ResizingBar;
 
-        private static readonly AvaloniaInput.Cursor s_SizeWestEastCursor = new(StandardCursorType.SizeWestEast);
-        private static readonly AvaloniaInput.Cursor s_HandCursor = new(StandardCursorType.Hand);
+        private static readonly Cursor s_SizeWestEastCursor = new(StandardCursorType.SizeWestEast);
+        private static readonly Cursor s_HandCursor = new(StandardCursorType.Hand);
 
         public GanttChartManagerView(IDateTimeCalculator dateTimeCalculator)
         {
@@ -106,8 +108,8 @@ namespace Zametek.View.ProjectPlan
                 {
                     int newDuration = CalculateNewDuration(newRightEdge, m_ResizeActivityStartTime.GetValueOrDefault(), vm);
 
-                    Canvas.SetLeft(dragTooltipBorder, pos.X + 16);
-                    Canvas.SetTop(dragTooltipBorder, pos.Y + 4);
+                    Canvas.SetLeft(dragTooltipBorder, pos.X + c_DragTooltipLeftOffset);
+                    Canvas.SetTop(dragTooltipBorder, pos.Y + c_DragTooltipTopOffset);
 
                     var tooltipText = new StringBuilder($@"{Resource.ProjectPlan.Labels.Label_Duration}: {newDuration}");
 
