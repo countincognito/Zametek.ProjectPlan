@@ -18,7 +18,10 @@ namespace Zametek.ProjectPlan
         [STAThread]
         public static void Main(string[] args)
         {
+            // Wire the Autofac-backed Splat locator before BuildAvaloniaApp runs, so
+            // that .UseReactiveUI(...) registers ReactiveUI plugins into our container.
             CompositionRoot.Configure();
+
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args, ShutdownMode.OnMainWindowClose);
         }

@@ -2,7 +2,6 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Dock.Model.Core;
 using Dock.Serializer.SystemTextJson;
-using ReactiveUI;
 using Splat;
 using Splat.Autofac;
 using System;
@@ -14,29 +13,26 @@ namespace Zametek.ProjectPlan
 {
     public static class CompositionRoot
     {
-        private static ContainerBuilder? builder;
-        private static AutofacDependencyResolver? _resolver;
+        private static ContainerBuilder? s_Builder;
+        private static AutofacDependencyResolver? s_Resolver;
 
         public static IContainer Container { get; private set; } = null!;
 
+        // Configure() must run before BuildAvaloniaApp().UseReactiveUI(...) so that
+        // AutofacDependencyResolver is the active AppLocator when ReactiveUI registers
+        // its plugins (ICreatesObservableForProperty, binders, etc.) — otherwise those
+        // registrations land in the default ModernDependencyResolver and are lost when
+        // we later swap in the Autofac one.
         public static void Configure()
         {
-            builder = new ContainerBuilder();
+            s_Builder = new ContainerBuilder();
 
-            _resolver = builder.UseAutofacDependencyResolver();
-            builder.RegisterInstance(_resolver);
+            s_Resolver = s_Builder.UseAutofacDependencyResolver();
+            s_Resolver.InitializeSplat();
 
-            _resolver.InitializeSplat();
-
-
-
-
-            builder.Register(c => new AutofacServiceProvider(c.Resolve<ILifetimeScope>()))
+            s_Builder.Register(c => new AutofacServiceProvider(c.Resolve<ILifetimeScope>()))
                 .As<IServiceProvider>()
                 .InstancePerLifetimeScope();
-
-
-
 
             // File settings.
             string settingsFilename = SettingFileHelper.DefaultUserSettingsFileLocation();
@@ -44,236 +40,226 @@ namespace Zametek.ProjectPlan
             string dataGridLayoutFilename = SettingFileHelper.DefaultDataGridLayoutFileLocation();
             var settingService = new SettingService(settingsFilename, dockLayoutFilename, dataGridLayoutFilename);
 
-            builder.RegisterInstance(settingService)
+            s_Builder.RegisterInstance(settingService)
                 .As<ISettingService>()
                 .As<SettingService>();
 
-            // 2. Register services and ViewModels
-            builder.RegisterInstance(TimeProvider.System);
-            builder.RegisterType<DateTimeCalculator>()
+            // Services and ViewModels.
+            s_Builder.RegisterInstance(TimeProvider.System);
+            s_Builder.RegisterType<DateTimeCalculator>()
                 .As<IDateTimeCalculator>()
                 .As<DateTimeCalculator>()
                 .SingleInstance();
-            builder.RegisterType<GraphImageExporter>()
+            s_Builder.RegisterType<GraphImageExporter>()
                 .As<IGraphImageExporter>()
                 .As<GraphImageExporter>()
                 .SingleInstance();
-            builder.RegisterType<MsaglSvgRenderer>()
+            s_Builder.RegisterType<MsaglSvgRenderer>()
                 .As<IMsaglSvgRenderer>()
                 .As<MsaglSvgRenderer>()
                 .SingleInstance();
-            builder.RegisterType<ArrowGraphSerializer>()
+            s_Builder.RegisterType<ArrowGraphSerializer>()
                 .As<IArrowGraphSerializer>()
                 .As<ArrowGraphSerializer>()
                 .SingleInstance();
-            builder.RegisterType<VertexGraphSerializer>()
+            s_Builder.RegisterType<VertexGraphSerializer>()
                 .As<IVertexGraphSerializer>()
                 .As<VertexGraphSerializer>()
                 .SingleInstance();
-            builder.RegisterType<MicrosoftProjectFileImporter>()
+            s_Builder.RegisterType<MicrosoftProjectFileImporter>()
                 .As<IMicrosoftProjectFileImporter>()
                 .As<MicrosoftProjectFileImporter>()
                 .SingleInstance();
-            builder.RegisterType<XlsxFileImporter>()
+            s_Builder.RegisterType<XlsxFileImporter>()
                 .As<IXlsxFileImporter>()
                 .As<XlsxFileImporter>()
                 .SingleInstance();
-            builder.RegisterType<ProjectScenarioFileImport>()
+            s_Builder.RegisterType<ProjectScenarioFileImport>()
                 .As<IProjectScenarioFileImport>()
                 .As<ProjectScenarioFileImport>()
                 .SingleInstance();
-            builder.RegisterType<ScottPlotImageExporter>()
+            s_Builder.RegisterType<ScottPlotImageExporter>()
                 .As<IScottPlotImageExporter>()
                 .As<ScottPlotImageExporter>()
                 .SingleInstance();
-            builder.RegisterType<XlsxScenarioExporter>()
+            s_Builder.RegisterType<XlsxScenarioExporter>()
                 .As<IXlsxScenarioExporter>()
                 .As<XlsxScenarioExporter>()
                 .SingleInstance();
-            builder.RegisterType<ProjectScenarioFileExport>()
+            s_Builder.RegisterType<ProjectScenarioFileExport>()
                 .As<IProjectScenarioFileExport>()
                 .As<ProjectScenarioFileExport>()
                 .SingleInstance();
-            builder.RegisterType<ProjectFileOpen>()
+            s_Builder.RegisterType<ProjectFileOpen>()
                 .As<IProjectFileOpen>()
                 .As<ProjectFileOpen>()
                 .SingleInstance();
-            builder.RegisterType<ProjectFileSave>()
+            s_Builder.RegisterType<ProjectFileSave>()
                 .As<IProjectFileSave>()
                 .As<ProjectFileSave>()
                 .SingleInstance();
-            builder.RegisterType<DialogService>()
+            s_Builder.RegisterType<DialogService>()
                 .As<IDialogService>()
                 .As<DialogService>()
                 .SingleInstance();
-            builder.RegisterType<GraphCompilationService>()
+            s_Builder.RegisterType<GraphCompilationService>()
                 .As<IGraphCompilationService>()
                 .As<GraphCompilationService>()
                 .SingleInstance();
-            builder.RegisterType<ResourceSchedulingService>()
+            s_Builder.RegisterType<ResourceSchedulingService>()
                 .As<IResourceSchedulingService>()
                 .As<ResourceSchedulingService>()
                 .SingleInstance();
-            builder.RegisterType<MetricCalculationService>()
+            s_Builder.RegisterType<MetricCalculationService>()
                 .As<IMetricCalculationService>()
                 .As<MetricCalculationService>()
                 .SingleInstance();
-            builder.RegisterType<CoreViewModel>()
+            s_Builder.RegisterType<CoreViewModel>()
                 .As<ICoreViewModel>()
                 .As<CoreViewModel>()
                 .SingleInstance();
-            builder.RegisterType<ActivitiesManagerViewModel>()
+            s_Builder.RegisterType<ActivitiesManagerViewModel>()
                 .As<IActivitiesManagerViewModel>()
                 .As<ActivitiesManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<TrackingManagerViewModel>()
+            s_Builder.RegisterType<TrackingManagerViewModel>()
                 .As<ITrackingManagerViewModel>()
                 .As<TrackingManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<ArrowGraphManagerViewModel>()
+            s_Builder.RegisterType<ArrowGraphManagerViewModel>()
                 .As<IArrowGraphManagerViewModel>()
                 .As<ArrowGraphManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<VertexGraphManagerViewModel>()
+            s_Builder.RegisterType<VertexGraphManagerViewModel>()
                 .As<IVertexGraphManagerViewModel>()
                 .As<VertexGraphManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<ResourceChartManagerViewModel>()
+            s_Builder.RegisterType<ResourceChartManagerViewModel>()
                 .As<IResourceChartManagerViewModel>()
                 .As<ResourceChartManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<GanttChartManagerViewModel>()
+            s_Builder.RegisterType<GanttChartManagerViewModel>()
                 .As<IGanttChartManagerViewModel>()
                 .As<GanttChartManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<EarnedValueChartManagerViewModel>()
+            s_Builder.RegisterType<EarnedValueChartManagerViewModel>()
                 .As<IEarnedValueChartManagerViewModel>()
                 .As<EarnedValueChartManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<MetricManagerViewModel>()
+            s_Builder.RegisterType<MetricManagerViewModel>()
                 .As<IMetricManagerViewModel>()
                 .As<MetricManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<OutputManagerViewModel>()
+            s_Builder.RegisterType<OutputManagerViewModel>()
                 .As<IOutputManagerViewModel>()
                 .As<OutputManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<GraphSettingsManagerViewModel>()
+            s_Builder.RegisterType<GraphSettingsManagerViewModel>()
                 .As<IGraphSettingsManagerViewModel>()
                 .As<GraphSettingsManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<ResourceSettingsManagerViewModel>()
+            s_Builder.RegisterType<ResourceSettingsManagerViewModel>()
                 .As<IResourceSettingsManagerViewModel>()
                 .As<ResourceSettingsManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<WorkStreamSettingsManagerViewModel>()
+            s_Builder.RegisterType<WorkStreamSettingsManagerViewModel>()
                 .As<IWorkStreamSettingsManagerViewModel>()
                 .As<WorkStreamSettingsManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<HolidaySettingsManagerViewModel>()
+            s_Builder.RegisterType<HolidaySettingsManagerViewModel>()
                 .As<IHolidaySettingsManagerViewModel>()
                 .As<HolidaySettingsManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<ProjectScenarioManagerViewModel>()
+            s_Builder.RegisterType<ProjectScenarioManagerViewModel>()
                 .As<IProjectScenarioManagerViewModel>()
                 .As<ProjectScenarioManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<ScenarioChartManagerViewModel>()
+            s_Builder.RegisterType<ScenarioChartManagerViewModel>()
                 .As<IScenarioChartManagerViewModel>()
                 .As<ScenarioChartManagerViewModel>()
                 .SingleInstance();
-            builder.RegisterType<MainViewModel>()
+            s_Builder.RegisterType<MainViewModel>()
                 .As<IMainViewModel>()
                 .As<MainViewModel>()
                 .SingleInstance();
-            builder.RegisterType<DockFactory>()
+            s_Builder.RegisterType<DockFactory>()
                 .As<IFactory>()
                 .As<DockFactory>()
                 .SingleInstance();
-            builder.RegisterType<DockSerializer>()
+            s_Builder.RegisterType<DockSerializer>()
                 .As<IDockSerializer>()
                 .As<DockSerializer>()
                 .SingleInstance();
 
             // Views.
-            builder.RegisterType<ActivitiesManagerView>()
+            s_Builder.RegisterType<ActivitiesManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<TrackingManagerView>()
+            s_Builder.RegisterType<TrackingManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<ArrowGraphManagerView>()
+            s_Builder.RegisterType<ArrowGraphManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<VertexGraphManagerView>()
+            s_Builder.RegisterType<VertexGraphManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<ResourceChartManagerView>()
+            s_Builder.RegisterType<ResourceChartManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<GanttChartManagerView>()
+            s_Builder.RegisterType<GanttChartManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<EarnedValueChartManagerView>()
+            s_Builder.RegisterType<EarnedValueChartManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<MetricManagerView>()
+            s_Builder.RegisterType<MetricManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<OutputManagerView>()
+            s_Builder.RegisterType<OutputManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<GraphSettingsManagerView>()
+            s_Builder.RegisterType<GraphSettingsManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<ResourceSettingsManagerView>()
+            s_Builder.RegisterType<ResourceSettingsManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<WorkStreamSettingsManagerView>()
+            s_Builder.RegisterType<WorkStreamSettingsManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<HolidaySettingsManagerView>()
+            s_Builder.RegisterType<HolidaySettingsManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<ProjectScenarioManagerView>()
+            s_Builder.RegisterType<ProjectScenarioManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<ScenarioChartManagerView>()
+            s_Builder.RegisterType<ScenarioChartManagerView>()
                 .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<MainView>()
+            s_Builder.RegisterType<MainView>()
                 .AsSelf()
                 .SingleInstance();
 
-            builder.RegisterInstance(new Data.ProjectPlan.VersionMapper());
-            builder.RegisterInstance(new ViewModel.ProjectPlan.ProjectPlanMapper());
-            builder.RegisterInstance(new View.ProjectPlan.ProjectPlanMapper());
+            s_Builder.RegisterInstance(new Data.ProjectPlan.VersionMapper());
+            s_Builder.RegisterInstance(new ViewModel.ProjectPlan.ProjectPlanMapper());
+            s_Builder.RegisterInstance(new View.ProjectPlan.ProjectPlanMapper());
 
-            builder.RegisterType<CommitEditHandler>()
+            s_Builder.RegisterType<CommitEditHandler>()
                 .As<ICommitEditHandler>()
                 .As<CommitEditHandler>()
                 .SingleInstance();
 
-            builder.RegisterType<DataGridManager>()
+            s_Builder.RegisterType<DataGridManager>()
                 .As<IDataGridManager>()
                 .As<DataGridManager>()
                 .SingleInstance();
-
-
-
-
-
-
-
-
-
-
         }
 
         public static void Build()
         {
-            Container = builder!.Build();
-            _resolver!.SetLifetimeScope(Container);
+            Container = s_Builder!.Build();
+            s_Resolver!.SetLifetimeScope(Container);
         }
     }
 }

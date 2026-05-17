@@ -91,7 +91,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ShowConnectionsSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections)
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(isReadyToRevise =>
                 {
                     if (isReadyToRevise == ReadyToRevise.Yes)

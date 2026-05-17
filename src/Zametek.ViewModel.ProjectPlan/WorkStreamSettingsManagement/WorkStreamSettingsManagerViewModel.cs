@@ -72,7 +72,7 @@ namespace Zametek.ViewModel.ProjectPlan
                .Subscribe();
 
             m_OrderableWorkStreamsSub = m_WorkStreams.Connect()
-               .ObserveOn(RxApp.MainThreadScheduler) // Ensure UI thread safety
+               .ObserveOn(RxSchedulers.MainThreadScheduler) // Ensure UI thread safety
                .Bind(m_OrderableWorkStreams)         // Bind to the mutable collection
                .DisposeMany()                        // Clean up resources
                .Subscribe();

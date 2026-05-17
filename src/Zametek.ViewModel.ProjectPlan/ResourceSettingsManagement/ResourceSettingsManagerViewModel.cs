@@ -94,7 +94,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_OrderableResourcesSub = m_Resources.Connect()
                //.ObserveOn(Scheduler.CurrentThread)
-               .ObserveOn(RxApp.MainThreadScheduler) // Ensure UI thread safety
+               .ObserveOn(RxSchedulers.MainThreadScheduler) // Ensure UI thread safety
                .Bind(m_OrderableResources)          // Bind to the mutable collection
                .DisposeMany()                        // Clean up resources
                .Subscribe();

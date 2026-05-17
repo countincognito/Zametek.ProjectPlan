@@ -74,11 +74,9 @@ namespace Zametek.ProjectPlan
 
                     try
                     {
-                        await Task.Factory.StartNew(() =>
-                        {
-                            CompositionRoot.Build();
-                            //Bootstrapper.RegisterIOC();
-                        }, cancellationToken: splashViewModel.CancellationToken);
+                        await Task.Factory.StartNew(
+                            CompositionRoot.Build,
+                            splashViewModel.CancellationToken);
 
                         ISettingService settingService = GetRequiredService<ISettingService>();
                         string selectedTheme = settingService.SelectedTheme;
@@ -187,10 +185,6 @@ namespace Zametek.ProjectPlan
             {
                 Log.CloseAndFlush();
             }
-
-#if DEBUG
-            this.AttachDeveloperTools();
-#endif
         }
     }
 }
