@@ -12,12 +12,11 @@
     <PackageReference Include="Dock.Model.ReactiveUI" Version="11.3.11.22" />
     <PackageReference Include="Dock.Serializer.Newtonsoft" Version="11.3.11.22" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <!--<PackageReference Include="Dock.Serializer.SystemTextJson" Version="11.3.11.22" />-->
-    <PackageReference Include="Ical.Net" Version="5.2.1" />
+    <PackageReference Include="Ical.Net" Version="5.2.2" />
     <PackageReference Include="net.sf.mpxj-for-csharp" Version="13.12.0" />
     <PackageReference Include="NPOI" Version="[2.7.6,2.8.0)" />
 	<PackageReference Include="ScottPlot.Avalonia" Version="5.0.56" />
-	<PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+	<!--<PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />-->
 	<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9" />
     <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="11.3.9.5" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.5" />
