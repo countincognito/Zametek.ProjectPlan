@@ -24,8 +24,8 @@
 	<PackageReference Include="Semi.Avalonia" Version="12.0.1" />
 	<PackageReference Include="Semi.Avalonia.ColorPicker" Version="12.0.1" />
 	<PackageReference Include="Semi.Avalonia.DataGrid" Version="12.0.0" />
-	<PackageReference Include="Xaml.Behaviors.Avalonia" Version="12.0.0" />
-	<PackageReference Include="Xaml.Behaviors.Interactions.DragAndDrop.DataGrid" Version="12.0.0" />
+	<PackageReference Include="Xaml.Behaviors.Avalonia" Version="12.0.0.1" />
+	<PackageReference Include="Xaml.Behaviors.Interactions.DragAndDrop.DataGrid" Version="12.0.0.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj" />
