@@ -20,51 +20,22 @@
     <Content Include="Assets\zpp.ico" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Autofac" Version="9.1.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.0" />
     <PackageReference Include="Avalonia" Version="12.0.3" />
     <PackageReference Include="Avalonia.Desktop" Version="12.0.3" />
-    <!--<PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.3" />-->
     <PackageReference Include="Avalonia.Themes.Simple" Version="12.0.3" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.3" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.1">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="12.0.0.2" />
+    <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="2.0.0" />
     <PackageReference Include="ReactiveUI.Avalonia" Version="12.0.1" />
-    <PackageReference Include="Autofac" Version="9.1.0" />
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="Splat.Autofac" Version="19.3.1" />
-
-
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.0" />
-    
-    <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="12.0.0.2" />
-    <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="2.0.0" />
-    <PackageReference Include="Serilog" Version="4.3.1" />
-    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-
-
-    
-    <!--<PackageReference Include="ReactiveUI.Avalonia" Version="12.0.1" />
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.0" />
-    <PackageReference Include="Avalonia.Themes.Simple" Version="12.0.3" />
-    <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="12.0.0.2" />
-    <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="2.0.0" />
-    <PackageReference Include="Serilog" Version="4.3.1" />
-    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="Splat.Autofac" Version="19.3.1" />-->
-
-    <!-- Integration package bridging Autofac, Splat, and Avalonia v12 -->
-    <!--<PackageReference Include="ReactiveUI.Avalonia.Autofac" Version="12.0.1" />-->
-
-    
-    <!--<PackageReference Include="Splat.Avalonia.Autofac" Version="15.5.3" />-->
-    <!--<PackageReference Include="Splat.DependencyInjection.SourceGenerator" Version="2.2.2">
-    <PackageReference Include="Avalonia.Themes.Simple" Version="12.0.1" />
-    <PackageReference Include="Dock.Avalonia.Themes.Simple" Version="12.0.0.1" />
-    <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="2.0.0-rc2" />
-    <PackageReference Include="Splat.DependencyInjection.SourceGenerator" Version="2.2.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>-->
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />

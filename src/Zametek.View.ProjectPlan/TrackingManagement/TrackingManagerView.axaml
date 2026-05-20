@@ -293,13 +293,13 @@
 						<DataGridTemplateColumn.CellTemplate>
 							<DataTemplate>
 								<DockPanel VerticalAlignment="Stretch">
-                  <Border BorderBrush="Gray"
-                          BorderThickness="2"
+                  <Border BorderBrush="{DynamicResource TextBoxDefaultBorderBrush}"
+                          BorderThickness="1"
                           CornerRadius="5"
                           DockPanel.Dock="Right"
                           Padding="2"
                           HorizontalAlignment="Center"
-                          VerticalAlignment="Center">
+                          VerticalAlignment="Stretch">                    
                     <TextBlock VerticalAlignment="Center"
                                TextAlignment="Right"
                                Margin="0"

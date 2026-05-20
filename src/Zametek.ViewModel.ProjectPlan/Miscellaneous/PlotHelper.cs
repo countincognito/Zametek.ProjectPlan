@@ -1,5 +1,7 @@
+using DynamicData;
 using ScottPlot;
 using ScottPlot.Avalonia;
+using ScottPlot.Interactivity;
 using Zametek.Common.ProjectPlan;
 using Zametek.Utility;
 
@@ -165,6 +167,24 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
                         }
                     });
+            }
+
+            return plotModel;
+        }
+
+        public static AvaPlot ClearContextMenu(this AvaPlot plotModel)
+        {
+
+            plotModel.Menu?.Clear();
+
+            IUserActionResponse? contextMenuAction = plotModel
+                .UserInputProcessor
+                .UserActionResponses
+                .FirstOrDefault(x => x is ScottPlot.Interactivity.UserActionResponses.SingleClickContextMenu);
+
+            if (contextMenuAction != null)
+            {
+                plotModel.UserInputProcessor.UserActionResponses.Remove(contextMenuAction);
             }
 
             return plotModel;

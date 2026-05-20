@@ -2,13 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
-			 xmlns:local="using:Zametek.View.ProjectPlan"
-			 xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
-			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
-			 xmlns:common="using:Zametek.Common.ProjectPlan"
-			 xmlns:converters="using:Avalonia.Controls.Converters"
-			 x:DataType="vm:ScenarioChartManagerViewModel"
+			       xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			       xmlns:local="using:Zametek.View.ProjectPlan"
+			       xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
+			       xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			       xmlns:common="using:Zametek.Common.ProjectPlan"
+			       xmlns:converters="using:Avalonia.Controls.Converters"
+			       x:DataType="vm:ScenarioChartManagerViewModel"
+			       xmlns:sys="using:System"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ScenarioChartManagerView">
 	<UserControl.Resources>
@@ -18,15 +19,23 @@
 	<DockPanel Margin="7">
 		<DockPanel>
       <DockPanel DockPanel.Dock="Bottom">
-        <ScrollViewer VerticalScrollBarVisibility="Auto"
-                HorizontalScrollBarVisibility="Disabled">
-          <SelectableTextBlock Text="{Binding Path=CurveFittingFormula, Mode=OneWay}"
-                     TextWrapping="Wrap"
-                     FontWeight="Bold"
-                     Height="25"
-                     Margin="11,0,0,0"
-                     VerticalAlignment="Stretch"/>
-        </ScrollViewer>
+        <Label VerticalContentAlignment="Center"
+					   HorizontalContentAlignment="Left"
+					   Height="25"
+					   DockPanel.Dock="Left"
+			       IsTabStop="False"
+					   Margin="0,0,11,0"
+					   Content="{x:Static resources:Labels.Label_CurveFitting}"/>
+
+        <TextBox Text="{Binding Path=CurveFittingFormula, Mode=OneWay}"
+                 TextWrapping="Wrap"
+                 FontWeight="Bold"
+								 Width="{x:Static sys:Double.NaN}"
+								 HorizontalAlignment="Stretch"
+                 VerticalAlignment="Center"
+                 Height="25"
+                 IsReadOnly="True"
+                 Margin="0,0,11,0"/>
       </DockPanel>
       
 			<!-- ScottPlot PlotView -->

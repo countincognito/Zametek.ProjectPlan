@@ -287,6 +287,19 @@ namespace Zametek.ViewModel.ProjectPlan
                 plotModel.Plot.PlottableList.AddRange(annotations);
             }
 
+            // X Axis title.
+            IXAxis xAxis = plotModel.Plot.Axes.Bottom;
+            xAxis.Label.Text = StringConverters.TrackedMetricsValue(xMetric);
+            xAxis.Label.FontSize = PlotHelper.FontSize;
+            xAxis.Label.Bold = false;
+
+            // Y Axis title.
+            IYAxis yAxis = plotModel.Plot.Axes.Left;
+            yAxis.Label.Text = StringConverters.TrackedMetricsValue(yMetric);
+            yAxis.Label.FontSize = PlotHelper.FontSize;
+            yAxis.Label.Bold = false;
+
+            // Build the curve fitting if requested.
             string curveFittingFormula = BuildCurveFit(plotModel, markers, curveFittingType);
             plotModel.Plot.Axes.AutoScale();
 
@@ -733,21 +746,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             plotModel ??= new AvaPlot();
-
-            // Clear existing menu items.
-            plotModel.Menu?.Clear();
-
-            //// Add menu items with custom actions.
-            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_SaveAs, (plot) =>
-            //{
-            //    SaveScenarioChartImageFileCommand.Execute(null);
-            //});
-            //plotModel.Menu?.Add(Resource.ProjectPlan.Menus.Menu_Reset, (plot) =>
-            //{
-            //    plot.Axes.AutoScale();
-            //});
-
-            //plotModel.Plot.Axes.AutoScale();
+            plotModel.ClearContextMenu();
             ScenarioChartPlotModel = plotModel;
             CurveFittingFormula = curveFittingFormula;
         }
