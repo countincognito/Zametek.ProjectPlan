@@ -681,4 +681,7 @@
   <data name="Label_CurveFitting" xml:space="preserve">
     <value>Curve Fitting</value>
   </data>
+  <data name="Label_ProjectedFinish" xml:space="preserve">
+    <value>Projected Finish:</value>
+  </data>
 </root>

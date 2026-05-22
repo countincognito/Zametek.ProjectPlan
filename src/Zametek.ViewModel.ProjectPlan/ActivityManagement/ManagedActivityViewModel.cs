@@ -1,5 +1,4 @@
 using ReactiveUI;
-using System.Collections;
 using System.ComponentModel;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -10,7 +9,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ManagedActivityViewModel
-        : ViewModelBase, IManagedActivityViewModel, IEditableObject, INotifyDataErrorInfo
+        : DataErrorViewModelBase, IManagedActivityViewModel, IEditableObject
     {
         #region Fields
 
@@ -27,9 +26,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable? m_DateTimeCalculatorDisplayModeSub;
         private readonly IDisposable? m_CompilationSub;
 
-        private static readonly string[] s_NoErrors = [];
-        private readonly Dictionary<string, List<string>> m_ErrorsByPropertyName;
-
         #endregion
 
         #region Ctors
@@ -43,6 +39,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IEnumerable<ActivityTrackerModel>? trackers,
             DateTimeOffset? minimumEarliestStartDateTime,
             DateTimeOffset? maximumLatestFinishDateTime)
+            : base()
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(dependentActivity);
@@ -55,7 +52,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_MinimumEarliestStartDateTime = minimumEarliestStartDateTime;
             m_MaximumLatestFinishDateTime = maximumLatestFinishDateTime;
             m_VertexGraphCompiler = vertexGraphCompiler;
-            m_ErrorsByPropertyName = [];
 
             ResourceSelector = new ResourceSelectorViewModel();
             m_ResourceSettings = m_CoreViewModel.ResourceSettings;
@@ -383,46 +379,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_IsCompiled = true;
             this.RaisePropertyChanged(nameof(IsIsolated));
             this.RaisePropertyChanged(nameof(AllocatedToResourcesString));
-        }
-
-        private void SetError(string propertyName, string error)
-        {
-            if (m_ErrorsByPropertyName.TryGetValue(propertyName, out List<string>? errorList))
-            {
-                if (!errorList.Contains(error))
-                {
-                    errorList.Add(error);
-                }
-            }
-            else
-            {
-                m_ErrorsByPropertyName.Add(propertyName, [error]);
-            }
-            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
-            this.RaisePropertyChanged(nameof(HasErrors));
-        }
-
-        private void ClearErrors(string? propertyName)
-        {
-            if (!string.IsNullOrWhiteSpace(propertyName)
-                && m_ErrorsByPropertyName.TryGetValue(propertyName, out List<string>? errorList))
-            {
-                errorList.Clear();
-            }
-            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
-        }
-
-        private void ClearErrors()
-        {
-            IList<string> propertyNames = [.. m_ErrorsByPropertyName.Keys];
-            m_ErrorsByPropertyName.Clear();
-
-            foreach (string propertyName in propertyNames)
-            {
-                ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
-            }
-
-            this.RaisePropertyChanged(nameof(HasErrors));
         }
 
         #endregion
@@ -1039,24 +995,6 @@ namespace Zametek.ViewModel.ProjectPlan
             // Suppress finalization.
             GC.SuppressFinalize(this);
         }
-
-        #endregion
-
-        #region INotifyDataErrorInfo Members
-
-        public bool HasErrors => m_ErrorsByPropertyName.Count != 0;
-
-        public IEnumerable GetErrors(string? propertyName)
-        {
-            if (!string.IsNullOrWhiteSpace(propertyName)
-                && m_ErrorsByPropertyName.TryGetValue(propertyName, out List<string>? errorList))
-            {
-                return errorList;
-            }
-            return s_NoErrors;
-        }
-
-        public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
 
         #endregion
     }

@@ -1,6 +1,8 @@
-﻿using ReactiveUI;
+using NPOI.SS.Formula.Functions;
+using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
+using System.Windows.Input;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -34,6 +36,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;
             m_DateTimeCalculator = dateTimeCalculator;
             m_NameColumnWidth = 130;
+
+            SyncTodayCommand = ReactiveCommand.Create(SyncToday);
 
             m_IsBusy = this
                 .WhenAnyValue(tm => tm.m_CoreViewModel.IsBusy)
@@ -123,6 +127,19 @@ namespace Zametek.ViewModel.ProjectPlan
             //this.RaisePropertyChanged(nameof(Day17Title));
             //this.RaisePropertyChanged(nameof(Day18Title));
             //this.RaisePropertyChanged(nameof(Day19Title));
+        }
+
+        private void SyncToday()
+        {
+            lock (m_Lock)
+            {
+                (int? intValue, _) = m_DateTimeCalculator
+                    .CalculateTimeAndDateTime(
+                        m_CoreViewModel.ProjectStart,
+                        m_CoreViewModel.Today);
+
+                TrackerIndex = intValue.GetValueOrDefault();
+            }
         }
 
         #endregion
@@ -215,6 +232,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public string Day12Title => GetDayTitle(12);
         public string Day13Title => GetDayTitle(13);
         public string Day14Title => GetDayTitle(14);
+
+        public ICommand SyncTodayCommand { get; }
 
         #endregion
 

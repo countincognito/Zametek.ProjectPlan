@@ -40,7 +40,18 @@
 						  DockPanel.Dock="Right"
 						  CurrentPage="{Binding Path=PageIndex, Mode=TwoWay}"/>
 
-			<Grid />
+      <Button DockPanel.Dock="Left"
+          Command="{Binding Path=SyncTodayCommand, Mode=OneWay}"
+          ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_SyncToday}"
+          Content="↺"
+          FontSize="18"
+          Padding="4,2"
+          Margin="0,0,7,0"
+          Width="30"
+          VerticalAlignment="Center"
+          VerticalContentAlignment="Center" />
+
+      <Grid />
 		</DockPanel>
 
 		<Grid RowDefinitions="*, 4, *">

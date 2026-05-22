@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -55,5 +56,7 @@ namespace Zametek.Contract.ProjectPlan
         //string Day17Title { get; }
         //string Day18Title { get; }
         //string Day19Title { get; }
+
+        ICommand SyncTodayCommand { get; }
     }
 }

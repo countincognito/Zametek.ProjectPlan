@@ -6,9 +6,11 @@ using ScottPlot.Plottables;
 using System.Globalization;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Text;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Data.ProjectPlan.v0_5_0;
 using Zametek.Maths.Graphs;
 using Zametek.Utility;
 
@@ -334,6 +336,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     plotModel,
                     trackingSeriesSet.ProgressProjection);
 
+                // Find projected completion time.
+                AddProjectedFinish(
+                    dateTimeCalculator,
+                    trackingSeriesSet,
+                    showDates,
+                    projectStart,
+                    plotModel);
+
                 AddScatterPlot(
                     title: Resource.ProjectPlan.Labels.Label_EffortProjection,
                     stroke: projectionStrokeThickness,
@@ -419,6 +429,38 @@ namespace Zametek.ViewModel.ProjectPlan
             plotModel.Plot.Axes.AutoScale();
 
             return plotModel.SetBaseTheme(baseTheme);
+        }
+
+        private static void AddProjectedFinish(
+            IDateTimeCalculator dateTimeCalculator,
+            TrackingSeriesSetModel trackingSeriesSet,
+            bool showDates,
+            DateTimeOffset projectStart,
+            AvaPlot plotModel)
+        {
+            var projectFinishDisplay = new StringBuilder(Resource.ProjectPlan.Labels.Label_ProjectedFinish);
+            projectFinishDisplay.Append(' ');
+
+            int projectedFinishTime = trackingSeriesSet.ProgressProjection.Select(x => x.Time).DefaultIfEmpty().Max();
+
+            if (showDates)
+            {
+                DateTimeOffset startAndFinish = dateTimeCalculator.AddDays(projectStart, projectedFinishTime);
+                string projectFinish = dateTimeCalculator
+                    .DisplayFinishDate(startAndFinish, startAndFinish, 1)
+                    .ToString(DateTimeCalculator.DateFormat);
+
+                projectFinishDisplay.Append(projectFinish);
+            }
+            else
+            {
+                projectFinishDisplay.Append(projectedFinishTime);
+            }
+
+            Annotation annotation = plotModel.Plot.Add.Annotation(projectFinishDisplay.ToString(), Alignment.LowerRight);
+            annotation.LabelBackgroundColor = Colors.Transparent;
+            annotation.LabelBorderColor = Colors.Transparent;
+            annotation.LabelShadowColor = Colors.Transparent;
         }
 
         private static AnnotatedArrow MilestoneAnnotation(
