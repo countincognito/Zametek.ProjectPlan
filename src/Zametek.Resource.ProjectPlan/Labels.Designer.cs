@@ -1322,6 +1322,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Projected Finish:.
+        /// </summary>
+        public static string Label_ProjectedFinish {
+            get {
+                return ResourceManager.GetString("Label_ProjectedFinish", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Project Finish:.
         /// </summary>
         public static string Label_ProjectFinish {

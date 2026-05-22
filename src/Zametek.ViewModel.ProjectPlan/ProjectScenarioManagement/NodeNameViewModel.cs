@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using System.Collections;
 using System.ComponentModel;
 using Zametek.Contract.ProjectPlan;
@@ -59,6 +59,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 && m_ErrorsByPropertyName.TryGetValue(propertyName, out List<string>? errorList))
             {
                 errorList.Clear();
+                m_ErrorsByPropertyName.Remove(propertyName);
             }
             ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
         }
