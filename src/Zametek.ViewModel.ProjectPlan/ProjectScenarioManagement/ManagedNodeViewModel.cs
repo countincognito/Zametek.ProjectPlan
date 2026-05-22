@@ -1,4 +1,4 @@
-﻿using DynamicData;
+using DynamicData;
 using ReactiveUI;
 using System.Collections;
 using System.Collections.ObjectModel;
@@ -11,7 +11,7 @@ using Zametek.Contract.ProjectPlan;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ManagedNodeViewModel
-        : ViewModelBase, IManagedNodeViewModel, IEditableObject, INotifyDataErrorInfo
+        : DataErrorViewModelBase, IManagedNodeViewModel, IEditableObject
     {
         #region Fields
 
@@ -22,9 +22,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly BehaviorSubject<IComparer<IManagedNodeViewModel>> m_NodeSortComparer;
         private ProjectScenarioNodeModel m_ProjectScenarioNodeModel;
         private ProjectScenarioModel? m_ProjectScenarioModel;
-
-        private static readonly string[] s_NoErrors = [];
-        private readonly Dictionary<string, List<string>> m_ErrorsByPropertyName;
 
         private readonly IDisposable m_ReadOnlyLabelsSub;
         private readonly IDisposable m_ReadOnlyChildrenSub;
@@ -62,6 +59,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ISettingService settingService,
             BehaviorSubject<IComparer<IManagedNodeViewModel>> nodeSortComparer,
             ProjectScenarioNodeModel projectScenarioNode)
+            : base()
         {
             ArgumentNullException.ThrowIfNull(projectScenarioManagerViewModel);
             ArgumentNullException.ThrowIfNull(coreViewModel);
@@ -132,56 +130,6 @@ namespace Zametek.ViewModel.ProjectPlan
                         return $@"{(isUpdated ? "*" : string.Empty)}{displayName} {label}";
                     })
                 .ToProperty(this, x => x.DisplayName);
-
-            m_ErrorsByPropertyName = [];
-        }
-
-        #endregion
-
-        #region Properties
-
-        #endregion
-
-        #region Private Methods
-
-        private void SetError(string propertyName, string error)
-        {
-            if (m_ErrorsByPropertyName.TryGetValue(propertyName, out List<string>? errorList))
-            {
-                if (!errorList.Contains(error))
-                {
-                    errorList.Add(error);
-                }
-            }
-            else
-            {
-                m_ErrorsByPropertyName.Add(propertyName, [error]);
-            }
-            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
-            this.RaisePropertyChanged(nameof(HasErrors));
-        }
-
-        private void ClearErrors(string? propertyName)
-        {
-            if (!string.IsNullOrWhiteSpace(propertyName)
-                && m_ErrorsByPropertyName.TryGetValue(propertyName, out List<string>? errorList))
-            {
-                errorList.Clear();
-            }
-            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
-        }
-
-        private void ClearErrors()
-        {
-            IList<string> propertyNames = [.. m_ErrorsByPropertyName.Keys];
-            m_ErrorsByPropertyName.Clear();
-
-            foreach (string propertyName in propertyNames)
-            {
-                ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
-            }
-
-            this.RaisePropertyChanged(nameof(HasErrors));
         }
 
         #endregion
@@ -474,24 +422,6 @@ namespace Zametek.ViewModel.ProjectPlan
             // Suppress finalization.
             GC.SuppressFinalize(this);
         }
-
-        #endregion
-
-        #region INotifyDataErrorInfo Members
-
-        public bool HasErrors => m_ErrorsByPropertyName.Count != 0;
-
-        public IEnumerable GetErrors(string? propertyName)
-        {
-            if (!string.IsNullOrWhiteSpace(propertyName)
-                && m_ErrorsByPropertyName.TryGetValue(propertyName, out List<string>? errorList))
-            {
-                return errorList;
-            }
-            return s_NoErrors;
-        }
-
-        public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
 
         #endregion
     }
