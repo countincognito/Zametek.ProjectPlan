@@ -270,9 +270,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 bool result = await m_DialogService.ShowContextAsync(
                     title: Resource.ProjectPlan.Titles.Title_EditCustomCalendar,
                     header: string.Empty,
-                    message: $@"**{Resource.ProjectPlan.Messages.Message_EditCustomCalendar}**",
-                    context: editViewModel,
-                    markdown: true);
+                    message: Resource.ProjectPlan.Messages.Message_EditCustomCalendar,
+                    context: editViewModel);
 
                 if (!result)
                 {

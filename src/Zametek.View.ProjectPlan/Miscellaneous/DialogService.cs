@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using MsBox.Avalonia;
@@ -55,8 +55,7 @@ namespace Zametek.View.ProjectPlan
         public async Task ShowNotificationAsync(
             string title,
             string header,
-            string message,
-            bool markdown = false)
+            string message)
         {
             await ShowMessageBoxAsync(new MessageBoxStandardParams
             {
@@ -65,15 +64,13 @@ namespace Zametek.View.ProjectPlan
                 ContentTitle = title,
                 ContentHeader = header,
                 ContentMessage = message,
-                Markdown = markdown
             });
         }
 
         public async Task ShowErrorAsync(
             string title,
             string header,
-            string message,
-            bool markdown = false)
+            string message)
         {
             await ShowMessageBoxAsync(new MessageBoxStandardParams
             {
@@ -83,15 +80,13 @@ namespace Zametek.View.ProjectPlan
                 ContentHeader = header,
                 ContentMessage = message,
                 Icon = Icon.Error,
-                Markdown = markdown
             });
         }
 
         public async Task ShowWarningAsync(
             string title,
             string header,
-            string message,
-            bool markdown = false)
+            string message)
         {
             await ShowMessageBoxAsync(new MessageBoxStandardParams
             {
@@ -101,7 +96,6 @@ namespace Zametek.View.ProjectPlan
                 ContentHeader = header,
                 ContentMessage = message,
                 Icon = Icon.Warning,
-                Markdown = markdown
             });
         }
 
@@ -109,7 +103,6 @@ namespace Zametek.View.ProjectPlan
             string title,
             string header,
             string message,
-            bool markdown = false,
             bool showMainPageLink = false)
         {
             var @params = new MessageBoxStandardParams
@@ -120,7 +113,6 @@ namespace Zametek.View.ProjectPlan
                 ContentHeader = header,
                 ContentMessage = message,
                 Icon = Icon.Info,
-                Markdown = markdown
             };
 
             if (showMainPageLink)
@@ -141,7 +133,6 @@ namespace Zametek.View.ProjectPlan
             string message,
             double height,
             double width,
-            bool markdown = false,
             bool showMainPageLink = false)
         {
             var @params = new MessageBoxStandardParams
@@ -154,7 +145,6 @@ namespace Zametek.View.ProjectPlan
                 Height = height,
                 Width = width,
                 Icon = Icon.Info,
-                Markdown = markdown
             };
 
             if (showMainPageLink)
@@ -173,8 +163,7 @@ namespace Zametek.View.ProjectPlan
             string title,
             string header,
             string message,
-            object context,
-            bool markdown = false)
+            object context)
         {
             var result = await ShowMessageBoxAsync(
                  new MessageBoxStandardParams
@@ -187,7 +176,6 @@ namespace Zametek.View.ProjectPlan
                      Context = context,
                      ButtonDefinitions = ButtonEnum.OkCancel,
                      Icon = Icon.None,
-                     Markdown = markdown
                  });
             return result == ButtonResult.Ok;
         }
@@ -198,8 +186,7 @@ namespace Zametek.View.ProjectPlan
             string message,
             object context,
             double height,
-            double width,
-            bool markdown = false)
+            double width)
         {
             var result = await ShowMessageBoxAsync(
                 new MessageBoxStandardParams
@@ -214,7 +201,6 @@ namespace Zametek.View.ProjectPlan
                     Width = width,
                     ButtonDefinitions = ButtonEnum.OkCancel,
                     Icon = Icon.None,
-                    Markdown = markdown
                 });
             return result == ButtonResult.Ok;
         }
@@ -222,8 +208,7 @@ namespace Zametek.View.ProjectPlan
         public async Task<bool> ShowConfirmationAsync(
             string title,
             string header,
-            string message,
-            bool markdown = false)
+            string message)
         {
             ButtonResult result = await ShowMessageBoxAsync(new MessageBoxStandardParams
             {
@@ -234,7 +219,6 @@ namespace Zametek.View.ProjectPlan
                 ContentMessage = message,
                 ButtonDefinitions = ButtonEnum.YesNo,
                 Icon = Icon.Info,
-                Markdown = markdown
             });
             return result == ButtonResult.Yes;
         }

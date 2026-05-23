@@ -1,4 +1,4 @@
-﻿using Zametek.Contract.ProjectPlan;
+using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine
 {
@@ -20,8 +20,7 @@ namespace Zametek.ProjectPlan.CommandLine
         public async Task ShowNotificationAsync(
             string title,
             string header,
-            string message,
-            bool markdown = false)
+            string message)
         {
             await Console.Out.WriteLineAsync($@"{title}: {message}");
         }
@@ -29,8 +28,7 @@ namespace Zametek.ProjectPlan.CommandLine
         public async Task ShowErrorAsync(
             string title,
             string header,
-            string message,
-            bool markdown = false)
+            string message)
         {
             await Console.Error.WriteLineAsync($@"{title}: {message}");
         }
@@ -38,8 +36,7 @@ namespace Zametek.ProjectPlan.CommandLine
         public async Task ShowWarningAsync(
             string title,
             string header,
-            string message,
-            bool markdown = false)
+            string message)
         {
             await Console.Error.WriteLineAsync($@"{title}: {message}");
         }
@@ -48,7 +45,6 @@ namespace Zametek.ProjectPlan.CommandLine
             string title,
             string header,
             string message,
-            bool markdown = false,
             bool showMainPageLink = false)
         {
             await Console.Out.WriteLineAsync($@"{title}: {message}");
@@ -60,7 +56,6 @@ namespace Zametek.ProjectPlan.CommandLine
             string message,
             double height,
             double width,
-            bool markdown = false,
             bool showMainPageLink = false)
         {
             await Console.Out.WriteLineAsync($@"{title}: {message}");
@@ -69,8 +64,7 @@ namespace Zametek.ProjectPlan.CommandLine
         public Task<bool> ShowConfirmationAsync(
             string title,
             string header,
-            string message,
-            bool markdown = false)
+            string message)
         {
             throw new InvalidOperationException();
         }
@@ -79,8 +73,7 @@ namespace Zametek.ProjectPlan.CommandLine
             string title,
             string header,
             string message,
-            object context,
-            bool markdown = false)
+            object context)
         {
             throw new InvalidOperationException();
         }
@@ -91,8 +84,7 @@ namespace Zametek.ProjectPlan.CommandLine
             string message,
             object context,
             double height,
-            double width,
-            bool markdown = false)
+            double width)
         {
             throw new InvalidOperationException();
         }

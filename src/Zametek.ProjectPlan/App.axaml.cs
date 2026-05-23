@@ -9,7 +9,6 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Zametek.Contract.ProjectPlan;
 using Zametek.View.ProjectPlan;
@@ -42,15 +41,8 @@ namespace Zametek.ProjectPlan
 
         public override async void OnFrameworkInitializationCompleted()
         {
-            //CompositionRoot.Build();
-
             Log.Logger = ConfigureSerilog();
             Log.Information("Application starting up");
-
-            //RxApp.DefaultExceptionHandler = System.Reactive.Observer.Create<Exception>(ex =>
-            //{
-            //    Log.Error(ex, "Unhandled ReactiveUI exception");
-            //});
 
             try
             {
@@ -88,6 +80,7 @@ namespace Zametek.ProjectPlan
                         desktopLifetime.Exit += (a, b) =>
                         {
                             mainViewModel.CloseLayout();
+                            Log.CloseAndFlush();
                         };
 
                         MainView mainView = new()
@@ -176,14 +169,11 @@ namespace Zametek.ProjectPlan
             {
                 Log.Fatal(ex, "Fatal startup error");
                 Console.Error.WriteLine($"Fatal startup error: {ex}");
+                Log.CloseAndFlush();
                 if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
                     desktop.Shutdown(1);
                 }
-            }
-            finally
-            {
-                Log.CloseAndFlush();
             }
         }
     }

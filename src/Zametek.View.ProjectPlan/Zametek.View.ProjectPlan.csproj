@@ -4,7 +4,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
 	<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-	<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
 	<Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
   <ItemGroup>
@@ -13,12 +12,10 @@
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" />
     <PackageReference Include="Avalonia.Desktop" Version="12.0.3" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.3" />
-    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.1" />
     <PackageReference Include="Dock.Avalonia" Version="12.0.0.2" />
     <PackageReference Include="Irihi.Ursa" Version="2.0.0" />
     <PackageReference Include="Markdown.Avalonia.SyntaxHigh" Version="12.0.0-a3" />
     <PackageReference Include="MessageBox.Avalonia" Version="12.0.0" />
-    <PackageReference Include="MessageBox.Avalonia.Markdown" Version="3.2.0" />
 	  <PackageReference Include="ReactiveUI.Avalonia" Version="12.0.1" />
 	  <PackageReference Include="Semi.Avalonia" Version="12.0.1" />
 	  <PackageReference Include="Semi.Avalonia.ColorPicker" Version="12.0.1" />

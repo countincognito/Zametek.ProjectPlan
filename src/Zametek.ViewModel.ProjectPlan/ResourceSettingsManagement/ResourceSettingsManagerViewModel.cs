@@ -322,9 +322,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 bool result = await m_DialogService.ShowContextAsync(
                     title: Resource.ProjectPlan.Titles.Title_EditResources,
                     header: string.Empty,
-                    message: $@"**{Resource.ProjectPlan.Messages.Message_EditResources}**",
-                    context: editViewModel,
-                    markdown: true);
+                    message: Resource.ProjectPlan.Messages.Message_EditResources,
+                    context: editViewModel);
 
                 if (!result)
                 {

@@ -1,24 +1,24 @@
-﻿namespace Zametek.Contract.ProjectPlan
+namespace Zametek.Contract.ProjectPlan
 {
     public interface IDialogService
     {
         object Parent { set; }
 
-        Task ShowNotificationAsync(string title, string header, string message, bool markdown = false);
+        Task ShowNotificationAsync(string title, string header, string message);
 
-        Task ShowErrorAsync(string title, string header, string message, bool markdown = false);
+        Task ShowErrorAsync(string title, string header, string message);
 
-        Task ShowWarningAsync(string title, string header, string message, bool markdown = false);
+        Task ShowWarningAsync(string title, string header, string message);
 
-        Task ShowInfoAsync(string title, string header, string message, bool markdown = false, bool showMainPageLink = false);
+        Task ShowInfoAsync(string title, string header, string message, bool showMainPageLink = false);
 
-        Task ShowInfoAsync(string title, string header, string message, double height, double width, bool markdown = false, bool showMainPageLink = false);
+        Task ShowInfoAsync(string title, string header, string message, double height, double width, bool showMainPageLink = false);
 
-        Task<bool> ShowContextAsync(string title, string header, string message, object context, bool markdown = false);
+        Task<bool> ShowContextAsync(string title, string header, string message, object context);
 
-        Task<bool> ShowContextAsync(string title, string header, string message, object context, double height, double width, bool markdown = false);
+        Task<bool> ShowContextAsync(string title, string header, string message, object context, double height, double width);
 
-        Task<bool> ShowConfirmationAsync(string title, string header, string message, bool markdown = false);
+        Task<bool> ShowConfirmationAsync(string title, string header, string message);
 
         Task<string?> ShowOpenFileDialogAsync(string initialDirectory, IList<IFileFilter> fileFilters);
 

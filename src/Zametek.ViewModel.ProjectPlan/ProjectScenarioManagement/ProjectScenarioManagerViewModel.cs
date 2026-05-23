@@ -984,9 +984,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 bool result = await m_DialogService.ShowContextAsync(
                     title: Resource.ProjectPlan.Labels.Label_NewScenario,
                     header: string.Empty,
-                    message: $@"**{Resource.ProjectPlan.Labels.Label_NewScenario}**",
-                    context: nodeNameViewModel,
-                    markdown: true);
+                    message: Resource.ProjectPlan.Labels.Label_NewScenario,
+                    context: nodeNameViewModel);
 
                 nodeNameViewModel.RunValidation();
 
@@ -1079,9 +1078,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 bool result = await m_DialogService.ShowContextAsync(
                     title: Resource.ProjectPlan.Labels.Label_NewScenarioFolder,
                     header: string.Empty,
-                    message: $@"**{Resource.ProjectPlan.Labels.Label_NewScenarioFolder}**",
-                    context: nodeNameViewModel,
-                    markdown: true);
+                    message: Resource.ProjectPlan.Labels.Label_NewScenarioFolder,
+                    context: nodeNameViewModel);
 
                 nodeNameViewModel.RunValidation();
 
@@ -1160,9 +1158,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 bool result = await m_DialogService.ShowContextAsync(
                     title: Resource.ProjectPlan.Labels.Label_NewName,
                     header: string.Empty,
-                    message: $@"**{Resource.ProjectPlan.Labels.Label_NewName}**",
-                    context: nodeNameViewModel,
-                    markdown: true);
+                    message: Resource.ProjectPlan.Labels.Label_NewName,
+                    context: nodeNameViewModel);
 
                 nodeNameViewModel.RunValidation();
 
@@ -1523,9 +1520,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 bool result = await m_DialogService.ShowContextAsync(
                     title: Resource.ProjectPlan.Labels.Label_AddTag,
                     header: string.Empty,
-                    message: $@"**{Resource.ProjectPlan.Messages.Message_AddTag} {managedNode.Name}**",
-                    context: addTagViewModel,
-                    markdown: true);
+                    message: $@"{Resource.ProjectPlan.Messages.Message_AddTag} {managedNode.Name}",
+                    context: addTagViewModel);
 
                 addTagViewModel.RunValidation();
 
@@ -1602,9 +1598,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 bool result = await m_DialogService.ShowContextAsync(
                     title: Resource.ProjectPlan.Labels.Label_DeleteTag,
                     header: string.Empty,
-                    message: $@"**{Resource.ProjectPlan.Messages.Message_DeleteTag} {managedNode.Name}**",
-                    context: removeTagViewModel,
-                    markdown: true);
+                    message: $@"{Resource.ProjectPlan.Messages.Message_DeleteTag} {managedNode.Name}",
+                    context: removeTagViewModel);
 
                 if (!result)
                 {
