@@ -1385,6 +1385,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             {
                                 if (activity is IEditableObject editable)
                                 {
+                                    activity.IsEditMuted = true;
                                     editable.BeginEdit();
 
                                     if (updateModel.IsNameEdited)
@@ -1425,12 +1426,19 @@ namespace Zametek.ViewModel.ProjectPlan
                                     }
 
                                     editable.EndEdit();
+                                    activity.IsEditMuted = false;
                                 }
                             }
                         }
                     });
 
                     IsProjectScenarioUpdated = true;
+
+                    if (AutoCompile)
+                    {
+                        IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                        IsReadyToCompile = ReadyToCompile.Yes;
+                    }
                 }
             }
             finally

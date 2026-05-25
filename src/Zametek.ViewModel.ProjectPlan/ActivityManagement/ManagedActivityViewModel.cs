@@ -49,6 +49,7 @@ namespace Zametek.ViewModel.ProjectPlan
             DependentActivity = dependentActivity;
             m_DateTimeCalculator = dateTimeCalculator;
             m_ProjectStart = projectStart;
+            m_IsEditMuted = false;
             m_MinimumEarliestStartDateTime = minimumEarliestStartDateTime;
             m_MaximumLatestFinishDateTime = maximumLatestFinishDateTime;
             m_VertexGraphCompiler = vertexGraphCompiler;
@@ -940,13 +941,28 @@ namespace Zametek.ViewModel.ProjectPlan
                 UpdateActivityTargetWorkStreams();
                 TrackerSet.RefreshIndex();
                 m_CoreViewModel.IsProjectScenarioUpdated = true;
-                IsCompiled = false;
+
+                if (!IsEditMuted)
+                {
+                    IsCompiled = false;
+                }
             }
         }
 
         public void CancelEdit()
         {
             m_isDirty = false;
+        }
+
+        #endregion
+
+        #region IMuteEdits Members
+
+        private bool m_IsEditMuted;
+        public bool IsEditMuted
+        {
+            get => m_IsEditMuted;
+            set => this.RaiseAndSetIfChanged(ref m_IsEditMuted, value);
         }
 
         #endregion

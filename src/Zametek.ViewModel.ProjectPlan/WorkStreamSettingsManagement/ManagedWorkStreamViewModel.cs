@@ -129,8 +129,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-
-
         #region IMuteEdits Members
 
         private bool m_IsEditMuted;
@@ -141,8 +139,6 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         #endregion
-
-
 
         #region IDisposable Members
 
