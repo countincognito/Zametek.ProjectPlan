@@ -11,7 +11,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public WorkStreamEditViewModel()
         {
-            m_ColorFormat = new ColorFormatModel();
+            m_ColorFormat = ColorHelper.None();
         }
 
         #endregion

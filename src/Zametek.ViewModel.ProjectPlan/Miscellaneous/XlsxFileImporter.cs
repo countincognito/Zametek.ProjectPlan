@@ -54,6 +54,8 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ActivityModel.MinimumEarliestStartDateTime),
             nameof(ActivityModel.MaximumLatestFinishTime),
             nameof(ActivityModel.MaximumLatestFinishDateTime),
+            nameof(ActivityModel.OverrideColor),
+            nameof(ActivityModel.ColorFormat),
             nameof(ActivityModel.Notes)
         ];
 
@@ -202,6 +204,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     DateTimeOffset? minimumEarliestStartDateTime = null;
                     int? maximumLatestFinishTime = null;
                     DateTimeOffset? maximumLatestFinishDateTime = null;
+                    bool overrideColor = false;
+                    ColorFormatModel colorFormat = ColorHelper.None();
                     string notes = string.Empty;
                     List<int> dependencies = [];
                     List<int> planningDependencies = [];
@@ -333,6 +337,23 @@ namespace Zametek.ViewModel.ProjectPlan
                                         maximumLatestFinishDateTime = new DateTimeOffset(output);
                                     }
                                 })
+                            .Case(nameof(ActivityModel.OverrideColor),
+                                colName =>
+                                {
+                                    if (bool.TryParse(row[colName]?.ToString(), out bool output))
+                                    {
+                                        overrideColor = output;
+                                    }
+                                })
+                            .Case(nameof(ActivityModel.ColorFormat),
+                                colName =>
+                                {
+                                    string? hexCode = row[colName]?.ToString();
+                                    if (!string.IsNullOrWhiteSpace(hexCode))
+                                    {
+                                        colorFormat = ColorHelper.HtmlHexCodeToColorFormat(hexCode);
+                                    }
+                                })
                             .Case(nameof(ActivityModel.Notes),
                                 colName => notes = row[colName]?.ToString() ?? string.Empty);
                     }
@@ -389,6 +410,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                 MinimumEarliestStartDateTime = minimumEarliestStartDateTime,
                                 MaximumLatestFinishTime = maximumLatestFinishTime,
                                 MaximumLatestFinishDateTime = maximumLatestFinishDateTime,
+                                OverrideColor = overrideColor,
+                                ColorFormat = colorFormat,
                                 Notes = notes
                             },
                             Dependencies = dependencies,

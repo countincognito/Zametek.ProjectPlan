@@ -1,4 +1,4 @@
-﻿using Zametek.Common.ProjectPlan;
+using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.Contract.ProjectPlan
@@ -9,6 +9,10 @@ namespace Zametek.Contract.ProjectPlan
         int DisplayOrder { get; set; }
 
         bool HasNoRisk { get; set; }
+
+        bool OverrideColor { get; set; }
+
+        ColorFormatModel ColorFormat { get; set; }
 
         List<ActivityTrackerModel> Trackers { get; }
     }

@@ -684,4 +684,10 @@
   <data name="Label_ProjectedFinish" xml:space="preserve">
     <value>Projected Finish:</value>
   </data>
+  <data name="Label_ColorOverride" xml:space="preserve">
+    <value>Color Override</value>
+  </data>
+  <data name="Label_OverrideColor" xml:space="preserve">
+    <value>Override Color</value>
+  </data>
 </root>

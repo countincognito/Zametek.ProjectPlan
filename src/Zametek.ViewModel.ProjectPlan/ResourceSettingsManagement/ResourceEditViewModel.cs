@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -12,7 +12,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ResourceEditViewModel(IEnumerable<WorkStreamModel> workStreams)
         {
-            m_ColorFormat = new ColorFormatModel();
+            m_ColorFormat = ColorHelper.None();
 
             WorkStreamSelector = new WorkStreamSelectorViewModel(phaseOnly: true);
             IEnumerable<TargetWorkStreamModel> targetWorkStreams = workStreams

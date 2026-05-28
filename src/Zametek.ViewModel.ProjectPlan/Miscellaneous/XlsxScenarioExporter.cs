@@ -61,6 +61,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 nameof(ActivityModel.MinimumEarliestStartDateTime),
                 nameof(ActivityModel.MaximumLatestFinishTime),
                 nameof(ActivityModel.MaximumLatestFinishDateTime),
+                nameof(ActivityModel.OverrideColor),
+                nameof(ActivityModel.ColorFormat),
                 nameof(ActivityModel.Notes)
             ];
 

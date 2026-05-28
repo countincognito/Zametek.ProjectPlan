@@ -846,6 +846,36 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public IWorkStreamSelectorViewModel WorkStreamSelector { get; }
 
+        public bool OverrideColor
+        {
+            get => DependentActivity.OverrideColor;
+            set
+            {
+                if (DependentActivity.OverrideColor != value)
+                {
+                    BeginEdit();
+                    DependentActivity.OverrideColor = value;
+                    EndEdit();
+                }
+                this.RaisePropertyChanged();
+            }
+        }
+
+        public ColorFormatModel ColorFormat
+        {
+            get => DependentActivity.ColorFormat;
+            set
+            {
+                if (DependentActivity.ColorFormat != value)
+                {
+                    BeginEdit();
+                    DependentActivity.ColorFormat = value;
+                    EndEdit();
+                }
+                this.RaisePropertyChanged();
+            }
+        }
+
         public IActivityTrackerSetViewModel TrackerSet { get; }
 
         public List<ActivityTrackerModel> Trackers => TrackerSet.Trackers;
@@ -896,6 +926,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 MinimumEarliestStartDateTime = MinimumEarliestStartDateTime,
                 MaximumLatestFinishTime = MaximumLatestFinishTime,
                 MaximumLatestFinishDateTime = MaximumLatestFinishDateTime,
+                OverrideColor = OverrideColor,
+                ColorFormat = ColorFormat,
                 Notes = Notes,
                 Trackers = TrackerSet.CloneTrackers(),
             };

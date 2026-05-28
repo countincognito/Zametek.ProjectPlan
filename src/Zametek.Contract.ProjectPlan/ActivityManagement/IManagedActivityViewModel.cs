@@ -26,7 +26,7 @@ namespace Zametek.Contract.ProjectPlan
 
         string SuccessorsString { get; }
 
-        public string AllocatedToResourcesString { get; }
+        string AllocatedToResourcesString { get; }
 
         DateTimeOffset? EarliestStartDateTimeOffset { get; }
 

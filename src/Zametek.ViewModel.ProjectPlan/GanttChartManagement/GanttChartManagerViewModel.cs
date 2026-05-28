@@ -439,13 +439,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 case AnnotationStyle.Color:
                                     {
                                         Avalonia.Media.Color slackColor = colorFormatLookup.FindSlackColor(activity.TotalSlack);
-
-                                        Color resourceColor = new(
-                                            slackColor.R,
-                                            slackColor.G,
-                                            slackColor.B,
-                                            slackColor.A);
-
+                                        Color resourceColor = ColorHelper.AvaloniaColorToScottPlotColor(slackColor);
                                         Color fillColor = resourceColor.WithAlpha(ColorHelper.AnnotationALight);
 
                                         AddAnnotationToPlot(
@@ -585,11 +579,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                     break;
                                 case AnnotationStyle.Color:
                                     {
-                                        Color resourceColor = new(
-                                            colorFormat.R,
-                                            colorFormat.G,
-                                            colorFormat.B,
-                                            colorFormat.A);
+                                        Color resourceColor = ColorHelper.ColorFormatToScottPlotColor(colorFormat);
                                         Color fillColor = resourceColor.WithAlpha(ColorHelper.AnnotationALight);
 
                                         AddAnnotationToPlot(
@@ -628,18 +618,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
                         // Gather all the used work stream
 
-                        var workStreamLookup = new Dictionary<int, WorkStreamModel>();
+                        var workStreamLookup = new Dictionary<int, WorkStreamModel>
+                        {
+                            // Include a catch-all work stream as default.
 
-                        // Include a catch-all work stream as default.
-
-                        workStreamLookup[default] =
+                            [default] =
                             new()
                             {
                                 Id = default,
                                 Name = Resource.ProjectPlan.Labels.Label_DefaultWorkStream,
                                 ColorFormat = ColorHelper.Black(),
                                 DisplayOrder = -1
-                            };
+                            }
+                        };
 
                         foreach (WorkStreamModel workStream in workStreamSettings.WorkStreams)
                         {
@@ -793,12 +784,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                 case AnnotationStyle.Color:
                                     {
                                         WorkStreamModel workStreamModel = workStreamLookup[workStreamId];
-                                        var workStreamColor = new Color(
-                                            workStreamModel.ColorFormat.R,
-                                            workStreamModel.ColorFormat.G,
-                                            workStreamModel.ColorFormat.B,
-                                            workStreamModel.ColorFormat.A);
-
+                                        Color workStreamColor = ColorHelper.ColorFormatToScottPlotColor(workStreamModel.ColorFormat);
                                         Color fillColor = workStreamColor.WithAlpha(ColorHelper.AnnotationALight);
 
                                         AddAnnotationToPlot(
@@ -1140,11 +1126,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     || highlightAsSuccessor
                     || highlightAsDependency)
                 {
-                    backgroundColor = new Color(
-                        slackColor.R,
-                        slackColor.G,
-                        slackColor.B,
-                        slackColor.A);
+                    backgroundColor = ColorHelper.AvaloniaColorToScottPlotColor(slackColor);
+
+                    if (activity.OverrideColor)
+                    {
+                        backgroundColor = ColorHelper.ColorFormatToScottPlotColor(activity.ColorFormat);
+                    }
                 }
 
                 string from = ChartHelper.FormatStartScheduleOutput(
