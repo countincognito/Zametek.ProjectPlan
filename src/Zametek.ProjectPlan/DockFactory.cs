@@ -29,6 +29,7 @@ namespace Zametek.ProjectPlan
         private readonly IDockable m_ResourceSettingsManagerViewModel;
         private readonly IDockable m_WorkStreamSettingsManagerViewModel;
         private readonly IDockable m_HolidaySettingsManagerViewModel;
+		private readonly IDockable m_DependencyGraphManagerViewModel;																	 
 
         public DockFactory(
             IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
@@ -45,7 +46,8 @@ namespace Zametek.ProjectPlan
             IGraphSettingsManagerViewModel graphSettingsManagerViewModel,
             IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
             IWorkStreamSettingsManagerViewModel workStreamSettingsManagerViewModel,
-            IHolidaySettingsManagerViewModel holidaySettingsManagerViewModel)
+            IHolidaySettingsManagerViewModel holidaySettingsManagerViewModel,
+            IDependencyGraphManagerViewModel dependencyGraphManagerViewModel) 
         {
             m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(projectScenarioManagerViewModel));
             m_ActivitiesManagerViewModel = activitiesManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(activitiesManagerViewModel));
@@ -62,6 +64,7 @@ namespace Zametek.ProjectPlan
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(resourceSettingsManagerViewModel));
             m_WorkStreamSettingsManagerViewModel = workStreamSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(workStreamSettingsManagerViewModel));
             m_HolidaySettingsManagerViewModel = holidaySettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(holidaySettingsManagerViewModel));
+            m_DependencyGraphManagerViewModel = dependencyGraphManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(dependencyGraphManagerViewModel));
         }
 
         public override IRootDock CreateLayout()
@@ -95,6 +98,11 @@ namespace Zametek.ProjectPlan
                 m_ArrowGraphManagerViewModel.CanClose = false;
                 m_ArrowGraphManagerViewModel.CanFloat = true;
                 m_ArrowGraphManagerViewModel.CanPin = true;
+            }
+			{
+                m_DependencyGraphManagerViewModel.CanClose = false;
+                m_DependencyGraphManagerViewModel.CanFloat = true;
+                m_DependencyGraphManagerViewModel.CanPin = true;
             }
             {
                 m_VertexGraphManagerViewModel.CanClose = false;
@@ -196,6 +204,7 @@ namespace Zametek.ProjectPlan
                                     m_GanttChartManagerViewModel,
                                     m_TrackingManagerViewModel,
                                     m_ArrowGraphManagerViewModel,
+									m_DependencyGraphManagerViewModel,								  
                                     m_VertexGraphManagerViewModel,
                                     m_ResourceChartManagerViewModel,
                                     m_EarnedValueChartManagerViewModel,

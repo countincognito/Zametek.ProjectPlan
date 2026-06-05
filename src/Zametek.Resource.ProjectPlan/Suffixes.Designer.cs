@@ -106,6 +106,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to -dependency.
+        /// </summary>
+        public static string Suffix_DependencyChart {
+            get {
+                return ResourceManager.GetString("Suffix_DependencyChart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to -vertex.
         /// </summary>
         public static string Suffix_VertexChart {

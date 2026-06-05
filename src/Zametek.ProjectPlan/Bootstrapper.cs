@@ -119,6 +119,10 @@ namespace Zametek.ProjectPlan
                 .As<IArrowGraphManagerViewModel>()
                 .As<ArrowGraphManagerViewModel>()
                 .SingleInstance();
+			builder.RegisterType<DependencyGraphManagerViewModel>()
+                .As<IDependencyGraphManagerViewModel>()
+                .As<DependencyGraphManagerViewModel>()
+                .SingleInstance();
             builder.RegisterType<VertexGraphManagerViewModel>()
                 .As<IVertexGraphManagerViewModel>()
                 .As<VertexGraphManagerViewModel>()
@@ -186,6 +190,9 @@ namespace Zametek.ProjectPlan
             builder.RegisterType<ArrowGraphManagerView>()
                 .AsSelf()
                 .SingleInstance();
+			builder.RegisterType<DependencyGraphManagerView>()
+				.AsSelf()
+				.SingleInstance();
             builder.RegisterType<VertexGraphManagerView>()
                 .AsSelf()
                 .SingleInstance();

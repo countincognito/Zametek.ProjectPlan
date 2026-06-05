@@ -286,6 +286,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dependency Graph.
+        /// </summary>
+        public static string Title_DependencyGraphView {
+            get {
+                return ResourceManager.GetString("Title_DependencyGraphView", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Work Stream Settings.
         /// </summary>
         public static string Title_WorkStreamSettingsView {

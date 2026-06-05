@@ -252,4 +252,13 @@
   <data name="Filter_ProjectXlsxFileType" xml:space="preserve">
     <value>Excel</value>
   </data>
+  <data name="Filter_PlantUmlFileType" xml:space="preserve">
+    <value>PlantUML</value>
+  </data>
+  <data name="Filter_PlantUmlFilePattern" xml:space="preserve">
+    <value>*.puml</value>
+  </data>
+  <data name="Filter_PlantUmlFileExtension" xml:space="preserve">
+    <value>puml</value>
+  </data>
 </root>

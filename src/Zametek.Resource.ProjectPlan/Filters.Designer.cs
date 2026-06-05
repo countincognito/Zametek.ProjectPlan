@@ -464,5 +464,32 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Filter_ProjectXlsxFileType", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PlantUML.
+        /// </summary>
+        public static string Filter_PlantUmlFileType {
+            get {
+                return ResourceManager.GetString("Filter_PlantUmlFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to *.puml.
+        /// </summary>
+        public static string Filter_PlantUmlFilePattern {
+            get {
+                return ResourceManager.GetString("Filter_PlantUmlFilePattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to puml.
+        /// </summary>
+        public static string Filter_PlantUmlFileExtension {
+            get {
+                return ResourceManager.GetString("Filter_PlantUmlFileExtension", resourceCulture);
+            }
+        }
     }
 }
