@@ -1,10 +1,8 @@
 using Avalonia;
 using Avalonia.Threading;
-using Microsoft.VisualBasic;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
-using ScottPlot.Interactivity;
 using ScottPlot.Plottables;
 using System.Data;
 using System.Globalization;
@@ -67,14 +65,14 @@ namespace Zametek.ViewModel.ProjectPlan
                         Resource.ProjectPlan.Filters.Filter_ImageSvgFilePattern
                     ]
                 },
-                //new FileFilter
-                //{
-                //    Name = Resource.ProjectPlan.Filters.Filter_PdfFileType,
-                //    Patterns =
-                //    [
-                //        Resource.ProjectPlan.Filters.Filter_PdfFilePattern
-                //    ]
-                //}
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_PdfFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_PdfFilePattern
+                    ]
+                }
             ];
 
         private readonly ICoreViewModel m_CoreViewModel;

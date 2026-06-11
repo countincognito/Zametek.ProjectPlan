@@ -11,30 +11,41 @@
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
 			 x:DataType="vm:ActivityEditViewModel"
              x:Class="Zametek.View.ProjectPlan.ActivityEditView">
-	<Grid Margin="7">
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="140"/>
-			<ColumnDefinition Width="80"/>
-			<ColumnDefinition Width="155"/>
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="36"/>
-			<RowDefinition Height="36"/>
-			<RowDefinition Height="36"/>
-			<RowDefinition Height="36"/>
-			<RowDefinition Height="36"/>
-			<RowDefinition Height="36"/>
-			<RowDefinition Height="36"/>
-		</Grid.RowDefinitions>
 
-		<Label Grid.Row="0" Grid.Column="0"
+  <!-- This overrides the default style for the buttons in MsBox.Avalonia
+  (MinWidth=75, MinHeight=24) and prevents the close button in MultiComboBox
+  from looking strange. -->
+  <UserControl.Styles>
+    <Style Selector="u|ClosableTag /template/ Button#PART_CloseButton">
+      <Setter Property="MinWidth" Value="0"/>
+      <Setter Property="MinHeight" Value="0"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid Margin="7">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="140"/>
+      <ColumnDefinition Width="80"/>
+      <ColumnDefinition Width="155"/>
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="36"/>
+      <RowDefinition Height="36"/>
+      <RowDefinition Height="36"/>
+      <RowDefinition Height="36"/>
+      <RowDefinition Height="36"/>
+      <RowDefinition Height="36"/>
+      <RowDefinition Height="36"/>
+    </Grid.RowDefinitions>
+
+    <Label Grid.Row="0" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_TargetWorkStreams}"/>
 
-		<ToggleSwitch Grid.Row="0" Grid.Column="1"
+    <ToggleSwitch Grid.Row="0" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
@@ -43,7 +54,7 @@
 					  OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsWorkStreamSelectorActive, Mode=TwoWay}"/>
 
-		<u:MultiComboBox Grid.Row="0" Grid.Column="2"
+    <u:MultiComboBox Grid.Row="0" Grid.Column="2"
 						 Margin="3"
 						 MaxHeight="200"
 						 Width="{x:Static sys:Double.NaN}"
@@ -55,25 +66,25 @@
 						 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
 						 IsDropDownOpen="False"
 					     IsEnabled="{Binding Path=IsWorkStreamSelectorActive, Mode=OneWay}">
-			<u:MultiComboBox.SelectedItemTemplate>
-				<DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
-					<Grid>
-						<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
-					</Grid>
-				</DataTemplate>
-			</u:MultiComboBox.SelectedItemTemplate>
-		</u:MultiComboBox>
+      <u:MultiComboBox.SelectedItemTemplate>
+        <DataTemplate x:DataType="vm:SelectableWorkStreamViewModel">
+          <Grid>
+            <TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
+          </Grid>
+        </DataTemplate>
+      </u:MultiComboBox.SelectedItemTemplate>
+    </u:MultiComboBox>
 
 
 
-		<Label Grid.Row="1" Grid.Column="0"
+    <Label Grid.Row="1" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_TargetResources}"/>
 
-		<ToggleSwitch Grid.Row="1" Grid.Column="1"
+    <ToggleSwitch Grid.Row="1" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
@@ -82,7 +93,7 @@
 				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsResourceSelectorActive, Mode=TwoWay}"/>
 
-		<u:MultiComboBox Grid.Row="1" Grid.Column="2"
+    <u:MultiComboBox Grid.Row="1" Grid.Column="2"
 						 Margin="3"
 						 MaxHeight="200"
 						 Width="{x:Static sys:Double.NaN}"
@@ -94,25 +105,25 @@
 						 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}"
 						 IsDropDownOpen="False"
 						 IsEnabled="{Binding Path=IsResourceSelectorActive, Mode=OneWay}">
-			<u:MultiComboBox.SelectedItemTemplate>
-				<DataTemplate x:DataType="vm:SelectableResourceViewModel">
-					<Grid>
-						<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
-					</Grid>
-				</DataTemplate>
-			</u:MultiComboBox.SelectedItemTemplate>
-		</u:MultiComboBox>
+      <u:MultiComboBox.SelectedItemTemplate>
+        <DataTemplate x:DataType="vm:SelectableResourceViewModel">
+          <Grid>
+            <TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
+          </Grid>
+        </DataTemplate>
+      </u:MultiComboBox.SelectedItemTemplate>
+    </u:MultiComboBox>
 
 
 
-		<Label Grid.Row="2" Grid.Column="0"
+    <Label Grid.Row="2" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_HasNoCost}"/>
 
-		<ToggleSwitch Grid.Row="2" Grid.Column="1"
+    <ToggleSwitch Grid.Row="2" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
@@ -121,7 +132,7 @@
 				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsHasNoCostActive, Mode=TwoWay}"/>
 
-		<ToggleSwitch Grid.Row="2" Grid.Column="2"
+    <ToggleSwitch Grid.Row="2" Grid.Column="2"
 					  Margin="3"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
@@ -133,14 +144,14 @@
 
 
 
-		<Label Grid.Row="3" Grid.Column="0"
+    <Label Grid.Row="3" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_HasNoBilling}"/>
 
-		<ToggleSwitch Grid.Row="3" Grid.Column="1"
+    <ToggleSwitch Grid.Row="3" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
@@ -149,7 +160,7 @@
 				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsHasNoBillingActive, Mode=TwoWay}"/>
 
-		<ToggleSwitch Grid.Row="3" Grid.Column="2"
+    <ToggleSwitch Grid.Row="3" Grid.Column="2"
 					  Margin="3"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
@@ -161,14 +172,14 @@
 
 
 
-		<Label Grid.Row="4" Grid.Column="0"
+    <Label Grid.Row="4" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_HasNoEffort}"/>
 
-		<ToggleSwitch Grid.Row="4" Grid.Column="1"
+    <ToggleSwitch Grid.Row="4" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
@@ -177,7 +188,7 @@
 				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsHasNoEffortActive, Mode=TwoWay}"/>
 
-		<ToggleSwitch Grid.Row="4" Grid.Column="2"
+    <ToggleSwitch Grid.Row="4" Grid.Column="2"
 					  Margin="3"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
@@ -189,14 +200,14 @@
 
 
 
-		<Label Grid.Row="5" Grid.Column="0"
+    <Label Grid.Row="5" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_HasNoRisk}"/>
 
-		<ToggleSwitch Grid.Row="5" Grid.Column="1"
+    <ToggleSwitch Grid.Row="5" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
@@ -205,7 +216,7 @@
 				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsHasNoRiskActive, Mode=TwoWay}"/>
 
-		<ToggleSwitch Grid.Row="5" Grid.Column="2"
+    <ToggleSwitch Grid.Row="5" Grid.Column="2"
 					  Margin="3"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
@@ -217,14 +228,14 @@
 
 
 
-		<Label Grid.Row="6" Grid.Column="0"
+    <Label Grid.Row="6" Grid.Column="0"
 			   VerticalAlignment="Center"
 			   HorizontalAlignment="Right"
 			   Margin="0"
 			   Padding="7"
 			   Content="{x:Static resources:Labels.Label_TargetResourceOperator}"/>
 
-		<ToggleSwitch Grid.Row="6" Grid.Column="1"
+    <ToggleSwitch Grid.Row="6" Grid.Column="1"
 					  VerticalAlignment="Center"
 					  HorizontalAlignment="Center"
 					  Margin="0"
@@ -233,7 +244,7 @@
 				      OnContent="{x:Static resources:Labels.Label_On}"
 					  IsChecked="{Binding Path=IsTargetResourceOperatorActive, Mode=TwoWay}"/>
 
-		<ComboBox Grid.Row="6" Grid.Column="2"
+    <ComboBox Grid.Row="6" Grid.Column="2"
 				  Margin="3"
 				  ItemsSource="{Binding Source={local:EnumBindingSource {x:Type zmg:LogicalOperator}}}"
 				  SelectedItem="{Binding Path=TargetResourceOperator, Mode=TwoWay}"
@@ -243,16 +254,16 @@
 				  HorizontalAlignment="Stretch"
 				  HorizontalContentAlignment="Center"
 				  IsEnabled="{Binding Path=IsTargetResourceOperatorActive, Mode=OneWay}">
-			<ComboBox.ItemTemplate>
-				<DataTemplate>
-					<TextBlock VerticalAlignment="Center"
+      <ComboBox.ItemTemplate>
+        <DataTemplate>
+          <TextBlock VerticalAlignment="Center"
 							   TextAlignment="Left"
 							   Margin="0"
 							   Padding="3"
 							   Text="{Binding Converter={x:Static local:StringConverters.LogicalOperatorValue}, Mode=OneWay}"/>
-				</DataTemplate>
-			</ComboBox.ItemTemplate>
-		</ComboBox>
+        </DataTemplate>
+      </ComboBox.ItemTemplate>
+    </ComboBox>
 
-	</Grid>
+  </Grid>
 </UserControl>

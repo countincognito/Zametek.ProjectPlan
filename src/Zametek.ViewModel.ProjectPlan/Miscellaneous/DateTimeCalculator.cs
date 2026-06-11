@@ -1,4 +1,4 @@
-﻿using Ical.Net;
+using Ical.Net;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
 using ReactiveUI;
@@ -300,7 +300,7 @@ namespace Zametek.ViewModel.ProjectPlan
             var nonWorkingDaysEvent = new CalendarEvent
             {
                 Start = startDateTime,
-                RecurrenceRules = [new RecurrencePattern(nonWorkingDayCalendarEvent.RecurrencePattern)],
+                RecurrenceRule = new RecurrencePattern(nonWorkingDayCalendarEvent.RecurrencePattern),
             };
 
             List<Occurrence> occurrences = [.. nonWorkingDaysEvent

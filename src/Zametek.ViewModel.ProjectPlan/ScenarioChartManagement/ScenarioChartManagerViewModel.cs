@@ -64,14 +64,14 @@ namespace Zametek.ViewModel.ProjectPlan
                         Resource.ProjectPlan.Filters.Filter_ImageSvgFilePattern
                     ]
                 },
-                //new FileFilter
-                //{
-                //    Name = Resource.ProjectPlan.Filters.Filter_PdfFileType,
-                //    Patterns =
-                //    [
-                //        Resource.ProjectPlan.Filters.Filter_PdfFilePattern
-                //    ]
-                //}
+                new FileFilter
+                {
+                    Name = Resource.ProjectPlan.Filters.Filter_PdfFileType,
+                    Patterns =
+                    [
+                        Resource.ProjectPlan.Filters.Filter_PdfFilePattern
+                    ]
+                }
             ];
 
         private readonly ICoreViewModel m_CoreViewModel;

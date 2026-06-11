@@ -71,7 +71,7 @@
 		<Style Selector="DataValidationErrors">
 			<Setter Property="Theme" Value="{StaticResource TooltipDataValidationErrors}" />
 		</Style>
-	</Application.Styles>
+  </Application.Styles>
 
 	<Application.Resources>
 		<ResourceDictionary>
