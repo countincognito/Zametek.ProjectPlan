@@ -192,51 +192,56 @@ namespace Zametek.ProjectPlan
                 .SingleInstance();
 
             // Views.
+            // Docked views must be transient: the ViewLocator resolves them from this
+            // container, and Dock re-materialises a dockable's content whenever it is
+            // floated, redocked, or the layout is reset. A singleton Control cannot live
+            // in two visual trees, so reparenting a shared instance leaves the previous
+            // location blank. InstancePerDependency hands out a fresh Control per resolve.
             s_Builder.RegisterType<ActivitiesManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<TrackingManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<ArrowGraphManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<VertexGraphManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<ResourceChartManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<GanttChartManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<EarnedValueChartManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<MetricManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<OutputManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<GraphSettingsManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<ResourceSettingsManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<WorkStreamSettingsManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<HolidaySettingsManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<ProjectScenarioManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<ScenarioChartManagerView>()
                 .AsSelf()
-                .SingleInstance();
+                .InstancePerDependency();
             s_Builder.RegisterType<MainView>()
                 .AsSelf()
                 .SingleInstance();
