@@ -20,7 +20,7 @@
             return new ProjectModel
             {
                 ProjectStart = project.ProjectStart,
-                Today = project.ProjectStart,
+                Today = project.Today,
                 DependentActivities = activities,
                 ArrowGraphSettings = project.ArrowGraphSettings ?? new(),
                 ResourceSettings = project.ResourceSettings ?? new(),

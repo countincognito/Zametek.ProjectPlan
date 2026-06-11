@@ -198,6 +198,12 @@ namespace Zametek.Data.ProjectPlan.Tests
             ProjectModel model1 = Converter.Upgrade(m_LocalNow, project_v0_4_2!);
             ProjectModel model2 = Converter.Upgrade(m_LocalNow, project_v0_4_3!);
             CompareModelsPreV0_6_0(model1, model2);
+
+            // The fixtures carry a Today distinct from ProjectStart; ensure it survives the upgrade.
+            var expectedToday = new DateTimeOffset(2025, 1, 13, 0, 0, 0, TimeSpan.Zero);
+            model1.Files[0].Scenario.Today.ShouldBe(expectedToday);
+            model1.Files[0].Scenario.Today.ShouldNotBe(model1.Files[0].Scenario.ProjectStart);
+            model2.Files[0].Scenario.Today.ShouldBe(expectedToday);
         }
 
         [Fact]
@@ -212,6 +218,12 @@ namespace Zametek.Data.ProjectPlan.Tests
             ProjectModel model1 = Converter.Upgrade(m_LocalNow, project_v0_4_3!);
             ProjectModel model2 = Converter.Upgrade(m_LocalNow, project_v0_4_4!);
             CompareModelsPreV0_6_0(model1, model2);
+
+            // The fixtures carry a Today distinct from ProjectStart; ensure it survives the upgrade.
+            var expectedToday = new DateTimeOffset(2025, 1, 13, 0, 0, 0, TimeSpan.Zero);
+            model1.Files[0].Scenario.Today.ShouldBe(expectedToday);
+            model1.Files[0].Scenario.Today.ShouldNotBe(model1.Files[0].Scenario.ProjectStart);
+            model2.Files[0].Scenario.Today.ShouldBe(expectedToday);
         }
 
         [Fact]
@@ -226,6 +238,12 @@ namespace Zametek.Data.ProjectPlan.Tests
             ProjectModel model1 = Converter.Upgrade(m_LocalNow, project_v0_4_4!);
             ProjectModel model2 = Converter.Upgrade(m_LocalNow, project_v0_5_0!);
             CompareModelsPreV0_6_0(model1, model2);
+
+            // The fixtures carry a Today distinct from ProjectStart; ensure it survives the upgrade.
+            var expectedToday = new DateTimeOffset(2025, 1, 13, 0, 0, 0, TimeSpan.Zero);
+            model1.Files[0].Scenario.Today.ShouldBe(expectedToday);
+            model1.Files[0].Scenario.Today.ShouldNotBe(model1.Files[0].Scenario.ProjectStart);
+            model2.Files[0].Scenario.Today.ShouldBe(expectedToday);
         }
 
         [Fact]
@@ -241,5 +259,77 @@ namespace Zametek.Data.ProjectPlan.Tests
             ProjectModel model2 = Converter.Upgrade(project_v0_6_0!);
             CompareModels(model1, model2);
         }
+
+        //[Fact]
+        //public void Converter_Given_v0_4_2_Input_Then_PreservesToday()
+        //{
+        //    var projectStart = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        //    var today = projectStart.AddDays(7);
+
+        //    var source = new v0_4_2.ProjectModel
+        //    {
+        //        ProjectStart = projectStart,
+        //        Today = today,
+        //    };
+
+        //    ProjectModel upgraded = Converter.Upgrade(m_LocalNow, source);
+
+        //    upgraded.Files[0].Scenario.Today.ShouldBe(today);
+        //    upgraded.Files[0].Scenario.Today.ShouldNotBe(projectStart);
+        //}
+
+        //[Fact]
+        //public void Converter_Given_v0_4_3_Input_Then_PreservesToday()
+        //{
+        //    var projectStart = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        //    var today = projectStart.AddDays(7);
+
+        //    var source = new v0_4_3.ProjectModel
+        //    {
+        //        ProjectStart = projectStart,
+        //        Today = today,
+        //    };
+
+        //    ProjectModel upgraded = Converter.Upgrade(m_LocalNow, source);
+
+        //    upgraded.Files[0].Scenario.Today.ShouldBe(today);
+        //    upgraded.Files[0].Scenario.Today.ShouldNotBe(projectStart);
+        //}
+
+        //[Fact]
+        //public void Converter_Given_v0_4_4_Input_Then_PreservesToday()
+        //{
+        //    var projectStart = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        //    var today = projectStart.AddDays(7);
+
+        //    var source = new v0_4_4.ProjectModel
+        //    {
+        //        ProjectStart = projectStart,
+        //        Today = today,
+        //    };
+
+        //    ProjectModel upgraded = Converter.Upgrade(m_LocalNow, source);
+
+        //    upgraded.Files[0].Scenario.Today.ShouldBe(today);
+        //    upgraded.Files[0].Scenario.Today.ShouldNotBe(projectStart);
+        //}
+
+        //[Fact]
+        //public void Converter_Given_v0_5_0_Input_Then_PreservesToday()
+        //{
+        //    var projectStart = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        //    var today = projectStart.AddDays(7);
+
+        //    var source = new v0_5_0.ProjectModel
+        //    {
+        //        ProjectStart = projectStart,
+        //        Today = today,
+        //    };
+
+        //    ProjectModel upgraded = Converter.Upgrade(m_LocalNow, source);
+
+        //    upgraded.Files[0].Scenario.Today.ShouldBe(today);
+        //    upgraded.Files[0].Scenario.Today.ShouldNotBe(projectStart);
+        //}
     }
 }
