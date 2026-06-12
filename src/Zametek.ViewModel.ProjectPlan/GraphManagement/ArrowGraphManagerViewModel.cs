@@ -137,6 +137,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     agm => agm.m_CoreViewModel.GraphSettings,
                     agm => agm.m_CoreViewModel.BaseTheme,
                     agm => agm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames)
+                .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildArrowGraphDiagramDataAsync());
 
@@ -323,6 +324,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildArrowGraphDiagramData()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(ArrowGraphManagerViewModel)}.{nameof(BuildArrowGraphDiagramData)}");
             byte[]? data = null;
 
             lock (m_Lock)
@@ -342,6 +344,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildArrowGraphDiagramImage()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(ArrowGraphManagerViewModel)}.{nameof(BuildArrowGraphDiagramImage)}");
             SvgSource? source = null;
 
             lock (m_Lock)

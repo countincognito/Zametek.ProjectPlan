@@ -160,6 +160,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
                     rcm => rcm.m_CoreViewModel.BaseTheme)
+                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildScenarioChartPlotModelAsync());
 
@@ -728,6 +729,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildScenarioChartPlotModel()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(ScenarioChartManagerViewModel)}.{nameof(BuildScenarioChartPlotModel)}");
             AvaPlot? plotModel = null;
             string curveFittingFormula = string.Empty;
 

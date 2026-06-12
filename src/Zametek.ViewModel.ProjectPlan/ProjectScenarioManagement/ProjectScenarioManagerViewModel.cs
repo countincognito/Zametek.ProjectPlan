@@ -285,6 +285,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .AutoRefresh(node => node.DisplayName)
                 .AutoRefresh(node => node.IsTracked)
                 //.Filter(node => !node.IsFolder && node.Scenario is not null)
+                .MuteWhile(this.WhenAnyValue(pm => pm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ =>
                 {
@@ -299,6 +300,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_MetricsSub = this
                 .WhenAnyValue(pm => pm.m_CoreViewModel.Metrics)
+                .MuteWhile(this.WhenAnyValue(pm => pm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ =>
                 {
@@ -1726,6 +1728,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void BuildTrackedMetrics()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(ProjectScenarioManagerViewModel)}.{nameof(BuildTrackedMetrics)}");
             lock (m_Lock)
             {
                 Dictionary<Guid, TrackedMetricsModel> trackedMetricsModelLookup = RawFlattenedNodes
