@@ -23,6 +23,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly Lock m_Lock;
+        private int m_BusyNestingLevel;
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
@@ -63,7 +64,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
-            m_IsBusy = false;
             m_NodeSortComparer = new(SortExpressionComparer<IManagedNodeViewModel>.Ascending(x => x.CreatedOn));
             Root = new ManagedNodeViewModel(this, m_CoreViewModel, m_SettingService, m_NodeSortComparer); // Placeholder until ResetRootNode is called.
             m_Nodes = new();
@@ -285,6 +285,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .AutoRefresh(node => node.DisplayName)
                 .AutoRefresh(node => node.IsTracked)
                 //.Filter(node => !node.IsFolder && node.Scenario is not null)
+                .MuteWhile(this.WhenAnyValue(pm => pm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ =>
                 {
@@ -299,6 +300,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_MetricsSub = this
                 .WhenAnyValue(pm => pm.m_CoreViewModel.Metrics)
+                .MuteWhile(this.WhenAnyValue(pm => pm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ =>
                 {
@@ -342,19 +344,66 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        /// <summary>
+        /// Marks the start of a busy section. IsBusy is a UI-facing signal only (busy
+        /// indicators, disabled controls); do not use it to gate behaviour. Calls nest:
+        /// the busy sections in this class routinely call each other, so IsBusy is
+        /// ref-counted and only raises change notifications on the outermost
+        /// transitions. This keeps the UI signal as one continuous busy window per
+        /// operation instead of flapping false/true as each nested helper completes.
+        /// Always pair with EndBusy in a finally block.
+        /// </summary>
+        private void BeginBusy()
+        {
+            if (Interlocked.Increment(ref m_BusyNestingLevel) == 1)
+            {
+                this.RaisePropertyChanged(nameof(IsBusy));
+            }
+        }
+
+        private void EndBusy()
+        {
+            // Decrement defensively, clamping at zero: pairing is expected (BeginBusy
+            // at the start of a try block, EndBusy in its finally), but an unmatched
+            // call must never drive the count negative, which would silently break
+            // the busy signal for the remainder of the session.
+            //
+            // This is a standard lock-free compare-and-swap retry loop. The initial
+            // volatile read is only a first guess and may be stale by the time the
+            // CompareExchange runs; that is fine, because CompareExchange writes the
+            // decrement only if the field still holds the guessed value, atomically,
+            // and otherwise writes nothing and returns the actual current value, with
+            // which the loop simply tries again. A stale read can therefore only ever
+            // cause a retry, never an incorrect write.
+            int currentLevel = Volatile.Read(ref m_BusyNestingLevel);
+            while (currentLevel > 0)
+            {
+                int originalLevel = Interlocked.CompareExchange(ref m_BusyNestingLevel, currentLevel - 1, currentLevel);
+                if (originalLevel == currentLevel)
+                {
+                    if (currentLevel == 1)
+                    {
+                        this.RaisePropertyChanged(nameof(IsBusy));
+                    }
+                    return;
+                }
+                currentLevel = originalLevel;
+            }
+        }
+
         private void ResetRootNode()
         {
             try
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     ResetRootNode(Guid.NewGuid());
                 }
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -365,7 +414,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     // Remember that Root does not go in the m_ManagedScenarioLookup.
-                    IsBusy = true;
+                    BeginBusy();
                     if (rootId == Guid.Empty)
                     {
                         rootId = Guid.NewGuid();
@@ -405,7 +454,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -419,7 +468,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     foreach (ProjectScenarioFileModel projectScenarioFileModel in projectScenarioFileModels)
                     {
                         m_FileScenarioLookup[projectScenarioFileModel.NodeId] = projectScenarioFileModel;
@@ -428,7 +477,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -442,7 +491,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     foreach (Guid projectScenarioFileId in projectScenarioFileIds)
                     {
                         m_FileScenarioLookup.TryRemove(projectScenarioFileId, out _);
@@ -451,7 +500,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -461,7 +510,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     var result = new HashSet<IManagedNodeViewModel>();
 
                     if (m_ManagedNodeLookup.TryGetValue(nodeId, out IManagedNodeViewModel? managedNode))
@@ -481,7 +530,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -491,7 +540,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     Dictionary<Guid, IManagedNodeViewModel> foundNodes = [];
 
                     foreach (Guid nodeId in nodeIds)
@@ -516,7 +565,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -526,7 +575,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     foreach (ProjectScenarioTagModel tagModel in projectScenarioTagModels)
                     {
                         if (!m_NodeTagLookup.TryGetValue(tagModel.NodeId, out List<string>? labels))
@@ -541,7 +590,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -551,7 +600,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     foreach (ProjectScenarioTagModel tagModel in projectScenarioTagModels)
                     {
                         if (m_NodeTagLookup.TryGetValue(tagModel.NodeId, out List<string>? labels))
@@ -563,7 +612,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -573,7 +622,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     foreach (Guid projectScenarioTagId in projectScenarioTagIds)
                     {
                         m_NodeTagLookup.TryRemove(projectScenarioTagId, out _);
@@ -582,7 +631,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -592,7 +641,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     if (m_NodeTagLookup.TryGetValue(managedNode.Id, out List<string>? labels))
                     {
                         managedNode.SetLabels(labels);
@@ -601,7 +650,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -611,7 +660,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     if (m_NodeTagLookup.TryGetValue(nodeId, out List<string>? labels))
                     {
                         return [.. labels];
@@ -621,7 +670,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -631,7 +680,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     HashSet<string> nameHash = [.. m_ManagedNodeLookup.Values
                         .Where(x => x.ParentId == parentId)
                         .Select(n => n.Name)
@@ -641,7 +690,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -669,14 +718,14 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     HashSet<string> nameHash = ExistingNodeNames(parentId);
                     return SuggestNodeName(suggestedName, nameHash);
                 }
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -686,7 +735,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     Root.ClearChildren();
                     m_ManagedNodeLookup.Clear();
                     m_FileScenarioLookup.Clear();
@@ -697,7 +746,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -731,7 +780,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
 
                     List<IManagedNodeViewModel> forFlattenedList = [];
 
@@ -787,7 +836,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -797,7 +846,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
 
                     // Reverse the order of AddManagedNodes.
 
@@ -834,7 +883,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -925,7 +974,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
 
                     if (managedNodeViewModel is null)
                     {
@@ -953,7 +1002,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1017,7 +1066,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     ProjectScenarioModel projectScenario = m_CoreViewModel.CreateEmptyProjectScenario();
                     DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 
@@ -1047,7 +1096,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1109,7 +1158,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 
                     var projectScenarioNode = new ProjectScenarioNodeModel
@@ -1130,7 +1179,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1230,7 +1279,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     HashSet<IManagedNodeViewModel> nestedNodes = FindNestedNodes(nodeIds);
 
                     RemoveManagedNodes(nestedNodes);
@@ -1307,7 +1356,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1430,7 +1479,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 
                     foreach (Guid nodeId in m_NodeAction.NodeIds)
@@ -1498,7 +1547,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1559,7 +1608,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     AddTagLabels([tagModel]);
                     SetTagLabels(managedNodeViewModel);
                     //MarkNodeAsLoaded(tagModel.NodeId);
@@ -1569,7 +1618,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1628,7 +1677,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     ClearTagLabels([tagModel]);
                     SetTagLabels(managedNodeViewModel);
                     //MarkNodeAsLoaded(tagModel.NodeId);
@@ -1638,7 +1687,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1721,6 +1770,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void BuildTrackedMetrics()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(ProjectScenarioManagerViewModel)}.{nameof(BuildTrackedMetrics)}");
             lock (m_Lock)
             {
                 Dictionary<Guid, TrackedMetricsModel> trackedMetricsModelLookup = RawFlattenedNodes
@@ -1778,15 +1828,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IProjectScenarioManagerViewModel
 
-        private bool m_IsBusy;
-        public bool IsBusy
-        {
-            get => m_IsBusy;
-            private set
-            {
-                this.RaiseAndSetIfChanged(ref m_IsBusy, value);
-            }
-        }
+        // This getter must remain lock-free: it is re-read synchronously by property
+        // chain observers (WhenAnyValue) on whichever thread raises the change
+        // notification, so it must never contend for m_Lock.
+        public bool IsBusy => Volatile.Read(ref m_BusyNestingLevel) > 0;
 
         // We need to use an enum because raised changes on bools aren't always captured.
         // https://github.com/reactiveui/ReactiveUI/issues/3846
@@ -2004,7 +2049,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
 
                     foreach (IManagedNodeViewModel managedNode in RawFlattenedNodes)
                     {
@@ -2014,7 +2059,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -2024,7 +2069,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
 
                     // Reset the core project scenario.
                     m_CoreViewModel.ResetProjectScenario();
@@ -2073,7 +2118,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -2083,7 +2128,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     ResetProject();
                     ClearProject();
 
@@ -2165,7 +2210,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -2194,7 +2239,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
 
                     // Ensure that the current project scenario is up to date.
 
@@ -2283,7 +2328,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 

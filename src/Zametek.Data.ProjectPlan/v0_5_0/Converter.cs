@@ -38,7 +38,7 @@ namespace Zametek.Data.ProjectPlan.v0_5_0
             return new ProjectModel
             {
                 ProjectStart = project.ProjectStart,
-                Today = project.ProjectStart,
+                Today = project.Today,
                 DependentActivities = project.DependentActivities,
                 GraphSettings = graphSettings,
                 ResourceSettings = project.ResourceSettings,

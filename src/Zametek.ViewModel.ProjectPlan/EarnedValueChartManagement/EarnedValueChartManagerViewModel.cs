@@ -157,6 +157,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections,
                     evc => evc.m_CoreViewModel.BaseTheme,
                     (x, _, _, _, _, _, _, _, _, _) => x)
+                .MuteWhile(this.WhenAnyValue(evc => evc.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(async _ => await BuildEarnedValueChartPlotModelAsync());
 
@@ -691,6 +692,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildEarnedValueChartPlotModel()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(EarnedValueChartManagerViewModel)}.{nameof(BuildEarnedValueChartPlotModel)}");
             AvaPlot? plotModel = null;
 
             lock (m_Lock)

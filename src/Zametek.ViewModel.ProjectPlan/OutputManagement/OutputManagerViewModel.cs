@@ -75,6 +75,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     om => om.NonWorkingDayMode,
                     om => om.ProjectStart,
                     om => om.HasCompilationErrors)
+                .MuteWhile(this.WhenAnyValue(om => om.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildCompilationOutputAsync());
 
@@ -225,6 +226,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildCompilationOutput()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(OutputManagerViewModel)}.{nameof(BuildCompilationOutput)}");
             string output = string.Empty;
 
             lock (m_Lock)

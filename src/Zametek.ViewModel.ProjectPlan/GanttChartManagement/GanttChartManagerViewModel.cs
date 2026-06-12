@@ -234,6 +234,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.BoolAccumulator,
                     rcm => rcm.ActivitySelector.TargetActivitiesString,
                     (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());
 
@@ -1645,6 +1646,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildGanttChartPlotModel()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(GanttChartManagerViewModel)}.{nameof(BuildGanttChartPlotModel)}");
             AvaPlot? plotModel = null;
 
             lock (m_Lock)
