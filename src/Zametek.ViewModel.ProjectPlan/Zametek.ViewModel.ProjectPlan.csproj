@@ -7,6 +7,13 @@
     <Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 
+  <!-- Enable the dormant cascade diagnostics (see CascadeDiagnostics.cs) in Debug
+       builds only; their output goes through Debug.WriteLine, so they are useless
+       in Release builds and would only add overhead there. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <!--<DefineConstants>$(DefineConstants);CASCADE_DIAGNOSTICS</DefineConstants>-->
+  </PropertyGroup>
+
   <ItemGroup>
 	  <PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
     <PackageReference Include="Dock.Model.ReactiveUI" Version="11.3.11.22" />
