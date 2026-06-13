@@ -721,5 +721,47 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_6_0.AppSettingsModel FromV0_4_4ToV0_6_0(v0_4_4.AppSettingsModel src);
 
         public partial v0_4_4.AppSettingsModel FromV0_6_0ToV0_4_4(v0_6_0.AppSettingsModel src);
+
+
+        // ---------------------------------------------------------------------
+        // v0.6.1 <-> Current and v0.6.0
+        // ---------------------------------------------------------------------
+
+        public partial v0_6_1.ActivityModel FromCurrentToV0_6_1(ActivityModel src);
+        public partial ActivityModel FromV0_6_1ToCurrent(v0_6_1.ActivityModel src);
+
+        public partial v0_6_1.ActivityModel FromV0_6_0ToV0_6_1(v0_6_0.ActivityModel src);
+        public partial v0_6_0.ActivityModel FromV0_6_1ToV0_6_0(v0_6_1.ActivityModel src);
+
+        public partial v0_6_1.DependentActivityModel FromCurrentToV0_6_1(DependentActivityModel src);
+        public partial DependentActivityModel FromV0_6_1ToCurrent(v0_6_1.DependentActivityModel src);
+
+        public partial v0_6_1.DependentActivityModel FromV0_6_0ToV0_6_1(v0_6_0.DependentActivityModel src);
+        public partial v0_6_0.DependentActivityModel FromV0_6_1ToV0_6_0(v0_6_1.DependentActivityModel src);
+
+        public partial v0_6_1.ProjectScenarioModel FromV0_6_0ToV0_6_1(v0_6_0.ProjectScenarioModel src);
+        public partial v0_6_0.ProjectScenarioModel FromV0_6_1ToV0_6_0(v0_6_1.ProjectScenarioModel src);
+
+        public partial v0_6_1.ProjectScenarioFileModel FromV0_6_0ToV0_6_1(v0_6_0.ProjectScenarioFileModel src);
+        public partial v0_6_0.ProjectScenarioFileModel FromV0_6_1ToV0_6_0(v0_6_1.ProjectScenarioFileModel src);
+
+        // The v0.6.1 models mirror the Current models 1:1, so require every target member to be
+        // mapped on both directions. The class default is RequiredMappingStrategy.None (the version
+        // mappings are intentionally asymmetric); these opt-ins flag any Current/v0.6.1 property that
+        // is added later but not wired through the mapper.
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_1.ProjectModel FromCurrentToV0_6_1(ProjectModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial ProjectModel FromV0_6_1ToCurrent(v0_6_1.ProjectModel src);
+
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_1.ProjectScenarioModel FromCurrentToV0_6_1(ProjectScenarioModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial ProjectScenarioModel FromV0_6_1ToCurrent(v0_6_1.ProjectScenarioModel src);
+
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_1.ProjectScenarioFileModel FromCurrentToV0_6_1(ProjectScenarioFileModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial ProjectScenarioFileModel FromV0_6_1ToCurrent(v0_6_1.ProjectScenarioFileModel src);
     }
 }

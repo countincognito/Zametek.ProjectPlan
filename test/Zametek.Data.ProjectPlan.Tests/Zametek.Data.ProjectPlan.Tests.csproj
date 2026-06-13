@@ -71,6 +71,9 @@
     <Content Include="TestFiles\test_v0_3_2.zpp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestFiles\test_v0_6_1.zpp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestFiles\test_v0_6_0.zpp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -116,7 +116,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
             string content = await File.ReadAllTextAsync(path);
             JObject json = JObject.Parse(content);
-            json["Version"]!.ToString().ShouldBe(Versions.v0_6_0);
+            json["Version"]!.ToString().ShouldBe(Versions.v0_6_1);
         }
 
         [Fact]
@@ -140,7 +140,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             await m_Saver.SaveProjectFileAsync(original, path);
             ProjectModel loaded = await m_Opener.OpenProjectFileAsync(path);
 
-            loaded.Version.ShouldBe(Versions.v0_6_0);
+            loaded.Version.ShouldBe(Versions.v0_6_1);
         }
 
         [Fact]
@@ -210,7 +210,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
             await m_Saver.SaveProjectFileAsync(loaded1, path2);
             ProjectModel loaded2 = await m_Opener.OpenProjectFileAsync(path2);
 
-            loaded2.Version.ShouldBe(Versions.v0_6_0);
+            loaded2.Version.ShouldBe(Versions.v0_6_1);
         }
 
         [Fact]
