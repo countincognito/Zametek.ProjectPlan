@@ -162,7 +162,7 @@
     <ProjectReference Include="..\..\src\Zametek.ProjectPlan.CommandLine\Zametek.ProjectPlan.CommandLine.csproj" />
   </ItemGroup>
   <ItemGroup>
-      <None Include="readme.txt" />
+    <None Include="readme.txt" />
   </ItemGroup>
   <Target Name="ResolveIkvmRuntimeAssembly" />
   <Target Name="_UpdateIkvmReferenceItemsMetadata" />
