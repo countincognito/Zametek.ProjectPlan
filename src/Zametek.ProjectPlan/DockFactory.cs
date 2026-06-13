@@ -62,6 +62,85 @@ namespace Zametek.ProjectPlan
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(resourceSettingsManagerViewModel));
             m_WorkStreamSettingsManagerViewModel = workStreamSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(workStreamSettingsManagerViewModel));
             m_HolidaySettingsManagerViewModel = holidaySettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(holidaySettingsManagerViewModel));
+
+            // The Dock control themes bind through the optional capability objects
+            // (e.g. ActiveDockable.DockCapabilityOverrides.CanPin), but the library
+            // leaves them null by default (null means 'inherit'), which floods the
+            // debug output with 'Value is null' binding errors. Initialize empty
+            // instances instead - their members are themselves null, preserving the
+            // inheritance semantics - so the binding paths resolve. These events
+            // cover dockables created dynamically (e.g. when floating or splitting);
+            // InitLayout covers freshly created and deserialized layouts.
+            DockableInit += (_, args) => EnsureCapabilityDefaults(args.Dockable);
+            DockableAdded += (_, args) => EnsureCapabilityDefaults(args.Dockable);
+        }
+
+        private static void EnsureCapabilityDefaults(IDockable? dockable)
+        {
+            if (dockable is null)
+            {
+                return;
+            }
+
+            dockable.DockCapabilityOverrides ??= new DockCapabilityOverrides();
+
+            if (dockable is IDock dock)
+            {
+                dock.DockCapabilityPolicy ??= new DockCapabilityPolicy();
+            }
+
+            if (dockable is IRootDock rootDock)
+            {
+                rootDock.RootDockCapabilityPolicy ??= new DockCapabilityPolicy();
+            }
+        }
+
+        private static void EnsureCapabilityDefaultsRecursive(IDockable? dockable)
+        {
+            if (dockable is null)
+            {
+                return;
+            }
+
+            EnsureCapabilityDefaults(dockable);
+
+            if (dockable is IRootDock rootDock)
+            {
+                EnsureCapabilityDefaultsRecursive(rootDock.PinnedDock);
+
+                foreach (IDockable hiddenDockable in rootDock.HiddenDockables ?? [])
+                {
+                    EnsureCapabilityDefaultsRecursive(hiddenDockable);
+                }
+                foreach (IDockable pinnedDockable in rootDock.LeftPinnedDockables ?? [])
+                {
+                    EnsureCapabilityDefaultsRecursive(pinnedDockable);
+                }
+                foreach (IDockable pinnedDockable in rootDock.RightPinnedDockables ?? [])
+                {
+                    EnsureCapabilityDefaultsRecursive(pinnedDockable);
+                }
+                foreach (IDockable pinnedDockable in rootDock.TopPinnedDockables ?? [])
+                {
+                    EnsureCapabilityDefaultsRecursive(pinnedDockable);
+                }
+                foreach (IDockable pinnedDockable in rootDock.BottomPinnedDockables ?? [])
+                {
+                    EnsureCapabilityDefaultsRecursive(pinnedDockable);
+                }
+                foreach (IDockWindow window in rootDock.Windows ?? [])
+                {
+                    EnsureCapabilityDefaultsRecursive(window.Layout);
+                }
+            }
+
+            if (dockable is IDock dock)
+            {
+                foreach (IDockable child in dock.VisibleDockables ?? [])
+                {
+                    EnsureCapabilityDefaultsRecursive(child);
+                }
+            }
         }
 
         public override IRootDock CreateLayout()
@@ -293,6 +372,10 @@ namespace Zametek.ProjectPlan
             };
 
             base.InitLayout(layout);
+
+            // Cover every dockable in the layout, whether freshly created or
+            // deserialized from a saved layout (which round-trips nulls).
+            EnsureCapabilityDefaultsRecursive(layout);
         }
     }
 }
