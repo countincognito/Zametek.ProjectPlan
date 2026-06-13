@@ -160,4 +160,9 @@
     <Content Include="Images\Wide310x150Logo.scale-400.png" />
     <None Include="Zametek.ProjectPlan.WapPackager_TemporaryKey.pfx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="readme.txt" />
+  </ItemGroup>
+  <Target Name="ResolveIkvmRuntimeAssembly" />
+  <Target Name="_UpdateIkvmReferenceItemsMetadata" />
 </Project>
