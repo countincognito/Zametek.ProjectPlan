@@ -130,9 +130,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(_ => RefreshStartAndFinishValues());
 
+            // Skip the initial value emitted at subscription, otherwise a newly
+            // created activity would be marked as compiled without a compilation
+            // having taken place. Stay on the current thread so the activity is
+            // marked as compiled synchronously when a compilation is published;
+            // deferring this (e.g. to the taskpool) leaves a window after a load
+            // completes where the activity still reads as uncompiled, which
+            // randomly arms a redundant auto-compile that marks the project
+            // scenario as updated.
             m_CompilationSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.GraphCompilation)
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Skip(1)
+                .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(_ => SetAsCompiled());
 
             m_IsCompiled = false;

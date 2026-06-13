@@ -21,6 +21,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly Lock m_Lock;
         private bool m_TrackIsProjectScenarioUpdated;
         private bool m_TrackHasStaleOutputs;
+        private int m_BulkUpdateNestingLevel;
+        private int m_BusyNestingLevel;
 
         private readonly VertexGraphCompiler m_VertexGraphCompiler;
 
@@ -85,7 +87,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_MetricCalculationService = metricCalculationService;
 
             m_IsReadyToCompile = ReadyToCompile.No;
-            m_IsBusy = false;
             m_HasStaleOutputs = false;
             m_ProjectStart = new(DateTime.Today);
             m_Today = new(DateTime.Today);
@@ -185,6 +186,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ToObservableChangeSet()
                 .AutoRefresh(activity => activity.IsCompiled) // Subscribe only to IsCompiled property changes
                 .Filter(activity => !activity.IsCompiled)
+                // Drop emissions raised during a bulk update: the bulk update methods
+                // run the compilation explicitly, so these emissions are redundant.
+                // Note this must come after the DynamicData operators (so their
+                // internal state stays consistent) and before ObserveOn (so the check
+                // runs at emission time, not at deferred delivery time).
+                .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(changeSet =>
                 {
@@ -194,15 +201,26 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             if (!IsBusy)
                             {
-                                if (AutoCompile)
+                                // The changeset's uncompiled verdict is baked in at
+                                // emission time and may be stale by the time it is
+                                // delivered here (e.g. activities added during a load
+                                // are emitted as uncompiled, but the load has already
+                                // compiled them by the time the load releases m_Lock),
+                                // so re-check the live state before arming a redundant
+                                // compile, which would mark the project scenario as
+                                // updated.
+                                if (RawActivities.Any(activity => !activity.IsCompiled))
                                 {
-                                    IsReadyToReviseTrackers = ReadyToRevise.Yes;
-                                    IsReadyToCompile = ReadyToCompile.Yes;
-                                }
-                                else
-                                {
-                                    IsReadyToReviseTrackers = ReadyToRevise.No;
-                                    IsReadyToCompile = ReadyToCompile.No;
+                                    if (AutoCompile)
+                                    {
+                                        IsReadyToReviseTrackers = ReadyToRevise.Yes;
+                                        IsReadyToCompile = ReadyToCompile.Yes;
+                                    }
+                                    else
+                                    {
+                                        IsReadyToReviseTrackers = ReadyToRevise.No;
+                                        IsReadyToCompile = ReadyToCompile.No;
+                                    }
                                 }
                             }
                         }
@@ -224,23 +242,34 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 });
 
+            // The internal Build* subscriptions drop (rather than conflate) emissions
+            // raised during a bulk update: the bulk update methods invoke the Build*
+            // cascade actively, in dependency order, inside the bulk update window so
+            // that all compilation outputs are settled before the gated manager view
+            // model subscriptions replay. The drop check must run at emission time
+            // (i.e. before ObserveOn), otherwise the deferred taskpool invocations
+            // would run after the bulk update window has already closed.
             m_BuildArrowGraphSub = this
                 .WhenAnyValue(core => core.GraphCompilation)
+                .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildArrowGraph());
 
             m_BuildVertexGraphSub = this
                 .WhenAnyValue(core => core.GraphCompilation)
+                .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildVertexGraph());
 
             m_BuildResourceSeriesSetSub = this
                 .WhenAnyValue(core => core.GraphCompilation)
+                .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildResourceSeriesSet());
 
             m_BuildTrackingSeriesSetSub = this
                 .WhenAnyValue(core => core.GraphCompilation)
+                .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildTrackingSeriesSet());
 
@@ -248,6 +277,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     core => core.GraphCompilation,
                     core => core.HasCompilationErrors)
+                .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildNetworkMetrics());
 
@@ -256,6 +286,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     core => core.GraphCompilation,
                     core => core.GraphSettings,
                     core => core.HasCompilationErrors)
+                .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildRiskMetrics());
 
@@ -263,6 +294,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     core => core.ResourceSeriesSet,
                     core => core.HasCompilationErrors)
+                .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => BuildFinancialMetrics());
         }
@@ -282,19 +314,118 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        /// <summary>
+        /// Marks the start of a bulk update (e.g. loading or resetting a project scenario),
+        /// during which subscribers gated on IsBulkUpdating should suppress reacting to
+        /// intermediate property change notifications. Calls may be nested; IsBulkUpdating
+        /// only raises change notifications on the outermost transitions.
+        /// Always pair with EndBulkUpdate in a finally block.
+        /// IMPORTANT: never call this, or EndBulkUpdate, while holding m_Lock. Raising
+        /// IsBulkUpdating causes its (deliberately lock-free) getter to be re-read
+        /// synchronously by property chain observers on this thread, and the bulk update
+        /// state must never couple those observers to m_Lock, otherwise the raising
+        /// thread can deadlock against the Build* subscriptions that serialize on m_Lock.
+        /// </summary>
+        private void BeginBulkUpdate()
+        {
+            if (Interlocked.Increment(ref m_BulkUpdateNestingLevel) == 1)
+            {
+                CascadeDiagnostics.RecordMarker(@"Bulk update started");
+                this.RaisePropertyChanged(nameof(IsBulkUpdating));
+            }
+        }
+
+        private void EndBulkUpdate()
+        {
+            if (Interlocked.Decrement(ref m_BulkUpdateNestingLevel) == 0)
+            {
+                CascadeDiagnostics.RecordMarker(@"Bulk update ended");
+                this.RaisePropertyChanged(nameof(IsBulkUpdating));
+            }
+        }
+
+        /// <summary>
+        /// Marks the start of a busy section. IsBusy is a UI-facing signal only (busy
+        /// indicators, disabled controls); do not use it to gate behaviour - use
+        /// IsBulkUpdating or dedicated flags for that. Calls nest: the busy sections
+        /// in this class routinely call each other, so IsBusy is ref-counted and only
+        /// raises change notifications on the outermost transitions. This keeps the
+        /// UI signal as one continuous busy window per operation instead of flapping
+        /// false/true as each nested helper completes.
+        /// Always pair with EndBusy in a finally block.
+        /// </summary>
+        private void BeginBusy()
+        {
+            if (Interlocked.Increment(ref m_BusyNestingLevel) == 1)
+            {
+                this.RaisePropertyChanged(nameof(IsBusy));
+            }
+        }
+
+        private void EndBusy()
+        {
+            // Decrement defensively, clamping at zero: pairing is expected (BeginBusy
+            // at the start of a try block, EndBusy in its finally), but an unmatched
+            // call must never drive the count negative, which would silently break
+            // the busy signal for the remainder of the session.
+            //
+            // This is a standard lock-free compare-and-swap retry loop. The initial
+            // volatile read is only a first guess and may be stale by the time the
+            // CompareExchange runs; that is fine, because CompareExchange writes the
+            // decrement only if the field still holds the guessed value, atomically,
+            // and otherwise writes nothing and returns the actual current value, with
+            // which the loop simply tries again. A stale read can therefore only ever
+            // cause a retry, never an incorrect write.
+            int currentLevel = Volatile.Read(ref m_BusyNestingLevel);
+            while (currentLevel > 0)
+            {
+                int originalLevel = Interlocked.CompareExchange(ref m_BusyNestingLevel, currentLevel - 1, currentLevel);
+                if (originalLevel == currentLevel)
+                {
+                    if (currentLevel == 1)
+                    {
+                        this.RaisePropertyChanged(nameof(IsBusy));
+                    }
+                    return;
+                }
+                currentLevel = originalLevel;
+            }
+        }
+
+        /// <summary>
+        /// Actively runs the Build* cascade, in dependency order, that the internal
+        /// subscriptions would otherwise perform in response to a compilation change.
+        /// Call this inside a bulk update window (after RunCompile), when those
+        /// subscriptions drop their emissions, so that all compilation outputs are
+        /// settled before the bulk update ends.
+        /// </summary>
+        private void RunBuildCascade()
+        {
+            lock (m_Lock)
+            {
+                BuildArrowGraph();
+                BuildVertexGraph();
+                BuildResourceSeriesSet();
+                BuildTrackingSeriesSet();
+                BuildNetworkMetrics();
+                BuildRiskMetrics();
+                BuildFinancialMetrics();
+            }
+        }
+
         #endregion
 
         #region ICoreViewModel Members
 
-        private bool m_IsBusy;
-        public bool IsBusy
-        {
-            get => m_IsBusy;
-            private set
-            {
-                this.RaiseAndSetIfChanged(ref m_IsBusy, value);
-            }
-        }
+        // This getter must remain lock-free: it is re-read synchronously by property
+        // chain observers (WhenAnyValue) on whichever thread raises the change
+        // notification, so it must never contend for m_Lock.
+        public bool IsBusy => Volatile.Read(ref m_BusyNestingLevel) > 0;
+
+        // This getter must remain lock-free: it is re-read synchronously by property
+        // chain observers (WhenAnyValue) on whichever thread raises the change
+        // notification, so it must never contend for m_Lock.
+        public bool IsBulkUpdating => Volatile.Read(ref m_BulkUpdateNestingLevel) > 0;
 
         // We need to use an enum because raised changes on bools aren't always captured.
         // https://github.com/reactiveui/ReactiveUI/issues/3846
@@ -327,6 +458,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     HasStaleOutputs = value;
                     if (m_TrackIsProjectScenarioUpdated)
                     {
+                        if (value && !m_IsProjectScenarioUpdated)
+                        {
+                            CascadeDiagnostics.RecordStackTrace($@"{nameof(IsProjectScenarioUpdated)} transitioned to true");
+                        }
                         this.RaiseAndSetIfChanged(ref m_IsProjectScenarioUpdated, value);
                     }
                 }
@@ -863,7 +998,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
 
                     var plan = new ProjectScenarioModel
                     {
@@ -890,7 +1025,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -900,7 +1035,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     ProjectScenarioModel emptyPlan = CreateEmptyProjectScenario();
 
                     ProjectStart = emptyPlan.ProjectStart;
@@ -917,7 +1052,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -925,9 +1060,10 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
+                BeginBulkUpdate();
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     m_TrackIsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = false;
 
@@ -944,6 +1080,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ArrowGraph = new();
                     VertexGraph = new();
+                    ResourceSeriesSet = new();
+                    TrackingSeriesSet = new();
 
                     IsReadyToCompile = ReadyToCompile.No;
                     IsReadyToReviseTrackers = ReadyToRevise.No;
@@ -959,7 +1097,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_TrackIsProjectScenarioUpdated = true;
                 m_TrackHasStaleOutputs = true;
-                IsBusy = false;
+                EndBusy();
+                EndBulkUpdate();
             }
         }
 
@@ -969,13 +1108,13 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     return m_ProjectScenarioFileImport.ImportProjectScenarioFile(filename);
                 }
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -990,7 +1129,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     m_ProjectScenarioFileExport.ExportProjectScenarioFile(
                         projectScenarioModel,
                         resourceSeriesSetModel,
@@ -1001,7 +1140,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1012,9 +1151,10 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
+                BeginBulkUpdate();
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     ResetProjectScenario();
                     m_TrackIsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = false;
@@ -1107,6 +1247,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     RunCompile();
 
+                    // The internal Build* subscriptions drop their emissions during a
+                    // bulk update, so run the cascade actively while everything is
+                    // still muted.
+                    RunBuildCascade();
+
                     //// Metrics.
                     //// It is important to put this after the compilation, so it will only
                     //// trigger a project scenario updated event if it is different from the compiled metrics.
@@ -1121,7 +1266,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_TrackIsProjectScenarioUpdated = true;
                 m_TrackHasStaleOutputs = true;
-                IsBusy = false;
+                EndBusy();
+                EndBulkUpdate();
             }
         }
 
@@ -1132,9 +1278,10 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
+                BeginBulkUpdate();
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     ResetProjectScenario();
                     m_TrackIsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = false;
@@ -1191,6 +1338,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     RunCompile();
 
+                    // The internal Build* subscriptions drop their emissions during a
+                    // bulk update, so run the cascade actively while everything is
+                    // still muted.
+                    RunBuildCascade();
+
                     // Metrics.
                     // It is important to put this after the compilation, so it will only
                     // trigger a project plan updated event if it is different from the compiled metrics.
@@ -1205,7 +1357,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 m_TrackIsProjectScenarioUpdated = true;
                 m_TrackHasStaleOutputs = true;
-                IsBusy = false;
+                EndBusy();
+                EndBulkUpdate();
             }
         }
 
@@ -1215,7 +1368,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     var graphCompilation = m_Mapper.ToGraphCompilationModel(GraphCompilation);
 
                     // Default display mode is required for all file opening and closing.
@@ -1257,7 +1410,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1267,7 +1420,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     var activityId = GetNextActivityId();
                     var set = new HashSet<DependentActivityModel>
                     {
@@ -1286,7 +1439,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1298,7 +1451,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_Activities.Edit(activities =>
                     {
-                        IsBusy = true;
+                        BeginBusy();
 
                         IOrderedEnumerable<DependentActivityModel> orderedDependentActivityModels = dependentActivityModels
                             .OrderBy(x => x.Activity.DisplayOrder)
@@ -1333,7 +1486,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1345,7 +1498,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_Activities.Edit(activities =>
                     {
-                        IsBusy = true;
+                        BeginBusy();
                         IEnumerable<IManagedActivityViewModel> dependentActivities = [.. RawActivities.Where(x => dependentActivityIds.Contains(x.Id))];
 
                         foreach (IManagedActivityViewModel dependentActivity in dependentActivities)
@@ -1364,7 +1517,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1376,7 +1529,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_Activities.Edit(activities =>
                     {
-                        IsBusy = true;
+                        BeginBusy();
                         Dictionary<int, IManagedActivityViewModel> activityLookup = RawActivities.ToDictionary(x => x.Id);
 
                         foreach (UpdateDependentActivityModel updateModel in updateModels)
@@ -1443,7 +1596,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1453,7 +1606,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
 
                     if (!HasCompilationErrors)
                     {
@@ -1517,7 +1670,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1539,7 +1692,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
 
                     ProjectScenarioModel projectScenarioModel = BuildProjectScenario();
                     Guid projectScenarioId = m_SettingService.ScenarioId;
@@ -1552,7 +1705,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1562,7 +1715,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
 
                     ProjectScenarioModel projectScenarioModel = BuildProjectScenario();
                     Guid projectScenarioId = m_SettingService.ScenarioId;
@@ -1575,7 +1728,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1585,7 +1738,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
 
                     ProjectScenarioModel projectScenarioModel = BuildProjectScenario();
                     Guid projectScenarioId = m_SettingService.ScenarioId;
@@ -1598,7 +1751,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1610,7 +1763,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     m_Activities.Edit(activities =>
                     {
-                        IsBusy = true;
+                        BeginBusy();
 
                         foreach (IManagedActivityViewModel activity in RawActivities)
                         {
@@ -1624,7 +1777,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1634,6 +1787,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
+                    BeginBusy();
                     IManagedActivityViewModel? activity = RawActivities.FirstOrDefault(a => a.Id == activityId);
 
                     if (activity is not IEditableObject editable)
@@ -1650,17 +1804,18 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
         public void RunCompile()
         {
+            CascadeDiagnostics.RecordStackTrace($@"{nameof(CoreViewModel)}.{nameof(RunCompile)} invoked");
             try
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
 
                     UpdateActivityDisplayOrders();
 
@@ -1685,7 +1840,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1695,7 +1850,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     if (AutoCompile)
                     {
                         RunCompile();
@@ -1704,7 +1859,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
@@ -1714,7 +1869,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    IsBusy = true;
+                    BeginBusy();
                     m_VertexGraphCompiler.Compile();
                     m_VertexGraphCompiler.TransitiveReduction();
                     RunCompile();
@@ -1722,12 +1877,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             finally
             {
-                IsBusy = false;
+                EndBusy();
             }
         }
 
         public void BuildArrowGraph()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildArrowGraph)}");
             lock (m_Lock)
             {
                 if (HasCompilationErrors)
@@ -1744,6 +1900,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildVertexGraph()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildVertexGraph)}");
             lock (m_Lock)
             {
                 if (HasCompilationErrors)
@@ -1763,6 +1920,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildResourceSeriesSet()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildResourceSeriesSet)}");
             lock (m_Lock)
             {
                 ResourceSeriesSet = m_ResourceSchedulingService.BuildResourceSeriesSet(
@@ -1773,6 +1931,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildTrackingSeriesSet()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildTrackingSeriesSet)}");
             lock (m_Lock)
             {
                 IList<ActivityModel> activityModels =
@@ -1787,6 +1946,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildNetworkMetrics()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildNetworkMetrics)}");
             lock (m_Lock)
             {
                 NetworkMetrics = m_MetricCalculationService.BuildNetworkMetrics(
@@ -1801,6 +1961,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildRiskMetrics()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildRiskMetrics)}");
             lock (m_Lock)
             {
                 RiskMetrics = m_MetricCalculationService.BuildRiskMetrics(
@@ -1813,6 +1974,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildFinancialMetrics()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildFinancialMetrics)}");
             lock (m_Lock)
             {
                 (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts) =

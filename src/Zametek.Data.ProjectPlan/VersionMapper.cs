@@ -683,22 +683,38 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_6_0.ProjectScenarioModel FromV0_5_0ToV0_6_0(v0_5_0.ProjectModel src);
         public partial v0_5_0.ProjectModel FromV0_6_0ToV0_5_0(v0_6_0.ProjectScenarioModel src);
 
+        // The v0.6.0 models mirror the Current models 1:1, so require every target member to be
+        // mapped on both directions. The class default is RequiredMappingStrategy.None (the version
+        // mappings are intentionally asymmetric); these opt-ins flag any Current/v0.6.0 property that
+        // is added later but not wired through the mapper.
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_0.ProjectModel FromCurrentToV0_6_0(ProjectModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial ProjectModel FromV0_6_0ToCurrent(v0_6_0.ProjectModel src);
 
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_0.ProjectScenarioModel FromCurrentToV0_6_0(ProjectScenarioModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial ProjectScenarioModel FromV0_6_0ToCurrent(v0_6_0.ProjectScenarioModel src);
 
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_0.ProjectScenarioNodeModel FromCurrentToV0_6_0(ProjectScenarioNodeModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial ProjectScenarioNodeModel FromV0_6_0ToCurrent(v0_6_0.ProjectScenarioNodeModel src);
 
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_0.ProjectScenarioFileModel FromCurrentToV0_6_0(ProjectScenarioFileModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial ProjectScenarioFileModel FromV0_6_0ToCurrent(v0_6_0.ProjectScenarioFileModel src);
 
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_0.ProjectScenarioTagModel FromCurrentToV0_6_0(ProjectScenarioTagModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial ProjectScenarioTagModel FromV0_6_0ToCurrent(v0_6_0.ProjectScenarioTagModel src);
 
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_0.AppSettingsModel FromCurrentToV0_6_0(AppSettingsModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial AppSettingsModel FromV0_6_0ToCurrent(v0_6_0.AppSettingsModel src);
 
         [MapProperty(nameof(v0_4_4.AppSettingsModel.DefaultUseBusinessDays), nameof(v0_6_0.AppSettingsModel.DefaultNonWorkingDayMode), Use = nameof(MapUseBusinessDays))]

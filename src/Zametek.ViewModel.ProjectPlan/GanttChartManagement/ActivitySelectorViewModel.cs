@@ -84,7 +84,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     if (isReadyToRevise == ReadyToRevise.Yes)
                     {
-                        ReviseActivities();
+                        try
+                        {
+                            // Guard the revision so any resulting selection changes
+                            // are not mistaken for user edits and do not mark the
+                            // project scenario as updated.
+                            m_IsRevising = true;
+                            ReviseActivities();
+                        }
+                        finally
+                        {
+                            m_IsRevising = false;
+                        }
                     }
                 });
 

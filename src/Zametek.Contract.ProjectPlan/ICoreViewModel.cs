@@ -9,6 +9,8 @@ namespace Zametek.Contract.ProjectPlan
     {
         bool IsBusy { get; }
 
+        bool IsBulkUpdating { get; }
+
         ReadyToCompile IsReadyToCompile { get; }
 
         bool IsProjectScenarioUpdated { get; set; }

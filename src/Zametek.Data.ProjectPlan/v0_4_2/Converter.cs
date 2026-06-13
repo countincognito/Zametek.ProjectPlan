@@ -12,7 +12,7 @@
             return new ProjectModel
             {
                 ProjectStart = project.ProjectStart,
-                Today = project.ProjectStart,
+                Today = project.Today,
                 DependentActivities = [.. project.DependentActivities.Select(mapper.FromV0_4_0ToV0_4_2)],
                 ArrowGraphSettings = project.ArrowGraphSettings ?? new(),
                 ResourceSettings = project.ResourceSettings ?? new(),

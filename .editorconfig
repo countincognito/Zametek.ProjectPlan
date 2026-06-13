@@ -10,6 +10,8 @@ insert_final_newline = true
 
 [*.cs]
 indent_size = 4
+# Namespace does not match folder structure 
+dotnet_diagnostic.IDE0130.severity = none
 
 # Naming conventions matching existing codebase (m_ prefix for private fields)
 dotnet_naming_rule.private_fields_should_have_prefix.severity = suggestion
@@ -20,7 +22,31 @@ dotnet_naming_symbols.private_fields.applicable_kinds = field
 dotnet_naming_symbols.private_fields.applicable_accessibilities = private
 
 dotnet_naming_style.prefix_m_underscore.required_prefix = m_
-dotnet_naming_style.prefix_m_underscore.capitalization = camel_case
+dotnet_naming_style.prefix_m_underscore.capitalization = pascal_case
+
+# Naming conventions matching existing codebase (s_ prefix for private static fields)
+dotnet_naming_rule.private_static_fields_should_have_prefix.severity = suggestion
+dotnet_naming_rule.private_static_fields_should_have_prefix.symbols = private_static_fields
+dotnet_naming_rule.private_static_fields_should_have_prefix.style = prefix_s_underscore
+
+dotnet_naming_symbols.private_static_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_fields.required_modifiers = static
+
+dotnet_naming_style.prefix_s_underscore.required_prefix = s_
+dotnet_naming_style.prefix_s_underscore.capitalization = pascal_case
+
+# Naming conventions matching existing codebase (s_ prefix for private constant fields)
+dotnet_naming_rule.private_constant_fields_should_have_prefix.severity = suggestion
+dotnet_naming_rule.private_constant_fields_should_have_prefix.symbols = private_constant_fields
+dotnet_naming_rule.private_constant_fields_should_have_prefix.style = prefix_c_underscore
+
+dotnet_naming_symbols.private_constant_fields.applicable_kinds = field
+dotnet_naming_symbols.private_constant_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_constant_fields.required_modifiers = const
+
+dotnet_naming_style.prefix_c_underscore.required_prefix = c_
+dotnet_naming_style.prefix_c_underscore.capitalization = pascal_case
 
 [*.{axaml,xaml}]
 indent_size = 2

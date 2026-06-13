@@ -169,6 +169,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     rcm => rcm.ShowMilestones,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
                     (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildResourceChartPlotModelAsync());
 
@@ -704,6 +705,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildResourceChartPlotModel()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(ResourceChartManagerViewModel)}.{nameof(BuildResourceChartPlotModel)}");
             AvaPlot? plotModel = null;
 
             lock (m_Lock)

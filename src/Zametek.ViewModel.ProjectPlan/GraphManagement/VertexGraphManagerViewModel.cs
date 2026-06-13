@@ -137,6 +137,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     agm => agm.m_CoreViewModel.GraphSettings,
                     agm => agm.m_CoreViewModel.BaseTheme,
                     agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames)
+                .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildVertexGraphDiagramDataAsync());
 
@@ -326,6 +327,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildVertexGraphDiagramData()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(VertexGraphManagerViewModel)}.{nameof(BuildVertexGraphDiagramData)}");
             byte[]? data = null;
 
             lock (m_Lock)
@@ -345,6 +347,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void BuildVertexGraphDiagramImage()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(VertexGraphManagerViewModel)}.{nameof(BuildVertexGraphDiagramImage)}");
             SvgSource? source = null;
 
             lock (m_Lock)

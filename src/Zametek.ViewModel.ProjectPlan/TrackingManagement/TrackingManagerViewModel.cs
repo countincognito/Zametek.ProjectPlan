@@ -74,6 +74,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     tm => tm.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
                     tm => tm.m_CoreViewModel.HolidaySettings,
                     tm => tm.m_CoreViewModel.ProjectStart)
+                .MuteWhile(this.WhenAnyValue(tm => tm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Subscribe(_ => RefreshDays());
 
@@ -105,6 +106,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void RefreshDays()
         {
+            CascadeDiagnostics.RecordBuild($@"{nameof(TrackingManagerViewModel)}.{nameof(RefreshDays)}");
             this.RaisePropertyChanged(nameof(TrackerIndex));
             this.RaisePropertyChanged(nameof(PageIndex));
             this.RaisePropertyChanged(nameof(Day00Title));
