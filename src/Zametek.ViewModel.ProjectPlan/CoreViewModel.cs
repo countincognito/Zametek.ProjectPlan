@@ -193,6 +193,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 // runs at emission time, not at deferred delivery time).
                 .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxApp.TaskpoolScheduler)
+                //.ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(changeSet =>
                 {
                     if ((changeSet.Replaced + changeSet.Adds) > 0)
@@ -1576,6 +1577,14 @@ namespace Zametek.ViewModel.ProjectPlan
                                     if (updateModel.IsHasNoRiskEdited)
                                     {
                                         activity.HasNoRisk = updateModel.HasNoRisk;
+                                    }
+                                    if (updateModel.IsOverrideColorEdited)
+                                    {
+                                        activity.OverrideColor = updateModel.OverrideColor;
+                                    }
+                                    if (updateModel.IsColorFormatEdited)
+                                    {
+                                        activity.ColorFormat = updateModel.ColorFormat;
                                     }
 
                                     editable.EndEdit();

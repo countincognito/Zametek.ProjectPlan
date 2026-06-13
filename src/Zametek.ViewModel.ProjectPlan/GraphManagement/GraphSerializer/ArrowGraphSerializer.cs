@@ -303,7 +303,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     SourceId = edgeTailNodeLookup[activityId],
                     TargetId = edgeHeadNodeLookup[activityId],
                     DashStyle = edgeFormatLookup.FindGraphEdgeDashStyle(isCritical, isDummy),
-                    ForegroundColorHexCode = ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(activityModel.TotalSlack)),
+                    ForegroundColorHexCode = activityModel.OverrideColor
+                        ? ColorHelper.ColorFormatToHtmlHexCode(activityModel.ColorFormat)
+                        : ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(activityModel.TotalSlack)),
                     StrokeThickness = edgeFormatLookup.FindStrokeThickness(isCritical, isDummy),
                     Label = labelText,
                     ShowLabel = showLabel,
