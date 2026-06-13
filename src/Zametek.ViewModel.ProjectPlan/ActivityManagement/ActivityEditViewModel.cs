@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -23,6 +23,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         Name = x.Name,
                     });
             ResourceSelector.SetTargetResources(targetResources, []);
+
+            m_ColorFormat = ColorHelper.None();
 
             WorkStreamSelector = new WorkStreamSelectorViewModel();
             IEnumerable<TargetWorkStreamModel> targetWorkStreams = workStreams
@@ -180,6 +182,50 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_OverrideColor;
+        public bool OverrideColor
+        {
+            get => m_OverrideColor;
+            set
+            {
+                m_OverrideColor = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsOverrideColorActive;
+        public bool IsOverrideColorActive
+        {
+            get => m_IsOverrideColorActive;
+            set
+            {
+                m_IsOverrideColorActive = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private ColorFormatModel m_ColorFormat;
+        public ColorFormatModel ColorFormat
+        {
+            get => m_ColorFormat;
+            set
+            {
+                m_ColorFormat = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsColorFormatActive;
+        public bool IsColorFormatActive
+        {
+            get => m_IsColorFormatActive;
+            set
+            {
+                m_IsColorFormatActive = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         public UpdateDependentActivityModel BuildUpdateModel()
         {
             var updateModel = new UpdateDependentActivityModel
@@ -208,6 +254,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 TargetResourceOperator = TargetResourceOperator,
                 IsTargetResourceOperatorEdited = IsTargetResourceOperatorActive,
+
+                OverrideColor = OverrideColor,
+                IsOverrideColorEdited = IsOverrideColorActive,
+
+                ColorFormat = ColorFormat,
+                IsColorFormatEdited = IsColorFormatActive,
             };
             updateModel.TargetResources.AddRange(ResourceSelector.SelectedResourceIds);
             updateModel.TargetWorkStreams.AddRange(WorkStreamSelector.SelectedWorkStreamIds);

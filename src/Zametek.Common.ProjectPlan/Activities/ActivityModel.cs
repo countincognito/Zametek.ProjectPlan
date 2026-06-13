@@ -1,4 +1,4 @@
-﻿using Zametek.Maths.Graphs;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.Common.ProjectPlan
 {
@@ -54,6 +54,10 @@ namespace Zametek.Common.ProjectPlan
         public int? MaximumLatestFinishTime { get; init; }
 
         public DateTimeOffset? MaximumLatestFinishDateTime { get; init; }
+
+        public bool OverrideColor { get; init; }
+
+        public ColorFormatModel ColorFormat { get; init; } = new ColorFormatModel();
 
         public List<ActivityTrackerModel> Trackers { get; init; } = [];
     }

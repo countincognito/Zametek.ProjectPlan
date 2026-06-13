@@ -38,26 +38,26 @@ namespace Zametek.ViewModel.ProjectPlan
         private static int s_PresetColorIndex = 0;
         private static readonly List<Color> s_PresetColors =
             [
-            Colors.RoyalBlue,
-            Colors.Coral,
-            Colors.Red,
-            Colors.LimeGreen,
-            Colors.Purple,
-            Colors.MediumTurquoise,
-            Colors.SteelBlue,
-            Colors.Crimson,
-            Colors.Chocolate,
-            Colors.BlueViolet,
-            Colors.Goldenrod,
-            Colors.Orchid,
-            Colors.MediumSeaGreen,
-            Colors.Firebrick,
-            Colors.Peru,
-            Colors.DarkKhaki,
-            Colors.OrangeRed,
-            Colors.Sienna,
-            Colors.YellowGreen,
-            Colors.OliveDrab,
+                Colors.RoyalBlue,
+                Colors.Coral,
+                Colors.Red,
+                Colors.LimeGreen,
+                Colors.Purple,
+                Colors.MediumTurquoise,
+                Colors.SteelBlue,
+                Colors.Crimson,
+                Colors.Chocolate,
+                Colors.BlueViolet,
+                Colors.Goldenrod,
+                Colors.Orchid,
+                Colors.MediumSeaGreen,
+                Colors.Firebrick,
+                Colors.Peru,
+                Colors.DarkKhaki,
+                Colors.OrangeRed,
+                Colors.Sienna,
+                Colors.YellowGreen,
+                Colors.OliveDrab,
             ];
 
         public static ColorFormatModel None()
@@ -130,7 +130,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public static ColorFormatModel Preset()
         {
             s_PresetColorIndex = s_PresetColorIndex % s_PresetColors.Count;
-            var color = ColorToColorFormatModel(s_PresetColors[s_PresetColorIndex]);
+            var color = AvaloniaColorToColorFormatModel(s_PresetColors[s_PresetColorIndex]);
             s_PresetColorIndex++;
             return color;
         }
@@ -140,7 +140,22 @@ namespace Zametek.ViewModel.ProjectPlan
             s_PresetColorIndex = 0;
         }
 
-        public static ColorFormatModel ColorToColorFormatModel(Color color)
+        public static ScottPlot.Color ColorFormatToScottPlotColor(ColorFormatModel color)
+        {
+            return new ScottPlot.Color(color.R, color.G, color.B, color.A);
+        }
+
+        public static ScottPlot.Color AvaloniaColorToScottPlotColor(Color color)
+        {
+            return new ScottPlot.Color(color.R, color.G, color.B, color.A);
+        }
+
+        public static Color ColorFormatToAvaloniaColor(ColorFormatModel color)
+        {
+            return Color.FromArgb(color.A, color.R, color.G, color.B);
+        }
+
+        public static ColorFormatModel AvaloniaColorToColorFormatModel(Color color)
         {
             return new ColorFormatModel
             {
@@ -193,7 +208,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            return new ColorFormatModel();
+            return None();
         }
 
         public static string BytesToHtmlHexCode(byte r, byte g, byte b)

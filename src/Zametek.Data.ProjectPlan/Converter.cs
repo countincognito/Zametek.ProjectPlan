@@ -7,16 +7,22 @@
 
         #region ProjectModels
 
-        public static v0_6_0.ProjectModel Format(Common.ProjectPlan.ProjectModel project)
+        public static v0_6_1.ProjectModel Format(Common.ProjectPlan.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return m_Mapper.FromCurrentToV0_6_0(project);
+            return m_Mapper.FromCurrentToV0_6_1(project);
+        }
+
+        public static Common.ProjectPlan.ProjectModel Upgrade(v0_6_1.ProjectModel project)
+        {
+            ArgumentNullException.ThrowIfNull(project);
+            return m_Mapper.FromV0_6_1ToCurrent(project);
         }
 
         public static Common.ProjectPlan.ProjectModel Upgrade(v0_6_0.ProjectModel project)
         {
             ArgumentNullException.ThrowIfNull(project);
-            return m_Mapper.FromV0_6_0ToCurrent(project);
+            return Upgrade(v0_6_1.Converter.Upgrade(m_Mapper, project));
         }
 
         public static Common.ProjectPlan.ProjectModel Upgrade(DateTimeOffset localNow, v0_5_0.ProjectModel project)

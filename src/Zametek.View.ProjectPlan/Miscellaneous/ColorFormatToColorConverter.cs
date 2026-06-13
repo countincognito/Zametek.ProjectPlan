@@ -1,4 +1,5 @@
-﻿using Avalonia;
+using Avalonia;
+using Avalonia.Controls.Primitives;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 using System;
@@ -18,7 +19,7 @@ namespace Zametek.View.ProjectPlan
             {
                 return AvaloniaProperty.UnsetValue;
             }
-            return Color.FromArgb(input.A, input.R, input.G, input.B);
+            return ViewModel.ProjectPlan.ColorHelper.ColorFormatToAvaloniaColor(input);
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -28,13 +29,7 @@ namespace Zametek.View.ProjectPlan
                 return AvaloniaProperty.UnsetValue;
             }
             var input = (Color)value;
-            return new ColorFormatModel
-            {
-                A = input.A,
-                R = input.R,
-                G = input.G,
-                B = input.B
-            };
+            return ViewModel.ProjectPlan.ColorHelper.AvaloniaColorToColorFormatModel(input);
         }
 
         #endregion

@@ -279,4 +279,7 @@
   <data name="ToolTip_SyncToday" xml:space="preserve">
     <value>Sync to current date</value>
   </data>
+  <data name="ToolTip_OverrideColor" xml:space="preserve">
+    <value>Override Color</value>
+  </data>
 </root>

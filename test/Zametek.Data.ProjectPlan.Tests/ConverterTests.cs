@@ -252,11 +252,25 @@ namespace Zametek.Data.ProjectPlan.Tests
             v0_5_0.ProjectModel? project_v0_5_0 = JsonConvert.DeserializeObject<v0_5_0.ProjectModel>(m_Fixture.V0_5_0a_JsonString);
             v0_6_0.ProjectModel? project_v0_6_0 = JsonConvert.DeserializeObject<v0_6_0.ProjectModel>(m_Fixture.V0_6_0_JsonString);
             var mapper = new VersionMapper();
-            v0_6_0.ProjectModel project_v0_5_0_upgraded = v0_6_0.Converter.Upgrade(mapper, m_LocalNow, project_v0_5_0!);
+            //v0_6_0.ProjectModel project_v0_5_0_upgraded = v0_6_0.Converter.Upgrade(mapper, m_LocalNow, project_v0_5_0!);
             //project_v0_5_0_upgraded.ShouldBeEquivalentTo(project_v0_6_0);
 
             ProjectModel model1 = Converter.Upgrade(m_LocalNow, project_v0_5_0!);
             ProjectModel model2 = Converter.Upgrade(project_v0_6_0!);
+            CompareModels(model1, model2);
+        }
+
+        [Fact]
+        public void Converter_Given_v0_6_0_Input_Then_ConvertsTo_v0_6_1()
+        {
+            v0_6_0.ProjectModel? project_v0_6_0 = JsonConvert.DeserializeObject<v0_6_0.ProjectModel>(m_Fixture.V0_6_0_JsonString);
+            v0_6_1.ProjectModel? project_v0_6_1 = JsonConvert.DeserializeObject<v0_6_1.ProjectModel>(m_Fixture.V0_6_1_JsonString);
+            var mapper = new VersionMapper();
+            v0_6_1.ProjectModel project_v0_6_0_upgraded = v0_6_1.Converter.Upgrade(mapper, project_v0_6_0!);
+            project_v0_6_0_upgraded.ShouldBeEquivalentTo(project_v0_6_1);
+
+            ProjectModel model1 = Converter.Upgrade(project_v0_6_0!);
+            ProjectModel model2 = Converter.Upgrade(project_v0_6_1!);
             CompareModels(model1, model2);
         }
     }

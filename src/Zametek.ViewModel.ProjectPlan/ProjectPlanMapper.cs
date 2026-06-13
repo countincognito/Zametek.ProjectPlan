@@ -1,4 +1,4 @@
-﻿using Riok.Mapperly.Abstractions;
+using Riok.Mapperly.Abstractions;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -129,6 +129,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     minimumFreeSlack: src.Activity.MinimumFreeSlack,
                     minimumEarliestStartTime: src.Activity.MinimumEarliestStartTime,
                     maximumLatestFinishTime: src.Activity.MaximumLatestFinishTime,
+                    overrideColor: src.Activity.OverrideColor,
+                    colorFormat: src.Activity.ColorFormat,
                     trackers: src.Activity.Trackers
                 );
 

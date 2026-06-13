@@ -300,11 +300,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     if (series != null)
                     {
-                        var color = new Color(
-                            series.ColorFormat.R,
-                            series.ColorFormat.G,
-                            series.ColorFormat.B,
-                            series.ColorFormat.A);
+                        var color = ColorHelper.ColorFormatToScottPlotColor(series.ColorFormat);
 
                         IList<double> xs = [];
                         IList<double> ys = [];

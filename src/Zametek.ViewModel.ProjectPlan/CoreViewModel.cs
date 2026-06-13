@@ -1577,6 +1577,14 @@ namespace Zametek.ViewModel.ProjectPlan
                                     {
                                         activity.HasNoRisk = updateModel.HasNoRisk;
                                     }
+                                    if (updateModel.IsOverrideColorEdited)
+                                    {
+                                        activity.OverrideColor = updateModel.OverrideColor;
+                                    }
+                                    if (updateModel.IsColorFormatEdited)
+                                    {
+                                        activity.ColorFormat = updateModel.ColorFormat;
+                                    }
 
                                     editable.EndEdit();
                                     activity.IsEditMuted = false;

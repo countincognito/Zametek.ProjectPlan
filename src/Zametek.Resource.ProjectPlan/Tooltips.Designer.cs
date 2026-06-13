@@ -412,6 +412,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Override Color.
+        /// </summary>
+        public static string ToolTip_OverrideColor {
+            get {
+                return ResourceManager.GetString("ToolTip_OverrideColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Percentage Completed.
         /// </summary>
         public static string ToolTip_PercentageCompleted {

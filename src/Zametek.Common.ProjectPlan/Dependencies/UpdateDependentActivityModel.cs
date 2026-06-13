@@ -1,4 +1,4 @@
-﻿using Zametek.Maths.Graphs;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.Common.ProjectPlan
 {
@@ -38,5 +38,11 @@ namespace Zametek.Common.ProjectPlan
 
         public bool HasNoRisk { get; init; } = default;
         public bool IsHasNoRiskEdited { get; init; } = false;
+
+        public bool OverrideColor { get; init; } = default;
+        public bool IsOverrideColorEdited { get; init; } = false;
+
+        public ColorFormatModel ColorFormat { get; init; } = new ColorFormatModel();
+        public bool IsColorFormatEdited { get; init; } = false;
     }
 }

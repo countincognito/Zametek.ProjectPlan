@@ -27,6 +27,12 @@ namespace Zametek.Contract.ProjectPlan
         LogicalOperator TargetResourceOperator { get; set; }
         bool IsTargetResourceOperatorActive { get; set; }
 
+        bool OverrideColor { get; set; }
+        bool IsOverrideColorActive { get; set; }
+
+        ColorFormatModel ColorFormat { get; set; }
+        bool IsColorFormatActive { get; set; }
+
         UpdateDependentActivityModel BuildUpdateModel();
     }
 }

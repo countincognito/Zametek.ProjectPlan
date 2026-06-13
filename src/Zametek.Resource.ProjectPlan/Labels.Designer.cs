@@ -304,6 +304,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Color Override.
+        /// </summary>
+        public static string Label_ColorOverride {
+            get {
+                return ResourceManager.GetString("Label_ColorOverride", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Copy.
         /// </summary>
         public static string Label_CopyNode {
@@ -1228,6 +1237,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_OtherMargin {
             get {
                 return ResourceManager.GetString("Label_OtherMargin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Override Color.
+        /// </summary>
+        public static string Label_OverrideColor {
+            get {
+                return ResourceManager.GetString("Label_OverrideColor", resourceCulture);
             }
         }
         

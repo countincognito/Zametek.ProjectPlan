@@ -124,7 +124,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 Height = s_DiagramNodeModelHeight,
                 Width = s_DiagramNodeModelWidth,
                 FillColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeFillColor),
-                BorderColorHexCode = ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(activityModel.TotalSlack)),
+                BorderColorHexCode = activityModel.OverrideColor
+                    ? ColorHelper.ColorFormatToHtmlHexCode(activityModel.ColorFormat)
+                    : ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(activityModel.TotalSlack)),
                 BorderDashStyle = nodeFormatLookup.FindGraphNodeBorderDashStyle(isCritical, isDummy),
                 BorderThickness = nodeFormatLookup.FindBorderThickness(isCritical, isDummy) * s_SvgNodeLineThicknessCorrectionFactor,
                 Text = BuildNodeLabel(activityModel),
