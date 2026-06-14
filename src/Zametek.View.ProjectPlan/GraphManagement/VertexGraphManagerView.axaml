@@ -6,6 +6,7 @@
 			 xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg"
 			 xmlns:local="using:Zametek.View.ProjectPlan"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 xmlns:i="using:Avalonia.Xaml.Interactivity"
 			 x:DataType="vm:VertexGraphManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.VertexGraphManagerView">
@@ -16,30 +17,30 @@
   <DockPanel Margin="7">
     <DockPanel>
       <DockPanel Width="250"
-					   DockPanel.Dock="Top">
+				 DockPanel.Dock="Top">
         <TextBlock Margin="0,11,11,11"
-						   DockPanel.Dock="Right"
-						   Text="x"/>
+				   DockPanel.Dock="Right"
+				   Text="x"/>
         <TextBlock Margin="0,11,0,11"
-						   DockPanel.Dock="Right"
-						   Text="{Binding ElementName=zoomer, Path=Value, Mode=OneWay, StringFormat=\{0:N1\}}"/>
+				   DockPanel.Dock="Right"
+				   Text="{Binding ElementName=zoomer, Path=Value, Mode=OneWay, StringFormat=\{0:N1\}}"/>
         <Slider Name="zoomer"
-						Orientation="Horizontal"
-						Value="1"
-						PointerWheelChanged="Zoom_PointerWheelChanged"
-						ValueChanged="Slider_ValueChanged"
-						Minimum="0.1" Maximum="5"
-						Margin="11"/>
+				Orientation="Horizontal"
+				Value="1"
+				PointerWheelChanged="Zoom_PointerWheelChanged"
+				ValueChanged="Slider_ValueChanged"
+				Minimum="0.1" Maximum="5"
+				Margin="11"/>
       </DockPanel>
 
       <ScrollViewer PointerPressed="ScrollViewer_PointerPressed"
-						  PointerReleased="ScrollViewer_PointerReleased"
-						  PointerMoved="ScrollViewer_PointerMoved"
-						  PointerWheelChanged="Zoom_PointerWheelChanged"
-						  HorizontalScrollBarVisibility="Auto"
-						  VerticalScrollBarVisibility="Auto"
-						  Name="viewer"
-						  Background="{Binding Path=BaseTheme, Mode=OneWay, Converter={StaticResource themeToBackgroundConverter}}">
+					PointerReleased="ScrollViewer_PointerReleased"
+					PointerMoved="ScrollViewer_PointerMoved"
+					PointerWheelChanged="Zoom_PointerWheelChanged"
+					HorizontalScrollBarVisibility="Auto"
+					VerticalScrollBarVisibility="Auto"
+					Name="viewer"
+					Background="{Binding Path=BaseTheme, Mode=OneWay, Converter={StaticResource themeToBackgroundConverter}}">
         <ScrollViewer.ContextMenu>
           <ContextMenu>
             <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
@@ -47,20 +48,84 @@
           </ContextMenu>
         </ScrollViewer.ContextMenu>
 
-        <!--Use the Grid to ensure the image is centered during zoom-->
+        <!--Use the Grid to ensure the graph is centered during zoom-->
         <Grid HorizontalAlignment="Center"
-					  VerticalAlignment="Center">
+			  VerticalAlignment="Center">
           <LayoutTransformControl Classes="screen pdf">
             <LayoutTransformControl.LayoutTransform>
               <ScaleTransform ScaleX="{Binding Value, ElementName=zoomer, Mode=TwoWay}"
-											ScaleY="{Binding Value, ElementName=zoomer, Mode=TwoWay}"/>
+							  ScaleY="{Binding Value, ElementName=zoomer, Mode=TwoWay}"/>
             </LayoutTransformControl.LayoutTransform>
 
-            <Image Stretch="None"
-							   PointerWheelChanged="Zoom_PointerWheelChanged"
-							   Source="{Binding Path=VertexGraphImage, Mode=OneWay}"
-							   RenderTransformOrigin="0.5,0.5">
-            </Image>
+            <!-- Spike: interactive node/edge canvas replacing the static SVG image.
+                 The SVG (VertexGraphImage) is still built in the background for Save As. -->
+            <Canvas Name="graphCanvas"
+                    Width="{Binding Path=GraphWidth, Mode=OneWay}"
+                    Height="{Binding Path=GraphHeight, Mode=OneWay}"
+                    Background="Transparent"
+                    PointerPressed="GraphCanvas_PointerPressed">
+
+              <!-- Edges drawn underneath the nodes. -->
+              <ItemsControl ItemsSource="{Binding Path=GraphEdges, Mode=OneWay}"
+                            Width="{Binding Path=GraphWidth, Mode=OneWay}"
+                            Height="{Binding Path=GraphHeight, Mode=OneWay}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <Canvas/>
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:VertexGraphEdgeViewModel">
+                    <Line StartPoint="{Binding Path=StartPoint, Mode=OneWay}"
+                          EndPoint="{Binding Path=EndPoint, Mode=OneWay}"
+                          Stroke="{Binding Path=Stroke, Mode=OneWay}"
+                          StrokeThickness="{Binding Path=StrokeThickness, Mode=OneWay}"
+                          Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"/>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <!-- Activity nodes: draggable, selectable, with hover tooltips. -->
+              <ItemsControl ItemsSource="{Binding Path=GraphNodes, Mode=OneWay}"
+                            Width="{Binding Path=GraphWidth, Mode=OneWay}"
+                            Height="{Binding Path=GraphHeight, Mode=OneWay}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <Canvas/>
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.Styles>
+                  <Style Selector="ContentPresenter" x:DataType="vm:VertexGraphNodeViewModel">
+                    <Setter Property="Canvas.Left" Value="{Binding Path=X, Mode=OneWay}"/>
+                    <Setter Property="Canvas.Top" Value="{Binding Path=Y, Mode=OneWay}"/>
+                  </Style>
+                </ItemsControl.Styles>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:VertexGraphNodeViewModel">
+                    <Border Width="{Binding Path=Width, Mode=OneWay}"
+                            Height="{Binding Path=Height, Mode=OneWay}"
+                            Background="{Binding Path=FillBrush, Mode=OneWay}"
+                            BorderBrush="{Binding Path=BorderBrush, Mode=OneWay}"
+                            BorderThickness="{Binding Path=BorderThickness, Mode=OneWay}"
+                            Opacity="{Binding Path=NodeOpacity, Mode=OneWay}"
+                            CornerRadius="3"
+                            Cursor="Hand"
+                            ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}">
+                      <i:Interaction.Behaviors>
+                        <local:NodeDragBehavior/>
+                      </i:Interaction.Behaviors>
+                      <TextBlock Text="{Binding Path=Label, Mode=OneWay}"
+                                 FontFamily="Consolas"
+                                 FontSize="11"
+                                 Foreground="Black"
+                                 TextAlignment="Center"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"/>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </Canvas>
           </LayoutTransformControl>
         </Grid>
       </ScrollViewer>

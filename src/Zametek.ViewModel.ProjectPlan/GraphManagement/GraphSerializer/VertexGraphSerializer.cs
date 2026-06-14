@@ -258,7 +258,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        public byte[] BuildVertexGraphSvgData(
+        private (Microsoft.Msagl.Drawing.Graph DrawingGraph, DiagramGraphModel Diagram) BuildAndLayoutDrawingGraph(
             VertexGraphModel vertexGraph,
             GraphSettingsModel graphSettings,
             BaseTheme baseTheme,
@@ -358,7 +358,136 @@ namespace Zametek.ViewModel.ProjectPlan
 
             Microsoft.Msagl.Miscellaneous.LayoutHelpers.CalculateLayout(drawingGraph.GeometryGraph, drawingGraph.LayoutAlgorithmSettings, null);
 
+            return (drawingGraph, diagramGraph);
+        }
+
+        public byte[] BuildVertexGraphSvgData(
+            VertexGraphModel vertexGraph,
+            GraphSettingsModel graphSettings,
+            BaseTheme baseTheme,
+            bool viewNames)
+        {
+            (Microsoft.Msagl.Drawing.Graph drawingGraph, _) =
+                BuildAndLayoutDrawingGraph(vertexGraph, graphSettings, baseTheme, viewNames);
+
             return m_MsaglSvgRenderer.RenderToSvg(drawingGraph, baseTheme);
+        }
+
+        // Spike: produce on-screen geometry for the interactive vertex-graph control,
+        // reusing the same MSAGL layout that drives the SVG. MSAGL works in a Y-up
+        // coordinate space; the SVG writer flips this internally, so here we flip it
+        // ourselves and scale uniformly so the small layout boxes become a comfortable
+        // interactive size while preserving relative positions.
+        private const double c_InteractiveLayoutScale = 2.5;
+
+        public GraphLayoutModel BuildVertexGraphLayout(
+            VertexGraphModel vertexGraph,
+            GraphSettingsModel graphSettings,
+            BaseTheme baseTheme,
+            bool viewNames)
+        {
+            (Microsoft.Msagl.Drawing.Graph drawingGraph, DiagramGraphModel diagramGraph) =
+                BuildAndLayoutDrawingGraph(vertexGraph, graphSettings, baseTheme, viewNames);
+
+            return ExtractLayout(drawingGraph, diagramGraph, vertexGraph);
+        }
+
+        private static GraphLayoutModel ExtractLayout(
+            Microsoft.Msagl.Drawing.Graph drawingGraph,
+            DiagramGraphModel diagramGraph,
+            VertexGraphModel vertexGraph)
+        {
+            Microsoft.Msagl.Core.Geometry.Rectangle boundingBox = drawingGraph.GeometryGraph.BoundingBox;
+            double graphLeft = boundingBox.Left;
+            double graphTop = boundingBox.Top; // Largest Y in MSAGL's Y-up space.
+
+            Dictionary<int, DiagramNodeModel> diagramNodeLookup = diagramGraph.Nodes.ToDictionary(x => x.Id);
+            Dictionary<int, ActivityModel> activityLookup = vertexGraph.Nodes
+                .Select(x => x.Content)
+                .Where(x => x is not null)
+                .ToDictionary(x => x.Id);
+
+            var nodes = new List<GraphNodeLayoutModel>();
+
+            foreach (Microsoft.Msagl.Drawing.Node drawingNode in drawingGraph.Nodes)
+            {
+                if (!int.TryParse(drawingNode.Id, out int id)
+                    || !diagramNodeLookup.TryGetValue(id, out DiagramNodeModel? diagramNode))
+                {
+                    continue;
+                }
+
+                Microsoft.Msagl.Core.Layout.Node? geometryNode = drawingNode.GeometryNode;
+                if (geometryNode is null)
+                {
+                    continue;
+                }
+
+                double width = geometryNode.Width;
+                double height = geometryNode.Height;
+
+                // MSAGL centre -> top-left, with Y flipped, then scaled uniformly.
+                double centreX = geometryNode.Center.X - graphLeft;
+                double centreY = graphTop - geometryNode.Center.Y;
+
+                activityLookup.TryGetValue(id, out ActivityModel? activity);
+
+                nodes.Add(new GraphNodeLayoutModel
+                {
+                    Id = id,
+                    X = (centreX - (width / 2.0)) * c_InteractiveLayoutScale,
+                    Y = (centreY - (height / 2.0)) * c_InteractiveLayoutScale,
+                    Width = width * c_InteractiveLayoutScale,
+                    Height = height * c_InteractiveLayoutScale,
+                    Label = diagramNode.Text ?? string.Empty,
+                    Name = diagramNode.Name,
+                    Tooltip = BuildNodeTooltip(activity, diagramNode),
+                    FillColorHexCode = diagramNode.FillColorHexCode,
+                    BorderColorHexCode = diagramNode.BorderColorHexCode,
+                    BorderThickness = diagramNode.BorderThickness,
+                    IsDashed = diagramNode.BorderDashStyle == NodeBorderDashStyle.Dashed,
+                });
+            }
+
+            List<GraphEdgeLayoutModel> edges = diagramGraph.Edges
+                .Select(x => new GraphEdgeLayoutModel
+                {
+                    Id = x.Id,
+                    SourceId = x.SourceId,
+                    TargetId = x.TargetId,
+                    StrokeThickness = x.StrokeThickness,
+                    IsDashed = x.DashStyle == EdgeDashStyle.Dashed,
+                })
+                .ToList();
+
+            return new GraphLayoutModel
+            {
+                Width = boundingBox.Width * c_InteractiveLayoutScale,
+                Height = boundingBox.Height * c_InteractiveLayoutScale,
+                Nodes = nodes,
+                Edges = edges,
+            };
+        }
+
+        private static string BuildNodeTooltip(ActivityModel? activity, DiagramNodeModel diagramNode)
+        {
+            if (activity is null)
+            {
+                return diagramNode.Name ?? diagramNode.Text ?? string.Empty;
+            }
+
+            static string Format(int? value) => value?.ToString() ?? @"-";
+
+            var builder = new StringBuilder();
+            if (!string.IsNullOrWhiteSpace(activity.Name))
+            {
+                builder.AppendLine(activity.Name);
+            }
+            builder.AppendLine($@"Id: {activity.Id}   Duration: {activity.Duration}");
+            builder.AppendLine($@"ES: {Format(activity.EarliestStartTime)}   EF: {Format(activity.EarliestFinishTime)}");
+            builder.AppendLine($@"LS: {Format(activity.LatestStartTime)}   LF: {Format(activity.LatestFinishTime)}");
+            builder.Append($@"Free slack: {Format(activity.FreeSlack)}   Total slack: {Format(activity.TotalSlack)}");
+            return builder.ToString();
         }
 
         public byte[] BuildVertexGraphMLData(

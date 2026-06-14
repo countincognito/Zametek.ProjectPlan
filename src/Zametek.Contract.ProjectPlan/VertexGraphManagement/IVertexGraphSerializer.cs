@@ -6,6 +6,8 @@ namespace Zametek.Contract.ProjectPlan
     {
         byte[] BuildVertexGraphSvgData(VertexGraphModel vertexGraph, GraphSettingsModel graphSettings, BaseTheme baseTheme, bool viewNames);
 
+        GraphLayoutModel BuildVertexGraphLayout(VertexGraphModel vertexGraph, GraphSettingsModel graphSettings, BaseTheme baseTheme, bool viewNames);
+
         byte[] BuildVertexGraphMLData(VertexGraphModel vertexGraph, GraphSettingsModel graphSettings, bool viewNames);
 
         byte[] BuildVertexGraphVizData(VertexGraphModel vertexGraph, GraphSettingsModel graphSettings, bool viewNames);

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using System;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -69,6 +70,16 @@ namespace Zametek.View.ProjectPlan
                     m_LastDragPoint = pointer;
                 }
             }
+        }
+
+        // Spike: clicking empty canvas space (not handled by a node) clears the selection.
+        private void GraphCanvas_PointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            if (e.Handled)
+            {
+                return;
+            }
+            (DataContext as VertexGraphManagerViewModel)?.SelectNode(null);
         }
 
         private void Zoom_PointerWheelChanged(object? sender, PointerWheelEventArgs e)
