@@ -772,15 +772,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Fit to view.
-        /// </summary>
-        public static string Label_FitToView {
-            get {
-                return ResourceManager.GetString("Label_FitToView", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Find.
         /// </summary>
         public static string Label_Find {

@@ -140,7 +140,16 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Menu_File", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fit to View.
+        /// </summary>
+        public static string Menu_FitToView {
+            get {
+                return ResourceManager.GetString("Menu_FitToView", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Help.
         /// </summary>

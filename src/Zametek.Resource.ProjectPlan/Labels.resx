@@ -279,9 +279,6 @@
   <data name="Label_FibonacciWeight" xml:space="preserve">
     <value>Fibonacci Weight</value>
   </data>
-  <data name="Label_FitToView" xml:space="preserve">
-    <value>Fit to view</value>
-  </data>
   <data name="Label_FreeSlack" xml:space="preserve">
     <value>FS</value>
   </data>

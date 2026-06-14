@@ -16,14 +16,8 @@
 
   <DockPanel Margin="7">
     <DockPanel>
-      <DockPanel Width="330"
+      <DockPanel Width="250"
 				 DockPanel.Dock="Top">
-        <Button Name="fitToView"
-				DockPanel.Dock="Left"
-				VerticalAlignment="Center"
-				Margin="0,0,11,0"
-				Click="FitToView_Click"
-				Content="{x:Static resources:Labels.Label_FitToView}"/>
         <TextBlock Margin="0,11,11,11"
 				   DockPanel.Dock="Right"
 				   Text="x"/>
@@ -51,6 +45,8 @@
               PointerWheelChanged="Zoom_PointerWheelChanged">
         <Border.ContextMenu>
           <ContextMenu>
+            <MenuItem Header="{x:Static resources:Menus.Menu_FitToView}"
+                      Click="FitToView_Click"/>
             <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
                       Command="{Binding Path=SaveVertexGraphImageFileCommand, Mode=OneWay}"/>
           </ContextMenu>
