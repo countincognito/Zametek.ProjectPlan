@@ -770,7 +770,16 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_FibonacciWeight", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fit to view.
+        /// </summary>
+        public static string Label_FitToView {
+            get {
+                return ResourceManager.GetString("Label_FitToView", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Find.
         /// </summary>

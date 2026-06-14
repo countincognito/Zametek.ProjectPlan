@@ -87,6 +87,13 @@ namespace Zametek.ViewModel.ProjectPlan
         // Positions of nodes the user has dragged, preserved across re-layouts.
         private readonly Dictionary<int, (double X, double Y)> m_ManualNodePositions = [];
 
+        // The interactive surface (graphCanvas / ItemsControls) is sized to the workspace, not the
+        // graph: a fixed margin is added on every side and the workspace grows as nodes are dragged
+        // outward, so a dragged node always stays inside the arrange bounds and never gets clipped
+        // away inside the pan layer (where panning could not bring it back). The fresh layout is
+        // offset by this margin so there is room to drag up and to the left as well as down/right.
+        private const double c_WorkspaceMargin = 1000.0;
+
         #endregion
 
         #region Ctors
@@ -188,6 +195,22 @@ namespace Zametek.ViewModel.ProjectPlan
             private set => this.RaiseAndSetIfChanged(ref m_GraphHeight, value);
         }
 
+        // The drawable surface size. Larger than the graph (margin on every side) and grown as
+        // nodes are dragged outward so the content is never clipped inside the pan layer.
+        private double m_WorkspaceWidth;
+        public double WorkspaceWidth
+        {
+            get => m_WorkspaceWidth;
+            private set => this.RaiseAndSetIfChanged(ref m_WorkspaceWidth, value);
+        }
+
+        private double m_WorkspaceHeight;
+        public double WorkspaceHeight
+        {
+            get => m_WorkspaceHeight;
+            private set => this.RaiseAndSetIfChanged(ref m_WorkspaceHeight, value);
+        }
+
         #endregion
 
         #region Private Methods
@@ -243,11 +266,17 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 var node = new VertexGraphNodeViewModel(nodeLayout);
 
-                // Keep a node where the user dragged it; everything else takes the fresh layout.
+                // Keep a node where the user dragged it; everything else takes the fresh layout,
+                // offset by the workspace margin so there is room to drag up and to the left.
                 if (m_ManualNodePositions.TryGetValue(node.Id, out (double X, double Y) manual))
                 {
                     node.X = manual.X;
                     node.Y = manual.Y;
+                }
+                else
+                {
+                    node.X = nodeLayout.X + c_WorkspaceMargin;
+                    node.Y = nodeLayout.Y + c_WorkspaceMargin;
                 }
 
                 GraphNodes.Add(node);
@@ -272,6 +301,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Adjacency = adjacency;
             GraphWidth = layout.Width;
             GraphHeight = layout.Height;
+            RecomputeWorkspace();
 
             // Restore the previous selection if that node survived the re-layout.
             if (previouslySelectedId is int selectedId
@@ -290,6 +320,38 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(node);
             m_ManualNodePositions[node.Id] = (node.X, node.Y);
+            RecomputeWorkspace();
+        }
+
+        // Grow the workspace immediately while a node is being dragged outward, so it never leaves
+        // the arrange bounds (and so gets clipped) part way through a drag.
+        public void EnsureWorkspaceContains(VertexGraphNodeViewModel node)
+        {
+            ArgumentNullException.ThrowIfNull(node);
+            double right = node.X + node.Width + c_WorkspaceMargin;
+            if (right > WorkspaceWidth)
+            {
+                WorkspaceWidth = right;
+            }
+            double bottom = node.Y + node.Height + c_WorkspaceMargin;
+            if (bottom > WorkspaceHeight)
+            {
+                WorkspaceHeight = bottom;
+            }
+        }
+
+        // Size the workspace to contain every node plus a margin on all sides.
+        private void RecomputeWorkspace()
+        {
+            double maxRight = c_WorkspaceMargin;
+            double maxBottom = c_WorkspaceMargin;
+            foreach (VertexGraphNodeViewModel node in GraphNodes)
+            {
+                maxRight = Math.Max(maxRight, node.X + node.Width);
+                maxBottom = Math.Max(maxBottom, node.Y + node.Height);
+            }
+            WorkspaceWidth = maxRight + c_WorkspaceMargin;
+            WorkspaceHeight = maxBottom + c_WorkspaceMargin;
         }
 
         private static void AddAdjacency(Dictionary<int, HashSet<int>> adjacency, int from, int to)

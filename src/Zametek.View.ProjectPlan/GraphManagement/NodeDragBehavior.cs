@@ -9,8 +9,8 @@ namespace Zametek.View.ProjectPlan
 {
     // Spike: lets the user drag an interactive vertex-graph node and select it on press.
     // Pointer positions are taken relative to the hosting Canvas, so dragging stays correct
-    // under the surrounding zoom transform. e.Handled is set so the press does not also pan
-    // the ScrollViewer behind the graph.
+    // under the surrounding zoom transform. e.Handled is set so the press does not also start
+    // a background pan of the viewport behind the graph.
     public class NodeDragBehavior
         : Behavior<Control>
     {
@@ -86,6 +86,11 @@ namespace Zametek.View.ProjectPlan
             Point current = e.GetPosition(m_Canvas);
             node.X = m_StartX + (current.X - m_StartPointer.X);
             node.Y = m_StartY + (current.Y - m_StartPointer.Y);
+
+            // Grow the workspace as the node is dragged out, so it stays inside the arrange
+            // bounds and is never clipped away mid-drag.
+            m_Manager?.EnsureWorkspaceContains(node);
+
             m_HasMoved = true;
             e.Handled = true;
         }

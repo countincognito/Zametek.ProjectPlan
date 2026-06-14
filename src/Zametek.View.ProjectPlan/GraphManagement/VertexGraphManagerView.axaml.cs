@@ -2,91 +2,108 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Media;
 using System;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
-    // Much of the panning capability was taken from here:
-    // https://www.codeproject.com/Articles/97871/WPF-simple-zoom-and-drag-support-in-a-ScrollViewer
     public partial class VertexGraphManagerView
         : UserControl
     {
-        private Point? m_LastDragPoint = new Point();
-        private Point m_CurrentPoint = new();
+        // Pan is a render-transform translation (unbounded), not a scroll offset, so nodes
+        // dragged anywhere remain reachable by panning. Zoom scales the content about its origin.
+        private readonly TranslateTransform m_PanTransform = new();
+
+        private bool m_IsPanning;
+        private Point m_PanStart;
+        private double m_PanStartX;
+        private double m_PanStartY;
+        private Point m_LastPointer;
+        private bool m_HasCentered;
         private const double c_SliderDelta = 0.1;
 
         public VertexGraphManagerView()
         {
             InitializeComponent();
+            panLayer.RenderTransform = m_PanTransform;
         }
 
-        private void ScrollViewer_PointerMoved(object? sender, PointerEventArgs e)
+        private double Zoom => zoomer.Value;
+
+        // Centre the graph in the viewport the first time both have a size; afterwards the
+        // user's pan/zoom is preserved across re-layouts.
+        private void GraphCanvas_SizeChanged(object? sender, SizeChangedEventArgs e)
         {
-            ArgumentNullException.ThrowIfNull(e);
-            var scrollViewer = sender as ScrollViewer;
-            if (scrollViewer is not null)
+            if (m_HasCentered
+                || graphCanvas.Bounds.Width <= 0
+                || graphCanvas.Bounds.Height <= 0
+                || viewport.Bounds.Width <= 0
+                || viewport.Bounds.Height <= 0)
             {
-                Point posNow = e.GetPosition(scrollViewer);
-                m_CurrentPoint = posNow;
-
-                if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-                {
-                    if (m_LastDragPoint.HasValue)
-                    {
-                        double dX = posNow.X - m_LastDragPoint.Value.X;
-                        double dY = posNow.Y - m_LastDragPoint.Value.Y;
-                        m_LastDragPoint = posNow;
-                        scrollViewer.Offset = new Vector(scrollViewer.Offset.X - dX, scrollViewer.Offset.Y - dY);
-                    }
-                }
+                return;
             }
+
+            m_PanTransform.X = (viewport.Bounds.Width - (graphCanvas.Bounds.Width * Zoom)) / 2.0;
+            m_PanTransform.Y = (viewport.Bounds.Height - (graphCanvas.Bounds.Height * Zoom)) / 2.0;
+            m_HasCentered = true;
         }
 
-        private void ScrollViewer_PointerReleased(object? sender, PointerReleasedEventArgs e)
+        private void Viewport_PointerPressed(object? sender, PointerPressedEventArgs e)
         {
-            ArgumentNullException.ThrowIfNull(e);
-            var scrollViewer = sender as ScrollViewer;
-            if (scrollViewer is not null
-                && e.InitialPressMouseButton == MouseButton.Left)
-            {
-                scrollViewer.Cursor = new Cursor(StandardCursorType.Arrow);
-                m_LastDragPoint = null;
-            }
-        }
-
-        private void ScrollViewer_PointerPressed(object? sender, PointerPressedEventArgs e)
-        {
-            ArgumentNullException.ThrowIfNull(e);
-            var scrollViewer = sender as ScrollViewer;
-            if (scrollViewer is not null
-                && e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-            {
-                Point pointer = e.GetPosition(scrollViewer);
-                if (pointer.X <= scrollViewer.Viewport.Width
-                    && pointer.Y < scrollViewer.Viewport.Height) //make sure we still can use the scrollbars
-                {
-                    scrollViewer.Cursor = new Cursor(StandardCursorType.SizeAll);
-                    m_LastDragPoint = pointer;
-                }
-            }
-        }
-
-        // Spike: clicking empty canvas space (not handled by a node) clears the selection.
-        private void GraphCanvas_PointerPressed(object? sender, PointerPressedEventArgs e)
-        {
+            // A node press is already handled (and selects/drags); ignore those here.
             if (e.Handled)
             {
                 return;
             }
+
+            PointerPoint point = e.GetCurrentPoint(viewport);
+            if (!point.Properties.IsLeftButtonPressed)
+            {
+                return;
+            }
+
+            // Pressing empty space clears the selection and begins a pan.
             (DataContext as VertexGraphManagerViewModel)?.SelectNode(null);
+
+            m_IsPanning = true;
+            m_PanStart = point.Position;
+            m_PanStartX = m_PanTransform.X;
+            m_PanStartY = m_PanTransform.Y;
+            viewport.Cursor = new Cursor(StandardCursorType.SizeAll);
+            e.Pointer.Capture(viewport);
+        }
+
+        private void Viewport_PointerMoved(object? sender, PointerEventArgs e)
+        {
+            m_LastPointer = e.GetPosition(viewport);
+
+            if (!m_IsPanning)
+            {
+                return;
+            }
+
+            m_PanTransform.X = m_PanStartX + (m_LastPointer.X - m_PanStart.X);
+            m_PanTransform.Y = m_PanStartY + (m_LastPointer.Y - m_PanStart.Y);
+        }
+
+        private void Viewport_PointerReleased(object? sender, PointerReleasedEventArgs e)
+        {
+            if (!m_IsPanning)
+            {
+                return;
+            }
+
+            m_IsPanning = false;
+            viewport.Cursor = new Cursor(StandardCursorType.Arrow);
+            e.Pointer.Capture(null);
         }
 
         private void Zoom_PointerWheelChanged(object? sender, PointerWheelEventArgs e)
         {
-            ArgumentNullException.ThrowIfNull(e);
+            m_LastPointer = e.GetPosition(viewport);
 
-            // Centering of the zoom will be handled by the slider ValueChanged event.
             if (e.Delta.Y > 0)
             {
                 zoomer.Value += c_SliderDelta;
@@ -101,24 +118,58 @@ namespace Zametek.View.ProjectPlan
 
         private void Slider_ValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
         {
-            ArgumentNullException.ThrowIfNull(e);
             double oldZoom = e.OldValue;
-            Vector oldOffset = viewer.Offset;
             double newZoom = e.NewValue;
+            if (oldZoom <= 0.0)
+            {
+                return;
+            }
 
-            // This centers the zoom according to the last position of the mouse pointer.
-            Vector newOffset = CalculateOffsetVector(oldOffset, oldZoom, newZoom);
-            viewer.Offset = newOffset;
+            // Keep the point under the cursor fixed as the zoom changes.
+            double factor = newZoom / oldZoom;
+            m_PanTransform.X = m_LastPointer.X - (factor * (m_LastPointer.X - m_PanTransform.X));
+            m_PanTransform.Y = m_LastPointer.Y - (factor * (m_LastPointer.Y - m_PanTransform.Y));
         }
 
-        private Vector CalculateOffsetVector(Vector oldOffset, double oldZoom, double newZoom)
+        // Frame every node in the viewport: pick the zoom that fits the node bounding box (with a
+        // margin) and pan so it is centred. This recovers any node that has been dragged far away.
+        private void FitToView_Click(object? sender, RoutedEventArgs e)
         {
-            // Reposition the scrollviewer to center the image zoom on the mouse pointer.
-            double factor = newZoom / oldZoom;
+            if (DataContext is not VertexGraphManagerViewModel viewModel
+                || viewModel.GraphNodes.Count == 0
+                || viewport.Bounds.Width <= 0
+                || viewport.Bounds.Height <= 0)
+            {
+                return;
+            }
 
-            return new Vector(
-                (oldOffset.X + m_CurrentPoint.X) * factor - m_CurrentPoint.X,
-                (oldOffset.Y + m_CurrentPoint.Y) * factor - m_CurrentPoint.Y);
+            double minX = double.MaxValue;
+            double minY = double.MaxValue;
+            double maxX = double.MinValue;
+            double maxY = double.MinValue;
+            foreach (VertexGraphNodeViewModel node in viewModel.GraphNodes)
+            {
+                minX = Math.Min(minX, node.X);
+                minY = Math.Min(minY, node.Y);
+                maxX = Math.Max(maxX, node.X + node.Width);
+                maxY = Math.Max(maxY, node.Y + node.Height);
+            }
+
+            const double fitMargin = 40.0;
+            double contentWidth = (maxX - minX) + (2.0 * fitMargin);
+            double contentHeight = (maxY - minY) + (2.0 * fitMargin);
+
+            double zoom = Math.Min(
+                viewport.Bounds.Width / contentWidth,
+                viewport.Bounds.Height / contentHeight);
+            zoom = Math.Clamp(zoom, zoomer.Minimum, zoomer.Maximum);
+            zoomer.Value = zoom;
+
+            // Centre the content (Slider_ValueChanged may have nudged the pan, so set it last).
+            double contentCentreX = (minX + maxX) / 2.0;
+            double contentCentreY = (minY + maxY) / 2.0;
+            m_PanTransform.X = (viewport.Bounds.Width / 2.0) - (contentCentreX * zoom);
+            m_PanTransform.Y = (viewport.Bounds.Height / 2.0) - (contentCentreY * zoom);
         }
     }
 }
