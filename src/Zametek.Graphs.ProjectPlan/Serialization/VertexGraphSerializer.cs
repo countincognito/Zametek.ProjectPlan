@@ -159,11 +159,11 @@ namespace Zametek.Graphs.ProjectPlan
 
             if (!edgeIds.OrderBy(x => x).SequenceEqual(edgeHeadNodeLookup.Keys.OrderBy(x => x)))
             {
-                throw new ArgumentException(Resource.ProjectPlan.Messages.Message_MismatchedEdgeIdsForHeadNodesInVertexGraph);
+                throw new ArgumentException(Messages.Message_MismatchedEdgeIdsForHeadNodesInVertexGraph);
             }
             if (!edgeIds.OrderBy(x => x).SequenceEqual(edgeTailNodeLookup.Keys.OrderBy(x => x)))
             {
-                throw new ArgumentException(Resource.ProjectPlan.Messages.Message_MismatchedEdgeIdsForTailNodesInVertexGraph);
+                throw new ArgumentException(Messages.Message_MismatchedEdgeIdsForTailNodesInVertexGraph);
             }
 
             // Check that the nodes referenced by edges are a subset of the drawn nodes.
@@ -172,7 +172,7 @@ namespace Zametek.Graphs.ProjectPlan
             if (edgeNodeLookupIds.Count != 0
                 && !edgeNodeLookupIds.IsSubsetOf(drawingGraphNodeIds))
             {
-                throw new ArgumentException(Resource.ProjectPlan.Messages.Message_MismatchedNodeIdsAssociatedWithEdgesInVertexGraph);
+                throw new ArgumentException(Messages.Message_MismatchedNodeIdsAssociatedWithEdgesInVertexGraph);
             }
 
             // Fill the graph. Presentation (border/edge colour, dash, weight) is resolved by the

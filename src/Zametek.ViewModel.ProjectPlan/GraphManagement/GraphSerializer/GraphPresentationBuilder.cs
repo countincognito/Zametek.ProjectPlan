@@ -1,5 +1,4 @@
 using Zametek.Common.ProjectPlan;
-using Zametek.Graphs.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {

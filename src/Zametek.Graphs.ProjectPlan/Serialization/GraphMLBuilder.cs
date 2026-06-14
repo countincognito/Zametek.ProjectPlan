@@ -41,7 +41,7 @@ namespace Zametek.Graphs.ProjectPlan
             {
                 NodeBorderDashStyle.Normal => @"line",
                 NodeBorderDashStyle.Dashed => @"dashed",
-                _ => throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_UnknownNodeBorderDashStyleValue} ""{diagramNode.BorderDashStyle}"""),
+                _ => throw new InvalidOperationException($@"{Messages.Message_UnknownNodeBorderDashStyleValue} ""{diagramNode.BorderDashStyle}"""),
             };
 
             var outputNode = new graphmlGraphNode
@@ -135,7 +135,7 @@ namespace Zametek.Graphs.ProjectPlan
             {
                 EdgeDashStyle.Normal => @"line",
                 EdgeDashStyle.Dashed => @"dashed",
-                _ => throw new InvalidOperationException($@"{Resource.ProjectPlan.Messages.Message_UnknownEdgeDashStyleValue} ""{diagramEdge.DashStyle}"""),
+                _ => throw new InvalidOperationException($@"{Messages.Message_UnknownEdgeDashStyleValue} ""{diagramEdge.DashStyle}"""),
             };
             outputEdge.data = new data
             {

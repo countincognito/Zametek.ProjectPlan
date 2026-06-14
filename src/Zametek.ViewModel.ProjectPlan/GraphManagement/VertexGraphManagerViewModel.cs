@@ -1,15 +1,14 @@
-﻿using Avalonia.Svg.Skia;
+using Avalonia.Svg.Skia;
 using Avalonia.Threading;
 using ReactiveUI;
 using SkiaSharp;
-using Svg.Skia;
 using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
-using Zametek.Graphs.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Graphs.ProjectPlan;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
