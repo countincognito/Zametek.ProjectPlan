@@ -1,6 +1,6 @@
 using SkiaSharp;
 
-namespace Zametek.Graphs.ProjectPlan
+namespace Zametek.ViewModel.ProjectPlan
 {
     public interface IGraphImageExporter
     {

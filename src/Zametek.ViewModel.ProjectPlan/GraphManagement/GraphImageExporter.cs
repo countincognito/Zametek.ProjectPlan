@@ -2,7 +2,7 @@ using SkiaSharp;
 using Svg.Skia;
 using Zametek.Utility;
 
-namespace Zametek.Graphs.ProjectPlan
+namespace Zametek.ViewModel.ProjectPlan
 {
     public class GraphImageExporter
         : IGraphImageExporter
