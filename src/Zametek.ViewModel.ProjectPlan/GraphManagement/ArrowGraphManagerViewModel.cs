@@ -293,11 +293,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ => isSkiaFormat = true)
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
                         {
-                            data = m_ArrowGraphExport.BuildArrowGraphMLData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
+                            data = m_ArrowGraphExport.BuildArrowGraphMLData(GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings), m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
                         {
-                            data = m_ArrowGraphExport.BuildArrowGraphVizData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
+                            data = m_ArrowGraphExport.BuildArrowGraphVizData(GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings), m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
                         })
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
 
@@ -332,8 +332,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (!HasCompilationErrors)
                 {
                     data = m_ArrowGraphExport.BuildArrowGraphSvgData(
-                        m_CoreViewModel.ArrowGraph,
-                        m_CoreViewModel.GraphSettings,
+                        GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings),
                         m_CoreViewModel.BaseTheme,
                         m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
                 }

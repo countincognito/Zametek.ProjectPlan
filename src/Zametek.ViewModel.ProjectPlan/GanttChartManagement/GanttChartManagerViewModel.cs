@@ -11,7 +11,6 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
-using Zametek.Graphs.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 

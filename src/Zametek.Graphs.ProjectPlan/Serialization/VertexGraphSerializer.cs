@@ -104,18 +104,10 @@ namespace Zametek.Graphs.ProjectPlan
             return labelText;
         }
 
-        private static DiagramNodeModel BuildDiagramNode(
-            ActivityNodeModel activityNode,
-            GraphNodeBorderFormatLookup nodeFormatLookup,
-            SlackColorFormatLookup colorFormatLookup)
+        private static DiagramNodeModel BuildDiagramNode(ActivityNodeModel activityNode)
         {
             ArgumentNullException.ThrowIfNull(activityNode);
-            ArgumentNullException.ThrowIfNull(nodeFormatLookup);
-            ArgumentNullException.ThrowIfNull(colorFormatLookup);
             ActivityModel activityModel = activityNode.Content;
-
-            bool isDummy = activityModel.IsDummy();
-            bool isCritical = activityModel.IsCritical();
 
             return new DiagramNodeModel
             {
@@ -123,11 +115,9 @@ namespace Zametek.Graphs.ProjectPlan
                 Height = s_DiagramNodeModelHeight,
                 Width = s_DiagramNodeModelWidth,
                 FillColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeFillColor),
-                BorderColorHexCode = activityModel.OverrideColor
-                    ? ColorHelper.ColorFormatToHtmlHexCode(activityModel.ColorFormat)
-                    : ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(activityModel.TotalSlack)),
-                BorderDashStyle = nodeFormatLookup.FindGraphNodeBorderDashStyle(isCritical, isDummy),
-                BorderThickness = nodeFormatLookup.FindBorderThickness(isCritical, isDummy) * s_SvgNodeLineThicknessCorrectionFactor,
+                BorderColorHexCode = activityNode.BorderColorHexCode ?? ColorHelper.ColorToHtmlHexCode(s_NodeBorderColor),
+                BorderDashStyle = activityNode.BorderDashStyle,
+                BorderThickness = activityNode.BorderWeight * s_SvgNodeLineThicknessCorrectionFactor,
                 Text = BuildNodeLabel(activityModel),
                 Name = activityModel.Name,
             };
@@ -135,12 +125,10 @@ namespace Zametek.Graphs.ProjectPlan
 
         private static DiagramGraphModel BuildGraphDiagram(
             VertexGraphModel vertexGraphModel,
-            GraphSettingsModel graphSettingsModel,
             bool multiLineEdgeLabels = false,
             bool viewNames = false)
         {
             ArgumentNullException.ThrowIfNull(vertexGraphModel);
-            ArgumentNullException.ThrowIfNull(graphSettingsModel);
             // Perform validity check.
             IList<ActivityNodeModel> nodeModels = vertexGraphModel.Nodes;
             IDictionary<int, ActivityNodeModel> nodeModelLookup = nodeModels.ToDictionary(x => x.Content.Id);
@@ -187,12 +175,9 @@ namespace Zametek.Graphs.ProjectPlan
                 throw new ArgumentException(Resource.ProjectPlan.Messages.Message_MismatchedNodeIdsAssociatedWithEdgesInVertexGraph);
             }
 
-            var nodeFormatLookup = new GraphNodeBorderFormatLookup(graphSettingsModel.NodeTypeFormats);
-            var edgeFormatLookup = new GraphEdgeFormatLookup(graphSettingsModel.EdgeTypeFormats);
-            var colorFormatLookup = new SlackColorFormatLookup(graphSettingsModel.ActivitySeverities);
-
-            // Fill the graph.
-            List<DiagramNodeModel> diagramNodeModels = nodeModels.Select(x => BuildDiagramNode(x, nodeFormatLookup, colorFormatLookup)).ToList();
+            // Fill the graph. Presentation (border/edge colour, dash, weight) is resolved by the
+            // application beforehand and read straight off the models here.
+            List<DiagramNodeModel> diagramNodeModels = nodeModels.Select(BuildDiagramNode).ToList();
             List<DiagramEdgeModel> diagramEdgeModels = [];
 
             foreach (EventEdgeModel eventEdge in edgeModels)
@@ -207,9 +192,9 @@ namespace Zametek.Graphs.ProjectPlan
                     Id = eventId,
                     SourceId = edgeTailNodeLookup[eventId],
                     TargetId = edgeHeadNodeLookup[eventId],
-                    DashStyle = edgeFormatLookup.FindGraphEdgeDashStyle(false, false),
-                    //ForegroundColorHexCode = ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(eventModel.TotalSlack)),
-                    StrokeThickness = edgeFormatLookup.FindStrokeThickness(false, false),
+                    DashStyle = eventEdge.DashStyle,
+                    ForegroundColorHexCode = eventEdge.ForegroundColorHexCode,
+                    StrokeThickness = eventEdge.StrokeWeight,
                     Label = string.Empty,
                     ShowLabel = false
                 };
@@ -259,13 +244,11 @@ namespace Zametek.Graphs.ProjectPlan
 
         private (Microsoft.Msagl.Drawing.Graph DrawingGraph, DiagramGraphModel Diagram) BuildAndLayoutDrawingGraph(
             VertexGraphModel vertexGraph,
-            GraphSettingsModel graphSettings,
             BaseTheme baseTheme,
             bool viewNames)
         {
             ArgumentNullException.ThrowIfNull(vertexGraph);
-            ArgumentNullException.ThrowIfNull(graphSettings);
-            DiagramGraphModel diagramGraph = BuildGraphDiagram(vertexGraph, graphSettings, viewNames: viewNames);
+            DiagramGraphModel diagramGraph = BuildGraphDiagram(vertexGraph, viewNames: viewNames);
 
             // Fill the graph.
             var drawingGraph = new Microsoft.Msagl.Drawing.Graph();
@@ -362,12 +345,11 @@ namespace Zametek.Graphs.ProjectPlan
 
         public byte[] BuildVertexGraphSvgData(
             VertexGraphModel vertexGraph,
-            GraphSettingsModel graphSettings,
             BaseTheme baseTheme,
             bool viewNames)
         {
             (Microsoft.Msagl.Drawing.Graph drawingGraph, _) =
-                BuildAndLayoutDrawingGraph(vertexGraph, graphSettings, baseTheme, viewNames);
+                BuildAndLayoutDrawingGraph(vertexGraph, baseTheme, viewNames);
 
             return m_MsaglSvgRenderer.RenderToSvg(drawingGraph, baseTheme);
         }
@@ -381,12 +363,11 @@ namespace Zametek.Graphs.ProjectPlan
 
         public GraphLayoutModel BuildVertexGraphLayout(
             VertexGraphModel vertexGraph,
-            GraphSettingsModel graphSettings,
             BaseTheme baseTheme,
             bool viewNames)
         {
             (Microsoft.Msagl.Drawing.Graph drawingGraph, DiagramGraphModel diagramGraph) =
-                BuildAndLayoutDrawingGraph(vertexGraph, graphSettings, baseTheme, viewNames);
+                BuildAndLayoutDrawingGraph(vertexGraph, baseTheme, viewNames);
 
             return ExtractLayout(drawingGraph, diagramGraph, vertexGraph);
         }
@@ -491,10 +472,9 @@ namespace Zametek.Graphs.ProjectPlan
 
         public byte[] BuildVertexGraphMLData(
             VertexGraphModel vertexGraph,
-            GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            DiagramGraphModel diagramGraph = BuildGraphDiagram(vertexGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            DiagramGraphModel diagramGraph = BuildGraphDiagram(vertexGraph, multiLineEdgeLabels: true, viewNames: viewNames);
             graphml graphML = GraphMLBuilder.ToGraphML(diagramGraph);
             using var ms = new MemoryStream();
             var xmlSerializer = new XmlSerializer(typeof(graphml));
@@ -507,10 +487,9 @@ namespace Zametek.Graphs.ProjectPlan
 
         public byte[] BuildVertexGraphVizData(
             VertexGraphModel vertexGraph,
-            GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            DiagramGraphModel diagramGraph = BuildGraphDiagram(vertexGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            DiagramGraphModel diagramGraph = BuildGraphDiagram(vertexGraph, multiLineEdgeLabels: true, viewNames: viewNames);
             string graphviz = GraphVizBuilder.ToGraphViz(diagramGraph);
             return graphviz.StringToByteArray();
         }

@@ -241,8 +241,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 return HasCompilationErrors
                     ? new GraphLayoutModel()
                     : m_VertexGraphExport.BuildVertexGraphLayout(
-                        m_CoreViewModel.VertexGraph,
-                        m_CoreViewModel.GraphSettings,
+                        GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings),
                         m_CoreViewModel.BaseTheme,
                         m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
             }
@@ -507,11 +506,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ => isSkiaFormat = true)
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
                         {
-                            data = m_VertexGraphExport.BuildVertexGraphMLData(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
+                            data = m_VertexGraphExport.BuildVertexGraphMLData(GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings), m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
                         {
-                            data = m_VertexGraphExport.BuildVertexGraphVizData(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
+                            data = m_VertexGraphExport.BuildVertexGraphVizData(GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings), m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
                         })
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
 
@@ -559,8 +558,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (!HasCompilationErrors)
                 {
                     data = m_VertexGraphExport.BuildVertexGraphSvgData(
-                        m_CoreViewModel.VertexGraph,
-                        m_CoreViewModel.GraphSettings,
+                        GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings),
                         m_CoreViewModel.BaseTheme,
                         m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
                 }

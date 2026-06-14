@@ -83,12 +83,9 @@ namespace Zametek.ViewModel.ProjectPlan
             return labelText;
         }
 
-        private static DiagramNodeModel BuildDiagramNode(
-            EventNodeModel eventNode,
-            GraphNodeBorderFormatLookup nodeFormatLookup)
+        private static DiagramNodeModel BuildDiagramNode(EventNodeModel eventNode)
         {
             ArgumentNullException.ThrowIfNull(eventNode);
-            ArgumentNullException.ThrowIfNull(nodeFormatLookup);
             EventModel eventModel = eventNode.Content;
 
             string text = BuildNodeLabel(eventModel);
@@ -99,9 +96,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 Height = s_DiagramNodeModelHeight,
                 Width = s_DiagramNodeModelWidth,
                 FillColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeFillColor),
-                BorderColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeBorderColor),
-                BorderDashStyle = nodeFormatLookup.FindGraphNodeBorderDashStyle(false, false),
-                BorderThickness = nodeFormatLookup.FindBorderThickness(false, false) * s_SvgNodeLineThicknessCorrectionFactor,
+                BorderColorHexCode = eventNode.BorderColorHexCode ?? ColorHelper.ColorToHtmlHexCode(s_NodeBorderColor),
+                BorderDashStyle = eventNode.BorderDashStyle,
+                BorderThickness = eventNode.BorderWeight * s_SvgNodeLineThicknessCorrectionFactor,
                 Text = text,
                 Name = text,
             };
@@ -205,12 +202,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static DiagramGraphModel BuildGraphDiagram(
             ArrowGraphModel arrowGraphModel,
-            GraphSettingsModel graphSettingsModel,
             bool multiLineEdgeLabels = false,
             bool viewNames = false)
         {
             ArgumentNullException.ThrowIfNull(arrowGraphModel);
-            ArgumentNullException.ThrowIfNull(graphSettingsModel);
             // Perform validity check.
             IList<EventNodeModel> nodeModels = arrowGraphModel.Nodes;
             IDictionary<int, EventNodeModel> nodeModelLookup = nodeModels.ToDictionary(x => x.Content.Id);
@@ -269,22 +264,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 throw new ArgumentException(Resource.ProjectPlan.Messages.Message_ArrowGraphDataContainMultipleEndNodes);
             }
 
-            var nodeFormatLookup = new GraphNodeBorderFormatLookup(graphSettingsModel.NodeTypeFormats);
-            var edgeFormatLookup = new GraphEdgeFormatLookup(graphSettingsModel.EdgeTypeFormats);
-            var colorFormatLookup = new SlackColorFormatLookup(graphSettingsModel.ActivitySeverities);
-
-            // Fill the graph.
-            List<DiagramNodeModel> diagramNodeModels = nodeModels.Select(x => BuildDiagramNode(x, nodeFormatLookup)).ToList();
+            // Fill the graph. Presentation (border/edge colour, dash, weight) is resolved by the
+            // application beforehand and read straight off the models here; only the labels (which
+            // depend on the per-call viewNames/multiLine options) are still built here.
+            List<DiagramNodeModel> diagramNodeModels = nodeModels.Select(BuildDiagramNode).ToList();
             List<DiagramEdgeModel> diagramEdgeModels = [];
 
             foreach (ActivityEdgeModel activityEdge in edgeModels)
             {
                 ActivityModel activityModel = activityEdge.Content;
                 int activityId = activityModel.Id;
-                bool isCritical = activityModel.IsCritical();
-                bool isDummy = activityModel.IsDummy();
-                bool showLabel = false;
-                string labelText = string.Empty;
+                bool showLabel;
+                string labelText;
 
                 if (multiLineEdgeLabels)
                 {
@@ -303,11 +294,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     Name = activityModel.Name,
                     SourceId = edgeTailNodeLookup[activityId],
                     TargetId = edgeHeadNodeLookup[activityId],
-                    DashStyle = edgeFormatLookup.FindGraphEdgeDashStyle(isCritical, isDummy),
-                    ForegroundColorHexCode = activityModel.OverrideColor
-                        ? ColorHelper.ColorFormatToHtmlHexCode(activityModel.ColorFormat)
-                        : ColorHelper.ColorFormatToHtmlHexCode(colorFormatLookup.FindSlackColorFormat(activityModel.TotalSlack)),
-                    StrokeThickness = edgeFormatLookup.FindStrokeThickness(isCritical, isDummy),
+                    DashStyle = activityEdge.DashStyle,
+                    ForegroundColorHexCode = activityEdge.ForegroundColorHexCode,
+                    StrokeThickness = activityEdge.StrokeWeight,
                     Label = labelText,
                     ShowLabel = showLabel,
                 };
@@ -357,13 +346,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public byte[] BuildArrowGraphSvgData(
             ArrowGraphModel arrowGraph,
-            GraphSettingsModel graphSettings,
             BaseTheme baseTheme,
             bool viewNames)
         {
             ArgumentNullException.ThrowIfNull(arrowGraph);
-            ArgumentNullException.ThrowIfNull(graphSettings);
-            DiagramGraphModel diagramGraph = BuildGraphDiagram(arrowGraph, graphSettings, viewNames: viewNames);
+            DiagramGraphModel diagramGraph = BuildGraphDiagram(arrowGraph, viewNames: viewNames);
 
             // Fill the graph.
             var drawingGraph = new Microsoft.Msagl.Drawing.Graph();
@@ -460,10 +447,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public byte[] BuildArrowGraphMLData(
             ArrowGraphModel arrowGraph,
-            GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            DiagramGraphModel diagramGraph = BuildGraphDiagram(arrowGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            DiagramGraphModel diagramGraph = BuildGraphDiagram(arrowGraph, multiLineEdgeLabels: true, viewNames: viewNames);
             graphml graphML = GraphMLBuilder.ToGraphML(diagramGraph);
             using var ms = new MemoryStream();
             var xmlSerializer = new XmlSerializer(typeof(graphml));
@@ -476,10 +462,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public byte[] BuildArrowGraphVizData(
             ArrowGraphModel arrowGraph,
-            GraphSettingsModel graphSettings,
             bool viewNames)
         {
-            DiagramGraphModel diagramGraph = BuildGraphDiagram(arrowGraph, graphSettings, multiLineEdgeLabels: true, viewNames: viewNames);
+            DiagramGraphModel diagramGraph = BuildGraphDiagram(arrowGraph, multiLineEdgeLabels: true, viewNames: viewNames);
             string graphviz = GraphVizBuilder.ToGraphViz(diagramGraph);
             return graphviz.StringToByteArray();
         }

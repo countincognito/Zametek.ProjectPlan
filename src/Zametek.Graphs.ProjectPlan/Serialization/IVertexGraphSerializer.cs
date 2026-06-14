@@ -4,12 +4,12 @@ namespace Zametek.Graphs.ProjectPlan
 {
     public interface IVertexGraphSerializer
     {
-        byte[] BuildVertexGraphSvgData(VertexGraphModel vertexGraph, GraphSettingsModel graphSettings, BaseTheme baseTheme, bool viewNames);
+        byte[] BuildVertexGraphSvgData(VertexGraphModel vertexGraph, BaseTheme baseTheme, bool viewNames);
 
-        GraphLayoutModel BuildVertexGraphLayout(VertexGraphModel vertexGraph, GraphSettingsModel graphSettings, BaseTheme baseTheme, bool viewNames);
+        GraphLayoutModel BuildVertexGraphLayout(VertexGraphModel vertexGraph, BaseTheme baseTheme, bool viewNames);
 
-        byte[] BuildVertexGraphMLData(VertexGraphModel vertexGraph, GraphSettingsModel graphSettings, bool viewNames);
+        byte[] BuildVertexGraphMLData(VertexGraphModel vertexGraph, bool viewNames);
 
-        byte[] BuildVertexGraphVizData(VertexGraphModel vertexGraph, GraphSettingsModel graphSettings, bool viewNames);
+        byte[] BuildVertexGraphVizData(VertexGraphModel vertexGraph, bool viewNames);
     }
 }

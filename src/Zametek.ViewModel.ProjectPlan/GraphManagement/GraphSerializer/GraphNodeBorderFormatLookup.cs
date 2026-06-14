@@ -1,6 +1,6 @@
 ﻿using Zametek.Common.ProjectPlan;
 
-namespace Zametek.Graphs.ProjectPlan
+namespace Zametek.ViewModel.ProjectPlan
 {
     public class GraphNodeBorderFormatLookup
     {
