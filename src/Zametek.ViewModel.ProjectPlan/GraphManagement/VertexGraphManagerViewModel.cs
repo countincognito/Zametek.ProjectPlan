@@ -220,18 +220,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                GraphLayoutModel layout;
-                lock (m_Lock)
-                {
-                    layout = HasCompilationErrors
-                        ? new GraphLayoutModel()
-                        : m_VertexGraphExport.BuildVertexGraphLayout(
-                            m_CoreViewModel.VertexGraph,
-                            m_CoreViewModel.GraphSettings,
-                            m_CoreViewModel.BaseTheme,
-                            m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
-                }
-
+                GraphLayoutModel layout = BuildLayout();
                 Dispatcher.UIThread.Invoke(() => PopulateInteractiveGraph(layout));
             }
             catch (Exception ex)
@@ -241,6 +230,29 @@ namespace Zametek.ViewModel.ProjectPlan
                     string.Empty,
                     ex.Message);
             }
+        }
+
+        // Run the MSAGL layout, producing the default node/edge arrangement.
+        private GraphLayoutModel BuildLayout()
+        {
+            lock (m_Lock)
+            {
+                return HasCompilationErrors
+                    ? new GraphLayoutModel()
+                    : m_VertexGraphExport.BuildVertexGraphLayout(
+                        m_CoreViewModel.VertexGraph,
+                        m_CoreViewModel.GraphSettings,
+                        m_CoreViewModel.BaseTheme,
+                        m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
+            }
+        }
+
+        // Discard every dragged position and rebuild from the default MSAGL layout, restoring the
+        // arrangement produced on first compilation. Called on the UI thread (context menu).
+        public void ResetLayout()
+        {
+            m_ManualNodePositions.Clear();
+            PopulateInteractiveGraph(BuildLayout());
         }
 
         private void PopulateInteractiveGraph(GraphLayoutModel layout)

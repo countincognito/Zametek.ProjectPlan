@@ -47,6 +47,9 @@
           <ContextMenu>
             <MenuItem Header="{x:Static resources:Menus.Menu_FitToView}"
                       Click="FitToView_Click"/>
+            <MenuItem Header="{x:Static resources:Menus.Menu_ResetLayout}"
+                      Click="ResetLayout_Click"/>
+            <Separator/>
             <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
                       Command="{Binding Path=SaveVertexGraphImageFileCommand, Mode=OneWay}"/>
           </ContextMenu>

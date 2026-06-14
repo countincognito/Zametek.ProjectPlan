@@ -45,9 +45,23 @@ namespace Zametek.View.ProjectPlan
                 return;
             }
 
-            m_PanTransform.X = (viewport.Bounds.Width - (graphCanvas.Bounds.Width * Zoom)) / 2.0;
-            m_PanTransform.Y = (viewport.Bounds.Height - (graphCanvas.Bounds.Height * Zoom)) / 2.0;
+            CentreWorkspace(graphCanvas.Bounds.Width, graphCanvas.Bounds.Height);
             m_HasCentered = true;
+        }
+
+        // Pan so a workspace of the given size sits centred in the viewport at the current zoom.
+        private void CentreWorkspace(double workspaceWidth, double workspaceHeight)
+        {
+            if (workspaceWidth <= 0
+                || workspaceHeight <= 0
+                || viewport.Bounds.Width <= 0
+                || viewport.Bounds.Height <= 0)
+            {
+                return;
+            }
+
+            m_PanTransform.X = (viewport.Bounds.Width - (workspaceWidth * Zoom)) / 2.0;
+            m_PanTransform.Y = (viewport.Bounds.Height - (workspaceHeight * Zoom)) / 2.0;
         }
 
         private void Viewport_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -170,6 +184,20 @@ namespace Zametek.View.ProjectPlan
             double contentCentreY = (minY + maxY) / 2.0;
             m_PanTransform.X = (viewport.Bounds.Width / 2.0) - (contentCentreX * zoom);
             m_PanTransform.Y = (viewport.Bounds.Height / 2.0) - (contentCentreY * zoom);
+        }
+
+        // Discard all dragged positions, rebuild the default MSAGL layout, and reproduce the
+        // first-compilation framing (default zoom, centred).
+        private void ResetLayout_Click(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is not VertexGraphManagerViewModel viewModel)
+            {
+                return;
+            }
+
+            viewModel.ResetLayout();
+            zoomer.Value = 1.0;
+            CentreWorkspace(viewModel.WorkspaceWidth, viewModel.WorkspaceHeight);
         }
     }
 }
