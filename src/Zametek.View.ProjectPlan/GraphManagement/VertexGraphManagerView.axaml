@@ -47,7 +47,7 @@
           <ContextMenu>
             <MenuItem Header="{x:Static resources:Menus.Menu_FitToView}"
                       Click="FitToView_Click"/>
-            <MenuItem Header="{x:Static resources:Menus.Menu_ResetLayout}"
+            <MenuItem Header="{x:Static resources:Menus.Menu_ResetGraphLayout}"
                       Click="ResetLayout_Click"/>
             <Separator/>
             <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
