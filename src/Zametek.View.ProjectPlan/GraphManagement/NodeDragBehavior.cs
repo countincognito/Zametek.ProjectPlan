@@ -15,10 +15,12 @@ namespace Zametek.View.ProjectPlan
         : Behavior<Control>
     {
         private bool m_IsDragging;
+        private bool m_HasMoved;
         private Point m_StartPointer;
         private double m_StartX;
         private double m_StartY;
         private Canvas? m_Canvas;
+        private VertexGraphManagerViewModel? m_Manager;
 
         protected override void OnAttached()
         {
@@ -54,10 +56,8 @@ namespace Zametek.View.ProjectPlan
             }
 
             // Selection highlighting is owned by the manager view-model.
-            if (AssociatedObject.FindAncestorOfType<ItemsControl>()?.DataContext is VertexGraphManagerViewModel manager)
-            {
-                manager.SelectNode(node);
-            }
+            m_Manager = AssociatedObject.FindAncestorOfType<ItemsControl>()?.DataContext as VertexGraphManagerViewModel;
+            m_Manager?.SelectNode(node);
 
             m_Canvas = AssociatedObject.FindAncestorOfType<Canvas>();
             if (m_Canvas is null)
@@ -69,6 +69,7 @@ namespace Zametek.View.ProjectPlan
             m_StartX = node.X;
             m_StartY = node.Y;
             m_IsDragging = true;
+            m_HasMoved = false;
             e.Pointer.Capture(AssociatedObject);
             e.Handled = true;
         }
@@ -85,6 +86,7 @@ namespace Zametek.View.ProjectPlan
             Point current = e.GetPosition(m_Canvas);
             node.X = m_StartX + (current.X - m_StartPointer.X);
             node.Y = m_StartY + (current.Y - m_StartPointer.Y);
+            m_HasMoved = true;
             e.Handled = true;
         }
 
@@ -95,8 +97,18 @@ namespace Zametek.View.ProjectPlan
                 return;
             }
 
+            // Only remember a position if the node was actually dragged, so a plain
+            // click selects without pinning the node against future re-layouts.
+            if (m_HasMoved
+                && AssociatedObject?.DataContext is VertexGraphNodeViewModel node)
+            {
+                m_Manager?.OnNodeMoved(node);
+            }
+
             m_IsDragging = false;
+            m_HasMoved = false;
             m_Canvas = null;
+            m_Manager = null;
             e.Pointer.Capture(null);
             e.Handled = true;
         }

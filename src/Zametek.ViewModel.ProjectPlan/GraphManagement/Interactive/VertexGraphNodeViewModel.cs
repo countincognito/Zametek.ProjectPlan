@@ -1,22 +1,17 @@
-using Avalonia;
+using Avalonia.Collections;
 using Avalonia.Media;
 using ReactiveUI;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    // Spike: a single draggable, selectable activity node in the interactive vertex graph.
-    // Selection visuals (border, opacity) are computed here and bound as plain values, so
-    // they survive without colliding with style setters.
+    // Interactive, draggable, selectable activity node. The slack/override border colour and
+    // critical/dummy dash style are preserved; selection is shown via a separate overlay ring
+    // (in the view) so it does not clobber the underlying colour. Dimming is driven by opacity.
     public class VertexGraphNodeViewModel
         : ReactiveObject
     {
         private const double c_DimmedOpacity = 0.25;
-        private const double c_SelectedBorderThickness = 3.0;
-        private static readonly IBrush s_SelectionBrush = new SolidColorBrush(Color.Parse(@"#0078D4"));
-
-        private readonly IBrush m_BaseBorderBrush;
-        private readonly Thickness m_BaseBorderThickness;
 
         public VertexGraphNodeViewModel(GraphNodeLayoutModel layout)
         {
@@ -30,8 +25,9 @@ namespace Zametek.ViewModel.ProjectPlan
             Name = layout.Name;
             Tooltip = layout.Tooltip;
             FillBrush = ToBrush(layout.FillColorHexCode, Colors.LightGray);
-            m_BaseBorderBrush = ToBrush(layout.BorderColorHexCode, Colors.Black);
-            m_BaseBorderThickness = new Thickness(layout.BorderThickness <= 0.0 ? 1.0 : layout.BorderThickness);
+            BorderBrush = ToBrush(layout.BorderColorHexCode, Colors.Black);
+            BorderThickness = layout.BorderThickness <= 0.0 ? 1.0 : layout.BorderThickness;
+            StrokeDashArray = layout.IsDashed ? [3.0, 2.0] : null;
         }
 
         public int Id { get; }
@@ -66,22 +62,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public IBrush FillBrush { get; }
 
-        public IBrush BorderBrush => IsSelected ? s_SelectionBrush : m_BaseBorderBrush;
+        public IBrush BorderBrush { get; }
 
-        public Thickness BorderThickness => IsSelected ? new Thickness(c_SelectedBorderThickness) : m_BaseBorderThickness;
+        public double BorderThickness { get; }
 
-        public double NodeOpacity => IsDimmed ? c_DimmedOpacity : 1.0;
+        public AvaloniaList<double>? StrokeDashArray { get; }
 
         private bool m_IsSelected;
         public bool IsSelected
         {
             get => m_IsSelected;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref m_IsSelected, value);
-                this.RaisePropertyChanged(nameof(BorderBrush));
-                this.RaisePropertyChanged(nameof(BorderThickness));
-            }
+            set => this.RaiseAndSetIfChanged(ref m_IsSelected, value);
         }
 
         private bool m_IsDimmed;
@@ -94,6 +85,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged(nameof(NodeOpacity));
             }
         }
+
+        public double NodeOpacity => IsDimmed ? c_DimmedOpacity : 1.0;
 
         private static IBrush ToBrush(string? hexCode, Color fallback)
         {

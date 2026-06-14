@@ -57,8 +57,8 @@
 							  ScaleY="{Binding Value, ElementName=zoomer, Mode=TwoWay}"/>
             </LayoutTransformControl.LayoutTransform>
 
-            <!-- Spike: interactive node/edge canvas replacing the static SVG image.
-                 The SVG (VertexGraphImage) is still built in the background for Save As. -->
+            <!-- Interactive node/edge canvas. The SVG is no longer kept live; it is
+                 generated on demand only when exporting via Save As. -->
             <Canvas Name="graphCanvas"
                     Width="{Binding Path=GraphWidth, Mode=OneWay}"
                     Height="{Binding Path=GraphHeight, Mode=OneWay}"
@@ -76,11 +76,17 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="vm:VertexGraphEdgeViewModel">
-                    <Line StartPoint="{Binding Path=StartPoint, Mode=OneWay}"
-                          EndPoint="{Binding Path=EndPoint, Mode=OneWay}"
-                          Stroke="{Binding Path=Stroke, Mode=OneWay}"
-                          StrokeThickness="{Binding Path=StrokeThickness, Mode=OneWay}"
-                          Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"/>
+                    <Canvas>
+                      <Line StartPoint="{Binding Path=StartPoint, Mode=OneWay}"
+                            EndPoint="{Binding Path=EndPoint, Mode=OneWay}"
+                            Stroke="{Binding Path=Stroke, Mode=OneWay}"
+                            StrokeThickness="{Binding Path=StrokeThickness, Mode=OneWay}"
+                            StrokeDashArray="{Binding Path=StrokeDashArray, Mode=OneWay}"
+                            Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"/>
+                      <Polygon Points="{Binding Path=ArrowPoints, Mode=OneWay}"
+                               Fill="{Binding Path=Stroke, Mode=OneWay}"
+                               Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"/>
+                    </Canvas>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
@@ -102,26 +108,36 @@
                 </ItemsControl.Styles>
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="vm:VertexGraphNodeViewModel">
-                    <Border Width="{Binding Path=Width, Mode=OneWay}"
-                            Height="{Binding Path=Height, Mode=OneWay}"
-                            Background="{Binding Path=FillBrush, Mode=OneWay}"
-                            BorderBrush="{Binding Path=BorderBrush, Mode=OneWay}"
-                            BorderThickness="{Binding Path=BorderThickness, Mode=OneWay}"
-                            Opacity="{Binding Path=NodeOpacity, Mode=OneWay}"
-                            CornerRadius="3"
-                            Cursor="Hand"
-                            ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}">
+                    <Grid Width="{Binding Path=Width, Mode=OneWay}"
+                          Height="{Binding Path=Height, Mode=OneWay}"
+                          Opacity="{Binding Path=NodeOpacity, Mode=OneWay}"
+                          Background="Transparent"
+                          Cursor="Hand"
+                          ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}">
                       <i:Interaction.Behaviors>
                         <local:NodeDragBehavior/>
                       </i:Interaction.Behaviors>
+                      <!-- Node body: fill + slack/override border, dashed for critical/dummy. -->
+                      <Rectangle Fill="{Binding Path=FillBrush, Mode=OneWay}"
+                                 Stroke="{Binding Path=BorderBrush, Mode=OneWay}"
+                                 StrokeThickness="{Binding Path=BorderThickness, Mode=OneWay}"
+                                 StrokeDashArray="{Binding Path=StrokeDashArray, Mode=OneWay}"
+                                 RadiusX="3" RadiusY="3"/>
+                      <!-- Selection ring: sits over the body so it never hides the slack colour. -->
+                      <Rectangle Stroke="#0078D4"
+                                 StrokeThickness="3"
+                                 RadiusX="3" RadiusY="3"
+                                 IsHitTestVisible="False"
+                                 IsVisible="{Binding Path=IsSelected, Mode=OneWay}"/>
                       <TextBlock Text="{Binding Path=Label, Mode=OneWay}"
                                  FontFamily="Consolas"
                                  FontSize="11"
                                  Foreground="Black"
                                  TextAlignment="Center"
                                  HorizontalAlignment="Center"
-                                 VerticalAlignment="Center"/>
-                    </Border>
+                                 VerticalAlignment="Center"
+                                 IsHitTestVisible="False"/>
+                    </Grid>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>

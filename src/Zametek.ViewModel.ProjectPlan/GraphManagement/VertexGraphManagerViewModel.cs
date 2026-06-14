@@ -78,13 +78,14 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IVertexGraphSerializer m_VertexGraphExport;
         private readonly IGraphImageExporter m_GraphImageExporter;
 
-        private readonly IDisposable? m_BuildVertexGraphDataSub;
-        private readonly IDisposable? m_BuildVertexGraphImageSub;
         private readonly IDisposable? m_BuildVertexGraphInteractiveSub;
 
-        // Spike: interactive vertex-graph state.
+        // Interactive vertex-graph state.
         private Dictionary<int, HashSet<int>> m_Adjacency = [];
         private VertexGraphNodeViewModel? m_SelectedNode;
+
+        // Positions of nodes the user has dragged, preserved across re-layouts.
+        private readonly Dictionary<int, (double X, double Y)> m_ManualNodePositions = [];
 
         #endregion
 
@@ -137,22 +138,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(agm => agm.m_CoreViewModel.BaseTheme)
                 .ToProperty(this, agm => agm.BaseTheme);
 
-            m_BuildVertexGraphDataSub = this
-                .WhenAnyValue(
-                    agm => agm.m_CoreViewModel.VertexGraph,
-                    agm => agm.m_CoreViewModel.GraphSettings,
-                    agm => agm.m_CoreViewModel.BaseTheme,
-                    agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames)
-                .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildVertexGraphDiagramDataAsync());
-
-            m_BuildVertexGraphImageSub = this
-                .WhenAnyValue(agm => agm.VertexGraphData)
-                .ObserveOn(RxApp.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildVertexGraphDiagramImageAsync());
-
-            // Spike: rebuild the interactive node/edge graph from the same inputs as the SVG.
+            // Single live layout pass: the interactive node/edge graph is the on-screen
+            // representation. The SVG is built lazily only when exporting (Save As), so a
+            // recompile runs the MSAGL layout once rather than twice.
             m_BuildVertexGraphInteractiveSub = this
                 .WhenAnyValue(
                     agm => agm.m_CoreViewModel.VertexGraph,
@@ -204,46 +192,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private async Task BuildVertexGraphDiagramDataAsync()
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    BuildVertexGraphDiagramData();
-                }
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
-            }
-        }
-
-        private async Task BuildVertexGraphDiagramImageAsync()
-        {
-            try
-            {
-                Dispatcher.UIThread.Invoke(() =>
-                {
-                    lock (m_Lock)
-                    {
-                        BuildVertexGraphDiagramImage();
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
-            }
-        }
-
-        // Spike: rebuild the interactive node/edge view-models from a fresh MSAGL layout.
+        // Rebuild the interactive node/edge view-models from a fresh MSAGL layout.
         private async Task BuildVertexGraphInteractiveAsync()
         {
             try
@@ -273,6 +222,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void PopulateInteractiveGraph(GraphLayoutModel layout)
         {
+            int? previouslySelectedId = m_SelectedNode?.Id;
+
             foreach (VertexGraphEdgeViewModel edge in GraphEdges)
             {
                 edge.Dispose();
@@ -280,10 +231,25 @@ namespace Zametek.ViewModel.ProjectPlan
             GraphEdges.Clear();
             GraphNodes.Clear();
 
+            // Drop remembered positions for nodes that no longer exist.
+            HashSet<int> layoutIds = [.. layout.Nodes.Select(x => x.Id)];
+            foreach (int staleId in m_ManualNodePositions.Keys.Where(x => !layoutIds.Contains(x)).ToList())
+            {
+                m_ManualNodePositions.Remove(staleId);
+            }
+
             var nodeLookup = new Dictionary<int, VertexGraphNodeViewModel>();
             foreach (GraphNodeLayoutModel nodeLayout in layout.Nodes)
             {
                 var node = new VertexGraphNodeViewModel(nodeLayout);
+
+                // Keep a node where the user dragged it; everything else takes the fresh layout.
+                if (m_ManualNodePositions.TryGetValue(node.Id, out (double X, double Y) manual))
+                {
+                    node.X = manual.X;
+                    node.Y = manual.Y;
+                }
+
                 GraphNodes.Add(node);
                 nodeLookup[node.Id] = node;
             }
@@ -297,7 +263,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     continue;
                 }
 
-                GraphEdges.Add(new VertexGraphEdgeViewModel(edgeLayout.Id, source, target, edgeLayout.StrokeThickness));
+                GraphEdges.Add(new VertexGraphEdgeViewModel(edgeLayout.Id, source, target, edgeLayout.StrokeThickness, edgeLayout.IsDashed));
 
                 AddAdjacency(adjacency, edgeLayout.SourceId, edgeLayout.TargetId);
                 AddAdjacency(adjacency, edgeLayout.TargetId, edgeLayout.SourceId);
@@ -306,7 +272,24 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Adjacency = adjacency;
             GraphWidth = layout.Width;
             GraphHeight = layout.Height;
-            SelectNode(null);
+
+            // Restore the previous selection if that node survived the re-layout.
+            if (previouslySelectedId is int selectedId
+                && nodeLookup.TryGetValue(selectedId, out VertexGraphNodeViewModel? reselect))
+            {
+                SelectNode(reselect);
+            }
+            else
+            {
+                SelectNode(null);
+            }
+        }
+
+        // Remember a node the user has dragged so its position survives the next re-layout.
+        public void OnNodeMoved(VertexGraphNodeViewModel node)
+        {
+            ArgumentNullException.ThrowIfNull(node);
+            m_ManualNodePositions[node.Id] = (node.X, node.Y);
         }
 
         private static void AddAdjacency(Dictionary<int, HashSet<int>> adjacency, int from, int to)
@@ -457,9 +440,17 @@ namespace Zametek.ViewModel.ProjectPlan
                         })
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
 
-                    if (isSkiaFormat && VertexGraphImage.Source?.Picture is SKPicture picture)
+                    if (isSkiaFormat)
                     {
-                        await m_GraphImageExporter.SaveGraphImageAsync(picture, filename, scaleX: 4, scaleY: 4);
+                        // The interactive view no longer keeps the SVG image current, so build it
+                        // on demand here (the only place a rendered raster/PDF/SVG is needed).
+                        BuildVertexGraphDiagramData();
+                        BuildVertexGraphDiagramImage();
+
+                        if (VertexGraphImage.Source?.Picture is SKPicture picture)
+                        {
+                            await m_GraphImageExporter.SaveGraphImageAsync(picture, filename, scaleX: 4, scaleY: 4);
+                        }
                     }
 
                     if (data is not null)
@@ -528,8 +519,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
-            m_BuildVertexGraphDataSub?.Dispose();
-            m_BuildVertexGraphImageSub?.Dispose();
             m_BuildVertexGraphInteractiveSub?.Dispose();
         }
 
