@@ -516,14 +516,19 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     if (isSkiaFormat)
                     {
-                        // The interactive view no longer keeps the SVG image current, so build it
-                        // on demand here (the only place a rendered raster/PDF/SVG is needed).
-                        BuildVertexGraphDiagramData();
-                        BuildVertexGraphDiagramImage();
+                        // Export exactly what is on the interactive canvas (the user's dragged
+                        // arrangement), not the default MSAGL SVG layout. The picture is vector, so
+                        // SVG/PDF stay crisp while PNG/JPEG render from the same source.
+                        SKPicture? picture = null;
+                        Dispatcher.UIThread.Invoke(() =>
+                            picture = InteractiveVertexGraphRenderer.Render(GraphNodes, GraphEdges));
 
-                        if (VertexGraphImage.Source?.Picture is SKPicture picture)
+                        if (picture is not null)
                         {
-                            await m_GraphImageExporter.SaveGraphImageAsync(picture, filename, scaleX: 4, scaleY: 4);
+                            using (picture)
+                            {
+                                await m_GraphImageExporter.SaveGraphImageAsync(picture, filename, scaleX: 2, scaleY: 2);
+                            }
                         }
                     }
 

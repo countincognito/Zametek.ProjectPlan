@@ -67,6 +67,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public double StrokeThickness => IsHighlighted ? c_HighlightThickness : m_BaseThickness;
 
+        // Neutral (unselected, undimmed) appearance, used when exporting the graph image so the
+        // export does not depend on the current selection/highlight state.
+        public IBrush BaseStroke => s_BaseBrush;
+
+        public double BaseStrokeThickness => m_BaseThickness;
+
         public double EdgeOpacity => IsDimmed ? c_DimmedOpacity : 1.0;
 
         private bool m_IsHighlighted;
