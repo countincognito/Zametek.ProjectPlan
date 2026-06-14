@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Zametek.Common.ProjectPlan;
+using Zametek.Graphs.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
 using Zametek.ViewModel.ProjectPlan;

@@ -2,6 +2,7 @@ using Avalonia.Media;
 using System.Text;
 using System.Xml.Serialization;
 using Zametek.Common.ProjectPlan;
+using Zametek.Graphs.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
 

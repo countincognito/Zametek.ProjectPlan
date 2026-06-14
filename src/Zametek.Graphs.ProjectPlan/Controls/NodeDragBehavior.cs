@@ -3,14 +3,13 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.VisualTree;
 using Avalonia.Xaml.Interactivity;
-using Zametek.ViewModel.ProjectPlan;
 
-namespace Zametek.View.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
-    // Spike: lets the user drag an interactive vertex-graph node and select it on press.
-    // Pointer positions are taken relative to the hosting Canvas, so dragging stays correct
-    // under the surrounding zoom transform. e.Handled is set so the press does not also start
-    // a background pan of the viewport behind the graph.
+    // Lets the user drag an interactive vertex-graph node and select it on press. Pointer positions
+    // are taken relative to the hosting Canvas, so dragging stays correct under the surrounding zoom
+    // transform. e.Handled is set so the press does not also start a background pan of the viewport
+    // behind the graph.
     public class NodeDragBehavior
         : Behavior<Control>
     {
@@ -20,7 +19,7 @@ namespace Zametek.View.ProjectPlan
         private double m_StartX;
         private double m_StartY;
         private Canvas? m_Canvas;
-        private VertexGraphManagerViewModel? m_Manager;
+        private IInteractiveVertexGraph? m_Manager;
 
         protected override void OnAttached()
         {
@@ -55,8 +54,8 @@ namespace Zametek.View.ProjectPlan
                 return;
             }
 
-            // Selection highlighting is owned by the manager view-model.
-            m_Manager = AssociatedObject.FindAncestorOfType<ItemsControl>()?.DataContext as VertexGraphManagerViewModel;
+            // Selection highlighting is owned by the host view-model.
+            m_Manager = AssociatedObject.FindAncestorOfType<ItemsControl>()?.DataContext as IInteractiveVertexGraph;
             m_Manager?.SelectNode(node);
 
             m_Canvas = AssociatedObject.FindAncestorOfType<Canvas>();

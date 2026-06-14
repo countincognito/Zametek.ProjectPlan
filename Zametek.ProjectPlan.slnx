@@ -27,6 +27,9 @@
     <Project Path="src/Zametek.Data.ProjectPlan/Zametek.Data.ProjectPlan.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
+    <Project Path="src/Zametek.Graphs.ProjectPlan/Zametek.Graphs.ProjectPlan.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
     <Project Path="src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />

@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using System.Xml;
 
-namespace Zametek.ViewModel.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
     public class CustomSvgGraphWriter
         : SvgGraphWriter

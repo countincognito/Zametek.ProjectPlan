@@ -1,4 +1,4 @@
-﻿namespace Zametek.Common.ProjectPlan
+﻿namespace Zametek.Graphs.ProjectPlan
 {
     [Serializable]
     public record DiagramGraphModel

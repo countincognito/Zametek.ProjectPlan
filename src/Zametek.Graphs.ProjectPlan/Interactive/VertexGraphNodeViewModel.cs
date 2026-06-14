@@ -3,7 +3,7 @@ using Avalonia.Media;
 using ReactiveUI;
 using Zametek.Common.ProjectPlan;
 
-namespace Zametek.ViewModel.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
     // Interactive, draggable, selectable activity node. The slack/override border colour and
     // critical/dummy dash style are preserved; selection is shown via a separate overlay ring

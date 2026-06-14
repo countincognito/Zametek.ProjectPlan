@@ -1,6 +1,6 @@
 using Zametek.Common.ProjectPlan;
 
-namespace Zametek.ViewModel.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
     public interface IMsaglSvgRenderer
     {

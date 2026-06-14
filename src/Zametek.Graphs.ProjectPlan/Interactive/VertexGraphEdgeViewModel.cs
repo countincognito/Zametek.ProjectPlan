@@ -3,7 +3,7 @@ using Avalonia.Collections;
 using Avalonia.Media;
 using ReactiveUI;
 
-namespace Zametek.ViewModel.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
     // A directed edge drawn as a straight line clipped to the source and target node borders,
     // with an arrowhead at the target. Endpoints are derived from the node positions and update

@@ -3,7 +3,7 @@ using Avalonia.Collections;
 using Avalonia.Media;
 using SkiaSharp;
 
-namespace Zametek.ViewModel.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
     // Records an SKPicture that mirrors the interactive vertex-graph canvas (the user's dragged
     // arrangement), so the exported image matches what is on screen rather than the default MSAGL

@@ -2,10 +2,9 @@ using Avalonia.Media;
 using System.Text;
 using System.Xml.Serialization;
 using Zametek.Common.ProjectPlan;
-using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
 
-namespace Zametek.ViewModel.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
     public class VertexGraphSerializer
         : IVertexGraphSerializer

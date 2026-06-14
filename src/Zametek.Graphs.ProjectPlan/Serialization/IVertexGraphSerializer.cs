@@ -1,6 +1,6 @@
 ﻿using Zametek.Common.ProjectPlan;
 
-namespace Zametek.Contract.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
     public interface IVertexGraphSerializer
     {

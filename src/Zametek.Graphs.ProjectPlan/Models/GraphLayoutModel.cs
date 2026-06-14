@@ -1,4 +1,4 @@
-namespace Zametek.Common.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
     // View-agnostic, laid-out graph geometry produced from the MSAGL layout pass.
     // Unlike DiagramGraphModel (which feeds the SVG/GraphML/GraphViz serializers),

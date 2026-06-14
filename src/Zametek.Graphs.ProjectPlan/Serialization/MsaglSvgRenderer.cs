@@ -1,9 +1,8 @@
 using System.Xml;
 using Zametek.Common.ProjectPlan;
-using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
 
-namespace Zametek.ViewModel.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
     public class MsaglSvgRenderer
         : IMsaglSvgRenderer

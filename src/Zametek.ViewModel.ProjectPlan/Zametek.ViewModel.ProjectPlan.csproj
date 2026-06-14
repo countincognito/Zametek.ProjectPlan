@@ -34,6 +34,7 @@
     <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Contract.ProjectPlan\Zametek.Contract.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Data.ProjectPlan\Zametek.Data.ProjectPlan.csproj" />
+    <ProjectReference Include="..\Zametek.Graphs.ProjectPlan\Zametek.Graphs.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
   </ItemGroup>
 
