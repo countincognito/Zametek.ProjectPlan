@@ -3,7 +3,6 @@ using System.Text;
 using System.Xml.Serialization;
 using Zametek.Common.ProjectPlan;
 using Zametek.Graphs.ProjectPlan;
-using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -344,7 +343,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        public byte[] BuildArrowGraphSvgData(
+        private (Microsoft.Msagl.Drawing.Graph DrawingGraph, DiagramGraphModel Diagram) BuildAndLayoutDrawingGraph(
             ArrowGraphModel arrowGraph,
             BaseTheme baseTheme,
             bool viewNames)
@@ -442,7 +441,158 @@ namespace Zametek.ViewModel.ProjectPlan
 
             Microsoft.Msagl.Miscellaneous.LayoutHelpers.CalculateLayout(drawingGraph.GeometryGraph, drawingGraph.LayoutAlgorithmSettings, null);
 
+            return (drawingGraph, diagramGraph);
+        }
+
+        public byte[] BuildArrowGraphSvgData(
+            ArrowGraphModel arrowGraph,
+            BaseTheme baseTheme,
+            bool viewNames)
+        {
+            (Microsoft.Msagl.Drawing.Graph drawingGraph, _) =
+                BuildAndLayoutDrawingGraph(arrowGraph, baseTheme, viewNames);
+
             return m_MsaglSvgRenderer.RenderToSvg(drawingGraph, baseTheme);
+        }
+
+        // Produce on-screen geometry for the interactive arrow-graph control, reusing the same
+        // MSAGL layout that drives the SVG. MSAGL works in a Y-up coordinate space; the SVG writer
+        // flips this internally, so here we flip it ourselves and scale uniformly so the small
+        // layout boxes become a comfortable interactive size while preserving relative positions.
+        private const double c_InteractiveLayoutScale = 2.5;
+
+        public GraphLayoutModel BuildArrowGraphLayout(
+            ArrowGraphModel arrowGraph,
+            BaseTheme baseTheme,
+            bool viewNames)
+        {
+            (Microsoft.Msagl.Drawing.Graph drawingGraph, DiagramGraphModel diagramGraph) =
+                BuildAndLayoutDrawingGraph(arrowGraph, baseTheme, viewNames);
+
+            return ExtractLayout(drawingGraph, diagramGraph, arrowGraph);
+        }
+
+        private static GraphLayoutModel ExtractLayout(
+            Microsoft.Msagl.Drawing.Graph drawingGraph,
+            DiagramGraphModel diagramGraph,
+            ArrowGraphModel arrowGraph)
+        {
+            Microsoft.Msagl.Core.Geometry.Rectangle boundingBox = drawingGraph.GeometryGraph.BoundingBox;
+            double graphLeft = boundingBox.Left;
+            double graphTop = boundingBox.Top; // Largest Y in MSAGL's Y-up space.
+
+            Dictionary<int, DiagramNodeModel> diagramNodeLookup = diagramGraph.Nodes.ToDictionary(x => x.Id);
+            Dictionary<int, EventModel> eventLookup = arrowGraph.Nodes
+                .Select(x => x.Content)
+                .Where(x => x is not null)
+                .ToDictionary(x => x.Id);
+
+            var nodes = new List<GraphNodeLayoutModel>();
+
+            foreach (Microsoft.Msagl.Drawing.Node drawingNode in drawingGraph.Nodes)
+            {
+                if (!int.TryParse(drawingNode.Id, out int id)
+                    || !diagramNodeLookup.TryGetValue(id, out DiagramNodeModel? diagramNode))
+                {
+                    continue;
+                }
+
+                Microsoft.Msagl.Core.Layout.Node? geometryNode = drawingNode.GeometryNode;
+                if (geometryNode is null)
+                {
+                    continue;
+                }
+
+                double width = geometryNode.Width;
+                double height = geometryNode.Height;
+
+                // MSAGL centre -> top-left, with Y flipped, then scaled uniformly.
+                double centreX = geometryNode.Center.X - graphLeft;
+                double centreY = graphTop - geometryNode.Center.Y;
+
+                eventLookup.TryGetValue(id, out EventModel? eventModel);
+
+                nodes.Add(new GraphNodeLayoutModel
+                {
+                    Id = id,
+                    X = (centreX - (width / 2.0)) * c_InteractiveLayoutScale,
+                    Y = (centreY - (height / 2.0)) * c_InteractiveLayoutScale,
+                    Width = width * c_InteractiveLayoutScale,
+                    Height = height * c_InteractiveLayoutScale,
+                    Label = diagramNode.Text ?? string.Empty,
+                    Name = diagramNode.Name,
+                    Tooltip = BuildNodeTooltip(eventModel, diagramNode),
+                    FillColorHexCode = diagramNode.FillColorHexCode,
+                    BorderColorHexCode = diagramNode.BorderColorHexCode,
+                    BorderThickness = diagramNode.BorderThickness,
+                    IsDashed = diagramNode.BorderDashStyle == NodeBorderDashStyle.Dashed,
+                });
+            }
+
+            // Activity edges carry the same rich tooltip the vertex graph puts on its activity
+            // nodes (both represent activities). The diagram edge id is the activity id.
+            Dictionary<int, ActivityModel> activityLookup = arrowGraph.Edges
+                .Select(x => x.Content)
+                .Where(x => x is not null)
+                .ToDictionary(x => x.Id);
+
+            List<GraphEdgeLayoutModel> edges = diagramGraph.Edges
+                .Select(x => new GraphEdgeLayoutModel
+                {
+                    Id = x.Id,
+                    SourceId = x.SourceId,
+                    TargetId = x.TargetId,
+                    StrokeThickness = x.StrokeThickness,
+                    IsDashed = x.DashStyle == EdgeDashStyle.Dashed,
+                    ForegroundColorHexCode = x.ForegroundColorHexCode,
+                    Label = x.Label,
+                    ShowLabel = x.ShowLabel,
+                    Tooltip = BuildEdgeTooltip(activityLookup.GetValueOrDefault(x.Id), x),
+                })
+                .ToList();
+
+            return new GraphLayoutModel
+            {
+                Width = boundingBox.Width * c_InteractiveLayoutScale,
+                Height = boundingBox.Height * c_InteractiveLayoutScale,
+                Nodes = nodes,
+                Edges = edges,
+            };
+        }
+
+        private static string BuildNodeTooltip(EventModel? eventModel, DiagramNodeModel diagramNode)
+        {
+            if (eventModel is null)
+            {
+                return diagramNode.Name ?? diagramNode.Text ?? string.Empty;
+            }
+
+            static string Format(int? value) => value?.ToString() ?? @"-";
+
+            return $@"EF: {Format(eventModel.EarliestFinishTime)}   LF: {Format(eventModel.LatestFinishTime)}";
+        }
+
+        // Mirrors the vertex graph's activity-node tooltip: an activity edge and a vertex node both
+        // represent an activity, so both surface the same id/duration/times/slack information.
+        private static string BuildEdgeTooltip(ActivityModel? activity, DiagramEdgeModel diagramEdge)
+        {
+            if (activity is null)
+            {
+                return diagramEdge.Name ?? diagramEdge.Label ?? string.Empty;
+            }
+
+            static string Format(int? value) => value?.ToString() ?? @"-";
+
+            var builder = new StringBuilder();
+            if (!string.IsNullOrWhiteSpace(activity.Name))
+            {
+                builder.AppendLine(activity.Name);
+            }
+            builder.AppendLine($@"Id: {activity.Id}   Duration: {activity.Duration}");
+            builder.AppendLine($@"ES: {Format(activity.EarliestStartTime)}   EF: {Format(activity.EarliestFinishTime)}");
+            builder.AppendLine($@"LS: {Format(activity.LatestStartTime)}   LF: {Format(activity.LatestFinishTime)}");
+            builder.Append($@"Free slack: {Format(activity.FreeSlack)}   Total slack: {Format(activity.TotalSlack)}");
+            return builder.ToString();
         }
 
         public byte[] BuildArrowGraphMLData(

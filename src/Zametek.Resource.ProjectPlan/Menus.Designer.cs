@@ -142,15 +142,6 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Fit to View.
-        /// </summary>
-        public static string Menu_FitToView {
-            get {
-                return ResourceManager.GetString("Menu_FitToView", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Help.
         /// </summary>
         public static string Menu_Help {
@@ -267,15 +258,6 @@ namespace Zametek.Resource.ProjectPlan {
             }
         }
 
-        /// <summary>
-        ///   Looks up a localized string similar to Reset Layout.
-        /// </summary>
-        public static string Menu_ResetGraphLayout {
-            get {
-                return ResourceManager.GetString("Menu_ResetGraphLayout", resourceCulture);
-            }
-        }
-        
         /// <summary>
         ///   Looks up a localized string similar to _Save.
         /// </summary>

@@ -144,9 +144,6 @@
   <data name="Menu_File" xml:space="preserve">
     <value>_File</value>
   </data>
-  <data name="Menu_FitToView" xml:space="preserve">
-    <value>Fit to View</value>
-  </data>
   <data name="Menu_Help" xml:space="preserve">
     <value>Help</value>
   </data>
@@ -226,9 +223,6 @@
     <value>Custom Calendar</value>
   </data>
   <data name="Menu_ResetDockLayout" xml:space="preserve">
-    <value>Reset Layout</value>
-  </data>
-  <data name="Menu_ResetGraphLayout" xml:space="preserve">
     <value>Reset Layout</value>
   </data>
   <data name="Menu_SaveLayout" xml:space="preserve">

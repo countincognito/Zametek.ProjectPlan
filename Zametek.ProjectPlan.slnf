@@ -5,6 +5,7 @@
       "src\\Zametek.Common.ProjectPlan\\Zametek.Common.ProjectPlan.csproj",
       "src\\Zametek.Contract.ProjectPlan\\Zametek.Contract.ProjectPlan.csproj",
       "src\\Zametek.Data.ProjectPlan\\Zametek.Data.ProjectPlan.csproj",
+      "src\\Zametek.Graphs.ProjectPlan\\Zametek.Graphs.ProjectPlan.csproj",
       "src\\Zametek.ProjectPlan.CommandLine\\Zametek.ProjectPlan.CommandLine.csproj",
       "src\\Zametek.ProjectPlan\\Zametek.ProjectPlan.csproj",
       "src\\Zametek.Resource.ProjectPlan\\Zametek.Resource.ProjectPlan.csproj",
