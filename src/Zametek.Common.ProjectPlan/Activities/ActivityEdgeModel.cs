@@ -13,5 +13,12 @@
         public EdgeDashStyle DashStyle { get; init; }
 
         public double StrokeWeight { get; init; }
+
+        // Precomputed activity-state flags (resolved by the application alongside the presentation),
+        // so the serializer can build the edge label text without depending on the application's
+        // critical/dummy derivation rules.
+        public bool IsCritical { get; init; }
+
+        public bool IsDummy { get; init; }
     }
 }

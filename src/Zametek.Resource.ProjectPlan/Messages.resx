@@ -117,14 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Message_ArrowGraphDataContainMultipleEndNodes" xml:space="preserve">
-    <value>Arrow Graph Data contain more than one End node</value>
-  </data>
   <data name="Message_VertexGraphDataContainsNoEndNodes" xml:space="preserve">
     <value>Vertex Graph Data contains no End nodes</value>
-  </data>
-  <data name="Message_ArrowGraphDataContainMultipleStartNodes" xml:space="preserve">
-    <value>Arrow Graph Data contain more than one Start node</value>
   </data>
   <data name="Message_VertexGraphDataContainsNoStartNodes" xml:space="preserve">
     <value>Vertex Graph Data contains no Start nodes</value>
@@ -149,15 +143,6 @@
   </data>
   <data name="Message_FibonacciWeightMustBeEqualOrGreaterThanZero" xml:space="preserve">
     <value>Fibonacci Weight must be equal or greater than 0</value>
-  </data>
-  <data name="Message_MismatchedEdgeIdsForHeadNodesInArrowGraph" xml:space="preserve">
-    <value>List of Edge IDs and Edges referenced by head Nodes do not match when building Arrow Graph</value>
-  </data>
-  <data name="Message_MismatchedEdgeIdsForTailNodesInArrowGraph" xml:space="preserve">
-    <value>List of Edge IDs and Edges referenced by tail Nodes do not match when building Arrow Graph</value>
-  </data>
-  <data name="Message_MismatchedNodeIdsAssociatedWithEdgesInArrowGraph" xml:space="preserve">
-    <value>List of Node IDs and Nodes associated with Edges do not match when building Arrow Graph</value>
   </data>
   <data name="Message_NewTrackersMustBeEqualOrGreaterThanZero" xml:space="preserve">
     <value>New Trackers must be equal or greater than 0</value>

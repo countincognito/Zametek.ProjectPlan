@@ -2,10 +2,9 @@ using Avalonia.Media;
 using System.Text;
 using System.Xml.Serialization;
 using Zametek.Common.ProjectPlan;
-using Zametek.Graphs.ProjectPlan;
 using Zametek.Utility;
 
-namespace Zametek.ViewModel.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
     public class ArrowGraphSerializer
         : IArrowGraphSerializer
@@ -103,13 +102,13 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        private static (bool isVisible, string labelText) BuildSingleLineEdgeLabel(ActivityModel activityModel, bool viewNames)
+        private static (bool isVisible, string labelText) BuildSingleLineEdgeLabel(ActivityModel activityModel, bool isDummy, bool isCritical, bool viewNames)
         {
             ArgumentNullException.ThrowIfNull(activityModel);
             var labelText = new StringBuilder();
             bool isVisible = false;
 
-            if (activityModel.IsDummy())
+            if (isDummy)
             {
                 if (!activityModel.CanBeRemoved)
                 {
@@ -118,7 +117,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         labelText.Append(@$" {activityModel.Name}");
                     }
-                    if (!activityModel.IsCritical())
+                    if (!isCritical)
                     {
                         labelText.Append(@$" [{activityModel.FreeSlack}|{activityModel.TotalSlack}]");
                     }
@@ -126,7 +125,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 else
                 {
-                    if (!activityModel.IsCritical())
+                    if (!isCritical)
                     {
                         labelText.Append(@$"[{activityModel.FreeSlack}|{activityModel.TotalSlack}]");
                         isVisible = true;
@@ -141,7 +140,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     labelText.Append(@$" {activityModel.Name}");
                 }
                 labelText.Append(@$" ({activityModel.Duration})");
-                if (!activityModel.IsCritical())
+                if (!isCritical)
                 {
                     labelText.Append(@$" [{activityModel.FreeSlack}|{activityModel.TotalSlack}]");
                 }
@@ -150,13 +149,13 @@ namespace Zametek.ViewModel.ProjectPlan
             return (isVisible, labelText.ToString());
         }
 
-        private static (bool isVisible, string labelText) BuildMultiLineEdgeLabel(ActivityModel activityModel, bool viewNames)
+        private static (bool isVisible, string labelText) BuildMultiLineEdgeLabel(ActivityModel activityModel, bool isDummy, bool isCritical, bool viewNames)
         {
             ArgumentNullException.ThrowIfNull(activityModel);
             var labelText = new StringBuilder();
             bool isVisible = false;
 
-            if (activityModel.IsDummy())
+            if (isDummy)
             {
                 if (!activityModel.CanBeRemoved)
                 {
@@ -165,7 +164,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     {
                         labelText.AppendFormat(@$" {activityModel.Name}");
                     }
-                    if (!activityModel.IsCritical())
+                    if (!isCritical)
                     {
                         labelText.AppendLine();
                         labelText.AppendFormat($@"{activityModel.FreeSlack}|{activityModel.TotalSlack}");
@@ -174,7 +173,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 else
                 {
-                    if (!activityModel.IsCritical())
+                    if (!isCritical)
                     {
                         labelText.AppendFormat($@"{activityModel.FreeSlack}|{activityModel.TotalSlack}");
                         isVisible = true;
@@ -189,7 +188,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     labelText.AppendFormat(@$" {activityModel.Name}");
                 }
                 labelText.AppendFormat($@" ({activityModel.Duration})");
-                if (!activityModel.IsCritical())
+                if (!isCritical)
                 {
                     labelText.AppendLine();
                     labelText.AppendFormat($@"{activityModel.FreeSlack}|{activityModel.TotalSlack}");
@@ -235,11 +234,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (!edgeIds.OrderBy(x => x).SequenceEqual(edgeHeadNodeLookup.Keys.OrderBy(x => x)))
             {
-                throw new ArgumentException(Resource.ProjectPlan.Messages.Message_MismatchedEdgeIdsForHeadNodesInArrowGraph);
+                throw new ArgumentException(Messages.Message_MismatchedEdgeIdsForHeadNodesInArrowGraph);
             }
             if (!edgeIds.OrderBy(x => x).SequenceEqual(edgeTailNodeLookup.Keys.OrderBy(x => x)))
             {
-                throw new ArgumentException(Resource.ProjectPlan.Messages.Message_MismatchedEdgeIdsForTailNodesInArrowGraph);
+                throw new ArgumentException(Messages.Message_MismatchedEdgeIdsForTailNodesInArrowGraph);
             }
 
             // Check all events are used.
@@ -247,20 +246,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (!drawingGraphNodeIds.OrderBy(x => x).SequenceEqual(edgeNodeLookupIds.OrderBy(x => x)))
             {
-                throw new ArgumentException(Resource.ProjectPlan.Messages.Message_MismatchedNodeIdsAssociatedWithEdgesInArrowGraph);
+                throw new ArgumentException(Messages.Message_MismatchedNodeIdsAssociatedWithEdgesInArrowGraph);
             }
 
             // Check Start and End nodes.
             IEnumerable<EventNodeModel> startNodes = nodeModels.Where(x => x.NodeType == Maths.Graphs.NodeType.Start);
             if (startNodes.Count() > 1)
             {
-                throw new ArgumentException(Resource.ProjectPlan.Messages.Message_ArrowGraphDataContainMultipleStartNodes);
+                throw new ArgumentException(Messages.Message_ArrowGraphDataContainMultipleStartNodes);
             }
 
             IEnumerable<EventNodeModel> endNodes = nodeModels.Where(x => x.NodeType == Maths.Graphs.NodeType.End);
             if (endNodes.Count() > 1)
             {
-                throw new ArgumentException(Resource.ProjectPlan.Messages.Message_ArrowGraphDataContainMultipleEndNodes);
+                throw new ArgumentException(Messages.Message_ArrowGraphDataContainMultipleEndNodes);
             }
 
             // Fill the graph. Presentation (border/edge colour, dash, weight) is resolved by the
@@ -278,11 +277,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (multiLineEdgeLabels)
                 {
-                    (showLabel, labelText) = BuildMultiLineEdgeLabel(activityModel, viewNames);
+                    (showLabel, labelText) = BuildMultiLineEdgeLabel(activityModel, activityEdge.IsDummy, activityEdge.IsCritical, viewNames);
                 }
                 else
                 {
-                    (showLabel, labelText) = BuildSingleLineEdgeLabel(activityModel, viewNames);
+                    (showLabel, labelText) = BuildSingleLineEdgeLabel(activityModel, activityEdge.IsDummy, activityEdge.IsCritical, viewNames);
                 }
 
                 // Source == tail

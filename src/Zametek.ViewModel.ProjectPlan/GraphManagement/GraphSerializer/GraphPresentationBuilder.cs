@@ -74,6 +74,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     ForegroundColorHexCode = ResolveColorHexCode(activity, colorFormatLookup),
                     DashStyle = edgeFormatLookup.FindGraphEdgeDashStyle(isCritical, isDummy),
                     StrokeWeight = edgeFormatLookup.FindStrokeThickness(isCritical, isDummy),
+                    // Stamp the activity-state flags so the (now library-side) serializer can build
+                    // the edge label without the application's IsCritical()/IsDummy() rules.
+                    IsCritical = isCritical,
+                    IsDummy = isDummy,
                 };
             })];
 

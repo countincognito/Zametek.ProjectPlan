@@ -132,4 +132,19 @@
   <data name="Message_UnknownNodeBorderDashStyleValue" xml:space="preserve">
     <value>Unknown NodeBorderDashStyle value</value>
   </data>
+  <data name="Message_MismatchedEdgeIdsForHeadNodesInArrowGraph" xml:space="preserve">
+    <value>List of Edge IDs and Edges referenced by head Nodes do not match when building Arrow Graph</value>
+  </data>
+  <data name="Message_MismatchedEdgeIdsForTailNodesInArrowGraph" xml:space="preserve">
+    <value>List of Edge IDs and Edges referenced by tail Nodes do not match when building Arrow Graph</value>
+  </data>
+  <data name="Message_MismatchedNodeIdsAssociatedWithEdgesInArrowGraph" xml:space="preserve">
+    <value>List of Node IDs and Nodes associated with Edges do not match when building Arrow Graph</value>
+  </data>
+  <data name="Message_ArrowGraphDataContainMultipleStartNodes" xml:space="preserve">
+    <value>Arrow Graph Data contain more than one Start node</value>
+  </data>
+  <data name="Message_ArrowGraphDataContainMultipleEndNodes" xml:space="preserve">
+    <value>Arrow Graph Data contain more than one End node</value>
+  </data>
 </root>
