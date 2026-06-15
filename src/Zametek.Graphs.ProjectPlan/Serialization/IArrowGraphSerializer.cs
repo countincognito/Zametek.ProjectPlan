@@ -1,15 +1,13 @@
-using Zametek.Common.ProjectPlan;
-
 namespace Zametek.Graphs.ProjectPlan
 {
     public interface IArrowGraphSerializer
     {
-        byte[] BuildArrowGraphSvgData(ArrowGraphModel arrowGraph, BaseTheme baseTheme, bool viewNames);
+        byte[] BuildArrowGraphSvgData(DiagramGraphModel diagramGraph, GraphTheme theme);
 
-        GraphLayoutModel BuildArrowGraphLayout(ArrowGraphModel arrowGraph, BaseTheme baseTheme, bool viewNames);
+        GraphLayoutModel BuildArrowGraphLayout(DiagramGraphModel diagramGraph, GraphTheme theme);
 
-        byte[] BuildArrowGraphMLData(ArrowGraphModel arrowGraph, bool viewNames);
+        byte[] BuildArrowGraphMLData(DiagramGraphModel diagramGraph);
 
-        byte[] BuildArrowGraphVizData(ArrowGraphModel arrowGraph, bool viewNames);
+        byte[] BuildArrowGraphVizData(DiagramGraphModel diagramGraph);
     }
 }

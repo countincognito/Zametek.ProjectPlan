@@ -1,6 +1,4 @@
-﻿using Zametek.Common.ProjectPlan;
-
-namespace Zametek.Graphs.ProjectPlan
+﻿namespace Zametek.Graphs.ProjectPlan
 {
     public static class GraphMLBuilder
     {
@@ -39,8 +37,8 @@ namespace Zametek.Graphs.ProjectPlan
 
             string borderDashStyle = diagramNode.BorderDashStyle switch
             {
-                NodeBorderDashStyle.Normal => @"line",
-                NodeBorderDashStyle.Dashed => @"dashed",
+                GraphDashStyle.Normal => @"line",
+                GraphDashStyle.Dashed => @"dashed",
                 _ => throw new InvalidOperationException($@"{Messages.Message_UnknownNodeBorderDashStyleValue} ""{diagramNode.BorderDashStyle}"""),
             };
 
@@ -133,8 +131,8 @@ namespace Zametek.Graphs.ProjectPlan
             };
             string dashStyle = diagramEdge.DashStyle switch
             {
-                EdgeDashStyle.Normal => @"line",
-                EdgeDashStyle.Dashed => @"dashed",
+                GraphDashStyle.Normal => @"line",
+                GraphDashStyle.Dashed => @"dashed",
                 _ => throw new InvalidOperationException($@"{Messages.Message_UnknownEdgeDashStyleValue} ""{diagramEdge.DashStyle}"""),
             };
             outputEdge.data = new data

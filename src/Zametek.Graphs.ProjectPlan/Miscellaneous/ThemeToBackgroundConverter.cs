@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 using System.Globalization;
-using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Graphs.ProjectPlan
 {
@@ -16,13 +15,13 @@ namespace Zametek.Graphs.ProjectPlan
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value is BaseTheme baseTheme)
+            if (value is GraphTheme theme)
             {
-                if (baseTheme == BaseTheme.Light)
+                if (theme == GraphTheme.Light)
                 {
                     return s_LightThemeBackground;
                 }
-                if (baseTheme == BaseTheme.Dark)
+                if (theme == GraphTheme.Dark)
                 {
                     return s_DarkThemeBackground;
                 }

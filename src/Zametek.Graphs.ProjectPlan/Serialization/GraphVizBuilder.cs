@@ -1,5 +1,4 @@
 using System.Text;
-using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Graphs.ProjectPlan
 {
@@ -17,8 +16,8 @@ namespace Zametek.Graphs.ProjectPlan
                 string tooltip = node.Name ?? string.Empty;
                 string style = node.BorderDashStyle switch
                 {
-                    NodeBorderDashStyle.Normal => @"solid",
-                    NodeBorderDashStyle.Dashed => @"dashed",
+                    GraphDashStyle.Normal => @"solid",
+                    GraphDashStyle.Dashed => @"dashed",
                     _ => throw new NotSupportedException($@"{node.BorderDashStyle} is not supported"),
                 };
 
@@ -35,8 +34,8 @@ namespace Zametek.Graphs.ProjectPlan
                 string tooltip = edge.Name ?? string.Empty;
                 string style = edge.DashStyle switch
                 {
-                    EdgeDashStyle.Normal => @"solid",
-                    EdgeDashStyle.Dashed => @"dashed",
+                    GraphDashStyle.Normal => @"solid",
+                    GraphDashStyle.Dashed => @"dashed",
                     _ => throw new NotSupportedException($@"{edge.DashStyle} is not supported"),
                 };
                 string label = edge.ShowLabel ? edge.Label ?? string.Empty : string.Empty;

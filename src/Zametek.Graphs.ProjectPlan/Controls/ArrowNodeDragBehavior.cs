@@ -9,7 +9,7 @@ namespace Zametek.Graphs.ProjectPlan
     // Lets the user drag an interactive arrow-graph event node and select it on press. Pointer
     // positions are taken relative to the hosting Canvas, so dragging stays correct under the
     // surrounding zoom transform. e.Handled is set so the press does not also start a background pan
-    // of the viewport behind the graph. (Parallel to NodeDragBehavior, retargeted to the arrow seam.)
+    // of the viewport behind the graph. (Parallel to VertexNodeDragBehavior, retargeted to the arrow seam.)
     public class ArrowNodeDragBehavior
         : Behavior<Control>
     {

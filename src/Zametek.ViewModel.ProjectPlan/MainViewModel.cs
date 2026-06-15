@@ -912,7 +912,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                     catch (Exception ex)
                     {
-                        // The persisted dock layout is corrupt or incompatible — reset to default.
+                        // The persisted dock layout is corrupt or incompatible - reset to default.
                         Debug.WriteLine($"[MainViewModel] Failed to deserialize dock layout, resetting: {ex.Message}");
                         m_Layout = null;
                     }

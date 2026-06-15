@@ -1,7 +1,8 @@
-﻿using Zametek.Common.ProjectPlan;
-
 namespace Zametek.Graphs.ProjectPlan
 {
+    // A single edge in a DiagramGraphModel: what to draw for one graph edge, already resolved by the
+    // application (presentation, label text/visibility and hover tooltip). The serializer turns it
+    // into an MSAGL edge and a GraphML/GraphViz edge.
     [Serializable]
     public record DiagramEdgeModel
     {
@@ -13,7 +14,7 @@ namespace Zametek.Graphs.ProjectPlan
 
         public int TargetId { get; init; }
 
-        public EdgeDashStyle DashStyle { get; init; }
+        public GraphDashStyle DashStyle { get; init; }
 
         public string? ForegroundColorHexCode { get; init; }
 
@@ -22,5 +23,8 @@ namespace Zametek.Graphs.ProjectPlan
         public string? Label { get; init; }
 
         public bool ShowLabel { get; init; }
+
+        // Hover tooltip for the interactive control; carried through to GraphLayoutModel.
+        public string? Tooltip { get; init; }
     }
 }

@@ -34,7 +34,7 @@
          anywhere stay reachable. -->
     <Border Name="viewport"
             ClipToBounds="True"
-            Background="{Binding Path=BaseTheme, Mode=OneWay, Converter={StaticResource themeToBackgroundConverter}}"
+            Background="{Binding Path=Theme, Mode=OneWay, Converter={StaticResource themeToBackgroundConverter}}"
             PointerPressed="Viewport_PointerPressed"
             PointerMoved="Viewport_PointerMoved"
             PointerReleased="Viewport_PointerReleased"
@@ -118,7 +118,7 @@
                       Cursor="Hand"
                       ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}">
                   <i:Interaction.Behaviors>
-                    <g:NodeDragBehavior/>
+                    <g:VertexNodeDragBehavior/>
                   </i:Interaction.Behaviors>
                   <!-- Node body: fill + slack/override border, dashed for critical/dummy. -->
                   <Rectangle Fill="{Binding Path=FillBrush, Mode=OneWay}"

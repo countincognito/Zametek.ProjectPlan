@@ -145,6 +145,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(agm => agm.m_CoreViewModel.BaseTheme)
                 .ToProperty(this, agm => agm.BaseTheme);
 
+            // The interactive control binds to the library's own GraphTheme (mapped from BaseTheme).
+            m_Theme = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.BaseTheme)
+                .Select(x => x.ToGraphTheme())
+                .ToProperty(this, agm => agm.Theme);
+
             // Single live layout pass: the interactive node/edge graph is the on-screen
             // representation. The SVG is built lazily only when exporting (Save As), so a
             // recompile runs the MSAGL layout once rather than twice.
@@ -240,10 +246,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 return HasCompilationErrors
                     ? new GraphLayoutModel()
                     : m_VertexGraphExport.BuildVertexGraphLayout(
-                        GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings),
-                        m_CoreViewModel.BaseTheme,
-                        m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
+                        BuildVertexDiagram(),
+                        m_CoreViewModel.BaseTheme.ToGraphTheme());
             }
+        }
+
+        // Map the application's domain graph (with presentation resolved) into the library-neutral
+        // DiagramGraphModel the serializer consumes.
+        private DiagramGraphModel BuildVertexDiagram()
+        {
+            return VertexGraphDiagramBuilder.Build(
+                GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings));
         }
 
         // Discard every dragged position and rebuild from the default MSAGL layout, restoring the
@@ -479,6 +492,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<BaseTheme> m_BaseTheme;
         public BaseTheme BaseTheme => m_BaseTheme.Value;
 
+        private readonly ObservableAsPropertyHelper<GraphTheme> m_Theme;
+        public GraphTheme Theme => m_Theme.Value;
+
         public ICommand SaveVertexGraphImageFileCommand { get; }
 
         public async Task SaveVertexGraphImageFileAsync(string? filename)
@@ -505,11 +521,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ => isSkiaFormat = true)
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
                         {
-                            data = m_VertexGraphExport.BuildVertexGraphMLData(GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings), m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
+                            data = m_VertexGraphExport.BuildVertexGraphMLData(BuildVertexDiagram());
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
                         {
-                            data = m_VertexGraphExport.BuildVertexGraphVizData(GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings), m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
+                            data = m_VertexGraphExport.BuildVertexGraphVizData(BuildVertexDiagram());
                         })
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
 
@@ -557,9 +573,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (!HasCompilationErrors)
                 {
                     data = m_VertexGraphExport.BuildVertexGraphSvgData(
-                        GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings),
-                        m_CoreViewModel.BaseTheme,
-                        m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
+                        BuildVertexDiagram(),
+                        m_CoreViewModel.BaseTheme.ToGraphTheme());
                 }
             }
 
@@ -620,6 +635,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_ShowNames?.Dispose();
                 m_BaseTheme?.Dispose();
+                m_Theme?.Dispose();
             }
 
             m_Disposed = true;

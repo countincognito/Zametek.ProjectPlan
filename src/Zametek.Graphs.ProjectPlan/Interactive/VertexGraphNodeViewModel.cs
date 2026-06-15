@@ -1,7 +1,6 @@
 using Avalonia.Collections;
 using Avalonia.Media;
 using ReactiveUI;
-using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Graphs.ProjectPlan
 {
@@ -93,8 +92,7 @@ namespace Zametek.Graphs.ProjectPlan
             Color color = fallback;
             if (!string.IsNullOrWhiteSpace(hexCode))
             {
-                ColorFormatModel colorFormat = ColorHelper.HtmlHexCodeToColorFormat(hexCode);
-                color = ColorHelper.ColorFormatToAvaloniaColor(colorFormat);
+                color = ColorHelper.HtmlHexCodeToColor(hexCode);
             }
             return new SolidColorBrush(color);
         }

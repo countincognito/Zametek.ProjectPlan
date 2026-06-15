@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Graphs.ProjectPlan
 {
@@ -10,7 +9,7 @@ namespace Zametek.Graphs.ProjectPlan
     // raise change notifications (INotifyPropertyChanged) for the bound properties.
     public interface IInteractiveVertexGraph
     {
-        BaseTheme BaseTheme { get; }
+        GraphTheme Theme { get; }
 
         ObservableCollection<VertexGraphNodeViewModel> GraphNodes { get; }
 

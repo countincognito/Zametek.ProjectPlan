@@ -1,15 +1,13 @@
-﻿using Zametek.Common.ProjectPlan;
-
 namespace Zametek.Graphs.ProjectPlan
 {
     public interface IVertexGraphSerializer
     {
-        byte[] BuildVertexGraphSvgData(VertexGraphModel vertexGraph, BaseTheme baseTheme, bool viewNames);
+        byte[] BuildVertexGraphSvgData(DiagramGraphModel diagramGraph, GraphTheme theme);
 
-        GraphLayoutModel BuildVertexGraphLayout(VertexGraphModel vertexGraph, BaseTheme baseTheme, bool viewNames);
+        GraphLayoutModel BuildVertexGraphLayout(DiagramGraphModel diagramGraph, GraphTheme theme);
 
-        byte[] BuildVertexGraphMLData(VertexGraphModel vertexGraph, bool viewNames);
+        byte[] BuildVertexGraphMLData(DiagramGraphModel diagramGraph);
 
-        byte[] BuildVertexGraphVizData(VertexGraphModel vertexGraph, bool viewNames);
+        byte[] BuildVertexGraphVizData(DiagramGraphModel diagramGraph);
     }
 }

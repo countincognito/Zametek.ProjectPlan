@@ -1,15 +1,15 @@
 using Avalonia.Media;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Graphs.ProjectPlan
 {
     // A focused copy of the colour helpers the graph rendering needs, kept local to this library
     // so it does not depend on the application's ViewModel project. (The application keeps its own
     // fuller ColorHelper; a little redundancy here is deliberate to make the library standalone.)
-    // Internal so it never clashes with the application's public ColorHelper in consumers that
-    // import both namespaces.
+    // Works purely in HTML hex strings and Avalonia colours so the library carries no dependency on
+    // the application's ColorFormatModel. Internal so it never clashes with the application's public
+    // ColorHelper in consumers that import both namespaces.
     internal static class ColorHelper
     {
         public const byte AnnotationAFull = 255;
@@ -23,33 +23,12 @@ namespace Zametek.Graphs.ProjectPlan
 
         private static readonly Regex s_HtmlHexMatch = new(@"^#(([A-Fa-f0-9]{2}){3,4})$", RegexOptions.Compiled);
 
-        public static ColorFormatModel None()
-        {
-            return new ColorFormatModel
-            {
-                A = 0,
-                R = 0,
-                G = 0,
-                B = 0
-            };
-        }
-
-        public static Color ColorFormatToAvaloniaColor(ColorFormatModel color)
-        {
-            return Color.FromArgb(color.A, color.R, color.G, color.B);
-        }
-
         public static string ColorToHtmlHexCode(Color color)
         {
             return BytesToHtmlHexCode(color.R, color.G, color.B, color.A);
         }
 
-        public static string ColorFormatToHtmlHexCode(ColorFormatModel color)
-        {
-            return BytesToHtmlHexCode(color.R, color.G, color.B, color.A);
-        }
-
-        public static ColorFormatModel HtmlHexCodeToColorFormat(string input)
+        public static Color HtmlHexCodeToColor(string input)
         {
             MatchCollection matches = s_HtmlHexMatch.Matches(input);
 
@@ -61,27 +40,15 @@ namespace Zametek.Graphs.ProjectPlan
 
                 if (bytes.Length == 3)
                 {
-                    return new ColorFormatModel
-                    {
-                        R = bytes[0],
-                        G = bytes[1],
-                        B = bytes[2],
-                        A = byte.MaxValue
-                    };
+                    return Color.FromArgb(byte.MaxValue, bytes[0], bytes[1], bytes[2]);
                 }
                 else if (bytes.Length == 4)
                 {
-                    return new ColorFormatModel
-                    {
-                        R = bytes[0],
-                        G = bytes[1],
-                        B = bytes[2],
-                        A = bytes[3]
-                    };
+                    return Color.FromArgb(bytes[3], bytes[0], bytes[1], bytes[2]);
                 }
             }
 
-            return None();
+            return Color.FromArgb(0, 0, 0, 0);
         }
 
         public static string BytesToHtmlHexCode(byte r, byte g, byte b)

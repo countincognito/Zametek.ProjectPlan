@@ -1,27 +1,23 @@
 using Avalonia.Media;
-using System.Text;
 using System.Xml.Serialization;
-using Zametek.Common.ProjectPlan;
 using Zametek.Utility;
 
 namespace Zametek.Graphs.ProjectPlan
 {
+    // The arrow-graph layout/render engine. It consumes a library-neutral DiagramGraphModel (built
+    // by the application from its domain graph) and runs the MSAGL layout to produce SVG, GraphML,
+    // GraphViz, or the interactive GraphLayoutModel. It carries no dependency on the application's
+    // domain models - all label text, tooltips, presentation and validation are resolved upstream.
     public class ArrowGraphSerializer
         : IArrowGraphSerializer
     {
         #region Fields
 
-        private static readonly Dictionary<EdgeDashStyle, Microsoft.Msagl.Drawing.Style> s_EdgeDashMsaglLookup =
+        private static readonly Dictionary<GraphDashStyle, Microsoft.Msagl.Drawing.Style> s_DashMsaglLookup =
              new()
              {
-                {EdgeDashStyle.Normal, Microsoft.Msagl.Drawing.Style.Solid},
-                {EdgeDashStyle.Dashed, Microsoft.Msagl.Drawing.Style.Dashed}
-             };
-        private static readonly Dictionary<NodeBorderDashStyle, Microsoft.Msagl.Drawing.Style> s_NodeBorderDashMsaglLookup =
-             new()
-             {
-                {NodeBorderDashStyle.Normal, Microsoft.Msagl.Drawing.Style.Solid},
-                {NodeBorderDashStyle.Dashed, Microsoft.Msagl.Drawing.Style.Dashed}
+                {GraphDashStyle.Normal, Microsoft.Msagl.Drawing.Style.Solid},
+                {GraphDashStyle.Dashed, Microsoft.Msagl.Drawing.Style.Dashed}
              };
 
         private static readonly double s_SvgNodeWidth = 40.0;
@@ -30,26 +26,23 @@ namespace Zametek.Graphs.ProjectPlan
         private static readonly double s_SvgNodeLabelLines = 1.0;
         private static readonly double s_SvgRadiusInXDirection = 3.0;
         private static readonly double s_SvgRadiusInYDirection = 2.0;
-        private static readonly double s_SvgNodeLineThicknessCorrectionFactor = 1.0;
 
         private static readonly double s_SvgEdgeLabelFontSize = 12.0;
         private static readonly double s_SvgEdgeLabelHeight = 12.0;
         private static readonly Microsoft.Msagl.Drawing.FontStyle s_SvgNodeFontStyle = Microsoft.Msagl.Drawing.FontStyle.Regular;
 
-        private static readonly double s_DiagramNodeModelHeight = 26.0;
-        private static readonly double s_DiagramNodeModelWidth = 62.0;
-
-        // These need to be worked out through trial and error
-        // whenever s_SvgNodeLabelWidth is changed.
+        // These need to be worked out through trial and error whenever s_SvgNodeLabelWidth changes.
         private static readonly double s_SvgConsolasLabelWidthCorrectionFactor = s_SvgNodeLabelLines * s_SvgNodeLabelWidth / 14;
         private static readonly double s_SvgConsolasLabelHeightCorrectionFactor = 0.7;
-
-        private static readonly Color s_NodeFillColor = Colors.LightGray;
-        private static readonly Color s_NodeBorderColor = Colors.Black;
 
         private const double c_PxPerInch = 96;
         private const double c_PtPerInch = 72;
         private const string c_FontName = @"Consolas";
+
+        // MSAGL works in a Y-up coordinate space; the SVG writer flips this internally, so here we
+        // flip it ourselves and scale uniformly so the small layout boxes become a comfortable
+        // interactive size while preserving relative positions.
+        private const double c_InteractiveLayoutScale = 2.5;
 
         private readonly IMsaglSvgRenderer m_MsaglSvgRenderer;
 
@@ -65,292 +58,46 @@ namespace Zametek.Graphs.ProjectPlan
 
         #endregion
 
+        public byte[] BuildArrowGraphSvgData(DiagramGraphModel diagramGraph, GraphTheme theme)
+        {
+            Microsoft.Msagl.Drawing.Graph drawingGraph = BuildAndLayoutDrawingGraph(diagramGraph, theme);
+            return m_MsaglSvgRenderer.RenderToSvg(drawingGraph, theme);
+        }
+
+        public GraphLayoutModel BuildArrowGraphLayout(DiagramGraphModel diagramGraph, GraphTheme theme)
+        {
+            Microsoft.Msagl.Drawing.Graph drawingGraph = BuildAndLayoutDrawingGraph(diagramGraph, theme);
+            return ExtractLayout(drawingGraph, diagramGraph);
+        }
+
+        public byte[] BuildArrowGraphMLData(DiagramGraphModel diagramGraph)
+        {
+            ArgumentNullException.ThrowIfNull(diagramGraph);
+            graphml graphML = GraphMLBuilder.ToGraphML(diagramGraph);
+            using var ms = new MemoryStream();
+            var xmlSerializer = new XmlSerializer(typeof(graphml));
+            xmlSerializer.Serialize(ms, graphML);
+            ms.Position = 0;
+            using var sr = new StreamReader(ms);
+            string content = sr.ReadToEnd();
+            return content.StringToByteArray();
+        }
+
+        public byte[] BuildArrowGraphVizData(DiagramGraphModel diagramGraph)
+        {
+            ArgumentNullException.ThrowIfNull(diagramGraph);
+            string graphviz = GraphVizBuilder.ToGraphViz(diagramGraph);
+            return graphviz.StringToByteArray();
+        }
+
         #region Private Methods
 
-        private static string BuildNodeLabel(EventModel eventModel)
+        private Microsoft.Msagl.Drawing.Graph BuildAndLayoutDrawingGraph(
+            DiagramGraphModel diagramGraph,
+            GraphTheme theme)
         {
-            ArgumentNullException.ThrowIfNull(eventModel);
-            string labelText = string.Empty;
+            ArgumentNullException.ThrowIfNull(diagramGraph);
 
-            if (eventModel.EarliestFinishTime is not null
-                && eventModel.LatestFinishTime is not null)
-            {
-                labelText = $@"{eventModel.EarliestFinishTime}|{eventModel.LatestFinishTime}";
-            }
-
-            return labelText;
-        }
-
-        private static DiagramNodeModel BuildDiagramNode(EventNodeModel eventNode)
-        {
-            ArgumentNullException.ThrowIfNull(eventNode);
-            EventModel eventModel = eventNode.Content;
-
-            string text = BuildNodeLabel(eventModel);
-
-            return new DiagramNodeModel
-            {
-                Id = eventModel.Id,
-                Height = s_DiagramNodeModelHeight,
-                Width = s_DiagramNodeModelWidth,
-                FillColorHexCode = ColorHelper.ColorToHtmlHexCode(s_NodeFillColor),
-                BorderColorHexCode = eventNode.BorderColorHexCode ?? ColorHelper.ColorToHtmlHexCode(s_NodeBorderColor),
-                BorderDashStyle = eventNode.BorderDashStyle,
-                BorderThickness = eventNode.BorderWeight * s_SvgNodeLineThicknessCorrectionFactor,
-                Text = text,
-                Name = text,
-            };
-        }
-
-        private static (bool isVisible, string labelText) BuildSingleLineEdgeLabel(ActivityModel activityModel, bool isDummy, bool isCritical, bool viewNames)
-        {
-            ArgumentNullException.ThrowIfNull(activityModel);
-            var labelText = new StringBuilder();
-            bool isVisible = false;
-
-            if (isDummy)
-            {
-                if (!activityModel.CanBeRemoved)
-                {
-                    labelText.Append(@$"{activityModel.Id}");
-                    if (viewNames)
-                    {
-                        labelText.Append(@$" {activityModel.Name}");
-                    }
-                    if (!isCritical)
-                    {
-                        labelText.Append(@$" [{activityModel.FreeSlack}|{activityModel.TotalSlack}]");
-                    }
-                    isVisible = true;
-                }
-                else
-                {
-                    if (!isCritical)
-                    {
-                        labelText.Append(@$"[{activityModel.FreeSlack}|{activityModel.TotalSlack}]");
-                        isVisible = true;
-                    }
-                }
-            }
-            else
-            {
-                labelText.Append(@$"{activityModel.Id}");
-                if (viewNames)
-                {
-                    labelText.Append(@$" {activityModel.Name}");
-                }
-                labelText.Append(@$" ({activityModel.Duration})");
-                if (!isCritical)
-                {
-                    labelText.Append(@$" [{activityModel.FreeSlack}|{activityModel.TotalSlack}]");
-                }
-                isVisible = true;
-            }
-            return (isVisible, labelText.ToString());
-        }
-
-        private static (bool isVisible, string labelText) BuildMultiLineEdgeLabel(ActivityModel activityModel, bool isDummy, bool isCritical, bool viewNames)
-        {
-            ArgumentNullException.ThrowIfNull(activityModel);
-            var labelText = new StringBuilder();
-            bool isVisible = false;
-
-            if (isDummy)
-            {
-                if (!activityModel.CanBeRemoved)
-                {
-                    labelText.AppendFormat($@"{activityModel.Id}");
-                    if (viewNames)
-                    {
-                        labelText.AppendFormat(@$" {activityModel.Name}");
-                    }
-                    if (!isCritical)
-                    {
-                        labelText.AppendLine();
-                        labelText.AppendFormat($@"{activityModel.FreeSlack}|{activityModel.TotalSlack}");
-                    }
-                    isVisible = true;
-                }
-                else
-                {
-                    if (!isCritical)
-                    {
-                        labelText.AppendFormat($@"{activityModel.FreeSlack}|{activityModel.TotalSlack}");
-                        isVisible = true;
-                    }
-                }
-            }
-            else
-            {
-                labelText.AppendFormat($@"{activityModel.Id}");
-                if (viewNames)
-                {
-                    labelText.AppendFormat(@$" {activityModel.Name}");
-                }
-                labelText.AppendFormat($@" ({activityModel.Duration})");
-                if (!isCritical)
-                {
-                    labelText.AppendLine();
-                    labelText.AppendFormat($@"{activityModel.FreeSlack}|{activityModel.TotalSlack}");
-                }
-                isVisible = true;
-            }
-            return (isVisible, labelText.ToString());
-        }
-
-        private static DiagramGraphModel BuildGraphDiagram(
-            ArrowGraphModel arrowGraphModel,
-            bool multiLineEdgeLabels = false,
-            bool viewNames = false)
-        {
-            ArgumentNullException.ThrowIfNull(arrowGraphModel);
-            // Perform validity check.
-            IList<EventNodeModel> nodeModels = arrowGraphModel.Nodes;
-            IDictionary<int, EventNodeModel> nodeModelLookup = nodeModels.ToDictionary(x => x.Content.Id);
-
-            var edgeHeadNodeLookup = new Dictionary<int, int>();
-            var edgeTailNodeLookup = new Dictionary<int, int>();
-            var drawingGraphNodeIds = new List<int>();
-
-            foreach (EventNodeModel node in nodeModels)
-            {
-                int nodeId = node.Content.Id;
-                drawingGraphNodeIds.Add(nodeId);
-
-                foreach (int edgeId in node.IncomingEdges)
-                {
-                    edgeHeadNodeLookup.Add(edgeId, nodeId);
-                }
-                foreach (int edgeId in node.OutgoingEdges)
-                {
-                    edgeTailNodeLookup.Add(edgeId, nodeId);
-                }
-            }
-
-            // Check all edges are used.
-            IList<ActivityEdgeModel> edgeModels = arrowGraphModel.Edges;
-            IDictionary<int, ActivityEdgeModel> edgeModelLookup = edgeModels.ToDictionary(x => x.Content.Id);
-            IEnumerable<int> edgeIds = edgeModelLookup.Keys;
-
-            if (!edgeIds.OrderBy(x => x).SequenceEqual(edgeHeadNodeLookup.Keys.OrderBy(x => x)))
-            {
-                throw new ArgumentException(Messages.Message_MismatchedEdgeIdsForHeadNodesInArrowGraph);
-            }
-            if (!edgeIds.OrderBy(x => x).SequenceEqual(edgeTailNodeLookup.Keys.OrderBy(x => x)))
-            {
-                throw new ArgumentException(Messages.Message_MismatchedEdgeIdsForTailNodesInArrowGraph);
-            }
-
-            // Check all events are used.
-            IEnumerable<int> edgeNodeLookupIds = edgeHeadNodeLookup.Values.Union(edgeTailNodeLookup.Values);
-
-            if (!drawingGraphNodeIds.OrderBy(x => x).SequenceEqual(edgeNodeLookupIds.OrderBy(x => x)))
-            {
-                throw new ArgumentException(Messages.Message_MismatchedNodeIdsAssociatedWithEdgesInArrowGraph);
-            }
-
-            // Check Start and End nodes.
-            IEnumerable<EventNodeModel> startNodes = nodeModels.Where(x => x.NodeType == Maths.Graphs.NodeType.Start);
-            if (startNodes.Count() > 1)
-            {
-                throw new ArgumentException(Messages.Message_ArrowGraphDataContainMultipleStartNodes);
-            }
-
-            IEnumerable<EventNodeModel> endNodes = nodeModels.Where(x => x.NodeType == Maths.Graphs.NodeType.End);
-            if (endNodes.Count() > 1)
-            {
-                throw new ArgumentException(Messages.Message_ArrowGraphDataContainMultipleEndNodes);
-            }
-
-            // Fill the graph. Presentation (border/edge colour, dash, weight) is resolved by the
-            // application beforehand and read straight off the models here; only the labels (which
-            // depend on the per-call viewNames/multiLine options) are still built here.
-            List<DiagramNodeModel> diagramNodeModels = nodeModels.Select(BuildDiagramNode).ToList();
-            List<DiagramEdgeModel> diagramEdgeModels = [];
-
-            foreach (ActivityEdgeModel activityEdge in edgeModels)
-            {
-                ActivityModel activityModel = activityEdge.Content;
-                int activityId = activityModel.Id;
-                bool showLabel;
-                string labelText;
-
-                if (multiLineEdgeLabels)
-                {
-                    (showLabel, labelText) = BuildMultiLineEdgeLabel(activityModel, activityEdge.IsDummy, activityEdge.IsCritical, viewNames);
-                }
-                else
-                {
-                    (showLabel, labelText) = BuildSingleLineEdgeLabel(activityModel, activityEdge.IsDummy, activityEdge.IsCritical, viewNames);
-                }
-
-                // Source == tail
-                // Target == head
-                var diagramEdgeModel = new DiagramEdgeModel
-                {
-                    Id = activityId,
-                    Name = activityModel.Name,
-                    SourceId = edgeTailNodeLookup[activityId],
-                    TargetId = edgeHeadNodeLookup[activityId],
-                    DashStyle = activityEdge.DashStyle,
-                    ForegroundColorHexCode = activityEdge.ForegroundColorHexCode,
-                    StrokeThickness = activityEdge.StrokeWeight,
-                    Label = labelText,
-                    ShowLabel = showLabel,
-                };
-
-                diagramEdgeModels.Add(diagramEdgeModel);
-            }
-
-            return new DiagramGraphModel
-            {
-                Nodes = diagramNodeModels,
-                Edges = diagramEdgeModels
-            };
-        }
-
-        private static Microsoft.Msagl.Drawing.Color? HtmlHexCodeToMsaglColor(string? input)
-        {
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                return null;
-            }
-
-            ColorFormatModel colorFormat = ColorHelper.HtmlHexCodeToColorFormat(input);
-
-            return new Microsoft.Msagl.Drawing.Color
-            {
-                A = colorFormat.A,
-                R = colorFormat.R,
-                G = colorFormat.G,
-                B = colorFormat.B
-            };
-        }
-
-        private static Microsoft.Msagl.Drawing.Color EdgeFontColor(BaseTheme baseTheme)
-        {
-            if (baseTheme == BaseTheme.Light)
-            {
-                return Microsoft.Msagl.Drawing.Color.Black;
-            }
-            if (baseTheme == BaseTheme.Dark)
-            {
-                return Microsoft.Msagl.Drawing.Color.White;
-            }
-            return Microsoft.Msagl.Drawing.Color.Black;
-        }
-
-        #endregion
-
-        private (Microsoft.Msagl.Drawing.Graph DrawingGraph, DiagramGraphModel Diagram) BuildAndLayoutDrawingGraph(
-            ArrowGraphModel arrowGraph,
-            BaseTheme baseTheme,
-            bool viewNames)
-        {
-            ArgumentNullException.ThrowIfNull(arrowGraph);
-            DiagramGraphModel diagramGraph = BuildGraphDiagram(arrowGraph, viewNames: viewNames);
-
-            // Fill the graph.
             var drawingGraph = new Microsoft.Msagl.Drawing.Graph();
 
             foreach (DiagramNodeModel diagramNode in diagramGraph.Nodes)
@@ -369,12 +116,12 @@ namespace Zametek.Graphs.ProjectPlan
                     Microsoft.Msagl.Drawing.ConnectionToGraph.Connected);
 
                 edge.Attr.ClearStyles();
-                edge.Attr.AddStyle(s_EdgeDashMsaglLookup[diagramEdge.DashStyle]);
+                edge.Attr.AddStyle(s_DashMsaglLookup[diagramEdge.DashStyle]);
                 edge.Attr.Color = HtmlHexCodeToMsaglColor(diagramEdge.ForegroundColorHexCode) ?? Microsoft.Msagl.Drawing.Color.Black;
                 edge.Attr.LineWidth = diagramEdge.StrokeThickness;
                 edge.LabelText = diagramEdge.Label;
                 edge.Label.IsVisible = diagramEdge.ShowLabel;
-                edge.Label.FontColor = EdgeFontColor(baseTheme);
+                edge.Label.FontColor = EdgeFontColor(theme);
 
                 drawingGraph.AddPrecalculatedEdge(edge);
             }
@@ -419,7 +166,7 @@ namespace Zametek.Graphs.ProjectPlan
                 drawingGraphNode.Label.FontStyle = s_SvgNodeFontStyle;
 
                 drawingGraphNode.Label.FontName = c_FontName;
-                drawingGraphNode.Attr.AddStyle(s_NodeBorderDashMsaglLookup[diagramNode.BorderDashStyle]);
+                drawingGraphNode.Attr.AddStyle(s_DashMsaglLookup[diagramNode.BorderDashStyle]);
                 drawingGraphNode.Attr.FillColor = HtmlHexCodeToMsaglColor(diagramNode.FillColorHexCode) ?? Microsoft.Msagl.Drawing.Color.LightGray;
                 drawingGraphNode.Attr.Color = HtmlHexCodeToMsaglColor(diagramNode.BorderColorHexCode) ?? Microsoft.Msagl.Drawing.Color.Black;
                 drawingGraphNode.Attr.LineWidth = diagramNode.BorderThickness;
@@ -440,51 +187,18 @@ namespace Zametek.Graphs.ProjectPlan
 
             Microsoft.Msagl.Miscellaneous.LayoutHelpers.CalculateLayout(drawingGraph.GeometryGraph, drawingGraph.LayoutAlgorithmSettings, null);
 
-            return (drawingGraph, diagramGraph);
-        }
-
-        public byte[] BuildArrowGraphSvgData(
-            ArrowGraphModel arrowGraph,
-            BaseTheme baseTheme,
-            bool viewNames)
-        {
-            (Microsoft.Msagl.Drawing.Graph drawingGraph, _) =
-                BuildAndLayoutDrawingGraph(arrowGraph, baseTheme, viewNames);
-
-            return m_MsaglSvgRenderer.RenderToSvg(drawingGraph, baseTheme);
-        }
-
-        // Produce on-screen geometry for the interactive arrow-graph control, reusing the same
-        // MSAGL layout that drives the SVG. MSAGL works in a Y-up coordinate space; the SVG writer
-        // flips this internally, so here we flip it ourselves and scale uniformly so the small
-        // layout boxes become a comfortable interactive size while preserving relative positions.
-        private const double c_InteractiveLayoutScale = 2.5;
-
-        public GraphLayoutModel BuildArrowGraphLayout(
-            ArrowGraphModel arrowGraph,
-            BaseTheme baseTheme,
-            bool viewNames)
-        {
-            (Microsoft.Msagl.Drawing.Graph drawingGraph, DiagramGraphModel diagramGraph) =
-                BuildAndLayoutDrawingGraph(arrowGraph, baseTheme, viewNames);
-
-            return ExtractLayout(drawingGraph, diagramGraph, arrowGraph);
+            return drawingGraph;
         }
 
         private static GraphLayoutModel ExtractLayout(
             Microsoft.Msagl.Drawing.Graph drawingGraph,
-            DiagramGraphModel diagramGraph,
-            ArrowGraphModel arrowGraph)
+            DiagramGraphModel diagramGraph)
         {
             Microsoft.Msagl.Core.Geometry.Rectangle boundingBox = drawingGraph.GeometryGraph.BoundingBox;
             double graphLeft = boundingBox.Left;
             double graphTop = boundingBox.Top; // Largest Y in MSAGL's Y-up space.
 
             Dictionary<int, DiagramNodeModel> diagramNodeLookup = diagramGraph.Nodes.ToDictionary(x => x.Id);
-            Dictionary<int, EventModel> eventLookup = arrowGraph.Nodes
-                .Select(x => x.Content)
-                .Where(x => x is not null)
-                .ToDictionary(x => x.Id);
 
             var nodes = new List<GraphNodeLayoutModel>();
 
@@ -509,8 +223,6 @@ namespace Zametek.Graphs.ProjectPlan
                 double centreX = geometryNode.Center.X - graphLeft;
                 double centreY = graphTop - geometryNode.Center.Y;
 
-                eventLookup.TryGetValue(id, out EventModel? eventModel);
-
                 nodes.Add(new GraphNodeLayoutModel
                 {
                     Id = id,
@@ -520,20 +232,13 @@ namespace Zametek.Graphs.ProjectPlan
                     Height = height * c_InteractiveLayoutScale,
                     Label = diagramNode.Text ?? string.Empty,
                     Name = diagramNode.Name,
-                    Tooltip = BuildNodeTooltip(eventModel, diagramNode),
+                    Tooltip = diagramNode.Tooltip,
                     FillColorHexCode = diagramNode.FillColorHexCode,
                     BorderColorHexCode = diagramNode.BorderColorHexCode,
                     BorderThickness = diagramNode.BorderThickness,
-                    IsDashed = diagramNode.BorderDashStyle == NodeBorderDashStyle.Dashed,
+                    IsDashed = diagramNode.BorderDashStyle == GraphDashStyle.Dashed,
                 });
             }
-
-            // Activity edges carry the same rich tooltip the vertex graph puts on its activity
-            // nodes (both represent activities). The diagram edge id is the activity id.
-            Dictionary<int, ActivityModel> activityLookup = arrowGraph.Edges
-                .Select(x => x.Content)
-                .Where(x => x is not null)
-                .ToDictionary(x => x.Id);
 
             List<GraphEdgeLayoutModel> edges = diagramGraph.Edges
                 .Select(x => new GraphEdgeLayoutModel
@@ -542,11 +247,11 @@ namespace Zametek.Graphs.ProjectPlan
                     SourceId = x.SourceId,
                     TargetId = x.TargetId,
                     StrokeThickness = x.StrokeThickness,
-                    IsDashed = x.DashStyle == EdgeDashStyle.Dashed,
+                    IsDashed = x.DashStyle == GraphDashStyle.Dashed,
                     ForegroundColorHexCode = x.ForegroundColorHexCode,
                     Label = x.Label,
                     ShowLabel = x.ShowLabel,
-                    Tooltip = BuildEdgeTooltip(activityLookup.GetValueOrDefault(x.Id), x),
+                    Tooltip = x.Tooltip,
                 })
                 .ToList();
 
@@ -559,63 +264,37 @@ namespace Zametek.Graphs.ProjectPlan
             };
         }
 
-        private static string BuildNodeTooltip(EventModel? eventModel, DiagramNodeModel diagramNode)
+        private static Microsoft.Msagl.Drawing.Color? HtmlHexCodeToMsaglColor(string? input)
         {
-            if (eventModel is null)
+            if (string.IsNullOrWhiteSpace(input))
             {
-                return diagramNode.Name ?? diagramNode.Text ?? string.Empty;
+                return null;
             }
 
-            static string Format(int? value) => value?.ToString() ?? @"-";
+            Color color = ColorHelper.HtmlHexCodeToColor(input);
 
-            return $@"EF: {Format(eventModel.EarliestFinishTime)}   LF: {Format(eventModel.LatestFinishTime)}";
-        }
-
-        // Mirrors the vertex graph's activity-node tooltip: an activity edge and a vertex node both
-        // represent an activity, so both surface the same id/duration/times/slack information.
-        private static string BuildEdgeTooltip(ActivityModel? activity, DiagramEdgeModel diagramEdge)
-        {
-            if (activity is null)
+            return new Microsoft.Msagl.Drawing.Color
             {
-                return diagramEdge.Name ?? diagramEdge.Label ?? string.Empty;
-            }
+                A = color.A,
+                R = color.R,
+                G = color.G,
+                B = color.B
+            };
+        }
 
-            static string Format(int? value) => value?.ToString() ?? @"-";
-
-            var builder = new StringBuilder();
-            if (!string.IsNullOrWhiteSpace(activity.Name))
+        private static Microsoft.Msagl.Drawing.Color EdgeFontColor(GraphTheme theme)
+        {
+            if (theme == GraphTheme.Light)
             {
-                builder.AppendLine(activity.Name);
+                return Microsoft.Msagl.Drawing.Color.Black;
             }
-            builder.AppendLine($@"Id: {activity.Id}   Duration: {activity.Duration}");
-            builder.AppendLine($@"ES: {Format(activity.EarliestStartTime)}   EF: {Format(activity.EarliestFinishTime)}");
-            builder.AppendLine($@"LS: {Format(activity.LatestStartTime)}   LF: {Format(activity.LatestFinishTime)}");
-            builder.Append($@"Free slack: {Format(activity.FreeSlack)}   Total slack: {Format(activity.TotalSlack)}");
-            return builder.ToString();
+            if (theme == GraphTheme.Dark)
+            {
+                return Microsoft.Msagl.Drawing.Color.White;
+            }
+            return Microsoft.Msagl.Drawing.Color.Black;
         }
 
-        public byte[] BuildArrowGraphMLData(
-            ArrowGraphModel arrowGraph,
-            bool viewNames)
-        {
-            DiagramGraphModel diagramGraph = BuildGraphDiagram(arrowGraph, multiLineEdgeLabels: true, viewNames: viewNames);
-            graphml graphML = GraphMLBuilder.ToGraphML(diagramGraph);
-            using var ms = new MemoryStream();
-            var xmlSerializer = new XmlSerializer(typeof(graphml));
-            xmlSerializer.Serialize(ms, graphML);
-            ms.Position = 0;
-            using var sr = new StreamReader(ms);
-            string content = sr.ReadToEnd();
-            return content.StringToByteArray();
-        }
-
-        public byte[] BuildArrowGraphVizData(
-            ArrowGraphModel arrowGraph,
-            bool viewNames)
-        {
-            DiagramGraphModel diagramGraph = BuildGraphDiagram(arrowGraph, multiLineEdgeLabels: true, viewNames: viewNames);
-            string graphviz = GraphVizBuilder.ToGraphViz(diagramGraph);
-            return graphviz.StringToByteArray();
-        }
+        #endregion
     }
 }

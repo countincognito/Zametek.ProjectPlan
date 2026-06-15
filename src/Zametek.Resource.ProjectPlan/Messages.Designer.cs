@@ -698,5 +698,77 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Message_VertexGraphDataContainsNoStartNodes", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to List of Edge IDs and Edges referenced by head Nodes do not match when building Vertex Graph.
+        /// </summary>
+        public static string Message_MismatchedEdgeIdsForHeadNodesInVertexGraph {
+            get {
+                return ResourceManager.GetString("Message_MismatchedEdgeIdsForHeadNodesInVertexGraph", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to List of Edge IDs and Edges referenced by tail Nodes do not match when building Vertex Graph.
+        /// </summary>
+        public static string Message_MismatchedEdgeIdsForTailNodesInVertexGraph {
+            get {
+                return ResourceManager.GetString("Message_MismatchedEdgeIdsForTailNodesInVertexGraph", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to List of Node IDs and Nodes associated with Edges do not match when building Vertex Graph.
+        /// </summary>
+        public static string Message_MismatchedNodeIdsAssociatedWithEdgesInVertexGraph {
+            get {
+                return ResourceManager.GetString("Message_MismatchedNodeIdsAssociatedWithEdgesInVertexGraph", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to List of Edge IDs and Edges referenced by head Nodes do not match when building Arrow Graph.
+        /// </summary>
+        public static string Message_MismatchedEdgeIdsForHeadNodesInArrowGraph {
+            get {
+                return ResourceManager.GetString("Message_MismatchedEdgeIdsForHeadNodesInArrowGraph", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to List of Edge IDs and Edges referenced by tail Nodes do not match when building Arrow Graph.
+        /// </summary>
+        public static string Message_MismatchedEdgeIdsForTailNodesInArrowGraph {
+            get {
+                return ResourceManager.GetString("Message_MismatchedEdgeIdsForTailNodesInArrowGraph", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to List of Node IDs and Nodes associated with Edges do not match when building Arrow Graph.
+        /// </summary>
+        public static string Message_MismatchedNodeIdsAssociatedWithEdgesInArrowGraph {
+            get {
+                return ResourceManager.GetString("Message_MismatchedNodeIdsAssociatedWithEdgesInArrowGraph", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Arrow Graph Data contain more than one Start node.
+        /// </summary>
+        public static string Message_ArrowGraphDataContainMultipleStartNodes {
+            get {
+                return ResourceManager.GetString("Message_ArrowGraphDataContainMultipleStartNodes", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Arrow Graph Data contain more than one End node.
+        /// </summary>
+        public static string Message_ArrowGraphDataContainMultipleEndNodes {
+            get {
+                return ResourceManager.GetString("Message_ArrowGraphDataContainMultipleEndNodes", resourceCulture);
+            }
+        }
     }
 }

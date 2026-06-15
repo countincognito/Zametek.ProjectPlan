@@ -34,7 +34,7 @@
          anywhere stay reachable. -->
     <Border Name="viewport"
             ClipToBounds="True"
-            Background="{Binding Path=BaseTheme, Mode=OneWay, Converter={StaticResource themeToBackgroundConverter}}"
+            Background="{Binding Path=Theme, Mode=OneWay, Converter={StaticResource themeToBackgroundConverter}}"
             PointerPressed="Viewport_PointerPressed"
             PointerMoved="Viewport_PointerMoved"
             PointerReleased="Viewport_PointerReleased"

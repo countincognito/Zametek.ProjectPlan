@@ -1,9 +1,13 @@
 namespace Zametek.Graphs.ProjectPlan
 {
-    // View-agnostic, laid-out graph geometry produced from the MSAGL layout pass.
-    // Unlike DiagramGraphModel (which feeds the SVG/GraphML/GraphViz serializers),
-    // this carries resolved on-screen coordinates so an interactive control can place
-    // real Avalonia controls. Coordinates are top-left origin, Y increasing downward.
+    // The *output* of the MSAGL layout pass: view-agnostic, laid-out graph geometry. Where
+    // DiagramGraphModel is the coordinate-free *input* that says what to draw (and feeds the
+    // SVG/GraphML/GraphViz serializers), GraphLayoutModel is what comes back out once MSAGL has
+    // placed everything - it carries resolved on-screen coordinates and sizes so the interactive
+    // control can position real Avalonia controls for each node and draw live edges between them.
+    // Coordinates are top-left origin, Y increasing downward. Presentation already resolved on the
+    // diagram is copied through (colours/dash/thickness/labels/tooltips) so the control needs
+    // nothing from the domain models.
     [Serializable]
     public record GraphLayoutModel
     {

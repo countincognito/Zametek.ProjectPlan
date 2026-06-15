@@ -8,7 +8,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// <summary>
     /// Edge-case tests for ProjectScenarioHelper.RefineIdMaps that are not
     /// covered by the fixture-driven theory tests.
-    /// All tests call RefineIdMaps directly — no file I/O is required.
+    /// All tests call RefineIdMaps directly - no file I/O is required.
     /// </summary>
     public class ProjectScenarioHelperEdgeCaseTests
     {
@@ -44,7 +44,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         [Fact]
         public void RefineIdMaps_SingleId_MappedToHigherValue_Returns_RequestedMap()
         {
-            // [5] remapped to [(5, 99)] — no conflicts, so the mapping is honoured exactly.
+            // [5] remapped to [(5, 99)] - no conflicts, so the mapping is honoured exactly.
             List<(int, int)> result = ProjectScenarioHelper.RefineIdMaps([5], [(5, 99)]);
             result.ShouldHaveSingleItem();
             result[0].ShouldBe((5, 99));
@@ -52,7 +52,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region No maps — identity
+        #region No maps - identity
 
         [Fact]
         public void RefineIdMaps_NoMaps_Returns_IdentityForAllOriginalIds()

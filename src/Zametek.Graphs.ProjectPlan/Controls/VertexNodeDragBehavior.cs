@@ -10,7 +10,7 @@ namespace Zametek.Graphs.ProjectPlan
     // are taken relative to the hosting Canvas, so dragging stays correct under the surrounding zoom
     // transform. e.Handled is set so the press does not also start a background pan of the viewport
     // behind the graph.
-    public class NodeDragBehavior
+    public class VertexNodeDragBehavior
         : Behavior<Control>
     {
         private bool m_IsDragging;

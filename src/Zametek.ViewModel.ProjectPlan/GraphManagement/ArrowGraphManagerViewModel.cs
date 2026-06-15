@@ -145,6 +145,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(agm => agm.m_CoreViewModel.BaseTheme)
                 .ToProperty(this, agm => agm.BaseTheme);
 
+            // The interactive control binds to the library's own GraphTheme (mapped from BaseTheme).
+            m_Theme = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.BaseTheme)
+                .Select(x => x.ToGraphTheme())
+                .ToProperty(this, agm => agm.Theme);
+
             // Single live layout pass: the interactive node/edge graph is the on-screen
             // representation. The SVG is built lazily only when exporting (Save As), so a
             // recompile runs the MSAGL layout once rather than twice.
@@ -240,10 +246,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 return HasCompilationErrors
                     ? new GraphLayoutModel()
                     : m_ArrowGraphExport.BuildArrowGraphLayout(
-                        GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings),
-                        m_CoreViewModel.BaseTheme,
-                        m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
+                        BuildArrowDiagram(multiLineEdgeLabels: false),
+                        m_CoreViewModel.BaseTheme.ToGraphTheme());
             }
+        }
+
+        // Map the application's domain graph (with presentation resolved) into the library-neutral
+        // DiagramGraphModel the serializer consumes. The interactive/SVG paths use single-line edge
+        // labels; the GraphML/GraphViz exports use multi-line labels.
+        private DiagramGraphModel BuildArrowDiagram(bool multiLineEdgeLabels)
+        {
+            return ArrowGraphDiagramBuilder.Build(
+                GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings),
+                multiLineEdgeLabels,
+                m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
         }
 
         // Discard every dragged position and rebuild from the default MSAGL layout, restoring the
@@ -272,7 +288,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ManualNodePositions.Remove(staleId);
             }
 
-            BaseTheme baseTheme = m_CoreViewModel.BaseTheme;
+            GraphTheme theme = m_CoreViewModel.BaseTheme.ToGraphTheme();
 
             var nodeLookup = new Dictionary<int, ArrowGraphNodeViewModel>();
             foreach (GraphNodeLayoutModel nodeLayout in layout.Nodes)
@@ -315,7 +331,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     edgeLayout.Label,
                     edgeLayout.ShowLabel,
                     edgeLayout.Tooltip,
-                    baseTheme));
+                    theme));
 
                 AddAdjacency(adjacency, edgeLayout.SourceId, edgeLayout.TargetId);
                 AddAdjacency(adjacency, edgeLayout.TargetId, edgeLayout.SourceId);
@@ -491,6 +507,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<BaseTheme> m_BaseTheme;
         public BaseTheme BaseTheme => m_BaseTheme.Value;
 
+        private readonly ObservableAsPropertyHelper<GraphTheme> m_Theme;
+        public GraphTheme Theme => m_Theme.Value;
+
         public ICommand SaveArrowGraphImageFileCommand { get; }
 
         public async Task SaveArrowGraphImageFileAsync(string? filename)
@@ -517,11 +536,11 @@ namespace Zametek.ViewModel.ProjectPlan
                         .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ => isSkiaFormat = true)
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
                         {
-                            data = m_ArrowGraphExport.BuildArrowGraphMLData(GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings), m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
+                            data = m_ArrowGraphExport.BuildArrowGraphMLData(BuildArrowDiagram(multiLineEdgeLabels: true));
                         })
                         .Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
                         {
-                            data = m_ArrowGraphExport.BuildArrowGraphVizData(GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings), m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
+                            data = m_ArrowGraphExport.BuildArrowGraphVizData(BuildArrowDiagram(multiLineEdgeLabels: true));
                         })
                         .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
 
@@ -569,9 +588,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (!HasCompilationErrors)
                 {
                     data = m_ArrowGraphExport.BuildArrowGraphSvgData(
-                        GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings),
-                        m_CoreViewModel.BaseTheme,
-                        m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
+                        BuildArrowDiagram(multiLineEdgeLabels: false),
+                        m_CoreViewModel.BaseTheme.ToGraphTheme());
                 }
             }
 
@@ -632,6 +650,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_ShowNames?.Dispose();
                 m_BaseTheme?.Dispose();
+                m_Theme?.Dispose();
             }
 
             m_Disposed = true;

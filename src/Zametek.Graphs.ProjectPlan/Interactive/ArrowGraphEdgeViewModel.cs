@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Media;
 using ReactiveUI;
-using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Graphs.ProjectPlan
 {
@@ -42,7 +41,7 @@ namespace Zametek.Graphs.ProjectPlan
             string? label,
             bool showLabel,
             string? tooltip,
-            BaseTheme baseTheme)
+            GraphTheme theme)
         {
             ArgumentNullException.ThrowIfNull(source);
             ArgumentNullException.ThrowIfNull(target);
@@ -55,7 +54,7 @@ namespace Zametek.Graphs.ProjectPlan
             Label = label ?? string.Empty;
             ShowLabel = showLabel && !string.IsNullOrEmpty(label);
             Tooltip = tooltip;
-            LabelBrush = baseTheme == BaseTheme.Dark ? s_DarkLabelBrush : s_LightLabelBrush;
+            LabelBrush = theme == GraphTheme.Dark ? s_DarkLabelBrush : s_LightLabelBrush;
 
             m_SourceSub = m_Source
                 .WhenAnyValue(x => x.X, x => x.Y)
@@ -218,8 +217,7 @@ namespace Zametek.Graphs.ProjectPlan
             {
                 return fallback;
             }
-            ColorFormatModel colorFormat = ColorHelper.HtmlHexCodeToColorFormat(hexCode);
-            return new SolidColorBrush(ColorHelper.ColorFormatToAvaloniaColor(colorFormat));
+            return new SolidColorBrush(ColorHelper.HtmlHexCodeToColor(hexCode));
         }
 
         public void Dispose()
