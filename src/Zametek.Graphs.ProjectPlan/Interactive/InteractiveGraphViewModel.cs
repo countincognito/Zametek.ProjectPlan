@@ -336,7 +336,8 @@ namespace Zametek.Graphs.ProjectPlan
                     edgeLayout.Label,
                     edgeLayout.ShowLabel,
                     edgeLayout.Tooltip,
-                    theme));
+                    theme,
+                    m_Config.EdgeRoutingMode));
 
                 AddAdjacency(adjacency, edgeLayout.SourceId, edgeLayout.TargetId);
                 AddAdjacency(adjacency, edgeLayout.TargetId, edgeLayout.SourceId);

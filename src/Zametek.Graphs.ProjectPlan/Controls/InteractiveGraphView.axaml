@@ -86,14 +86,12 @@
                 <Canvas>
                   <!-- Invisible wide hit area so a thin edge is easy to hover for its tooltip.
                        Transparent (not null) so it is hit-test visible; the tooltip is empty for
-                       graphs (e.g. vertex) whose edges carry none. -->
-                  <Line StartPoint="{Binding Path=StartPoint, Mode=OneWay}"
-                        EndPoint="{Binding Path=EndPoint, Mode=OneWay}"
+                       graphs (e.g. vertex) whose edges carry none. Follows the routed curve. -->
+                  <Path Data="{Binding Path=EdgeGeometry, Mode=OneWay}"
                         Stroke="Transparent"
                         StrokeThickness="14"
                         ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}"/>
-                  <Line StartPoint="{Binding Path=StartPoint, Mode=OneWay}"
-                        EndPoint="{Binding Path=EndPoint, Mode=OneWay}"
+                  <Path Data="{Binding Path=EdgeGeometry, Mode=OneWay}"
                         Stroke="{Binding Path=Stroke, Mode=OneWay}"
                         StrokeThickness="{Binding Path=StrokeThickness, Mode=OneWay}"
                         StrokeDashArray="{Binding Path=StrokeDashArray, Mode=OneWay}"

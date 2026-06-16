@@ -8,12 +8,24 @@ namespace Zametek.Graphs.ProjectPlan
         Bold
     }
 
-    // The MSAGL edge-routing strategy. Mapped to Microsoft.Msagl.Core.Routing.EdgeRoutingMode inside
-    // the serializer so the library's own configuration surface carries no MSAGL types.
+    // The edge-routing strategy. These mirror Microsoft.Msagl.Core.Routing.EdgeRoutingMode one-for-one
+    // (mapped inside the serializer, so the library's own configuration surface carries no MSAGL
+    // types), and they also drive the interactive view's client-side edge shape (see
+    // GraphEdgeGeometry): spline modes draw a smooth connector, straight modes a line, rectilinear
+    // modes an orthogonal right-angle path. The fixed-layout SVG export routes through MSAGL itself,
+    // so it honours each mode fully; the interactive view is a coarse local approximation (no obstacle
+    // avoidance, no edge bundling). Note that None and SplineBundling are passed straight through to
+    // MSAGL for the SVG export and may need extra MSAGL settings there; the shipped presets stay on
+    // the well-trodden Spline/SugiyamaSplines, so the other modes are opt-in for consumers.
     public enum GraphEdgeRoutingMode
     {
+        Spline,
+        SplineBundling,
+        StraightLine,
         SugiyamaSplines,
-        Spline
+        Rectilinear,
+        RectilinearToCenter,
+        None
     }
 
     // The single per-graph settings bundle that lets one interactive view-model and one serializer

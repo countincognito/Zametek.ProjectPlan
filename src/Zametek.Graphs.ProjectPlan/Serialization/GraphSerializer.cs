@@ -259,11 +259,21 @@ namespace Zametek.Graphs.ProjectPlan
                 : Microsoft.Msagl.Drawing.FontStyle.Regular;
         }
 
+        // One-for-one with Microsoft.Msagl.Core.Routing.EdgeRoutingMode, so the fixed-layout SVG
+        // export honours every mode exactly (the interactive view approximates them client-side).
         private static Microsoft.Msagl.Core.Routing.EdgeRoutingMode MapRoutingMode(GraphEdgeRoutingMode edgeRoutingMode)
         {
-            return edgeRoutingMode == GraphEdgeRoutingMode.Spline
-                ? Microsoft.Msagl.Core.Routing.EdgeRoutingMode.Spline
-                : Microsoft.Msagl.Core.Routing.EdgeRoutingMode.SugiyamaSplines;
+            return edgeRoutingMode switch
+            {
+                GraphEdgeRoutingMode.Spline => Microsoft.Msagl.Core.Routing.EdgeRoutingMode.Spline,
+                GraphEdgeRoutingMode.SplineBundling => Microsoft.Msagl.Core.Routing.EdgeRoutingMode.SplineBundling,
+                GraphEdgeRoutingMode.StraightLine => Microsoft.Msagl.Core.Routing.EdgeRoutingMode.StraightLine,
+                GraphEdgeRoutingMode.SugiyamaSplines => Microsoft.Msagl.Core.Routing.EdgeRoutingMode.SugiyamaSplines,
+                GraphEdgeRoutingMode.Rectilinear => Microsoft.Msagl.Core.Routing.EdgeRoutingMode.Rectilinear,
+                GraphEdgeRoutingMode.RectilinearToCenter => Microsoft.Msagl.Core.Routing.EdgeRoutingMode.RectilinearToCenter,
+                GraphEdgeRoutingMode.None => Microsoft.Msagl.Core.Routing.EdgeRoutingMode.None,
+                _ => Microsoft.Msagl.Core.Routing.EdgeRoutingMode.SugiyamaSplines,
+            };
         }
 
         private static Microsoft.Msagl.Drawing.Color? HtmlHexCodeToMsaglColor(string? input)

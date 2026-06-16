@@ -5,13 +5,14 @@ using ReactiveUI;
 
 namespace Zametek.Graphs.ProjectPlan
 {
-    // A directed graph edge: a straight line clipped to the source/target node borders with an
-    // arrowhead at the target, plus an optional label placed at the edge midpoint. Endpoints and
-    // label position are derived from the node positions and update live as nodes are dragged.
-    // The base colour is the supplied foreground colour (so e.g. the critical path shows through),
-    // defaulting to grey; selection overrides it with the highlight colour. The label is used by the
-    // arrow graph (activity edges) and left empty by the vertex graph. (Replaces the parallel
-    // ArrowGraphEdgeViewModel/VertexGraphEdgeViewModel - the arrow one was a superset of the vertex one.)
+    // A directed graph edge, drawn as one or more contiguous cubic-bezier segments clipped to the
+    // source and target node borders, with an arrowhead at the target and an optional label at the
+    // path midpoint. The GraphEdgeRoutingMode chooses the shape (spline modes draw a smooth horizontal
+    // connector, straight modes a line, rectilinear modes an orthogonal right-angle path); the
+    // geometry is computed client-side (see GraphEdgeGeometry) and updates live as nodes are dragged.
+    // The base colour is the supplied foreground colour (so e.g. the critical path shows
+    // through), defaulting to grey; selection overrides it with the highlight colour. The label is
+    // used by the arrow graph (activity edges) and left empty by the vertex graph.
     public class GraphEdgeViewModel
         : ReactiveObject, IDisposable
     {
@@ -30,6 +31,7 @@ namespace Zametek.Graphs.ProjectPlan
         private readonly GraphNodeViewModel m_Target;
         private readonly double m_BaseThickness;
         private readonly IBrush m_BaseBrush;
+        private readonly GraphEdgeRoutingMode m_RoutingMode;
         private readonly IDisposable m_SourceSub;
         private readonly IDisposable m_TargetSub;
 
@@ -43,7 +45,8 @@ namespace Zametek.Graphs.ProjectPlan
             string? label,
             bool showLabel,
             string? tooltip,
-            GraphTheme theme)
+            GraphTheme theme,
+            GraphEdgeRoutingMode routingMode)
         {
             ArgumentNullException.ThrowIfNull(source);
             ArgumentNullException.ThrowIfNull(target);
@@ -52,6 +55,7 @@ namespace Zametek.Graphs.ProjectPlan
             m_Target = target;
             m_BaseThickness = strokeThickness <= 0.0 ? 1.0 : strokeThickness;
             m_BaseBrush = ToBrush(foregroundColorHexCode, s_DefaultBrush);
+            m_RoutingMode = routingMode;
             StrokeDashArray = isDashed ? [3.0, 2.0] : null;
             Label = label ?? string.Empty;
             ShowLabel = showLabel && !string.IsNullOrEmpty(label);
@@ -77,6 +81,31 @@ namespace Zametek.Graphs.ProjectPlan
 
         public Point EndPoint => ClipToBorder(m_Target, m_Source);
 
+        // The edge's shape as contiguous cubic-bezier segments, chosen by the routing mode. Exposed so
+        // the export renderer can rebuild the same path in SkiaSharp.
+        internal IReadOnlyList<GraphEdgeSegment> EdgeSegments => GraphEdgeGeometry.BuildSegments(m_RoutingMode, StartPoint, EndPoint);
+
+        // The drawn edge: the bezier segments stitched into one open figure (a straight line for
+        // non-spline modes, a right-angle path for rectilinear modes). Bound by the view's <Path>.
+        public Geometry EdgeGeometry
+        {
+            get
+            {
+                IReadOnlyList<GraphEdgeSegment> segments = EdgeSegments;
+                var geometry = new StreamGeometry();
+                using (StreamGeometryContext context = geometry.Open())
+                {
+                    context.BeginFigure(segments[0].Start, isFilled: false);
+                    foreach (GraphEdgeSegment segment in segments)
+                    {
+                        context.CubicBezierTo(segment.Control1, segment.Control2, segment.End);
+                    }
+                    context.EndFigure(isClosed: false);
+                }
+                return geometry;
+            }
+        }
+
         public IList<Point> ArrowPoints => BuildArrowPoints();
 
         public AvaloniaList<double>? StrokeDashArray { get; }
@@ -89,7 +118,7 @@ namespace Zametek.Graphs.ProjectPlan
 
         public IBrush LabelBrush { get; }
 
-        // Top-left anchor for the label: the edge midpoint, lifted perpendicular to the line so it
+        // Top-left anchor for the label: the curve midpoint, lifted perpendicular to the chord so it
         // sits just off the edge rather than on top of it.
         public double LabelX => LabelAnchor.X;
 
@@ -134,6 +163,7 @@ namespace Zametek.Graphs.ProjectPlan
         {
             this.RaisePropertyChanged(nameof(StartPoint));
             this.RaisePropertyChanged(nameof(EndPoint));
+            this.RaisePropertyChanged(nameof(EdgeGeometry));
             this.RaisePropertyChanged(nameof(ArrowPoints));
             this.RaisePropertyChanged(nameof(LabelX));
             this.RaisePropertyChanged(nameof(LabelY));
@@ -143,23 +173,20 @@ namespace Zametek.Graphs.ProjectPlan
         {
             get
             {
-                Point start = StartPoint;
-                Point end = EndPoint;
-                double midX = (start.X + end.X) / 2.0;
-                double midY = (start.Y + end.Y) / 2.0;
+                Point mid = GraphEdgeGeometry.Midpoint(EdgeSegments);
 
-                double dx = end.X - start.X;
-                double dy = end.Y - start.Y;
+                double dx = EndPoint.X - StartPoint.X;
+                double dy = EndPoint.Y - StartPoint.Y;
                 double length = Math.Sqrt((dx * dx) + (dy * dy));
                 if (length < 1e-6)
                 {
-                    return new Point(midX, midY);
+                    return mid;
                 }
 
                 // Perpendicular unit vector, used to lift the label off the line.
                 double perpX = -dy / length;
                 double perpY = dx / length;
-                return new Point(midX + (perpX * c_LabelOffset), midY + (perpY * c_LabelOffset));
+                return new Point(mid.X + (perpX * c_LabelOffset), mid.Y + (perpY * c_LabelOffset));
             }
         }
 
@@ -187,15 +214,26 @@ namespace Zametek.Graphs.ProjectPlan
 
         private IList<Point> BuildArrowPoints()
         {
-            Point tip = EndPoint;
-            Point tail = StartPoint;
-            double dx = tip.X - tail.X;
-            double dy = tip.Y - tail.Y;
+            GraphEdgeSegment last = EdgeSegments[^1];
+            Point tip = last.End;
+
+            // Tangent at the tip = direction from the final segment's last control point to the tip, so
+            // the arrowhead follows the curve. (For a straight run the control point is on the chord,
+            // so this is the chord direction.)
+            double dx = tip.X - last.Control2.X;
+            double dy = tip.Y - last.Control2.Y;
             double length = Math.Sqrt((dx * dx) + (dy * dy));
 
             if (length < 1e-6)
             {
-                return [];
+                // Degenerate control point; fall back to the chord direction.
+                dx = tip.X - StartPoint.X;
+                dy = tip.Y - StartPoint.Y;
+                length = Math.Sqrt((dx * dx) + (dy * dy));
+                if (length < 1e-6)
+                {
+                    return [];
+                }
             }
 
             double unitX = dx / length;

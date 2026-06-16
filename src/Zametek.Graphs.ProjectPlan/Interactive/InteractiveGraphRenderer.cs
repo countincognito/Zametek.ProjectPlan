@@ -90,9 +90,19 @@ namespace Zametek.Graphs.ProjectPlan
                 using SKPathEffect? dash = BuildDash(edge.StrokeDashArray, thickness);
                 linePaint.PathEffect = dash;
 
-                Point start = edge.StartPoint;
-                Point end = edge.EndPoint;
-                canvas.DrawLine((float)start.X, (float)start.Y, (float)end.X, (float)end.Y, linePaint);
+                // Match the on-screen <Path>: the same contiguous bezier segments (a straight line for
+                // non-spline modes, an orthogonal path for rectilinear modes).
+                IReadOnlyList<GraphEdgeSegment> segments = edge.EdgeSegments;
+                using var path = new SKPath();
+                path.MoveTo((float)segments[0].Start.X, (float)segments[0].Start.Y);
+                foreach (GraphEdgeSegment segment in segments)
+                {
+                    path.CubicTo(
+                        (float)segment.Control1.X, (float)segment.Control1.Y,
+                        (float)segment.Control2.X, (float)segment.Control2.Y,
+                        (float)segment.End.X, (float)segment.End.Y);
+                }
+                canvas.DrawPath(path, linePaint);
             }
 
             IList<Point> arrowPoints = edge.ArrowPoints;
@@ -124,8 +134,10 @@ namespace Zametek.Graphs.ProjectPlan
 
             Point start = edge.StartPoint;
             Point end = edge.EndPoint;
-            float midX = (float)((start.X + end.X) / 2.0);
-            float midY = (float)((start.Y + end.Y) / 2.0);
+            // Anchor at the path midpoint, matching GraphEdgeViewModel's on-screen label.
+            Point mid = GraphEdgeGeometry.Midpoint(edge.EdgeSegments);
+            float midX = (float)mid.X;
+            float midY = (float)mid.Y;
 
             double dx = end.X - start.X;
             double dy = end.Y - start.Y;
