@@ -9,8 +9,9 @@
              x:Class="Zametek.View.ProjectPlan.VertexGraphManagerView">
 
   <!-- The interactive viewer lives in the reusable Zametek.Graphs.ProjectPlan control library.
-       It binds to IInteractiveVertexGraph, which VertexGraphManagerViewModel implements, and
-       inherits this view's DataContext (the manager view-model). -->
-  <g:InteractiveVertexGraphView Margin="7"/>
+       It binds to IInteractiveVertexGraph, supplied here by the manager view-model's reusable
+       InteractiveVertexGraphViewModel (exposed as Interactive). -->
+  <g:InteractiveVertexGraphView Margin="7"
+                                DataContext="{Binding Interactive}"/>
 
 </UserControl>

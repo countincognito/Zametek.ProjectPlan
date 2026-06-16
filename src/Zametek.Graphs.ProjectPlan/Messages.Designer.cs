@@ -61,6 +61,24 @@ namespace Zametek.Graphs.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Empty filename.
+        /// </summary>
+        public static string Message_EmptyFilename {
+            get {
+                return ResourceManager.GetString("Message_EmptyFilename", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to save file:.
+        /// </summary>
+        public static string Message_UnableToSaveFile {
+            get {
+                return ResourceManager.GetString("Message_UnableToSaveFile", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Unknown EdgeDashStyle value.
         /// </summary>
         public static string Message_UnknownEdgeDashStyleValue {

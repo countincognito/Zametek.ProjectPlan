@@ -3,10 +3,10 @@ using System.Windows.Input;
 
 namespace Zametek.Graphs.ProjectPlan
 {
-    // The binding surface the InteractiveArrowGraphView control draws against. Implemented by the
-    // host view-model (e.g. the application's ArrowGraphManagerViewModel) so the control can be
-    // embedded without the library depending on the application. Implementations are expected to
-    // raise change notifications (INotifyPropertyChanged) for the bound properties.
+    // The contract the InteractiveArrowGraphView control draws against, and the operations used to
+    // drive the interactive graph. Implemented by InteractiveArrowGraphViewModel (the reusable,
+    // self-contained implementation in this library). Implementations are expected to raise change
+    // notifications (INotifyPropertyChanged) for the bound properties.
     public interface IInteractiveArrowGraph
     {
         GraphTheme Theme { get; }
@@ -30,5 +30,12 @@ namespace Zametek.Graphs.ProjectPlan
         void EnsureWorkspaceContains(ArrowGraphNodeViewModel node);
 
         void ResetLayout();
+
+        // Rebuild the displayed graph from the host's current data and re-run the layout.
+        void Refresh();
+
+        // Export the graph to a file, choosing between the live interactive canvas and the fixed
+        // MSAGL layout. GraphML/GraphViz exports are independent of the chosen source.
+        Task SaveImageAsync(string? filename, ArrowGraphImageSource source);
     }
 }

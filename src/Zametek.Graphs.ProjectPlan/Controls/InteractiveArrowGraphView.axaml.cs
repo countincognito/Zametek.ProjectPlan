@@ -198,7 +198,7 @@ namespace Zametek.Graphs.ProjectPlan
             }
 
             viewModel.ResetLayout();
-            zoomer.Value = 1.0;
+            //zoomer.Value = 1.0;
             CentreWorkspace(viewModel.WorkspaceWidth, viewModel.WorkspaceHeight);
         }
     }

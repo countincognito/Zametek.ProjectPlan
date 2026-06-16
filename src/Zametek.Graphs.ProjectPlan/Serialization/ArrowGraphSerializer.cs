@@ -42,7 +42,7 @@ namespace Zametek.Graphs.ProjectPlan
         // MSAGL works in a Y-up coordinate space; the SVG writer flips this internally, so here we
         // flip it ourselves and scale uniformly so the small layout boxes become a comfortable
         // interactive size while preserving relative positions.
-        private const double c_InteractiveLayoutScale = 2.5;
+        private const double c_InteractiveLayoutScale = 1.5;
 
         private readonly IMsaglSvgRenderer m_MsaglSvgRenderer;
 

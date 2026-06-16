@@ -14,6 +14,7 @@
     <PackageReference Include="Avalonia" Version="11.3.13" />
     <PackageReference Include="ReactiveUI.Avalonia" Version="11.3.8" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9" />
+    <PackageReference Include="Svg.Skia" Version="3.7.0" />
     <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.9.5" />
     <PackageReference Include="Zametek.Utility" Version="3.0.0" />
   </ItemGroup>
