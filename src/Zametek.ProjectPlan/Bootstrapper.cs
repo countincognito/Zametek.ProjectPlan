@@ -48,14 +48,6 @@ namespace Zametek.ProjectPlan
                 .As<IMsaglSvgRenderer>()
                 .As<MsaglSvgRenderer>()
                 .SingleInstance();
-            builder.RegisterType<ArrowGraphSerializer>()
-                .As<IArrowGraphSerializer>()
-                .As<ArrowGraphSerializer>()
-                .SingleInstance();
-            builder.RegisterType<VertexGraphSerializer>()
-                .As<IVertexGraphSerializer>()
-                .As<VertexGraphSerializer>()
-                .SingleInstance();
             builder.RegisterType<MicrosoftProjectFileImporter>()
                 .As<IMicrosoftProjectFileImporter>()
                 .As<MicrosoftProjectFileImporter>()

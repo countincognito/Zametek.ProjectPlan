@@ -6,11 +6,11 @@ using Avalonia.Xaml.Interactivity;
 
 namespace Zametek.Graphs.ProjectPlan
 {
-    // Lets the user drag an interactive arrow-graph event node and select it on press. Pointer
-    // positions are taken relative to the hosting Canvas, so dragging stays correct under the
-    // surrounding zoom transform. e.Handled is set so the press does not also start a background pan
-    // of the viewport behind the graph. (Parallel to VertexNodeDragBehavior, retargeted to the arrow seam.)
-    public class ArrowNodeDragBehavior
+    // Lets the user drag an interactive graph node and select it on press. Pointer positions are
+    // taken relative to the hosting Canvas, so dragging stays correct under the surrounding zoom
+    // transform. e.Handled is set so the press does not also start a background pan of the viewport
+    // behind the graph. (Replaces the parallel ArrowNodeDragBehavior/VertexNodeDragBehavior.)
+    public class GraphNodeDragBehavior
         : Behavior<Control>
     {
         private bool m_IsDragging;
@@ -19,7 +19,7 @@ namespace Zametek.Graphs.ProjectPlan
         private double m_StartX;
         private double m_StartY;
         private Canvas? m_Canvas;
-        private IInteractiveArrowGraph? m_Manager;
+        private IInteractiveGraph? m_Manager;
 
         protected override void OnAttached()
         {
@@ -45,7 +45,7 @@ namespace Zametek.Graphs.ProjectPlan
 
         private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
         {
-            if (AssociatedObject?.DataContext is not ArrowGraphNodeViewModel node)
+            if (AssociatedObject?.DataContext is not GraphNodeViewModel node)
             {
                 return;
             }
@@ -55,7 +55,7 @@ namespace Zametek.Graphs.ProjectPlan
             }
 
             // Selection highlighting is owned by the host view-model.
-            m_Manager = AssociatedObject.FindAncestorOfType<ItemsControl>()?.DataContext as IInteractiveArrowGraph;
+            m_Manager = AssociatedObject.FindAncestorOfType<ItemsControl>()?.DataContext as IInteractiveGraph;
             m_Manager?.SelectNode(node);
 
             m_Canvas = AssociatedObject.FindAncestorOfType<Canvas>();
@@ -77,7 +77,7 @@ namespace Zametek.Graphs.ProjectPlan
         {
             if (!m_IsDragging
                 || m_Canvas is null
-                || AssociatedObject?.DataContext is not ArrowGraphNodeViewModel node)
+                || AssociatedObject?.DataContext is not GraphNodeViewModel node)
             {
                 return;
             }
@@ -104,7 +104,7 @@ namespace Zametek.Graphs.ProjectPlan
             // Only remember a position if the node was actually dragged, so a plain
             // click selects without pinning the node against future re-layouts.
             if (m_HasMoved
-                && AssociatedObject?.DataContext is ArrowGraphNodeViewModel node)
+                && AssociatedObject?.DataContext is GraphNodeViewModel node)
             {
                 m_Manager?.OnNodeMoved(node);
             }

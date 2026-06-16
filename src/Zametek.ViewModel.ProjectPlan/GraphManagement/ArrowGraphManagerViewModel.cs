@@ -12,11 +12,12 @@ using Zametek.Utility;
 namespace Zametek.ViewModel.ProjectPlan
 {
     // Application glue for the arrow graph. The interactive viewer itself now lives in the reusable
-    // InteractiveArrowGraphViewModel (in Zametek.Graphs.ProjectPlan); this view-model supplies that
-    // control with the application's data and dialogs via IArrowGraphHost, keeps the headless
-    // SVG export members the CLI calls, and exposes the interactive view-model to the embedded view.
+    // InteractiveGraphViewModel (in Zametek.Graphs.ProjectPlan); this view-model supplies that
+    // control with the application's data and dialogs via IGraphHost, keeps the headless SVG export
+    // members the CLI calls, and exposes the interactive view-model to the embedded view. The graph's
+    // per-type differences come from GraphConfigurations.Arrow.
     public class ArrowGraphManagerViewModel
-        : ToolViewModelBase, IArrowGraphManagerViewModel, IArrowGraphHost
+        : ToolViewModelBase, IArrowGraphManagerViewModel, IGraphHost
     {
         #region Fields
 
@@ -77,12 +78,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
-        private readonly IArrowGraphSerializer m_ArrowGraphExport;
+        private readonly IGraphSerializer m_GraphSerializer;
         private readonly IGraphImageExporter m_GraphImageExporter;
 
-        // The reusable, self-contained interactive arrow graph. It owns all of the
+        // The reusable, self-contained interactive graph. It owns all of the
         // node/edge/workspace/drag/select/layout/export behaviour and subscribes to RebuildRequested.
-        private readonly InteractiveArrowGraphViewModel m_Interactive;
+        private readonly InteractiveGraphViewModel m_Interactive;
 
         #endregion
 
@@ -92,19 +93,19 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IArrowGraphSerializer arrowGraphExport,
+            IMsaglSvgRenderer msaglSvgRenderer,
             IGraphImageExporter graphImageExporter)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
-            ArgumentNullException.ThrowIfNull(arrowGraphExport);
+            ArgumentNullException.ThrowIfNull(msaglSvgRenderer);
             ArgumentNullException.ThrowIfNull(graphImageExporter);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
-            m_ArrowGraphExport = arrowGraphExport;
+            m_GraphSerializer = new GraphSerializer(GraphConfigurations.Arrow, msaglSvgRenderer);
             m_GraphImageExporter = graphImageExporter;
 
             m_ArrowGraphData = string.Empty;
@@ -150,7 +151,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Select(_ => Unit.Default);
 
-            m_Interactive = new InteractiveArrowGraphViewModel(this, m_ArrowGraphExport, m_GraphImageExporter);
+            m_Interactive = new InteractiveGraphViewModel(this, m_GraphSerializer, m_GraphImageExporter, GraphConfigurations.Arrow);
 
             Id = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
             Title = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
@@ -170,12 +171,12 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        // The reusable interactive viewer the embedded InteractiveArrowGraphView binds to.
-        public IInteractiveArrowGraph Interactive => m_Interactive;
+        // The reusable interactive viewer the embedded InteractiveGraphView binds to.
+        public IInteractiveGraph Interactive => m_Interactive;
 
         #endregion
 
-        #region IArrowGraphHost Members
+        #region IGraphHost Members
 
         private readonly ObservableAsPropertyHelper<GraphTheme> m_Theme;
         public GraphTheme Theme => m_Theme.Value;
@@ -267,13 +268,13 @@ namespace Zametek.ViewModel.ProjectPlan
         public BaseTheme BaseTheme => m_BaseTheme.Value;
 
         // Delegates to the interactive viewer's Save-As (which prompts and renders the live canvas).
-        public ICommand SaveArrowGraphImageFileCommand => m_Interactive.SaveArrowGraphImageFileCommand;
+        public ICommand SaveArrowGraphImageFileCommand => m_Interactive.SaveGraphImageFileCommand;
 
         // Export to a specific file. Used by the headless CLI, so it exports the fixed MSAGL layout
         // (which needs no populated interactive surface) rather than the on-screen canvas.
         public Task SaveArrowGraphImageFileAsync(string? filename)
         {
-            return m_Interactive.SaveImageAsync(filename, ArrowGraphImageSource.FixedLayout);
+            return m_Interactive.SaveImageAsync(filename, GraphImageSource.FixedLayout);
         }
 
         public void BuildArrowGraphDiagramData()
@@ -285,7 +286,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (!HasCompilationErrors)
                 {
-                    data = m_ArrowGraphExport.BuildArrowGraphSvgData(
+                    data = m_GraphSerializer.BuildGraphSvgData(
                         BuildArrowDiagram(multiLineEdgeLabels: false),
                         m_CoreViewModel.BaseTheme.ToGraphTheme());
                 }

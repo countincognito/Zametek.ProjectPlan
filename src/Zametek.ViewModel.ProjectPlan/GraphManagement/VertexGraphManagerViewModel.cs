@@ -12,11 +12,13 @@ using Zametek.Utility;
 namespace Zametek.ViewModel.ProjectPlan
 {
     // Application glue for the vertex graph. The interactive viewer itself now lives in the reusable
-    // InteractiveVertexGraphViewModel (in Zametek.Graphs.ProjectPlan); this view-model supplies that
-    // control with the application's data and dialogs via IVertexGraphHost, keeps the headless
-    // SVG export members the CLI calls, and exposes the interactive view-model to the embedded view.
+    // InteractiveGraphViewModel (in Zametek.Graphs.ProjectPlan); this view-model supplies that
+    // control with the application's data and dialogs via IGraphHost, keeps the headless SVG export
+    // members the CLI calls, and exposes the interactive view-model to the embedded view. The graph's
+    // per-type differences come from GraphConfigurations.Vertex (which, unlike the arrow graph, does
+    // not surface a show-names toggle).
     public class VertexGraphManagerViewModel
-        : ToolViewModelBase, IVertexGraphManagerViewModel, IVertexGraphHost
+        : ToolViewModelBase, IVertexGraphManagerViewModel, IGraphHost
     {
         #region Fields
 
@@ -77,12 +79,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
-        private readonly IVertexGraphSerializer m_VertexGraphExport;
+        private readonly IGraphSerializer m_GraphSerializer;
         private readonly IGraphImageExporter m_GraphImageExporter;
 
-        // The reusable, self-contained interactive vertex graph. It owns all of the
+        // The reusable, self-contained interactive graph. It owns all of the
         // node/edge/workspace/drag/select/layout/export behaviour and subscribes to RebuildRequested.
-        private readonly InteractiveVertexGraphViewModel m_Interactive;
+        private readonly InteractiveGraphViewModel m_Interactive;
 
         #endregion
 
@@ -92,19 +94,19 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IVertexGraphSerializer vertexGraphExport,
+            IMsaglSvgRenderer msaglSvgRenderer,
             IGraphImageExporter graphImageExporter)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
-            ArgumentNullException.ThrowIfNull(vertexGraphExport);
+            ArgumentNullException.ThrowIfNull(msaglSvgRenderer);
             ArgumentNullException.ThrowIfNull(graphImageExporter);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
-            m_VertexGraphExport = vertexGraphExport;
+            m_GraphSerializer = new GraphSerializer(GraphConfigurations.Vertex, msaglSvgRenderer);
             m_GraphImageExporter = graphImageExporter;
 
             m_VertexGraphData = string.Empty;
@@ -146,7 +148,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Select(_ => Unit.Default);
 
-            m_Interactive = new InteractiveVertexGraphViewModel(this, m_VertexGraphExport, m_GraphImageExporter);
+            m_Interactive = new InteractiveGraphViewModel(this, m_GraphSerializer, m_GraphImageExporter, GraphConfigurations.Vertex);
 
             Id = Resource.ProjectPlan.Titles.Title_VertexGraphView;
             Title = Resource.ProjectPlan.Titles.Title_VertexGraphView;
@@ -166,19 +168,32 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        // The reusable interactive viewer the embedded InteractiveVertexGraphView binds to.
-        public IInteractiveVertexGraph Interactive => m_Interactive;
+        // The reusable interactive viewer the embedded InteractiveGraphView binds to.
+        public IInteractiveGraph Interactive => m_Interactive;
 
         #endregion
 
-        #region IVertexGraphHost Members
+        #region IGraphHost Members
 
         private readonly ObservableAsPropertyHelper<GraphTheme> m_Theme;
         public GraphTheme Theme => m_Theme.Value;
 
+        // The vertex graph does not surface a show-names toggle (GraphConfigurations.Vertex sets
+        // SupportsShowNames = false), but the host contract still carries it; it is backed by the
+        // persisted setting and is simply never displayed.
+        public bool ShowNames
+        {
+            get => m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames = value;
+            }
+        }
+
         // Build the library-neutral diagram (what to draw) from the application's domain graph (with
-        // presentation resolved). Locked so it serialises with the headless SVG build below.
-        public DiagramGraphModel BuildDiagram()
+        // presentation resolved). The vertex graph has no edge labels, so multiLineEdgeLabels is
+        // ignored. Locked so it serialises with the headless SVG build below.
+        public DiagramGraphModel BuildDiagram(bool multiLineEdgeLabels)
         {
             lock (m_Lock)
             {
@@ -249,13 +264,13 @@ namespace Zametek.ViewModel.ProjectPlan
         public BaseTheme BaseTheme => m_BaseTheme.Value;
 
         // Delegates to the interactive viewer's Save-As (which prompts and renders the live canvas).
-        public ICommand SaveVertexGraphImageFileCommand => m_Interactive.SaveVertexGraphImageFileCommand;
+        public ICommand SaveVertexGraphImageFileCommand => m_Interactive.SaveGraphImageFileCommand;
 
         // Export to a specific file. Used by the headless CLI, so it exports the fixed MSAGL layout
         // (which needs no populated interactive surface) rather than the on-screen canvas.
         public Task SaveVertexGraphImageFileAsync(string? filename)
         {
-            return m_Interactive.SaveImageAsync(filename, VertexGraphImageSource.FixedLayout);
+            return m_Interactive.SaveImageAsync(filename, GraphImageSource.FixedLayout);
         }
 
         public void BuildVertexGraphDiagramData()
@@ -267,7 +282,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (!HasCompilationErrors)
                 {
-                    data = m_VertexGraphExport.BuildVertexGraphSvgData(
+                    data = m_GraphSerializer.BuildGraphSvgData(
                         BuildVertexDiagram(),
                         m_CoreViewModel.BaseTheme.ToGraphTheme());
                 }

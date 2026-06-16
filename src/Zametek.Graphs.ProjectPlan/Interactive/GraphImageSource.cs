@@ -3,7 +3,7 @@ namespace Zametek.Graphs.ProjectPlan
     // Chooses which rendering an image export is produced from. The on-screen Save-As uses the
     // interactive canvas (what the user has dragged); a headless caller (e.g. the CLI) uses the
     // fixed MSAGL layout, which does not require a populated interactive surface.
-    public enum ArrowGraphImageSource
+    public enum GraphImageSource
     {
         // The interactive node/edge canvas, exactly as currently arranged on screen.
         InteractiveCanvas,

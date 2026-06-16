@@ -9,9 +9,9 @@
              x:Class="Zametek.View.ProjectPlan.ArrowGraphManagerView">
 
   <!-- The interactive viewer lives in the reusable Zametek.Graphs.ProjectPlan control library.
-       It binds to IInteractiveArrowGraph, supplied here by the manager view-model's reusable
-       InteractiveArrowGraphViewModel (exposed as Interactive). -->
-  <g:InteractiveArrowGraphView Margin="7"
-                               DataContext="{Binding Interactive}"/>
+       It binds to IInteractiveGraph, supplied here by the manager view-model's reusable
+       InteractiveGraphViewModel (exposed as Interactive). -->
+  <g:InteractiveGraphView Margin="7"
+                          DataContext="{Binding Interactive}"/>
 
 </UserControl>

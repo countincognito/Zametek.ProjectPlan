@@ -7,10 +7,11 @@ using Avalonia.Media;
 
 namespace Zametek.Graphs.ProjectPlan
 {
-    // Reusable, embeddable interactive vertex-graph viewer. It draws against any host that
-    // implements IInteractiveVertexGraph (e.g. the application's VertexGraphManagerViewModel),
-    // supporting drag, click-to-select, hover tooltips, unbounded pan and zoom.
-    public partial class InteractiveVertexGraphView
+    // Reusable, embeddable interactive graph viewer. It draws against any host that implements
+    // IInteractiveGraph (e.g. the application's ArrowGraphManagerViewModel / VertexGraphManagerViewModel,
+    // via their InteractiveGraphViewModel), supporting drag, click-to-select, hover tooltips,
+    // unbounded pan and zoom. (Replaces the parallel InteractiveArrowGraphView/InteractiveVertexGraphView.)
+    public partial class InteractiveGraphView
         : UserControl
     {
         // Pan is a render-transform translation (unbounded), not a scroll offset, so nodes
@@ -25,7 +26,7 @@ namespace Zametek.Graphs.ProjectPlan
         private bool m_HasCentered;
         private const double c_SliderDelta = 0.1;
 
-        public InteractiveVertexGraphView()
+        public InteractiveGraphView()
         {
             InitializeComponent();
             panLayer.RenderTransform = m_PanTransform;
@@ -80,7 +81,7 @@ namespace Zametek.Graphs.ProjectPlan
             }
 
             // Pressing empty space clears the selection and begins a pan.
-            (DataContext as IInteractiveVertexGraph)?.SelectNode(null);
+            (DataContext as IInteractiveGraph)?.SelectNode(null);
 
             m_IsPanning = true;
             m_PanStart = point.Position;
@@ -150,7 +151,7 @@ namespace Zametek.Graphs.ProjectPlan
         // margin) and pan so it is centred. This recovers any node that has been dragged far away.
         private void FitToView_Click(object? sender, RoutedEventArgs e)
         {
-            if (DataContext is not IInteractiveVertexGraph viewModel
+            if (DataContext is not IInteractiveGraph viewModel
                 || viewModel.GraphNodes.Count == 0
                 || viewport.Bounds.Width <= 0
                 || viewport.Bounds.Height <= 0)
@@ -162,7 +163,7 @@ namespace Zametek.Graphs.ProjectPlan
             double minY = double.MaxValue;
             double maxX = double.MinValue;
             double maxY = double.MinValue;
-            foreach (VertexGraphNodeViewModel node in viewModel.GraphNodes)
+            foreach (GraphNodeViewModel node in viewModel.GraphNodes)
             {
                 minX = Math.Min(minX, node.X);
                 minY = Math.Min(minY, node.Y);
@@ -191,13 +192,13 @@ namespace Zametek.Graphs.ProjectPlan
         // first-compilation framing (default zoom, centred).
         private void ResetLayout_Click(object? sender, RoutedEventArgs e)
         {
-            if (DataContext is not IInteractiveVertexGraph viewModel)
+            if (DataContext is not IInteractiveGraph viewModel)
             {
                 return;
             }
 
             viewModel.ResetLayout();
-            //zoomer.Value = 1.0;
+            zoomer.Value = 1.0;
             CentreWorkspace(viewModel.WorkspaceWidth, viewModel.WorkspaceHeight);
         }
     }

@@ -4,15 +4,17 @@ using ReactiveUI;
 
 namespace Zametek.Graphs.ProjectPlan
 {
-    // Interactive, draggable, selectable activity node. The slack/override border colour and
-    // critical/dummy dash style are preserved; selection is shown via a separate overlay ring
-    // (in the view) so it does not clobber the underlying colour. Dimming is driven by opacity.
-    public class VertexGraphNodeViewModel
+    // Interactive, draggable, selectable graph node (an activity node in the vertex graph, an event
+    // node in the arrow graph). The slack/override border colour and critical/dummy dash style are
+    // preserved; selection is shown via a separate overlay ring (in the view) so it does not clobber
+    // the underlying colour. Dimming is driven by opacity. (Replaces the parallel
+    // ArrowGraphNodeViewModel/VertexGraphNodeViewModel, which were identical.)
+    public class GraphNodeViewModel
         : ReactiveObject
     {
         private const double c_DimmedOpacity = 0.25;
 
-        public VertexGraphNodeViewModel(GraphNodeLayoutModel layout)
+        public GraphNodeViewModel(GraphNodeLayoutModel layout)
         {
             ArgumentNullException.ThrowIfNull(layout);
             Id = layout.Id;

@@ -4,9 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:g="using:Zametek.Graphs.ProjectPlan"
              xmlns:i="using:Avalonia.Xaml.Interactivity"
-             x:DataType="g:IInteractiveVertexGraph"
+             x:DataType="g:IInteractiveGraph"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Zametek.Graphs.ProjectPlan.InteractiveVertexGraphView">
+             x:Class="Zametek.Graphs.ProjectPlan.InteractiveGraphView">
   <UserControl.Resources>
     <g:ThemeToBackgroundConverter x:Key="themeToBackgroundConverter"/>
   </UserControl.Resources>
@@ -46,8 +46,13 @@
           <MenuItem Header="{x:Static g:Menus.Menu_ResetGraphLayout}"
                     Click="ResetLayout_Click"/>
           <Separator/>
+          <!-- Only the arrow graph offers the show-names toggle; hidden otherwise. -->
+          <MenuItem Header="{x:Static g:Menus.Menu_ShowNames}"
+                    IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"
+                    IsVisible="{Binding Path=SupportsShowNames, Mode=OneWay}"
+                    ToggleType="CheckBox"/>
           <MenuItem Header="{x:Static g:Menus.Menu_SaveAs}"
-                    Command="{Binding Path=SaveVertexGraphImageFileCommand, Mode=OneWay}"/>
+                    Command="{Binding Path=SaveGraphImageFileCommand, Mode=OneWay}"/>
         </ContextMenu>
       </Border.ContextMenu>
 
@@ -77,23 +82,43 @@
               </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
-              <DataTemplate x:DataType="g:VertexGraphEdgeViewModel">
+              <DataTemplate x:DataType="g:GraphEdgeViewModel">
                 <Canvas>
+                  <!-- Invisible wide hit area so a thin edge is easy to hover for its tooltip.
+                       Transparent (not null) so it is hit-test visible; the tooltip is empty for
+                       graphs (e.g. vertex) whose edges carry none. -->
+                  <Line StartPoint="{Binding Path=StartPoint, Mode=OneWay}"
+                        EndPoint="{Binding Path=EndPoint, Mode=OneWay}"
+                        Stroke="Transparent"
+                        StrokeThickness="14"
+                        ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}"/>
                   <Line StartPoint="{Binding Path=StartPoint, Mode=OneWay}"
                         EndPoint="{Binding Path=EndPoint, Mode=OneWay}"
                         Stroke="{Binding Path=Stroke, Mode=OneWay}"
                         StrokeThickness="{Binding Path=StrokeThickness, Mode=OneWay}"
                         StrokeDashArray="{Binding Path=StrokeDashArray, Mode=OneWay}"
-                        Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"/>
+                        Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"
+                        IsHitTestVisible="False"/>
                   <Polygon Points="{Binding Path=ArrowPoints, Mode=OneWay}"
                            Fill="{Binding Path=Stroke, Mode=OneWay}"
-                           Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"/>
+                           Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"
+                           ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}"/>
+                  <!-- Optional edge label, lifted just off the line at the edge midpoint. -->
+                  <TextBlock Canvas.Left="{Binding Path=LabelX, Mode=OneWay}"
+                             Canvas.Top="{Binding Path=LabelY, Mode=OneWay}"
+                             Text="{Binding Path=Label, Mode=OneWay}"
+                             IsVisible="{Binding Path=ShowLabel, Mode=OneWay}"
+                             Foreground="{Binding Path=LabelBrush, Mode=OneWay}"
+                             Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"
+                             FontFamily="Consolas"
+                             FontSize="12"
+                             ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}"/>
                 </Canvas>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
 
-          <!-- Activity nodes: draggable, selectable, with hover tooltips. -->
+          <!-- Nodes: draggable, selectable, with hover tooltips. -->
           <ItemsControl ItemsSource="{Binding Path=GraphNodes, Mode=OneWay}"
                         Width="{Binding Path=WorkspaceWidth, Mode=OneWay}"
                         Height="{Binding Path=WorkspaceHeight, Mode=OneWay}"
@@ -104,13 +129,13 @@
               </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.Styles>
-              <Style Selector="ContentPresenter" x:DataType="g:VertexGraphNodeViewModel">
+              <Style Selector="ContentPresenter" x:DataType="g:GraphNodeViewModel">
                 <Setter Property="Canvas.Left" Value="{Binding Path=X, Mode=OneWay}"/>
                 <Setter Property="Canvas.Top" Value="{Binding Path=Y, Mode=OneWay}"/>
               </Style>
             </ItemsControl.Styles>
             <ItemsControl.ItemTemplate>
-              <DataTemplate x:DataType="g:VertexGraphNodeViewModel">
+              <DataTemplate x:DataType="g:GraphNodeViewModel">
                 <Grid Width="{Binding Path=Width, Mode=OneWay}"
                       Height="{Binding Path=Height, Mode=OneWay}"
                       Opacity="{Binding Path=NodeOpacity, Mode=OneWay}"
@@ -118,7 +143,7 @@
                       Cursor="Hand"
                       ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}">
                   <i:Interaction.Behaviors>
-                    <g:VertexNodeDragBehavior/>
+                    <g:GraphNodeDragBehavior/>
                   </i:Interaction.Behaviors>
                   <!-- Node body: fill + slack/override border, dashed for critical/dummy. -->
                   <Rectangle Fill="{Binding Path=FillBrush, Mode=OneWay}"

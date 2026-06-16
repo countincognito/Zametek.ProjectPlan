@@ -4,12 +4,14 @@ using Zametek.Utility;
 
 namespace Zametek.Graphs.ProjectPlan
 {
-    // The arrow-graph layout/render engine. It consumes a library-neutral DiagramGraphModel (built
-    // by the application from its domain graph) and runs the MSAGL layout to produce SVG, GraphML,
-    // GraphViz, or the interactive GraphLayoutModel. It carries no dependency on the application's
-    // domain models - all label text, tooltips, presentation and validation are resolved upstream.
-    public class ArrowGraphSerializer
-        : IArrowGraphSerializer
+    // The graph layout/render engine. It consumes a library-neutral DiagramGraphModel (built by the
+    // application from its domain graph) and runs the MSAGL layout to produce SVG, GraphML, GraphViz,
+    // or the interactive GraphLayoutModel. The per-graph MSAGL tuning constants come from a
+    // GraphConfiguration, so a single engine serves both the arrow and vertex graphs. It carries no
+    // dependency on the application's domain models - all label text, tooltips, presentation and
+    // validation are resolved upstream. (Replaces the parallel ArrowGraphSerializer/VertexGraphSerializer.)
+    public class GraphSerializer
+        : IGraphSerializer
     {
         #region Fields
 
@@ -20,57 +22,47 @@ namespace Zametek.Graphs.ProjectPlan
                 {GraphDashStyle.Dashed, Microsoft.Msagl.Drawing.Style.Dashed}
              };
 
-        private static readonly double s_SvgNodeWidth = 40.0;
-        private static readonly double s_SvgNodeHeight = 34.0;
-        private static readonly double s_SvgNodeLabelWidth = 34.0;
-        private static readonly double s_SvgNodeLabelLines = 1.0;
-        private static readonly double s_SvgRadiusInXDirection = 3.0;
-        private static readonly double s_SvgRadiusInYDirection = 2.0;
-
-        private static readonly double s_SvgEdgeLabelFontSize = 12.0;
-        private static readonly double s_SvgEdgeLabelHeight = 12.0;
-        private static readonly Microsoft.Msagl.Drawing.FontStyle s_SvgNodeFontStyle = Microsoft.Msagl.Drawing.FontStyle.Regular;
-
-        // These need to be worked out through trial and error whenever s_SvgNodeLabelWidth changes.
-        private static readonly double s_SvgConsolasLabelWidthCorrectionFactor = s_SvgNodeLabelLines * s_SvgNodeLabelWidth / 14;
-        private static readonly double s_SvgConsolasLabelHeightCorrectionFactor = 0.7;
-
+        // Constants that are identical for both graphs (the per-graph differences live in the config).
+        private const double c_SvgRadiusInXDirection = 3.0;
+        private const double c_SvgRadiusInYDirection = 2.0;
+        private const double c_SvgEdgeLabelFontSize = 12.0;
+        private const double c_SvgEdgeLabelHeight = 12.0;
         private const double c_PxPerInch = 96;
         private const double c_PtPerInch = 72;
         private const string c_FontName = @"Consolas";
 
-        // MSAGL works in a Y-up coordinate space; the SVG writer flips this internally, so here we
-        // flip it ourselves and scale uniformly so the small layout boxes become a comfortable
-        // interactive size while preserving relative positions.
-        private const double c_InteractiveLayoutScale = 1.5;
-
+        private readonly GraphConfiguration m_Config;
         private readonly IMsaglSvgRenderer m_MsaglSvgRenderer;
 
         #endregion
 
         #region Ctors
 
-        public ArrowGraphSerializer(IMsaglSvgRenderer msaglSvgRenderer)
+        public GraphSerializer(
+            GraphConfiguration configuration,
+            IMsaglSvgRenderer msaglSvgRenderer)
         {
+            ArgumentNullException.ThrowIfNull(configuration);
             ArgumentNullException.ThrowIfNull(msaglSvgRenderer);
+            m_Config = configuration;
             m_MsaglSvgRenderer = msaglSvgRenderer;
         }
 
         #endregion
 
-        public byte[] BuildArrowGraphSvgData(DiagramGraphModel diagramGraph, GraphTheme theme)
+        public byte[] BuildGraphSvgData(DiagramGraphModel diagramGraph, GraphTheme theme)
         {
             Microsoft.Msagl.Drawing.Graph drawingGraph = BuildAndLayoutDrawingGraph(diagramGraph, theme);
             return m_MsaglSvgRenderer.RenderToSvg(drawingGraph, theme);
         }
 
-        public GraphLayoutModel BuildArrowGraphLayout(DiagramGraphModel diagramGraph, GraphTheme theme)
+        public GraphLayoutModel BuildGraphLayout(DiagramGraphModel diagramGraph, GraphTheme theme)
         {
             Microsoft.Msagl.Drawing.Graph drawingGraph = BuildAndLayoutDrawingGraph(diagramGraph, theme);
-            return ExtractLayout(drawingGraph, diagramGraph);
+            return ExtractLayout(drawingGraph, diagramGraph, m_Config.InteractiveLayoutScale);
         }
 
-        public byte[] BuildArrowGraphMLData(DiagramGraphModel diagramGraph)
+        public byte[] BuildGraphMLData(DiagramGraphModel diagramGraph)
         {
             ArgumentNullException.ThrowIfNull(diagramGraph);
             graphml graphML = GraphMLBuilder.ToGraphML(diagramGraph);
@@ -83,7 +75,7 @@ namespace Zametek.Graphs.ProjectPlan
             return content.StringToByteArray();
         }
 
-        public byte[] BuildArrowGraphVizData(DiagramGraphModel diagramGraph)
+        public byte[] BuildGraphVizData(DiagramGraphModel diagramGraph)
         {
             ArgumentNullException.ThrowIfNull(diagramGraph);
             string graphviz = GraphVizBuilder.ToGraphViz(diagramGraph);
@@ -129,7 +121,7 @@ namespace Zametek.Graphs.ProjectPlan
             drawingGraph.LayoutAlgorithmSettings = drawingGraph.CreateLayoutSettings();
 
             drawingGraph.LayoutAlgorithmSettings.EdgeRoutingSettings.UseObstacleRectangles = true;
-            drawingGraph.LayoutAlgorithmSettings.EdgeRoutingSettings.EdgeRoutingMode = Microsoft.Msagl.Core.Routing.EdgeRoutingMode.SugiyamaSplines;
+            drawingGraph.LayoutAlgorithmSettings.EdgeRoutingSettings.EdgeRoutingMode = MapRoutingMode(m_Config.EdgeRoutingMode);
 
             drawingGraph.Attr.LayerDirection = Microsoft.Msagl.Drawing.LayerDirection.LR;
 
@@ -148,22 +140,22 @@ namespace Zametek.Graphs.ProjectPlan
 
                 // Calculate the correct label font size (Pts) and the label height (Pxs)
                 // based off of the pt->px conversion, with Consolas correction factors.
-                double nodeLabelFontSize = s_SvgConsolasLabelWidthCorrectionFactor * s_SvgNodeLabelWidth * c_PtPerInch / (drawingGraphNode.LabelText.Length * c_PxPerInch);
-                double nodeLabelHeight = s_SvgConsolasLabelHeightCorrectionFactor * nodeLabelFontSize * c_PxPerInch / c_PtPerInch;
-                double nodeHeight = s_SvgNodeHeight;
+                double nodeLabelFontSize = m_Config.ConsolasLabelWidthCorrectionFactor * m_Config.SvgNodeLabelWidth * c_PtPerInch / (drawingGraphNode.LabelText.Length * c_PxPerInch);
+                double nodeLabelHeight = m_Config.ConsolasLabelHeightCorrectionFactor * nodeLabelFontSize * c_PxPerInch / c_PtPerInch;
+                double nodeHeight = m_Config.SvgNodeHeight;
 
                 drawingGraphNode.GeometryNode.BoundaryCurve =
                     Microsoft.Msagl.Core.Geometry.Curves.CurveFactory.CreateRectangleWithRoundedCorners(
-                        s_SvgNodeWidth,
+                        m_Config.SvgNodeWidth,
                         nodeHeight,
-                        s_SvgRadiusInXDirection,
-                        s_SvgRadiusInYDirection,
+                        c_SvgRadiusInXDirection,
+                        c_SvgRadiusInYDirection,
                         new Microsoft.Msagl.Core.Geometry.Point(0, 0));
 
                 drawingGraphNode.Label.Height = nodeLabelHeight;
-                drawingGraphNode.Label.Width = s_SvgNodeLabelWidth;
+                drawingGraphNode.Label.Width = m_Config.SvgNodeLabelWidth;
                 drawingGraphNode.Label.FontSize = nodeLabelFontSize;
-                drawingGraphNode.Label.FontStyle = s_SvgNodeFontStyle;
+                drawingGraphNode.Label.FontStyle = MapFontStyle(m_Config.NodeFontStyle);
 
                 drawingGraphNode.Label.FontName = c_FontName;
                 drawingGraphNode.Attr.AddStyle(s_DashMsaglLookup[diagramNode.BorderDashStyle]);
@@ -175,12 +167,12 @@ namespace Zametek.Graphs.ProjectPlan
             // Initialise geometry labels as well.
             foreach (Microsoft.Msagl.Drawing.Edge drawingGraphEdge in drawingGraph.Edges)
             {
-                double edgeLabelWidth = drawingGraphEdge.LabelText.Length * s_SvgEdgeLabelFontSize * (c_PxPerInch / c_PtPerInch) / s_SvgConsolasLabelWidthCorrectionFactor;
+                double edgeLabelWidth = drawingGraphEdge.LabelText.Length * c_SvgEdgeLabelFontSize * (c_PxPerInch / c_PtPerInch) / m_Config.ConsolasLabelWidthCorrectionFactor;
 
                 drawingGraphEdge.Label.FontName = c_FontName;
-                drawingGraphEdge.Label.FontSize = s_SvgEdgeLabelFontSize;
+                drawingGraphEdge.Label.FontSize = c_SvgEdgeLabelFontSize;
                 drawingGraphEdge.Label.GeometryLabel.Width = edgeLabelWidth;
-                drawingGraphEdge.Label.GeometryLabel.Height = s_SvgEdgeLabelHeight;
+                drawingGraphEdge.Label.GeometryLabel.Height = c_SvgEdgeLabelHeight;
                 drawingGraphEdge.Label.GeometryLabel.Center = new Microsoft.Msagl.Core.Geometry.Point(0, 0);
                 drawingGraphEdge.Label.GeometryLabel.PlacementResult = Microsoft.Msagl.Core.Layout.LabelPlacementResult.OverlapsNothing;
             }
@@ -192,7 +184,8 @@ namespace Zametek.Graphs.ProjectPlan
 
         private static GraphLayoutModel ExtractLayout(
             Microsoft.Msagl.Drawing.Graph drawingGraph,
-            DiagramGraphModel diagramGraph)
+            DiagramGraphModel diagramGraph,
+            double interactiveLayoutScale)
         {
             Microsoft.Msagl.Core.Geometry.Rectangle boundingBox = drawingGraph.GeometryGraph.BoundingBox;
             double graphLeft = boundingBox.Left;
@@ -226,10 +219,10 @@ namespace Zametek.Graphs.ProjectPlan
                 nodes.Add(new GraphNodeLayoutModel
                 {
                     Id = id,
-                    X = (centreX - (width / 2.0)) * c_InteractiveLayoutScale,
-                    Y = (centreY - (height / 2.0)) * c_InteractiveLayoutScale,
-                    Width = width * c_InteractiveLayoutScale,
-                    Height = height * c_InteractiveLayoutScale,
+                    X = (centreX - (width / 2.0)) * interactiveLayoutScale,
+                    Y = (centreY - (height / 2.0)) * interactiveLayoutScale,
+                    Width = width * interactiveLayoutScale,
+                    Height = height * interactiveLayoutScale,
                     Label = diagramNode.Text ?? string.Empty,
                     Name = diagramNode.Name,
                     Tooltip = diagramNode.Tooltip,
@@ -257,11 +250,25 @@ namespace Zametek.Graphs.ProjectPlan
 
             return new GraphLayoutModel
             {
-                Width = boundingBox.Width * c_InteractiveLayoutScale,
-                Height = boundingBox.Height * c_InteractiveLayoutScale,
+                Width = boundingBox.Width * interactiveLayoutScale,
+                Height = boundingBox.Height * interactiveLayoutScale,
                 Nodes = nodes,
                 Edges = edges,
             };
+        }
+
+        private static Microsoft.Msagl.Drawing.FontStyle MapFontStyle(GraphNodeFontStyle nodeFontStyle)
+        {
+            return nodeFontStyle == GraphNodeFontStyle.Bold
+                ? Microsoft.Msagl.Drawing.FontStyle.Bold
+                : Microsoft.Msagl.Drawing.FontStyle.Regular;
+        }
+
+        private static Microsoft.Msagl.Core.Routing.EdgeRoutingMode MapRoutingMode(GraphEdgeRoutingMode edgeRoutingMode)
+        {
+            return edgeRoutingMode == GraphEdgeRoutingMode.Spline
+                ? Microsoft.Msagl.Core.Routing.EdgeRoutingMode.Spline
+                : Microsoft.Msagl.Core.Routing.EdgeRoutingMode.SugiyamaSplines;
         }
 
         private static Microsoft.Msagl.Drawing.Color? HtmlHexCodeToMsaglColor(string? input)
