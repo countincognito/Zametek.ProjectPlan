@@ -22,14 +22,9 @@ namespace Zametek.Graphs.ProjectPlan
                 {GraphDashStyle.Dashed, Microsoft.Msagl.Drawing.Style.Dashed}
              };
 
-        // Constants that are identical for both graphs (the per-graph differences live in the config).
-        private const double c_SvgRadiusInXDirection = 3.0;
-        private const double c_SvgRadiusInYDirection = 2.0;
-        private const double c_SvgEdgeLabelFontSize = 12.0;
-        private const double c_SvgEdgeLabelHeight = 12.0;
+        // Unit conversions - the only layout constants not carried by the GraphConfiguration.
         private const double c_PxPerInch = 96;
         private const double c_PtPerInch = 72;
-        private const string c_FontName = @"Consolas";
 
         private readonly GraphConfiguration m_Config;
         private readonly IMsaglSvgRenderer m_MsaglSvgRenderer;
@@ -59,7 +54,7 @@ namespace Zametek.Graphs.ProjectPlan
         public GraphLayoutModel BuildGraphLayout(DiagramGraphModel diagramGraph, GraphTheme theme)
         {
             Microsoft.Msagl.Drawing.Graph drawingGraph = BuildAndLayoutDrawingGraph(diagramGraph, theme);
-            return ExtractLayout(drawingGraph, diagramGraph, m_Config.InteractiveLayoutScale);
+            return ExtractLayout(drawingGraph, diagramGraph, m_Config.InteractiveLayoutScalingFactor);
         }
 
         public byte[] BuildGraphMLData(DiagramGraphModel diagramGraph)
@@ -140,24 +135,24 @@ namespace Zametek.Graphs.ProjectPlan
 
                 // Calculate the correct label font size (Pts) and the label height (Pxs)
                 // based off of the pt->px conversion, with Consolas correction factors.
-                double nodeLabelFontSize = m_Config.ConsolasLabelWidthCorrectionFactor * m_Config.SvgNodeLabelWidth * c_PtPerInch / (drawingGraphNode.LabelText.Length * c_PxPerInch);
-                double nodeLabelHeight = m_Config.ConsolasLabelHeightCorrectionFactor * nodeLabelFontSize * c_PxPerInch / c_PtPerInch;
-                double nodeHeight = m_Config.SvgNodeHeight;
+                double nodeLabelFontSize = m_Config.LabelWidthCorrectionFactor * m_Config.NodeLabelWidth * c_PtPerInch / (drawingGraphNode.LabelText.Length * c_PxPerInch);
+                double nodeLabelHeight = m_Config.LabelHeightCorrectionFactor * nodeLabelFontSize * c_PxPerInch / c_PtPerInch;
+                double nodeHeight = m_Config.NodeHeight;
 
                 drawingGraphNode.GeometryNode.BoundaryCurve =
                     Microsoft.Msagl.Core.Geometry.Curves.CurveFactory.CreateRectangleWithRoundedCorners(
-                        m_Config.SvgNodeWidth,
+                        m_Config.NodeWidth,
                         nodeHeight,
-                        c_SvgRadiusInXDirection,
-                        c_SvgRadiusInYDirection,
+                        m_Config.NodeCornerRadiusX,
+                        m_Config.NodeCornerRadiusY,
                         new Microsoft.Msagl.Core.Geometry.Point(0, 0));
 
                 drawingGraphNode.Label.Height = nodeLabelHeight;
-                drawingGraphNode.Label.Width = m_Config.SvgNodeLabelWidth;
+                drawingGraphNode.Label.Width = m_Config.NodeLabelWidth;
                 drawingGraphNode.Label.FontSize = nodeLabelFontSize;
                 drawingGraphNode.Label.FontStyle = MapFontStyle(m_Config.NodeFontStyle);
 
-                drawingGraphNode.Label.FontName = c_FontName;
+                drawingGraphNode.Label.FontName = m_Config.FontName;
                 drawingGraphNode.Attr.AddStyle(s_DashMsaglLookup[diagramNode.BorderDashStyle]);
                 drawingGraphNode.Attr.FillColor = HtmlHexCodeToMsaglColor(diagramNode.FillColorHexCode) ?? Microsoft.Msagl.Drawing.Color.LightGray;
                 drawingGraphNode.Attr.Color = HtmlHexCodeToMsaglColor(diagramNode.BorderColorHexCode) ?? Microsoft.Msagl.Drawing.Color.Black;
@@ -167,12 +162,12 @@ namespace Zametek.Graphs.ProjectPlan
             // Initialise geometry labels as well.
             foreach (Microsoft.Msagl.Drawing.Edge drawingGraphEdge in drawingGraph.Edges)
             {
-                double edgeLabelWidth = drawingGraphEdge.LabelText.Length * c_SvgEdgeLabelFontSize * (c_PxPerInch / c_PtPerInch) / m_Config.ConsolasLabelWidthCorrectionFactor;
+                double edgeLabelWidth = drawingGraphEdge.LabelText.Length * m_Config.EdgeLabelFontSize * (c_PxPerInch / c_PtPerInch) / m_Config.LabelWidthCorrectionFactor;
 
-                drawingGraphEdge.Label.FontName = c_FontName;
-                drawingGraphEdge.Label.FontSize = c_SvgEdgeLabelFontSize;
+                drawingGraphEdge.Label.FontName = m_Config.FontName;
+                drawingGraphEdge.Label.FontSize = m_Config.EdgeLabelFontSize;
                 drawingGraphEdge.Label.GeometryLabel.Width = edgeLabelWidth;
-                drawingGraphEdge.Label.GeometryLabel.Height = c_SvgEdgeLabelHeight;
+                drawingGraphEdge.Label.GeometryLabel.Height = m_Config.EdgeLabelHeight;
                 drawingGraphEdge.Label.GeometryLabel.Center = new Microsoft.Msagl.Core.Geometry.Point(0, 0);
                 drawingGraphEdge.Label.GeometryLabel.PlacementResult = Microsoft.Msagl.Core.Layout.LabelPlacementResult.OverlapsNothing;
             }
@@ -185,7 +180,7 @@ namespace Zametek.Graphs.ProjectPlan
         private static GraphLayoutModel ExtractLayout(
             Microsoft.Msagl.Drawing.Graph drawingGraph,
             DiagramGraphModel diagramGraph,
-            double interactiveLayoutScale)
+            double interactiveLayoutScalingFactor)
         {
             Microsoft.Msagl.Core.Geometry.Rectangle boundingBox = drawingGraph.GeometryGraph.BoundingBox;
             double graphLeft = boundingBox.Left;
@@ -219,10 +214,10 @@ namespace Zametek.Graphs.ProjectPlan
                 nodes.Add(new GraphNodeLayoutModel
                 {
                     Id = id,
-                    X = (centreX - (width / 2.0)) * interactiveLayoutScale,
-                    Y = (centreY - (height / 2.0)) * interactiveLayoutScale,
-                    Width = width * interactiveLayoutScale,
-                    Height = height * interactiveLayoutScale,
+                    X = (centreX - (width / 2.0)) * interactiveLayoutScalingFactor,
+                    Y = (centreY - (height / 2.0)) * interactiveLayoutScalingFactor,
+                    Width = width * interactiveLayoutScalingFactor,
+                    Height = height * interactiveLayoutScalingFactor,
                     Label = diagramNode.Text ?? string.Empty,
                     Name = diagramNode.Name,
                     Tooltip = diagramNode.Tooltip,
@@ -250,8 +245,8 @@ namespace Zametek.Graphs.ProjectPlan
 
             return new GraphLayoutModel
             {
-                Width = boundingBox.Width * interactiveLayoutScale,
-                Height = boundingBox.Height * interactiveLayoutScale,
+                Width = boundingBox.Width * interactiveLayoutScalingFactor,
+                Height = boundingBox.Height * interactiveLayoutScalingFactor,
                 Nodes = nodes,
                 Edges = edges,
             };
