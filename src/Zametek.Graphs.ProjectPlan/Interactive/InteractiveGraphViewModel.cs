@@ -24,7 +24,6 @@ namespace Zametek.Graphs.ProjectPlan
         private readonly IGraphHost m_Host;
         private readonly IGraphSerializer m_Serializer;
         private readonly IGraphImageExporter m_ImageExporter;
-        private readonly GraphConfiguration m_Config;
 
         private readonly IDisposable m_RebuildSub;
 
@@ -48,19 +47,17 @@ namespace Zametek.Graphs.ProjectPlan
         public InteractiveGraphViewModel(
             IGraphHost host,
             IGraphSerializer serializer,
-            IGraphImageExporter imageExporter,
-            GraphConfiguration configuration)
+            IGraphImageExporter imageExporter)
         {
             ArgumentNullException.ThrowIfNull(host);
             ArgumentNullException.ThrowIfNull(serializer);
             ArgumentNullException.ThrowIfNull(imageExporter);
-            ArgumentNullException.ThrowIfNull(configuration);
             m_Host = host;
             m_Serializer = serializer;
             m_ImageExporter = imageExporter;
-            m_Config = configuration;
 
             SaveGraphImageFileCommand = ReactiveCommand.CreateFromTask(SaveInteractiveImageAsync);
+            ChangeEdgeRoutingModeCommand = ReactiveCommand.Create<GraphEdgeRoutingMode>(ChangeEdgeRoutingMode);
 
             // The host pre-throttles/schedules the trigger; we simply rebuild on each notification.
             // The notification fires once on subscription, producing the initial layout.
@@ -73,7 +70,13 @@ namespace Zametek.Graphs.ProjectPlan
 
         public GraphTheme Theme => m_Host.Theme;
 
-        public bool SupportsShowNames => m_Config.SupportsShowNames;
+        // Per-graph settings live on the serializer's (mutable) configuration, so there is a single
+        // configuration object - the routing-mode change swaps the whole record there.
+        public bool SupportsShowNames => m_Serializer.Configuration.SupportsShowNames;
+
+        // The current edge routing mode (the menu's radio items read this); set via
+        // ChangeEdgeRoutingModeCommand.
+        public GraphEdgeRoutingMode EdgeRoutingMode => m_Serializer.Configuration.EdgeRoutingMode;
 
         public bool ShowNames
         {
@@ -117,6 +120,8 @@ namespace Zametek.Graphs.ProjectPlan
         }
 
         public ICommand SaveGraphImageFileCommand { get; }
+
+        public ICommand ChangeEdgeRoutingModeCommand { get; }
 
         #endregion
 
@@ -267,6 +272,25 @@ namespace Zametek.Graphs.ProjectPlan
 
         #region Private Methods
 
+        // Switch the edge routing mode. The whole configuration record is swapped on the serializer (so
+        // a subsequent layout/SVG export follows the new mode), and the existing edges are updated in
+        // place - node positions are independent of the routing mode, so no re-layout is needed. Raising
+        // EdgeRoutingMode lets the context menu's radio items re-evaluate.
+        private void ChangeEdgeRoutingMode(GraphEdgeRoutingMode routingMode)
+        {
+            if (m_Serializer.Configuration.EdgeRoutingMode == routingMode)
+            {
+                return;
+            }
+
+            m_Serializer.Configuration = m_Serializer.Configuration with { EdgeRoutingMode = routingMode };
+            foreach (GraphEdgeViewModel edge in GraphEdges)
+            {
+                edge.RoutingMode = routingMode;
+            }
+            this.RaisePropertyChanged(nameof(EdgeRoutingMode));
+        }
+
         // Run the MSAGL layout, producing the default node/edge arrangement.
         private GraphLayoutModel BuildLayout()
         {
@@ -337,7 +361,7 @@ namespace Zametek.Graphs.ProjectPlan
                     edgeLayout.ShowLabel,
                     edgeLayout.Tooltip,
                     theme,
-                    m_Config.EdgeRoutingMode));
+                    EdgeRoutingMode));
 
                 AddAdjacency(adjacency, edgeLayout.SourceId, edgeLayout.TargetId);
                 AddAdjacency(adjacency, edgeLayout.TargetId, edgeLayout.SourceId);

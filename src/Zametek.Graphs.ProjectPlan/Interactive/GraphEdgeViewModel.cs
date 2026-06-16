@@ -31,7 +31,7 @@ namespace Zametek.Graphs.ProjectPlan
         private readonly GraphNodeViewModel m_Target;
         private readonly double m_BaseThickness;
         private readonly IBrush m_BaseBrush;
-        private readonly GraphEdgeRoutingMode m_RoutingMode;
+        private GraphEdgeRoutingMode m_RoutingMode;
         private readonly IDisposable m_SourceSub;
         private readonly IDisposable m_TargetSub;
 
@@ -80,6 +80,22 @@ namespace Zametek.Graphs.ProjectPlan
         public Point StartPoint => ClipToBorder(m_Source, m_Target);
 
         public Point EndPoint => ClipToBorder(m_Target, m_Source);
+
+        // The routing strategy that shapes this edge. Settable so the interactive graph can switch the
+        // mode live (from its context menu) without a re-layout: setting it just re-raises the geometry.
+        public GraphEdgeRoutingMode RoutingMode
+        {
+            get => m_RoutingMode;
+            set
+            {
+                if (m_RoutingMode == value)
+                {
+                    return;
+                }
+                m_RoutingMode = value;
+                RaiseGeometryChanged();
+            }
+        }
 
         // The edge's shape as contiguous cubic-bezier segments, chosen by the routing mode. Exposed so
         // the export renderer can rebuild the same path in SkiaSharp.

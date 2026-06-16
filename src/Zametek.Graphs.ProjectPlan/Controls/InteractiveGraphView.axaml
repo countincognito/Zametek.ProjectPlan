@@ -4,11 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:g="using:Zametek.Graphs.ProjectPlan"
              xmlns:i="using:Avalonia.Xaml.Interactivity"
+             xmlns:converters="using:Avalonia.Controls.Converters"
              x:DataType="g:IInteractiveGraph"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.Graphs.ProjectPlan.InteractiveGraphView">
   <UserControl.Resources>
     <g:ThemeToBackgroundConverter x:Key="themeToBackgroundConverter"/>
+    <converters:EnumToBoolConverter x:Key="enumToBool"/>
   </UserControl.Resources>
 
   <DockPanel>
@@ -51,6 +53,46 @@
                     IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"
                     IsVisible="{Binding Path=SupportsShowNames, Mode=OneWay}"
                     ToggleType="CheckBox"/>
+          <!-- Edge routing: radio items whose check state reflects the current mode (OneWay via the
+               built-in EnumToBoolConverter) and whose click sets it through the command. -->
+          <MenuItem Header="{x:Static g:Menus.Menu_EdgeRouting}">
+            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_Spline}"
+                      IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.Spline}, Mode=OneWay}"
+                      Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
+                      CommandParameter="{x:Static g:GraphEdgeRoutingMode.Spline}"
+                      ToggleType="Radio"/>
+            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_SplineBundling}"
+                      IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.SplineBundling}, Mode=OneWay}"
+                      Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
+                      CommandParameter="{x:Static g:GraphEdgeRoutingMode.SplineBundling}"
+                      ToggleType="Radio"/>
+            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_StraightLine}"
+                      IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.StraightLine}, Mode=OneWay}"
+                      Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
+                      CommandParameter="{x:Static g:GraphEdgeRoutingMode.StraightLine}"
+                      ToggleType="Radio"/>
+            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_SugiyamaSplines}"
+                      IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.SugiyamaSplines}, Mode=OneWay}"
+                      Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
+                      CommandParameter="{x:Static g:GraphEdgeRoutingMode.SugiyamaSplines}"
+                      ToggleType="Radio"/>
+            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_Rectilinear}"
+                      IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.Rectilinear}, Mode=OneWay}"
+                      Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
+                      CommandParameter="{x:Static g:GraphEdgeRoutingMode.Rectilinear}"
+                      ToggleType="Radio"/>
+            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_RectilinearToCenter}"
+                      IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.RectilinearToCenter}, Mode=OneWay}"
+                      Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
+                      CommandParameter="{x:Static g:GraphEdgeRoutingMode.RectilinearToCenter}"
+                      ToggleType="Radio"/>
+            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_None}"
+                      IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.None}, Mode=OneWay}"
+                      Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
+                      CommandParameter="{x:Static g:GraphEdgeRoutingMode.None}"
+                      ToggleType="Radio"/>
+          </MenuItem>
+          <Separator/>
           <MenuItem Header="{x:Static g:Menus.Menu_SaveAs}"
                     Command="{Binding Path=SaveGraphImageFileCommand, Mode=OneWay}"/>
         </ContextMenu>

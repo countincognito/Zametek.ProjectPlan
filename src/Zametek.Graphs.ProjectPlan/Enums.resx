@@ -117,19 +117,25 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Menu_EdgeRouting" xml:space="preserve">
-    <value>Edge Routing</value>
+  <data name="Enum_EdgeRouting_None" xml:space="preserve">
+    <value>None</value>
   </data>
-  <data name="Menu_FitToView" xml:space="preserve">
-    <value>Fit to View</value>
+  <data name="Enum_EdgeRouting_Rectilinear" xml:space="preserve">
+    <value>Rectilinear</value>
   </data>
-  <data name="Menu_ResetGraphLayout" xml:space="preserve">
-    <value>Reset Layout</value>
+  <data name="Enum_EdgeRouting_RectilinearToCenter" xml:space="preserve">
+    <value>Rectilinear to Center</value>
   </data>
-  <data name="Menu_SaveAs" xml:space="preserve">
-    <value>Save _As...</value>
+  <data name="Enum_EdgeRouting_Spline" xml:space="preserve">
+    <value>Spline</value>
   </data>
-  <data name="Menu_ShowNames" xml:space="preserve">
-    <value>Show Names</value>
+  <data name="Enum_EdgeRouting_SplineBundling" xml:space="preserve">
+    <value>Spline Bundling</value>
+  </data>
+  <data name="Enum_EdgeRouting_StraightLine" xml:space="preserve">
+    <value>Straight Line</value>
+  </data>
+  <data name="Enum_EdgeRouting_SugiyamaSplines" xml:space="preserve">
+    <value>Sugiyama Splines</value>
   </data>
 </root>

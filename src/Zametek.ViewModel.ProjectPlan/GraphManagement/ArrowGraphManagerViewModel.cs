@@ -151,7 +151,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Select(_ => Unit.Default);
 
-            m_Interactive = new InteractiveGraphViewModel(this, m_GraphSerializer, m_GraphImageExporter, GraphConfigurations.Arrow);
+            m_Interactive = new InteractiveGraphViewModel(this, m_GraphSerializer, m_GraphImageExporter);
 
             Id = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
             Title = Resource.ProjectPlan.Titles.Title_ArrowGraphView;

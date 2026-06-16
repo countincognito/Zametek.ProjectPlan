@@ -26,7 +26,7 @@ namespace Zametek.Graphs.ProjectPlan
         private const double c_PxPerInch = 96;
         private const double c_PtPerInch = 72;
 
-        private readonly GraphConfiguration m_Config;
+        private GraphConfiguration m_Config;
         private readonly IMsaglSvgRenderer m_MsaglSvgRenderer;
 
         #endregion
@@ -44,6 +44,19 @@ namespace Zametek.Graphs.ProjectPlan
         }
 
         #endregion
+
+        // The live configuration. Swapping the whole record (it is immutable) is an atomic reference
+        // assignment, so a build in progress reads either the old or the new record, never a mix; the
+        // next build picks up the change (nothing derived from it is cached).
+        public GraphConfiguration Configuration
+        {
+            get => m_Config;
+            set
+            {
+                ArgumentNullException.ThrowIfNull(value);
+                m_Config = value;
+            }
+        }
 
         public byte[] BuildGraphSvgData(DiagramGraphModel diagramGraph, GraphTheme theme)
         {

@@ -16,6 +16,11 @@ namespace Zametek.Graphs.ProjectPlan
 
         bool ShowNames { get; set; }
 
+        // The current edge routing strategy (it shapes the interactive edges and drives the
+        // layout/export). The context menu's radio items read this to show the current selection and
+        // set it through ChangeEdgeRoutingModeCommand.
+        GraphEdgeRoutingMode EdgeRoutingMode { get; }
+
         ObservableCollection<GraphNodeViewModel> GraphNodes { get; }
 
         ObservableCollection<GraphEdgeViewModel> GraphEdges { get; }
@@ -25,6 +30,10 @@ namespace Zametek.Graphs.ProjectPlan
         double WorkspaceHeight { get; }
 
         ICommand SaveGraphImageFileCommand { get; }
+
+        // Set the edge routing mode. The menu's radio items bind to this, passing the chosen
+        // GraphEdgeRoutingMode as the command parameter.
+        ICommand ChangeEdgeRoutingModeCommand { get; }
 
         void SelectNode(GraphNodeViewModel? node);
 
