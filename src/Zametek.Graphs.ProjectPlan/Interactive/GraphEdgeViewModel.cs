@@ -295,9 +295,11 @@ namespace Zametek.Graphs.ProjectPlan
             double dx = Math.Abs(m_Target.CentreX - m_Source.CentreX);
             double dy = Math.Abs(m_Target.CentreY - m_Source.CentreY);
             GraphConnectionAxis dominant = GraphEdgeGeometry.ClassifyAxis(dx, dy);
-            return (
-                GraphEdgeGeometry.ResolveAxis(m_SourceExitAxis, dominant, dx, dy, c_AxisFlipRatio),
-                GraphEdgeGeometry.ResolveAxis(m_TargetEntryAxis, dominant, dx, dy, c_AxisFlipRatio));
+            GraphConnectionAxis source = GraphEdgeGeometry.ResolveAxis(m_SourceExitAxis, dominant, dx, dy, c_AxisFlipRatio);
+            GraphConnectionAxis target = GraphEdgeGeometry.ResolveAxis(m_TargetEntryAxis, dominant, dx, dy, c_AxisFlipRatio);
+            // Past the half-node threshold, turn a Z into an L (the edge keeps its source-side run and
+            // turns into the target) so a clearly-offset edge stops drawing an ever-growing middle jog.
+            return GraphEdgeGeometry.PromoteZToL(source, target, dx, dy, m_Source.Width, m_Source.Height);
         }
 
         // The centre of the node side the edge attaches to for the given axis (see

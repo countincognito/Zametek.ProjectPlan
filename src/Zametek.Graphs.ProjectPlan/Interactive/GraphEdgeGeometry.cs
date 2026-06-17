@@ -198,6 +198,40 @@ namespace Zametek.Graphs.ProjectPlan
             return axis;
         }
 
+        // Promote a "Z" (both endpoints resolved to the same axis) to an "L" once the offset
+        // perpendicular to that axis grows past half a node's extent, by flipping the TARGET endpoint
+        // to the perpendicular axis - so the edge keeps its source-side run and turns into the target
+        // (rather than a Z with an ever-growing middle jog). An already-mixed L (or a straight collapse)
+        // is returned unchanged. dx/dy are the absolute centre-to-centre offsets.
+        internal static (GraphConnectionAxis Source, GraphConnectionAxis Target) PromoteZToL(
+            GraphConnectionAxis sourceAxis,
+            GraphConnectionAxis targetAxis,
+            double dx,
+            double dy,
+            double nodeWidth,
+            double nodeHeight)
+        {
+            if (sourceAxis != targetAxis)
+            {
+                return (sourceAxis, targetAxis);
+            }
+            if (sourceAxis == GraphConnectionAxis.Horizontal)
+            {
+                // Horizontal Z: the jog is vertical, so promote once the vertical offset passes the
+                // source's half-way line; enter the target vertically (top/bottom).
+                if (dy > nodeHeight / 2.0)
+                {
+                    return (GraphConnectionAxis.Horizontal, GraphConnectionAxis.Vertical);
+                }
+            }
+            else if (dx > nodeWidth / 2.0)
+            {
+                // Vertical Z: the jog is horizontal; enter the target horizontally (left/right).
+                return (GraphConnectionAxis.Vertical, GraphConnectionAxis.Horizontal);
+            }
+            return (sourceAxis, targetAxis);
+        }
+
         // The centre of the node side the edge attaches to for the given axis: the left/right-centre for
         // a horizontal connection, the top/bottom-centre for a vertical one, choosing the side that
         // faces the other node (toward). This matches MSAGL's edge ports, so the approximation meets the

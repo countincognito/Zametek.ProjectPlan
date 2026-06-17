@@ -163,5 +163,71 @@ namespace Zametek.Graphs.ProjectPlan.Tests
         }
 
         #endregion
+
+        #region PromoteZToL (Z -> L past the half-node threshold)
+
+        private const double c_NodeWidth = 60.0;
+        private const double c_NodeHeight = 40.0;
+
+        [Fact]
+        public void PromoteZToL_HorizontalZ_BelowThreshold_StaysZ()
+        {
+            // Vertical offset (15) is within half the node height (20): keep the horizontal Z.
+            (GraphConnectionAxis source, GraphConnectionAxis target) = GraphEdgeGeometry.PromoteZToL(
+                GraphConnectionAxis.Horizontal, GraphConnectionAxis.Horizontal, 200.0, 15.0, c_NodeWidth, c_NodeHeight);
+            source.ShouldBe(GraphConnectionAxis.Horizontal);
+            target.ShouldBe(GraphConnectionAxis.Horizontal);
+        }
+
+        [Fact]
+        public void PromoteZToL_HorizontalZ_PastThreshold_FlipsTargetToVertical()
+        {
+            // Vertical offset (25) exceeds half the node height (20): enter the target vertically.
+            (GraphConnectionAxis source, GraphConnectionAxis target) = GraphEdgeGeometry.PromoteZToL(
+                GraphConnectionAxis.Horizontal, GraphConnectionAxis.Horizontal, 200.0, 25.0, c_NodeWidth, c_NodeHeight);
+            source.ShouldBe(GraphConnectionAxis.Horizontal);
+            target.ShouldBe(GraphConnectionAxis.Vertical);
+        }
+
+        [Fact]
+        public void PromoteZToL_VerticalZ_BelowThreshold_StaysZ()
+        {
+            // Horizontal offset (25) is within half the node width (30): keep the vertical Z.
+            (GraphConnectionAxis source, GraphConnectionAxis target) = GraphEdgeGeometry.PromoteZToL(
+                GraphConnectionAxis.Vertical, GraphConnectionAxis.Vertical, 25.0, 200.0, c_NodeWidth, c_NodeHeight);
+            source.ShouldBe(GraphConnectionAxis.Vertical);
+            target.ShouldBe(GraphConnectionAxis.Vertical);
+        }
+
+        [Fact]
+        public void PromoteZToL_VerticalZ_PastThreshold_FlipsTargetToHorizontal()
+        {
+            // Horizontal offset (35) exceeds half the node width (30): enter the target horizontally.
+            (GraphConnectionAxis source, GraphConnectionAxis target) = GraphEdgeGeometry.PromoteZToL(
+                GraphConnectionAxis.Vertical, GraphConnectionAxis.Vertical, 35.0, 200.0, c_NodeWidth, c_NodeHeight);
+            source.ShouldBe(GraphConnectionAxis.Vertical);
+            target.ShouldBe(GraphConnectionAxis.Horizontal);
+        }
+
+        [Fact]
+        public void PromoteZToL_AlreadyL_HorizontalToVertical_IsUnchangedEvenPastThreshold()
+        {
+            // A mixed L is never re-touched, regardless of the offsets.
+            (GraphConnectionAxis source, GraphConnectionAxis target) = GraphEdgeGeometry.PromoteZToL(
+                GraphConnectionAxis.Horizontal, GraphConnectionAxis.Vertical, 500.0, 500.0, c_NodeWidth, c_NodeHeight);
+            source.ShouldBe(GraphConnectionAxis.Horizontal);
+            target.ShouldBe(GraphConnectionAxis.Vertical);
+        }
+
+        [Fact]
+        public void PromoteZToL_AlreadyL_VerticalToHorizontal_IsUnchangedEvenPastThreshold()
+        {
+            (GraphConnectionAxis source, GraphConnectionAxis target) = GraphEdgeGeometry.PromoteZToL(
+                GraphConnectionAxis.Vertical, GraphConnectionAxis.Horizontal, 500.0, 500.0, c_NodeWidth, c_NodeHeight);
+            source.ShouldBe(GraphConnectionAxis.Vertical);
+            target.ShouldBe(GraphConnectionAxis.Horizontal);
+        }
+
+        #endregion
     }
 }
