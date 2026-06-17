@@ -168,12 +168,20 @@
                 <Canvas/>
               </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
-            <ItemsControl.Styles>
-              <Style Selector="ContentPresenter" x:DataType="g:GraphNodeViewModel">
+            <!-- Position each node container on the panel via the container theme. A bare
+                 "ContentPresenter" style selector also matches the presenter inside a node's ToolTip
+                 (whose DataContext is the tooltip string), so the compiled X/Y binding would throw
+                 InvalidCastException; but scoping it by selector fails the other way (a container's
+                 styling parent is the ItemsControl, not the Canvas, so a child-combinator selector
+                 never matches it, leaving the nodes unpositioned at the origin). ItemContainerTheme
+                 applies ONLY to the generated item containers, so it does both: positions every node
+                 and never touches the tooltip presenter. -->
+            <ItemsControl.ItemContainerTheme>
+              <ControlTheme TargetType="ContentPresenter" x:DataType="g:GraphNodeViewModel">
                 <Setter Property="Canvas.Left" Value="{Binding Path=X, Mode=OneWay}"/>
                 <Setter Property="Canvas.Top" Value="{Binding Path=Y, Mode=OneWay}"/>
-              </Style>
-            </ItemsControl.Styles>
+              </ControlTheme>
+            </ItemsControl.ItemContainerTheme>
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="g:GraphNodeViewModel">
                 <Grid Width="{Binding Path=Width, Mode=OneWay}"
