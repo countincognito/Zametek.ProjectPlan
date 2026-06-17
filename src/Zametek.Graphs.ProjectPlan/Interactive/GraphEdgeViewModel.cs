@@ -20,6 +20,14 @@ namespace Zametek.Graphs.ProjectPlan
         private const double c_HighlightThickness = 2.5;
         private const double c_ArrowLength = 9.0;
         private const double c_ArrowHalfWidth = 4.5;
+        // How far back along the curve (in workspace pixels) the arrowhead's direction is measured, so
+        // a tiny final control leg cannot flip it sideways. ~1.5x the arrow length: long enough to
+        // absorb such a leg, short enough to still follow real curvature.
+        private const double c_ArrowTangentSpan = 14.0;
+        // Hysteresis for the hybrid connection-axis choice: keep the pre-drag (MSAGL-chosen) axis until
+        // the current arrangement exceeds this ratio against it, then fall back to the dominant axis.
+        // Above 1 so there is a dead-band around 45 degrees that stops the orientation flip-flopping.
+        private const double c_AxisFlipRatio = 1.5;
         // Lift the label clear of the line so it reads against the canvas, not the edge.
         private const double c_LabelOffset = 9.0;
         private static readonly IBrush s_DefaultBrush = new SolidColorBrush(Colors.Gray);
@@ -32,6 +40,11 @@ namespace Zametek.Graphs.ProjectPlan
         private readonly double m_BaseThickness;
         private readonly IBrush m_BaseBrush;
         private GraphEdgeRoutingMode m_RoutingMode;
+        // The axes the most recent exact MSAGL route used to leave the source / enter the target (null
+        // until the first route is captured). They survive an endpoint move - so a drag keeps the
+        // pre-drag sides as a guide - and are cleared only when the routing mode changes.
+        private GraphConnectionAxis? m_SourceExitAxis;
+        private GraphConnectionAxis? m_TargetEntryAxis;
         private readonly IDisposable m_SourceSub;
         private readonly IDisposable m_TargetSub;
 
@@ -62,12 +75,14 @@ namespace Zametek.Graphs.ProjectPlan
             Tooltip = tooltip;
             LabelBrush = theme == GraphTheme.Dark ? s_DarkLabelBrush : s_LightLabelBrush;
 
+            // An endpoint moving invalidates any exact MSAGL-routed geometry (it was routed for the old
+            // position), so the edge falls back to the live approximation until the next reroute.
             m_SourceSub = m_Source
                 .WhenAnyValue(x => x.X, x => x.Y)
-                .Subscribe(_ => RaiseGeometryChanged());
+                .Subscribe(_ => InvalidateRoutedGeometry());
             m_TargetSub = m_Target
                 .WhenAnyValue(x => x.X, x => x.Y)
-                .Subscribe(_ => RaiseGeometryChanged());
+                .Subscribe(_ => InvalidateRoutedGeometry());
         }
 
         public int Id { get; }
@@ -82,7 +97,9 @@ namespace Zametek.Graphs.ProjectPlan
         public Point EndPoint => ClipToBorder(m_Target, m_Source);
 
         // The routing strategy that shapes this edge. Settable so the interactive graph can switch the
-        // mode live (from its context menu) without a re-layout: setting it just re-raises the geometry.
+        // mode live (from its context menu) without a re-layout. Changing it discards any exact routed
+        // geometry (which was for the old mode) and re-raises, so the edge shows the new mode's
+        // approximation until the next reroute upgrades it.
         public GraphEdgeRoutingMode RoutingMode
         {
             get => m_RoutingMode;
@@ -93,13 +110,53 @@ namespace Zametek.Graphs.ProjectPlan
                     return;
                 }
                 m_RoutingMode = value;
+                m_RoutedSegments = null;
+                // The captured sides were for the old mode's route; drop them so the approximation
+                // falls back to the dominant axis until the new mode's reroute captures fresh ones.
+                m_SourceExitAxis = null;
+                m_TargetEntryAxis = null;
                 RaiseGeometryChanged();
             }
         }
 
-        // The edge's shape as contiguous cubic-bezier segments, chosen by the routing mode. Exposed so
-        // the export renderer can rebuild the same path in SkiaSharp.
-        internal IReadOnlyList<GraphEdgeSegment> EdgeSegments => GraphEdgeGeometry.BuildSegments(m_RoutingMode, StartPoint, EndPoint);
+        // Exact MSAGL-routed geometry for the current positions/mode, applied as an override of the
+        // client-side approximation (see SetRoutedSegments). Null = use the approximation, which is the
+        // default and the live fallback while an endpoint is being dragged.
+        private IReadOnlyList<GraphEdgeSegment>? m_RoutedSegments;
+
+        // The edge's shape as contiguous cubic-bezier segments: the exact MSAGL route when one is in
+        // effect, otherwise the client-side approximation (built around the resolved per-endpoint
+        // connection axes, so a vertically-stacked arrangement connects top-to-bottom). Exposed so the
+        // export renderer can rebuild the same path in SkiaSharp.
+        internal IReadOnlyList<GraphEdgeSegment> EdgeSegments
+        {
+            get
+            {
+                if (m_RoutedSegments is not null)
+                {
+                    return m_RoutedSegments;
+                }
+                Point start = StartPoint;
+                Point end = EndPoint;
+                (GraphConnectionAxis sourceAxis, GraphConnectionAxis targetAxis) = ResolveConnectionAxes(start, end);
+                return GraphEdgeGeometry.BuildSegments(m_RoutingMode, start, end, sourceAxis, targetAxis);
+            }
+        }
+
+        // Apply (non-null) or drop (null) exact MSAGL-routed geometry as an override of the
+        // approximation. Called by the interactive view-model after an off-thread reroute settles. A
+        // non-empty route also refreshes the captured connection axes (the sides MSAGL chose), which
+        // then guide the approximation through the next drag.
+        internal void SetRoutedSegments(IReadOnlyList<GraphEdgeSegment>? segments)
+        {
+            m_RoutedSegments = segments;
+            if (segments is { Count: > 0 })
+            {
+                m_SourceExitAxis = ExitAxis(segments[0]);
+                m_TargetEntryAxis = EntryAxis(segments[^1]);
+            }
+            RaiseGeometryChanged();
+        }
 
         // The drawn edge: the bezier segments stitched into one open figure (a straight line for
         // non-spline modes, a right-angle path for rectilinear modes). Bound by the view's <Path>.
@@ -175,6 +232,14 @@ namespace Zametek.Graphs.ProjectPlan
             }
         }
 
+        // An endpoint moved: the exact routed geometry is now stale, so drop it (reverting to the live
+        // approximation) and re-raise.
+        private void InvalidateRoutedGeometry()
+        {
+            m_RoutedSegments = null;
+            RaiseGeometryChanged();
+        }
+
         private void RaiseGeometryChanged()
         {
             this.RaisePropertyChanged(nameof(StartPoint));
@@ -206,6 +271,67 @@ namespace Zametek.Graphs.ProjectPlan
             }
         }
 
+        // Resolve the per-endpoint connection axes for the approximation: the hybrid of the pre-drag
+        // MSAGL-chosen sides and the current arrangement. Each endpoint keeps its captured axis until
+        // the arrangement clearly contradicts it, then falls back to the dominant axis; with nothing
+        // captured yet, the dominant axis is used outright.
+        private (GraphConnectionAxis Source, GraphConnectionAxis Target) ResolveConnectionAxes(Point start, Point end)
+        {
+            double dx = Math.Abs(end.X - start.X);
+            double dy = Math.Abs(end.Y - start.Y);
+            GraphConnectionAxis dominant = dy > dx ? GraphConnectionAxis.Vertical : GraphConnectionAxis.Horizontal;
+            return (
+                ResolveAxis(m_SourceExitAxis, dominant, dx, dy),
+                ResolveAxis(m_TargetEntryAxis, dominant, dx, dy));
+        }
+
+        // Keep the captured (pre-drag) axis unless the current arrangement exceeds the flip ratio
+        // against it, in which case fall back to the dominant axis. Nothing captured -> dominant axis.
+        private static GraphConnectionAxis ResolveAxis(GraphConnectionAxis? captured, GraphConnectionAxis dominant, double dx, double dy)
+        {
+            if (captured is not GraphConnectionAxis axis)
+            {
+                return dominant;
+            }
+            if (axis == GraphConnectionAxis.Horizontal && dy > c_AxisFlipRatio * dx)
+            {
+                return GraphConnectionAxis.Vertical;
+            }
+            if (axis == GraphConnectionAxis.Vertical && dx > c_AxisFlipRatio * dy)
+            {
+                return GraphConnectionAxis.Horizontal;
+            }
+            return axis;
+        }
+
+        // The axis a routed edge leaves its source along, from the first segment's start tangent
+        // (Control1 - Start), falling back to the segment chord if that is degenerate.
+        private static GraphConnectionAxis ExitAxis(GraphEdgeSegment first)
+        {
+            double dx = Math.Abs(first.Control1.X - first.Start.X);
+            double dy = Math.Abs(first.Control1.Y - first.Start.Y);
+            if (dx < 1e-6 && dy < 1e-6)
+            {
+                dx = Math.Abs(first.End.X - first.Start.X);
+                dy = Math.Abs(first.End.Y - first.Start.Y);
+            }
+            return dy > dx ? GraphConnectionAxis.Vertical : GraphConnectionAxis.Horizontal;
+        }
+
+        // The axis a routed edge enters its target along, from the last segment's end tangent
+        // (End - Control2), falling back to the segment chord if that is degenerate.
+        private static GraphConnectionAxis EntryAxis(GraphEdgeSegment last)
+        {
+            double dx = Math.Abs(last.End.X - last.Control2.X);
+            double dy = Math.Abs(last.End.Y - last.Control2.Y);
+            if (dx < 1e-6 && dy < 1e-6)
+            {
+                dx = Math.Abs(last.End.X - last.Start.X);
+                dy = Math.Abs(last.End.Y - last.Start.Y);
+            }
+            return dy > dx ? GraphConnectionAxis.Vertical : GraphConnectionAxis.Horizontal;
+        }
+
         // Intersection of the centre-to-centre line with 'node's axis-aligned border rectangle.
         private static Point ClipToBorder(GraphNodeViewModel node, GraphNodeViewModel toward)
         {
@@ -230,19 +356,22 @@ namespace Zametek.Graphs.ProjectPlan
 
         private IList<Point> BuildArrowPoints()
         {
-            GraphEdgeSegment last = EdgeSegments[^1];
-            Point tip = last.End;
+            IReadOnlyList<GraphEdgeSegment> segments = EdgeSegments;
+            Point tip = segments[^1].End;
 
-            // Tangent at the tip = direction from the final segment's last control point to the tip, so
-            // the arrowhead follows the curve. (For a straight run the control point is on the chord,
-            // so this is the chord direction.)
-            double dx = tip.X - last.Control2.X;
-            double dy = tip.Y - last.Control2.Y;
+            // Aim the head along the curve measured over the last c_ArrowTangentSpan pixels of travel,
+            // not the final control leg: that leg can be a tiny, horizontally-pinned nub (where a
+            // near-vertical spline/rectilinear edge meets the node), which would otherwise snap the head
+            // sideways. Walking a meaningful span back keeps the head glued to the visible line for any
+            // orientation, and for an exact MSAGL bezier it tracks the true tip tangent.
+            Point anchor = GraphEdgeGeometry.AnchorBeforeEnd(segments, c_ArrowTangentSpan);
+            double dx = tip.X - anchor.X;
+            double dy = tip.Y - anchor.Y;
             double length = Math.Sqrt((dx * dx) + (dy * dy));
 
             if (length < 1e-6)
             {
-                // Degenerate control point; fall back to the chord direction.
+                // Degenerate (zero-length path); fall back to the chord direction.
                 dx = tip.X - StartPoint.X;
                 dy = tip.Y - StartPoint.Y;
                 length = Math.Sqrt((dx * dx) + (dy * dy));

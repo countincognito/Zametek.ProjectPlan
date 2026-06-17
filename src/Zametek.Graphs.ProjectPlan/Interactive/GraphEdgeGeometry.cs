@@ -7,19 +7,34 @@ namespace Zametek.Graphs.ProjectPlan
     // control points lie on its own chord.
     internal readonly record struct GraphEdgeSegment(Point Start, Point Control1, Point Control2, Point End);
 
+    // Which axis an interactive edge leaves the source / enters the target along: Horizontal = the
+    // left/right node sides, Vertical = the top/bottom sides. Chosen per endpoint (see the interactive
+    // view-model's hybrid resolve) and fed into the spline/rectilinear builders so a vertically-stacked
+    // arrangement connects top-to-bottom instead of always sideways.
+    internal enum GraphConnectionAxis
+    {
+        Horizontal,
+        Vertical,
+    }
+
     // Computes the on-screen shape of an interactive edge from a GraphEdgeRoutingMode, client-side (no
     // MSAGL) so it recomputes live as nodes are dragged. The shape is returned as a list of contiguous
     // cubic-bezier segments from the (already border-clipped) start to end. The serializer lays the
     // graph out left-to-right (LayerDirection.LR), so the shapes are built around that primary axis:
     //
-    //   - Spline / SugiyamaSplines / SplineBundling -> a single smooth horizontal connector: both
-    //     control points sit at the horizontal midpoint, each at its own endpoint's height. Endpoints
-    //     on the same level (equal Y) leave the controls on the chord, giving a straight line; a
-    //     vertical offset gives a smooth S-curve whose direction follows the offset (so edges going up
-    //     and edges going down bend opposite ways, not all to one side).
+    //   - Spline / SugiyamaSplines / SplineBundling -> a single smooth connector whose control points
+    //     follow the per-endpoint GraphConnectionAxis: a horizontal endpoint puts its control at the
+    //     horizontal midpoint at its own height, a vertical endpoint at the vertical midpoint at its
+    //     own X. Endpoints aligned along the chosen axis leave the controls on the chord, giving a
+    //     straight line; an offset gives a smooth S-curve (or a mixed curve when the two axes differ).
     //   - StraightLine / None / anything else -> a single straight segment.
-    //   - Rectilinear / RectilinearToCenter -> an orthogonal "Z" path with right-angle corners: leave
-    //     horizontally, turn vertically at the midpoint, arrive horizontally (three straight segments).
+    //   - Rectilinear / RectilinearToCenter -> an orthogonal path with right-angle corners, shaped by
+    //     the per-endpoint axes: matching axes give a three-segment "Z" (corners at the horizontal or
+    //     vertical midpoint), differing axes give a two-segment "L" with a single corner.
+    //
+    // The connection axes are supplied by the caller (the interactive view-model resolves them from the
+    // pre-drag MSAGL route plus the current arrangement), so the same arrangement can connect side-to-
+    // side or top-to-bottom depending on what the layout favours.
     //
     // Both the interactive view-model (an Avalonia Geometry) and the export renderer (a SkiaSharp path)
     // build from these same segments, so the on-screen and exported edges stay identical.
@@ -35,16 +50,18 @@ namespace Zametek.Graphs.ProjectPlan
         public static IReadOnlyList<GraphEdgeSegment> BuildSegments(
             GraphEdgeRoutingMode routingMode,
             Point start,
-            Point end)
+            Point end,
+            GraphConnectionAxis sourceAxis,
+            GraphConnectionAxis targetAxis)
         {
             return routingMode switch
             {
                 GraphEdgeRoutingMode.Rectilinear or GraphEdgeRoutingMode.RectilinearToCenter
-                    => OrthogonalSegments(start, end),
+                    => OrthogonalSegments(start, end, sourceAxis, targetAxis),
                 GraphEdgeRoutingMode.Spline
                     or GraphEdgeRoutingMode.SugiyamaSplines
                     or GraphEdgeRoutingMode.SplineBundling
-                    => [HorizontalConnector(start, end)],
+                    => [Connector(start, end, sourceAxis, targetAxis)],
                 // StraightLine, None and any future value: a straight line.
                 _ => [StraightSegment(start, end)],
             };
@@ -63,6 +80,43 @@ namespace Zametek.Graphs.ProjectPlan
                 (w0 * start.Y) + (w1 * control1.Y) + (w2 * control2.Y) + (w3 * end.Y));
         }
 
+        // The point a given distance of travel back from the path's end (the tip), found by walking
+        // backward along the segments and sampling each cubic, crossing into earlier segments when the
+        // final leg is shorter than the span. Used to aim the arrowhead along a meaningful stretch of
+        // the curve near the tip rather than its final control leg, which for the spline/rectilinear
+        // approximations is a tiny horizontally-pinned nub that would otherwise snap the head sideways
+        // on a near-vertical edge. Falls back to the path's start when the whole path is shorter than
+        // the span.
+        public static Point AnchorBeforeEnd(IReadOnlyList<GraphEdgeSegment> segments, double span)
+        {
+            const int samplesPerSegment = 16;
+            Point previous = segments[^1].End;
+            double travelled = 0.0;
+
+            // Walk segments tip-to-start; within each, sample from just before the end (t just under
+            // 1) down to its start (t = 0). Points are contiguous, so 'previous' carries across the
+            // segment boundary without double-counting the shared point.
+            for (int s = segments.Count - 1; s >= 0; s--)
+            {
+                GraphEdgeSegment segment = segments[s];
+                for (int i = 1; i <= samplesPerSegment; i++)
+                {
+                    double t = 1.0 - ((double)i / samplesPerSegment);
+                    Point sample = PointOnCubic(segment.Start, segment.Control1, segment.Control2, segment.End, t);
+                    double dx = sample.X - previous.X;
+                    double dy = sample.Y - previous.Y;
+                    travelled += Math.Sqrt((dx * dx) + (dy * dy));
+                    if (travelled >= span)
+                    {
+                        return sample;
+                    }
+                    previous = sample;
+                }
+            }
+
+            return segments[0].Start;
+        }
+
         // The geometric middle of the path (the midpoint of the middle segment), used to anchor the
         // edge label. For a single-segment edge this is just t = 0.5; for the three-segment orthogonal
         // path it lands on the middle (vertical) run.
@@ -72,22 +126,38 @@ namespace Zametek.Graphs.ProjectPlan
             return PointOnCubic(mid.Start, mid.Control1, mid.Control2, mid.End, 0.5);
         }
 
-        // Both control points at the horizontal midpoint, each at its endpoint's height: a straight
-        // line when the endpoints are level, otherwise a smooth S-curve toward the offset.
-        private static GraphEdgeSegment HorizontalConnector(Point start, Point end)
+        // A single smooth cubic whose control points follow the per-endpoint axis: a horizontal
+        // endpoint anchors its control at the horizontal midpoint (keeping its own height), a vertical
+        // endpoint at the vertical midpoint (keeping its own X). Matching axes give a straight line when
+        // the endpoints are aligned along that axis, otherwise a smooth S-curve; differing axes give a
+        // smooth curve that leaves along one axis and arrives along the other.
+        private static GraphEdgeSegment Connector(
+            Point start,
+            Point end,
+            GraphConnectionAxis sourceAxis,
+            GraphConnectionAxis targetAxis)
         {
             double midX = (start.X + end.X) / 2.0;
-            return new GraphEdgeSegment(
-                start,
-                new Point(midX, start.Y),
-                new Point(midX, end.Y),
-                end);
+            double midY = (start.Y + end.Y) / 2.0;
+            Point control1 = sourceAxis == GraphConnectionAxis.Horizontal
+                ? new Point(midX, start.Y)
+                : new Point(start.X, midY);
+            Point control2 = targetAxis == GraphConnectionAxis.Horizontal
+                ? new Point(midX, end.Y)
+                : new Point(end.X, midY);
+            return new GraphEdgeSegment(start, control1, control2, end);
         }
 
-        // An orthogonal "Z": horizontal out of the source, vertical at the midpoint, horizontal into
-        // the target. Collapses to a single straight run when the endpoints already share an axis (so
-        // there is no zero-length corner).
-        private static IReadOnlyList<GraphEdgeSegment> OrthogonalSegments(Point start, Point end)
+        // An orthogonal path shaped by the per-endpoint axes. Matching axes give a three-segment "Z"
+        // (corners at the horizontal midpoint for two horizontal ends, the vertical midpoint for two
+        // vertical ends); differing axes give a two-segment "L" with a single corner (leave along the
+        // source axis, arrive along the target axis). Collapses to a single straight run when the
+        // endpoints already share an axis (so there is no zero-length corner).
+        private static IReadOnlyList<GraphEdgeSegment> OrthogonalSegments(
+            Point start,
+            Point end,
+            GraphConnectionAxis sourceAxis,
+            GraphConnectionAxis targetAxis)
         {
             const double epsilon = 1e-6;
             if (Math.Abs(end.Y - start.Y) < epsilon || Math.Abs(end.X - start.X) < epsilon)
@@ -96,19 +166,49 @@ namespace Zametek.Graphs.ProjectPlan
             }
 
             double midX = (start.X + end.X) / 2.0;
-            var corner1 = new Point(midX, start.Y);
-            var corner2 = new Point(midX, end.Y);
-            return
-            [
-                StraightSegment(start, corner1),
-                StraightSegment(corner1, corner2),
-                StraightSegment(corner2, end),
-            ];
+            double midY = (start.Y + end.Y) / 2.0;
+
+            if (sourceAxis == GraphConnectionAxis.Horizontal && targetAxis == GraphConnectionAxis.Horizontal)
+            {
+                var corner1 = new Point(midX, start.Y);
+                var corner2 = new Point(midX, end.Y);
+                return
+                [
+                    StraightSegment(start, corner1),
+                    StraightSegment(corner1, corner2),
+                    StraightSegment(corner2, end),
+                ];
+            }
+
+            if (sourceAxis == GraphConnectionAxis.Vertical && targetAxis == GraphConnectionAxis.Vertical)
+            {
+                var corner1 = new Point(start.X, midY);
+                var corner2 = new Point(end.X, midY);
+                return
+                [
+                    StraightSegment(start, corner1),
+                    StraightSegment(corner1, corner2),
+                    StraightSegment(corner2, end),
+                ];
+            }
+
+            if (sourceAxis == GraphConnectionAxis.Horizontal)
+            {
+                // Leave horizontally, arrive vertically: corner level with the source, above/below the
+                // target.
+                var corner = new Point(end.X, start.Y);
+                return [StraightSegment(start, corner), StraightSegment(corner, end)];
+            }
+
+            // Leave vertically, arrive horizontally: corner above/below the source, level with the
+            // target.
+            var elbow = new Point(start.X, end.Y);
+            return [StraightSegment(start, elbow), StraightSegment(elbow, end)];
         }
 
         // A straight line expressed as a bezier: control points at one-third and two-thirds along the
-        // chord.
-        private static GraphEdgeSegment StraightSegment(Point start, Point end)
+        // chord. Shared with the MSAGL router, which builds straight runs the same way.
+        internal static GraphEdgeSegment StraightSegment(Point start, Point end)
         {
             double dx = end.X - start.X;
             double dy = end.Y - start.Y;

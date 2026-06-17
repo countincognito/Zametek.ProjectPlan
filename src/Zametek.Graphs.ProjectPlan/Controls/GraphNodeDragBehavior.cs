@@ -6,10 +6,11 @@ using Avalonia.Xaml.Interactivity;
 
 namespace Zametek.Graphs.ProjectPlan
 {
-    // Lets the user drag an interactive graph node and select it on press. Pointer positions are
-    // taken relative to the hosting Canvas, so dragging stays correct under the surrounding zoom
-    // transform. e.Handled is set so the press does not also start a background pan of the viewport
-    // behind the graph. (Replaces the parallel ArrowNodeDragBehavior/VertexNodeDragBehavior.)
+    // Lets the user drag an interactive graph node and highlight it while the button is held; the
+    // selection clears on release, so the highlight only persists for the press/drag. Pointer
+    // positions are taken relative to the hosting Canvas, so dragging stays correct under the
+    // surrounding zoom transform. e.Handled is set so the press does not also start a background pan
+    // of the viewport behind the graph. (Replaces the parallel ArrowNodeDragBehavior/VertexNodeDragBehavior.)
     public class GraphNodeDragBehavior
         : Behavior<Control>
     {
@@ -108,6 +109,9 @@ namespace Zametek.Graphs.ProjectPlan
             {
                 m_Manager?.OnNodeMoved(node);
             }
+
+            // The highlight is held only while the button is down; releasing clears the selection.
+            m_Manager?.SelectNode(null);
 
             m_IsDragging = false;
             m_HasMoved = false;

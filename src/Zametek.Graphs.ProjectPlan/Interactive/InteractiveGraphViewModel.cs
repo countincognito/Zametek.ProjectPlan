@@ -24,8 +24,12 @@ namespace Zametek.Graphs.ProjectPlan
         private readonly IGraphHost m_Host;
         private readonly IGraphSerializer m_Serializer;
         private readonly IGraphImageExporter m_ImageExporter;
+        private readonly IInteractiveEdgeRouter m_EdgeRouter;
 
         private readonly IDisposable m_RebuildSub;
+
+        // Coalesces edge reroutes: starting a new one cancels the previous so only the latest wins.
+        private CancellationTokenSource? m_RerouteCts;
 
         private Dictionary<int, HashSet<int>> m_Adjacency = [];
         private GraphNodeViewModel? m_SelectedNode;
@@ -48,6 +52,17 @@ namespace Zametek.Graphs.ProjectPlan
             IGraphHost host,
             IGraphSerializer serializer,
             IGraphImageExporter imageExporter)
+            : this(host, serializer, imageExporter, edgeRouter: null)
+        {
+        }
+
+        // Injecting overload (internal, since the router type is a library-private detail) for tests and
+        // a future B that supplies a persistent live router.
+        internal InteractiveGraphViewModel(
+            IGraphHost host,
+            IGraphSerializer serializer,
+            IGraphImageExporter imageExporter,
+            IInteractiveEdgeRouter? edgeRouter)
         {
             ArgumentNullException.ThrowIfNull(host);
             ArgumentNullException.ThrowIfNull(serializer);
@@ -55,6 +70,9 @@ namespace Zametek.Graphs.ProjectPlan
             m_Host = host;
             m_Serializer = serializer;
             m_ImageExporter = imageExporter;
+            // Defaulted (not injected) so the manager view-models stay unchanged; a future B (live
+            // rerouting) can inject a persistent router behind the same interface.
+            m_EdgeRouter = edgeRouter ?? new MsaglInteractiveEdgeRouter();
 
             SaveGraphImageFileCommand = ReactiveCommand.CreateFromTask(SaveInteractiveImageAsync);
             ChangeEdgeRoutingModeCommand = ReactiveCommand.Create<GraphEdgeRoutingMode>(ChangeEdgeRoutingMode);
@@ -140,6 +158,7 @@ namespace Zametek.Graphs.ProjectPlan
                     PopulateInteractiveGraph(layout);
                     this.RaisePropertyChanged(nameof(Theme));
                     this.RaisePropertyChanged(nameof(ShowNames));
+                    RerouteEdges();
                 });
             }
             catch (Exception ex)
@@ -200,6 +219,7 @@ namespace Zametek.Graphs.ProjectPlan
         {
             m_ManualNodePositions.Clear();
             PopulateInteractiveGraph(BuildLayout());
+            RerouteEdges();
         }
 
         // Remember a node the user has dragged so its position survives the next re-layout.
@@ -208,6 +228,9 @@ namespace Zametek.Graphs.ProjectPlan
             ArgumentNullException.ThrowIfNull(node);
             m_ManualNodePositions[node.Id] = (node.X, node.Y);
             RecomputeWorkspace();
+            // Drag-end: re-route the edges for the dropped arrangement (the B' trigger). During the drag
+            // the moved edges fell back to the approximation; this upgrades them back to exact geometry.
+            RerouteEdges();
         }
 
         // Grow the workspace immediately while a node is being dragged outward, so it never leaves
@@ -286,9 +309,101 @@ namespace Zametek.Graphs.ProjectPlan
             m_Serializer.Configuration = m_Serializer.Configuration with { EdgeRoutingMode = routingMode };
             foreach (GraphEdgeViewModel edge in GraphEdges)
             {
+                // Setting the mode drops any exact routed geometry (it was for the old mode), so the
+                // edges show the new mode's approximation immediately; the reroute below upgrades them.
                 edge.RoutingMode = routingMode;
             }
             this.RaisePropertyChanged(nameof(EdgeRoutingMode));
+            RerouteEdges();
+        }
+
+        // Replace the client-side edge approximations with exact MSAGL-routed geometry for the current
+        // node positions and mode. This is the B' seam: it is invoked once whenever the arrangement
+        // settles (initial layout, reset, mode change, drag-end). Transitioning to B (live rerouting)
+        // is just calling this more often - throttled, from the per-move drag path - plus optionally
+        // injecting a persistent IInteractiveEdgeRouter that reroutes only the dragged edges. The
+        // snapshot is taken synchronously on the UI thread; the routing runs off-thread; the result is
+        // applied back on the UI thread (the await resumes on the captured UI context).
+        private void RerouteEdges()
+        {
+            _ = RerouteEdgesAsync();
+        }
+
+        private async Task RerouteEdgesAsync()
+        {
+            EdgeRoutingRequest request = SnapshotRouting();
+            if (request.Edges.Count == 0)
+            {
+                return;
+            }
+
+            // Supersede any in-flight reroute so only the latest arrangement is applied.
+            m_RerouteCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            m_RerouteCts = cts;
+
+            try
+            {
+                IReadOnlyList<RoutedEdge> routed = await m_EdgeRouter.RouteAsync(request, cts.Token);
+                if (!cts.Token.IsCancellationRequested)
+                {
+                    ApplyRoutedEdges(routed);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Superseded by a newer reroute; nothing to apply.
+            }
+            catch (Exception ex)
+            {
+                await m_Host.ReportErrorAsync(ex);
+            }
+            finally
+            {
+                if (ReferenceEquals(m_RerouteCts, cts))
+                {
+                    m_RerouteCts = null;
+                }
+                cts.Dispose();
+            }
+        }
+
+        // Immutable screen-coordinate snapshot of the current nodes, edges and mode, for off-thread
+        // routing.
+        private EdgeRoutingRequest SnapshotRouting()
+        {
+            var nodes = new List<EdgeRoutingNode>(GraphNodes.Count);
+            foreach (GraphNodeViewModel node in GraphNodes)
+            {
+                nodes.Add(new EdgeRoutingNode(node.Id, node.X, node.Y, node.Width, node.Height));
+            }
+
+            var edges = new List<EdgeRoutingEdge>(GraphEdges.Count);
+            foreach (GraphEdgeViewModel edge in GraphEdges)
+            {
+                edges.Add(new EdgeRoutingEdge(edge.Id, edge.SourceId, edge.TargetId));
+            }
+
+            return new EdgeRoutingRequest(nodes, edges, EdgeRoutingMode);
+        }
+
+        // Apply exact routed geometry to the matching edges. Edges absent from the result (e.g. when the
+        // mode needs no routing, or routing failed) keep whatever geometry they currently show.
+        private void ApplyRoutedEdges(IReadOnlyList<RoutedEdge> routed)
+        {
+            if (routed.Count == 0)
+            {
+                return;
+            }
+
+            Dictionary<int, GraphEdgeViewModel> byId = GraphEdges.ToDictionary(x => x.Id);
+            foreach (RoutedEdge routedEdge in routed)
+            {
+                if (byId.TryGetValue(routedEdge.Id, out GraphEdgeViewModel? edge))
+                {
+                    edge.SetRoutedSegments(routedEdge.Segments);
+                }
+            }
         }
 
         // Run the MSAGL layout, producing the default node/edge arrangement.
@@ -490,6 +605,7 @@ namespace Zametek.Graphs.ProjectPlan
             if (disposing)
             {
                 m_RebuildSub.Dispose();
+                m_RerouteCts?.Cancel();
                 foreach (GraphEdgeViewModel edge in GraphEdges)
                 {
                     edge.Dispose();

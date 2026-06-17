@@ -34,21 +34,21 @@ namespace Zametek.Graphs.ProjectPlan
 
         private double Zoom => zoomer.Value;
 
-        // Centre the graph in the viewport the first time both have a size; afterwards the
-        // user's pan/zoom is preserved across re-layouts.
+        // Frame the graph in the viewport the first time there are nodes and both have a size;
+        // afterwards the user's pan/zoom is preserved across re-layouts. The auto-fit only shrinks
+        // to fit (it never enlarges a small graph past its natural size), so the graph lands fully
+        // on screen without surprising zoom-in.
         private void GraphCanvas_SizeChanged(object? sender, SizeChangedEventArgs e)
         {
-            if (m_HasCentered
-                || graphCanvas.Bounds.Width <= 0
-                || graphCanvas.Bounds.Height <= 0
-                || viewport.Bounds.Width <= 0
-                || viewport.Bounds.Height <= 0)
+            if (m_HasCentered)
             {
                 return;
             }
 
-            CentreWorkspace(graphCanvas.Bounds.Width, graphCanvas.Bounds.Height);
-            m_HasCentered = true;
+            if (FitToView(maxZoom: 1.0))
+            {
+                m_HasCentered = true;
+            }
         }
 
         // Pan so a workspace of the given size sits centred in the viewport at the current zoom.
@@ -149,14 +149,25 @@ namespace Zametek.Graphs.ProjectPlan
 
         // Frame every node in the viewport: pick the zoom that fits the node bounding box (with a
         // margin) and pan so it is centred. This recovers any node that has been dragged far away.
+        // The explicit menu command fills the viewport (zooming in if the graph is small).
         private void FitToView_Click(object? sender, RoutedEventArgs e)
+        {
+            FitToView(maxZoom: zoomer.Maximum);
+        }
+
+        // Pick the zoom that frames the node bounding box (with a margin) in the viewport and pan so
+        // it is centred, capping the zoom at maxZoom (the auto-fit passes 1.0 so it only shrinks to
+        // fit; the menu command passes the slider maximum so it also fills a small graph). Returns
+        // false without changing anything when there is nothing to frame yet (no nodes, or the
+        // viewport has no size).
+        private bool FitToView(double maxZoom)
         {
             if (DataContext is not IInteractiveGraph viewModel
                 || viewModel.GraphNodes.Count == 0
                 || viewport.Bounds.Width <= 0
                 || viewport.Bounds.Height <= 0)
             {
-                return;
+                return false;
             }
 
             double minX = double.MaxValue;
@@ -178,7 +189,7 @@ namespace Zametek.Graphs.ProjectPlan
             double zoom = Math.Min(
                 viewport.Bounds.Width / contentWidth,
                 viewport.Bounds.Height / contentHeight);
-            zoom = Math.Clamp(zoom, zoomer.Minimum, zoomer.Maximum);
+            zoom = Math.Clamp(zoom, zoomer.Minimum, Math.Min(zoomer.Maximum, maxZoom));
             zoomer.Value = zoom;
 
             // Centre the content (Slider_ValueChanged may have nudged the pan, so set it last).
@@ -186,6 +197,7 @@ namespace Zametek.Graphs.ProjectPlan
             double contentCentreY = (minY + maxY) / 2.0;
             m_PanTransform.X = (viewport.Bounds.Width / 2.0) - (contentCentreX * zoom);
             m_PanTransform.Y = (viewport.Bounds.Height / 2.0) - (contentCentreY * zoom);
+            return true;
         }
 
         // Discard all dragged positions, rebuild the default MSAGL layout, and reproduce the
