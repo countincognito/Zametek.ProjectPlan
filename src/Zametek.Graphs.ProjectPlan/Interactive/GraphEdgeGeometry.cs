@@ -126,6 +126,93 @@ namespace Zametek.Graphs.ProjectPlan
             return PointOnCubic(mid.Start, mid.Control1, mid.Control2, mid.End, 0.5);
         }
 
+        // Whether a mode shapes its edges around the connection axes (the spline and rectilinear
+        // families) or ignores them (StraightLine / None, which just draw the centre-to-centre line).
+        internal static bool UsesConnectionAxes(GraphEdgeRoutingMode routingMode)
+        {
+            return routingMode switch
+            {
+                GraphEdgeRoutingMode.StraightLine or GraphEdgeRoutingMode.None => false,
+                _ => true,
+            };
+        }
+
+        // Classify a span as a horizontal or vertical connection: vertical when the vertical span
+        // dominates, horizontal otherwise (ties resolve to horizontal).
+        internal static GraphConnectionAxis ClassifyAxis(double dx, double dy)
+        {
+            return dy > dx ? GraphConnectionAxis.Vertical : GraphConnectionAxis.Horizontal;
+        }
+
+        // The axis a routed edge leaves its source along, taken from the first segment's start tangent
+        // (Control1 - Start), falling back to the segment chord if that tangent is degenerate.
+        internal static GraphConnectionAxis ExitAxis(GraphEdgeSegment first)
+        {
+            double dx = Math.Abs(first.Control1.X - first.Start.X);
+            double dy = Math.Abs(first.Control1.Y - first.Start.Y);
+            if (dx < 1e-6 && dy < 1e-6)
+            {
+                dx = Math.Abs(first.End.X - first.Start.X);
+                dy = Math.Abs(first.End.Y - first.Start.Y);
+            }
+            return ClassifyAxis(dx, dy);
+        }
+
+        // The axis a routed edge enters its target along, taken from the last segment's end tangent
+        // (End - Control2), falling back to the segment chord if that tangent is degenerate.
+        internal static GraphConnectionAxis EntryAxis(GraphEdgeSegment last)
+        {
+            double dx = Math.Abs(last.End.X - last.Control2.X);
+            double dy = Math.Abs(last.End.Y - last.Control2.Y);
+            if (dx < 1e-6 && dy < 1e-6)
+            {
+                dx = Math.Abs(last.End.X - last.Start.X);
+                dy = Math.Abs(last.End.Y - last.Start.Y);
+            }
+            return ClassifyAxis(dx, dy);
+        }
+
+        // The hybrid axis choice: keep the captured (pre-drag) axis unless the current arrangement
+        // exceeds the flip ratio against it, in which case fall back to the dominant axis. With nothing
+        // captured, the dominant axis is used outright. flipRatio > 1 gives a dead-band around 45
+        // degrees so the orientation does not flip-flop.
+        internal static GraphConnectionAxis ResolveAxis(
+            GraphConnectionAxis? captured,
+            GraphConnectionAxis dominant,
+            double dx,
+            double dy,
+            double flipRatio)
+        {
+            if (captured is not GraphConnectionAxis axis)
+            {
+                return dominant;
+            }
+            if (axis == GraphConnectionAxis.Horizontal && dy > flipRatio * dx)
+            {
+                return GraphConnectionAxis.Vertical;
+            }
+            if (axis == GraphConnectionAxis.Vertical && dx > flipRatio * dy)
+            {
+                return GraphConnectionAxis.Horizontal;
+            }
+            return axis;
+        }
+
+        // The centre of the node side the edge attaches to for the given axis: the left/right-centre for
+        // a horizontal connection, the top/bottom-centre for a vertical one, choosing the side that
+        // faces the other node (toward). This matches MSAGL's edge ports, so the approximation meets the
+        // node where the settled route does.
+        internal static Point AttachPoint(Point centre, double width, double height, GraphConnectionAxis axis, Point toward)
+        {
+            if (axis == GraphConnectionAxis.Horizontal)
+            {
+                double x = toward.X >= centre.X ? centre.X + (width / 2.0) : centre.X - (width / 2.0);
+                return new Point(x, centre.Y);
+            }
+            double y = toward.Y >= centre.Y ? centre.Y + (height / 2.0) : centre.Y - (height / 2.0);
+            return new Point(centre.X, y);
+        }
+
         // A single smooth cubic whose control points follow the per-endpoint axis: a horizontal
         // endpoint anchors its control at the horizontal midpoint (keeping its own height), a vertical
         // endpoint at the vertical midpoint (keeping its own X). Matching axes give a straight line when

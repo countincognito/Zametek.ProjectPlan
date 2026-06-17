@@ -54,8 +54,11 @@
     <Project Path="test/Zametek.Data.ProjectPlan.Tests/Zametek.Data.ProjectPlan.Tests.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
+    <Project Path="test/Zametek.Graphs.ProjectPlan.Tests/Zametek.Graphs.ProjectPlan.Tests.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
     <Project Path="test/Zametek.ViewModel.ProjectPlan.Tests/Zametek.ViewModel.ProjectPlan.Tests.csproj">
-      <Platform Solution="Release|ARM64" Project="ARM64" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
   </Folder>
 </Solution>

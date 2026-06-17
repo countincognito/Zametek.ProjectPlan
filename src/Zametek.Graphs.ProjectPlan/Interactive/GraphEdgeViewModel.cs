@@ -136,9 +136,23 @@ namespace Zametek.Graphs.ProjectPlan
                 {
                     return m_RoutedSegments;
                 }
-                Point start = StartPoint;
-                Point end = EndPoint;
-                (GraphConnectionAxis sourceAxis, GraphConnectionAxis targetAxis) = ResolveConnectionAxes(start, end);
+
+                // Straight / None ignore the connection axes: draw the centre-to-centre border clip so
+                // the line runs accurately corner-to-corner between the nodes.
+                if (!GraphEdgeGeometry.UsesConnectionAxes(m_RoutingMode))
+                {
+                    return GraphEdgeGeometry.BuildSegments(
+                        m_RoutingMode, StartPoint, EndPoint,
+                        GraphConnectionAxis.Horizontal, GraphConnectionAxis.Horizontal);
+                }
+
+                // Spline / rectilinear: resolve the per-endpoint axes from the (stable) centre-to-centre
+                // arrangement and attach each end at the centre of the chosen side, matching where MSAGL
+                // ports the edge - so the drag-time approximation meets the node where the settled route
+                // does (and orthogonal edges leave perpendicular to a side, not off-centre).
+                (GraphConnectionAxis sourceAxis, GraphConnectionAxis targetAxis) = ResolveConnectionAxes();
+                Point start = AttachPoint(m_Source, sourceAxis, m_Target);
+                Point end = AttachPoint(m_Target, targetAxis, m_Source);
                 return GraphEdgeGeometry.BuildSegments(m_RoutingMode, start, end, sourceAxis, targetAxis);
             }
         }
@@ -152,8 +166,8 @@ namespace Zametek.Graphs.ProjectPlan
             m_RoutedSegments = segments;
             if (segments is { Count: > 0 })
             {
-                m_SourceExitAxis = ExitAxis(segments[0]);
-                m_TargetEntryAxis = EntryAxis(segments[^1]);
+                m_SourceExitAxis = GraphEdgeGeometry.ExitAxis(segments[0]);
+                m_TargetEntryAxis = GraphEdgeGeometry.EntryAxis(segments[^1]);
             }
             RaiseGeometryChanged();
         }
@@ -272,64 +286,30 @@ namespace Zametek.Graphs.ProjectPlan
         }
 
         // Resolve the per-endpoint connection axes for the approximation: the hybrid of the pre-drag
-        // MSAGL-chosen sides and the current arrangement. Each endpoint keeps its captured axis until
-        // the arrangement clearly contradicts it, then falls back to the dominant axis; with nothing
-        // captured yet, the dominant axis is used outright.
-        private (GraphConnectionAxis Source, GraphConnectionAxis Target) ResolveConnectionAxes(Point start, Point end)
+        // MSAGL-chosen sides and the current arrangement. The dominant axis is taken from the (stable)
+        // centre-to-centre span; each endpoint keeps its captured axis until the arrangement clearly
+        // contradicts it, then falls back to the dominant axis (and to it outright with nothing
+        // captured). See GraphEdgeGeometry.ResolveAxis for the hysteresis.
+        private (GraphConnectionAxis Source, GraphConnectionAxis Target) ResolveConnectionAxes()
         {
-            double dx = Math.Abs(end.X - start.X);
-            double dy = Math.Abs(end.Y - start.Y);
-            GraphConnectionAxis dominant = dy > dx ? GraphConnectionAxis.Vertical : GraphConnectionAxis.Horizontal;
+            double dx = Math.Abs(m_Target.CentreX - m_Source.CentreX);
+            double dy = Math.Abs(m_Target.CentreY - m_Source.CentreY);
+            GraphConnectionAxis dominant = GraphEdgeGeometry.ClassifyAxis(dx, dy);
             return (
-                ResolveAxis(m_SourceExitAxis, dominant, dx, dy),
-                ResolveAxis(m_TargetEntryAxis, dominant, dx, dy));
+                GraphEdgeGeometry.ResolveAxis(m_SourceExitAxis, dominant, dx, dy, c_AxisFlipRatio),
+                GraphEdgeGeometry.ResolveAxis(m_TargetEntryAxis, dominant, dx, dy, c_AxisFlipRatio));
         }
 
-        // Keep the captured (pre-drag) axis unless the current arrangement exceeds the flip ratio
-        // against it, in which case fall back to the dominant axis. Nothing captured -> dominant axis.
-        private static GraphConnectionAxis ResolveAxis(GraphConnectionAxis? captured, GraphConnectionAxis dominant, double dx, double dy)
+        // The centre of the node side the edge attaches to for the given axis (see
+        // GraphEdgeGeometry.AttachPoint), choosing the side that faces 'toward'.
+        private static Point AttachPoint(GraphNodeViewModel node, GraphConnectionAxis axis, GraphNodeViewModel toward)
         {
-            if (captured is not GraphConnectionAxis axis)
-            {
-                return dominant;
-            }
-            if (axis == GraphConnectionAxis.Horizontal && dy > c_AxisFlipRatio * dx)
-            {
-                return GraphConnectionAxis.Vertical;
-            }
-            if (axis == GraphConnectionAxis.Vertical && dx > c_AxisFlipRatio * dy)
-            {
-                return GraphConnectionAxis.Horizontal;
-            }
-            return axis;
-        }
-
-        // The axis a routed edge leaves its source along, from the first segment's start tangent
-        // (Control1 - Start), falling back to the segment chord if that is degenerate.
-        private static GraphConnectionAxis ExitAxis(GraphEdgeSegment first)
-        {
-            double dx = Math.Abs(first.Control1.X - first.Start.X);
-            double dy = Math.Abs(first.Control1.Y - first.Start.Y);
-            if (dx < 1e-6 && dy < 1e-6)
-            {
-                dx = Math.Abs(first.End.X - first.Start.X);
-                dy = Math.Abs(first.End.Y - first.Start.Y);
-            }
-            return dy > dx ? GraphConnectionAxis.Vertical : GraphConnectionAxis.Horizontal;
-        }
-
-        // The axis a routed edge enters its target along, from the last segment's end tangent
-        // (End - Control2), falling back to the segment chord if that is degenerate.
-        private static GraphConnectionAxis EntryAxis(GraphEdgeSegment last)
-        {
-            double dx = Math.Abs(last.End.X - last.Control2.X);
-            double dy = Math.Abs(last.End.Y - last.Control2.Y);
-            if (dx < 1e-6 && dy < 1e-6)
-            {
-                dx = Math.Abs(last.End.X - last.Start.X);
-                dy = Math.Abs(last.End.Y - last.Start.Y);
-            }
-            return dy > dx ? GraphConnectionAxis.Vertical : GraphConnectionAxis.Horizontal;
+            return GraphEdgeGeometry.AttachPoint(
+                new Point(node.CentreX, node.CentreY),
+                node.Width,
+                node.Height,
+                axis,
+                new Point(toward.CentreX, toward.CentreY));
         }
 
         // Intersection of the centre-to-centre line with 'node's axis-aligned border rectangle.

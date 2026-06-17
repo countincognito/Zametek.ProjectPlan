@@ -12,6 +12,7 @@
       "src\\Zametek.View.ProjectPlan\\Zametek.View.ProjectPlan.csproj",
       "src\\Zametek.ViewModel.ProjectPlan\\Zametek.ViewModel.ProjectPlan.csproj",
       "test\\Zametek.Data.ProjectPlan.Tests\\Zametek.Data.ProjectPlan.Tests.csproj",
+      "test\\Zametek.Graphs.ProjectPlan.Tests\\Zametek.Graphs.ProjectPlan.Tests.csproj",
       "test\\Zametek.ViewModel.ProjectPlan.Tests\\Zametek.ViewModel.ProjectPlan.Tests.csproj"
     ]
   }

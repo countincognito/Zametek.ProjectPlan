@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Zametek.Graphs.ProjectPlan.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
     <PackageReference Include="Avalonia" Version="11.3.13" />
     <PackageReference Include="ReactiveUI.Avalonia" Version="11.3.8" />
