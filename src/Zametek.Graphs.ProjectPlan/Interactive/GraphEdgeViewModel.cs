@@ -130,8 +130,7 @@ namespace Zametek.Graphs.ProjectPlan
         // The clash-resolved route pushed by the interactive view-model's port resolver: the per-endpoint
         // connection axes, the route shape (Direct L/Z, or a Bracket/Saucepan detour), and the slid
         // corner positions that clear a blocking node. Null = use this edge's own resolve. Only set
-        // during a rectilinear drag; ignored at rest (the exact routed geometry takes precedence). The
-        // legacy flip-based de-confliction pushes a Direct plan; see GraphEdgeGeometry.UseLegacyRectilinearPorts.
+        // during a rectilinear drag; ignored at rest (the exact routed geometry takes precedence).
         private GraphRoutePlan? m_ResolvedRoute;
 
         // Per-end attach-point offsets pushed by the port-offset resolver, separating edges that share a
@@ -335,13 +334,7 @@ namespace Zametek.Graphs.ProjectPlan
             RaiseGeometryChanged();
         }
 
-        // The legacy flip-based de-confliction pushes axes only, i.e. a Direct (L/Z) route.
-        internal void SetResolvedAxes(GraphConnectionAxis source, GraphConnectionAxis target, double? zCorner = null)
-        {
-            SetResolvedRoute(new GraphRoutePlan(source, target, GraphRouteShape.Direct, zCorner));
-        }
-
-        internal void ClearResolvedAxes()
+        internal void ClearResolvedRoute()
         {
             if (m_ResolvedRoute is null)
             {
@@ -393,11 +386,8 @@ namespace Zametek.Graphs.ProjectPlan
             {
                 return (source, target);
             }
-            if (!GraphEdgeGeometry.UseLegacyRectilinearPorts)
-            {
-                // Rule 2: favour a horizontal exit for the outgoing (source) end when there is room.
-                source = GraphEdgeGeometry.PreferHorizontalExit(source, dx, m_Source.Width);
-            }
+            // Favour a horizontal exit for the outgoing (source) end when there is room.
+            source = GraphEdgeGeometry.PreferHorizontalExit(source, dx, m_Source.Width);
             // Past the half-node threshold, turn a Z into an L (the edge keeps its source-side run and
             // turns into the target) so a clearly-offset edge stops drawing an ever-growing middle jog.
             return GraphEdgeGeometry.PromoteZToL(source, target, dx, dy, m_Source.Width, m_Source.Height);

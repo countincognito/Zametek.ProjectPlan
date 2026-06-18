@@ -3,10 +3,10 @@ using Avalonia;
 namespace Zametek.Graphs.ProjectPlan
 {
     // Spreads the edges that attach to the same node side apart so their ports (and arrowheads) do not
-    // overlap - the replacement for the flip-based de-confliction. An incoming and an outgoing edge may
-    // now share a side; every edge attaching to a side is simply offset along it. Used only by the
-    // rectilinear families and only for the drag-time approximation. Returns a per-edge perpendicular
-    // attach-point offset for each end (zero when an end is the only edge on its side).
+    // overlap. An incoming and an outgoing edge may share a side; every edge attaching to a side is
+    // simply offset along it. Used only by the rectilinear families and only for the drag-time
+    // approximation. Returns a per-edge perpendicular attach-point offset for each end (zero when an end
+    // is the only edge on its side).
     //
     // The side an edge actually attaches on is taken from its resolved attach point (PortPlacement),
     // NOT re-derived from the axis + the other node's direction - so the detour shapes (Bracket /

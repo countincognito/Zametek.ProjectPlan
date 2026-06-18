@@ -523,19 +523,18 @@ namespace Zametek.Graphs.ProjectPlan
                 .Subscribe(_ => ResolvePortConflicts());
         }
 
-        // Arrange the edge ports for the current arrangement. New behaviour (default): separate the
-        // edges that share a node side so their ports do not overlap (GraphPortOffsetResolver). Legacy
-        // behaviour (toggle): reroute edges so no side mixes an incoming and an outgoing edge
-        // (GraphPortResolver). Rectilinear-only and only visible during a drag (at rest the exact routed
-        // geometry is shown); for other modes the overrides/offsets are cleared so each edge keeps its
-        // own resolve. The snapshot is taken on the UI thread; the resolver does the work.
+        // Arrange the edge ports for the current arrangement: steer each edge clear of the nodes in its
+        // way (GraphClashResolver) and separate the edges that share a node side so their ports do not
+        // overlap (GraphPortOffsetResolver). Rectilinear-only and only visible during a drag (at rest the
+        // exact routed geometry is shown); for other modes the overrides/offsets are cleared so each edge
+        // keeps its own resolve. The snapshot is taken on the UI thread; the resolvers do the work.
         private void ResolvePortConflicts()
         {
             if (!GraphEdgeGeometry.IsRectilinear(EdgeRoutingMode))
             {
                 foreach (GraphEdgeViewModel edge in GraphEdges)
                 {
-                    edge.ClearResolvedAxes();
+                    edge.ClearResolvedRoute();
                     edge.ClearPortOffsets();
                 }
                 return;
@@ -556,21 +555,6 @@ namespace Zametek.Graphs.ProjectPlan
             {
                 (GraphConnectionAxis source, GraphConnectionAxis target) = edge.TentativeConnectionAxes;
                 edges.Add(new PortEdge(edge.Id, edge.SourceId, edge.TargetId, source, target));
-            }
-
-            if (GraphEdgeGeometry.UseLegacyRectilinearPorts)
-            {
-                IReadOnlyDictionary<int, (GraphConnectionAxis Source, GraphConnectionAxis Target)> resolved =
-                    GraphPortResolver.Resolve(nodes, edges);
-                foreach (GraphEdgeViewModel edge in GraphEdges)
-                {
-                    if (resolved.TryGetValue(edge.Id, out (GraphConnectionAxis Source, GraphConnectionAxis Target) axes))
-                    {
-                        edge.SetResolvedAxes(axes.Source, axes.Target);
-                    }
-                    edge.ClearPortOffsets();
-                }
-                return;
             }
 
             // Node sizes are uniform in the arrow/vertex graphs, so one width/height suffices.

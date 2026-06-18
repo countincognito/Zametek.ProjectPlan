@@ -178,21 +178,14 @@ namespace Zametek.Graphs.ProjectPlan
         }
 
         // The orthogonal (right-angle) routing modes. Only these draw "Z"/"L" paths, so only these get
-        // the Z->L promotion and the incoming/outgoing port de-confliction; the spline family keeps its
-        // smooth connector untouched by those.
+        // the Z->L promotion, the horizontal-exit bias, the clash-avoidance detours and the port
+        // offsetting; the spline family keeps its smooth connector untouched by those.
         internal static bool IsRectilinear(GraphEdgeRoutingMode routingMode)
         {
             return routingMode is GraphEdgeRoutingMode.Rectilinear or GraphEdgeRoutingMode.RectilinearToCenter;
         }
 
-        // Reversibility toggle (pending a visual check): true restores the old flip-based
-        // incoming/outgoing port de-confliction (GraphPortResolver); false uses the new rules - a
-        // horizontal-exit bias (PreferHorizontalExit) plus port offsetting (GraphPortOffsetResolver) so
-        // an incoming and outgoing edge may share a side, just separated. A static readonly (not const)
-        // so both branches stay reachable and compiled.
-        internal static readonly bool UseLegacyRectilinearPorts = false;
-
-        // Rule 2 (new rectilinear ports): bias an outgoing edge's exit toward a horizontal (left/right)
+        // Bias an outgoing edge's exit toward a horizontal (left/right)
         // side when there is real horizontal room - the far node is at least half a node-width to the
         // side; otherwise keep the resolved axis. Applied to the source end before PromoteZToL.
         internal static GraphConnectionAxis PreferHorizontalExit(GraphConnectionAxis source, double dx, double nodeWidth)
