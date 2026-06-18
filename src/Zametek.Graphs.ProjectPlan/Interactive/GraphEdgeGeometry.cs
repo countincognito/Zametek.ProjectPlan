@@ -2,60 +2,6 @@ using Avalonia;
 
 namespace Zametek.Graphs.ProjectPlan
 {
-    // One cubic-bezier piece of an interactive edge. Pieces are contiguous (each Start is the previous
-    // End), so an edge is one or more of these chained together. A straight run is just a bezier whose
-    // control points lie on its own chord.
-    internal readonly record struct GraphEdgeSegment(Point Start, Point Control1, Point Control2, Point End);
-
-    // Which axis an interactive edge leaves the source / enters the target along: Horizontal = the
-    // left/right node sides, Vertical = the top/bottom sides. Chosen per endpoint (see the interactive
-    // view-model's hybrid resolve) and fed into the spline/rectilinear builders so a vertically-stacked
-    // arrangement connects top-to-bottom instead of always sideways.
-    internal enum GraphConnectionAxis
-    {
-        Horizontal,
-        Vertical,
-    }
-
-    // The orthogonal route family an edge draws (rectilinear modes only). Direct is the everyday L
-    // (mixed axes, one bend) or Z (matching axes, two bends, corner between the endpoints). Bracket and
-    // Saucepan are the clash-avoidance detours the resolver reaches for when an obstacle sits where a
-    // Direct route would cross it:
-    //   - Bracket ("U"): matching axes, the cross leg slid OUTSIDE the endpoints (above/below or
-    //     left/right of the blocking node) - two bends, both ends leaving the same way.
-    //   - Saucepan: a "U" bowl that dips around the obstacle, with a short "handle" stub on the source
-    //     end, the target end, or BOTH. A handled end leaves on a side perpendicular to the bowl's arms
-    //     (so it can keep a horizontal entry/exit while the bowl detours vertically); a direct end
-    //     attaches straight onto an arm. So three bends is the minimum (one handle) and four the next
-    //     (two handles) - the both-handle form is what the settled MSAGL route shows for an obstacle
-    //     squarely between two level nodes.
-    internal enum GraphRouteShape
-    {
-        Direct,
-        Bracket,
-        Saucepan,
-    }
-
-    // A fully-resolved rectilinear route: the per-endpoint connection axes plus, for the detour shapes,
-    // the position(s) the resolver slid the route to so it clears the nodes in its way. Carried from the
-    // clash resolver onto the edge so the drawn geometry and the clearance check are built from exactly
-    // the same numbers (see GraphEdgeGeometry.RouteCorners).
-    //   - Direct: Source/Target axes; Primary = optional Z corner (null = midpoint). Secondary unused.
-    //   - Bracket: Source == Target (the shared axis); Primary = the cross-leg coordinate (may be
-    //     outside the endpoint span). Secondary unused.
-    //   - Saucepan: BowlVertical chooses the dip direction (false = a horizontal bowl with vertical arms,
-    //     dipping in Y; true = the transpose). Primary = the bowl's cross-leg coordinate. Each of
-    //     Source/Target is a handled end when its axis is perpendicular to the arms (H for a horizontal
-    //     bowl, V for a vertical bowl) and a direct end otherwise - so the axis pair selects no/one/two
-    //     handles. Secondary = the handle stub length (null = a default half-node stub).
-    internal readonly record struct GraphRoutePlan(
-        GraphConnectionAxis Source,
-        GraphConnectionAxis Target,
-        GraphRouteShape Shape = GraphRouteShape.Direct,
-        double? Primary = null,
-        double? Secondary = null,
-        bool BowlVertical = false);
-
     // Computes the on-screen shape of an interactive edge from a GraphEdgeRoutingMode, client-side (no
     // MSAGL) so it recomputes live as nodes are dragged. The shape is returned as a list of contiguous
     // cubic-bezier segments from the (already border-clipped) start to end. The serializer lays the

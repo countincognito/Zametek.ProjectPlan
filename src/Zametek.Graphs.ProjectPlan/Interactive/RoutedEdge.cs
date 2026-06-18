@@ -1,0 +1,6 @@
+namespace Zametek.Graphs.ProjectPlan
+{
+    // The routed geometry for one edge, as contiguous cubic-bezier segments in the same (screen)
+    // coordinates as the request.
+    internal readonly record struct RoutedEdge(int Id, IReadOnlyList<GraphEdgeSegment> Segments);
+}

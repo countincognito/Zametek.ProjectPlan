@@ -15,8 +15,6 @@ namespace Zametek.Graphs.ProjectPlan
     // fan out toward their destinations without crossing), then spread by a fixed gap centred on the
     // side - clamped to the side length so they stay on the node border. Node sizes are taken as
     // uniform (the arrow/vertex graphs use one node size), so a single width/height is passed in.
-    internal readonly record struct PortPlacement(int EdgeId, int SourceId, int TargetId, Point SourceAttach, Point TargetAttach);
-
     internal static class GraphPortOffsetResolver
     {
         // Target separation between adjacent ports, and the keep-off-the-corner margin, in pixels.
