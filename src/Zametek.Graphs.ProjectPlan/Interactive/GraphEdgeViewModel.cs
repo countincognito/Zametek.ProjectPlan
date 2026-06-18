@@ -167,15 +167,15 @@ namespace Zametek.Graphs.ProjectPlan
                 // does (and orthogonal edges leave perpendicular to a side, not off-centre). A
                 // de-conflicted override from the port resolver wins when present.
                 // A resolved detour (Bracket/Saucepan) is drawn straight from its corner polyline, built
-                // off the node centres exactly as the clash check measured it (the port offsets, which
-                // only separate Direct L/Z edges, do not apply to a detour).
+                // off the node centres exactly as the clash check measured it, with the port offsets
+                // sliding its end legs along their sides so detours sharing a side fan out too.
                 if (m_ResolvedRoute is { Shape: GraphRouteShape.Bracket or GraphRouteShape.Saucepan } detour)
                 {
                     return GraphEdgeGeometry.SegmentsFromCorners(
                         GraphEdgeGeometry.RouteCorners(
                             new Point(m_Source.CentreX, m_Source.CentreY),
                             new Point(m_Target.CentreX, m_Target.CentreY),
-                            m_Source.Width, m_Source.Height, detour));
+                            m_Source.Width, m_Source.Height, detour, m_SourcePortOffset, m_TargetPortOffset));
                 }
 
                 (GraphConnectionAxis sourceAxis, GraphConnectionAxis targetAxis) = m_ResolvedRoute is { } plan

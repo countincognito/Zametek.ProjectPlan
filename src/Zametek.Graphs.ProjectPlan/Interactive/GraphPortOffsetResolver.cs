@@ -8,10 +8,15 @@ namespace Zametek.Graphs.ProjectPlan
     // rectilinear families and only for the drag-time approximation. Returns a per-edge perpendicular
     // attach-point offset for each end (zero when an end is the only edge on its side).
     //
+    // The side an edge actually attaches on is taken from its resolved attach point (PortPlacement),
+    // NOT re-derived from the axis + the other node's direction - so the detour shapes (Bracket /
+    // Saucepan), whose ends can leave on a side facing away from the far node, are grouped correctly.
     // Ports on a side are ordered by the far endpoint's position on the perpendicular axis (so edges
     // fan out toward their destinations without crossing), then spread by a fixed gap centred on the
     // side - clamped to the side length so they stay on the node border. Node sizes are taken as
     // uniform (the arrow/vertex graphs use one node size), so a single width/height is passed in.
+    internal readonly record struct PortPlacement(int EdgeId, int SourceId, int TargetId, Point SourceAttach, Point TargetAttach);
+
     internal static class GraphPortOffsetResolver
     {
         // Target separation between adjacent ports, and the keep-off-the-corner margin, in pixels.
@@ -30,7 +35,7 @@ namespace Zametek.Graphs.ProjectPlan
 
         public static IReadOnlyDictionary<int, (Point SourceOffset, Point TargetOffset)> Resolve(
             IReadOnlyList<PortNode> nodes,
-            IReadOnlyList<PortEdge> edges,
+            IReadOnlyList<PortPlacement> placements,
             double nodeWidth,
             double nodeHeight)
         {
@@ -39,22 +44,24 @@ namespace Zametek.Graphs.ProjectPlan
             {
                 centreById[node.Id] = node;
             }
+            double halfWidth = nodeWidth / 2.0;
+            double halfHeight = nodeHeight / 2.0;
 
-            var result = new Dictionary<int, (Point SourceOffset, Point TargetOffset)>(edges.Count);
+            var result = new Dictionary<int, (Point SourceOffset, Point TargetOffset)>(placements.Count);
             var groups = new Dictionary<(int Node, Side Side), List<Port>>();
-            foreach (PortEdge edge in edges)
+            foreach (PortPlacement placement in placements)
             {
-                result[edge.Id] = (default, default);
-                if (edge.SourceId == edge.TargetId
-                    || !centreById.TryGetValue(edge.SourceId, out PortNode sourceNode)
-                    || !centreById.TryGetValue(edge.TargetId, out PortNode targetNode))
+                result[placement.EdgeId] = (default, default);
+                if (placement.SourceId == placement.TargetId
+                    || !centreById.TryGetValue(placement.SourceId, out PortNode sourceNode)
+                    || !centreById.TryGetValue(placement.TargetId, out PortNode targetNode))
                 {
                     continue;
                 }
-                Side sourceSide = SideAt(sourceNode, targetNode, edge.SourceAxis);
-                Add(groups, (edge.SourceId, sourceSide), new Port(edge.Id, IsSource: true, OrderKey(sourceSide, targetNode)));
-                Side targetSide = SideAt(targetNode, sourceNode, edge.TargetAxis);
-                Add(groups, (edge.TargetId, targetSide), new Port(edge.Id, IsSource: false, OrderKey(targetSide, sourceNode)));
+                Side sourceSide = SideOf(sourceNode, placement.SourceAttach, halfWidth, halfHeight);
+                Add(groups, (placement.SourceId, sourceSide), new Port(placement.EdgeId, IsSource: true, OrderKey(sourceSide, targetNode)));
+                Side targetSide = SideOf(targetNode, placement.TargetAttach, halfWidth, halfHeight);
+                Add(groups, (placement.TargetId, targetSide), new Port(placement.EdgeId, IsSource: false, OrderKey(targetSide, sourceNode)));
             }
 
             foreach (KeyValuePair<(int Node, Side Side), List<Port>> group in groups)
@@ -84,13 +91,18 @@ namespace Zametek.Graphs.ProjectPlan
             return result;
         }
 
-        private static Side SideAt(PortNode node, PortNode far, GraphConnectionAxis nearAxis)
+        // The node border the attach point sits on, from which extent it has reached: a left/right side
+        // when the attach is (about) half a width off-centre horizontally, a top/bottom side when it is
+        // half a height off vertically. Works for any shape because it reads the actual attach point.
+        private static Side SideOf(PortNode node, Point attach, double halfWidth, double halfHeight)
         {
-            if (nearAxis == GraphConnectionAxis.Horizontal)
+            double horizontalResidual = halfWidth - Math.Abs(attach.X - node.CentreX);
+            double verticalResidual = halfHeight - Math.Abs(attach.Y - node.CentreY);
+            if (horizontalResidual <= verticalResidual)
             {
-                return far.CentreX >= node.CentreX ? Side.Right : Side.Left;
+                return attach.X >= node.CentreX ? Side.Right : Side.Left;
             }
-            return far.CentreY >= node.CentreY ? Side.Bottom : Side.Top;
+            return attach.Y >= node.CentreY ? Side.Bottom : Side.Top;
         }
 
         // Distribute along a side by the far endpoint's position on the perpendicular axis: for a

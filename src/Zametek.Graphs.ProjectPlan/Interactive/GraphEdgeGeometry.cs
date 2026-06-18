@@ -384,16 +384,40 @@ namespace Zametek.Graphs.ProjectPlan
             Point targetCentre,
             double width,
             double height,
-            GraphRoutePlan plan)
+            GraphRoutePlan plan,
+            Point sourceOffset = default,
+            Point targetOffset = default)
         {
             double halfWidth = width / 2.0;
             double halfHeight = height / 2.0;
-            return plan.Shape switch
+            IReadOnlyList<Point> corners = plan.Shape switch
             {
                 GraphRouteShape.Bracket => BracketCorners(sourceCentre, targetCentre, halfWidth, halfHeight, plan.Source, plan.Primary),
                 GraphRouteShape.Saucepan => SaucepanCorners(sourceCentre, targetCentre, halfWidth, halfHeight, plan),
                 _ => DirectCorners(sourceCentre, targetCentre, width, height, plan),
             };
+
+            // Spread a detour's ports apart: shift the two node-side vertices at each end (the attach
+            // point and its first turn) by the port offset, which runs along the side, so the end legs
+            // slide while staying orthogonal and the bowl/cross leg is untouched. Direct (L/Z) edges
+            // apply their offset elsewhere (in the edge view-model's attach + rebuild path).
+            if (plan.Shape != GraphRouteShape.Direct
+                && corners.Count >= 4
+                && (sourceOffset != default || targetOffset != default))
+            {
+                var shifted = new List<Point>(corners);
+                shifted[0] = Shift(shifted[0], sourceOffset);
+                shifted[1] = Shift(shifted[1], sourceOffset);
+                shifted[^1] = Shift(shifted[^1], targetOffset);
+                shifted[^2] = Shift(shifted[^2], targetOffset);
+                return shifted;
+            }
+            return corners;
+        }
+
+        private static Point Shift(Point point, Point delta)
+        {
+            return new Point(point.X + delta.X, point.Y + delta.Y);
         }
 
         // A Direct (L/Z) route: attach each end at the centre of the side facing the other node, then
