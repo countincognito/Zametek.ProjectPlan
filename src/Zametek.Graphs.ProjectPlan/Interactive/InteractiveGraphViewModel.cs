@@ -1,8 +1,10 @@
+using Avalonia;
 using Avalonia.Threading;
 using ReactiveUI;
 using SkiaSharp;
 using Svg.Skia;
 using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Utility;
 
@@ -30,6 +32,9 @@ namespace Zametek.Graphs.ProjectPlan
 
         // Coalesces edge reroutes: starting a new one cancels the previous so only the latest wins.
         private CancellationTokenSource? m_RerouteCts;
+
+        // Re-runs the incoming/outgoing port de-confliction as nodes are dragged (re-armed per layout).
+        private IDisposable? m_PortConflictSub;
 
         private Dictionary<int, HashSet<int>> m_Adjacency = [];
         private GraphNodeViewModel? m_SelectedNode;
@@ -497,6 +502,120 @@ namespace Zametek.Graphs.ProjectPlan
             {
                 SelectNode(null);
             }
+
+            // Re-arm the drag-time port de-confliction for the new node/edge set.
+            SubscribeToPortConflicts();
+        }
+
+        // Subscribe to node moves so the port resolver re-runs during a drag. Skip(1) drops each node's
+        // initial value, so populating the graph does not trigger a burst of resolutions; thereafter
+        // only the dragged node emits.
+        private void SubscribeToPortConflicts()
+        {
+            m_PortConflictSub?.Dispose();
+            if (GraphNodes.Count == 0)
+            {
+                m_PortConflictSub = null;
+                return;
+            }
+            m_PortConflictSub = Observable
+                .Merge(GraphNodes.Select(node => node.WhenAnyValue(x => x.X, x => x.Y).Skip(1)))
+                .Subscribe(_ => ResolvePortConflicts());
+        }
+
+        // Arrange the edge ports for the current arrangement. New behaviour (default): separate the
+        // edges that share a node side so their ports do not overlap (GraphPortOffsetResolver). Legacy
+        // behaviour (toggle): reroute edges so no side mixes an incoming and an outgoing edge
+        // (GraphPortResolver). Rectilinear-only and only visible during a drag (at rest the exact routed
+        // geometry is shown); for other modes the overrides/offsets are cleared so each edge keeps its
+        // own resolve. The snapshot is taken on the UI thread; the resolver does the work.
+        private void ResolvePortConflicts()
+        {
+            if (!GraphEdgeGeometry.IsRectilinear(EdgeRoutingMode))
+            {
+                foreach (GraphEdgeViewModel edge in GraphEdges)
+                {
+                    edge.ClearResolvedAxes();
+                    edge.ClearPortOffsets();
+                }
+                return;
+            }
+            if (GraphEdges.Count == 0)
+            {
+                return;
+            }
+
+            var nodes = new List<PortNode>(GraphNodes.Count);
+            foreach (GraphNodeViewModel node in GraphNodes)
+            {
+                nodes.Add(new PortNode(node.Id, node.CentreX, node.CentreY));
+            }
+
+            var edges = new List<PortEdge>(GraphEdges.Count);
+            foreach (GraphEdgeViewModel edge in GraphEdges)
+            {
+                (GraphConnectionAxis source, GraphConnectionAxis target) = edge.TentativeConnectionAxes;
+                edges.Add(new PortEdge(edge.Id, edge.SourceId, edge.TargetId, source, target));
+            }
+
+            if (GraphEdgeGeometry.UseLegacyRectilinearPorts)
+            {
+                IReadOnlyDictionary<int, (GraphConnectionAxis Source, GraphConnectionAxis Target)> resolved =
+                    GraphPortResolver.Resolve(nodes, edges);
+                foreach (GraphEdgeViewModel edge in GraphEdges)
+                {
+                    if (resolved.TryGetValue(edge.Id, out (GraphConnectionAxis Source, GraphConnectionAxis Target) axes))
+                    {
+                        edge.SetResolvedAxes(axes.Source, axes.Target);
+                    }
+                    edge.ClearPortOffsets();
+                }
+                return;
+            }
+
+            // Node sizes are uniform in the arrow/vertex graphs, so one width/height suffices.
+            double nodeWidth = GraphNodes[0].Width;
+            double nodeHeight = GraphNodes[0].Height;
+
+            var nodeById = new Dictionary<int, PortNode>(nodes.Count);
+            foreach (PortNode node in nodes)
+            {
+                nodeById[node.Id] = node;
+            }
+
+            // Steer each edge around the nodes it is not connected to (clash avoidance), then re-snapshot
+            // with the clash-resolved axes so the port offsetting groups by the final sides.
+            var resolvedById = new Dictionary<int, (GraphConnectionAxis Source, GraphConnectionAxis Target, double? ZCorner)>(edges.Count);
+            var resolvedEdges = new List<PortEdge>(edges.Count);
+            foreach (PortEdge edge in edges)
+            {
+                if (nodeById.TryGetValue(edge.SourceId, out PortNode sourceNode)
+                    && nodeById.TryGetValue(edge.TargetId, out PortNode targetNode))
+                {
+                    (GraphConnectionAxis Source, GraphConnectionAxis Target, double? ZCorner) route =
+                        GraphClashResolver.Resolve(sourceNode, targetNode, edge.SourceAxis, edge.TargetAxis, nodes, nodeWidth, nodeHeight);
+                    resolvedById[edge.Id] = route;
+                    resolvedEdges.Add(new PortEdge(edge.Id, edge.SourceId, edge.TargetId, route.Source, route.Target));
+                }
+                else
+                {
+                    resolvedById[edge.Id] = (edge.SourceAxis, edge.TargetAxis, null);
+                    resolvedEdges.Add(edge);
+                }
+            }
+
+            IReadOnlyDictionary<int, (Point SourceOffset, Point TargetOffset)> offsets =
+                GraphPortOffsetResolver.Resolve(nodes, resolvedEdges, nodeWidth, nodeHeight);
+
+            foreach (GraphEdgeViewModel edge in GraphEdges)
+            {
+                (GraphConnectionAxis Source, GraphConnectionAxis Target, double? ZCorner) route = resolvedById[edge.Id];
+                edge.SetResolvedAxes(route.Source, route.Target, route.ZCorner);
+                if (offsets.TryGetValue(edge.Id, out (Point SourceOffset, Point TargetOffset) offset))
+                {
+                    edge.SetPortOffsets(offset.SourceOffset, offset.TargetOffset);
+                }
+            }
         }
 
         // Size the workspace to contain every node plus a margin on all sides.
@@ -605,6 +724,7 @@ namespace Zametek.Graphs.ProjectPlan
             if (disposing)
             {
                 m_RebuildSub.Dispose();
+                m_PortConflictSub?.Dispose();
                 m_RerouteCts?.Cancel();
                 foreach (GraphEdgeViewModel edge in GraphEdges)
                 {

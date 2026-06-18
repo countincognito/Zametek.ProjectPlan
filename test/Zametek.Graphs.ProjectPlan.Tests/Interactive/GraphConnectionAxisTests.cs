@@ -60,6 +60,26 @@ namespace Zametek.Graphs.ProjectPlan.Tests
             GraphEdgeGeometry.UsesConnectionAxes(mode).ShouldBeFalse();
         }
 
+        [Theory]
+        [InlineData(GraphEdgeRoutingMode.Rectilinear)]
+        [InlineData(GraphEdgeRoutingMode.RectilinearToCenter)]
+        public void IsRectilinear_OrthogonalModes_AreTrue(GraphEdgeRoutingMode mode)
+        {
+            GraphEdgeGeometry.IsRectilinear(mode).ShouldBeTrue();
+        }
+
+        [Theory]
+        [InlineData(GraphEdgeRoutingMode.Spline)]
+        [InlineData(GraphEdgeRoutingMode.SugiyamaSplines)]
+        [InlineData(GraphEdgeRoutingMode.SplineBundling)]
+        [InlineData(GraphEdgeRoutingMode.StraightLine)]
+        [InlineData(GraphEdgeRoutingMode.None)]
+        public void IsRectilinear_NonOrthogonalModes_AreFalse(GraphEdgeRoutingMode mode)
+        {
+            // Gates the Z->L promotion + port de-confliction so the spline family is unaffected.
+            GraphEdgeGeometry.IsRectilinear(mode).ShouldBeFalse();
+        }
+
         #endregion
 
         #region ExitAxis / EntryAxis
@@ -226,6 +246,27 @@ namespace Zametek.Graphs.ProjectPlan.Tests
                 GraphConnectionAxis.Vertical, GraphConnectionAxis.Horizontal, 500.0, 500.0, c_NodeWidth, c_NodeHeight);
             source.ShouldBe(GraphConnectionAxis.Vertical);
             target.ShouldBe(GraphConnectionAxis.Horizontal);
+        }
+
+        #endregion
+
+        #region PreferHorizontalExit (Rule 2)
+
+        [Fact]
+        public void PreferHorizontalExit_WithHorizontalRoom_ForcesHorizontal()
+        {
+            // dx (100) exceeds half the node width (30): the source exits horizontally even if its
+            // resolved axis was vertical.
+            GraphEdgeGeometry.PreferHorizontalExit(GraphConnectionAxis.Vertical, 100.0, c_NodeWidth)
+                .ShouldBe(GraphConnectionAxis.Horizontal);
+        }
+
+        [Fact]
+        public void PreferHorizontalExit_NearlyStacked_KeepsResolvedAxis()
+        {
+            // dx (20) is within half the node width (30): no horizontal room, so the resolved axis holds.
+            GraphEdgeGeometry.PreferHorizontalExit(GraphConnectionAxis.Vertical, 20.0, c_NodeWidth)
+                .ShouldBe(GraphConnectionAxis.Vertical);
         }
 
         #endregion

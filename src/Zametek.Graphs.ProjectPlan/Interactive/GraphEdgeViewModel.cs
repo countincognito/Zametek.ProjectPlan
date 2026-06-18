@@ -111,10 +111,14 @@ namespace Zametek.Graphs.ProjectPlan
                 }
                 m_RoutingMode = value;
                 m_RoutedSegments = null;
-                // The captured sides were for the old mode's route; drop them so the approximation
-                // falls back to the dominant axis until the new mode's reroute captures fresh ones.
+                // The captured sides and any de-conflicted override/offsets were for the old mode; drop
+                // them so the approximation falls back to the dominant axis until the new mode resolves.
                 m_SourceExitAxis = null;
                 m_TargetEntryAxis = null;
+                m_ResolvedAxes = null;
+                m_ZCorner = null;
+                m_SourcePortOffset = default;
+                m_TargetPortOffset = default;
                 RaiseGeometryChanged();
             }
         }
@@ -123,6 +127,20 @@ namespace Zametek.Graphs.ProjectPlan
         // client-side approximation (see SetRoutedSegments). Null = use the approximation, which is the
         // default and the live fallback while an endpoint is being dragged.
         private IReadOnlyList<GraphEdgeSegment>? m_RoutedSegments;
+
+        // De-conflicted connection axes pushed by the interactive view-model's port resolver (so an
+        // incoming and outgoing edge do not share a node side). Null = use this edge's own resolve.
+        // Only set during a rectilinear drag; ignored at rest (the routed geometry takes precedence).
+        // (Legacy flip-based de-confliction; see GraphEdgeGeometry.UseLegacyRectilinearPorts.) Now also
+        // carries the clash-avoided route from the new path - the axes plus an optional Z middle-leg
+        // corner position (m_ZCorner) slid to clear a blocking node.
+        private (GraphConnectionAxis Source, GraphConnectionAxis Target)? m_ResolvedAxes;
+        private double? m_ZCorner;
+
+        // Per-end attach-point offsets pushed by the port-offset resolver, separating edges that share a
+        // node side so their ports do not overlap. Zero = attach at the side centre. Drag-time only.
+        private Point m_SourcePortOffset;
+        private Point m_TargetPortOffset;
 
         // The edge's shape as contiguous cubic-bezier segments: the exact MSAGL route when one is in
         // effect, otherwise the client-side approximation (built around the resolved per-endpoint
@@ -149,11 +167,15 @@ namespace Zametek.Graphs.ProjectPlan
                 // Spline / rectilinear: resolve the per-endpoint axes from the (stable) centre-to-centre
                 // arrangement and attach each end at the centre of the chosen side, matching where MSAGL
                 // ports the edge - so the drag-time approximation meets the node where the settled route
-                // does (and orthogonal edges leave perpendicular to a side, not off-centre).
-                (GraphConnectionAxis sourceAxis, GraphConnectionAxis targetAxis) = ResolveConnectionAxes();
+                // does (and orthogonal edges leave perpendicular to a side, not off-centre). A
+                // de-conflicted override from the port resolver wins when present.
+                (GraphConnectionAxis sourceAxis, GraphConnectionAxis targetAxis) = m_ResolvedAxes ?? ResolveConnectionAxes();
                 Point start = AttachPoint(m_Source, sourceAxis, m_Target);
                 Point end = AttachPoint(m_Target, targetAxis, m_Source);
-                return GraphEdgeGeometry.BuildSegments(m_RoutingMode, start, end, sourceAxis, targetAxis);
+                // Nudge each end along its side to separate edges that share it (zero when alone).
+                start = new Point(start.X + m_SourcePortOffset.X, start.Y + m_SourcePortOffset.Y);
+                end = new Point(end.X + m_TargetPortOffset.X, end.Y + m_TargetPortOffset.Y);
+                return GraphEdgeGeometry.BuildSegments(m_RoutingMode, start, end, sourceAxis, targetAxis, m_ZCorner);
             }
         }
 
@@ -285,6 +307,58 @@ namespace Zametek.Graphs.ProjectPlan
             }
         }
 
+        // The edge's own (pre-de-confliction) connection axes, exposed so the interactive view-model's
+        // port resolver can snapshot them. Always recomputed from the current arrangement.
+        internal (GraphConnectionAxis Source, GraphConnectionAxis Target) TentativeConnectionAxes => ResolveConnectionAxes();
+
+        // Apply (non-null) or drop (null, see ClearResolvedAxes) a de-conflicted axis override from the
+        // port resolver. Only raises when the value actually changes, so a steady drag does not churn.
+        internal void SetResolvedAxes(GraphConnectionAxis source, GraphConnectionAxis target, double? zCorner = null)
+        {
+            if (m_ResolvedAxes is { } current && current.Source == source && current.Target == target && m_ZCorner == zCorner)
+            {
+                return;
+            }
+            m_ResolvedAxes = (source, target);
+            m_ZCorner = zCorner;
+            RaiseGeometryChanged();
+        }
+
+        internal void ClearResolvedAxes()
+        {
+            if (m_ResolvedAxes is null)
+            {
+                return;
+            }
+            m_ResolvedAxes = null;
+            m_ZCorner = null;
+            RaiseGeometryChanged();
+        }
+
+        // Apply / drop the per-end attach-point offsets from the port-offset resolver. Only raises when
+        // the value actually changes, so a steady drag does not churn the geometry.
+        internal void SetPortOffsets(Point sourceOffset, Point targetOffset)
+        {
+            if (m_SourcePortOffset == sourceOffset && m_TargetPortOffset == targetOffset)
+            {
+                return;
+            }
+            m_SourcePortOffset = sourceOffset;
+            m_TargetPortOffset = targetOffset;
+            RaiseGeometryChanged();
+        }
+
+        internal void ClearPortOffsets()
+        {
+            if (m_SourcePortOffset == default && m_TargetPortOffset == default)
+            {
+                return;
+            }
+            m_SourcePortOffset = default;
+            m_TargetPortOffset = default;
+            RaiseGeometryChanged();
+        }
+
         // Resolve the per-endpoint connection axes for the approximation: the hybrid of the pre-drag
         // MSAGL-chosen sides and the current arrangement. The dominant axis is taken from the (stable)
         // centre-to-centre span; each endpoint keeps its captured axis until the arrangement clearly
@@ -297,6 +371,17 @@ namespace Zametek.Graphs.ProjectPlan
             GraphConnectionAxis dominant = GraphEdgeGeometry.ClassifyAxis(dx, dy);
             GraphConnectionAxis source = GraphEdgeGeometry.ResolveAxis(m_SourceExitAxis, dominant, dx, dy, c_AxisFlipRatio);
             GraphConnectionAxis target = GraphEdgeGeometry.ResolveAxis(m_TargetEntryAxis, dominant, dx, dy, c_AxisFlipRatio);
+            // The Z->L promotion is a rectilinear-only refinement; the spline family keeps its smooth
+            // connector (its control points already follow the resolved axes without a "jog" to remove).
+            if (!GraphEdgeGeometry.IsRectilinear(m_RoutingMode))
+            {
+                return (source, target);
+            }
+            if (!GraphEdgeGeometry.UseLegacyRectilinearPorts)
+            {
+                // Rule 2: favour a horizontal exit for the outgoing (source) end when there is room.
+                source = GraphEdgeGeometry.PreferHorizontalExit(source, dx, m_Source.Width);
+            }
             // Past the half-node threshold, turn a Z into an L (the edge keeps its source-side run and
             // turns into the target) so a clearly-offset edge stops drawing an ever-growing middle jog.
             return GraphEdgeGeometry.PromoteZToL(source, target, dx, dy, m_Source.Width, m_Source.Height);

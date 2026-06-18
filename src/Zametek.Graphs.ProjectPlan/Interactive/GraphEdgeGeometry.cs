@@ -52,12 +52,13 @@ namespace Zametek.Graphs.ProjectPlan
             Point start,
             Point end,
             GraphConnectionAxis sourceAxis,
-            GraphConnectionAxis targetAxis)
+            GraphConnectionAxis targetAxis,
+            double? zCorner = null)
         {
             return routingMode switch
             {
                 GraphEdgeRoutingMode.Rectilinear or GraphEdgeRoutingMode.RectilinearToCenter
-                    => OrthogonalSegments(start, end, sourceAxis, targetAxis),
+                    => OrthogonalSegments(start, end, sourceAxis, targetAxis, zCorner),
                 GraphEdgeRoutingMode.Spline
                     or GraphEdgeRoutingMode.SugiyamaSplines
                     or GraphEdgeRoutingMode.SplineBundling
@@ -135,6 +136,29 @@ namespace Zametek.Graphs.ProjectPlan
                 GraphEdgeRoutingMode.StraightLine or GraphEdgeRoutingMode.None => false,
                 _ => true,
             };
+        }
+
+        // The orthogonal (right-angle) routing modes. Only these draw "Z"/"L" paths, so only these get
+        // the Z->L promotion and the incoming/outgoing port de-confliction; the spline family keeps its
+        // smooth connector untouched by those.
+        internal static bool IsRectilinear(GraphEdgeRoutingMode routingMode)
+        {
+            return routingMode is GraphEdgeRoutingMode.Rectilinear or GraphEdgeRoutingMode.RectilinearToCenter;
+        }
+
+        // Reversibility toggle (pending a visual check): true restores the old flip-based
+        // incoming/outgoing port de-confliction (GraphPortResolver); false uses the new rules - a
+        // horizontal-exit bias (PreferHorizontalExit) plus port offsetting (GraphPortOffsetResolver) so
+        // an incoming and outgoing edge may share a side, just separated. A static readonly (not const)
+        // so both branches stay reachable and compiled.
+        internal static readonly bool UseLegacyRectilinearPorts = false;
+
+        // Rule 2 (new rectilinear ports): bias an outgoing edge's exit toward a horizontal (left/right)
+        // side when there is real horizontal room - the far node is at least half a node-width to the
+        // side; otherwise keep the resolved axis. Applied to the source end before PromoteZToL.
+        internal static GraphConnectionAxis PreferHorizontalExit(GraphConnectionAxis source, double dx, double nodeWidth)
+        {
+            return dx > nodeWidth / 2.0 ? GraphConnectionAxis.Horizontal : source;
         }
 
         // Classify a span as a horizontal or vertical connection: vertical when the vertical span
@@ -269,62 +293,65 @@ namespace Zametek.Graphs.ProjectPlan
             return new GraphEdgeSegment(start, control1, control2, end);
         }
 
-        // An orthogonal path shaped by the per-endpoint axes. Matching axes give a three-segment "Z"
-        // (corners at the horizontal midpoint for two horizontal ends, the vertical midpoint for two
-        // vertical ends); differing axes give a two-segment "L" with a single corner (leave along the
-        // source axis, arrive along the target axis). Collapses to a single straight run when the
-        // endpoints already share an axis (so there is no zero-length corner).
-        private static IReadOnlyList<GraphEdgeSegment> OrthogonalSegments(
+        // The corner points (a polyline including the endpoints) of an orthogonal route shaped by the
+        // per-endpoint axes. Matching axes give a three-point "Z" turning at the midpoint - or at
+        // zCorner when supplied, so the middle leg can be slid to dodge a node (the clash resolver);
+        // differing axes give a single-corner "L"; endpoints already sharing an axis collapse to a
+        // straight [start, end]. Exposed so the clash check tests the exact route the edge draws.
+        internal static IReadOnlyList<Point> OrthogonalCorners(
             Point start,
             Point end,
             GraphConnectionAxis sourceAxis,
-            GraphConnectionAxis targetAxis)
+            GraphConnectionAxis targetAxis,
+            double? zCorner = null)
         {
             const double epsilon = 1e-6;
             if (Math.Abs(end.Y - start.Y) < epsilon || Math.Abs(end.X - start.X) < epsilon)
             {
-                return [StraightSegment(start, end)];
+                return [start, end];
             }
-
-            double midX = (start.X + end.X) / 2.0;
-            double midY = (start.Y + end.Y) / 2.0;
 
             if (sourceAxis == GraphConnectionAxis.Horizontal && targetAxis == GraphConnectionAxis.Horizontal)
             {
-                var corner1 = new Point(midX, start.Y);
-                var corner2 = new Point(midX, end.Y);
-                return
-                [
-                    StraightSegment(start, corner1),
-                    StraightSegment(corner1, corner2),
-                    StraightSegment(corner2, end),
-                ];
+                double cornerX = zCorner ?? ((start.X + end.X) / 2.0);
+                return [start, new Point(cornerX, start.Y), new Point(cornerX, end.Y), end];
             }
 
             if (sourceAxis == GraphConnectionAxis.Vertical && targetAxis == GraphConnectionAxis.Vertical)
             {
-                var corner1 = new Point(start.X, midY);
-                var corner2 = new Point(end.X, midY);
-                return
-                [
-                    StraightSegment(start, corner1),
-                    StraightSegment(corner1, corner2),
-                    StraightSegment(corner2, end),
-                ];
+                double cornerY = zCorner ?? ((start.Y + end.Y) / 2.0);
+                return [start, new Point(start.X, cornerY), new Point(end.X, cornerY), end];
             }
 
             if (sourceAxis == GraphConnectionAxis.Horizontal)
             {
                 // Leave horizontally, arrive vertically: corner level with the source, above/below the
                 // target.
-                var corner = new Point(end.X, start.Y);
-                return [StraightSegment(start, corner), StraightSegment(corner, end)];
+                return [start, new Point(end.X, start.Y), end];
             }
 
             // Leave vertically, arrive horizontally: corner above/below the source, level with the
             // target.
-            var elbow = new Point(start.X, end.Y);
-            return [StraightSegment(start, elbow), StraightSegment(elbow, end)];
+            return [start, new Point(start.X, end.Y), end];
+        }
+
+        // The same orthogonal route as contiguous straight segments (each corner-to-corner leg as a
+        // bezier on its own chord), built from OrthogonalCorners so the drawn edge and the clash check
+        // agree exactly.
+        private static IReadOnlyList<GraphEdgeSegment> OrthogonalSegments(
+            Point start,
+            Point end,
+            GraphConnectionAxis sourceAxis,
+            GraphConnectionAxis targetAxis,
+            double? zCorner)
+        {
+            IReadOnlyList<Point> corners = OrthogonalCorners(start, end, sourceAxis, targetAxis, zCorner);
+            var segments = new List<GraphEdgeSegment>(corners.Count - 1);
+            for (int i = 1; i < corners.Count; i++)
+            {
+                segments.Add(StraightSegment(corners[i - 1], corners[i]));
+            }
+            return segments;
         }
 
         // A straight line expressed as a bezier: control points at one-third and two-thirds along the
