@@ -88,16 +88,18 @@ namespace Zametek.Graphs.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Resolve_ObstacleDirectlyBetweenLevelNodes_ReturnsAClearDetour()
+        public void Resolve_ObstacleDirectlyBetweenLevelNodes_ReturnsAClearBothHandleSaucepan()
         {
             // Source and target on one row with a node squarely between them: every L and in-span Z runs
-            // along that row, so none can clear it. The resolver must reach for a detour (Saucepan first,
-            // else Bracket) - and the route it returns must actually clear the blocking node.
+            // along that row, so none can clear it. The resolver reaches for the both-handle Saucepan
+            // (horizontal in and out, dipping around the obstacle) - and it must actually clear the node.
             var nodes = new List<PortNode> { new(1, 0.0, 0.0), new(2, 200.0, 0.0), new(3, 100.0, 0.0) };
 
             var route = Resolve(nodes, 1, 2, H, V);
 
-            route.Shape.ShouldBeOneOf(GraphRouteShape.Saucepan, GraphRouteShape.Bracket);
+            route.Shape.ShouldBe(GraphRouteShape.Saucepan);
+            route.Source.ShouldBe(GraphConnectionAxis.Horizontal);
+            route.Target.ShouldBe(GraphConnectionAxis.Horizontal);
             RouteClears(nodes[0], nodes[1], route, nodes[2]).ShouldBeTrue();
         }
 

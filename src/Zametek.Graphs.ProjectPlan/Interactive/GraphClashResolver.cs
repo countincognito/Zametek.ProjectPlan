@@ -144,10 +144,12 @@ namespace Zametek.Graphs.ProjectPlan
             return null;
         }
 
-        // A Saucepan: try each orientation (handle at the source or the target, leaving horizontally or
-        // vertically) and, within it, slide the bowl's cross leg to a position just clear of a node,
-        // nearest the centre line first. The horizontal-exit orientations are tried first to keep the
-        // agreed horizontal-exit bias. Returns the first clear plan, or null.
+        // A Saucepan: try each handle configuration and bowl orientation and, within it, slide the bowl's
+        // cross leg to a position just clear of a node, nearest the centre line first. Horizontal-bowl
+        // (vertical dip) configs are tried first - the common case for a left-to-right layout - with the
+        // both-handle form (horizontal in AND out, which is what the settled route shows for an obstacle
+        // squarely between two level nodes) preferred over a single handle. Returns the first clear plan,
+        // or null. (The no-handle case is the Bracket, searched separately.)
         private static GraphRoutePlan? SearchSaucepan(
             Point a,
             Point b,
@@ -157,27 +159,28 @@ namespace Zametek.Graphs.ProjectPlan
             int sourceId,
             int targetId)
         {
-            // (handleAtSource, handle axis); horizontal handle first.
-            (bool HandleAtSource, GraphConnectionAxis HandleAxis)[] orientations =
+            // (Source axis, Target axis, BowlVertical). For a horizontal bowl a handled end is axis H;
+            // for a vertical bowl, axis V. Both-handle first, then single handle, then the vertical-bowl
+            // mirror.
+            (GraphConnectionAxis Source, GraphConnectionAxis Target, bool BowlVertical)[] configs =
             [
-                (true, GraphConnectionAxis.Horizontal),
-                (false, GraphConnectionAxis.Horizontal),
-                (true, GraphConnectionAxis.Vertical),
-                (false, GraphConnectionAxis.Vertical),
+                (GraphConnectionAxis.Horizontal, GraphConnectionAxis.Horizontal, false),
+                (GraphConnectionAxis.Horizontal, GraphConnectionAxis.Vertical, false),
+                (GraphConnectionAxis.Vertical, GraphConnectionAxis.Horizontal, false),
+                (GraphConnectionAxis.Vertical, GraphConnectionAxis.Vertical, true),
+                (GraphConnectionAxis.Vertical, GraphConnectionAxis.Horizontal, true),
+                (GraphConnectionAxis.Horizontal, GraphConnectionAxis.Vertical, true),
             ];
 
-            foreach ((bool handleAtSource, GraphConnectionAxis handleAxis) in orientations)
+            foreach ((GraphConnectionAxis source, GraphConnectionAxis target, bool bowlVertical) in configs)
             {
-                bool bowlIsY = handleAxis == GraphConnectionAxis.Horizontal;
+                bool bowlIsY = !bowlVertical;
                 double ideal = bowlIsY ? (a.Y + b.Y) / 2.0 : (a.X + b.X) / 2.0;
                 IReadOnlyList<double> bowls = EdgeCandidates(nodes, bowlIsY, nodeWidth, nodeHeight, ideal);
-                GraphConnectionAxis perpendicular = bowlIsY ? GraphConnectionAxis.Vertical : GraphConnectionAxis.Horizontal;
 
                 foreach (double bowl in bowls)
                 {
-                    GraphRoutePlan plan = handleAtSource
-                        ? new GraphRoutePlan(handleAxis, perpendicular, GraphRouteShape.Saucepan, bowl, null, true)
-                        : new GraphRoutePlan(perpendicular, handleAxis, GraphRouteShape.Saucepan, bowl, null, false);
+                    var plan = new GraphRoutePlan(source, target, GraphRouteShape.Saucepan, bowl, null, bowlVertical);
                     if (IsClear(plan, a, b, nodeWidth, nodeHeight, nodes, sourceId, targetId))
                     {
                         return plan;

@@ -23,9 +23,12 @@ namespace Zametek.Graphs.ProjectPlan
     // Direct route would cross it:
     //   - Bracket ("U"): matching axes, the cross leg slid OUTSIDE the endpoints (above/below or
     //     left/right of the blocking node) - two bends, both ends leaving the same way.
-    //   - Saucepan: a Direct route plus one extra bend - a short "handle" stub off one end, then a "U"
-    //     bowl that dips around the obstacle and turns into the other end on a perpendicular side. The
-    //     handle may sit at the source or the target (HandleAtSource).
+    //   - Saucepan: a "U" bowl that dips around the obstacle, with a short "handle" stub on the source
+    //     end, the target end, or BOTH. A handled end leaves on a side perpendicular to the bowl's arms
+    //     (so it can keep a horizontal entry/exit while the bowl detours vertically); a direct end
+    //     attaches straight onto an arm. So three bends is the minimum (one handle) and four the next
+    //     (two handles) - the both-handle form is what the settled MSAGL route shows for an obstacle
+    //     squarely between two level nodes.
     internal enum GraphRouteShape
     {
         Direct,
@@ -40,16 +43,18 @@ namespace Zametek.Graphs.ProjectPlan
     //   - Direct: Source/Target axes; Primary = optional Z corner (null = midpoint). Secondary unused.
     //   - Bracket: Source == Target (the shared axis); Primary = the cross-leg coordinate (may be
     //     outside the endpoint span). Secondary unused.
-    //   - Saucepan: Source/Target are the per-end axes (mixed); Primary = the bowl's cross-leg
-    //     coordinate; Secondary = the handle turn coordinate (null = a default short stub);
-    //     HandleAtSource picks which end carries the handle.
+    //   - Saucepan: BowlVertical chooses the dip direction (false = a horizontal bowl with vertical arms,
+    //     dipping in Y; true = the transpose). Primary = the bowl's cross-leg coordinate. Each of
+    //     Source/Target is a handled end when its axis is perpendicular to the arms (H for a horizontal
+    //     bowl, V for a vertical bowl) and a direct end otherwise - so the axis pair selects no/one/two
+    //     handles. Secondary = the handle stub length (null = a default half-node stub).
     internal readonly record struct GraphRoutePlan(
         GraphConnectionAxis Source,
         GraphConnectionAxis Target,
         GraphRouteShape Shape = GraphRouteShape.Direct,
         double? Primary = null,
         double? Secondary = null,
-        bool HandleAtSource = true);
+        bool BowlVertical = false);
 
     // Computes the on-screen shape of an interactive edge from a GraphEdgeRoutingMode, client-side (no
     // MSAGL) so it recomputes live as nodes are dragged. The shape is returned as a list of contiguous
@@ -422,50 +427,87 @@ namespace Zametek.Graphs.ProjectPlan
             return [new Point(startX, a.Y), new Point(cornerX, a.Y), new Point(cornerX, b.Y), new Point(endX, b.Y)];
         }
 
-        // A saucepan: a handle stub off one end, then a bowl (down/across/up) that dips around an
-        // obstacle and turns into the other end on a perpendicular side - a Direct route with one extra
-        // bend. Built with the handle at the first endpoint and reversed when the handle is at the
-        // target, so the returned list always runs source -> target.
+        // A saucepan: a "U" bowl that dips around an obstacle, with a handle stub on the source end, the
+        // target end, or both. A handled end (axis perpendicular to the arms) leaves on a left/right side
+        // for a horizontal bowl - so it keeps a horizontal entry/exit while the bowl detours vertically;
+        // a direct end attaches straight onto an arm (top/bottom). The two end legs are appended around
+        // the bowl's cross leg (which connects the two arm tops), so the list runs source -> target.
         private static IReadOnlyList<Point> SaucepanCorners(Point a, Point b, double halfWidth, double halfHeight, GraphRoutePlan plan)
         {
-            if (plan.HandleAtSource)
+            var corners = new List<Point>(6);
+            if (!plan.BowlVertical)
             {
-                return HandleFirstCorners(a, b, halfWidth, halfHeight, plan.Source, plan.Secondary, plan.Primary);
-            }
-            IReadOnlyList<Point> mirrored = HandleFirstCorners(b, a, halfWidth, halfHeight, plan.Target, plan.Secondary, plan.Primary);
-            var reversed = new List<Point>(mirrored.Count);
-            for (int i = mirrored.Count - 1; i >= 0; i--)
-            {
-                reversed.Add(mirrored[i]);
-            }
-            return reversed;
-        }
-
-        // The saucepan with the handle at the first endpoint 'h' (the second 'p' is the plain end). Leaves
-        // 'h' along handleAxis (a short stub to 'handle', a default half-node stub when null), dips
-        // perpendicular to the bowl cross-leg at 'bowl', runs to the plain end's row/column, then turns
-        // into 'p' on the side the bowl approaches from.
-        private static IReadOnlyList<Point> HandleFirstCorners(Point h, Point p, double halfWidth, double halfHeight, GraphConnectionAxis handleAxis, double? handle, double? bowl)
-        {
-            if (handleAxis == GraphConnectionAxis.Horizontal)
-            {
-                int sx = p.X >= h.X ? 1 : -1;
-                Point start = new(h.X + (sx * halfWidth), h.Y);
-                double handleX = handle ?? (start.X + (sx * halfWidth));
-                double bowlY = bowl ?? ((h.Y + p.Y) / 2.0);
-                int sy = bowlY <= p.Y ? -1 : 1;
-                Point end = new(p.X, p.Y + (sy * halfHeight));
-                return [start, new Point(handleX, h.Y), new Point(handleX, bowlY), new Point(p.X, bowlY), end];
+                // Horizontal bowl (cross leg along X), vertical arms; the dip is in Y. Handled ends leave
+                // horizontally (axis H), direct ends attach top/bottom (axis V).
+                double bowlY = plan.Primary ?? ((a.Y + b.Y) / 2.0);
+                double stub = plan.Secondary ?? halfWidth;
+                int sx = b.X >= a.X ? 1 : -1;
+                AppendHorizontalBowlEnd(corners, a, halfWidth, halfHeight, plan.Source == GraphConnectionAxis.Horizontal, bowlY, sx, stub, reverse: false);
+                AppendHorizontalBowlEnd(corners, b, halfWidth, halfHeight, plan.Target == GraphConnectionAxis.Horizontal, bowlY, -sx, stub, reverse: true);
             }
             else
             {
-                int sy = p.Y >= h.Y ? 1 : -1;
-                Point start = new(h.X, h.Y + (sy * halfHeight));
-                double handleY = handle ?? (start.Y + (sy * halfHeight));
-                double bowlX = bowl ?? ((h.X + p.X) / 2.0);
-                int sx = bowlX <= p.X ? -1 : 1;
-                Point end = new(p.X + (sx * halfWidth), p.Y);
-                return [start, new Point(h.X, handleY), new Point(bowlX, handleY), new Point(bowlX, p.Y), end];
+                // Vertical bowl (cross leg along Y), horizontal arms; the dip is in X. Handled ends leave
+                // vertically (axis V), direct ends attach left/right (axis H).
+                double bowlX = plan.Primary ?? ((a.X + b.X) / 2.0);
+                double stub = plan.Secondary ?? halfHeight;
+                int sy = b.Y >= a.Y ? 1 : -1;
+                AppendVerticalBowlEnd(corners, a, halfWidth, halfHeight, plan.Source == GraphConnectionAxis.Vertical, bowlX, sy, stub, reverse: false);
+                AppendVerticalBowlEnd(corners, b, halfWidth, halfHeight, plan.Target == GraphConnectionAxis.Vertical, bowlX, -sy, stub, reverse: true);
+            }
+            return corners;
+        }
+
+        // One end of a horizontal-bowl saucepan, from the node attach point out to its arm's foot on the
+        // bowl line (a handled end adds a horizontal handle stub then a vertical arm; a direct end is a
+        // single vertical arm off the top/bottom). 'sx' points along X away from this end; 'reverse'
+        // emits the legs bowl-to-node for the target end so the whole list runs source -> target.
+        private static void AppendHorizontalBowlEnd(List<Point> corners, Point centre, double halfWidth, double halfHeight, bool handled, double bowlY, int sx, double stub, bool reverse)
+        {
+            Point[] legs;
+            if (handled)
+            {
+                double startX = centre.X + (sx * halfWidth);
+                double armX = startX + (sx * stub);
+                legs = [new Point(startX, centre.Y), new Point(armX, centre.Y), new Point(armX, bowlY)];
+            }
+            else
+            {
+                double startY = bowlY <= centre.Y ? centre.Y - halfHeight : centre.Y + halfHeight;
+                legs = [new Point(centre.X, startY), new Point(centre.X, bowlY)];
+            }
+            AppendLegs(corners, legs, reverse);
+        }
+
+        // The transpose of AppendHorizontalBowlEnd for a vertical-bowl saucepan (horizontal arms,
+        // vertical handle stubs); 'sy' points along Y away from this end.
+        private static void AppendVerticalBowlEnd(List<Point> corners, Point centre, double halfWidth, double halfHeight, bool handled, double bowlX, int sy, double stub, bool reverse)
+        {
+            Point[] legs;
+            if (handled)
+            {
+                double startY = centre.Y + (sy * halfHeight);
+                double armY = startY + (sy * stub);
+                legs = [new Point(centre.X, startY), new Point(centre.X, armY), new Point(bowlX, armY)];
+            }
+            else
+            {
+                double startX = bowlX <= centre.X ? centre.X - halfWidth : centre.X + halfWidth;
+                legs = [new Point(startX, centre.Y), new Point(bowlX, centre.Y)];
+            }
+            AppendLegs(corners, legs, reverse);
+        }
+
+        private static void AppendLegs(List<Point> corners, Point[] legs, bool reverse)
+        {
+            if (!reverse)
+            {
+                corners.AddRange(legs);
+                return;
+            }
+            for (int i = legs.Length - 1; i >= 0; i--)
+            {
+                corners.Add(legs[i]);
             }
         }
 

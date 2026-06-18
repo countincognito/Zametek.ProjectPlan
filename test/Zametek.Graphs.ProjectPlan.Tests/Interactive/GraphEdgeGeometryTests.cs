@@ -145,12 +145,12 @@ namespace Zametek.Graphs.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Saucepan_HandleAtSource_HandleThenBowlIntoTargetSide()
+        public void Saucepan_HandleAtSourceOnly_HandleThenBowlIntoTargetSide()
         {
-            // Handle off the source's right side, a default half-node stub, then the bowl dips to y = -60
-            // and turns up into the target's bottom.
+            // Horizontal bowl; source is a handled end (axis H), target a direct end (axis V). Handle off
+            // the source's right side, default half-node stub, bowl dips to y = -60, up into target bottom.
             var plan = new GraphRoutePlan(
-                GraphConnectionAxis.Horizontal, GraphConnectionAxis.Vertical, GraphRouteShape.Saucepan, -60.0, null, true);
+                GraphConnectionAxis.Horizontal, GraphConnectionAxis.Vertical, GraphRouteShape.Saucepan, -60.0);
             IReadOnlyList<Point> corners = GraphEdgeGeometry.RouteCorners(
                 new Point(0.0, 0.0), new Point(200.0, 0.0), 40.0, 40.0, plan);
 
@@ -163,11 +163,11 @@ namespace Zametek.Graphs.ProjectPlan.Tests
         }
 
         [Fact]
-        public void Saucepan_HandleAtTarget_RunsSourceToTargetWithHandleAtTheEnd()
+        public void Saucepan_HandleAtTargetOnly_RunsSourceToTargetWithHandleAtTheEnd()
         {
-            // The mirror: the handle sits at the target end, the list still runs source -> target.
+            // The mirror: source direct (axis V), target handled (axis H); the list still runs src -> tgt.
             var plan = new GraphRoutePlan(
-                GraphConnectionAxis.Vertical, GraphConnectionAxis.Horizontal, GraphRouteShape.Saucepan, -60.0, null, false);
+                GraphConnectionAxis.Vertical, GraphConnectionAxis.Horizontal, GraphRouteShape.Saucepan, -60.0);
             IReadOnlyList<Point> corners = GraphEdgeGeometry.RouteCorners(
                 new Point(0.0, 0.0), new Point(200.0, 0.0), 40.0, 40.0, plan);
 
@@ -177,6 +177,25 @@ namespace Zametek.Graphs.ProjectPlan.Tests
             ShouldBePoint(corners[2], 160.0, -60.0);
             ShouldBePoint(corners[3], 160.0, 0.0);
             ShouldBePoint(corners[4], 180.0, 0.0);   // handle into the target's left side
+        }
+
+        [Fact]
+        public void Saucepan_HandleAtBothEnds_HorizontalInAndOutAroundTheBowl()
+        {
+            // Both ends handled (axis H, horizontal bowl): a handle off each side, both arms diving to the
+            // bowl at y = -60 - four bends, horizontal entry and exit. The both-ends case the user hit.
+            var plan = new GraphRoutePlan(
+                GraphConnectionAxis.Horizontal, GraphConnectionAxis.Horizontal, GraphRouteShape.Saucepan, -60.0);
+            IReadOnlyList<Point> corners = GraphEdgeGeometry.RouteCorners(
+                new Point(0.0, 0.0), new Point(200.0, 0.0), 40.0, 40.0, plan);
+
+            corners.Count.ShouldBe(6);
+            ShouldBePoint(corners[0], 20.0, 0.0);    // source right side (handle)
+            ShouldBePoint(corners[1], 40.0, 0.0);    // source handle turn
+            ShouldBePoint(corners[2], 40.0, -60.0);  // source arm down to the bowl
+            ShouldBePoint(corners[3], 160.0, -60.0); // bowl run to the target arm
+            ShouldBePoint(corners[4], 160.0, 0.0);   // target arm up
+            ShouldBePoint(corners[5], 180.0, 0.0);   // handle into the target's left side
         }
 
         #endregion
