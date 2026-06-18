@@ -583,37 +583,44 @@ namespace Zametek.Graphs.ProjectPlan
                 nodeById[node.Id] = node;
             }
 
-            // Steer each edge around the nodes it is not connected to (clash avoidance), then re-snapshot
-            // with the clash-resolved axes so the port offsetting groups by the final sides.
-            var resolvedById = new Dictionary<int, (GraphConnectionAxis Source, GraphConnectionAxis Target, double? ZCorner)>(edges.Count);
-            var resolvedEdges = new List<PortEdge>(edges.Count);
+            // Steer each edge around the nodes it is not connected to (clash avoidance). Plain L/Z
+            // (Direct) edges still feed the port offsetting so edges sharing a side are separated; a
+            // Bracket/Saucepan detour is already spatially distinct, so it keeps its centre ports.
+            var resolvedById = new Dictionary<int, GraphRoutePlan>(edges.Count);
+            var directEdges = new List<PortEdge>(edges.Count);
             foreach (PortEdge edge in edges)
             {
                 if (nodeById.TryGetValue(edge.SourceId, out PortNode sourceNode)
                     && nodeById.TryGetValue(edge.TargetId, out PortNode targetNode))
                 {
-                    (GraphConnectionAxis Source, GraphConnectionAxis Target, double? ZCorner) route =
+                    GraphRoutePlan route =
                         GraphClashResolver.Resolve(sourceNode, targetNode, edge.SourceAxis, edge.TargetAxis, nodes, nodeWidth, nodeHeight);
                     resolvedById[edge.Id] = route;
-                    resolvedEdges.Add(new PortEdge(edge.Id, edge.SourceId, edge.TargetId, route.Source, route.Target));
+                    if (route.Shape == GraphRouteShape.Direct)
+                    {
+                        directEdges.Add(new PortEdge(edge.Id, edge.SourceId, edge.TargetId, route.Source, route.Target));
+                    }
                 }
                 else
                 {
-                    resolvedById[edge.Id] = (edge.SourceAxis, edge.TargetAxis, null);
-                    resolvedEdges.Add(edge);
+                    resolvedById[edge.Id] = new GraphRoutePlan(edge.SourceAxis, edge.TargetAxis);
+                    directEdges.Add(edge);
                 }
             }
 
             IReadOnlyDictionary<int, (Point SourceOffset, Point TargetOffset)> offsets =
-                GraphPortOffsetResolver.Resolve(nodes, resolvedEdges, nodeWidth, nodeHeight);
+                GraphPortOffsetResolver.Resolve(nodes, directEdges, nodeWidth, nodeHeight);
 
             foreach (GraphEdgeViewModel edge in GraphEdges)
             {
-                (GraphConnectionAxis Source, GraphConnectionAxis Target, double? ZCorner) route = resolvedById[edge.Id];
-                edge.SetResolvedAxes(route.Source, route.Target, route.ZCorner);
+                edge.SetResolvedRoute(resolvedById[edge.Id]);
                 if (offsets.TryGetValue(edge.Id, out (Point SourceOffset, Point TargetOffset) offset))
                 {
                     edge.SetPortOffsets(offset.SourceOffset, offset.TargetOffset);
+                }
+                else
+                {
+                    edge.ClearPortOffsets();
                 }
             }
         }

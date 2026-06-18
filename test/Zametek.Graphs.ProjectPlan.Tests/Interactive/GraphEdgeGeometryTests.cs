@@ -108,6 +108,79 @@ namespace Zametek.Graphs.ProjectPlan.Tests
 
         #endregion
 
+        #region Detour shapes (Bracket / Saucepan) via RouteCorners
+
+        [Fact]
+        public void Bracket_Vertical_CrossLegSlidAboveLevelNodes()
+        {
+            // Two nodes on one row; a vertical-sided bracket lifts the cross leg above both (corner at
+            // y = -50, outside the [-20, +20] span of their tops/bottoms) and attaches on the top sides.
+            var plan = new GraphRoutePlan(
+                GraphConnectionAxis.Vertical, GraphConnectionAxis.Vertical, GraphRouteShape.Bracket, -50.0);
+            IReadOnlyList<Point> corners = GraphEdgeGeometry.RouteCorners(
+                new Point(0.0, 0.0), new Point(100.0, 0.0), 40.0, 40.0, plan);
+
+            corners.Count.ShouldBe(4);
+            ShouldBePoint(corners[0], 0.0, -20.0);
+            ShouldBePoint(corners[1], 0.0, -50.0);
+            ShouldBePoint(corners[2], 100.0, -50.0);
+            ShouldBePoint(corners[3], 100.0, -20.0);
+        }
+
+        [Fact]
+        public void Bracket_Horizontal_CrossLegSlidLeftOfStackedNodes()
+        {
+            // Two stacked nodes; a horizontal-sided bracket slides the cross leg left of both (x = -50)
+            // and attaches on the left sides.
+            var plan = new GraphRoutePlan(
+                GraphConnectionAxis.Horizontal, GraphConnectionAxis.Horizontal, GraphRouteShape.Bracket, -50.0);
+            IReadOnlyList<Point> corners = GraphEdgeGeometry.RouteCorners(
+                new Point(0.0, 0.0), new Point(0.0, 100.0), 40.0, 40.0, plan);
+
+            corners.Count.ShouldBe(4);
+            ShouldBePoint(corners[0], -20.0, 0.0);
+            ShouldBePoint(corners[1], -50.0, 0.0);
+            ShouldBePoint(corners[2], -50.0, 100.0);
+            ShouldBePoint(corners[3], -20.0, 100.0);
+        }
+
+        [Fact]
+        public void Saucepan_HandleAtSource_HandleThenBowlIntoTargetSide()
+        {
+            // Handle off the source's right side, a default half-node stub, then the bowl dips to y = -60
+            // and turns up into the target's bottom.
+            var plan = new GraphRoutePlan(
+                GraphConnectionAxis.Horizontal, GraphConnectionAxis.Vertical, GraphRouteShape.Saucepan, -60.0, null, true);
+            IReadOnlyList<Point> corners = GraphEdgeGeometry.RouteCorners(
+                new Point(0.0, 0.0), new Point(200.0, 0.0), 40.0, 40.0, plan);
+
+            corners.Count.ShouldBe(5);
+            ShouldBePoint(corners[0], 20.0, 0.0);    // source right side
+            ShouldBePoint(corners[1], 40.0, 0.0);    // handle turn
+            ShouldBePoint(corners[2], 40.0, -60.0);  // dip to the bowl
+            ShouldBePoint(corners[3], 200.0, -60.0); // bowl run to the target column
+            ShouldBePoint(corners[4], 200.0, -20.0); // up into the target's bottom
+        }
+
+        [Fact]
+        public void Saucepan_HandleAtTarget_RunsSourceToTargetWithHandleAtTheEnd()
+        {
+            // The mirror: the handle sits at the target end, the list still runs source -> target.
+            var plan = new GraphRoutePlan(
+                GraphConnectionAxis.Vertical, GraphConnectionAxis.Horizontal, GraphRouteShape.Saucepan, -60.0, null, false);
+            IReadOnlyList<Point> corners = GraphEdgeGeometry.RouteCorners(
+                new Point(0.0, 0.0), new Point(200.0, 0.0), 40.0, 40.0, plan);
+
+            corners.Count.ShouldBe(5);
+            ShouldBePoint(corners[0], 0.0, -20.0);   // up off the source's top
+            ShouldBePoint(corners[1], 0.0, -60.0);
+            ShouldBePoint(corners[2], 160.0, -60.0);
+            ShouldBePoint(corners[3], 160.0, 0.0);
+            ShouldBePoint(corners[4], 180.0, 0.0);   // handle into the target's left side
+        }
+
+        #endregion
+
         #region Spline connector shapes
 
         [Fact]

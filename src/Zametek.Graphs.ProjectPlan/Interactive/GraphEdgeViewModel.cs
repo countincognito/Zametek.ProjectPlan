@@ -115,8 +115,7 @@ namespace Zametek.Graphs.ProjectPlan
                 // them so the approximation falls back to the dominant axis until the new mode resolves.
                 m_SourceExitAxis = null;
                 m_TargetEntryAxis = null;
-                m_ResolvedAxes = null;
-                m_ZCorner = null;
+                m_ResolvedRoute = null;
                 m_SourcePortOffset = default;
                 m_TargetPortOffset = default;
                 RaiseGeometryChanged();
@@ -128,14 +127,12 @@ namespace Zametek.Graphs.ProjectPlan
         // default and the live fallback while an endpoint is being dragged.
         private IReadOnlyList<GraphEdgeSegment>? m_RoutedSegments;
 
-        // De-conflicted connection axes pushed by the interactive view-model's port resolver (so an
-        // incoming and outgoing edge do not share a node side). Null = use this edge's own resolve.
-        // Only set during a rectilinear drag; ignored at rest (the routed geometry takes precedence).
-        // (Legacy flip-based de-confliction; see GraphEdgeGeometry.UseLegacyRectilinearPorts.) Now also
-        // carries the clash-avoided route from the new path - the axes plus an optional Z middle-leg
-        // corner position (m_ZCorner) slid to clear a blocking node.
-        private (GraphConnectionAxis Source, GraphConnectionAxis Target)? m_ResolvedAxes;
-        private double? m_ZCorner;
+        // The clash-resolved route pushed by the interactive view-model's port resolver: the per-endpoint
+        // connection axes, the route shape (Direct L/Z, or a Bracket/Saucepan detour), and the slid
+        // corner positions that clear a blocking node. Null = use this edge's own resolve. Only set
+        // during a rectilinear drag; ignored at rest (the exact routed geometry takes precedence). The
+        // legacy flip-based de-confliction pushes a Direct plan; see GraphEdgeGeometry.UseLegacyRectilinearPorts.
+        private GraphRoutePlan? m_ResolvedRoute;
 
         // Per-end attach-point offsets pushed by the port-offset resolver, separating edges that share a
         // node side so their ports do not overlap. Zero = attach at the side centre. Drag-time only.
@@ -169,13 +166,28 @@ namespace Zametek.Graphs.ProjectPlan
                 // ports the edge - so the drag-time approximation meets the node where the settled route
                 // does (and orthogonal edges leave perpendicular to a side, not off-centre). A
                 // de-conflicted override from the port resolver wins when present.
-                (GraphConnectionAxis sourceAxis, GraphConnectionAxis targetAxis) = m_ResolvedAxes ?? ResolveConnectionAxes();
+                // A resolved detour (Bracket/Saucepan) is drawn straight from its corner polyline, built
+                // off the node centres exactly as the clash check measured it (the port offsets, which
+                // only separate Direct L/Z edges, do not apply to a detour).
+                if (m_ResolvedRoute is { Shape: GraphRouteShape.Bracket or GraphRouteShape.Saucepan } detour)
+                {
+                    return GraphEdgeGeometry.SegmentsFromCorners(
+                        GraphEdgeGeometry.RouteCorners(
+                            new Point(m_Source.CentreX, m_Source.CentreY),
+                            new Point(m_Target.CentreX, m_Target.CentreY),
+                            m_Source.Width, m_Source.Height, detour));
+                }
+
+                (GraphConnectionAxis sourceAxis, GraphConnectionAxis targetAxis) = m_ResolvedRoute is { } plan
+                    ? (plan.Source, plan.Target)
+                    : ResolveConnectionAxes();
+                double? zCorner = m_ResolvedRoute?.Primary;
                 Point start = AttachPoint(m_Source, sourceAxis, m_Target);
                 Point end = AttachPoint(m_Target, targetAxis, m_Source);
                 // Nudge each end along its side to separate edges that share it (zero when alone).
                 start = new Point(start.X + m_SourcePortOffset.X, start.Y + m_SourcePortOffset.Y);
                 end = new Point(end.X + m_TargetPortOffset.X, end.Y + m_TargetPortOffset.Y);
-                return GraphEdgeGeometry.BuildSegments(m_RoutingMode, start, end, sourceAxis, targetAxis, m_ZCorner);
+                return GraphEdgeGeometry.BuildSegments(m_RoutingMode, start, end, sourceAxis, targetAxis, zCorner);
             }
         }
 
@@ -311,27 +323,31 @@ namespace Zametek.Graphs.ProjectPlan
         // port resolver can snapshot them. Always recomputed from the current arrangement.
         internal (GraphConnectionAxis Source, GraphConnectionAxis Target) TentativeConnectionAxes => ResolveConnectionAxes();
 
-        // Apply (non-null) or drop (null, see ClearResolvedAxes) a de-conflicted axis override from the
-        // port resolver. Only raises when the value actually changes, so a steady drag does not churn.
-        internal void SetResolvedAxes(GraphConnectionAxis source, GraphConnectionAxis target, double? zCorner = null)
+        // Apply a clash-resolved route override from the port resolver. Only raises when the plan actually
+        // changes, so a steady drag does not churn the geometry.
+        internal void SetResolvedRoute(GraphRoutePlan plan)
         {
-            if (m_ResolvedAxes is { } current && current.Source == source && current.Target == target && m_ZCorner == zCorner)
+            if (m_ResolvedRoute == plan)
             {
                 return;
             }
-            m_ResolvedAxes = (source, target);
-            m_ZCorner = zCorner;
+            m_ResolvedRoute = plan;
             RaiseGeometryChanged();
+        }
+
+        // The legacy flip-based de-confliction pushes axes only, i.e. a Direct (L/Z) route.
+        internal void SetResolvedAxes(GraphConnectionAxis source, GraphConnectionAxis target, double? zCorner = null)
+        {
+            SetResolvedRoute(new GraphRoutePlan(source, target, GraphRouteShape.Direct, zCorner));
         }
 
         internal void ClearResolvedAxes()
         {
-            if (m_ResolvedAxes is null)
+            if (m_ResolvedRoute is null)
             {
                 return;
             }
-            m_ResolvedAxes = null;
-            m_ZCorner = null;
+            m_ResolvedRoute = null;
             RaiseGeometryChanged();
         }
 

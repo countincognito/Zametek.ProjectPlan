@@ -17,6 +17,40 @@ namespace Zametek.Graphs.ProjectPlan
         Vertical,
     }
 
+    // The orthogonal route family an edge draws (rectilinear modes only). Direct is the everyday L
+    // (mixed axes, one bend) or Z (matching axes, two bends, corner between the endpoints). Bracket and
+    // Saucepan are the clash-avoidance detours the resolver reaches for when an obstacle sits where a
+    // Direct route would cross it:
+    //   - Bracket ("U"): matching axes, the cross leg slid OUTSIDE the endpoints (above/below or
+    //     left/right of the blocking node) - two bends, both ends leaving the same way.
+    //   - Saucepan: a Direct route plus one extra bend - a short "handle" stub off one end, then a "U"
+    //     bowl that dips around the obstacle and turns into the other end on a perpendicular side. The
+    //     handle may sit at the source or the target (HandleAtSource).
+    internal enum GraphRouteShape
+    {
+        Direct,
+        Bracket,
+        Saucepan,
+    }
+
+    // A fully-resolved rectilinear route: the per-endpoint connection axes plus, for the detour shapes,
+    // the position(s) the resolver slid the route to so it clears the nodes in its way. Carried from the
+    // clash resolver onto the edge so the drawn geometry and the clearance check are built from exactly
+    // the same numbers (see GraphEdgeGeometry.RouteCorners).
+    //   - Direct: Source/Target axes; Primary = optional Z corner (null = midpoint). Secondary unused.
+    //   - Bracket: Source == Target (the shared axis); Primary = the cross-leg coordinate (may be
+    //     outside the endpoint span). Secondary unused.
+    //   - Saucepan: Source/Target are the per-end axes (mixed); Primary = the bowl's cross-leg
+    //     coordinate; Secondary = the handle turn coordinate (null = a default short stub);
+    //     HandleAtSource picks which end carries the handle.
+    internal readonly record struct GraphRoutePlan(
+        GraphConnectionAxis Source,
+        GraphConnectionAxis Target,
+        GraphRouteShape Shape = GraphRouteShape.Direct,
+        double? Primary = null,
+        double? Secondary = null,
+        bool HandleAtSource = true);
+
     // Computes the on-screen shape of an interactive edge from a GraphEdgeRoutingMode, client-side (no
     // MSAGL) so it recomputes live as nodes are dragged. The shape is returned as a list of contiguous
     // cubic-bezier segments from the (already border-clipped) start to end. The serializer lays the
@@ -335,6 +369,106 @@ namespace Zametek.Graphs.ProjectPlan
             return [start, new Point(start.X, end.Y), end];
         }
 
+        // The corner polyline (endpoints included) of a fully-resolved rectilinear route, from the node
+        // centres + size and the route plan. The single source of truth for every orthogonal shape, so
+        // the drawn edge (GraphEdgeViewModel) and the clearance check (GraphClashResolver) are built from
+        // exactly the same points. Attach points are derived here (not passed in) because the detour
+        // shapes pick the node side from where the route runs, not from the other node's direction.
+        internal static IReadOnlyList<Point> RouteCorners(
+            Point sourceCentre,
+            Point targetCentre,
+            double width,
+            double height,
+            GraphRoutePlan plan)
+        {
+            double halfWidth = width / 2.0;
+            double halfHeight = height / 2.0;
+            return plan.Shape switch
+            {
+                GraphRouteShape.Bracket => BracketCorners(sourceCentre, targetCentre, halfWidth, halfHeight, plan.Source, plan.Primary),
+                GraphRouteShape.Saucepan => SaucepanCorners(sourceCentre, targetCentre, halfWidth, halfHeight, plan),
+                _ => DirectCorners(sourceCentre, targetCentre, width, height, plan),
+            };
+        }
+
+        // A Direct (L/Z) route: attach each end at the centre of the side facing the other node, then
+        // turn at the midpoint (or the supplied Z corner). Reproduces the long-standing attach + corner
+        // flow exactly, so existing routes are unchanged.
+        private static IReadOnlyList<Point> DirectCorners(Point sourceCentre, Point targetCentre, double width, double height, GraphRoutePlan plan)
+        {
+            Point start = AttachPoint(sourceCentre, width, height, plan.Source, targetCentre);
+            Point end = AttachPoint(targetCentre, width, height, plan.Target, sourceCentre);
+            return OrthogonalCorners(start, end, plan.Source, plan.Target, plan.Primary);
+        }
+
+        // A "U"/bracket: both ends leave along the same axis and the cross leg sits at 'corner', which may
+        // be OUTSIDE the span between the nodes so the edge detours around what lies directly between
+        // them. The attach side at each end is chosen by which side of the node the corner falls on, so
+        // the bracket can rise above (or drop below) two level nodes - something a midpoint Z, whose
+        // corner is pinned between the endpoints, cannot do.
+        private static IReadOnlyList<Point> BracketCorners(Point a, Point b, double halfWidth, double halfHeight, GraphConnectionAxis axis, double? corner)
+        {
+            if (axis == GraphConnectionAxis.Vertical)
+            {
+                double cornerY = corner ?? ((a.Y + b.Y) / 2.0);
+                double startY = cornerY <= a.Y ? a.Y - halfHeight : a.Y + halfHeight;
+                double endY = cornerY <= b.Y ? b.Y - halfHeight : b.Y + halfHeight;
+                return [new Point(a.X, startY), new Point(a.X, cornerY), new Point(b.X, cornerY), new Point(b.X, endY)];
+            }
+
+            double cornerX = corner ?? ((a.X + b.X) / 2.0);
+            double startX = cornerX <= a.X ? a.X - halfWidth : a.X + halfWidth;
+            double endX = cornerX <= b.X ? b.X - halfWidth : b.X + halfWidth;
+            return [new Point(startX, a.Y), new Point(cornerX, a.Y), new Point(cornerX, b.Y), new Point(endX, b.Y)];
+        }
+
+        // A saucepan: a handle stub off one end, then a bowl (down/across/up) that dips around an
+        // obstacle and turns into the other end on a perpendicular side - a Direct route with one extra
+        // bend. Built with the handle at the first endpoint and reversed when the handle is at the
+        // target, so the returned list always runs source -> target.
+        private static IReadOnlyList<Point> SaucepanCorners(Point a, Point b, double halfWidth, double halfHeight, GraphRoutePlan plan)
+        {
+            if (plan.HandleAtSource)
+            {
+                return HandleFirstCorners(a, b, halfWidth, halfHeight, plan.Source, plan.Secondary, plan.Primary);
+            }
+            IReadOnlyList<Point> mirrored = HandleFirstCorners(b, a, halfWidth, halfHeight, plan.Target, plan.Secondary, plan.Primary);
+            var reversed = new List<Point>(mirrored.Count);
+            for (int i = mirrored.Count - 1; i >= 0; i--)
+            {
+                reversed.Add(mirrored[i]);
+            }
+            return reversed;
+        }
+
+        // The saucepan with the handle at the first endpoint 'h' (the second 'p' is the plain end). Leaves
+        // 'h' along handleAxis (a short stub to 'handle', a default half-node stub when null), dips
+        // perpendicular to the bowl cross-leg at 'bowl', runs to the plain end's row/column, then turns
+        // into 'p' on the side the bowl approaches from.
+        private static IReadOnlyList<Point> HandleFirstCorners(Point h, Point p, double halfWidth, double halfHeight, GraphConnectionAxis handleAxis, double? handle, double? bowl)
+        {
+            if (handleAxis == GraphConnectionAxis.Horizontal)
+            {
+                int sx = p.X >= h.X ? 1 : -1;
+                Point start = new(h.X + (sx * halfWidth), h.Y);
+                double handleX = handle ?? (start.X + (sx * halfWidth));
+                double bowlY = bowl ?? ((h.Y + p.Y) / 2.0);
+                int sy = bowlY <= p.Y ? -1 : 1;
+                Point end = new(p.X, p.Y + (sy * halfHeight));
+                return [start, new Point(handleX, h.Y), new Point(handleX, bowlY), new Point(p.X, bowlY), end];
+            }
+            else
+            {
+                int sy = p.Y >= h.Y ? 1 : -1;
+                Point start = new(h.X, h.Y + (sy * halfHeight));
+                double handleY = handle ?? (start.Y + (sy * halfHeight));
+                double bowlX = bowl ?? ((h.X + p.X) / 2.0);
+                int sx = bowlX <= p.X ? -1 : 1;
+                Point end = new(p.X + (sx * halfWidth), p.Y);
+                return [start, new Point(h.X, handleY), new Point(bowlX, handleY), new Point(bowlX, p.Y), end];
+            }
+        }
+
         // The same orthogonal route as contiguous straight segments (each corner-to-corner leg as a
         // bezier on its own chord), built from OrthogonalCorners so the drawn edge and the clash check
         // agree exactly.
@@ -345,11 +479,20 @@ namespace Zametek.Graphs.ProjectPlan
             GraphConnectionAxis targetAxis,
             double? zCorner)
         {
-            IReadOnlyList<Point> corners = OrthogonalCorners(start, end, sourceAxis, targetAxis, zCorner);
-            var segments = new List<GraphEdgeSegment>(corners.Count - 1);
+            return SegmentsFromCorners(OrthogonalCorners(start, end, sourceAxis, targetAxis, zCorner));
+        }
+
+        // Chain a corner polyline into contiguous straight bezier segments (each leg on its own chord).
+        internal static IReadOnlyList<GraphEdgeSegment> SegmentsFromCorners(IReadOnlyList<Point> corners)
+        {
+            var segments = new List<GraphEdgeSegment>(Math.Max(1, corners.Count - 1));
             for (int i = 1; i < corners.Count; i++)
             {
                 segments.Add(StraightSegment(corners[i - 1], corners[i]));
+            }
+            if (segments.Count == 0)
+            {
+                segments.Add(StraightSegment(corners[0], corners[0]));
             }
             return segments;
         }

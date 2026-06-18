@@ -1,3 +1,4 @@
+using Avalonia;
 using Shouldly;
 using Xunit;
 
@@ -12,7 +13,7 @@ namespace Zametek.Graphs.ProjectPlan.Tests
         private const int V = (int)GraphConnectionAxis.Vertical;
         private const double c_Node = 40.0;
 
-        private static (GraphConnectionAxis Source, GraphConnectionAxis Target, double? ZCorner) Resolve(
+        private static GraphRoutePlan Resolve(
             IReadOnlyList<PortNode> nodes, int sourceId, int targetId, int tentativeSource, int tentativeTarget)
         {
             PortNode source = nodes.First(n => n.Id == sourceId);
@@ -30,7 +31,8 @@ namespace Zametek.Graphs.ProjectPlan.Tests
 
             route.Source.ShouldBe(GraphConnectionAxis.Horizontal);
             route.Target.ShouldBe(GraphConnectionAxis.Horizontal);
-            route.ZCorner.ShouldBeNull();
+            route.Shape.ShouldBe(GraphRouteShape.Direct);
+            route.Primary.ShouldBeNull();
         }
 
         [Fact]
@@ -43,7 +45,8 @@ namespace Zametek.Graphs.ProjectPlan.Tests
 
             route.Source.ShouldBe(GraphConnectionAxis.Vertical);
             route.Target.ShouldBe(GraphConnectionAxis.Horizontal);
-            route.ZCorner.ShouldBeNull();
+            route.Shape.ShouldBe(GraphRouteShape.Direct);
+            route.Primary.ShouldBeNull();
         }
 
         [Fact]
@@ -63,8 +66,9 @@ namespace Zametek.Graphs.ProjectPlan.Tests
 
             route.Source.ShouldBe(GraphConnectionAxis.Horizontal);
             route.Target.ShouldBe(GraphConnectionAxis.Horizontal);
-            route.ZCorner.ShouldNotBeNull();
-            route.ZCorner!.Value.ShouldBeInRange(66.0, 74.0);
+            route.Shape.ShouldBe(GraphRouteShape.Direct);
+            route.Primary.ShouldNotBeNull();
+            route.Primary!.Value.ShouldBeInRange(66.0, 74.0);
         }
 
         [Fact]
@@ -81,6 +85,48 @@ namespace Zametek.Graphs.ProjectPlan.Tests
             var rerouted = Resolve(blocked, 1, 2, H, V);
             rerouted.Source.ShouldBe(GraphConnectionAxis.Vertical);
             rerouted.Target.ShouldBe(GraphConnectionAxis.Horizontal);
+        }
+
+        [Fact]
+        public void Resolve_ObstacleDirectlyBetweenLevelNodes_ReturnsAClearDetour()
+        {
+            // Source and target on one row with a node squarely between them: every L and in-span Z runs
+            // along that row, so none can clear it. The resolver must reach for a detour (Saucepan first,
+            // else Bracket) - and the route it returns must actually clear the blocking node.
+            var nodes = new List<PortNode> { new(1, 0.0, 0.0), new(2, 200.0, 0.0), new(3, 100.0, 0.0) };
+
+            var route = Resolve(nodes, 1, 2, H, V);
+
+            route.Shape.ShouldBeOneOf(GraphRouteShape.Saucepan, GraphRouteShape.Bracket);
+            RouteClears(nodes[0], nodes[1], route, nodes[2]).ShouldBeTrue();
+        }
+
+        // Rebuild the route exactly as it is drawn (RouteCorners) and confirm none of its legs cross the
+        // obstacle's rectangle expanded by the clash margin.
+        private static bool RouteClears(PortNode source, PortNode target, GraphRoutePlan route, PortNode obstacle)
+        {
+            const double margin = 6.0;
+            double half = (c_Node / 2.0) + margin;
+            IReadOnlyList<Point> corners = GraphEdgeGeometry.RouteCorners(
+                new Point(source.CentreX, source.CentreY), new Point(target.CentreX, target.CentreY), c_Node, c_Node, route);
+            for (int i = 1; i < corners.Count; i++)
+            {
+                if (SegmentHitsRect(corners[i - 1], corners[i], obstacle.CentreX, obstacle.CentreY, half))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private static bool SegmentHitsRect(Point a, Point b, double cx, double cy, double half)
+        {
+            double minX = cx - half, maxX = cx + half, minY = cy - half, maxY = cy + half;
+            if (Math.Abs(a.Y - b.Y) < 1e-6)
+            {
+                return a.Y >= minY && a.Y <= maxY && Math.Max(a.X, b.X) >= minX && Math.Min(a.X, b.X) <= maxX;
+            }
+            return a.X >= minX && a.X <= maxX && Math.Max(a.Y, b.Y) >= minY && Math.Min(a.Y, b.Y) <= maxY;
         }
     }
 }
