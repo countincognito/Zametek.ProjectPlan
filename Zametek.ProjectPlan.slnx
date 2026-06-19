@@ -27,7 +27,7 @@
     <Project Path="src/Zametek.Data.ProjectPlan/Zametek.Data.ProjectPlan.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
-    <Project Path="src/Zametek.Graphs.ProjectPlan/Zametek.Graphs.ProjectPlan.csproj">
+    <Project Path="src/Zametek.Graphs.Avalonia/Zametek.Graphs.Avalonia.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
     <Project Path="src/Zametek.ProjectPlan.CommandLine/Zametek.ProjectPlan.CommandLine.csproj">
@@ -54,7 +54,7 @@
     <Project Path="test/Zametek.Data.ProjectPlan.Tests/Zametek.Data.ProjectPlan.Tests.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
-    <Project Path="test/Zametek.Graphs.ProjectPlan.Tests/Zametek.Graphs.ProjectPlan.Tests.csproj">
+    <Project Path="test/Zametek.Graphs.Avalonia.Tests/Zametek.Graphs.Avalonia.Tests.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
     <Project Path="test/Zametek.ViewModel.ProjectPlan.Tests/Zametek.ViewModel.ProjectPlan.Tests.csproj">

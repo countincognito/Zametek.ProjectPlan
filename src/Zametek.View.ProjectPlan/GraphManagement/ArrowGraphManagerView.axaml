@@ -2,13 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:g="using:Zametek.Graphs.ProjectPlan"
+			 xmlns:g="using:Zametek.Graphs.Avalonia"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 			 x:DataType="vm:ArrowGraphManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.ArrowGraphManagerView">
 
-  <!-- The interactive viewer lives in the reusable Zametek.Graphs.ProjectPlan control library.
+  <!-- The interactive viewer lives in the reusable Zametek.Graphs.Avalonia control library.
        It binds to IInteractiveGraph, supplied here by the manager view-model's reusable
        InteractiveGraphViewModel (exposed as Interactive). -->
   <g:InteractiveGraphView Margin="7"

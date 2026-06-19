@@ -1,7 +1,7 @@
 using Avalonia.Media;
 using System.Text;
 using Zametek.Common.ProjectPlan;
-using Zametek.Graphs.ProjectPlan;
+using Zametek.Graphs.Avalonia;
 
 namespace Zametek.ViewModel.ProjectPlan
 {

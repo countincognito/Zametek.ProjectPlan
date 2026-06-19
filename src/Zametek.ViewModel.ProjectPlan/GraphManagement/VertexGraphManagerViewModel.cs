@@ -6,13 +6,13 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Graphs.ProjectPlan;
+using Zametek.Graphs.Avalonia;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     // Application glue for the vertex graph. The interactive viewer itself now lives in the reusable
-    // InteractiveGraphViewModel (in Zametek.Graphs.ProjectPlan); this view-model supplies that
+    // InteractiveGraphViewModel (in Zametek.Graphs.Avalonia); this view-model supplies that
     // control with the application's data and dialogs via IGraphHost, keeps the headless SVG export
     // members the CLI calls, and exposes the interactive view-model to the embedded view. The graph's
     // per-type differences come from GraphConfigurations.Vertex (which, unlike the arrow graph, does
@@ -79,8 +79,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
-        private readonly IGraphSerializer m_GraphSerializer;
-        private readonly IGraphImageExporter m_GraphImageExporter;
+        private readonly IGraphLayoutEngine m_LayoutEngine;
 
         // The reusable, self-contained interactive graph. It owns all of the
         // node/edge/workspace/drag/select/layout/export behaviour and subscribes to RebuildRequested.
@@ -94,20 +93,17 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IMsaglSvgRenderer msaglSvgRenderer,
-            IGraphImageExporter graphImageExporter)
+            IGraphLayoutEngine layoutEngine)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
-            ArgumentNullException.ThrowIfNull(msaglSvgRenderer);
-            ArgumentNullException.ThrowIfNull(graphImageExporter);
+            ArgumentNullException.ThrowIfNull(layoutEngine);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
-            m_GraphSerializer = new GraphSerializer(GraphConfigurations.Vertex, msaglSvgRenderer);
-            m_GraphImageExporter = graphImageExporter;
+            m_LayoutEngine = layoutEngine;
 
             m_VertexGraphData = string.Empty;
             m_VertexGraphImage = new SvgImage();
@@ -148,7 +144,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Select(_ => Unit.Default);
 
-            m_Interactive = new InteractiveGraphViewModel(this, m_GraphSerializer, m_GraphImageExporter);
+            m_Interactive = new InteractiveGraphViewModel(this, m_LayoutEngine, new GraphSerializer(), GraphConfigurations.Vertex);
 
             Id = Resource.ProjectPlan.Titles.Title_VertexGraphView;
             Title = Resource.ProjectPlan.Titles.Title_VertexGraphView;
@@ -282,8 +278,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (!HasCompilationErrors)
                 {
-                    data = m_GraphSerializer.BuildGraphSvgData(
+                    data = m_LayoutEngine.RenderSvg(
                         BuildVertexDiagram(),
+                        m_Interactive.Configuration,
                         m_CoreViewModel.BaseTheme.ToGraphTheme());
                 }
             }
