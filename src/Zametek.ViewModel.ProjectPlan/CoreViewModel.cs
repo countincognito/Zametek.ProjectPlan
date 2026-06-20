@@ -1946,8 +1946,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 else
                 {
-                    ArrowGraph = m_GraphCompilationService.BuildArrowGraph(
+                    // Stamp each event with a stable, activity-anchored id (ArrowEventAnchorMap), so the
+                    // interactive layout can persist and rehydrate by it; the compiler's own event ids
+                    // are transient (regenerated every compile) and so cannot key a saved arrangement.
+                    var arrowGraph = m_GraphCompilationService.BuildArrowGraph(
                         GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject()));
+
+                    ArrowGraph = ArrowEventAnchorMap.Build(arrowGraph);
                 }
             }
         }

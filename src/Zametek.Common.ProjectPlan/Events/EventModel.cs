@@ -1,4 +1,4 @@
-﻿namespace Zametek.Common.ProjectPlan
+namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
     public record EventModel

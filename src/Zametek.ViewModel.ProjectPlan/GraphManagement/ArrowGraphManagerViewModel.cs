@@ -173,11 +173,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Where(mode => mode != EdgeRoutingMode.Unset)
                 .Subscribe(mode => m_Interactive.ApplyEdgeRoutingMode(mode.ToGraphEdgeRoutingMode()));
 
-            // Persist the interactive arrangement in the scenario. Push the live arrangement to the Core
-            // when the user changes it (drag/reset) - which marks the scenario modified - and seed the
-            // interactive graph from a loaded arrangement (the Core layout changing on load). The Where
-            // ignores the manager's own push (by instance) so it does not re-seed; ObserveOn keeps the
-            // seed (which touches the bound node collection) on the UI thread.
+            // Persist the interactive arrangement in the scenario. Arrow graph event ids are stamped with a
+            // stable, activity-anchored id in CoreViewModel.BuildArrowGraph (see ArrowEventAnchorMap), so
+            // the layout persists and maps back to live ids by, so the seed works on load before the graph
+            // is rebuilt.
+            // Push the live arrangement to the Core when the user changes it (drag/reset) - which marks
+            // the scenario modified - and seed the interactive graph from a loaded arrangement (the Core
+            // layout changing on load). The Where ignores the manager's own push (by instance) so it
+            // does not re-seed; ObserveOn keeps the seed (which touches the bound node collection) on the
+            // UI thread.
             m_Interactive.LayoutChanged += OnInteractiveLayoutChanged;
 
             m_LayoutSeedSub = this
@@ -255,8 +259,9 @@ namespace Zametek.ViewModel.ProjectPlan
         // DiagramGraphModel the serializer consumes.
         private DiagramGraphModel BuildArrowDiagram(bool multiLineEdgeLabels)
         {
+            ArrowGraphModel arrowGraph = ArrowEventAnchorMap.Build(m_CoreViewModel.ArrowGraph);
             return ArrowGraphDiagramBuilder.Build(
-                GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings),
+                GraphPresentationBuilder.ApplyPresentation(arrowGraph, m_CoreViewModel.GraphSettings),
                 multiLineEdgeLabels,
                 m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
         }
@@ -354,13 +359,31 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         // Push the interactive arrangement into the Core (which persists it and marks the scenario
-        // modified) whenever the user changes it. m_LastPushedLayout records the pushed instance so the
-        // Core-layout subscription ignores this self-induced change rather than re-seeding.
+        // modified) whenever the user changes it. The live positions are keyed by the stable anchored
+        // event id, so decode them to the durable (activity id, side) anchor before persisting (see
+        // ArrowEventAnchorMap). m_LastPushedLayout records the pushed instance so the Core-layout
+        // subscription ignores this self-induced change rather than re-seeding.
         private void OnInteractiveLayoutChanged(object? sender, EventArgs e)
         {
-            var pushed = m_Interactive.GetNodeLayout().ToGraphLayoutModel();
+            Dictionary<int, int> eventIdLookup = ArrowEventAnchorMap.BuildEventIdLookup(m_CoreViewModel.ArrowGraph);
+            var pushed = ToGraphLayoutModel(m_Interactive.GetNodeLayout(), eventIdLookup);
             m_LastPushedLayout = pushed;
             m_CoreViewModel.ArrowGraphLayout = pushed;
+        }
+
+        private static Common.ProjectPlan.GraphLayoutModel ToGraphLayoutModel(
+            IReadOnlyList<GraphNodePosition> positions,
+            Dictionary<int, int> eventIdLookup)
+        {
+            return new Common.ProjectPlan.GraphLayoutModel
+            {
+                Nodes = [.. positions.Select(p => new NodeLayoutModel
+                {
+                    Id = eventIdLookup.TryGetValue(p.Id, out int newId) ? newId : p.Id,
+                    X = p.X,
+                    Y = p.Y,
+                })],
+            };
         }
 
         #endregion

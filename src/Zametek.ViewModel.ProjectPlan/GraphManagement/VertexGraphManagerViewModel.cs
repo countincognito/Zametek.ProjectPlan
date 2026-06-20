@@ -354,9 +354,17 @@ namespace Zametek.ViewModel.ProjectPlan
         // Core-layout subscription ignores this self-induced change rather than re-seeding.
         private void OnInteractiveLayoutChanged(object? sender, EventArgs e)
         {
-            var pushed = m_Interactive.GetNodeLayout().ToGraphLayoutModel();
+            Common.ProjectPlan.GraphLayoutModel pushed = ToGraphLayoutModel(m_Interactive.GetNodeLayout());
             m_LastPushedLayout = pushed;
             m_CoreViewModel.VertexGraphLayout = pushed;
+        }
+
+        private static Common.ProjectPlan.GraphLayoutModel ToGraphLayoutModel(IReadOnlyList<GraphNodePosition> positions)
+        {
+            return new Common.ProjectPlan.GraphLayoutModel
+            {
+                Nodes = [.. positions.Select(p => new NodeLayoutModel { Id = p.Id, X = p.X, Y = p.Y })],
+            };
         }
 
         #endregion
