@@ -508,11 +508,18 @@ namespace Zametek.Graphs.Avalonia
             GraphEdges.Clear();
             GraphNodes.Clear();
 
-            // Drop remembered positions for nodes that no longer exist.
-            HashSet<int> layoutIds = [.. layout.Nodes.Select(x => x.Id)];
-            foreach (int staleId in m_ManualNodePositions.Keys.Where(x => !layoutIds.Contains(x)).ToList())
+            // Drop remembered positions for nodes that no longer exist - but only when we have a real
+            // layout to reconcile against. An empty layout is a transient state (the graph rebuilds
+            // empty before compilation completes, and on a compilation error); treating it as "every
+            // node was removed" would wipe positions just seeded from a loaded scenario, before the
+            // real layout arrives in a follow-up populate. Reconcile only against a populated layout.
+            if (layout.Nodes.Count > 0)
             {
-                m_ManualNodePositions.Remove(staleId);
+                HashSet<int> layoutIds = [.. layout.Nodes.Select(x => x.Id)];
+                foreach (int staleId in m_ManualNodePositions.Keys.Where(x => !layoutIds.Contains(x)).ToList())
+                {
+                    m_ManualNodePositions.Remove(staleId);
+                }
             }
 
             GraphTheme theme = m_Host.Theme;
