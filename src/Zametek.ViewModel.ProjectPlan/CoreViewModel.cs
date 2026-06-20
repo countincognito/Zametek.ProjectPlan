@@ -955,10 +955,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_TrackIsProjectScenarioUpdated = false;
                     m_ArrowGraphLayout = value;
-                    IsProjectScenarioUpdated = true;
-                    m_TrackIsProjectScenarioUpdated = true;
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                 }
             }
@@ -972,10 +970,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    m_TrackIsProjectScenarioUpdated = false;
                     m_VertexGraphLayout = value;
-                    IsProjectScenarioUpdated = true;
-                    m_TrackIsProjectScenarioUpdated = true;
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
                     this.RaisePropertyChanged();
                 }
             }
