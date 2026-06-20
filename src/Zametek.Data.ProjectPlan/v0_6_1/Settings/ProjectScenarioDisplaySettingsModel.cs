@@ -1,4 +1,6 @@
-namespace Zametek.Common.ProjectPlan
+using Zametek.Common.ProjectPlan;
+
+namespace Zametek.Data.ProjectPlan.v0_6_1
 {
     [Serializable]
     public record ProjectScenarioDisplaySettingsModel
@@ -14,7 +16,9 @@ namespace Zametek.Common.ProjectPlan
         public bool HideBilling { get; init; } = default;
 
 
+
         public bool ArrowGraphShowNames { get; init; } = default;
+
 
 
         public bool VertexGraphShowNames { get; init; } = default;
@@ -48,6 +52,7 @@ namespace Zametek.Common.ProjectPlan
         public List<int> GanttChartShowConnections { get; init; } = [];
 
 
+
         public AllocationMode ResourceChartAllocationMode { get; init; } = default;
 
         public ScheduleMode ResourceChartScheduleMode { get; init; } = default;
@@ -57,6 +62,7 @@ namespace Zametek.Common.ProjectPlan
         public bool ResourceChartShowToday { get; init; } = default;
 
         public bool ResourceChartShowMilestones { get; init; } = default;
+
 
 
         public bool EarnedValueShowProjections { get; init; } = default;

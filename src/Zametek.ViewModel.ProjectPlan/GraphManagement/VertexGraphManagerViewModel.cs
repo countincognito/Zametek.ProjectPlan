@@ -85,6 +85,16 @@ namespace Zametek.ViewModel.ProjectPlan
         // node/edge/workspace/drag/select/layout/export behaviour and subscribes to RebuildRequested.
         private readonly InteractiveGraphViewModel m_Interactive;
 
+        // Keep the interactive graph's edge routing mode and the scenario's persisted routing-mode
+        // setting in step (see the ctor).
+        private readonly IDisposable m_EdgeRoutingModePushSub;
+        private readonly IDisposable m_EdgeRoutingModeApplySub;
+
+        // Persist the interactive arrangement: push to the Core on a drag/reset, seed from the Core on
+        // load. m_LastPushedLayout lets the seed ignore the manager's own push (see the ctor).
+        private readonly IDisposable m_LayoutSeedSub;
+        private object? m_LastPushedLayout;
+
         #endregion
 
         #region Ctors
@@ -145,6 +155,33 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Select(_ => Unit.Default);
 
             m_Interactive = new InteractiveGraphViewModel(this, m_LayoutEngine, new GraphSerializer(), GraphConfigurations.Vertex);
+
+            // Persist the edge routing mode in the scenario. Push a user-made change to the Core display
+            // setting (Skip(1) drops the initial value, so opening a scenario does not mark it modified);
+            // apply a loaded mode back to the interactive graph (Unset = none stored, so keep the preset).
+            // ApplyEdgeRoutingMode's no-op-on-equal guard stops the push and apply from looping.
+            m_EdgeRoutingModePushSub = m_Interactive
+                .WhenAnyValue(x => x.EdgeRoutingMode)
+                .Skip(1)
+                .Subscribe(mode => m_CoreViewModel.DisplaySettingsViewModel.VertexGraphEdgeRoutingMode = mode.ToEdgeRoutingMode());
+
+            m_EdgeRoutingModeApplySub = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphEdgeRoutingMode)
+                .Where(mode => mode != EdgeRoutingMode.Unset)
+                .Subscribe(mode => m_Interactive.ApplyEdgeRoutingMode(mode.ToGraphEdgeRoutingMode()));
+
+            // Persist the interactive arrangement in the scenario. Push the live arrangement to the Core
+            // when the user changes it (drag/reset) - which marks the scenario modified - and seed the
+            // interactive graph from a loaded arrangement (the Core layout changing on load). The Where
+            // ignores the manager's own push (by instance) so it does not re-seed; ObserveOn keeps the
+            // seed (which touches the bound node collection) on the UI thread.
+            m_Interactive.LayoutChanged += OnInteractiveLayoutChanged;
+
+            m_LayoutSeedSub = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.VertexGraphLayout)
+                .Where(layout => !ReferenceEquals(layout, m_LastPushedLayout))
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(layout => m_Interactive.SeedNodeLayout(layout.ToNodePositions()));
 
             Id = Resource.ProjectPlan.Titles.Title_VertexGraphView;
             Title = Resource.ProjectPlan.Titles.Title_VertexGraphView;
@@ -312,6 +349,16 @@ namespace Zametek.ViewModel.ProjectPlan
             });
         }
 
+        // Push the interactive arrangement into the Core (which persists it and marks the scenario
+        // modified) whenever the user changes it. m_LastPushedLayout records the pushed instance so the
+        // Core-layout subscription ignores this self-induced change rather than re-seeding.
+        private void OnInteractiveLayoutChanged(object? sender, EventArgs e)
+        {
+            var pushed = m_Interactive.GetNodeLayout().ToGraphLayoutModel();
+            m_LastPushedLayout = pushed;
+            m_CoreViewModel.VertexGraphLayout = pushed;
+        }
+
         #endregion
 
         #region IKillSubscriptions Members
@@ -342,6 +389,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_BaseTheme?.Dispose();
                 m_Theme?.Dispose();
+                m_EdgeRoutingModePushSub?.Dispose();
+                m_EdgeRoutingModeApplySub?.Dispose();
+                m_LayoutSeedSub?.Dispose();
+                m_Interactive.LayoutChanged -= OnInteractiveLayoutChanged;
             }
 
             m_Disposed = true;

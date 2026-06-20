@@ -112,6 +112,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
             m_ArrowGraph = new ArrowGraphModel();
             m_VertexGraph = new VertexGraphModel();
+            m_ArrowGraphLayout = new GraphLayoutModel();
+            m_VertexGraphLayout = new GraphLayoutModel();
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
             m_TrackingSeriesSet = new TrackingSeriesSetModel();
 
@@ -941,6 +943,44 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The persisted interactive graph layouts (node positions, layout space). Settable so a loaded
+        // scenario can rehydrate them and a node drag can update them; setting marks the scenario
+        // modified (gated during a load/reset, like the other scenario state). The graph view-models
+        // seed from these when their graph is (re)built and push the live arrangement back on a drag.
+        private GraphLayoutModel m_ArrowGraphLayout;
+        public GraphLayoutModel ArrowGraphLayout
+        {
+            get => m_ArrowGraphLayout;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_TrackIsProjectScenarioUpdated = false;
+                    m_ArrowGraphLayout = value;
+                    IsProjectScenarioUpdated = true;
+                    m_TrackIsProjectScenarioUpdated = true;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        private GraphLayoutModel m_VertexGraphLayout;
+        public GraphLayoutModel VertexGraphLayout
+        {
+            get => m_VertexGraphLayout;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_TrackIsProjectScenarioUpdated = false;
+                    m_VertexGraphLayout = value;
+                    IsProjectScenarioUpdated = true;
+                    m_TrackIsProjectScenarioUpdated = true;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         private ResourceSeriesSetModel m_ResourceSeriesSet;
         public ResourceSeriesSetModel ResourceSeriesSet
         {
@@ -1081,6 +1121,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ArrowGraph = new();
                     VertexGraph = new();
+                    ArrowGraphLayout = new();
+                    VertexGraphLayout = new();
                     ResourceSeriesSet = new();
                     TrackingSeriesSet = new();
 
@@ -1320,6 +1362,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Graph Settings.
                     GraphSettings = projectScenarioModel.GraphSettings;
 
+                    // Interactive graph layouts (node positions). Set before the compile/build cascade so
+                    // the graph view-models seed them when their graphs are (re)built.
+                    ArrowGraphLayout = projectScenarioModel.ArrowGraphLayout;
+                    VertexGraphLayout = projectScenarioModel.VertexGraphLayout;
+
                     // Activities.
                     AddManagedActivities(projectScenarioModel.DependentActivities);
 
@@ -1392,6 +1439,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         HolidaySettings = HolidaySettings.CloneObject(),
                         Metrics = Metrics.CloneObject(),
                         DisplaySettings = DisplaySettingsViewModel.GetValues(),
+                        ArrowGraphLayout = ArrowGraphLayout,
+                        VertexGraphLayout = VertexGraphLayout,
                     };
 
                     // Reorder activity dependencies so they are more readable.

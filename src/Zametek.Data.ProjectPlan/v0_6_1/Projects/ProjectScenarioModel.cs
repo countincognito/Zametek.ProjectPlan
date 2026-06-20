@@ -19,6 +19,10 @@ namespace Zametek.Data.ProjectPlan.v0_6_1
 
         public v0_5_0.MetricsModel Metrics { get; init; } = new();
 
-        public v0_6_0.ProjectScenarioDisplaySettingsModel DisplaySettings { get; init; } = new();
+        public ProjectScenarioDisplaySettingsModel DisplaySettings { get; init; } = new();
+
+        public GraphLayoutModel ArrowGraphLayout { get; init; } = new();
+
+        public GraphLayoutModel VertexGraphLayout { get; init; } = new();
     }
 }

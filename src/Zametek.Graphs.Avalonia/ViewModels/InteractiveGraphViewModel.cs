@@ -43,8 +43,14 @@ namespace Zametek.Graphs.Avalonia
         private Dictionary<int, HashSet<int>> m_Adjacency = [];
         private GraphNodeViewModel? m_SelectedNode;
 
-        // Positions of nodes the user has dragged, preserved across re-layouts.
+        // Positions of nodes the user has dragged, preserved across re-layouts. Also holds positions
+        // seeded from a loaded scenario (see SeedNodeLayout), so both are applied as the same overlay.
         private readonly Dictionary<int, (double X, double Y)> m_ManualNodePositions = [];
+
+        // True once the user has actually dragged a node this session. Distinguishes a user-modified
+        // arrangement (captured on save) from positions merely seeded from a loaded scenario (which
+        // round-trip unchanged). Seeding does not set it; an explicit drag does.
+        private bool m_UserHasDragged;
 
         // The interactive surface (graphCanvas / ItemsControls) is sized to the workspace, not the
         // graph: a fixed margin is added on every side and the workspace grows as nodes are dragged
@@ -235,8 +241,10 @@ namespace Zametek.Graphs.Avalonia
         public void ResetLayout()
         {
             m_ManualNodePositions.Clear();
+            m_UserHasDragged = false;
             PopulateInteractiveGraph(BuildLayout());
             RerouteEdges();
+            LayoutChanged?.Invoke(this, EventArgs.Empty);
         }
 
         // Remember a node the user has dragged so its position survives the next re-layout.
@@ -244,10 +252,68 @@ namespace Zametek.Graphs.Avalonia
         {
             ArgumentNullException.ThrowIfNull(node);
             m_ManualNodePositions[node.Id] = (node.X, node.Y);
+            m_UserHasDragged = true;
             RecomputeWorkspace();
             // Drag-end: re-route the edges for the dropped arrangement (the B' trigger). During the drag
             // the moved edges fell back to the approximation; this upgrades them back to exact geometry.
             RerouteEdges();
+            LayoutChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        // --- Layout persistence: the host saves/restores the arrangement through these (the View
+        // contract IInteractiveGraph stays minimal; the host holds the concrete view-model). ---
+
+        // Raised when the user changes the arrangement (a drag-end or a reset), so the host can capture
+        // the new layout for persistence. Seeding a saved layout does NOT raise it.
+        public event EventHandler? LayoutChanged;
+
+        // True once the user has manually dragged a node this session, so a save captures the live
+        // arrangement rather than round-tripping the layout that was loaded.
+        public bool HasManualLayout => m_UserHasDragged;
+
+        // The current node arrangement in layout space (the workspace margin removed), for persistence.
+        public IReadOnlyList<GraphNodePosition> GetNodeLayout()
+        {
+            return [.. GraphNodes.Select(n => new GraphNodePosition(n.Id, n.X - c_WorkspaceMargin, n.Y - c_WorkspaceMargin))];
+        }
+
+        // Seed a saved arrangement (layout space) as a best-effort overlay: nodes take their saved
+        // positions on the next build (and immediately, if already shown); ids no longer present are
+        // dropped by the build's reconciliation, and nodes without a saved position keep the fresh
+        // layout. Seeding is not a manual drag, so it leaves HasManualLayout false.
+        public void SeedNodeLayout(IReadOnlyList<GraphNodePosition> positions)
+        {
+            ArgumentNullException.ThrowIfNull(positions);
+            m_ManualNodePositions.Clear();
+            foreach (GraphNodePosition position in positions)
+            {
+                m_ManualNodePositions[position.Id] = (position.X + c_WorkspaceMargin, position.Y + c_WorkspaceMargin);
+            }
+            m_UserHasDragged = false;
+
+            // Apply to any nodes already on screen so a seed after the build still takes effect.
+            bool applied = false;
+            foreach (GraphNodeViewModel node in GraphNodes)
+            {
+                if (m_ManualNodePositions.TryGetValue(node.Id, out (double X, double Y) seeded))
+                {
+                    node.X = seeded.X;
+                    node.Y = seeded.Y;
+                    applied = true;
+                }
+            }
+            if (applied)
+            {
+                RecomputeWorkspace();
+                RerouteEdges();
+            }
+        }
+
+        // Apply a saved edge routing mode (e.g. when a scenario is loaded), swapping the configuration
+        // and updating the existing edges exactly as the context-menu command does.
+        public void ApplyEdgeRoutingMode(GraphEdgeRoutingMode mode)
+        {
+            ChangeEdgeRoutingMode(mode);
         }
 
         // Grow the workspace immediately while a node is being dragged outward, so it never leaves

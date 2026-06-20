@@ -179,6 +179,38 @@ namespace Zametek.ViewModel.ProjectPlan
 
 
 
+        private EdgeRoutingMode m_ArrowGraphEdgeRoutingMode;
+        public EdgeRoutingMode ArrowGraphEdgeRoutingMode
+        {
+            get => m_ArrowGraphEdgeRoutingMode;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaiseAndSetIfChanged(ref m_ArrowGraphEdgeRoutingMode, value);
+                }
+            }
+        }
+
+
+
+        private EdgeRoutingMode m_VertexGraphEdgeRoutingMode;
+        public EdgeRoutingMode VertexGraphEdgeRoutingMode
+        {
+            get => m_VertexGraphEdgeRoutingMode;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaiseAndSetIfChanged(ref m_VertexGraphEdgeRoutingMode, value);
+                }
+            }
+        }
+
+
+
         private GroupByMode m_GanttChartGroupByMode;
         public GroupByMode GanttChartGroupByMode
         {
@@ -483,6 +515,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
 
+                if (ArrowGraphEdgeRoutingMode != model.ArrowGraphEdgeRoutingMode)
+                {
+                    ArrowGraphEdgeRoutingMode = model.ArrowGraphEdgeRoutingMode;
+                }
+
+                if (VertexGraphEdgeRoutingMode != model.VertexGraphEdgeRoutingMode)
+                {
+                    VertexGraphEdgeRoutingMode = model.VertexGraphEdgeRoutingMode;
+                }
+
+
                 if (GanttChartGroupByMode != model.GanttChartGroupByMode)
                 {
                     GanttChartGroupByMode = model.GanttChartGroupByMode;
@@ -577,6 +620,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     ArrowGraphShowNames = ArrowGraphShowNames,
 
                     VertexGraphShowNames = VertexGraphShowNames,
+
+                    ArrowGraphEdgeRoutingMode = ArrowGraphEdgeRoutingMode,
+                    VertexGraphEdgeRoutingMode = VertexGraphEdgeRoutingMode,
 
                     GanttChartGroupByMode = GanttChartGroupByMode,
                     GanttChartAnnotationStyle = GanttChartAnnotationStyle,
