@@ -1435,8 +1435,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         HolidaySettings = HolidaySettings.CloneObject(),
                         Metrics = Metrics.CloneObject(),
                         DisplaySettings = DisplaySettingsViewModel.GetValues(),
-                        ArrowGraphLayout = ArrowGraphLayout,
-                        VertexGraphLayout = VertexGraphLayout,
+                        ArrowGraphLayout = ArrowGraphLayout.CloneObject(),
+                        VertexGraphLayout = VertexGraphLayout.CloneObject(),
                     };
 
                     // Reorder activity dependencies so they are more readable.
