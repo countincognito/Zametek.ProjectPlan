@@ -6,6 +6,7 @@ using Splat;
 using Splat.Autofac;
 using System;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Graphs.Avalonia;
 using Zametek.View.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
@@ -50,22 +51,10 @@ namespace Zametek.ProjectPlan
                 .As<IDateTimeCalculator>()
                 .As<DateTimeCalculator>()
                 .SingleInstance();
-            //s_Builder.RegisterType<GraphImageExporter>()
-            //    .As<IGraphImageExporter>()
-            //    .As<GraphImageExporter>()
-            //    .SingleInstance();
-            //s_Builder.RegisterType<MsaglSvgRenderer>()
-            //    .As<IMsaglSvgRenderer>()
-            //    .As<MsaglSvgRenderer>()
-            //    .SingleInstance();
-            //s_Builder.RegisterType<ArrowGraphSerializer>()
-            //    .As<IArrowGraphSerializer>()
-            //    .As<ArrowGraphSerializer>()
-            //    .SingleInstance();
-            //s_Builder.RegisterType<VertexGraphSerializer>()
-            //    .As<IVertexGraphSerializer>()
-            //    .As<VertexGraphSerializer>()
-            //    .SingleInstance();
+            s_Builder.RegisterType<MsaglGraphLayoutEngine>()
+                .As<IGraphLayoutEngine>()
+                .As<MsaglGraphLayoutEngine>()
+                .SingleInstance();
             s_Builder.RegisterType<MicrosoftProjectFileImporter>()
                 .As<IMicrosoftProjectFileImporter>()
                 .As<MicrosoftProjectFileImporter>()

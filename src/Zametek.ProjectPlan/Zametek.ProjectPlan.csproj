@@ -34,7 +34,7 @@
     <PackageReference Include="ReactiveUI.Avalonia" Version="12.0.3" />
     <PackageReference Include="Serilog" Version="4.3.2-dev-02433" />
     <PackageReference Include="Serilog.Sinks.File" Version="8.0.0-nblumhardt-02322" />
-    <PackageReference Include="Splat.Autofac" Version="20.0.0" />
+    <PackageReference Include="Splat.Autofac" Version="19.4.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Zametek.Graphs.Avalonia\Zametek.Graphs.Avalonia.csproj" />
