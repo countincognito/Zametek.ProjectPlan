@@ -61,6 +61,4 @@
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
   </Folder>
-  <Project Path="../Zametek.Maths.Graphs/src/Zametek.Maths.Graphs.Compilers/Zametek.Maths.Graphs.Compilers.csproj" />
-  <Project Path="../Zametek.Maths.Graphs/src/Zametek.Maths.Graphs.Primitives/Zametek.Maths.Graphs.Primitives.csproj" />
 </Solution>
