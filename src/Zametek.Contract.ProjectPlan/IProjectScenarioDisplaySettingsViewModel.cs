@@ -18,6 +18,12 @@ namespace Zametek.Contract.ProjectPlan
         bool VertexGraphShowNames { get; set; }
 
 
+        EdgeRoutingMode ArrowGraphEdgeRoutingMode { get; set; }
+
+
+        EdgeRoutingMode VertexGraphEdgeRoutingMode { get; set; }
+
+
         GroupByMode GanttChartGroupByMode { get; set; }
         AnnotationStyle GanttChartAnnotationStyle { get; set; }
         bool GanttChartShowGroupLabels { get; set; }

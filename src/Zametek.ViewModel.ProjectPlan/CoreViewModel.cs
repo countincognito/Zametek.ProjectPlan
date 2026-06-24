@@ -112,6 +112,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
             m_ArrowGraph = new ArrowGraphModel();
             m_VertexGraph = new VertexGraphModel();
+            m_ArrowGraphLayout = new GraphLayoutModel();
+            m_VertexGraphLayout = new GraphLayoutModel();
             m_ResourceSeriesSet = new ResourceSeriesSetModel();
             m_TrackingSeriesSet = new TrackingSeriesSetModel();
 
@@ -940,6 +942,40 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The persisted interactive graph layouts (node positions, layout space). Settable so a loaded
+        // scenario can rehydrate them and a node drag can update them; setting marks the scenario
+        // modified (gated during a load/reset, like the other scenario state). The graph view-models
+        // seed from these when their graph is (re)built and push the live arrangement back on a drag.
+        private GraphLayoutModel m_ArrowGraphLayout;
+        public GraphLayoutModel ArrowGraphLayout
+        {
+            get => m_ArrowGraphLayout;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_ArrowGraphLayout = value;
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        private GraphLayoutModel m_VertexGraphLayout;
+        public GraphLayoutModel VertexGraphLayout
+        {
+            get => m_VertexGraphLayout;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_VertexGraphLayout = value;
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         private ResourceSeriesSetModel m_ResourceSeriesSet;
         public ResourceSeriesSetModel ResourceSeriesSet
         {
@@ -1080,6 +1116,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ArrowGraph = new();
                     VertexGraph = new();
+                    ArrowGraphLayout = new();
+                    VertexGraphLayout = new();
                     ResourceSeriesSet = new();
                     TrackingSeriesSet = new();
 
@@ -1319,6 +1357,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     // Graph Settings.
                     GraphSettings = projectScenarioModel.GraphSettings;
 
+                    // Interactive graph layouts (node positions). Set before the compile/build cascade so
+                    // the graph view-models seed them when their graphs are (re)built.
+                    ArrowGraphLayout = projectScenarioModel.ArrowGraphLayout;
+                    VertexGraphLayout = projectScenarioModel.VertexGraphLayout;
+
                     // Activities.
                     AddManagedActivities(projectScenarioModel.DependentActivities);
 
@@ -1391,6 +1434,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         HolidaySettings = HolidaySettings.CloneObject(),
                         Metrics = Metrics.CloneObject(),
                         DisplaySettings = DisplaySettingsViewModel.GetValues(),
+                        ArrowGraphLayout = ArrowGraphLayout.CloneObject(),
+                        VertexGraphLayout = VertexGraphLayout.CloneObject(),
                     };
 
                     // Reorder activity dependencies so they are more readable.
@@ -1900,8 +1945,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 else
                 {
-                    ArrowGraph = m_GraphCompilationService.BuildArrowGraph(
+                    // Stamp each event with a stable, activity-anchored id (ArrowEventIdMapper), so the
+                    // interactive layout can persist and rehydrate by it; the compiler's own event ids
+                    // are transient (regenerated every compile) and so cannot key a saved arrangement.
+                    var arrowGraph = m_GraphCompilationService.BuildArrowGraph(
                         GraphCompilation.DependentActivities.Select(x => (IDependentActivity)x.CloneObject()));
+
+                    ArrowGraph = ArrowEventIdMapper.ApplyStableIds(arrowGraph);
                 }
             }
         }

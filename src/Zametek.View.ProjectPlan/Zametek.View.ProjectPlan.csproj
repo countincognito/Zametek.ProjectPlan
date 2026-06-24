@@ -7,13 +7,13 @@
 	<Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.0.4" />
-    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="12.0.4" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.0.4" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.4" />
+    <PackageReference Include="Avalonia" Version="12.0.5" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="12.0.5" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.0.5" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.5" />
     <PackageReference Include="Dock.Avalonia" Version="12.0.0.2" />
-    <PackageReference Include="Irihi.Ursa" Version="2.0.0" />
+    <PackageReference Include="Irihi.Ursa" Version="2.0.1" />
     <PackageReference Include="Markdown.Avalonia.SyntaxHigh" Version="12.0.0-a3" />
     <PackageReference Include="MessageBox.Avalonia" Version="12.0.0" />
 	  <PackageReference Include="ReactiveUI.Avalonia" Version="12.0.3" />
@@ -27,6 +27,6 @@
     <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
-    <ProjectReference Include="..\Zametek.Graphs.ProjectPlan\Zametek.Graphs.ProjectPlan.csproj" />
+    <ProjectReference Include="..\Zametek.Graphs.Avalonia\Zametek.Graphs.Avalonia.csproj" />
   </ItemGroup>
 </Project>

@@ -6,13 +6,13 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Graphs.ProjectPlan;
+using Zametek.Graphs.Avalonia;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     // Application glue for the arrow graph. The interactive viewer itself now lives in the reusable
-    // InteractiveGraphViewModel (in Zametek.Graphs.ProjectPlan); this view-model supplies that
+    // InteractiveGraphViewModel (in Zametek.Graphs.Avalonia); this view-model supplies that
     // control with the application's data and dialogs via IGraphHost, keeps the headless SVG export
     // members the CLI calls, and exposes the interactive view-model to the embedded view. The graph's
     // per-type differences come from GraphConfigurations.Arrow.
@@ -78,12 +78,21 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
-        private readonly IGraphSerializer m_GraphSerializer;
-        private readonly IGraphImageExporter m_GraphImageExporter;
+        private readonly IGraphLayoutEngine m_LayoutEngine;
 
         // The reusable, self-contained interactive graph. It owns all of the
         // node/edge/workspace/drag/select/layout/export behaviour and subscribes to RebuildRequested.
         private readonly InteractiveGraphViewModel m_Interactive;
+
+        // Keep the interactive graph's edge routing mode and the scenario's persisted routing-mode
+        // setting in step (see the ctor).
+        private readonly IDisposable m_EdgeRoutingModePushSub;
+        private readonly IDisposable m_EdgeRoutingModeApplySub;
+
+        // Persist the interactive arrangement: push to the Core on a drag/reset, seed from the Core on
+        // load. m_SuppressNextSeed lets the seed ignore the manager's own push echo (see the ctor).
+        private readonly IDisposable m_LayoutSeedSub;
+        private bool m_SuppressNextSeed;
 
         #endregion
 
@@ -93,20 +102,17 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IMsaglSvgRenderer msaglSvgRenderer,
-            IGraphImageExporter graphImageExporter)
+            IGraphLayoutEngine layoutEngine)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
-            ArgumentNullException.ThrowIfNull(msaglSvgRenderer);
-            ArgumentNullException.ThrowIfNull(graphImageExporter);
+            ArgumentNullException.ThrowIfNull(layoutEngine);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
-            m_GraphSerializer = new GraphSerializer(GraphConfigurations.Arrow, msaglSvgRenderer);
-            m_GraphImageExporter = graphImageExporter;
+            m_LayoutEngine = layoutEngine;
 
             m_ArrowGraphData = string.Empty;
             m_ArrowGraphImage = new SvgImage();
@@ -148,10 +154,47 @@ namespace Zametek.ViewModel.ProjectPlan
                     agm => agm.m_CoreViewModel.BaseTheme,
                     agm => agm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames)
                 .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating))
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Select(_ => Unit.Default);
 
-            m_Interactive = new InteractiveGraphViewModel(this, m_GraphSerializer, m_GraphImageExporter, GraphConfigurations.Arrow);
+            m_Interactive = new InteractiveGraphViewModel(this, m_LayoutEngine, new GraphSerializer(), GraphConfigurations.Arrow);
+
+            // Persist the edge routing mode in the scenario. Push a user-made change to the Core display
+            // setting (Skip(1) drops the initial value, so opening a scenario does not mark it modified);
+            // apply a loaded mode back to the interactive graph (Unset = none stored, so keep the preset).
+            // ApplyEdgeRoutingMode's no-op-on-equal guard stops the push and apply from looping.
+            m_EdgeRoutingModePushSub = m_Interactive
+                .WhenAnyValue(x => x.EdgeRoutingMode)
+                .Skip(1)
+                .Subscribe(mode => m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphEdgeRoutingMode = mode.ToEdgeRoutingMode());
+
+            m_EdgeRoutingModeApplySub = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphEdgeRoutingMode)
+                .Where(mode => mode != EdgeRoutingMode.Unset)
+                .Subscribe(mode => m_Interactive.ApplyEdgeRoutingMode(mode.ToGraphEdgeRoutingMode()));
+
+            // Persist the interactive arrangement in the scenario. Arrow event ids are regenerated every
+            // compile, so CoreViewModel.BuildArrowGraph stamps each event with a stable, activity-derived
+            // id (see ArrowEventIdMapper) shared by the live graph, the diagram and the persisted layout -
+            // so seeding is a plain id match, no graph lookup needed. Push the live arrangement to the Core
+            // when the user changes it (drag/reset) - which marks the scenario modified - and seed the
+            // interactive graph from a loaded arrangement (the Core layout changing on load). A one-shot
+            // flag set on push lets the seed ignore the manager's own echo so it does not re-seed; ObserveOn
+            // keeps the seed (which touches the bound node collection) on the UI thread.
+            m_Interactive.LayoutChanged += OnInteractiveLayoutChanged;
+
+            m_LayoutSeedSub = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.ArrowGraphLayout)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(layout =>
+                {
+                    if (m_SuppressNextSeed)
+                    {
+                        m_SuppressNextSeed = false;
+                        return;
+                    }
+                    m_Interactive.SeedNodeLayout(layout.ToNodePositions());
+                });
 
             Id = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
             Title = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
@@ -222,8 +265,9 @@ namespace Zametek.ViewModel.ProjectPlan
         // DiagramGraphModel the serializer consumes.
         private DiagramGraphModel BuildArrowDiagram(bool multiLineEdgeLabels)
         {
+            ArrowGraphModel arrowGraph = ArrowEventIdMapper.ApplyStableIds(m_CoreViewModel.ArrowGraph);
             return ArrowGraphDiagramBuilder.Build(
-                GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings),
+                GraphPresentationBuilder.ApplyPresentation(arrowGraph, m_CoreViewModel.GraphSettings),
                 multiLineEdgeLabels,
                 m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
         }
@@ -286,8 +330,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (!HasCompilationErrors)
                 {
-                    data = m_GraphSerializer.BuildGraphSvgData(
+                    data = m_LayoutEngine.RenderSvg(
                         BuildArrowDiagram(multiLineEdgeLabels: false),
+                        m_Interactive.Configuration,
                         m_CoreViewModel.BaseTheme.ToGraphTheme());
                 }
             }
@@ -317,6 +362,34 @@ namespace Zametek.ViewModel.ProjectPlan
                 };
                 ArrowGraphImage = image;
             });
+        }
+
+        // Push the interactive arrangement into the Core (which persists it and marks the scenario
+        // modified) whenever the user changes it. Persist each live position under its stable,
+        // activity-derived event id (BuildEventIdLookup; see ArrowEventIdMapper). m_SuppressNextSeed
+        // flags the resulting Core-layout change as self-induced so the seed subscription ignores it
+        // rather than re-seeding.
+        private void OnInteractiveLayoutChanged(object? sender, EventArgs e)
+        {
+            Dictionary<int, int> stableEventIdLookup = ArrowEventIdMapper.BuildStableEventIdLookup(m_CoreViewModel.ArrowGraph);
+            Common.ProjectPlan.GraphLayoutModel pushed = ToGraphLayoutModel(m_Interactive.GetNodeLayout(), stableEventIdLookup);
+            m_SuppressNextSeed = true;
+            m_CoreViewModel.ArrowGraphLayout = pushed;
+        }
+
+        private static Common.ProjectPlan.GraphLayoutModel ToGraphLayoutModel(
+            IReadOnlyList<GraphNodePosition> positions,
+            Dictionary<int, int> stableEventIdLookup)
+        {
+            return new Common.ProjectPlan.GraphLayoutModel
+            {
+                Nodes = [.. positions.Select(p => new NodeLayoutModel
+                {
+                    Id = stableEventIdLookup.TryGetValue(p.Id, out int newId) ? newId : p.Id,
+                    X = p.X,
+                    Y = p.Y,
+                })],
+            };
         }
 
         #endregion
@@ -350,6 +423,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ShowNames?.Dispose();
                 m_BaseTheme?.Dispose();
                 m_Theme?.Dispose();
+                m_EdgeRoutingModePushSub?.Dispose();
+                m_EdgeRoutingModeApplySub?.Dispose();
+                m_LayoutSeedSub?.Dispose();
+                m_Interactive.LayoutChanged -= OnInteractiveLayoutChanged;
             }
 
             m_Disposed = true;

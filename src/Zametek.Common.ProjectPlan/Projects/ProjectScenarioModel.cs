@@ -20,5 +20,9 @@
         public MetricsModel Metrics { get; init; } = new();
 
         public ProjectScenarioDisplaySettingsModel DisplaySettings { get; init; } = new();
+
+        public GraphLayoutModel ArrowGraphLayout { get; init; } = new();
+
+        public GraphLayoutModel VertexGraphLayout { get; init; } = new();
     }
 }

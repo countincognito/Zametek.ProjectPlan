@@ -18,23 +18,23 @@
 	<PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
     <PackageReference Include="Dock.Model.ReactiveUI" Version="12.0.0.2" />
     <PackageReference Include="Dock.Serializer.SystemTextJson" Version="12.0.0.2" />
-    <PackageReference Include="Ical.Net" Version="5.2.2" />
-    <PackageReference Include="MPXJ.Net" Version="16.4.0" />
+    <PackageReference Include="Ical.Net" Version="5.2.3" />
+    <PackageReference Include="MPXJ.Net" Version="16.4.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.5-beta1" />
     <PackageReference Include="NPOI" Version="[2.7.6,2.8.0)" />
-	  <PackageReference Include="ScottPlot.Avalonia" Version="5.1.58" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.147.0-preview.3.1" />
-    <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.11" />
+	  <PackageReference Include="ScottPlot.Avalonia" Version="5.1.59" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.148.0" />
+    <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.13" />
     <PackageReference Include="System.Drawing.Common" Version="11.0.0-preview.5.26302.115" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="11.0.0-preview.5.26302.115" />
-    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="2.4.8" />
+    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Contract.ProjectPlan\Zametek.Contract.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Data.ProjectPlan\Zametek.Data.ProjectPlan.csproj" />
-    <ProjectReference Include="..\Zametek.Graphs.ProjectPlan\Zametek.Graphs.ProjectPlan.csproj" />
+    <ProjectReference Include="..\Zametek.Graphs.Avalonia\Zametek.Graphs.Avalonia.csproj" />
     <ProjectReference Include="..\Zametek.Resource.ProjectPlan\Zametek.Resource.ProjectPlan.csproj" />
   </ItemGroup>
 

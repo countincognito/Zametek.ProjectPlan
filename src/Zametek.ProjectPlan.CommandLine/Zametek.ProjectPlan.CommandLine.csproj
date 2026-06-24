@@ -20,11 +20,11 @@
 	  <PackageReference Include="Microsoft.Extensions.Logging" Version="11.0.0-preview.5.26302.115" />
     <PackageReference Include="Serilog" Version="4.3.2-dev-02433" />
 	  <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
-	  <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1-dev-02351" />
+	  <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Zametek.Graphs.ProjectPlan\Zametek.Graphs.ProjectPlan.csproj" />
+    <ProjectReference Include="..\Zametek.Graphs.Avalonia\Zametek.Graphs.Avalonia.csproj" />
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
   </ItemGroup>
 

@@ -312,7 +312,17 @@ namespace Zametek.ViewModel.ProjectPlan
         public Edge<int, IDependentActivity> ToActivityEdge(ActivityEdgeModel src)
             => new(ToDependentActivity(src.Content));
 
-        public partial ActivityEdgeModel ToActivityEdgeModel(Edge<int, IDependentActivity> src);
+        public ActivityEdgeModel ToActivityEdgeModel(Edge<int, IDependentActivity> src)
+        {
+            var dest = new ActivityEdgeModel
+            {
+                Content = ToActivityModel((DependentActivity)src.Content),
+                IsCritical = src.Content.IsCritical,
+                IsDummy = src.Content.IsDummy,
+            };
+
+            return dest;
+        }
 
         public static Edge<int, IEvent<int>> ToEventEdge(EventEdgeModel src)
             => new(ToEvent(src.Content));
@@ -435,9 +445,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return dest;
         }
 
-        public ArrowGraphModel ToArrowGraphModel(
-            Graph<int, IDependentActivity,
-                IEvent<int>> src)
+        public ArrowGraphModel ToArrowGraphModel(Graph<int, IDependentActivity, IEvent<int>> src)
         {
             var dest = new ArrowGraphModel
             {

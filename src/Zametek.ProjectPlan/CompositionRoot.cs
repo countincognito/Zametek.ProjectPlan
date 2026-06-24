@@ -6,7 +6,6 @@ using Splat;
 using Splat.Autofac;
 using System;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Graphs.ProjectPlan;
 using Zametek.View.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
@@ -21,7 +20,7 @@ namespace Zametek.ProjectPlan
 
         // Configure() must run before BuildAvaloniaApp().UseReactiveUI(...) so that
         // AutofacDependencyResolver is the active AppLocator when ReactiveUI registers
-        // its plugins (ICreatesObservableForProperty, binders, etc.) — otherwise those
+        // its plugins (ICreatesObservableForProperty, binders, etc.) - otherwise those
         // registrations land in the default ModernDependencyResolver and are lost when
         // we later swap in the Autofac one.
         public static void Configure()
@@ -51,22 +50,22 @@ namespace Zametek.ProjectPlan
                 .As<IDateTimeCalculator>()
                 .As<DateTimeCalculator>()
                 .SingleInstance();
-            s_Builder.RegisterType<GraphImageExporter>()
-                .As<IGraphImageExporter>()
-                .As<GraphImageExporter>()
-                .SingleInstance();
-            s_Builder.RegisterType<MsaglSvgRenderer>()
-                .As<IMsaglSvgRenderer>()
-                .As<MsaglSvgRenderer>()
-                .SingleInstance();
-            s_Builder.RegisterType<ArrowGraphSerializer>()
-                .As<IArrowGraphSerializer>()
-                .As<ArrowGraphSerializer>()
-                .SingleInstance();
-            s_Builder.RegisterType<VertexGraphSerializer>()
-                .As<IVertexGraphSerializer>()
-                .As<VertexGraphSerializer>()
-                .SingleInstance();
+            //s_Builder.RegisterType<GraphImageExporter>()
+            //    .As<IGraphImageExporter>()
+            //    .As<GraphImageExporter>()
+            //    .SingleInstance();
+            //s_Builder.RegisterType<MsaglSvgRenderer>()
+            //    .As<IMsaglSvgRenderer>()
+            //    .As<MsaglSvgRenderer>()
+            //    .SingleInstance();
+            //s_Builder.RegisterType<ArrowGraphSerializer>()
+            //    .As<IArrowGraphSerializer>()
+            //    .As<ArrowGraphSerializer>()
+            //    .SingleInstance();
+            //s_Builder.RegisterType<VertexGraphSerializer>()
+            //    .As<IVertexGraphSerializer>()
+            //    .As<VertexGraphSerializer>()
+            //    .SingleInstance();
             s_Builder.RegisterType<MicrosoftProjectFileImporter>()
                 .As<IMicrosoftProjectFileImporter>()
                 .As<MicrosoftProjectFileImporter>()

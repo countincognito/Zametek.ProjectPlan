@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 using Zametek.Utility;
@@ -276,6 +276,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 return idUpdatesLookup.TryGetValue(showConnectionsId, out int mappedNewShowConnectionsId) ? mappedNewShowConnectionsId : showConnectionsId;
             })];
 
+            // Graph layouts (node positions). Both graphs key positions by an activity id - vertex by the
+            // activity id directly, arrow by the lowest non-dummy incoming activity id (with Start = 0 and
+            // any unanchored event keeping a transient compiler id). Remap the activity-id keys through the
+            // same lookup; non-activity keys (Start's 0 and compiler ids) are absent from the lookup and so
+            // pass through unchanged.
+
+            GraphLayoutModel newArrowGraphLayout = RemapLayoutIds(projectScenarioModel.ArrowGraphLayout, idUpdatesLookup);
+            GraphLayoutModel newVertexGraphLayout = RemapLayoutIds(projectScenarioModel.VertexGraphLayout, idUpdatesLookup);
+
             // Return the new project scenario model with the updated dependent activities and resources.
 
             projectScenarioModel = projectScenarioModel with
@@ -288,10 +297,26 @@ namespace Zametek.ViewModel.ProjectPlan
                 DisplaySettings = projectScenarioModel.DisplaySettings with
                 {
                     GanttChartShowConnections = newGanttChartShowConnections,
-                }
+                },
+                ArrowGraphLayout = newArrowGraphLayout,
+                VertexGraphLayout = newVertexGraphLayout,
             };
 
             return projectScenarioModel;
+        }
+
+        // Remap a persisted graph layout's node keys (activity ids) through the same id update lookup used
+        // for the rest of the scenario. Keys that are not activity ids (an arrow Start node's 0, or an
+        // unanchored event's transient compiler id) are absent from the lookup and pass through unchanged;
+        // X/Y are untouched.
+        private static GraphLayoutModel RemapLayoutIds(GraphLayoutModel layout, Dictionary<int, int> idUpdatesLookup)
+        {
+            //return layout with { Nodes = [] };
+            return layout with
+            {
+                Nodes = [.. layout.Nodes.Select(node =>
+                    node with { Id = idUpdatesLookup.TryGetValue(node.Id, out int newId) ? newId : node.Id })],
+            };
         }
 
         public static ProjectScenarioModel UpdateResourceIds(

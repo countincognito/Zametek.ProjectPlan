@@ -85,6 +85,10 @@ namespace Zametek.Contract.ProjectPlan
 
         VertexGraphModel VertexGraph { get; }
 
+        GraphLayoutModel ArrowGraphLayout { get; set; }
+
+        GraphLayoutModel VertexGraphLayout { get; set; }
+
         ResourceSeriesSetModel ResourceSeriesSet { get; }
 
         TrackingSeriesSetModel TrackingSeriesSet { get; }

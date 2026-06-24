@@ -20,6 +20,13 @@ namespace Zametek.Common.ProjectPlan
         public bool VertexGraphShowNames { get; init; } = default;
 
 
+
+        public EdgeRoutingMode ArrowGraphEdgeRoutingMode { get; init; } = default;
+
+        public EdgeRoutingMode VertexGraphEdgeRoutingMode { get; init; } = default;
+
+
+
         public GroupByMode GanttChartGroupByMode { get; init; } = default;
 
         public AnnotationStyle GanttChartAnnotationStyle { get; init; } = default;

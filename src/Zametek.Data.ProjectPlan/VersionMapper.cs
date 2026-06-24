@@ -694,7 +694,11 @@ namespace Zametek.Data.ProjectPlan
 
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_0.ProjectScenarioModel FromCurrentToV0_6_0(ProjectScenarioModel src);
+        // The graph layout is new in v0.6.1, so a v0.6.0 scenario carries none: the layout targets are
+        // intentionally left at their (empty) defaults, and the graphs fall back to a fresh layout.
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        [MapperIgnoreTarget(nameof(ProjectScenarioModel.ArrowGraphLayout))]
+        [MapperIgnoreTarget(nameof(ProjectScenarioModel.VertexGraphLayout))]
         public partial ProjectScenarioModel FromV0_6_0ToCurrent(v0_6_0.ProjectScenarioModel src);
 
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]

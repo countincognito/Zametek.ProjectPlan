@@ -6,13 +6,13 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Graphs.ProjectPlan;
+using Zametek.Graphs.Avalonia;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     // Application glue for the vertex graph. The interactive viewer itself now lives in the reusable
-    // InteractiveGraphViewModel (in Zametek.Graphs.ProjectPlan); this view-model supplies that
+    // InteractiveGraphViewModel (in Zametek.Graphs.Avalonia); this view-model supplies that
     // control with the application's data and dialogs via IGraphHost, keeps the headless SVG export
     // members the CLI calls, and exposes the interactive view-model to the embedded view. The graph's
     // per-type differences come from GraphConfigurations.Vertex (which, unlike the arrow graph, does
@@ -79,12 +79,21 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
-        private readonly IGraphSerializer m_GraphSerializer;
-        private readonly IGraphImageExporter m_GraphImageExporter;
+        private readonly IGraphLayoutEngine m_LayoutEngine;
 
         // The reusable, self-contained interactive graph. It owns all of the
         // node/edge/workspace/drag/select/layout/export behaviour and subscribes to RebuildRequested.
         private readonly InteractiveGraphViewModel m_Interactive;
+
+        // Keep the interactive graph's edge routing mode and the scenario's persisted routing-mode
+        // setting in step (see the ctor).
+        private readonly IDisposable m_EdgeRoutingModePushSub;
+        private readonly IDisposable m_EdgeRoutingModeApplySub;
+
+        // Persist the interactive arrangement: push to the Core on a drag/reset, seed from the Core on
+        // load. m_SuppressNextSeed lets the seed ignore the manager's own push echo (see the ctor).
+        private readonly IDisposable m_LayoutSeedSub;
+        private bool m_SuppressNextSeed;
 
         #endregion
 
@@ -94,20 +103,17 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IMsaglSvgRenderer msaglSvgRenderer,
-            IGraphImageExporter graphImageExporter)
+            IGraphLayoutEngine layoutEngine)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
-            ArgumentNullException.ThrowIfNull(msaglSvgRenderer);
-            ArgumentNullException.ThrowIfNull(graphImageExporter);
+            ArgumentNullException.ThrowIfNull(layoutEngine);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
-            m_GraphSerializer = new GraphSerializer(GraphConfigurations.Vertex, msaglSvgRenderer);
-            m_GraphImageExporter = graphImageExporter;
+            m_LayoutEngine = layoutEngine;
 
             m_VertexGraphData = string.Empty;
             m_VertexGraphImage = new SvgImage();
@@ -145,10 +151,44 @@ namespace Zametek.ViewModel.ProjectPlan
                     agm => agm.m_CoreViewModel.BaseTheme,
                     agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames)
                 .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating))
-                .ObserveOn(RxApp.TaskpoolScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Select(_ => Unit.Default);
 
-            m_Interactive = new InteractiveGraphViewModel(this, m_GraphSerializer, m_GraphImageExporter, GraphConfigurations.Vertex);
+            m_Interactive = new InteractiveGraphViewModel(this, m_LayoutEngine, new GraphSerializer(), GraphConfigurations.Vertex);
+
+            // Persist the edge routing mode in the scenario. Push a user-made change to the Core display
+            // setting (Skip(1) drops the initial value, so opening a scenario does not mark it modified);
+            // apply a loaded mode back to the interactive graph (Unset = none stored, so keep the preset).
+            // ApplyEdgeRoutingMode's no-op-on-equal guard stops the push and apply from looping.
+            m_EdgeRoutingModePushSub = m_Interactive
+                .WhenAnyValue(x => x.EdgeRoutingMode)
+                .Skip(1)
+                .Subscribe(mode => m_CoreViewModel.DisplaySettingsViewModel.VertexGraphEdgeRoutingMode = mode.ToEdgeRoutingMode());
+
+            m_EdgeRoutingModeApplySub = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphEdgeRoutingMode)
+                .Where(mode => mode != EdgeRoutingMode.Unset)
+                .Subscribe(mode => m_Interactive.ApplyEdgeRoutingMode(mode.ToGraphEdgeRoutingMode()));
+
+            // Persist the interactive arrangement in the scenario. Push the live arrangement to the Core
+            // when the user changes it (drag/reset) - which marks the scenario modified - and seed the
+            // interactive graph from a loaded arrangement (the Core layout changing on load). A one-shot
+            // flag set on push lets the seed ignore the manager's own echo so it does not re-seed; ObserveOn
+            // keeps the seed (which touches the bound node collection) on the UI thread.
+            m_Interactive.LayoutChanged += OnInteractiveLayoutChanged;
+
+            m_LayoutSeedSub = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.VertexGraphLayout)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(layout =>
+                {
+                    if (m_SuppressNextSeed)
+                    {
+                        m_SuppressNextSeed = false;
+                        return;
+                    }
+                    m_Interactive.SeedNodeLayout(layout.ToNodePositions());
+                });
 
             Id = Resource.ProjectPlan.Titles.Title_VertexGraphView;
             Title = Resource.ProjectPlan.Titles.Title_VertexGraphView;
@@ -282,8 +322,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (!HasCompilationErrors)
                 {
-                    data = m_GraphSerializer.BuildGraphSvgData(
+                    data = m_LayoutEngine.RenderSvg(
                         BuildVertexDiagram(),
+                        m_Interactive.Configuration,
                         m_CoreViewModel.BaseTheme.ToGraphTheme());
                 }
             }
@@ -313,6 +354,24 @@ namespace Zametek.ViewModel.ProjectPlan
                 };
                 VertexGraphImage = image;
             });
+        }
+
+        // Push the interactive arrangement into the Core (which persists it and marks the scenario
+        // modified) whenever the user changes it. m_SuppressNextSeed flags the resulting Core-layout
+        // change as self-induced so the seed subscription ignores it rather than re-seeding.
+        private void OnInteractiveLayoutChanged(object? sender, EventArgs e)
+        {
+            Common.ProjectPlan.GraphLayoutModel pushed = ToGraphLayoutModel(m_Interactive.GetNodeLayout());
+            m_SuppressNextSeed = true;
+            m_CoreViewModel.VertexGraphLayout = pushed;
+        }
+
+        private static Common.ProjectPlan.GraphLayoutModel ToGraphLayoutModel(IReadOnlyList<GraphNodePosition> positions)
+        {
+            return new Common.ProjectPlan.GraphLayoutModel
+            {
+                Nodes = [.. positions.Select(p => new NodeLayoutModel { Id = p.Id, X = p.X, Y = p.Y })],
+            };
         }
 
         #endregion
@@ -345,6 +404,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_BaseTheme?.Dispose();
                 m_Theme?.Dispose();
+                m_EdgeRoutingModePushSub?.Dispose();
+                m_EdgeRoutingModeApplySub?.Dispose();
+                m_LayoutSeedSub?.Dispose();
+                m_Interactive.LayoutChanged -= OnInteractiveLayoutChanged;
             }
 
             m_Disposed = true;
