@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Zametek.Common.ProjectPlan;
+using Zametek.Graphs.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
 using Zametek.ViewModel.ProjectPlan;
@@ -50,8 +51,6 @@ namespace Zametek.ProjectPlan.CommandLine
                         services.AddSingleton<IDateTimeCalculator, DateTimeCalculator>();
                         services.AddSingleton<IGraphImageExporter, GraphImageExporter>();
                         services.AddSingleton<IMsaglSvgRenderer, MsaglSvgRenderer>();
-                        services.AddSingleton<IArrowGraphSerializer, ArrowGraphSerializer>();
-                        services.AddSingleton<IVertexGraphSerializer, VertexGraphSerializer>();
 
                         services.AddSingleton<IGanttChartManagerViewModel, GanttChartManagerViewModel>();
                         services.AddSingleton<IArrowGraphManagerViewModel, ArrowGraphManagerViewModel>();

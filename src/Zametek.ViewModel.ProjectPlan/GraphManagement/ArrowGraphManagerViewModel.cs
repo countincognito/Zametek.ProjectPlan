@@ -1,19 +1,23 @@
-﻿using Avalonia.Svg.Skia;
+using Avalonia.Svg.Skia;
 using Avalonia.Threading;
 using ReactiveUI;
-using SkiaSharp;
-using Svg.Skia;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Graphs.ProjectPlan;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
+    // Application glue for the arrow graph. The interactive viewer itself now lives in the reusable
+    // InteractiveGraphViewModel (in Zametek.Graphs.ProjectPlan); this view-model supplies that
+    // control with the application's data and dialogs via IGraphHost, keeps the headless SVG export
+    // members the CLI calls, and exposes the interactive view-model to the embedded view. The graph's
+    // per-type differences come from GraphConfigurations.Arrow.
     public class ArrowGraphManagerViewModel
-        : ToolViewModelBase, IArrowGraphManagerViewModel
+        : ToolViewModelBase, IArrowGraphManagerViewModel, IGraphHost
     {
         #region Fields
 
@@ -74,11 +78,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
-        private readonly IArrowGraphSerializer m_ArrowGraphExport;
+        private readonly IGraphSerializer m_GraphSerializer;
         private readonly IGraphImageExporter m_GraphImageExporter;
 
-        private readonly IDisposable? m_BuildArrowGraphDataSub;
-        private readonly IDisposable? m_BuildArrowGraphImageSub;
+        // The reusable, self-contained interactive graph. It owns all of the
+        // node/edge/workspace/drag/select/layout/export behaviour and subscribes to RebuildRequested.
+        private readonly InteractiveGraphViewModel m_Interactive;
 
         #endregion
 
@@ -88,28 +93,23 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IArrowGraphSerializer arrowGraphExport,
+            IMsaglSvgRenderer msaglSvgRenderer,
             IGraphImageExporter graphImageExporter)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
-            ArgumentNullException.ThrowIfNull(arrowGraphExport);
+            ArgumentNullException.ThrowIfNull(msaglSvgRenderer);
             ArgumentNullException.ThrowIfNull(graphImageExporter);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
-            m_ArrowGraphExport = arrowGraphExport;
+            m_GraphSerializer = new GraphSerializer(GraphConfigurations.Arrow, msaglSvgRenderer);
             m_GraphImageExporter = graphImageExporter;
 
             m_ArrowGraphData = string.Empty;
             m_ArrowGraphImage = new SvgImage();
-
-            {
-                ReactiveCommand<Unit, Unit> saveArrowGraphImageFileCommand = ReactiveCommand.CreateFromTask(SaveArrowGraphImageFileAsync);
-                SaveArrowGraphImageFileCommand = saveArrowGraphImageFileCommand;
-            }
 
             m_IsBusy = this
                 .WhenAnyValue(agm => agm.m_CoreViewModel.IsBusy)
@@ -131,20 +131,27 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(agm => agm.m_CoreViewModel.BaseTheme)
                 .ToProperty(this, agm => agm.BaseTheme);
 
-            m_BuildArrowGraphDataSub = this
+            // The interactive control binds to the library's own GraphTheme (mapped from BaseTheme).
+            m_Theme = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.BaseTheme)
+                .Select(x => x.ToGraphTheme())
+                .ToProperty(this, agm => agm.Theme);
+
+            // The single live rebuild trigger: the domain graph, the graph settings, the theme or the
+            // show-names setting changing. Conflated while a project scenario is loaded/reset, and
+            // delivered off the UI thread. The interactive view-model subscribes to this and runs the
+            // MSAGL layout once per change (the headless SVG is built lazily, only when exporting).
+            m_RebuildRequested = this
                 .WhenAnyValue(
                     agm => agm.m_CoreViewModel.ArrowGraph,
                     agm => agm.m_CoreViewModel.GraphSettings,
                     agm => agm.m_CoreViewModel.BaseTheme,
                     agm => agm.m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames)
-                .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildArrowGraphDiagramDataAsync());
+                .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating))
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Select(_ => Unit.Default);
 
-            m_BuildArrowGraphImageSub = this
-                .WhenAnyValue(agm => agm.ArrowGraphData)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildArrowGraphDiagramAsync());
+            m_Interactive = new InteractiveGraphViewModel(this, m_GraphSerializer, m_GraphImageExporter, GraphConfigurations.Arrow);
 
             Id = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
             Title = Resource.ProjectPlan.Titles.Title_ArrowGraphView;
@@ -164,68 +171,61 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The reusable interactive viewer the embedded InteractiveGraphView binds to.
+        public IInteractiveGraph Interactive => m_Interactive;
+
+        #endregion
+
+        #region IGraphHost Members
+
+        private readonly ObservableAsPropertyHelper<GraphTheme> m_Theme;
+        public GraphTheme Theme => m_Theme.Value;
+
+        // Build the library-neutral diagram (what to draw) from the application's domain graph (with
+        // presentation resolved). The interactive/SVG paths use single-line edge labels; the
+        // GraphML/GraphViz exports use multi-line labels. Locked so it serialises with the headless
+        // SVG build below.
+        public DiagramGraphModel BuildDiagram(bool multiLineEdgeLabels)
+        {
+            lock (m_Lock)
+            {
+                return BuildArrowDiagram(multiLineEdgeLabels);
+            }
+        }
+
+        private readonly IObservable<Unit> m_RebuildRequested;
+        public IObservable<Unit> RebuildRequested => m_RebuildRequested;
+
+        public async Task<string?> PickSaveFileAsync()
+        {
+            string title = m_SettingService.ProjectTitle;
+            title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
+            string graphOutputFile = $@"{title}{Resource.ProjectPlan.Suffixes.Suffix_ArrowChart}";
+            string directory = m_SettingService.ProjectDirectory;
+            return await m_DialogService.ShowSaveFileDialogAsync(graphOutputFile, directory, s_ExportFileFilters);
+        }
+
+        public Task ReportErrorAsync(Exception exception)
+        {
+            ArgumentNullException.ThrowIfNull(exception);
+            return m_DialogService.ShowErrorAsync(
+                Resource.ProjectPlan.Titles.Title_Error,
+                string.Empty,
+                exception.Message);
+        }
+
         #endregion
 
         #region Private Methods
 
-        private async Task BuildArrowGraphDiagramDataAsync()
+        // Map the application's domain graph (with presentation resolved) into the library-neutral
+        // DiagramGraphModel the serializer consumes.
+        private DiagramGraphModel BuildArrowDiagram(bool multiLineEdgeLabels)
         {
-            try
-            {
-                lock (m_Lock)
-                {
-                    BuildArrowGraphDiagramData();
-                }
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
-            }
-        }
-
-        private async Task BuildArrowGraphDiagramAsync()
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    BuildArrowGraphDiagramImage();
-                }
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
-            }
-        }
-
-        private async Task SaveArrowGraphImageFileAsync()
-        {
-            try
-            {
-                string title = m_SettingService.ProjectTitle;
-                title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
-                string graphOutputFile = $@"{title}{Resource.ProjectPlan.Suffixes.Suffix_ArrowChart}";
-                string directory = m_SettingService.ProjectDirectory;
-                string? filename = await m_DialogService.ShowSaveFileDialogAsync(graphOutputFile, directory, s_ExportFileFilters);
-
-                if (!string.IsNullOrWhiteSpace(filename))
-                {
-                    await SaveArrowGraphImageFileAsync(filename);
-                }
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
-            }
+            return ArrowGraphDiagramBuilder.Build(
+                GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings),
+                multiLineEdgeLabels,
+                m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
         }
 
         #endregion
@@ -267,59 +267,14 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<BaseTheme> m_BaseTheme;
         public BaseTheme BaseTheme => m_BaseTheme.Value;
 
-        public ICommand SaveArrowGraphImageFileCommand { get; }
+        // Delegates to the interactive viewer's Save-As (which prompts and renders the live canvas).
+        public ICommand SaveArrowGraphImageFileCommand => m_Interactive.SaveGraphImageFileCommand;
 
-        public async Task SaveArrowGraphImageFileAsync(string? filename)
+        // Export to a specific file. Used by the headless CLI, so it exports the fixed MSAGL layout
+        // (which needs no populated interactive surface) rather than the on-screen canvas.
+        public Task SaveArrowGraphImageFileAsync(string? filename)
         {
-            if (string.IsNullOrWhiteSpace(filename))
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
-            }
-            else
-            {
-                try
-                {
-                    string fileExtension = Path.GetExtension(filename);
-                    byte[]? data = null;
-                    bool isSkiaFormat = false;
-
-                    fileExtension.ValueSwitchOn()
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ => isSkiaFormat = true)
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ => isSkiaFormat = true)
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ => isSkiaFormat = true)
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ => isSkiaFormat = true)
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
-                        {
-                            data = m_ArrowGraphExport.BuildArrowGraphMLData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
-                        {
-                            data = m_ArrowGraphExport.BuildArrowGraphVizData(m_CoreViewModel.ArrowGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
-                        })
-                        .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
-
-                    if (isSkiaFormat && ArrowGraphImage.Source?.Picture is SKPicture picture)
-                    {
-                        await m_GraphImageExporter.SaveGraphImageAsync(picture, filename, scaleX: 2, scaleY: 2);
-                    }
-
-                    if (data is not null)
-                    {
-                        using var stream = File.OpenWrite(filename);
-                        await stream.WriteAsync(data);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    await m_DialogService.ShowErrorAsync(
-                        Resource.ProjectPlan.Titles.Title_Error,
-                        string.Empty,
-                        ex.Message);
-                }
-            }
+            return m_Interactive.SaveImageAsync(filename, GraphImageSource.FixedLayout);
         }
 
         public void BuildArrowGraphDiagramData()
@@ -331,11 +286,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (!HasCompilationErrors)
                 {
-                    data = m_ArrowGraphExport.BuildArrowGraphSvgData(
-                        m_CoreViewModel.ArrowGraph,
-                        m_CoreViewModel.GraphSettings,
-                        m_CoreViewModel.BaseTheme,
-                        m_CoreViewModel.DisplaySettingsViewModel.ArrowGraphShowNames);
+                    data = m_GraphSerializer.BuildGraphSvgData(
+                        BuildArrowDiagram(multiLineEdgeLabels: false),
+                        m_CoreViewModel.BaseTheme.ToGraphTheme());
                 }
             }
 
@@ -372,8 +325,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
-            m_BuildArrowGraphDataSub?.Dispose();
-            m_BuildArrowGraphImageSub?.Dispose();
+            m_Interactive.Dispose();
         }
 
         #endregion
@@ -397,6 +349,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasCompilationErrors?.Dispose();
                 m_ShowNames?.Dispose();
                 m_BaseTheme?.Dispose();
+                m_Theme?.Dispose();
             }
 
             m_Disposed = true;

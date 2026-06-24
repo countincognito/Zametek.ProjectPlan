@@ -11,7 +11,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// Tests for DateTimeCalculator covering working-day arithmetic, non-working-day
     /// detection, and business-day counting under each NonWorkingDayMode.
     /// DateTimeCalculator accepts a TimeProvider via constructor so no mocking framework
-    /// is needed — we use TimeProvider.System (or a fixed fake via FakeTimeProvider).
+    /// is needed - we use TimeProvider.System (or a fixed fake via FakeTimeProvider).
     /// </summary>
     public class DateTimeCalculatorTests
     {

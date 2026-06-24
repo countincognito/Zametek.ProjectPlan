@@ -1,29 +1,27 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using System;
 using System.Globalization;
-using Zametek.Common.ProjectPlan;
 
-namespace Zametek.View.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
     public class ThemeToBackgroundConverter
         : IValueConverter
     {
-        private static readonly IBrush s_LightThemeBackground = new SolidColorBrush(ViewModel.ProjectPlan.ColorHelper.LightThemeBackground);
-        private static readonly IBrush s_DarkThemeBackground = new SolidColorBrush(ViewModel.ProjectPlan.ColorHelper.DarkThemeBackground);
+        private static readonly IBrush s_LightThemeBackground = new SolidColorBrush(ColorHelper.LightThemeBackground);
+        private static readonly IBrush s_DarkThemeBackground = new SolidColorBrush(ColorHelper.DarkThemeBackground);
 
         #region IValueConverter Members
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value is BaseTheme baseTheme)
+            if (value is GraphTheme theme)
             {
-                if (baseTheme == BaseTheme.Light)
+                if (theme == GraphTheme.Light)
                 {
                     return s_LightThemeBackground;
                 }
-                if (baseTheme == BaseTheme.Dark)
+                if (theme == GraphTheme.Dark)
                 {
                     return s_DarkThemeBackground;
                 }

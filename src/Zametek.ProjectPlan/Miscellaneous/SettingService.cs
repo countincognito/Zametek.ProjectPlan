@@ -68,7 +68,7 @@ namespace Zametek.ProjectPlan
                 }
                 catch (Exception ex)
                 {
-                    // The data grid layout file is corrupt or unreadable — reset to defaults.
+                    // The data grid layout file is corrupt or unreadable - reset to defaults.
                     Debug.WriteLine($"[SettingService] Failed to deserialize data grid layout, resetting: {ex.Message}");
                     m_DataGridLayouts.Clear();
                 }

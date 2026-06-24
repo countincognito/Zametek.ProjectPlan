@@ -2,68 +2,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
-			 xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg"
-			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:g="using:Zametek.Graphs.ProjectPlan"
 			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 			 x:DataType="vm:VertexGraphManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Zametek.View.ProjectPlan.VertexGraphManagerView">
-  <UserControl.Resources>
-    <local:ThemeToBackgroundConverter x:Key="themeToBackgroundConverter"/>
-  </UserControl.Resources>
 
-  <DockPanel Margin="7">
-    <DockPanel>
-      <DockPanel Width="250"
-					   DockPanel.Dock="Top">
-        <TextBlock Margin="0,11,11,11"
-						   DockPanel.Dock="Right"
-						   Text="x"/>
-        <TextBlock Margin="0,11,0,11"
-						   DockPanel.Dock="Right"
-						   Text="{Binding ElementName=zoomer, Path=Value, Mode=OneWay, StringFormat=\{0:N1\}}"/>
-        <Slider Name="zoomer"
-						Orientation="Horizontal"
-						Value="1"
-						PointerWheelChanged="Zoom_PointerWheelChanged"
-						ValueChanged="Slider_ValueChanged"
-						Minimum="0.1" Maximum="5"
-						Margin="11"/>
-      </DockPanel>
+  <!-- The interactive viewer lives in the reusable Zametek.Graphs.ProjectPlan control library.
+       It binds to IInteractiveGraph, supplied here by the manager view-model's reusable
+       InteractiveGraphViewModel (exposed as Interactive). -->
+  <g:InteractiveGraphView Margin="7"
+                          DataContext="{Binding Interactive}"/>
 
-      <ScrollViewer PointerPressed="ScrollViewer_PointerPressed"
-						  PointerReleased="ScrollViewer_PointerReleased"
-						  PointerMoved="ScrollViewer_PointerMoved"
-						  PointerWheelChanged="Zoom_PointerWheelChanged"
-						  HorizontalScrollBarVisibility="Auto"
-						  VerticalScrollBarVisibility="Auto"
-						  Name="viewer"
-						  Background="{Binding Path=BaseTheme, Mode=OneWay, Converter={StaticResource themeToBackgroundConverter}}">
-        <ScrollViewer.ContextMenu>
-          <ContextMenu>
-            <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-                      Command="{Binding Path=SaveVertexGraphImageFileCommand, Mode=OneWay}"/>
-          </ContextMenu>
-        </ScrollViewer.ContextMenu>
-
-        <!--Use the Grid to ensure the image is centered during zoom-->
-        <Grid HorizontalAlignment="Center"
-					  VerticalAlignment="Center">
-          <LayoutTransformControl Classes="screen pdf">
-            <LayoutTransformControl.LayoutTransform>
-              <ScaleTransform ScaleX="{Binding Value, ElementName=zoomer, Mode=TwoWay}"
-											ScaleY="{Binding Value, ElementName=zoomer, Mode=TwoWay}"/>
-            </LayoutTransformControl.LayoutTransform>
-
-            <Image Stretch="None"
-							   PointerWheelChanged="Zoom_PointerWheelChanged"
-							   Source="{Binding Path=VertexGraphImage, Mode=OneWay}"
-							   RenderTransformOrigin="0.5,0.5">
-            </Image>
-          </LayoutTransformControl>
-        </Grid>
-      </ScrollViewer>
-    </DockPanel>
-  </DockPanel>
 </UserControl>

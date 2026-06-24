@@ -1,5 +1,7 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.Xaml.Interactivity;
 using System;
@@ -18,6 +20,7 @@ namespace Zametek.View.ProjectPlan
         private string m_GridName;
         private DataGridModel m_OriginalGridModelModel;
         private readonly IDataGridManager m_DataGridManager;
+        private readonly Dictionary<DataGridColumn, string> m_HeaderTextCache;
         private DataGrid? m_DataGrid;
         private bool m_IsInitialized;
 
@@ -28,8 +31,62 @@ namespace Zametek.View.ProjectPlan
             m_GridName = string.Empty;
             m_DataGrid = null;
             m_OriginalGridModelModel = new();
+            m_HeaderTextCache = [];
             m_IsInitialized = false;
             m_DataGridManager.ResetActions.Add(ResetDataGridModel);
+        }
+
+        // DataGridTemplateColumns set only a HeaderTemplate (a DataTemplate containing a
+        // TextBlock bound to a static label), never the Header property itself, so
+        // column.Header?.ToString() yields nothing usable. Build the header template and
+        // read the realised text so the display header can be used as a persistence key.
+        // Results are cached per column because the header text is fixed for the lifetime
+        // of the grid and SaveDataGridModel runs on every LayoutUpdated.
+        private string GetColumnHeaderText(DataGridColumn column)
+        {
+            if (m_HeaderTextCache.TryGetValue(column, out string? cached))
+            {
+                return cached;
+            }
+
+            string headerText = ExtractColumnHeaderText(column);
+            m_HeaderTextCache[column] = headerText;
+            return headerText;
+        }
+
+        private static string ExtractColumnHeaderText(DataGridColumn column)
+        {
+            // A plainly-set string header takes precedence.
+            if (column.Header is string headerString
+                && !string.IsNullOrWhiteSpace(headerString))
+            {
+                return headerString;
+            }
+
+            // Otherwise realise the header template and find the first non-empty TextBlock.
+            if (column.HeaderTemplate is IDataTemplate headerTemplate)
+            {
+                Control? built = headerTemplate.Build(null);
+
+                if (built is TextBlock rootTextBlock
+                    && !string.IsNullOrWhiteSpace(rootTextBlock.Text))
+                {
+                    return rootTextBlock.Text;
+                }
+
+                string? nestedText = built?
+                    .GetLogicalDescendants()
+                    .OfType<TextBlock>()
+                    .Select(x => x.Text)
+                    .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+
+                if (!string.IsNullOrWhiteSpace(nestedText))
+                {
+                    return nestedText;
+                }
+            }
+
+            return column.Header?.ToString() ?? string.Empty;
         }
 
         private DataGridModel SaveDataGridModel()
@@ -47,7 +104,7 @@ namespace Zametek.View.ProjectPlan
 
                         var columnModel = new DataGridColumnModel
                         {
-                            Name = column.Header?.ToString() ?? string.Empty,
+                            Name = GetColumnHeaderText(column),
                             PositionIndex = i,
                             DisplayIndex = column.DisplayIndex,
                             PixelWidth = column.ActualWidth,
@@ -71,14 +128,50 @@ namespace Zametek.View.ProjectPlan
                 if (m_DataGrid is not null
                     && m_DataGrid.Columns.Count != 0)
                 {
-                    Dictionary<int, DataGridColumnModel> modelMap = dataGridModel
+                    // Match persisted columns by their display header name first. Only names
+                    // that are non-empty and unambiguous (appear once) are usable as keys.
+                    Dictionary<string, DataGridColumnModel> nameMap = dataGridModel
                         .Columns
-                        .ToDictionary(x => x.PositionIndex, x => x);
+                        .Where(x => !string.IsNullOrWhiteSpace(x.Name))
+                        .GroupBy(x => x.Name)
+                        .Where(x => x.Count() == 1)
+                        .ToDictionary(x => x.Key, x => x.First());
+
+                    // Fall back to the position index for columns without a usable name
+                    // (e.g. spacer columns) or whose name no longer matches (e.g. older
+                    // layout files, renamed labels, or a language change).
+                    Dictionary<int, DataGridColumnModel> positionMap = dataGridModel
+                        .Columns
+                        .GroupBy(x => x.PositionIndex)
+                        .ToDictionary(x => x.Key, x => x.First());
+
+                    // Ensure each persisted column (identified by its unique PositionIndex)
+                    // is applied to at most one live column, so a name match never collides
+                    // with a later position fallback.
+                    HashSet<int> consumed = [];
 
                     for (int i = 0; i < m_DataGrid.Columns.Count; i++)
                     {
                         DataGridColumn column = m_DataGrid.Columns[i];
-                        if (modelMap.TryGetValue(i, out DataGridColumnModel? dataGridColumnModel))
+                        string headerText = GetColumnHeaderText(column);
+
+                        DataGridColumnModel? dataGridColumnModel = null;
+
+                        // Prefer a unique name match; otherwise fall back to the position
+                        // index. consumed.Add guards against applying a persisted column twice.
+                        if (!string.IsNullOrWhiteSpace(headerText)
+                            && nameMap.TryGetValue(headerText, out DataGridColumnModel? byName)
+                            && consumed.Add(byName.PositionIndex))
+                        {
+                            dataGridColumnModel = byName;
+                        }
+                        else if (positionMap.TryGetValue(i, out DataGridColumnModel? byPosition)
+                            && consumed.Add(byPosition.PositionIndex))
+                        {
+                            dataGridColumnModel = byPosition;
+                        }
+
+                        if (dataGridColumnModel is not null)
                         {
                             column.DisplayIndex = dataGridColumnModel.DisplayIndex;
                             column.Width = new DataGridLength(dataGridColumnModel.PixelWidth, DataGridLengthUnitType.Pixel);
@@ -139,6 +232,7 @@ namespace Zametek.View.ProjectPlan
                 m_DataGrid.ColumnReordered -= OnColumnReordered;
                 m_DataGrid.LayoutUpdated -= OnLayoutUpdated;
             }
+            m_HeaderTextCache.Clear();
             m_GridName = string.Empty;
             base.OnDetaching();
         }

@@ -6,6 +6,7 @@ using Splat;
 using Splat.Autofac;
 using System;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Graphs.ProjectPlan;
 using Zametek.View.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 

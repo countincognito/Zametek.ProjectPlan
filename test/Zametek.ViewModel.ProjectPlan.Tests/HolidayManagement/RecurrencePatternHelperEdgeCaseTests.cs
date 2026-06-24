@@ -12,7 +12,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
     /// </summary>
     public class RecurrencePatternHelperEdgeCaseTests
     {
-        #region ParseFrequency — all tokens
+        #region ParseFrequency - all tokens
 
         [Theory]
         [InlineData("SECONDLY", RecurrenceFrequency.Secondly)]
@@ -46,7 +46,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region ParseDay — all tokens
+        #region ParseDay - all tokens
 
         [Theory]
         [InlineData("MO", RecurrenceDay.MO)]
@@ -71,7 +71,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region ToDayToken — all days
+        #region ToDayToken - all days
 
         [Theory]
         [InlineData(RecurrenceDay.MO, "MO")]
@@ -109,7 +109,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region ToFrequencyToken — all frequencies
+        #region ToFrequencyToken - all frequencies
 
         [Theory]
         [InlineData(RecurrenceFrequency.Secondly, "SECONDLY")]
@@ -126,7 +126,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region ToRule — error paths
+        #region ToRule - error paths
 
         [Fact]
         public void ToRule_NullInput_Returns_EmptyModel()
@@ -172,7 +172,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region ToPattern — FREQ=NONE produces empty string
+        #region ToPattern - FREQ=NONE produces empty string
 
         [Fact]
         public void ToPattern_FrequencyNone_Returns_EmptyString()
@@ -183,7 +183,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region ToPattern — interval of 1 is omitted, other values are included
+        #region ToPattern - interval of 1 is omitted, other values are included
 
         [Fact]
         public void ToPattern_Interval_Of_One_Is_Omitted_From_Output()
@@ -203,7 +203,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region ToRule — UNTIL date-only format is accepted
+        #region ToRule - UNTIL date-only format is accepted
 
         [Fact]
         public void ToRule_UntilDateOnly_Format_Is_Parsed()

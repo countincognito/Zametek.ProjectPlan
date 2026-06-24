@@ -117,14 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Message_ArrowGraphDataContainMultipleEndNodes" xml:space="preserve">
-    <value>Arrow Graph Data contain more than one End node</value>
-  </data>
   <data name="Message_VertexGraphDataContainsNoEndNodes" xml:space="preserve">
     <value>Vertex Graph Data contains no End nodes</value>
-  </data>
-  <data name="Message_ArrowGraphDataContainMultipleStartNodes" xml:space="preserve">
-    <value>Arrow Graph Data contain more than one Start node</value>
   </data>
   <data name="Message_VertexGraphDataContainsNoStartNodes" xml:space="preserve">
     <value>Vertex Graph Data contains no Start nodes</value>
@@ -149,24 +143,6 @@
   </data>
   <data name="Message_FibonacciWeightMustBeEqualOrGreaterThanZero" xml:space="preserve">
     <value>Fibonacci Weight must be equal or greater than 0</value>
-  </data>
-  <data name="Message_MismatchedEdgeIdsForHeadNodesInArrowGraph" xml:space="preserve">
-    <value>List of Edge IDs and Edges referenced by head Nodes do not match when building Arrow Graph</value>
-  </data>
-  <data name="Message_MismatchedEdgeIdsForHeadNodesInVertexGraph" xml:space="preserve">
-    <value>List of Edge IDs and Edges referenced by head Nodes do not match when building Vertex Graph</value>
-  </data>
-  <data name="Message_MismatchedEdgeIdsForTailNodesInArrowGraph" xml:space="preserve">
-    <value>List of Edge IDs and Edges referenced by tail Nodes do not match when building Arrow Graph</value>
-  </data>
-  <data name="Message_MismatchedEdgeIdsForTailNodesInVertexGraph" xml:space="preserve">
-    <value>List of Edge IDs and Edges referenced by tail Nodes do not match when building Vertex Graph</value>
-  </data>
-  <data name="Message_MismatchedNodeIdsAssociatedWithEdgesInArrowGraph" xml:space="preserve">
-    <value>List of Node IDs and Nodes associated with Edges do not match when building Arrow Graph</value>
-  </data>
-  <data name="Message_MismatchedNodeIdsAssociatedWithEdgesInVertexGraph" xml:space="preserve">
-    <value>List of Node IDs and Nodes associated with Edges do not match when building Vertex Graph</value>
   </data>
   <data name="Message_NewTrackersMustBeEqualOrGreaterThanZero" xml:space="preserve">
     <value>New Trackers must be equal or greater than 0</value>
@@ -203,12 +179,6 @@
   </data>
   <data name="Message_UnknownNonWorkingDayMode" xml:space="preserve">
     <value>Unknown NonWorkingDayMode value:</value>
-  </data>
-  <data name="Message_UnknownEdgeDashStyleValue" xml:space="preserve">
-    <value>Unknown EdgeDashStyle value</value>
-  </data>
-  <data name="Message_UnknownNodeBorderDashStyleValue" xml:space="preserve">
-    <value>Unknown NodeBorderDashStyle value</value>
   </data>
   <data name="Message_ProjectUnsavedChanges" xml:space="preserve">
     <value>Project has unsaved changes. Do you wish to continue?</value>
@@ -359,5 +329,29 @@
   </data>
   <data name="Message_EditCustomCalendar" xml:space="preserve">
     <value>Configure custom calendar</value>
+  </data>
+  <data name="Message_MismatchedEdgeIdsForHeadNodesInVertexGraph" xml:space="preserve">
+    <value>List of Edge IDs and Edges referenced by head Nodes do not match when building Vertex Graph</value>
+  </data>
+  <data name="Message_MismatchedEdgeIdsForTailNodesInVertexGraph" xml:space="preserve">
+    <value>List of Edge IDs and Edges referenced by tail Nodes do not match when building Vertex Graph</value>
+  </data>
+  <data name="Message_MismatchedNodeIdsAssociatedWithEdgesInVertexGraph" xml:space="preserve">
+    <value>List of Node IDs and Nodes associated with Edges do not match when building Vertex Graph</value>
+  </data>
+  <data name="Message_MismatchedEdgeIdsForHeadNodesInArrowGraph" xml:space="preserve">
+    <value>List of Edge IDs and Edges referenced by head Nodes do not match when building Arrow Graph</value>
+  </data>
+  <data name="Message_MismatchedEdgeIdsForTailNodesInArrowGraph" xml:space="preserve">
+    <value>List of Edge IDs and Edges referenced by tail Nodes do not match when building Arrow Graph</value>
+  </data>
+  <data name="Message_MismatchedNodeIdsAssociatedWithEdgesInArrowGraph" xml:space="preserve">
+    <value>List of Node IDs and Nodes associated with Edges do not match when building Arrow Graph</value>
+  </data>
+  <data name="Message_ArrowGraphDataContainMultipleStartNodes" xml:space="preserve">
+    <value>Arrow Graph Data contain more than one Start node</value>
+  </data>
+  <data name="Message_ArrowGraphDataContainMultipleEndNodes" xml:space="preserve">
+    <value>Arrow Graph Data contain more than one End node</value>
   </data>
 </root>

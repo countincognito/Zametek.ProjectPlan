@@ -140,7 +140,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Menu_File", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Help.
         /// </summary>
@@ -252,12 +252,12 @@ namespace Zametek.Resource.ProjectPlan {
         /// <summary>
         ///   Looks up a localized string similar to Reset Layout.
         /// </summary>
-        public static string Menu_ResetLayout {
+        public static string Menu_ResetDockLayout {
             get {
-                return ResourceManager.GetString("Menu_ResetLayout", resourceCulture);
+                return ResourceManager.GetString("Menu_ResetDockLayout", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to _Save.
         /// </summary>

@@ -1,19 +1,24 @@
-﻿using Avalonia.Svg.Skia;
+using Avalonia.Svg.Skia;
 using Avalonia.Threading;
 using ReactiveUI;
-using SkiaSharp;
-using Svg.Skia;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Graphs.ProjectPlan;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
+    // Application glue for the vertex graph. The interactive viewer itself now lives in the reusable
+    // InteractiveGraphViewModel (in Zametek.Graphs.ProjectPlan); this view-model supplies that
+    // control with the application's data and dialogs via IGraphHost, keeps the headless SVG export
+    // members the CLI calls, and exposes the interactive view-model to the embedded view. The graph's
+    // per-type differences come from GraphConfigurations.Vertex (which, unlike the arrow graph, does
+    // not surface a show-names toggle).
     public class VertexGraphManagerViewModel
-        : ToolViewModelBase, IVertexGraphManagerViewModel
+        : ToolViewModelBase, IVertexGraphManagerViewModel, IGraphHost
     {
         #region Fields
 
@@ -74,11 +79,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
-        private readonly IVertexGraphSerializer m_VertexGraphExport;
+        private readonly IGraphSerializer m_GraphSerializer;
         private readonly IGraphImageExporter m_GraphImageExporter;
 
-        private readonly IDisposable? m_BuildVertexGraphDataSub;
-        private readonly IDisposable? m_BuildVertexGraphImageSub;
+        // The reusable, self-contained interactive graph. It owns all of the
+        // node/edge/workspace/drag/select/layout/export behaviour and subscribes to RebuildRequested.
+        private readonly InteractiveGraphViewModel m_Interactive;
 
         #endregion
 
@@ -88,28 +94,23 @@ namespace Zametek.ViewModel.ProjectPlan
             ICoreViewModel coreViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IVertexGraphSerializer vertexGraphExport,
+            IMsaglSvgRenderer msaglSvgRenderer,
             IGraphImageExporter graphImageExporter)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
-            ArgumentNullException.ThrowIfNull(vertexGraphExport);
+            ArgumentNullException.ThrowIfNull(msaglSvgRenderer);
             ArgumentNullException.ThrowIfNull(graphImageExporter);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
-            m_VertexGraphExport = vertexGraphExport;
+            m_GraphSerializer = new GraphSerializer(GraphConfigurations.Vertex, msaglSvgRenderer);
             m_GraphImageExporter = graphImageExporter;
 
             m_VertexGraphData = string.Empty;
             m_VertexGraphImage = new SvgImage();
-
-            {
-                ReactiveCommand<Unit, Unit> saveVertexGraphImageFileCommand = ReactiveCommand.CreateFromTask(SaveVertexGraphImageFileAsync);
-                SaveVertexGraphImageFileCommand = saveVertexGraphImageFileCommand;
-            }
 
             m_IsBusy = this
                 .WhenAnyValue(agm => agm.m_CoreViewModel.IsBusy)
@@ -123,28 +124,31 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(agm => agm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, agm => agm.HasCompilationErrors);
 
-            m_ShowNames = this
-                .WhenAnyValue(agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames)
-                .ToProperty(this, agm => agm.ShowNames);
-
             m_BaseTheme = this
                 .WhenAnyValue(agm => agm.m_CoreViewModel.BaseTheme)
                 .ToProperty(this, agm => agm.BaseTheme);
 
-            m_BuildVertexGraphDataSub = this
+            // The interactive control binds to the library's own GraphTheme (mapped from BaseTheme).
+            m_Theme = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.BaseTheme)
+                .Select(x => x.ToGraphTheme())
+                .ToProperty(this, agm => agm.Theme);
+
+            // The single live rebuild trigger: the domain graph, the graph settings, the theme or the
+            // show-names setting changing. Conflated while a project scenario is loaded/reset, and
+            // delivered off the UI thread. The interactive view-model subscribes to this and runs the
+            // MSAGL layout once per change (the headless SVG is built lazily, only when exporting).
+            m_RebuildRequested = this
                 .WhenAnyValue(
                     agm => agm.m_CoreViewModel.VertexGraph,
                     agm => agm.m_CoreViewModel.GraphSettings,
                     agm => agm.m_CoreViewModel.BaseTheme,
                     agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames)
-                .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildVertexGraphDiagramDataAsync());
+                .MuteWhile(this.WhenAnyValue(agm => agm.m_CoreViewModel.IsBulkUpdating))
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Select(_ => Unit.Default);
 
-            m_BuildVertexGraphImageSub = this
-                .WhenAnyValue(agm => agm.VertexGraphData)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(async _ => await BuildVertexGraphDiagramImageAsync());
+            m_Interactive = new InteractiveGraphViewModel(this, m_GraphSerializer, m_GraphImageExporter, GraphConfigurations.Vertex);
 
             Id = Resource.ProjectPlan.Titles.Title_VertexGraphView;
             Title = Resource.ProjectPlan.Titles.Title_VertexGraphView;
@@ -164,71 +168,70 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        // The reusable interactive viewer the embedded InteractiveGraphView binds to.
+        public IInteractiveGraph Interactive => m_Interactive;
+
+        #endregion
+
+        #region IGraphHost Members
+
+        private readonly ObservableAsPropertyHelper<GraphTheme> m_Theme;
+        public GraphTheme Theme => m_Theme.Value;
+
+        // The vertex graph does not surface a show-names toggle (GraphConfigurations.Vertex sets
+        // SupportsShowNames = false), but the host contract still carries it; it is backed by the
+        // persisted setting and is simply never displayed.
+        public bool ShowNames
+        {
+            get => m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames = value;
+            }
+        }
+
+        // Build the library-neutral diagram (what to draw) from the application's domain graph (with
+        // presentation resolved). The vertex graph has no edge labels, so multiLineEdgeLabels is
+        // ignored. Locked so it serialises with the headless SVG build below.
+        public DiagramGraphModel BuildDiagram(bool multiLineEdgeLabels)
+        {
+            lock (m_Lock)
+            {
+                return BuildVertexDiagram();
+            }
+        }
+
+        private readonly IObservable<Unit> m_RebuildRequested;
+        public IObservable<Unit> RebuildRequested => m_RebuildRequested;
+
+        public async Task<string?> PickSaveFileAsync()
+        {
+            string title = m_SettingService.ProjectTitle;
+            title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
+            string graphOutputFile = $@"{title}{Resource.ProjectPlan.Suffixes.Suffix_VertexChart}";
+            string directory = m_SettingService.ProjectDirectory;
+            return await m_DialogService.ShowSaveFileDialogAsync(graphOutputFile, directory, s_ExportFileFilters);
+        }
+
+        public Task ReportErrorAsync(Exception exception)
+        {
+            ArgumentNullException.ThrowIfNull(exception);
+            return m_DialogService.ShowErrorAsync(
+                Resource.ProjectPlan.Titles.Title_Error,
+                string.Empty,
+                exception.Message);
+        }
+
         #endregion
 
         #region Private Methods
 
-        private async Task BuildVertexGraphDiagramDataAsync()
+        // Map the application's domain graph (with presentation resolved) into the library-neutral
+        // DiagramGraphModel the serializer consumes.
+        private DiagramGraphModel BuildVertexDiagram()
         {
-            try
-            {
-                lock (m_Lock)
-                {
-                    BuildVertexGraphDiagramData();
-                }
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
-            }
-        }
-
-        private async Task BuildVertexGraphDiagramImageAsync()
-        {
-            try
-            {
-                Dispatcher.UIThread.Invoke(() =>
-                {
-                    lock (m_Lock)
-                    {
-                        BuildVertexGraphDiagramImage();
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
-            }
-        }
-
-        private async Task SaveVertexGraphImageFileAsync()
-        {
-            try
-            {
-                string title = m_SettingService.ProjectTitle;
-                title = string.IsNullOrWhiteSpace(title) ? Resource.ProjectPlan.Titles.Title_UntitledProject : title;
-                string graphOutputFile = $@"{title}{Resource.ProjectPlan.Suffixes.Suffix_VertexChart}";
-                string directory = m_SettingService.ProjectDirectory;
-                string? filename = await m_DialogService.ShowSaveFileDialogAsync(graphOutputFile, directory, s_ExportFileFilters);
-
-                if (!string.IsNullOrWhiteSpace(filename))
-                {
-                    await SaveVertexGraphImageFileAsync(filename);
-                }
-            }
-            catch (Exception ex)
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    ex.Message);
-            }
+            return VertexGraphDiagramBuilder.Build(
+                GraphPresentationBuilder.ApplyPresentation(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings));
         }
 
         #endregion
@@ -243,16 +246,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
-
-        private readonly ObservableAsPropertyHelper<bool> m_ShowNames;
-        public bool ShowNames
-        {
-            get => m_ShowNames.Value;
-            set
-            {
-                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames = value;
-            }
-        }
 
         private string m_VertexGraphData;
         public string VertexGraphData
@@ -270,59 +263,14 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<BaseTheme> m_BaseTheme;
         public BaseTheme BaseTheme => m_BaseTheme.Value;
 
-        public ICommand SaveVertexGraphImageFileCommand { get; }
+        // Delegates to the interactive viewer's Save-As (which prompts and renders the live canvas).
+        public ICommand SaveVertexGraphImageFileCommand => m_Interactive.SaveGraphImageFileCommand;
 
-        public async Task SaveVertexGraphImageFileAsync(string? filename)
+        // Export to a specific file. Used by the headless CLI, so it exports the fixed MSAGL layout
+        // (which needs no populated interactive surface) rather than the on-screen canvas.
+        public Task SaveVertexGraphImageFileAsync(string? filename)
         {
-            if (string.IsNullOrWhiteSpace(filename))
-            {
-                await m_DialogService.ShowErrorAsync(
-                    Resource.ProjectPlan.Titles.Title_Error,
-                    string.Empty,
-                    Resource.ProjectPlan.Messages.Message_EmptyFilename);
-            }
-            else
-            {
-                try
-                {
-                    string fileExtension = Path.GetExtension(filename);
-                    byte[]? data = null;
-                    bool isSkiaFormat = false;
-
-                    fileExtension.ValueSwitchOn()
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ => isSkiaFormat = true)
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ => isSkiaFormat = true)
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ => isSkiaFormat = true)
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ => isSkiaFormat = true)
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_GraphMLFileExtension}", _ =>
-                        {
-                            data = m_VertexGraphExport.BuildVertexGraphMLData(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_GraphVizFileExtension}", _ =>
-                        {
-                            data = m_VertexGraphExport.BuildVertexGraphVizData(m_CoreViewModel.VertexGraph, m_CoreViewModel.GraphSettings, m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
-                        })
-                        .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
-
-                    if (isSkiaFormat && VertexGraphImage.Source?.Picture is SKPicture picture)
-                    {
-                        await m_GraphImageExporter.SaveGraphImageAsync(picture, filename, scaleX: 4, scaleY: 4);
-                    }
-
-                    if (data is not null)
-                    {
-                        using var stream = File.OpenWrite(filename);
-                        await stream.WriteAsync(data);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    await m_DialogService.ShowErrorAsync(
-                        Resource.ProjectPlan.Titles.Title_Error,
-                        string.Empty,
-                        ex.Message);
-                }
-            }
+            return m_Interactive.SaveImageAsync(filename, GraphImageSource.FixedLayout);
         }
 
         public void BuildVertexGraphDiagramData()
@@ -334,11 +282,9 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (!HasCompilationErrors)
                 {
-                    data = m_VertexGraphExport.BuildVertexGraphSvgData(
-                        m_CoreViewModel.VertexGraph,
-                        m_CoreViewModel.GraphSettings,
-                        m_CoreViewModel.BaseTheme,
-                        m_CoreViewModel.DisplaySettingsViewModel.VertexGraphShowNames);
+                    data = m_GraphSerializer.BuildGraphSvgData(
+                        BuildVertexDiagram(),
+                        m_CoreViewModel.BaseTheme.ToGraphTheme());
                 }
             }
 
@@ -375,8 +321,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
-            m_BuildVertexGraphDataSub?.Dispose();
-            m_BuildVertexGraphImageSub?.Dispose();
+            m_Interactive.Dispose();
         }
 
         #endregion
@@ -398,8 +343,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
-                m_ShowNames?.Dispose();
                 m_BaseTheme?.Dispose();
+                m_Theme?.Dispose();
             }
 
             m_Disposed = true;

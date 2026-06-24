@@ -32,7 +32,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region Risk invariants — result is always in [0, 1] for valid inputs
+        #region Risk invariants - result is always in [0, 1] for valid inputs
 
         [Theory]
         [InlineData(0)]
@@ -96,7 +96,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region Efficiency invariant — equal inputs always produce 1.0
+        #region Efficiency invariant - equal inputs always produce 1.0
 
         [Theory]
         [InlineData(1.0)]
@@ -111,7 +111,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region Efficiency invariant — result = activityEffort / totalEffort
+        #region Efficiency invariant - result = activityEffort / totalEffort
 
         [Theory]
         [InlineData(1.0, 2.0, 0.5)]
@@ -127,7 +127,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region Margin invariant — margin = (billing - cost) / billing
+        #region Margin invariant - margin = (billing - cost) / billing
 
         [Theory]
         [InlineData(80.0, 100.0, 0.2)]
@@ -143,7 +143,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region ActivityRisk monotonicity — more slack = lower (or equal) risk
+        #region ActivityRisk monotonicity - more slack = lower (or equal) risk
 
         [Theory]
         [InlineData(0, 1)]
@@ -176,7 +176,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region MarginAbsolute invariant — always = billing - cost
+        #region MarginAbsolute invariant - always = billing - cost
 
         [Theory]
         [InlineData(80.0, 100.0, 20.0)]
@@ -192,7 +192,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region CalculateProjectCosts — totals are sum of parts
+        #region CalculateProjectCosts - totals are sum of parts
 
         [Fact]
         public void CalculateProjectCosts_Total_Equals_Sum_Of_Direct_Indirect_Other()

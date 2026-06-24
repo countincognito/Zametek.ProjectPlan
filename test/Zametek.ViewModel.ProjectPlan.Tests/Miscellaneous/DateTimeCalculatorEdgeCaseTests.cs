@@ -36,7 +36,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region CalculateTimeAndDateTime — DateTimeOffset? overload
+        #region CalculateTimeAndDateTime - DateTimeOffset? overload
 
         [Fact]
         public void CalculateTimeAndDateTime_FromDateTimeOffset_NullInput_Returns_Nulls()
@@ -93,7 +93,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region DisplayMode.Classic — DisplayEarliestStartDate
+        #region DisplayMode.Classic - DisplayEarliestStartDate
 
         [Fact]
         public void DisplayEarliestStartDate_Default_Returns_EarliestStart_Unchanged()
@@ -130,7 +130,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region DisplayMode.Classic — MaximumLatestFinishDate In/Out
+        #region DisplayMode.Classic - MaximumLatestFinishDate In/Out
 
         [Fact]
         public void MaximumLatestFinishDateIn_Default_Returns_MaxLatestFinish_Unchanged()
@@ -156,7 +156,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region NonWorkingDayMode.Weekends — larger spans
+        #region NonWorkingDayMode.Weekends - larger spans
 
         [Fact]
         public void AddDays_Weekends_TenWorkingDays_SkipsTwoWeekends()
@@ -194,7 +194,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region CustomCalendar — multiple holidays in the same week
+        #region CustomCalendar - multiple holidays in the same week
 
         [Fact]
         public void AddDays_CustomCalendar_MultipleHolidaysInWeek_SkipsAllOfThem()
@@ -230,7 +230,7 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
 
         #endregion
 
-        #region GetLocalNow — returns a value close to now
+        #region GetLocalNow - returns a value close to now
 
         [Fact]
         public void GetLocalNow_Returns_ValueWithinOneMinute_Of_SystemNow()

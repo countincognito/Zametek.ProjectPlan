@@ -770,7 +770,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_FibonacciWeight", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Find.
         /// </summary>

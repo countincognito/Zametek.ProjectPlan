@@ -257,7 +257,7 @@
 								  Command="{Binding Path=SaveLayoutCommand, Mode=OneWay}"
 								  InputGesture="Ctrl+L"/>
 
-						<MenuItem Header="{x:Static resources:Menus.Menu_ResetLayout}"
+						<MenuItem Header="{x:Static resources:Menus.Menu_ResetDockLayout}"
 								  Command="{Binding Path=ResetLayoutCommand, Mode=OneWay}" />
 					</MenuItem>
 

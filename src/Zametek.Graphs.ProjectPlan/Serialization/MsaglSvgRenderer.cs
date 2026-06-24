@@ -1,9 +1,7 @@
 using System.Xml;
-using Zametek.Common.ProjectPlan;
-using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
 
-namespace Zametek.ViewModel.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
     public class MsaglSvgRenderer
         : IMsaglSvgRenderer
@@ -12,7 +10,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public byte[] RenderToSvg(
             Microsoft.Msagl.Drawing.Graph graph,
-            BaseTheme theme)
+            GraphTheme theme)
         {
             ArgumentNullException.ThrowIfNull(graph);
 
@@ -37,11 +35,11 @@ namespace Zametek.ViewModel.ProjectPlan
             rect.SetAttribute(@"height", height);
             rect.SetAttribute(@"width", width);
 
-            if (theme == BaseTheme.Light)
+            if (theme == GraphTheme.Light)
             {
                 rect.SetAttribute(@"fill", ColorHelper.SvgLightThemeBackground);
             }
-            if (theme == BaseTheme.Dark)
+            if (theme == GraphTheme.Dark)
             {
                 rect.SetAttribute(@"fill", ColorHelper.SvgDarkThemeBackground);
             }

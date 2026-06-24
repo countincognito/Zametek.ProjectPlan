@@ -2,8 +2,11 @@ using SkiaSharp;
 using Svg.Skia;
 using Zametek.Utility;
 
-namespace Zametek.ViewModel.ProjectPlan
+namespace Zametek.Graphs.ProjectPlan
 {
+    // Writes a recorded graph picture (either the interactive canvas or a rasterised MSAGL SVG) to a
+    // JPEG, PNG, PDF or SVG file. Moved into the control library so the reusable interactive graph
+    // view-models can export images without depending on the application.
     public class GraphImageExporter
         : IGraphImageExporter
     {
@@ -19,29 +22,29 @@ namespace Zametek.ViewModel.ProjectPlan
                 string fileExtension = Path.GetExtension(filename);
 
                 fileExtension.ValueSwitchOn()
-                    .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
+                    .Case($".{GraphFileExtensions.Jpeg}", _ =>
                     {
                         using var stream = File.OpenWrite(filename);
                         picture.ToImage(
                             stream, SKColors.White, SKEncodedImageFormat.Jpeg, quality: 100, scaleX: scaleX, scaleY: scaleY,
                             skColorType: SKColorType.Argb4444, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb());
                     })
-                    .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
+                    .Case($".{GraphFileExtensions.Png}", _ =>
                     {
                         using var stream = File.OpenWrite(filename);
                         picture.ToImage(
                             stream, SKColors.White, SKEncodedImageFormat.Png, quality: 100, scaleX: scaleX, scaleY: scaleY,
                             skColorType: SKColorType.Argb4444, skAlphaType: SKAlphaType.Premul, skColorSpace: SKColorSpace.CreateSrgb());
                     })
-                    .Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
+                    .Case($".{GraphFileExtensions.Pdf}", _ =>
                     {
                         picture.ToPdf(filename, SKColors.White, scaleX: 2, scaleY: 2);
                     })
-                    .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ =>
+                    .Case($".{GraphFileExtensions.Svg}", _ =>
                     {
                         picture.ToSvg(filename, SKColors.White, scaleX: 2, scaleY: 2);
                     })
-                    .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
+                    .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Messages.Message_UnableToSaveFile} {filename}"));
             });
         }
 
