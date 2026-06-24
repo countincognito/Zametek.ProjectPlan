@@ -1,40 +1,34 @@
-﻿using Zametek.Contract.ProjectPlan;
+using NPOI.SS.Formula.Functions;
+using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
     public sealed class VertexGraphBuilder
-        : VertexGraphBuilderBase<int, int, int, IDependentActivity, IEvent<int>>
+        : VertexGraphBuilder<int, int, int, IDependentActivity>
     {
-        #region Fields
-
-        private static readonly Func<int, IEvent<int>> s_EventGenerator = (id) =>
-        {
-            var output = new Event<int>(id);
-            output.SetAsRemovable();
-            return output;
-        };
-
-        #endregion
-
         #region Ctors
 
-        public VertexGraphBuilder(
-            Func<int> edgeIdGenerator,
-            Func<int> nodeIdGenerator)
-            : base(edgeIdGenerator, nodeIdGenerator, s_EventGenerator)
+        public VertexGraphBuilder(IIdGenerator<int> edgeIdGenerator)
+            : base(
+                  edgeIdGenerator,
+                  new RemovableEventGenerator<int>(),
+                  new VertexTarjanStronglyConnectedComponentsFinder<int, int, int, IDependentActivity>(),
+                  new VertexCriticalPathEngine<int, int, int, IDependentActivity>(),
+                  new PriorityListResourceScheduler<int, int, int>())
         {
         }
 
         public VertexGraphBuilder(
             Graph<int, IEvent<int>, IDependentActivity> graph,
-            Func<int> edgeIdGenerator,
-            Func<int> nodeIdGenerator)
+            IIdGenerator<int> edgeIdGenerator)
             : base(
                   graph,
                   edgeIdGenerator,
-                  nodeIdGenerator,
-                  s_EventGenerator)
+                  new RemovableEventGenerator<int>(),
+                  new VertexTarjanStronglyConnectedComponentsFinder<int, int, int, IDependentActivity>(),
+                  new VertexCriticalPathEngine<int, int, int, IDependentActivity>(),
+                  new PriorityListResourceScheduler<int, int, int>())
         {
             if (NormalNodes.Any())
             {
@@ -52,25 +46,24 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #endregion
 
-        #region Properties
+        public static VertexGraphBuilder CreateDependentActivityVertexGraphBuilder()
+        {
+            int edgeId = default;
+            return new VertexGraphBuilder(new PreviousIdGenerator<int>(edgeId));
+        }
 
-        public IDictionary<int, Node<int, IDependentActivity>> NodeLookupById => NodeLookup;
-
-        #endregion
+        public static VertexGraphBuilder CreateDependentActivityVertexGraphBuilder(Graph<int, IEvent<int>, IDependentActivity> vertexGraph)
+        {
+            int edgeId = vertexGraph.Edges.Select(x => x.Id).DefaultIfEmpty().Min();
+            return new VertexGraphBuilder(vertexGraph, new PreviousIdGenerator<int>(edgeId));
+        }
 
         #region Overrides
 
         public override object CloneObject()
         {
             Graph<int, IEvent<int>, IDependentActivity> vertexGraphCopy = ToGraph();
-            int minNodeId = vertexGraphCopy.Nodes.Select(x => x.Id).DefaultIfEmpty().Min();
-            minNodeId = minNodeId - 1;
-            int minEdgeId = vertexGraphCopy.Edges.Select(x => x.Id).DefaultIfEmpty().Min();
-            minEdgeId = minEdgeId - 1;
-            return new VertexGraphBuilder<int, int, int, IDependentActivity>(
-                vertexGraphCopy,
-                () => minEdgeId = minEdgeId - 1,
-                () => minNodeId = minNodeId - 1);
+            return CreateDependentActivityVertexGraphBuilder(vertexGraphCopy);
         }
 
         #endregion
