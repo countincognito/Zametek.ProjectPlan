@@ -99,8 +99,6 @@
 											Command="{Binding Path=SetSelectedManagedActivitySeveritiesCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />
 				</EventTriggerBehavior>
-
-				<!--<local:DataGridCacheScrollBehavior />-->
 			</Interaction.Behaviors>
 
 			<DataGrid.Columns>

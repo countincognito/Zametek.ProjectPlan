@@ -120,8 +120,6 @@
 											Command="{Binding Path=SetSelectedManagedWorkStreamsCommand, Mode=OneWay}"
 											PassEventArgsToCommand="True" />
 				</EventTriggerBehavior>
-
-				<!--<local:DataGridCacheScrollBehavior />-->
 			</Interaction.Behaviors>
 
 			<DataGrid.Columns>

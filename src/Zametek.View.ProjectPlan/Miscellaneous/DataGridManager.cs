@@ -10,6 +10,7 @@ namespace Zametek.View.ProjectPlan
         : IDataGridManager
     {
         private readonly ConcurrentDictionary<string, DataGridModel> m_DataGridModels;
+        private readonly ConcurrentDictionary<string, object> m_ScrollItems;
         private readonly ISettingService m_SettingService;
 
         public DataGridManager(ISettingService settingService)
@@ -17,6 +18,7 @@ namespace Zametek.View.ProjectPlan
             ArgumentNullException.ThrowIfNull(settingService);
             ResetActions = [];
             m_DataGridModels = [];
+            m_ScrollItems = [];
             m_SettingService = settingService;
 
             Initialize();
@@ -68,6 +70,41 @@ namespace Zametek.View.ProjectPlan
             }
         }
 
+        // Scroll positions are kept in memory only (never flushed to settings) so they
+        // persist between tab changes within a session but reset whenever a project or
+        // project scenario is loaded or reset (see ClearScrollItems).
+
+        public object? GetScrollItem(string name)
+        {
+            if (m_ScrollItems.TryGetValue(name, out object? item))
+            {
+                return item;
+            }
+            return null;
+        }
+
+        public void SetScrollItem(string name, object? item)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return;
+            }
+
+            if (item is null)
+            {
+                m_ScrollItems.TryRemove(name, out _);
+            }
+            else
+            {
+                m_ScrollItems[name] = item;
+            }
+        }
+
+        public void ClearScrollItems()
+        {
+            m_ScrollItems.Clear();
+        }
+
         #endregion
 
         #region IDisposable Members
@@ -84,6 +121,7 @@ namespace Zametek.View.ProjectPlan
             if (disposing)
             {
                 ResetActions.Clear();
+                m_ScrollItems.Clear();
             }
 
             m_Disposed = true;

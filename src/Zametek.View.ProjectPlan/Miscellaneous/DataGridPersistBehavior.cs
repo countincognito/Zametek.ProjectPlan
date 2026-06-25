@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
@@ -23,6 +24,15 @@ namespace Zametek.View.ProjectPlan
         private readonly Dictionary<DataGridColumn, string> m_HeaderTextCache;
         private DataGrid? m_DataGrid;
         private bool m_IsInitialized;
+
+        // Scroll-position persistence (functionally distinct from the column layout above).
+        // The top visible item is cached in the singleton manager keyed by grid name so it
+        // survives the view being re-materialised on a tab change. Mechanics are adapted from
+        // the former DataGridCacheScrollBehavior; only the storage location differs.
+        private ScrollBar? m_VerticalScrollBar;
+        private bool m_IsRestoringScroll;
+        private const double c_RowHeightCorrection = 1.0;
+        private const double c_RowScrollThreshold = 0.5;
 
         public DataGridPersistBehavior(IDataGridManager dataGridManager)
         {
@@ -221,6 +231,9 @@ namespace Zametek.View.ProjectPlan
 
             // Listen for layout changes to capture user resizing
             m_DataGrid.LayoutUpdated += OnLayoutUpdated;
+
+            // Capture the vertical scrollbar from the template for scroll persistence
+            m_DataGrid.TemplateApplied += OnTemplateApplied;
         }
 
         protected override void OnDetaching()
@@ -231,7 +244,9 @@ namespace Zametek.View.ProjectPlan
                 m_DataGrid.Loaded -= OnLoaded;
                 m_DataGrid.ColumnReordered -= OnColumnReordered;
                 m_DataGrid.LayoutUpdated -= OnLayoutUpdated;
+                m_DataGrid.TemplateApplied -= OnTemplateApplied;
             }
+            m_VerticalScrollBar = null;
             m_HeaderTextCache.Clear();
             m_GridName = string.Empty;
             base.OnDetaching();
@@ -275,6 +290,7 @@ namespace Zametek.View.ProjectPlan
             RoutedEventArgs e)
         {
             LoadPersistedDataGridModel();
+            RestoreScrollPosition();
         }
 
         private void OnColumnReordered(
@@ -289,6 +305,107 @@ namespace Zametek.View.ProjectPlan
             EventArgs e)
         {
             SavePersistedDataGridModel();
+            SaveScrollPosition();
         }
+
+        #region Scroll persistence
+
+        private void OnTemplateApplied(
+            object? sender,
+            TemplateAppliedEventArgs e)
+        {
+            m_VerticalScrollBar = e.NameScope.Find<ScrollBar>(@"PART_VerticalScrollbar");
+        }
+
+        // Records the item currently at the top of the viewport so it can be restored when
+        // the grid is rebuilt on a tab change. Skipped while a restore is in flight so the
+        // freshly-loaded (top) position does not overwrite the value we are about to apply.
+        private void SaveScrollPosition()
+        {
+            if (m_IsRestoringScroll
+                || m_DataGrid is null
+                || m_VerticalScrollBar is null
+                || !m_DataGrid.IsLoaded
+                || string.IsNullOrEmpty(m_GridName)
+                || m_DataGrid.ItemsSource is null)
+            {
+                return;
+            }
+
+            double rowHeight = m_DataGrid.RowHeight + c_RowHeightCorrection;
+
+            if (rowHeight <= 0.0)
+            {
+                return;
+            }
+
+            double scrollBarValue = m_VerticalScrollBar.Value;
+            object? topItem = null;
+            double scrollValue = 0.0;
+
+            foreach (object item in m_DataGrid.ItemsSource)
+            {
+                // Cache to this row if the scroll position is within the threshold of it,
+                // otherwise to the next row once the running offset passes the scroll value.
+                if ((scrollBarValue - scrollValue) / rowHeight < c_RowScrollThreshold)
+                {
+                    topItem = item;
+                    break;
+                }
+                else if (scrollValue >= scrollBarValue)
+                {
+                    topItem = item;
+                    break;
+                }
+
+                scrollValue += rowHeight;
+            }
+
+            m_DataGridManager.SetScrollItem(m_GridName, topItem);
+        }
+
+        // Restores the cached top item. The actual scroll is deferred to Background priority
+        // so it runs after the grid has realised its rows; a guard flag suppresses interim
+        // saves until the restore has settled.
+        private void RestoreScrollPosition()
+        {
+            if (m_DataGrid is null
+                || string.IsNullOrEmpty(m_GridName))
+            {
+                return;
+            }
+
+            object? topItem = m_DataGridManager.GetScrollItem(m_GridName);
+
+            if (topItem is null)
+            {
+                return;
+            }
+
+            m_IsRestoringScroll = true;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (m_DataGrid is not null
+                    && m_DataGrid.ItemsSource is not null)
+                {
+                    object? lastItem = m_DataGrid.ItemsSource.Cast<object>().LastOrDefault();
+
+                    // Scroll to the last item first, then to the target, so the target
+                    // settles near the top of the viewport rather than just into view.
+                    if (lastItem is not null)
+                    {
+                        m_DataGrid.ScrollIntoView(lastItem, null);
+                    }
+
+                    m_DataGrid.ScrollIntoView(topItem, null);
+                }
+            }, DispatcherPriority.Background);
+
+            // Lift the guard after the restore above has run (same priority, queued later).
+            Dispatcher.UIThread.Post(() => m_IsRestoringScroll = false, DispatcherPriority.Background);
+        }
+
+        #endregion
     }
 }
