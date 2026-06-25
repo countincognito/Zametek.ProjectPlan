@@ -11,6 +11,7 @@
   <UserControl.Resources>
     <g:ThemeToBackgroundConverter x:Key="themeToBackgroundConverter"/>
     <converters:EnumToBoolConverter x:Key="enumToBool"/>
+    <g:HalfNegativeConverter x:Key="halfNegative"/>
   </UserControl.Resources>
 
   <DockPanel>
@@ -144,8 +145,12 @@
                            Fill="{Binding Path=Stroke, Mode=OneWay}"
                            Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"
                            ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}"/>
-                  <!-- Optional edge label, lifted just off the line at the edge midpoint. -->
-                  <TextBlock Canvas.Left="{Binding Path=LabelX, Mode=OneWay}"
+                  <!-- Optional edge label, centred on the lifted edge midpoint. LabelX/LabelY give
+                       the anchor point; the RenderTransform shifts the TextBlock by half its own
+                       rendered size so it is centred on that point (matching the export renderer)
+                       rather than starting there and spilling over the successor node. -->
+                  <TextBlock Name="edgeLabel"
+                             Canvas.Left="{Binding Path=LabelX, Mode=OneWay}"
                              Canvas.Top="{Binding Path=LabelY, Mode=OneWay}"
                              Text="{Binding Path=Label, Mode=OneWay}"
                              IsVisible="{Binding Path=ShowLabel, Mode=OneWay}"
@@ -153,7 +158,12 @@
                              Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"
                              FontFamily="Consolas"
                              FontSize="12"
-                             ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}"/>
+                             ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}">
+                    <TextBlock.RenderTransform>
+                      <TranslateTransform X="{Binding #edgeLabel.Bounds.Width, Converter={StaticResource halfNegative}}"
+                                          Y="{Binding #edgeLabel.Bounds.Height, Converter={StaticResource halfNegative}}"/>
+                    </TextBlock.RenderTransform>
+                  </TextBlock>
                 </Canvas>
               </DataTemplate>
             </ItemsControl.ItemTemplate>

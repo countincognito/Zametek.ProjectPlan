@@ -238,8 +238,8 @@ namespace Zametek.Graphs.Avalonia
 
         public IBrush LabelBrush { get; }
 
-        // Top-left anchor for the label: the curve midpoint, lifted perpendicular to the chord so it
-        // sits just off the edge rather than on top of it.
+        // Anchor point the label is centred on (by the view's RenderTransform): the curve midpoint,
+        // lifted perpendicular to the chord so it sits just off the edge rather than on top of it.
         public double LabelX => LabelAnchor.X;
 
         public double LabelY => LabelAnchor.Y;
