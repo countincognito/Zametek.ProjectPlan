@@ -118,9 +118,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
             m_LayoutEngine = layoutEngine;
 
-            m_ArrowGraphData = string.Empty;
-            m_ArrowGraphImage = new SvgImage();
-
             m_IsBusy = this
                 .WhenAnyValue(agm => agm.m_CoreViewModel.IsBusy)
                 .ToProperty(this, agm => agm.IsBusy);
@@ -218,16 +215,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Properties
 
-        private SvgImage m_ArrowGraphImage;
-        public SvgImage ArrowGraphImage
-        {
-            get => m_ArrowGraphImage;
-            private set
-            {
-                this.RaiseAndSetIfChanged(ref m_ArrowGraphImage, value);
-            }
-        }
-
         // The reusable interactive viewer the embedded InteractiveGraphView binds to.
         public IInteractiveGraph Interactive => m_Interactive;
 
@@ -309,19 +296,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private string m_ArrowGraphData;
-        public string ArrowGraphData
-        {
-            get => m_ArrowGraphData;
-            private set
-            {
-                lock (m_Lock)
-                {
-                    this.RaiseAndSetIfChanged(ref m_ArrowGraphData, value);
-                }
-            }
-        }
-
         private readonly ObservableAsPropertyHelper<BaseTheme> m_BaseTheme;
         public BaseTheme BaseTheme => m_BaseTheme.Value;
 
@@ -330,52 +304,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         // Export to a specific file. Used by the headless CLI, so it exports the fixed MSAGL layout
         // (which needs no populated interactive surface) rather than the on-screen canvas.
-        public Task SaveArrowGraphImageFileAsync(string? filename)
+        public Task SaveFixedLayoutArrowGraphImageFileAsync(string? filename)
         {
-            return m_Interactive.SaveImageAsync(filename, GraphImageSource.FixedLayout);
-        }
-
-        public void BuildArrowGraphDiagramData()
-        {
-            CascadeDiagnostics.RecordBuild($@"{nameof(ArrowGraphManagerViewModel)}.{nameof(BuildArrowGraphDiagramData)}");
-            byte[]? data = null;
-
-            lock (m_Lock)
-            {
-                if (!HasCompilationErrors)
-                {
-                    data = m_LayoutEngine.RenderSvg(
-                        BuildArrowDiagram(multiLineEdgeLabels: false),
-                        m_Interactive.Configuration,
-                        m_CoreViewModel.BaseTheme.ToGraphTheme());
-                }
-            }
-
-            ArrowGraphData = data?.ByteArrayToString() ?? string.Empty;
-        }
-
-        public void BuildArrowGraphDiagramImage()
-        {
-            CascadeDiagnostics.RecordBuild($@"{nameof(ArrowGraphManagerViewModel)}.{nameof(BuildArrowGraphDiagramImage)}");
-            SvgSource? source = null;
-
-            lock (m_Lock)
-            {
-                string arrowGraphData = ArrowGraphData;
-                if (!string.IsNullOrWhiteSpace(arrowGraphData))
-                {
-                    source = SvgSource.LoadFromSvg(arrowGraphData);
-                }
-            }
-
-            Dispatcher.UIThread.Invoke(() =>
-            {
-                var image = new SvgImage
-                {
-                    Source = source
-                };
-                ArrowGraphImage = image;
-            });
+            return m_Interactive.SaveImageAsync(filename, GraphImageSource.FixedLayout, FixedLayoutGraphType.Arrow);
         }
 
         // Push the interactive arrangement into the Core (which persists it and marks the scenario

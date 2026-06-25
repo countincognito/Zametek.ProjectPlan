@@ -202,7 +202,10 @@ namespace Zametek.Graphs.Avalonia
             }
         }
 
-        public async Task SaveImageAsync(string? filename, GraphImageSource source)
+        public async Task SaveImageAsync(
+            string? filename,
+            GraphImageSource source,
+            FixedLayoutGraphType imageType)
         {
             if (string.IsNullOrWhiteSpace(filename))
             {
@@ -233,7 +236,7 @@ namespace Zametek.Graphs.Avalonia
 
                 if (isImageFormat)
                 {
-                    await SaveImageFormatAsync(filename, fileExtension, source);
+                    await SaveImageFormatAsync(filename, fileExtension, source, imageType);
                 }
 
                 if (data is not null)
@@ -764,7 +767,7 @@ namespace Zametek.Graphs.Avalonia
                 string? filename = await m_Host.PickSaveFileAsync();
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    await SaveImageAsync(filename, GraphImageSource.InteractiveCanvas);
+                    await SaveImageAsync(filename, GraphImageSource.InteractiveCanvas, FixedLayoutGraphType.None);
                 }
             }
             catch (Exception ex)
@@ -773,38 +776,81 @@ namespace Zametek.Graphs.Avalonia
             }
         }
 
-        private async Task SaveImageFormatAsync(string filename, string fileExtension, GraphImageSource source)
+        private async Task SaveImageFormatAsync(
+            string filename,
+            string fileExtension,
+            GraphImageSource source,
+            FixedLayoutGraphType imageType)
         {
             if (source == GraphImageSource.InteractiveCanvas)
             {
-                // Export exactly what is on the interactive canvas (the user's dragged arrangement).
-                // The picture is vector, so SVG/PDF stay crisp while PNG/JPEG render from the same
-                // source.
-                SKPicture? picture = null;
-                Dispatcher.UIThread.Invoke(() =>
-                    picture = InteractiveGraphRenderer.Render(GraphNodes, GraphEdges));
-
-                if (picture is not null)
-                {
-                    using (picture)
-                    {
-                        await GraphImageExporter.SaveGraphImageAsync(picture, filename, scaleX: 2, scaleY: 2);
-                    }
-                }
+                await SaveInteractiveCanvasImageFormatAsync(filename);
                 return;
             }
+            else if (source == GraphImageSource.FixedLayout)
+            {
+                if (imageType == FixedLayoutGraphType.Arrow)
+                {
+                    await SaveFixedLayoutImageFormatAsync(
+                        m_Host,
+                        m_LayoutEngine,
+                        GraphConfigurations.Arrow,
+                        filename,
+                        fileExtension);
+                    return;
+                }
+                else if (imageType == FixedLayoutGraphType.Vertex)
+                {
+                    await SaveFixedLayoutImageFormatAsync(
+                        m_Host,
+                        m_LayoutEngine,
+                        GraphConfigurations.Vertex,
+                        filename,
+                        fileExtension);
+                    return;
+                }
+            }
+        }
 
+        private async Task SaveInteractiveCanvasImageFormatAsync(string filename)
+        {
+            // Export exactly what is on the interactive canvas (the user's dragged arrangement).
+            // The picture is vector, so SVG/PDF stay crisp while PNG/JPEG render from the same
+            // source.
+            SKPicture? picture = null;
+            Dispatcher.UIThread.Invoke(() =>
+                picture = InteractiveGraphRenderer.Render(GraphNodes, GraphEdges));
+
+            if (picture is not null)
+            {
+                using (picture)
+                {
+                    await GraphImageExporter.SaveGraphImageAsync(picture, filename, scaleX: 2, scaleY: 2);
+                }
+            }
+        }
+
+        private static async Task SaveFixedLayoutImageFormatAsync(
+            IGraphHost graphHost,
+            IGraphLayoutEngine layoutEngine,
+            GraphConfiguration graphConfiguration,
+            string filename,
+            string fileExtension)
+        {
+            ArgumentNullException.ThrowIfNull(graphHost);
+            ArgumentNullException.ThrowIfNull(layoutEngine);
+            ArgumentNullException.ThrowIfNull(graphConfiguration);
             // FixedLayout: built straight from the diagram, so no interactive surface is needed
             // (this is the path a headless caller such as the CLI uses).
-            if (m_Host.HasCompilationErrors)
+            if (graphHost.HasCompilationErrors)
             {
                 return;
             }
 
-            byte[] svgData = m_LayoutEngine.RenderSvg(
-                m_Host.BuildDiagram(multiLineEdgeLabels: false),
-                m_Config,
-                m_Host.Theme);
+            byte[] svgData = layoutEngine.RenderSvg(
+                graphHost.BuildDiagram(multiLineEdgeLabels: false),
+                graphConfiguration,
+                graphHost.Theme);
 
             if (string.Equals(fileExtension, $".{GraphFileExtensions.Svg}", StringComparison.OrdinalIgnoreCase))
             {

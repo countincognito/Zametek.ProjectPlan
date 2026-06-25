@@ -1,4 +1,4 @@
-﻿using System.Windows.Input;
+using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
@@ -14,16 +14,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowNames { get; set; }
 
-        string ArrowGraphData { get; }
-
         BaseTheme BaseTheme { get; }
 
         ICommand SaveArrowGraphImageFileCommand { get; }
 
-        Task SaveArrowGraphImageFileAsync(string? filename);
-
-        void BuildArrowGraphDiagramData();
-
-        void BuildArrowGraphDiagramImage();
+        Task SaveFixedLayoutArrowGraphImageFileAsync(string? filename);
     }
 }

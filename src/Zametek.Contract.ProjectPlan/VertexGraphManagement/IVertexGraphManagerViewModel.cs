@@ -1,4 +1,4 @@
-﻿using System.Windows.Input;
+using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
@@ -12,18 +12,10 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
-        //bool ShowNames { get; set; }
-
-        string VertexGraphData { get; }
-
         BaseTheme BaseTheme { get; }
 
         ICommand SaveVertexGraphImageFileCommand { get; }
 
-        Task SaveVertexGraphImageFileAsync(string? filename);
-
-        void BuildVertexGraphDiagramData();
-
-        void BuildVertexGraphDiagramImage();
+        Task SaveFixedLayoutVertexGraphImageFileAsync(string? filename);
     }
 }

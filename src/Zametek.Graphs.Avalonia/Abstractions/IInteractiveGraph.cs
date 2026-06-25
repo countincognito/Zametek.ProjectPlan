@@ -73,6 +73,6 @@ namespace Zametek.Graphs.Avalonia
 
         // Export the graph to a file, choosing between the live interactive canvas and the fixed
         // MSAGL layout. GraphML/GraphViz exports are independent of the chosen source.
-        Task SaveImageAsync(string? filename, GraphImageSource source);
+        Task SaveImageAsync(string? filename, GraphImageSource source, FixedLayoutGraphType imageType);
     }
 }

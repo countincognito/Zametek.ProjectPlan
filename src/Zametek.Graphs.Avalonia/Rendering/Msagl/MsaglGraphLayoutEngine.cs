@@ -198,7 +198,7 @@ namespace Zametek.Graphs.Avalonia
                 });
             }
 
-            List<GraphEdgeLayoutModel> edges = diagramGraph.Edges
+            List<GraphEdgeLayoutModel> edges = [.. diagramGraph.Edges
                 .Select(x => new GraphEdgeLayoutModel
                 {
                     Id = x.Id,
@@ -210,8 +210,7 @@ namespace Zametek.Graphs.Avalonia
                     Label = x.Label,
                     ShowLabel = x.ShowLabel,
                     Tooltip = x.Tooltip,
-                })
-                .ToList();
+                })];
 
             return new GraphLayoutModel
             {

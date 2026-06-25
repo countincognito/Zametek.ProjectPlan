@@ -3,10 +3,11 @@ using CommandLine.Text;
 using ConsoleTables;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ReactiveUI.Builder;
 using Serilog;
 using Zametek.Common.ProjectPlan;
-using Zametek.Graphs.Avalonia;
 using Zametek.Contract.ProjectPlan;
+using Zametek.Graphs.Avalonia;
 using Zametek.Utility;
 using Zametek.ViewModel.ProjectPlan;
 
@@ -21,6 +22,13 @@ namespace Zametek.ProjectPlan.CommandLine
         {
             try
             {
+                // ReactiveUI 23 requires explicit initialization before any WhenAnyValue is used.
+                // The desktop app does this via Avalonia's .UseReactiveUI(); this headless CLI has no
+                // UI platform, so initialize the core (non-UI) ReactiveUI services directly.
+                RxAppBuilder.CreateReactiveUIBuilder()
+                    .WithCoreServices()
+                    .BuildApp();
+
                 var parser = new Parser(with =>
                 {
                     with.CaseInsensitiveEnumValues = true;
@@ -70,6 +78,8 @@ namespace Zametek.ProjectPlan.CommandLine
 
                         services.AddSingleton(new Data.ProjectPlan.VersionMapper());
                         services.AddSingleton(new ProjectPlanMapper());
+
+                        services.AddSingleton<IDataGridManager, DataGridManager>();
                     })
                     .UseSerilog()
                     .Build();
@@ -248,14 +258,11 @@ namespace Zametek.ProjectPlan.CommandLine
                                     throw new InvalidOperationException($@"Directory {graphDirectory} does not exist");
                                 }
 
-                                arrow.BuildArrowGraphDiagramData();
-                                arrow.BuildArrowGraphDiagramImage();
-
                                 string graphOutputFile = Path.Combine(
                                     graphDirectory,
                                     $@"{settingService.ProjectTitle}{Resource.ProjectPlan.Suffixes.Suffix_ArrowChart}.{graphFormat.GetDescription().ToLowerInvariant()}");
 
-                                arrow.SaveArrowGraphImageFileAsync(graphOutputFile).Wait();
+                                arrow.SaveFixedLayoutArrowGraphImageFileAsync(graphOutputFile).Wait();
                             }
                         }
 
@@ -271,14 +278,11 @@ namespace Zametek.ProjectPlan.CommandLine
                                     throw new InvalidOperationException($@"Directory {graphDirectory} does not exist");
                                 }
 
-                                vertex.BuildVertexGraphDiagramData();
-                                vertex.BuildVertexGraphDiagramImage();
-
                                 string graphOutputFile = Path.Combine(
                                     graphDirectory,
                                     $@"{settingService.ProjectTitle}{Resource.ProjectPlan.Suffixes.Suffix_VertexChart}.{graphFormat.GetDescription().ToLowerInvariant()}");
 
-                                vertex.SaveVertexGraphImageFileAsync(graphOutputFile).Wait();
+                                vertex.SaveFixedLayoutVertexGraphImageFileAsync(graphOutputFile).Wait();
                             }
                         }
 

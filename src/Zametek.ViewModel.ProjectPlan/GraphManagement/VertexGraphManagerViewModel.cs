@@ -119,9 +119,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
             m_LayoutEngine = layoutEngine;
 
-            m_VertexGraphData = string.Empty;
-            m_VertexGraphImage = new SvgImage();
-
             m_IsBusy = this
                 .WhenAnyValue(agm => agm.m_CoreViewModel.IsBusy)
                 .ToProperty(this, agm => agm.IsBusy);
@@ -212,16 +209,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Properties
 
-        private SvgImage m_VertexGraphImage;
-        public SvgImage VertexGraphImage
-        {
-            get => m_VertexGraphImage;
-            private set
-            {
-                this.RaiseAndSetIfChanged(ref m_VertexGraphImage, value);
-            }
-        }
-
         // The reusable interactive viewer the embedded InteractiveGraphView binds to.
         public IInteractiveGraph Interactive => m_Interactive;
 
@@ -301,19 +288,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
-        private string m_VertexGraphData;
-        public string VertexGraphData
-        {
-            get => m_VertexGraphData;
-            private set
-            {
-                lock (m_Lock)
-                {
-                    this.RaiseAndSetIfChanged(ref m_VertexGraphData, value);
-                }
-            }
-        }
-
         private readonly ObservableAsPropertyHelper<BaseTheme> m_BaseTheme;
         public BaseTheme BaseTheme => m_BaseTheme.Value;
 
@@ -322,52 +296,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         // Export to a specific file. Used by the headless CLI, so it exports the fixed MSAGL layout
         // (which needs no populated interactive surface) rather than the on-screen canvas.
-        public Task SaveVertexGraphImageFileAsync(string? filename)
+        public Task SaveFixedLayoutVertexGraphImageFileAsync(string? filename)
         {
-            return m_Interactive.SaveImageAsync(filename, GraphImageSource.FixedLayout);
-        }
-
-        public void BuildVertexGraphDiagramData()
-        {
-            CascadeDiagnostics.RecordBuild($@"{nameof(VertexGraphManagerViewModel)}.{nameof(BuildVertexGraphDiagramData)}");
-            byte[]? data = null;
-
-            lock (m_Lock)
-            {
-                if (!HasCompilationErrors)
-                {
-                    data = m_LayoutEngine.RenderSvg(
-                        BuildVertexDiagram(),
-                        m_Interactive.Configuration,
-                        m_CoreViewModel.BaseTheme.ToGraphTheme());
-                }
-            }
-
-            VertexGraphData = data?.ByteArrayToString() ?? string.Empty;
-        }
-
-        public void BuildVertexGraphDiagramImage()
-        {
-            CascadeDiagnostics.RecordBuild($@"{nameof(VertexGraphManagerViewModel)}.{nameof(BuildVertexGraphDiagramImage)}");
-            SvgSource? source = null;
-
-            lock (m_Lock)
-            {
-                string vertexGraphData = VertexGraphData;
-                if (!string.IsNullOrWhiteSpace(vertexGraphData))
-                {
-                    source = SvgSource.LoadFromSvg(vertexGraphData);
-                }
-            }
-
-            Dispatcher.UIThread.Invoke(() =>
-            {
-                var image = new SvgImage
-                {
-                    Source = source
-                };
-                VertexGraphImage = image;
-            });
+            return m_Interactive.SaveImageAsync(filename, GraphImageSource.FixedLayout, FixedLayoutGraphType.Vertex);
         }
 
         // Push the interactive arrangement into the Core (which persists it and marks the scenario
