@@ -160,6 +160,17 @@ namespace Zametek.Graphs.Avalonia
             private set => this.RaiseAndSetIfChanged(ref m_WorkspaceHeight, value);
         }
 
+        // Persisted viewport transform (see IInteractiveGraph). Plain stored state owned by the
+        // InteractiveGraphView, which writes on zoom/pan/fit and reads back when its control is
+        // rebuilt; nothing binds to these, so no change notification is needed.
+        public double ViewZoom { get; set; }
+
+        public double ViewPanX { get; set; }
+
+        public double ViewPanY { get; set; }
+
+        public bool HasViewState { get; set; }
+
         public ICommand SaveGraphImageFileCommand { get; }
 
         public ICommand ChangeEdgeRoutingModeCommand { get; }
@@ -182,6 +193,7 @@ namespace Zametek.Graphs.Avalonia
                     this.RaisePropertyChanged(nameof(Theme));
                     this.RaisePropertyChanged(nameof(ShowNames));
                     RerouteEdges();
+                    GraphRefreshed?.Invoke(this, EventArgs.Empty);
                 });
             }
             catch (Exception ex)
@@ -247,6 +259,18 @@ namespace Zametek.Graphs.Avalonia
             LayoutChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        // Reset the persisted viewport so the next graph is framed from scratch: zoom back to x1, pan to
+        // the origin, clear HasViewState. Raises ViewReset so an attached view drops its live transform;
+        // a detached view picks it up via HasViewState when it next attaches.
+        public void ResetView()
+        {
+            ViewZoom = 1.0;
+            ViewPanX = 0.0;
+            ViewPanY = 0.0;
+            HasViewState = false;
+            ViewReset?.Invoke(this, EventArgs.Empty);
+        }
+
         // Remember a node the user has dragged so its position survives the next re-layout.
         public void OnNodeMoved(GraphNodeViewModel node)
         {
@@ -266,6 +290,15 @@ namespace Zametek.Graphs.Avalonia
         // Raised when the user changes the arrangement (a drag-end or a reset), so the host can capture
         // the new layout for persistence. Seeding a saved layout does NOT raise it.
         public event EventHandler? LayoutChanged;
+
+        // Raised when ResetView clears the viewport (project scenario reset/closed), so an attached
+        // InteractiveGraphView drops its live zoom/pan and re-frames the next graph from scratch.
+        public event EventHandler? ViewReset;
+
+        // Raised after the graph is rebuilt or a saved layout is seeded, so an attached view can re-frame
+        // a fresh load even when the workspace size is unchanged (e.g. switching between scenarios with an
+        // identical graph but different layouts). The view coalesces and defers it so it runs after seed.
+        public event EventHandler? GraphRefreshed;
 
         // True once the user has manually dragged a node this session, so a save captures the live
         // arrangement rather than round-tripping the layout that was loaded.
@@ -307,6 +340,11 @@ namespace Zametek.Graphs.Avalonia
                 RecomputeWorkspace();
                 RerouteEdges();
             }
+
+            // The seed is the final step of a scenario load, so signal a re-frame here too: an identical
+            // graph with a different saved layout changes node positions but not the workspace size, so
+            // the view's size-driven auto-fit would not otherwise fire.
+            GraphRefreshed?.Invoke(this, EventArgs.Empty);
         }
 
         // Apply a saved edge routing mode (e.g. when a scenario is loaded), swapping the configuration

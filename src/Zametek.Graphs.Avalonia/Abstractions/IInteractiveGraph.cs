@@ -29,6 +29,26 @@ namespace Zametek.Graphs.Avalonia
 
         double WorkspaceHeight { get; }
 
+        // Persisted viewport transform (zoom + pan offset). The InteractiveGraphView writes these as
+        // the user zooms/pans/fits, and reads them back when its control is rebuilt (e.g. after a dock
+        // tab switch), so the framing survives the view being re-materialised. HasViewState is false
+        // until the view has been framed at least once (before that the view does its initial auto-fit).
+        double ViewZoom { get; set; }
+
+        double ViewPanX { get; set; }
+
+        double ViewPanY { get; set; }
+
+        bool HasViewState { get; set; }
+
+        // Raised by ResetView so an attached InteractiveGraphView drops its live zoom/pan and re-frames
+        // the next graph from scratch.
+        event EventHandler? ViewReset;
+
+        // Raised after the graph is rebuilt or re-seeded, so the view re-frames a fresh load even when the
+        // workspace size is unchanged (e.g. switching between scenarios with an identical graph).
+        event EventHandler? GraphRefreshed;
+
         ICommand SaveGraphImageFileCommand { get; }
 
         // Set the edge routing mode. The menu's radio items bind to this, passing the chosen
@@ -42,6 +62,11 @@ namespace Zametek.Graphs.Avalonia
         void EnsureWorkspaceContains(GraphNodeViewModel node);
 
         void ResetLayout();
+
+        // Reset the viewport: zoom back to x1, pan to the origin, and clear the persisted framing
+        // (ViewZoom/ViewPanX/ViewPanY/HasViewState) so the next graph is framed from scratch. Used when
+        // the project scenario is reset or closed.
+        void ResetView();
 
         // Rebuild the displayed graph from the host's current data and re-run the layout.
         void Refresh();

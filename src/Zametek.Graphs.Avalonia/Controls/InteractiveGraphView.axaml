@@ -40,7 +40,8 @@
             PointerPressed="Viewport_PointerPressed"
             PointerMoved="Viewport_PointerMoved"
             PointerReleased="Viewport_PointerReleased"
-            PointerWheelChanged="Zoom_PointerWheelChanged">
+            PointerWheelChanged="Zoom_PointerWheelChanged"
+            SizeChanged="Graph_SizeChanged">
       <Border.ContextMenu>
         <ContextMenu>
           <MenuItem Header="{x:Static g:Menus.Menu_FitToView}"
@@ -106,7 +107,7 @@
                 Height="{Binding Path=WorkspaceHeight, Mode=OneWay}"
                 ClipToBounds="False"
                 RenderTransformOrigin="0,0"
-                SizeChanged="GraphCanvas_SizeChanged">
+                SizeChanged="Graph_SizeChanged">
           <Canvas.RenderTransform>
             <ScaleTransform ScaleX="{Binding Value, ElementName=zoomer, Mode=OneWay}"
                             ScaleY="{Binding Value, ElementName=zoomer, Mode=OneWay}"/>

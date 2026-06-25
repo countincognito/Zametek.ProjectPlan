@@ -4,6 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
 
 namespace Zametek.Graphs.Avalonia
 {
@@ -24,6 +25,15 @@ namespace Zametek.Graphs.Avalonia
         private double m_PanStartY;
         private Point m_LastPointer;
         private bool m_HasCentered;
+        // Suppresses SaveViewState while persisted values are pushed back into the slider/pan
+        // transform, so the slider's own ValueChanged does not re-save an interim pan.
+        private bool m_Restoring;
+        // The interactive graph we have hooked ViewReset/GraphRefreshed on, tracked so the subscription
+        // survives the data context resolving after attach (and is cleaned up exactly once).
+        private IInteractiveGraph? m_ViewModelEventsSource;
+        // Coalesces re-frame requests: only the most recently scheduled one actually frames, and it runs
+        // at Background priority so it lands after the rebuild + seed have applied the final positions.
+        private int m_FramingToken;
         private const double c_SliderDelta = 0.1;
 
         public InteractiveGraphView()
@@ -34,14 +44,126 @@ namespace Zametek.Graphs.Avalonia
 
         private double Zoom => zoomer.Value;
 
-        // Frame the graph in the viewport the first time there are nodes and both have a size;
-        // afterwards the user's pan/zoom is preserved across re-layouts. The auto-fit only shrinks
-        // to fit (it never enlarges a small graph past its natural size), so the graph lands fully
-        // on screen without surprising zoom-in.
-        private void GraphCanvas_SizeChanged(object? sender, SizeChangedEventArgs e)
+        // When the control is rebuilt (e.g. a dock tab switch) restore the persisted framing as soon
+        // as it attaches. If the data context is not bound yet, Graph_SizeChanged restores once it is.
+        // The first ever framing (HasViewState false) is left to the auto-fit below.
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            base.OnAttachedToVisualTree(e);
+
+            // Hook the view-model events here and in OnDataContextChanged: whichever happens with the data
+            // context bound wins (the {Binding Interactive} often resolves after attach), so neither the
+            // live reset nor the re-frame is missed.
+            HookViewModelEvents();
+            TryFrameGraph();
+        }
+
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            UnhookViewModelEvents();
+            base.OnDetachedFromVisualTree(e);
+        }
+
+        protected override void OnDataContextChanged(EventArgs e)
+        {
+            base.OnDataContextChanged(e);
+            HookViewModelEvents();
+        }
+
+        // Subscribe to the current data context's ViewReset/GraphRefreshed (idempotent: re-points the
+        // handlers when the data context changes, no-ops when it has not).
+        private void HookViewModelEvents()
+        {
+            IInteractiveGraph? current = DataContext as IInteractiveGraph;
+            if (ReferenceEquals(current, m_ViewModelEventsSource))
+            {
+                return;
+            }
+
+            UnhookViewModelEvents();
+
+            if (current is not null)
+            {
+                current.ViewReset += OnViewReset;
+                current.GraphRefreshed += OnGraphRefreshed;
+                m_ViewModelEventsSource = current;
+            }
+        }
+
+        private void UnhookViewModelEvents()
+        {
+            if (m_ViewModelEventsSource is not null)
+            {
+                m_ViewModelEventsSource.ViewReset -= OnViewReset;
+                m_ViewModelEventsSource.GraphRefreshed -= OnGraphRefreshed;
+                m_ViewModelEventsSource = null;
+            }
+        }
+
+        // The graph was rebuilt or re-seeded. Schedule a re-frame (deferred + coalesced) so a fresh load
+        // is framed even when the workspace size did not change (identical graph, different layout).
+        private void OnGraphRefreshed(object? sender, EventArgs e) => ScheduleFraming();
+
+        // Defer framing to Background priority and keep only the latest request, so it runs once after the
+        // rebuild and the (higher-priority) seed have applied the final node positions.
+        private void ScheduleFraming()
+        {
+            int token = ++m_FramingToken;
+            Dispatcher.UIThread.Post(
+                () =>
+                {
+                    if (token == m_FramingToken)
+                    {
+                        TryFrameGraph();
+                    }
+                },
+                DispatcherPriority.Background);
+        }
+
+        // The project scenario was reset/closed: drop the live transform back to x1 / origin and let the
+        // next graph re-frame from scratch (the view model has already cleared HasViewState).
+        private void OnViewReset(object? sender, EventArgs e)
+        {
+            m_Restoring = true;
+            try
+            {
+                zoomer.Value = 1.0;
+                m_PanTransform.X = 0.0;
+                m_PanTransform.Y = 0.0;
+            }
+            finally
+            {
+                m_Restoring = false;
+            }
+            m_HasCentered = false;
+        }
+
+        // Frame the graph the first time the viewport has a size and there are nodes; afterwards the
+        // user's pan/zoom is preserved across re-layouts. Wired to both the viewport and the graph
+        // canvas, because the viewport's size and the canvas's (binding-driven) workspace size can
+        // settle in either order - the initial fit only needs the viewport bounds and the nodes, so it
+        // must retry whenever either arrives. The auto-fit only shrinks to fit (it never enlarges a
+        // small graph past its natural size). Once a framing has been persisted, restore it instead
+        // (this is what survives the control being re-materialised on a tab switch).
+        private void Graph_SizeChanged(object? sender, SizeChangedEventArgs e)
+        {
+            TryFrameGraph();
+        }
+
+        // Frame the graph once per load: restore the persisted framing if there is one, otherwise auto-fit.
+        // No-op once framed (m_HasCentered), so it neither disturbs a later manual pan/zoom nor re-fits on
+        // every recompile. ResetView clears m_HasCentered so the next load frames afresh.
+        private void TryFrameGraph()
         {
             if (m_HasCentered)
             {
+                return;
+            }
+
+            if (DataContext is IInteractiveGraph viewModel && viewModel.HasViewState)
+            {
+                RestoreViewState(viewModel);
+                m_HasCentered = true;
                 return;
             }
 
@@ -64,6 +186,7 @@ namespace Zametek.Graphs.Avalonia
 
             m_PanTransform.X = (viewport.Bounds.Width - (workspaceWidth * Zoom)) / 2.0;
             m_PanTransform.Y = (viewport.Bounds.Height - (workspaceHeight * Zoom)) / 2.0;
+            SaveViewState();
         }
 
         private void Viewport_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -114,6 +237,7 @@ namespace Zametek.Graphs.Avalonia
             m_IsPanning = false;
             viewport.Cursor = new Cursor(StandardCursorType.Arrow);
             e.Pointer.Capture(null);
+            SaveViewState();
         }
 
         private void Zoom_PointerWheelChanged(object? sender, PointerWheelEventArgs e)
@@ -145,6 +269,7 @@ namespace Zametek.Graphs.Avalonia
             double factor = newZoom / oldZoom;
             m_PanTransform.X = m_LastPointer.X - (factor * (m_LastPointer.X - m_PanTransform.X));
             m_PanTransform.Y = m_LastPointer.Y - (factor * (m_LastPointer.Y - m_PanTransform.Y));
+            SaveViewState();
         }
 
         // Frame every node in the viewport: pick the zoom that fits the node bounding box (with a
@@ -197,6 +322,7 @@ namespace Zametek.Graphs.Avalonia
             double contentCentreY = (minY + maxY) / 2.0;
             m_PanTransform.X = (viewport.Bounds.Width / 2.0) - (contentCentreX * zoom);
             m_PanTransform.Y = (viewport.Bounds.Height / 2.0) - (contentCentreY * zoom);
+            SaveViewState();
             return true;
         }
 
@@ -210,8 +336,42 @@ namespace Zametek.Graphs.Avalonia
             }
 
             viewModel.ResetLayout();
-            zoomer.Value = 1.0;
             CentreWorkspace(viewModel.WorkspaceWidth, viewModel.WorkspaceHeight);
+        }
+
+        // Persist the current zoom + pan into the view model so the framing survives the control being
+        // rebuilt (e.g. a dock tab switch). No-op while restoring (the slider's ValueChanged would
+        // otherwise re-save an interim pan) or before the data context is bound.
+        private void SaveViewState()
+        {
+            if (m_Restoring
+                || DataContext is not IInteractiveGraph viewModel)
+            {
+                return;
+            }
+
+            viewModel.ViewZoom = zoomer.Value;
+            viewModel.ViewPanX = m_PanTransform.X;
+            viewModel.ViewPanY = m_PanTransform.Y;
+            viewModel.HasViewState = true;
+        }
+
+        // Push the persisted zoom + pan back into the slider and pan transform. The zoom is applied
+        // first (its ValueChanged nudges the pan), then the saved pan overwrites it; SaveViewState is
+        // suppressed throughout so the interim pan is never persisted.
+        private void RestoreViewState(IInteractiveGraph viewModel)
+        {
+            m_Restoring = true;
+            try
+            {
+                zoomer.Value = viewModel.ViewZoom;
+                m_PanTransform.X = viewModel.ViewPanX;
+                m_PanTransform.Y = viewModel.ViewPanY;
+            }
+            finally
+            {
+                m_Restoring = false;
+            }
         }
     }
 }

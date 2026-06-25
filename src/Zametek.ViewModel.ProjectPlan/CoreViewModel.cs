@@ -5,7 +5,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Text;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
@@ -197,7 +196,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(changeSet =>
                 {
-                    if ((changeSet.Replaced + changeSet.Adds) > 0)
+                    CascadeDiagnostics.RecordMarker($@"UncompiledSub fired: Replaced={changeSet.Replaced} Adds={changeSet.Adds} IsBusy={IsBusy} IsBulkUpdating={IsBulkUpdating} AutoCompile={AutoCompile} anyUncompiled={RawActivities.Any(a => !a.IsCompiled)}");
+                    if ((changeSet.Replaced + changeSet.Adds + changeSet.Refreshes) > 0)
                     {
                         lock (m_Lock)
                         {
@@ -217,6 +217,7 @@ namespace Zametek.ViewModel.ProjectPlan
                                     {
                                         IsReadyToReviseTrackers = ReadyToRevise.Yes;
                                         IsReadyToCompile = ReadyToCompile.Yes;
+                                        CascadeDiagnostics.RecordMarker(@"UncompiledSub armed IsReadyToCompile=Yes");
                                     }
                                     else
                                     {
@@ -234,6 +235,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(isReady =>
                 {
+                    CascadeDiagnostics.RecordMarker($@"CompileOnSettingsUpdateSub fired: isReady={isReady} IsBusy={IsBusy}");
                     lock (m_Lock)
                     {
                         if (isReady == ReadyToCompile.Yes
@@ -1899,6 +1901,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void RunAutoCompile()
         {
+            CascadeDiagnostics.RecordMarker($@"RunAutoCompile invoked: AutoCompile={AutoCompile} IsBusy={IsBusy}");
             try
             {
                 lock (m_Lock)

@@ -5,9 +5,8 @@ namespace Zametek.ViewModel.ProjectPlan
 {
     // Maps between the application's persisted Common.EdgeRoutingMode and the Graphs library's own
     // GraphEdgeRoutingMode at the boundary, so the data contracts carry no dependency on the graph
-    // library (and vice versa). Common.EdgeRoutingMode.Unset has no library equivalent - it means "the
-    // scenario did not store a mode" and is handled by the caller (keep the per-graph preset), so it is
-    // never mapped here; it falls through to the configuration preset's typical default.
+    // library (and vice versa). The mapping is by name and total (every defined value has an explicit
+    // case, None included); the `_` arms only guard against an out-of-range cast.
     internal static class GraphEdgeRoutingModeMapper
     {
         public static GraphEdgeRoutingMode ToGraphEdgeRoutingMode(this CommonEdgeRoutingMode mode)

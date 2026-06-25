@@ -90,6 +90,10 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable m_EdgeRoutingModePushSub;
         private readonly IDisposable m_EdgeRoutingModeApplySub;
 
+        // Reset the interactive viewport (zoom x1, default pan, cleared framing) when the project
+        // scenario is reset/closed, signalled by the domain graph going empty (see the ctor).
+        private readonly IDisposable m_ResetViewSub;
+
         // Persist the interactive arrangement: push to the Core on a drag/reset, seed from the Core on
         // load. m_SuppressNextSeed lets the seed ignore the manager's own push echo (see the ctor).
         private readonly IDisposable m_LayoutSeedSub;
@@ -158,7 +162,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Persist the edge routing mode in the scenario. Push a user-made change to the Core display
             // setting (Skip(1) drops the initial value, so opening a scenario does not mark it modified);
-            // apply a loaded mode back to the interactive graph (Unset = none stored, so keep the preset).
+            // apply a loaded mode back to the interactive graph (every mode applies, including None).
             // ApplyEdgeRoutingMode's no-op-on-equal guard stops the push and apply from looping.
             m_EdgeRoutingModePushSub = m_Interactive
                 .WhenAnyValue(x => x.EdgeRoutingMode)
@@ -167,8 +171,18 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_EdgeRoutingModeApplySub = this
                 .WhenAnyValue(agm => agm.m_CoreViewModel.DisplaySettingsViewModel.VertexGraphEdgeRoutingMode)
-                .Where(mode => mode != EdgeRoutingMode.Unset)
                 .Subscribe(mode => m_Interactive.ApplyEdgeRoutingMode(mode.ToGraphEdgeRoutingMode()));
+
+            // Reset the interactive viewport whenever the domain vertex graph goes empty - the signal for
+            // a project scenario reset/close. Deliberately not gated by IsBulkUpdating, so it also fires
+            // during the reset phase of opening a project (which clears then repopulates inside one bulk
+            // window); the repopulation then auto-fits because the framing was cleared. Marshalled to the
+            // UI thread because ResetView raises ViewReset, which touches the control.
+            m_ResetViewSub = this
+                .WhenAnyValue(agm => agm.m_CoreViewModel.VertexGraph)
+                .Where(graph => graph.Nodes.Count == 0)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ => m_Interactive.ResetView());
 
             // Persist the interactive arrangement in the scenario. Push the live arrangement to the Core
             // when the user changes it (drag/reset) - which marks the scenario modified - and seed the
@@ -406,6 +420,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_Theme?.Dispose();
                 m_EdgeRoutingModePushSub?.Dispose();
                 m_EdgeRoutingModeApplySub?.Dispose();
+                m_ResetViewSub?.Dispose();
                 m_LayoutSeedSub?.Dispose();
                 m_Interactive.LayoutChanged -= OnInteractiveLayoutChanged;
             }
