@@ -254,13 +254,13 @@ namespace Zametek.ViewModel.ProjectPlan
             return await m_DialogService.ShowSaveFileDialogAsync(graphOutputFile, directory, s_ExportFileFilters);
         }
 
-        public Task ReportErrorAsync(Exception exception)
+        public Task ReportErrorAsync(string message)
         {
-            ArgumentNullException.ThrowIfNull(exception);
+            ArgumentException.ThrowIfNullOrWhiteSpace(message);
             return m_DialogService.ShowErrorAsync(
                 Resource.ProjectPlan.Titles.Title_Error,
                 string.Empty,
-                exception.Message);
+                message);
         }
 
         #endregion

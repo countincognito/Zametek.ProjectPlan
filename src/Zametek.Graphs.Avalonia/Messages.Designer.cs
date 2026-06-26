@@ -61,6 +61,15 @@ namespace Zametek.Graphs.Avalonia {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copying the graph image to the clipboard failed. Use Save Image instead..
+        /// </summary>
+        public static string Message_ClipboardCopyFailed {
+            get {
+                return ResourceManager.GetString("Message_ClipboardCopyFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Empty filename.
         /// </summary>
         public static string Message_EmptyFilename {
@@ -68,7 +77,7 @@ namespace Zametek.Graphs.Avalonia {
                 return ResourceManager.GetString("Message_EmptyFilename", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Unable to save file:.
         /// </summary>
@@ -77,7 +86,7 @@ namespace Zametek.Graphs.Avalonia {
                 return ResourceManager.GetString("Message_UnableToSaveFile", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Unknown EdgeDashStyle value.
         /// </summary>

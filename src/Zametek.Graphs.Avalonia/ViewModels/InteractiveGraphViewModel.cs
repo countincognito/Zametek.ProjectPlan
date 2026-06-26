@@ -198,7 +198,7 @@ namespace Zametek.Graphs.Avalonia
             }
             catch (Exception ex)
             {
-                Dispatcher.UIThread.Post(async () => await m_Host.ReportErrorAsync(ex));
+                Dispatcher.UIThread.Post(async () => await m_Host.ReportErrorAsync(ex.Message));
             }
         }
 
@@ -209,7 +209,7 @@ namespace Zametek.Graphs.Avalonia
         {
             if (string.IsNullOrWhiteSpace(filename))
             {
-                await m_Host.ReportErrorAsync(new ArgumentException(Messages.Message_EmptyFilename));
+                await m_Host.ReportErrorAsync(Messages.Message_EmptyFilename);
                 return;
             }
 
@@ -247,8 +247,14 @@ namespace Zametek.Graphs.Avalonia
             }
             catch (Exception ex)
             {
-                await m_Host.ReportErrorAsync(ex);
+                await m_Host.ReportErrorAsync(ex.Message);
             }
+        }
+
+        public async Task ReportErrorAsync(string message)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(message);
+            await m_Host.ReportErrorAsync(message);
         }
 
         // Discard every dragged position and rebuild from the default MSAGL layout, restoring the
@@ -480,7 +486,7 @@ namespace Zametek.Graphs.Avalonia
             }
             catch (Exception ex)
             {
-                await m_Host.ReportErrorAsync(ex);
+                await m_Host.ReportErrorAsync(ex.Message);
             }
             finally
             {
@@ -772,7 +778,7 @@ namespace Zametek.Graphs.Avalonia
             }
             catch (Exception ex)
             {
-                await m_Host.ReportErrorAsync(ex);
+                await m_Host.ReportErrorAsync(ex.Message);
             }
         }
 
