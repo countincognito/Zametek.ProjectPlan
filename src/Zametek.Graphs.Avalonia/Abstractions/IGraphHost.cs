@@ -35,6 +35,6 @@ namespace Zametek.Graphs.Avalonia
         Task<string?> PickSaveFileAsync();
 
         // Surface an error to the user.
-        Task ReportErrorAsync(Exception exception);
+        Task ReportErrorAsync(string message);
     }
 }

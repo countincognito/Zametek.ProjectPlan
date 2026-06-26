@@ -387,13 +387,13 @@ namespace Zametek.Graphs.Avalonia
         // path.
         private async void CopyImage_Click(object? sender, RoutedEventArgs e)
         {
+            if (DataContext is not IInteractiveGraph viewModel)
+            {
+                return;
+            }
+
             try
             {
-                if (DataContext is not IInteractiveGraph viewModel)
-                {
-                    return;
-                }
-
                 IClipboard? clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
                 if (clipboard is null)
                 {
@@ -411,6 +411,7 @@ namespace Zametek.Graphs.Avalonia
                 DataTransfer? dataTransfer = BuildImageDataTransfer(png);
                 if (dataTransfer is null)
                 {
+                    await viewModel.ReportErrorAsync(Messages.Message_ClipboardCopyFailed);
                     return;
                 }
 
@@ -419,6 +420,7 @@ namespace Zametek.Graphs.Avalonia
             catch
             {
                 // Best-effort: never crash the app if a clipboard backend cannot accept an image.
+                await viewModel.ReportErrorAsync(Messages.Message_ClipboardCopyFailed);
             }
         }
 
