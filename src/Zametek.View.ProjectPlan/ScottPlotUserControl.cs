@@ -11,6 +11,7 @@ using ScottPlot.Plottables;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Zametek.Contract.ProjectPlan;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
@@ -271,10 +272,17 @@ namespace Zametek.View.ProjectPlan
         // (broadly readable, e.g. on X11/Wayland). Shared by the ScottPlot charts (Gantt, resource,
         // earned-value); it never throws if a backend cannot accept an image (Save-As remains the
         // guaranteed fallback).
-        protected async Task CopyImageToClipboardAsync(byte[]? png)
+        protected async Task CopyImageToClipboardAsync()
         {
+            if (DataContext is not IScottPlotViewModel vm)
+            {
+                return;
+            }
+
             try
             {
+                byte[]? png = await vm.RenderChartImageAsync();
+
                 if (png is null || png.Length == 0)
                 {
                     return;
@@ -289,6 +297,7 @@ namespace Zametek.View.ProjectPlan
                 DataTransfer? dataTransfer = BuildImageDataTransfer(png);
                 if (dataTransfer is null)
                 {
+                    await vm.ReportErrorAsync(Resource.ProjectPlan.Messages.Message_ClipboardCopyFailed);
                     return;
                 }
 
@@ -297,6 +306,7 @@ namespace Zametek.View.ProjectPlan
             catch
             {
                 // Best-effort: never crash if a clipboard backend cannot accept an image.
+                await vm.ReportErrorAsync(Resource.ProjectPlan.Messages.Message_ClipboardCopyFailed);
             }
         }
 

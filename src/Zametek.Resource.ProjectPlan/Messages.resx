@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -353,5 +353,8 @@
   </data>
   <data name="Message_ArrowGraphDataContainMultipleEndNodes" xml:space="preserve">
     <value>Arrow Graph Data contain more than one End node</value>
+  </data>
+  <data name="Message_ClipboardCopyFailed" xml:space="preserve">
+    <value>Copying the mage to the clipboard failed</value>
   </data>
 </root>

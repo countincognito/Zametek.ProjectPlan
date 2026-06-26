@@ -52,13 +52,7 @@ namespace Zametek.View.ProjectPlan
         // same sizing as Save-As); the base ScottPlotUserControl does the defensive clipboard write.
         private async void CopyImage_Click(object? sender, RoutedEventArgs e)
         {
-            if (DataContext is not IGanttChartManagerViewModel vm)
-            {
-                return;
-            }
-
-            byte[]? png = await vm.RenderGanttChartImageAsync();
-            await CopyImageToClipboardAsync(png);
+            await CopyImageToClipboardAsync();
         }
 
         private void Gantt_PointerPressed(object? sender, PointerPressedEventArgs e)

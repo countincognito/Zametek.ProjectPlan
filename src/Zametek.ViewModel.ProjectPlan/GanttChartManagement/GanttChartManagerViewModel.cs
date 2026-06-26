@@ -17,7 +17,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class GanttChartManagerViewModel
-        : ToolViewModelBase, IGanttChartManagerViewModel
+        : ToolViewModelBase, IGanttChartManagerViewModel, IScottPlotViewModel
     {
         #region Fields
 
@@ -1632,27 +1632,6 @@ namespace Zametek.ViewModel.ProjectPlan
             return calculatedHeight;
         }
 
-        // Render the current Gantt chart to PNG bytes for the clipboard, using the same sizing as the
-        // file export (whole chart). Returns null when there is nothing measurable to render yet.
-        public async Task<byte[]?> RenderGanttChartImageAsync()
-        {
-            if (ImageBounds is not Rect bounds)
-            {
-                return null;
-            }
-
-            int width = Math.Abs(Convert.ToInt32(bounds.Width));
-            int height = Math.Abs(Convert.ToInt32(bounds.Height));
-
-            if (width <= 0 || height <= 0)
-            {
-                return null;
-            }
-
-            int calculatedHeight = CalculatedExportHeight(height);
-            return await m_ScottPlotImageExporter.RenderPlotImageAsync(GanttChartPlotModel.Plot, width, calculatedHeight);
-        }
-
         public void SetActivityDuration(int activityId, int newDuration)
         {
             lock (m_Lock)
@@ -1696,6 +1675,40 @@ namespace Zametek.ViewModel.ProjectPlan
             plotModel ??= new AvaPlot();
             plotModel.ClearContextMenu();
             GanttChartPlotModel = plotModel;
+        }
+
+        #endregion
+
+        #region IScottPlotViewModel Members
+
+        // Render the current Gantt chart to PNG bytes for the clipboard, using the same sizing as the
+        // file export (whole chart). Returns null when there is nothing measurable to render yet.
+        public async Task<byte[]?> RenderChartImageAsync()
+        {
+            if (ImageBounds is not Rect bounds)
+            {
+                return null;
+            }
+
+            int width = Math.Abs(Convert.ToInt32(bounds.Width));
+            int height = Math.Abs(Convert.ToInt32(bounds.Height));
+
+            if (width <= 0 || height <= 0)
+            {
+                return null;
+            }
+
+            int calculatedHeight = CalculatedExportHeight(height);
+            return await m_ScottPlotImageExporter.RenderPlotImageAsync(GanttChartPlotModel.Plot, width, calculatedHeight);
+        }
+
+        public Task ReportErrorAsync(string message)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(message);
+            return m_DialogService.ShowErrorAsync(
+                Resource.ProjectPlan.Titles.Title_Error,
+                string.Empty,
+                message);
         }
 
         #endregion
