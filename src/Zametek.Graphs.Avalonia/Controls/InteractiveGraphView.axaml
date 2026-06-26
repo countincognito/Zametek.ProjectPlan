@@ -97,6 +97,8 @@
           <Separator/>
           <MenuItem Header="{x:Static g:Menus.Menu_SaveAs}"
                     Command="{Binding Path=SaveGraphImageFileCommand, Mode=OneWay}"/>
+          <MenuItem Header="{x:Static g:Menus.Menu_CopyImage}"
+                    Click="CopyImage_Click"/>
         </ContextMenu>
       </Border.ContextMenu>
 

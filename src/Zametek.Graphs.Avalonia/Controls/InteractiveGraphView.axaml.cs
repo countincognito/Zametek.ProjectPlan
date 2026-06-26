@@ -2,9 +2,13 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using SkiaSharp;
+using System.IO;
 
 namespace Zametek.Graphs.Avalonia
 {
@@ -372,6 +376,95 @@ namespace Zametek.Graphs.Avalonia
             {
                 m_Restoring = false;
             }
+        }
+
+        // Copy the whole graph (the bounding-box-cropped render, matching the Save-Image export, not the
+        // current viewport) to the clipboard as an image. Built defensively for cross-platform use: the
+        // payload offers both the native bitmap representation (preferred where the backend supports it)
+        // and the raw image/png bytes (broadly readable, e.g. on X11/Wayland), so the OS picks whichever
+        // it understands. The whole operation is best-effort - if a clipboard backend cannot accept an
+        // image it fails silently rather than crashing, and the Save-Image export remains the guaranteed
+        // path.
+        private async void CopyImage_Click(object? sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (DataContext is not IInteractiveGraph viewModel)
+                {
+                    return;
+                }
+
+                IClipboard? clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                if (clipboard is null)
+                {
+                    return;
+                }
+
+                using SKPicture? picture = InteractiveGraphRenderer.Render(viewModel.GraphNodes, viewModel.GraphEdges);
+                if (picture is null)
+                {
+                    return;
+                }
+
+                byte[] png = await ImageExporter.RenderToPngAsync(picture);
+
+                DataTransfer? dataTransfer = BuildImageDataTransfer(png);
+                if (dataTransfer is null)
+                {
+                    return;
+                }
+
+                await clipboard.SetDataAsync(dataTransfer);
+            }
+            catch
+            {
+                // Best-effort: never crash the app if a clipboard backend cannot accept an image.
+            }
+        }
+
+        // Assemble a single clipboard item carrying the image in two representations - the platform's
+        // native bitmap and raw image/png bytes - so the receiving app can choose. Each representation
+        // is added independently; if one cannot be produced on this platform/build the other still
+        // stands. Returns null only when neither could be added.
+        private static DataTransfer? BuildImageDataTransfer(byte[] png)
+        {
+            var item = new DataTransferItem();
+            bool added = false;
+
+            // Native bitmap (preferred where supported - Avalonia writes the platform image format).
+            // The bitmap must not be disposed: Avalonia owns the lifetime of anything handed to the
+            // clipboard.
+            try
+            {
+                var bitmap = new Bitmap(new MemoryStream(png));
+                item.SetBitmap(bitmap);
+                added = true;
+            }
+            catch
+            {
+                // Bitmap representation unavailable on this platform/build; rely on the raw bytes below.
+            }
+
+            // Raw PNG bytes under image/png (broadly readable, especially on Linux/X11/Wayland), as a
+            // second representation on the same item so the receiving app can choose.
+            try
+            {
+                item.Set(DataFormat.CreateBytesPlatformFormat("image/png"), png);
+                added = true;
+            }
+            catch
+            {
+                // image/png byte format unavailable; rely on the bitmap representation above (if any).
+            }
+
+            if (!added)
+            {
+                return null;
+            }
+
+            var dataTransfer = new DataTransfer();
+            dataTransfer.Add(item);
+            return dataTransfer;
         }
     }
 }

@@ -825,7 +825,7 @@ namespace Zametek.Graphs.Avalonia
             {
                 using (picture)
                 {
-                    await GraphImageExporter.SaveGraphImageAsync(picture, filename, scaleX: 2, scaleY: 2);
+                    await ImageExporter.SaveImageAsync(picture, filename, scaleX: 2, scaleY: 2);
                 }
             }
         }
@@ -866,7 +866,7 @@ namespace Zametek.Graphs.Avalonia
             svg.Load(svgStream);
             if (svg.Picture is not null)
             {
-                await GraphImageExporter.SaveGraphImageAsync(svg.Picture, filename, scaleX: 2, scaleY: 2);
+                await ImageExporter.SaveImageAsync(svg.Picture, filename, scaleX: 2, scaleY: 2);
             }
         }
 

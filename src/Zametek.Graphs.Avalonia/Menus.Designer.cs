@@ -61,6 +61,15 @@ namespace Zametek.Graphs.Avalonia {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Copy Image.
+        /// </summary>
+        public static string Menu_CopyImage {
+            get {
+                return ResourceManager.GetString("Menu_CopyImage", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Edge Routing.
         /// </summary>
         public static string Menu_EdgeRouting {

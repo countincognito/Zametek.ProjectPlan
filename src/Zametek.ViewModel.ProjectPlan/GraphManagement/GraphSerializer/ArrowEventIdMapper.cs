@@ -18,7 +18,14 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             min = int.MaxValue;
             bool any = false;
-            foreach (int id in ids) { any = true; if (id < min) min = id; }
+            foreach (int id in ids)
+            {
+                any = true;
+                if (id < min)
+                {
+                    min = id;
+                }
+            }
             return any;
         }
 
