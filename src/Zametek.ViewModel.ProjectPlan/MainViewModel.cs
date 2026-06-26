@@ -1,7 +1,6 @@
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.ReactiveUI.Controls;
-using Dock.Serializer.SystemTextJson;
 using ReactiveUI;
 using System.Diagnostics;
 using System.Reactive;

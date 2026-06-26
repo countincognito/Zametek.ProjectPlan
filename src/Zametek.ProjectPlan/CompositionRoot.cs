@@ -1,7 +1,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Dock.Model.Core;
-using Dock.Serializer.SystemTextJson;
+using Dock.Serializer;
 using Splat;
 using Splat.Autofac;
 using System;
