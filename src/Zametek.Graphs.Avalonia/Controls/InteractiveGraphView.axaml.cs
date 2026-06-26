@@ -8,7 +8,6 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using SkiaSharp;
-using System.IO;
 
 namespace Zametek.Graphs.Avalonia
 {

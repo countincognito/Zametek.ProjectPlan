@@ -1598,19 +1598,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 try
                 {
-                    int calculatedHeight = 0;
-
-                    if (GanttChartPlotModel.Plot.GetPlottables<BarPlot>().FirstOrDefault() is BarPlot barPlot)
-                    {
-                        int barCount = barPlot.Bars.Count;
-                        calculatedHeight = Convert.ToInt32(barPlot.Axes.YAxis.TickLabelStyle.FontSize * barCount * c_ExportLabelHeightCorrection);
-                    }
-
-                    if (calculatedHeight <= height)
-                    {
-                        calculatedHeight = height;
-                    }
-
+                    int calculatedHeight = CalculatedExportHeight(height);
                     await m_ScottPlotImageExporter.SavePlotImageAsync(GanttChartPlotModel.Plot, filename, width, calculatedHeight);
                 }
                 catch (Exception ex)
@@ -1621,6 +1609,48 @@ namespace Zametek.ViewModel.ProjectPlan
                         ex.Message);
                 }
             }
+        }
+
+        // The exported/copied image shows every bar at a readable fixed height (so a large chart is not
+        // squashed), falling back to the on-screen height when that is taller. Shared by the file save
+        // and the clipboard copy so the two match.
+        private int CalculatedExportHeight(int height)
+        {
+            int calculatedHeight = 0;
+
+            if (GanttChartPlotModel.Plot.GetPlottables<BarPlot>().FirstOrDefault() is BarPlot barPlot)
+            {
+                int barCount = barPlot.Bars.Count;
+                calculatedHeight = Convert.ToInt32(barPlot.Axes.YAxis.TickLabelStyle.FontSize * barCount * c_ExportLabelHeightCorrection);
+            }
+
+            if (calculatedHeight <= height)
+            {
+                calculatedHeight = height;
+            }
+
+            return calculatedHeight;
+        }
+
+        // Render the current Gantt chart to PNG bytes for the clipboard, using the same sizing as the
+        // file export (whole chart). Returns null when there is nothing measurable to render yet.
+        public async Task<byte[]?> RenderGanttChartImageAsync()
+        {
+            if (ImageBounds is not Rect bounds)
+            {
+                return null;
+            }
+
+            int width = Math.Abs(Convert.ToInt32(bounds.Width));
+            int height = Math.Abs(Convert.ToInt32(bounds.Height));
+
+            if (width <= 0 || height <= 0)
+            {
+                return null;
+            }
+
+            int calculatedHeight = CalculatedExportHeight(height);
+            return await m_ScottPlotImageExporter.RenderPlotImageAsync(GanttChartPlotModel.Plot, width, calculatedHeight);
         }
 
         public void SetActivityDuration(int activityId, int newDuration)

@@ -171,6 +171,9 @@
   <data name="Menu_Save" xml:space="preserve">
     <value>_Save</value>
   </data>
+  <data name="Menu_CopyImage" xml:space="preserve">
+    <value>Copy Image</value>
+  </data>
   <data name="Menu_SaveAs" xml:space="preserve">
     <value>Save _As...</value>
   </data>

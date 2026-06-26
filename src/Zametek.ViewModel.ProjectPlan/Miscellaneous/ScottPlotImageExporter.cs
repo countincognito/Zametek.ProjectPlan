@@ -1,7 +1,5 @@
-using java.util.stream;
 using ScottPlot;
 using SkiaSharp;
-using sun.swing;
 using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -50,6 +48,12 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
             });
+        }
+
+        public Task<byte[]> RenderPlotImageAsync(Plot plot, int width, int height)
+        {
+            ArgumentNullException.ThrowIfNull(plot);
+            return Task.Run(() => plot.GetImageBytes(Math.Max(1, width), Math.Max(1, height), ImageFormat.Png));
         }
 
         #endregion

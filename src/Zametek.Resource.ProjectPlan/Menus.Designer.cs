@@ -268,6 +268,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy Image.
+        /// </summary>
+        public static string Menu_CopyImage {
+            get {
+                return ResourceManager.GetString("Menu_CopyImage", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Save _As....
         /// </summary>
         public static string Menu_SaveAs {

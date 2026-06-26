@@ -1,12 +1,16 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
 using Avalonia.VisualTree;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
@@ -260,6 +264,79 @@ namespace Zametek.View.ProjectPlan
         private void ClearToolTip()
         {
             m_PlotContainer?.ClearValue(ToolTip.TipProperty);
+        }
+
+        // Copy a PNG image to the clipboard, best-effort and defensively for cross-platform use: the
+        // payload carries both the native bitmap (preferred where supported) and the raw image/png bytes
+        // (broadly readable, e.g. on X11/Wayland). Shared by the ScottPlot charts (Gantt, resource,
+        // earned-value); it never throws if a backend cannot accept an image (Save-As remains the
+        // guaranteed fallback).
+        protected async Task CopyImageToClipboardAsync(byte[]? png)
+        {
+            try
+            {
+                if (png is null || png.Length == 0)
+                {
+                    return;
+                }
+
+                IClipboard? clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                if (clipboard is null)
+                {
+                    return;
+                }
+
+                DataTransfer? dataTransfer = BuildImageDataTransfer(png);
+                if (dataTransfer is null)
+                {
+                    return;
+                }
+
+                await clipboard.SetDataAsync(dataTransfer);
+            }
+            catch
+            {
+                // Best-effort: never crash if a clipboard backend cannot accept an image.
+            }
+        }
+
+        private static DataTransfer? BuildImageDataTransfer(byte[] png)
+        {
+            var item = new DataTransferItem();
+            bool added = false;
+
+            // Native bitmap (preferred where supported). Avalonia owns anything handed to the clipboard,
+            // so the bitmap must not be disposed here.
+            try
+            {
+                var bitmap = new Bitmap(new MemoryStream(png));
+                item.SetBitmap(bitmap);
+                added = true;
+            }
+            catch
+            {
+                // Bitmap representation unavailable on this platform/build; rely on the raw bytes below.
+            }
+
+            // Raw PNG bytes under image/png (broadly readable), as a second representation on the same item.
+            try
+            {
+                item.Set(DataFormat.CreateBytesPlatformFormat("image/png"), png);
+                added = true;
+            }
+            catch
+            {
+                // image/png byte format unavailable; rely on the bitmap representation above (if any).
+            }
+
+            if (!added)
+            {
+                return null;
+            }
+
+            var dataTransfer = new DataTransfer();
+            dataTransfer.Add(item);
+            return dataTransfer;
         }
     }
 }
