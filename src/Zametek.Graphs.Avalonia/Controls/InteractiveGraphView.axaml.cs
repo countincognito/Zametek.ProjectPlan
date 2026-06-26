@@ -437,7 +437,10 @@ namespace Zametek.Graphs.Avalonia
             // clipboard.
             try
             {
-                var bitmap = new Bitmap(new MemoryStream(png));
+                // Bitmap reads the stream eagerly in its constructor, so the stream can be disposed
+                // immediately; the bitmap itself must not be (Avalonia owns clipboard payloads).
+                using var stream = new MemoryStream(png);
+                var bitmap = new Bitmap(stream);
                 item.SetBitmap(bitmap);
                 added = true;
             }

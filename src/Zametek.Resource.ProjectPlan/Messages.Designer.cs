@@ -142,7 +142,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Copying the mage to the clipboard failed.
+        ///   Looks up a localized string similar to Copying the chart image to the clipboard failed. Use Save As instead..
         /// </summary>
         public static string Message_ClipboardCopyFailed {
             get {

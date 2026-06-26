@@ -17,7 +17,7 @@ using Zametek.Utility;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class EarnedValueChartManagerViewModel
-        : ToolViewModelBase, IEarnedValueChartManagerViewModel
+        : ToolViewModelBase, IEarnedValueChartManagerViewModel, IScottPlotViewModel
     {
         #region Fields
 
@@ -716,6 +716,37 @@ namespace Zametek.ViewModel.ProjectPlan
             plotModel ??= new AvaPlot();
             plotModel.ClearContextMenu();
             EarnedValueChartPlotModel = plotModel;
+        }
+
+        #endregion
+
+        #region IScottPlotViewModel Members
+
+        public async Task<byte[]?> RenderChartImageAsync()
+        {
+            if (ImageBounds is not Rect bounds)
+            {
+                return null;
+            }
+
+            int width = Math.Abs(Convert.ToInt32(bounds.Width));
+            int height = Math.Abs(Convert.ToInt32(bounds.Height));
+
+            if (width <= 0 || height <= 0)
+            {
+                return null;
+            }
+
+            return await m_ScottPlotImageExporter.RenderPlotImageAsync(EarnedValueChartPlotModel.Plot, width, height);
+        }
+
+        public Task ReportErrorAsync(string message)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(message);
+            return m_DialogService.ShowErrorAsync(
+                Resource.ProjectPlan.Titles.Title_Error,
+                string.Empty,
+                message);
         }
 
         #endregion

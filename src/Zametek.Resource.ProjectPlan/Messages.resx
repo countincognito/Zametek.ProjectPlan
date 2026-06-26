@@ -355,6 +355,6 @@
     <value>Arrow Graph Data contain more than one End node</value>
   </data>
   <data name="Message_ClipboardCopyFailed" xml:space="preserve">
-    <value>Copying the mage to the clipboard failed</value>
+    <value>Copying the chart image to the clipboard failed. Use Save As instead.</value>
   </data>
 </root>
