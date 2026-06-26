@@ -97,16 +97,18 @@
 									  ToggleType="Radio" />
 						</MenuItem>
 
-						<Separator />
+            <Separator />
 
-						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-								  Command="{Binding Path=SaveResourceChartImageFileCommand, Mode=OneWay}" />
+            <MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
+								  Command="{Binding Path=ResetResourceChartCommand, Mode=OneWay}" />
+
+            <Separator />
 
             <MenuItem Header="{x:Static resources:Menus.Menu_CopyImage}"
                   Click="CopyImage_Click" />
 
-            <MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
-								  Command="{Binding Path=ResetResourceChartCommand, Mode=OneWay}" />
+            <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+								  Command="{Binding Path=SaveResourceChartImageFileCommand, Mode=OneWay}" />
 					</ContextMenu>
 				</ContentControl.ContextMenu>
 			</ContentControl>

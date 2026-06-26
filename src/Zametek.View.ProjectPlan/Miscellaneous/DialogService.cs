@@ -217,10 +217,10 @@ namespace Zametek.View.ProjectPlan
                 ContentTitle = title,
                 ContentHeader = header,
                 ContentMessage = message,
-                ButtonDefinitions = ButtonEnum.YesNo,
+                ButtonDefinitions = ButtonEnum.OkCancel,
                 Icon = Icon.Info,
             });
-            return result == ButtonResult.Yes;
+            return result == ButtonResult.Ok;
         }
 
         public async Task<string?> ShowOpenFileDialogAsync(

@@ -250,11 +250,11 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do you wish to delete these items?.
+        ///   Looks up a localized string similar to Do you wish to delete these scenarios?.
         /// </summary>
-        public static string Message_DoYouWishToDeleteTheseItems {
+        public static string Message_DoYouWishToDeleteTheseScenarios {
             get {
-                return ResourceManager.GetString("Message_DoYouWishToDeleteTheseItems", resourceCulture);
+                return ResourceManager.GetString("Message_DoYouWishToDeleteTheseScenarios", resourceCulture);
             }
         }
         
@@ -493,7 +493,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project has unsaved changes. Do you wish to continue?.
+        ///   Looks up a localized string similar to The project has unsaved changes that will be lost. Do you wish to continue without saving?.
         /// </summary>
         public static string Message_ProjectUnsavedChanges {
             get {
@@ -511,7 +511,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Scenario has unsaved changes. Do you wish to continue?.
+        ///   Looks up a localized string similar to The scenario has unsaved changes that will be lost. Do you wish to continue without saving?.
         /// </summary>
         public static string Message_ScenarioUnsavedChanges {
             get {

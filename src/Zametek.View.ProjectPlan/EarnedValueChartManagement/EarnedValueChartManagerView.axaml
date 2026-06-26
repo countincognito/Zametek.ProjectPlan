@@ -32,16 +32,18 @@
 								  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
 								  ToggleType="CheckBox" />
 
-						<Separator />
+            <Separator />
 
-						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-								  Command="{Binding Path=SaveEarnedValueChartImageFileCommand, Mode=OneWay}" />
+            <MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
+								  Command="{Binding Path=ResetEarnedValueChartCommand, Mode=OneWay}" />
+            
+            <Separator />
 
-						<MenuItem Header="{x:Static resources:Menus.Menu_CopyImage}"
+            <MenuItem Header="{x:Static resources:Menus.Menu_CopyImage}"
 								  Click="CopyImage_Click" />
 
-						<MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
-								  Command="{Binding Path=ResetEarnedValueChartCommand, Mode=OneWay}" />
+            <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+								  Command="{Binding Path=SaveEarnedValueChartImageFileCommand, Mode=OneWay}" />
 					</ContextMenu>
 				</ContentControl.ContextMenu>
 			</ContentControl>

@@ -506,14 +506,16 @@
 
 						<Separator />
 
-						<MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
-								  Command="{Binding Path=SaveScenarioChartImageFileCommand, Mode=OneWay}" />
+            <MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
+								  Command="{Binding Path=ResetScenarioChartCommand, Mode=OneWay}" />
+
+            <Separator />
 
             <MenuItem Header="{x:Static resources:Menus.Menu_CopyImage}"
                   Click="CopyImage_Click" />
 
-            <MenuItem Header="{x:Static resources:Menus.Menu_Reset}"
-								  Command="{Binding Path=ResetScenarioChartCommand, Mode=OneWay}" />
+            <MenuItem Header="{x:Static resources:Menus.Menu_SaveAs}"
+								  Command="{Binding Path=SaveScenarioChartImageFileCommand, Mode=OneWay}" />
 					</ContextMenu>
 				</ContentControl.ContextMenu>
 			</ContentControl>

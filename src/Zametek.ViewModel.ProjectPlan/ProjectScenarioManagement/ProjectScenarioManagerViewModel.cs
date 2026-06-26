@@ -1252,7 +1252,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 bool confirmation = await m_DialogService.ShowConfirmationAsync(
                     Resource.ProjectPlan.Titles.Title_DeleteNodes,
                     string.Empty,
-                    string.Format(Resource.ProjectPlan.Messages.Message_DoYouWishToDeleteTheseItems));
+                    string.Format(Resource.ProjectPlan.Messages.Message_DoYouWishToDeleteTheseScenarios));
 
                 if (!confirmation)
                 {

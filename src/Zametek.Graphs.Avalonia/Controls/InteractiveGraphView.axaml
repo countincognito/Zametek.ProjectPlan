@@ -47,14 +47,18 @@
         <ContextMenu>
           <MenuItem Header="{x:Static g:Menus.Menu_FitToView}"
                     Click="FitToView_Click"/>
+          
           <MenuItem Header="{x:Static g:Menus.Menu_ResetGraphLayout}"
                     Click="ResetLayout_Click"/>
+          
           <Separator/>
+          
           <!-- Only the arrow graph offers the show-names toggle; hidden otherwise. -->
           <MenuItem Header="{x:Static g:Menus.Menu_ShowNames}"
                     IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"
                     IsVisible="{Binding Path=SupportsShowNames, Mode=OneWay}"
                     ToggleType="CheckBox"/>
+          
           <!-- Edge routing: radio items whose check state reflects the current mode (OneWay via the
                built-in EnumToBoolConverter) and whose click sets it through the command. -->
           <MenuItem Header="{x:Static g:Menus.Menu_EdgeRouting}">
@@ -94,11 +98,14 @@
                       CommandParameter="{x:Static g:GraphEdgeRoutingMode.None}"
                       ToggleType="Radio"/>
           </MenuItem>
+          
           <Separator/>
-          <MenuItem Header="{x:Static g:Menus.Menu_SaveAs}"
-                    Command="{Binding Path=SaveGraphImageFileCommand, Mode=OneWay}"/>
+
           <MenuItem Header="{x:Static g:Menus.Menu_CopyImage}"
                     Click="CopyImage_Click"/>
+
+          <MenuItem Header="{x:Static g:Menus.Menu_SaveAs}"
+                    Command="{Binding Path=SaveGraphImageFileCommand, Mode=OneWay}"/>
         </ContextMenu>
       </Border.ContextMenu>
 

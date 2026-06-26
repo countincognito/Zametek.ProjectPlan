@@ -188,9 +188,9 @@
 							<MenuItem Header="{x:Static resources:Menus.Menu_DeleteNode}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.RemoveProjectScenarioNodeCommand, Mode=OneWay}" />
 
-							<Separator />
+              <Separator />
 
-							<MenuItem Header="{x:Static resources:Menus.Menu_AddTag}"
+              <MenuItem Header="{x:Static resources:Menus.Menu_AddTag}"
 									  Command="{Binding Path=$parent[TreeView].DataContext.AddNodeTagCommand, Mode=OneWay}" />
 
 							<MenuItem Header="{x:Static resources:Menus.Menu_DeleteTag}"

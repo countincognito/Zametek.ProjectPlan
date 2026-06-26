@@ -181,10 +181,10 @@
     <value>Unknown NonWorkingDayMode value:</value>
   </data>
   <data name="Message_ProjectUnsavedChanges" xml:space="preserve">
-    <value>Project has unsaved changes. Do you wish to continue?</value>
+    <value>The project has unsaved changes that will be lost. Do you wish to continue without saving?</value>
   </data>
   <data name="Message_ScenarioUnsavedChanges" xml:space="preserve">
-    <value>Scenario has unsaved changes. Do you wish to continue?</value>
+    <value>The scenario has unsaved changes that will be lost. Do you wish to continue without saving?</value>
   </data>
   <data name="Message_NumberOfTrackersAcrossAllActivitiesNotIdentical" xml:space="preserve">
     <value>The number of Trackers across all Activities is not identical</value>
@@ -258,8 +258,8 @@
   <data name="Message_CannotGetProjectScenarioFileWhenProjectScenarioIsNull" xml:space="preserve">
     <value>Cannot get a project scenario file when project scenario is null:</value>
   </data>
-  <data name="Message_DoYouWishToDeleteTheseItems" xml:space="preserve">
-    <value>Do you wish to delete these items?</value>
+  <data name="Message_DoYouWishToDeleteTheseScenarios" xml:space="preserve">
+    <value>Do you wish to delete these scenarios?</value>
   </data>
   <data name="Message_NameAlreadyExists" xml:space="preserve">
     <value>Name already exists</value>
