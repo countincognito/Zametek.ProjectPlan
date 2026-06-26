@@ -16,7 +16,7 @@ using Zametek.Utility;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ScenarioChartManagerViewModel
-        : ToolViewModelBase, IScenarioChartManagerViewModel, IDisposable
+        : ToolViewModelBase, IScenarioChartManagerViewModel, IScottPlotViewModel
     {
         #region Fields
 
@@ -79,6 +79,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
+        private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
 
         private readonly IDisposable? m_BuildScenarioChartPlotModelSub;
 
@@ -93,19 +94,22 @@ namespace Zametek.ViewModel.ProjectPlan
             IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
             ISettingService settingService,
             IDialogService dialogService,
-            IDateTimeCalculator dateTimeCalculator)
+            IDateTimeCalculator dateTimeCalculator,
+            IScottPlotImageExporter scottPlotImageExporter)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(projectScenarioManagerViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(scottPlotImageExporter);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
+            m_ScottPlotImageExporter = scottPlotImageExporter;
             m_ScenarioChartPlotModel = new AvaPlot();
             m_CurveFittingFormula = string.Empty;
 
@@ -670,38 +674,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 try
                 {
-                    string fileExtension = Path.GetExtension(filename);
-
-                    fileExtension.ValueSwitchOn()
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageJpegFileExtension}", _ =>
-                        {
-                            ScenarioChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImagePngFileExtension}", _ =>
-                        {
-                            ScenarioChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageBmpFileExtension}", _ =>
-                        {
-                            ScenarioChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageWebpFileExtension}", _ =>
-                        {
-                            ScenarioChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        .Case($".{Resource.ProjectPlan.Filters.Filter_ImageSvgFileExtension}", _ =>
-                        {
-                            ScenarioChartPlotModel.Plot.Save(
-                                filename, width, height, ImageFormats.FromFilename(filename), 100);
-                        })
-                        //.Case($".{Resource.ProjectPlan.Filters.Filter_PdfFileExtension}", _ =>
-                        //{
-                        //})
-                        .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Resource.ProjectPlan.Messages.Message_UnableToSaveFile} {filename}"));
+                    await m_ScottPlotImageExporter.SavePlotImageAsync(ScenarioChartPlotModel.Plot, filename, width, height);
                 }
                 catch (Exception ex)
                 {
@@ -751,6 +724,37 @@ namespace Zametek.ViewModel.ProjectPlan
             plotModel.ClearContextMenu();
             ScenarioChartPlotModel = plotModel;
             CurveFittingFormula = curveFittingFormula;
+        }
+
+        #endregion
+
+        #region IScottPlotViewModel Members
+
+        public async Task<byte[]?> RenderChartImageAsync()
+        {
+            if (ImageBounds is not Rect bounds)
+            {
+                return null;
+            }
+
+            int width = Math.Abs(Convert.ToInt32(bounds.Width));
+            int height = Math.Abs(Convert.ToInt32(bounds.Height));
+
+            if (width <= 0 || height <= 0)
+            {
+                return null;
+            }
+
+            return await m_ScottPlotImageExporter.RenderPlotImageAsync(ScenarioChartPlotModel.Plot, width, height);
+        }
+
+        public Task ReportErrorAsync(string message)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(message);
+            return m_DialogService.ShowErrorAsync(
+                Resource.ProjectPlan.Titles.Title_Error,
+                string.Empty,
+                message);
         }
 
         #endregion

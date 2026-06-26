@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
 using DynamicData;
@@ -18,7 +18,7 @@ using SortDirection = Zametek.Common.ProjectPlan.SortDirection;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class ProjectScenarioManagerViewModel
-        : ToolViewModelBase, IProjectScenarioManagerViewModel, IDisposable
+        : ToolViewModelBase, IProjectScenarioManagerViewModel
     {
         #region Fields
 

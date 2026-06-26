@@ -4,7 +4,7 @@ using System.Windows.Input;
 namespace Zametek.Contract.ProjectPlan
 {
     public interface ITrackingManagerViewModel
-        : IKillSubscriptions
+        : IKillSubscriptions, IDisposable
     {
         bool IsBusy { get; }
 

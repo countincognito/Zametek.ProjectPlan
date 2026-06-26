@@ -8,7 +8,7 @@ using Zametek.Contract.ProjectPlan;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class TrackingManagerViewModel
-        : ToolViewModelBase, ITrackingManagerViewModel, IDisposable
+        : ToolViewModelBase, ITrackingManagerViewModel
     {
         #region Fields
 

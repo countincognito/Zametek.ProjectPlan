@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using System.Reactive.Linq;
 using System.Text;
 using Zametek.Common.ProjectPlan;
@@ -8,7 +8,7 @@ using Zametek.Maths.Graphs;
 namespace Zametek.ViewModel.ProjectPlan
 {
     public class OutputManagerViewModel
-        : ToolViewModelBase, IOutputManagerViewModel, IDisposable
+        : ToolViewModelBase, IOutputManagerViewModel
     {
         #region Fields
 
