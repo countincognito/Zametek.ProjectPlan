@@ -14,6 +14,10 @@ namespace Zametek.View.ProjectPlan
             new FuncValueConverter<LogicalOperator, string>(
                 x => ViewModel.ProjectPlan.StringConverters.LogicalOperatorValue(x));
 
+        public static readonly IValueConverter ActivityAllocationTypeValue =
+            new FuncValueConverter<ActivityAllocationType, string>(
+                x => ViewModel.ProjectPlan.StringConverters.ActivityAllocationTypeValue(x));
+
         public static readonly IValueConverter InterActivityAllocationTypeValue =
             new FuncValueConverter<InterActivityAllocationType, string>(
                 x => ViewModel.ProjectPlan.StringConverters.InterActivityAllocationTypeValue(x));

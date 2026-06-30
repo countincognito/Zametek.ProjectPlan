@@ -1,4 +1,4 @@
-﻿using Zametek.Common.ProjectPlan;
+using Zametek.Common.ProjectPlan;
 using Zametek.Maths.Graphs;
 
 namespace Zametek.ViewModel.ProjectPlan
@@ -230,34 +230,108 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(resourceSeriesModels);
 
-            double direct = resourceSeriesModels
-                .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
-                .Sum(static x =>
-                {
-                    double accumulator(bool y) => y ? x.UnitCost : 0.0;
-                    return x.ResourceSchedule.CostAllocation.Sum(accumulator) + x.FixedCost;
-                });
-            double indirect = resourceSeriesModels
-                .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
-                .Sum(static x =>
-                {
-                    double accumulator(bool y) => y ? x.UnitCost : 0.0;
-                    return x.ResourceSchedule.CostAllocation.Sum(accumulator) + x.FixedCost;
-                });
-            double other = resourceSeriesModels
-                .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
-                .Sum(static x =>
-                {
-                    double accumulator(bool y) => y ? x.UnitCost : 0.0;
-                    return x.ResourceSchedule.CostAllocation.Sum(accumulator) + x.FixedCost;
-                });
-            double total = direct + indirect + other;
+            double totalDirect = 0.0;
+            double totalIndirect = 0.0;
+            double totalOther = 0.0;
+
+            // Inter-activity costs only.
+
+            {
+                // Where cost allocation is true, but activity allocation is false.
+
+                double direct = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitCost : 0.0;
+                        List<bool> trueCostAllocation = [.. x.ResourceSchedule.CostAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && !b)];
+                        return trueCostAllocation.Sum(accumulator);
+                    });
+                double indirect = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitCost : 0.0;
+                        List<bool> trueCostAllocation = [.. x.ResourceSchedule.CostAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && !b)];
+                        return trueCostAllocation.Sum(accumulator);
+                    });
+                double other = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitCost : 0.0;
+                        List<bool> trueCostAllocation = [.. x.ResourceSchedule.CostAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && !b)];
+                        return trueCostAllocation.Sum(accumulator);
+                    });
+
+                totalDirect += direct;
+                totalIndirect += indirect;
+                totalOther += other;
+            }
+
+            // Activity costs only.
+
+            {
+                // Where cost allocation is true, and activity allocation is true.
+
+                double direct = resourceSeriesModels
+                    .Where(static x => x.ActivityAllocationType == ActivityAllocationType.Direct)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitCost : 0.0;
+                        List<bool> trueCostAllocation = [.. x.ResourceSchedule.CostAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && b)];
+                        return trueCostAllocation.Sum(accumulator);
+                    });
+                double indirect = resourceSeriesModels
+                    .Where(static x => x.ActivityAllocationType == ActivityAllocationType.Indirect)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitCost : 0.0;
+                        List<bool> trueCostAllocation = [.. x.ResourceSchedule.CostAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && b)];
+                        return trueCostAllocation.Sum(accumulator);
+                    });
+                double other = resourceSeriesModels
+                    .Where(static x => x.ActivityAllocationType == ActivityAllocationType.Other)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitCost : 0.0;
+                        List<bool> trueCostAllocation = [.. x.ResourceSchedule.CostAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && b)];
+                        return trueCostAllocation.Sum(accumulator);
+                    });
+
+                totalDirect += direct;
+                totalIndirect += indirect;
+                totalOther += other;
+            }
+
+            // Fixed costs only.
+
+            {
+                // Use InterActivityAllocationType to determine direct, indirect, or other,
+                // since fixed costs are not allocated to activities.
+
+                double direct = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
+                    .Sum(static x => x.FixedCost);
+                double indirect = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
+                    .Sum(static x => x.FixedCost);
+                double other = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
+                    .Sum(static x => x.FixedCost);
+
+                totalDirect += direct;
+                totalIndirect += indirect;
+                totalOther += other;
+            }
+
+            double total = totalDirect + totalIndirect + totalOther;
 
             return new CostsModel
             {
-                Direct = direct,
-                Indirect = indirect,
-                Other = other,
+                Direct = totalDirect,
+                Indirect = totalIndirect,
+                Other = totalOther,
                 Total = total,
             };
         }
@@ -266,34 +340,108 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(resourceSeriesModels);
 
-            double direct = resourceSeriesModels
-                .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
-                .Sum(static x =>
-                {
-                    double accumulator(bool y) => y ? x.UnitBilling : 0.0;
-                    return x.ResourceSchedule.BillingAllocation.Sum(accumulator) + x.FixedBilling;
-                });
-            double indirect = resourceSeriesModels
-                .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
-                .Sum(static x =>
-                {
-                    double accumulator(bool y) => y ? x.UnitBilling : 0.0;
-                    return x.ResourceSchedule.BillingAllocation.Sum(accumulator) + x.FixedBilling;
-                });
-            double other = resourceSeriesModels
-                .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
-                .Sum(static x =>
-                {
-                    double accumulator(bool y) => y ? x.UnitBilling : 0.0;
-                    return x.ResourceSchedule.BillingAllocation.Sum(accumulator) + x.FixedBilling;
-                });
-            double total = direct + indirect + other;
+            double totalDirect = 0.0;
+            double totalIndirect = 0.0;
+            double totalOther = 0.0;
+
+            // Inter-activity billings only.
+
+            {
+                // Where billing allocation is true, but activity allocation is false.
+
+                double direct = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitBilling : 0.0;
+                        List<bool> trueBillingAllocation = [.. x.ResourceSchedule.BillingAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && !b)];
+                        return trueBillingAllocation.Sum(accumulator);
+                    });
+                double indirect = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitBilling : 0.0;
+                        List<bool> trueBillingAllocation = [.. x.ResourceSchedule.BillingAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && !b)];
+                        return trueBillingAllocation.Sum(accumulator);
+                    });
+                double other = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitBilling : 0.0;
+                        List<bool> trueBillingAllocation = [.. x.ResourceSchedule.BillingAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && !b)];
+                        return trueBillingAllocation.Sum(accumulator);
+                    });
+
+                totalDirect += direct;
+                totalIndirect += indirect;
+                totalOther += other;
+            }
+
+            // Activity billings only.
+
+            {
+                // Where billing allocation is true, and activity allocation is true.
+
+                double direct = resourceSeriesModels
+                    .Where(static x => x.ActivityAllocationType == ActivityAllocationType.Direct)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitBilling : 0.0;
+                        List<bool> trueBillingAllocation = [.. x.ResourceSchedule.BillingAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && b)];
+                        return trueBillingAllocation.Sum(accumulator);
+                    });
+                double indirect = resourceSeriesModels
+                    .Where(static x => x.ActivityAllocationType == ActivityAllocationType.Indirect)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitBilling : 0.0;
+                        List<bool> trueBillingAllocation = [.. x.ResourceSchedule.BillingAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && b)];
+                        return trueBillingAllocation.Sum(accumulator);
+                    });
+                double other = resourceSeriesModels
+                    .Where(static x => x.ActivityAllocationType == ActivityAllocationType.Other)
+                    .Sum(static x =>
+                    {
+                        double accumulator(bool y) => y ? x.UnitBilling : 0.0;
+                        List<bool> trueBillingAllocation = [.. x.ResourceSchedule.BillingAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && b)];
+                        return trueBillingAllocation.Sum(accumulator);
+                    });
+
+                totalDirect += direct;
+                totalIndirect += indirect;
+                totalOther += other;
+            }
+
+            // Fixed billings only.
+
+            {
+                // Use InterActivityAllocationType to determine direct, indirect, or other,
+                // since fixed billings are not allocated to activities.
+
+                double direct = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
+                    .Sum(static x => x.FixedBilling);
+                double indirect = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
+                    .Sum(static x => x.FixedBilling);
+                double other = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
+                    .Sum(static x => x.FixedBilling);
+
+                totalDirect += direct;
+                totalIndirect += indirect;
+                totalOther += other;
+            }
+
+            double total = totalDirect + totalIndirect + totalOther;
 
             return new BillingsModel
             {
-                Direct = direct,
-                Indirect = indirect,
-                Other = other,
+                Direct = totalDirect,
+                Indirect = totalIndirect,
+                Other = totalOther,
                 Total = total,
             };
         }
@@ -313,27 +461,89 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(resourceSeriesModels);
             static double allocationAccumulator(bool x) => x ? 1.0 : 0.0;
+
+            double totalDirect = 0.0;
+            double totalIndirect = 0.0;
+            double totalOther = 0.0;
+
+            // Inter-activity effort only.
+
+            {
+                // Where effort allocation is true, but activity allocation is false.
+
+                double direct = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
+                    .Sum(static x =>
+                    {
+                        List<bool> trueEffortAllocation = [.. x.ResourceSchedule.EffortAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && !b)];
+                        return trueEffortAllocation.Sum(allocationAccumulator);
+                    });
+                double indirect = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
+                    .Sum(static x =>
+                    {
+                        List<bool> trueEffortAllocation = [.. x.ResourceSchedule.EffortAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && !b)];
+                        return trueEffortAllocation.Sum(allocationAccumulator);
+                    });
+                double other = resourceSeriesModels
+                    .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
+                    .Sum(static x =>
+                    {
+                        List<bool> trueEffortAllocation = [.. x.ResourceSchedule.EffortAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && !b)];
+                        return trueEffortAllocation.Sum(allocationAccumulator);
+                    });
+
+                totalDirect += direct;
+                totalIndirect += indirect;
+                totalOther += other;
+            }
+
+            // Activity effort only.
+
+            {
+                // Where effort allocation is true, and activity allocation is true.
+
+                double direct = resourceSeriesModels
+                    .Where(static x => x.ActivityAllocationType == ActivityAllocationType.Direct)
+                    .Sum(static x =>
+                    {
+                        List<bool> trueEffortAllocation = [.. x.ResourceSchedule.EffortAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && b)];
+                        return trueEffortAllocation.Sum(allocationAccumulator);
+                    });
+                double indirect = resourceSeriesModels
+                    .Where(static x => x.ActivityAllocationType == ActivityAllocationType.Indirect)
+                    .Sum(static x =>
+                    {
+                        List<bool> trueEffortAllocation = [.. x.ResourceSchedule.EffortAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && b)];
+                        return trueEffortAllocation.Sum(allocationAccumulator);
+                    });
+                double other = resourceSeriesModels
+                    .Where(static x => x.ActivityAllocationType == ActivityAllocationType.Other)
+                    .Sum(static x =>
+                    {
+                        List<bool> trueEffortAllocation = [.. x.ResourceSchedule.EffortAllocation.Zip(x.ResourceSchedule.ActivityAllocation, (a, b) => a && b)];
+                        return trueEffortAllocation.Sum(allocationAccumulator);
+                    });
+
+                totalDirect += direct;
+                totalIndirect += indirect;
+                totalOther += other;
+            }
+
+            double total = totalDirect + totalIndirect + totalOther;
+
             static int durationAccumulator(ScheduledActivityModel x) => x.HasNoEffort ? 0 : x.Duration;
 
-            double direct = resourceSeriesModels
-                .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Direct)
-                .Sum(static x => x.ResourceSchedule.EffortAllocation.Sum(allocationAccumulator));
-            double indirect = resourceSeriesModels
-                .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.Indirect)
-                .Sum(static x => x.ResourceSchedule.EffortAllocation.Sum(allocationAccumulator));
-            double other = resourceSeriesModels
-                .Where(static x => x.InterActivityAllocationType == InterActivityAllocationType.None)
-                .Sum(static x => x.ResourceSchedule.EffortAllocation.Sum(allocationAccumulator));
-            double total = direct + indirect + other;
             double activity = resourceSeriesModels
                 .Sum(static x => x.ResourceSchedule.ScheduledActivities.Sum(durationAccumulator));
+
             double? efficiency = CalculateEfficiency(activity, total);
 
             return new EffortsModel
             {
-                Direct = direct,
-                Indirect = indirect,
-                Other = other,
+                Direct = totalDirect,
+                Indirect = totalIndirect,
+                Other = totalOther,
                 Total = total,
                 Activity = activity,
                 Efficiency = efficiency,

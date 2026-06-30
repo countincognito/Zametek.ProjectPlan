@@ -27,10 +27,11 @@
     <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.13" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.9" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.9" />
-    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="3.0.0" />
+    <!--<PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="3.0.0" />-->
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Zametek.Maths.Graphs\src\Zametek.Maths.Graphs.Compilers\Zametek.Maths.Graphs.Compilers.csproj" />
     <ProjectReference Include="..\Zametek.Common.ProjectPlan\Zametek.Common.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Contract.ProjectPlan\Zametek.Contract.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Data.ProjectPlan\Zametek.Data.ProjectPlan.csproj" />

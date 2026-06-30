@@ -282,4 +282,7 @@
   <data name="ToolTip_OverrideColor" xml:space="preserve">
     <value>Override Color</value>
   </data>
+  <data name="ToolTip_ActivityAllocationType" xml:space="preserve">
+    <value>Activity Allocation</value>
+  </data>
 </root>

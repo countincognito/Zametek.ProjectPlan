@@ -1,4 +1,4 @@
-﻿namespace Zametek.Common.ProjectPlan
+namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
     public record ResourceScheduleModel
@@ -7,13 +7,15 @@
 
         public List<ScheduledActivityModel> ScheduledActivities { get; init; } = [];
 
-        public List<bool> ActivityAllocation { get; init; } = [];
+        public List<bool> ResourceAllocation { get; init; } = [];
 
         public List<bool> CostAllocation { get; init; } = [];
 
         public List<bool> BillingAllocation { get; init; } = [];
 
         public List<bool> EffortAllocation { get; init; } = [];
+
+        public List<bool> ActivityAllocation { get; init; } = [];
 
         public int StartTime { get; init; }
 

@@ -1,4 +1,4 @@
-﻿using Zametek.Maths.Graphs;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.Common.ProjectPlan
 {
@@ -18,6 +18,9 @@ namespace Zametek.Common.ProjectPlan
 
         public bool IsInactive { get; init; }
         public bool IsIsInactiveEdited { get; init; } = false;
+
+        public ActivityAllocationType ActivityAllocationType { get; init; }
+        public bool IsActivityAllocationTypeEdited { get; init; } = false;
 
         public InterActivityAllocationType InterActivityAllocationType { get; init; }
         public bool IsInterActivityAllocationTypeEdited { get; init; } = false;

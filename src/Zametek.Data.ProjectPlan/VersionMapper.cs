@@ -743,6 +743,28 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_6_1.DependentActivityModel FromV0_6_0ToV0_6_1(v0_6_0.DependentActivityModel src);
         public partial v0_6_0.DependentActivityModel FromV0_6_1ToV0_6_0(v0_6_1.DependentActivityModel src);
 
+        // The v0.6.1 resource models mirror the Current models 1:1 (v0.6.1 introduced its own resource
+        // types so it can persist the new ActivityAllocationType), so the Current<->v0.6.1 pair opts into
+        // Target-required mapping to flag any future drift. The v0.4.4<->v0.6.1 pair (used by the
+        // v0.6.0<->v0.6.1 scenario chain, where resources are still stored as v0.4.4 models) stays at the
+        // class default None: v0.4.4 has no ActivityAllocationType, so that target is intentionally left
+        // at its default on the way up and dropped on the way down.
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_1.ResourceModel FromCurrentToV0_6_1(ResourceModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial ResourceModel FromV0_6_1ToCurrent(v0_6_1.ResourceModel src);
+
+        public partial v0_6_1.ResourceModel FromV0_4_4ToV0_6_1(v0_4_4.ResourceModel src);
+        public partial v0_4_4.ResourceModel FromV0_6_1ToV0_4_4(v0_6_1.ResourceModel src);
+
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_1.ResourceSettingsModel FromCurrentToV0_6_1(ResourceSettingsModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial ResourceSettingsModel FromV0_6_1ToCurrent(v0_6_1.ResourceSettingsModel src);
+
+        public partial v0_6_1.ResourceSettingsModel FromV0_4_4ToV0_6_1(v0_4_4.ResourceSettingsModel src);
+        public partial v0_4_4.ResourceSettingsModel FromV0_6_1ToV0_4_4(v0_6_1.ResourceSettingsModel src);
+
         public partial v0_6_1.ProjectScenarioModel FromV0_6_0ToV0_6_1(v0_6_0.ProjectScenarioModel src);
         public partial v0_6_0.ProjectScenarioModel FromV0_6_1ToV0_6_0(v0_6_1.ProjectScenarioModel src);
 

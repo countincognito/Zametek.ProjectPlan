@@ -9,8 +9,8 @@ using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class XlsxScenarioExporter
-        : IXlsxScenarioExporter
+    public class XlsxScenarioFileExporter
+        : IXlsxScenarioFileExporter
     {
         #region Fields
 
@@ -81,6 +81,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 nameof(ResourceModel.Notes),
                 nameof(ResourceModel.IsExplicitTarget),
                 nameof(ResourceModel.IsInactive),
+                nameof(ResourceModel.ActivityAllocationType),
                 nameof(ResourceModel.InterActivityAllocationType),
                 nameof(ResourceModel.InterActivityPhases),
                 nameof(ResourceModel.UnitCost),
@@ -132,7 +133,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Ctors
 
-        public XlsxScenarioExporter(IDateTimeCalculator dateTimeCalculator)
+        public XlsxScenarioFileExporter(IDateTimeCalculator dateTimeCalculator)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             m_DateTimeCalculator = dateTimeCalculator;
@@ -1042,8 +1043,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             WriteResourceChartToWorkbook(
                 resourceSeriesSet,
-                x => x.ResourceSchedule.ActivityAllocation.Count,
-                (resourceSeries, timeIndex) => resourceSeries.ResourceSchedule.ActivityAllocation[timeIndex],
+                x => x.ResourceSchedule.ResourceAllocation.Count,
+                (resourceSeries, timeIndex) => resourceSeries.ResourceSchedule.ResourceAllocation[timeIndex],
                 Resource.ProjectPlan.Reporting.Reporting_WorksheetResourceChartActivity,
                 workbook,
                 titleStyle,

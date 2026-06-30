@@ -2,7 +2,7 @@ using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
-    public interface IXlsxScenarioExporter
+    public interface IXlsxScenarioFileExporter
     {
         void ExportProjectScenarioXlsxFile(
             ProjectScenarioModel projectScenario,

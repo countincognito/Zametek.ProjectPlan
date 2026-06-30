@@ -2,7 +2,7 @@ using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
-    public interface IXlsxFileImporter
+    public interface IXlsxScenarioFileImporter
     {
         ProjectScenarioImportModel ImportProjectScenarioXlsxFile(string filename);
     }

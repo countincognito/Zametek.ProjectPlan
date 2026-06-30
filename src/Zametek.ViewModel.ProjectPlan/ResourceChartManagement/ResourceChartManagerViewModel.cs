@@ -250,10 +250,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             allocationFunction = allocationMode switch
             {
-                AllocationMode.Activity => model => model.ActivityAllocation,
+                AllocationMode.Resource => model => model.ResourceAllocation,
                 AllocationMode.Cost => model => model.CostAllocation,
                 AllocationMode.Billing => model => model.BillingAllocation,
                 AllocationMode.Effort => model => model.EffortAllocation,
+                AllocationMode.Activity => model => model.ActivityAllocation,
                 _ => throw new ArgumentOutOfRangeException(nameof(allocationMode), @$"{Resource.ProjectPlan.Messages.Message_UnknownAllocationMode} {allocationMode}"),
             };
 

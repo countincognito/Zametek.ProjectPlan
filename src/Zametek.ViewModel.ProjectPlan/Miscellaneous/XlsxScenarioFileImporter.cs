@@ -8,8 +8,8 @@ using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class XlsxFileImporter
-        : IXlsxFileImporter
+    public class XlsxScenarioFileImporter
+        : IXlsxScenarioFileImporter
     {
         #region Fields
 
@@ -72,6 +72,7 @@ namespace Zametek.ViewModel.ProjectPlan
             nameof(ResourceModel.Notes),
             nameof(ResourceModel.IsExplicitTarget),
             nameof(ResourceModel.IsInactive),
+            nameof(ResourceModel.ActivityAllocationType),
             nameof(ResourceModel.InterActivityAllocationType),
             nameof(ResourceModel.InterActivityPhases),
             nameof(ResourceModel.UnitCost),
@@ -451,6 +452,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     bool isExplicitTarget = false;
                     bool isInactive = false;
                     List<int> interActivityPhases = [];
+                    ActivityAllocationType activityAllocationType = ActivityAllocationType.Direct;
                     InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
                     double unitCost = 0.0;
                     double unitBilling = 0.0;
@@ -503,6 +505,8 @@ namespace Zametek.ViewModel.ProjectPlan
                                         }
                                     }
                                 })
+                            .Case(nameof(ResourceModel.ActivityAllocationType),
+                                colName => activityAllocationType = row[colName]?.ToString().GetValueFromDescription<ActivityAllocationType>() ?? default)
                             .Case(nameof(ResourceModel.InterActivityAllocationType),
                                 colName => interActivityAllocationType = row[colName]?.ToString().GetValueFromDescription<InterActivityAllocationType>() ?? default)
                             .Case(nameof(ResourceModel.UnitCost),
@@ -574,6 +578,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             Notes = notes,
                             IsExplicitTarget = isExplicitTarget,
                             IsInactive = isInactive,
+                            ActivityAllocationType = activityAllocationType,
                             InterActivityAllocationType = interActivityAllocationType,
                             InterActivityPhases = interActivityPhases,
                             UnitCost = unitCost,

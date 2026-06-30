@@ -69,11 +69,11 @@ namespace Zametek.ProjectPlan.CommandLine
 
                         services.AddSingleton<IProjectFileOpen, ProjectFileOpen>();
                         services.AddSingleton<IMicrosoftProjectFileImporter, MicrosoftProjectFileImporter>();
-                        services.AddSingleton<IXlsxFileImporter, XlsxFileImporter>();
+                        services.AddSingleton<IXlsxScenarioFileImporter, XlsxScenarioFileImporter>();
                         services.AddSingleton<IProjectScenarioFileImport, ProjectScenarioFileImport>();
                         services.AddSingleton<IProjectFileSave, ProjectFileSave>();
                         services.AddSingleton<IScottPlotImageExporter, ScottPlotImageExporter>();
-                        services.AddSingleton<IXlsxScenarioExporter, XlsxScenarioExporter>();
+                        services.AddSingleton<IXlsxScenarioFileExporter, XlsxScenarioFileExporter>();
                         services.AddSingleton<IProjectScenarioFileExport, ProjectScenarioFileExport>();
 
                         services.AddSingleton(new Data.ProjectPlan.VersionMapper());

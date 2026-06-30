@@ -60,6 +60,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     if (scheduledResourceSchedule.ScheduledActivities.Count > 0)
                     {
                         var stringBuilder = new StringBuilder();
+                        ActivityAllocationType activityAllocationType = ActivityAllocationType.Direct;
                         InterActivityAllocationType interActivityAllocationType = InterActivityAllocationType.None;
                         ColorFormatModel color = ColorHelper.Preset();
                         double unitCost = defaultUnitCost;
@@ -72,6 +73,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             && resourceLookup.TryGetValue(scheduledResourceSchedule.Resource.Id, out ResourceModel? resource))
                         {
                             int resourceId = resource.Id;
+                            activityAllocationType = resource.ActivityAllocationType;
                             interActivityAllocationType = resource.InterActivityAllocationType;
                             if (string.IsNullOrWhiteSpace(resource.Name))
                             {
@@ -109,6 +111,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             FixedBilling = fixedBilling,
                             DisplayOrder = displayOrder,
                             ResourceSchedule = scheduledResourceSchedule,
+                            ActivityAllocationType = activityAllocationType,
                             InterActivityAllocationType = interActivityAllocationType,
                         };
 
@@ -146,6 +149,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         var series = new ResourceSeriesModel
                         {
                             Title = title,
+                            ActivityAllocationType = resource.ActivityAllocationType,
                             InterActivityAllocationType = resource.InterActivityAllocationType,
                             ResourceSchedule = resourceSchedule,
                             ColorFormat = resource.ColorFormat != null ? resource.ColorFormat with { } : ColorHelper.Preset(),
@@ -168,46 +172,52 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 foreach (ResourceSeriesModel combinedSeries in combinedSeriesSet)
                 {
-                    IList<bool> combinedActivityAllocations = [.. Enumerable.Repeat(false, finishTime)];
+                    IList<bool> combinedResourceAllocations = [.. Enumerable.Repeat(false, finishTime)];
                     IList<bool> combinedCostAllocations = [.. Enumerable.Repeat(false, finishTime)];
                     IList<bool> combinedBillingAllocations = [.. Enumerable.Repeat(false, finishTime)];
                     IList<bool> combinedEffortAllocations = [.. Enumerable.Repeat(false, finishTime)];
+                    IList<bool> combinedActivityAllocations = [.. Enumerable.Repeat(false, finishTime)];
 
                     if (combinedSeries.ResourceSchedule.Resource.Id != default)
                     {
                         int resourceId = combinedSeries.ResourceSchedule.Resource.Id;
                         if (unscheduledResourceSeriesLookup.TryGetValue(resourceId, out ResourceSeriesModel? unscheduledResourceSeries))
                         {
-                            combinedActivityAllocations = [.. combinedSeries.ResourceSchedule.ActivityAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.ActivityAllocation, (x, y) => x || y)];
+                            combinedResourceAllocations = [.. combinedSeries.ResourceSchedule.ResourceAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.ResourceAllocation, (x, y) => x || y)];
                             combinedCostAllocations = [.. combinedSeries.ResourceSchedule.CostAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.CostAllocation, (x, y) => x || y)];
                             combinedBillingAllocations = [.. combinedSeries.ResourceSchedule.BillingAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.BillingAllocation, (x, y) => x || y)];
                             combinedEffortAllocations = [.. combinedSeries.ResourceSchedule.EffortAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.EffortAllocation, (x, y) => x || y)];
+                            combinedActivityAllocations = [.. combinedSeries.ResourceSchedule.ActivityAllocation.Zip(unscheduledResourceSeries.ResourceSchedule.ActivityAllocation, (x, y) => x || y)];
                             unscheduledSeriesAlreadyIncluded.Add(resourceId);
                         }
                         else
                         {
-                            combinedActivityAllocations = [.. combinedSeries.ResourceSchedule.ActivityAllocation];
+                            combinedResourceAllocations = [.. combinedSeries.ResourceSchedule.ResourceAllocation];
                             combinedCostAllocations = [.. combinedSeries.ResourceSchedule.CostAllocation];
                             combinedBillingAllocations = [.. combinedSeries.ResourceSchedule.BillingAllocation];
                             combinedEffortAllocations = [.. combinedSeries.ResourceSchedule.EffortAllocation];
+                            combinedActivityAllocations = [.. combinedSeries.ResourceSchedule.ActivityAllocation];
                         }
                     }
                     else
                     {
-                        combinedActivityAllocations = [.. combinedSeries.ResourceSchedule.ActivityAllocation];
+                        combinedResourceAllocations = [.. combinedSeries.ResourceSchedule.ResourceAllocation];
                         combinedCostAllocations = [.. combinedSeries.ResourceSchedule.CostAllocation];
                         combinedBillingAllocations = [.. combinedSeries.ResourceSchedule.BillingAllocation];
                         combinedEffortAllocations = [.. combinedSeries.ResourceSchedule.EffortAllocation];
+                        combinedActivityAllocations = [.. combinedSeries.ResourceSchedule.ActivityAllocation];
                     }
 
-                    combinedSeries.ResourceSchedule.ActivityAllocation.Clear();
-                    combinedSeries.ResourceSchedule.ActivityAllocation.AddRange(combinedActivityAllocations);
+                    combinedSeries.ResourceSchedule.ResourceAllocation.Clear();
+                    combinedSeries.ResourceSchedule.ResourceAllocation.AddRange(combinedResourceAllocations);
                     combinedSeries.ResourceSchedule.CostAllocation.Clear();
                     combinedSeries.ResourceSchedule.CostAllocation.AddRange(combinedCostAllocations);
                     combinedSeries.ResourceSchedule.BillingAllocation.Clear();
                     combinedSeries.ResourceSchedule.BillingAllocation.AddRange(combinedBillingAllocations);
                     combinedSeries.ResourceSchedule.EffortAllocation.Clear();
                     combinedSeries.ResourceSchedule.EffortAllocation.AddRange(combinedEffortAllocations);
+                    combinedSeries.ResourceSchedule.ActivityAllocation.Clear();
+                    combinedSeries.ResourceSchedule.ActivityAllocation.AddRange(combinedActivityAllocations);
                 }
 
                 // Finally, add the unscheduled series that have not already been included above.

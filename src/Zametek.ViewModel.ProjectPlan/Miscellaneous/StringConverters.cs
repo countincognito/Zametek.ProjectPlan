@@ -19,6 +19,16 @@ namespace Zametek.ViewModel.ProjectPlan
                     _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
                 });
 
+        public static readonly Func<ActivityAllocationType, string> ActivityAllocationTypeValue =
+            new(
+                x => x switch
+                {
+                    ActivityAllocationType.Direct => Enums.Enum_ActivityAllocationType_Direct,
+                    ActivityAllocationType.Indirect => Enums.Enum_ActivityAllocationType_Indirect,
+                    ActivityAllocationType.Other => Enums.Enum_ActivityAllocationType_Other,
+                    _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
+                });
+
         public static readonly Func<InterActivityAllocationType, string> InterActivityAllocationTypeValue =
             new(
                 x => x switch
@@ -53,7 +63,7 @@ namespace Zametek.ViewModel.ProjectPlan
             new(
                 x => x switch
                 {
-                    AllocationMode.Activity => Enums.Enum_AllocationMode_Activity,
+                    AllocationMode.Resource => Enums.Enum_AllocationMode_Resource,
                     AllocationMode.Cost => Enums.Enum_AllocationMode_Cost,
                     AllocationMode.Billing => Enums.Enum_AllocationMode_Billing,
                     AllocationMode.Effort => Enums.Enum_AllocationMode_Effort,

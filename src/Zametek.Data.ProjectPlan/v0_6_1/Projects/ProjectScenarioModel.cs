@@ -11,7 +11,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_1
 
         public v0_5_0.GraphSettingsModel GraphSettings { get; init; } = new();
 
-        public v0_4_4.ResourceSettingsModel ResourceSettings { get; init; } = new();
+        public ResourceSettingsModel ResourceSettings { get; init; } = new();
 
         public v0_3_2.WorkStreamSettingsModel WorkStreamSettings { get; init; } = new();
 

@@ -428,6 +428,10 @@ namespace Zametek.ViewModel.ProjectPlan
                             {
                                 resource.IsInactive = updateModel.IsInactive;
                             }
+                            if (updateModel.IsActivityAllocationTypeEdited)
+                            {
+                                resource.ActivityAllocationType = updateModel.ActivityAllocationType;
+                            }
                             if (updateModel.IsInterActivityAllocationTypeEdited)
                             {
                                 resource.InterActivityAllocationType = updateModel.InterActivityAllocationType;

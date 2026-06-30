@@ -1,11 +1,12 @@
-﻿namespace Zametek.Common.ProjectPlan
+namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
     public enum AllocationMode
     {
-        Activity,
+        Resource,
         Cost,
         Billing,
-        Effort
+        Effort,
+        Activity
     }
 }

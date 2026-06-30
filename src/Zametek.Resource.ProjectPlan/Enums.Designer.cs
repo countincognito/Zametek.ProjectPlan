@@ -61,6 +61,33 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Direct.
+        /// </summary>
+        public static string Enum_ActivityAllocationType_Direct {
+            get {
+                return ResourceManager.GetString("Enum_ActivityAllocationType_Direct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indirect.
+        /// </summary>
+        public static string Enum_ActivityAllocationType_Indirect {
+            get {
+                return ResourceManager.GetString("Enum_ActivityAllocationType_Indirect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Other.
+        /// </summary>
+        public static string Enum_ActivityAllocationType_Other {
+            get {
+                return ResourceManager.GetString("Enum_ActivityAllocationType_Other", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Activity.
         /// </summary>
         public static string Enum_AllocationMode_Activity {
@@ -93,6 +120,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Enum_AllocationMode_Effort {
             get {
                 return ResourceManager.GetString("Enum_AllocationMode_Effort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource.
+        /// </summary>
+        public static string Enum_AllocationMode_Resource {
+            get {
+                return ResourceManager.GetString("Enum_AllocationMode_Resource", resourceCulture);
             }
         }
         

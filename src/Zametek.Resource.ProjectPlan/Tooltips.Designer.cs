@@ -61,6 +61,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Activity Allocation.
+        /// </summary>
+        public static string ToolTip_ActivityAllocationType {
+            get {
+                return ResourceManager.GetString("ToolTip_ActivityAllocationType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Activity Name.
         /// </summary>
         public static string ToolTip_ActivityName {

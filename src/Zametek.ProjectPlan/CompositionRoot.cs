@@ -59,9 +59,9 @@ namespace Zametek.ProjectPlan
                 .As<IMicrosoftProjectFileImporter>()
                 .As<MicrosoftProjectFileImporter>()
                 .SingleInstance();
-            s_Builder.RegisterType<XlsxFileImporter>()
-                .As<IXlsxFileImporter>()
-                .As<XlsxFileImporter>()
+            s_Builder.RegisterType<XlsxScenarioFileImporter>()
+                .As<IXlsxScenarioFileImporter>()
+                .As<XlsxScenarioFileImporter>()
                 .SingleInstance();
             s_Builder.RegisterType<ProjectScenarioFileImport>()
                 .As<IProjectScenarioFileImport>()
@@ -71,9 +71,9 @@ namespace Zametek.ProjectPlan
                 .As<IScottPlotImageExporter>()
                 .As<ScottPlotImageExporter>()
                 .SingleInstance();
-            s_Builder.RegisterType<XlsxScenarioExporter>()
-                .As<IXlsxScenarioExporter>()
-                .As<XlsxScenarioExporter>()
+            s_Builder.RegisterType<XlsxScenarioFileExporter>()
+                .As<IXlsxScenarioFileExporter>()
+                .As<XlsxScenarioFileExporter>()
                 .SingleInstance();
             s_Builder.RegisterType<ProjectScenarioFileExport>()
                 .As<IProjectScenarioFileExport>()

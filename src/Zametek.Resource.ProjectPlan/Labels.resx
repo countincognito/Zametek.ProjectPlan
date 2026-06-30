@@ -175,7 +175,7 @@
     <value>projectplan.net</value>
   </data>
   <data name="Label_AppVersion" xml:space="preserve">
-    <value>0.9.3</value>
+    <value>0.10.0-alpha</value>
   </data>
   <data name="Label_Author" xml:space="preserve">
     <value>R. M. Bennett-Lovsey</value>
@@ -689,5 +689,8 @@
   </data>
   <data name="Label_OverrideColor" xml:space="preserve">
     <value>Override Color</value>
+  </data>
+  <data name="Label_ActivityAllocationType" xml:space="preserve">
+    <value>Activity Allocation</value>
   </data>
 </root>

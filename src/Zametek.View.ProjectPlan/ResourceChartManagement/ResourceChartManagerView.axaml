@@ -34,10 +34,10 @@
 						<Separator />
 
 						<MenuItem Header="{x:Static resources:Menus.Menu_AllocationMode}">
-							<MenuItem Header="{x:Static resources:Enums.Enum_AllocationMode_Activity}"
-									  IsChecked="{Binding Path=AllocationMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AllocationMode.Activity}, Mode=OneWay}"
+							<MenuItem Header="{x:Static resources:Enums.Enum_AllocationMode_Resource}"
+									  IsChecked="{Binding Path=AllocationMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AllocationMode.Resource}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeAllocationModeCommand, Mode=OneWay}"
-									  CommandParameter="{x:Static common:AllocationMode.Activity}"
+									  CommandParameter="{x:Static common:AllocationMode.Resource}"
 									  ToggleType="Radio" />
 
 							<MenuItem Header="{x:Static resources:Enums.Enum_AllocationMode_Cost}"
@@ -56,6 +56,12 @@
 									  IsChecked="{Binding Path=AllocationMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AllocationMode.Effort}, Mode=OneWay}"
 									  Command="{Binding Path=ChangeAllocationModeCommand, Mode=OneWay}"
 									  CommandParameter="{x:Static common:AllocationMode.Effort}"
+									  ToggleType="Radio" />
+
+              <MenuItem Header="{x:Static resources:Enums.Enum_AllocationMode_Activity}"
+									  IsChecked="{Binding Path=AllocationMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:AllocationMode.Activity}, Mode=OneWay}"
+									  Command="{Binding Path=ChangeAllocationModeCommand, Mode=OneWay}"
+									  CommandParameter="{x:Static common:AllocationMode.Activity}"
 									  ToggleType="Radio" />
 						</MenuItem>
 

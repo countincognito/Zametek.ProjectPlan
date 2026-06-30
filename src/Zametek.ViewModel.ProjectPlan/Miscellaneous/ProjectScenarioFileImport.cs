@@ -10,7 +10,7 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly IMicrosoftProjectFileImporter m_MicrosoftProjectFileImporter;
-        private readonly IXlsxFileImporter m_XlsxFileImporter;
+        private readonly IXlsxScenarioFileImporter m_XlsxFileImporter;
 
         #endregion
 
@@ -18,7 +18,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ProjectScenarioFileImport(
             IMicrosoftProjectFileImporter microsoftProjectFileImporter,
-            IXlsxFileImporter xlsxFileImporter)
+            IXlsxScenarioFileImporter xlsxFileImporter)
         {
             ArgumentNullException.ThrowIfNull(microsoftProjectFileImporter);
             ArgumentNullException.ThrowIfNull(xlsxFileImporter);

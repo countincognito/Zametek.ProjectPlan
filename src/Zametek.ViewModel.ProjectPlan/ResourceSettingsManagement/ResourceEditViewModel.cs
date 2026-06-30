@@ -78,6 +78,28 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private ActivityAllocationType m_ActivityAllocationType;
+        public ActivityAllocationType ActivityAllocationType
+        {
+            get => m_ActivityAllocationType;
+            set
+            {
+                m_ActivityAllocationType = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_IsActivityAllocationTypeActive;
+        public bool IsActivityAllocationTypeActive
+        {
+            get => m_IsActivityAllocationTypeActive;
+            set
+            {
+                m_IsActivityAllocationTypeActive = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
         private InterActivityAllocationType m_InterActivityAllocationType;
         public InterActivityAllocationType InterActivityAllocationType
         {
@@ -235,6 +257,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 IsInactive = IsInactive,
                 IsIsInactiveEdited = IsIsInactiveActive,
+
+                ActivityAllocationType = ActivityAllocationType,
+                IsActivityAllocationTypeEdited = IsActivityAllocationTypeActive,
 
                 InterActivityAllocationType = InterActivityAllocationType,
                 IsInterActivityAllocationTypeEdited = IsInterActivityAllocationTypeActive,

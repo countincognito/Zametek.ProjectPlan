@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			       xmlns:controls="using:Avalonia.Controls"
 			       xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			       xmlns:common="using:Zametek.Common.ProjectPlan"
 			       xmlns:local="using:Zametek.View.ProjectPlan"
              xmlns:zmg="clr-namespace:Zametek.Maths.Graphs;assembly=Zametek.Maths.Graphs.Primitives"
 			       xmlns:sys="using:System"
@@ -23,7 +24,8 @@
 		<local:ManagedResourceSortComparer x:Key="isExplicitTargetSortComparer" SortMemberPath="IsExplicitTarget"/>
 		<local:ManagedResourceSortComparer x:Key="isInactiveSortComparer" SortMemberPath="IsInactive"/>
 		<local:ManagedResourceSortComparer x:Key="allocationOrderSortComparer" SortMemberPath="AllocationOrder"/>
-		<local:ManagedResourceSortComparer x:Key="interActivityAllocationTypeSortComparer" SortMemberPath="InterActivityAllocationType"/>
+    <local:ManagedResourceSortComparer x:Key="activityAllocationTypeSortComparer" SortMemberPath="ActivityAllocationType"/>
+    <local:ManagedResourceSortComparer x:Key="interActivityAllocationTypeSortComparer" SortMemberPath="InterActivityAllocationType"/>
 		<local:ManagedResourceSortComparer x:Key="workStreamSelectorTargetWorkStreamsStringSortComparer" SortMemberPath="WorkStreamSelector.TargetWorkStreamsString"/>
 		<local:ManagedResourceSortComparer x:Key="unitCostSortComparer" SortMemberPath="UnitCost"/>
 		<local:ManagedResourceSortComparer x:Key="unitBillingSortComparer" SortMemberPath="UnitBilling"/>
@@ -386,7 +388,52 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
-				<DataGridTemplateColumn CanUserResize="True"
+        <DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="True"
+										CustomSortComparer="{StaticResource activityAllocationTypeSortComparer}"
+										Width="175">
+          <DataGridTemplateColumn.HeaderTemplate>
+            <DataTemplate>
+              <TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_ActivityAllocationType}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_ActivityAllocationType}"/>
+            </DataTemplate>
+          </DataGridTemplateColumn.HeaderTemplate>
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+              <Grid VerticalAlignment="Stretch"
+								  Classes="editable">
+                <TextBlock VerticalAlignment="Center"
+										   TextAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=ActivityAllocationType, Converter={x:Static local:StringConverters.ActivityAllocationTypeValue}, Mode=OneWay}"/>
+              </Grid>
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+          <DataGridTemplateColumn.CellEditingTemplate>
+            <DataTemplate>
+              <ComboBox ItemsSource="{Binding Source={local:EnumBindingSource {x:Type common:ActivityAllocationType}}}"
+									  SelectedItem="{Binding Path=ActivityAllocationType, Mode=TwoWay}"
+									  Focusable="True">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock VerticalAlignment="Center"
+												   TextAlignment="Left"
+												   Margin="0"
+												   Padding="3"
+												   Text="{Binding Converter={x:Static local:StringConverters.ActivityAllocationTypeValue}, Mode=OneWay}"/>
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+            </DataTemplate>
+          </DataGridTemplateColumn.CellEditingTemplate>
+        </DataGridTemplateColumn>
+
+        <DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"
 										CustomSortComparer="{StaticResource interActivityAllocationTypeSortComparer}"
@@ -431,6 +478,15 @@
 					</DataGridTemplateColumn.CellEditingTemplate>
 				</DataGridTemplateColumn>
 
+
+
+
+
+
+
+
+
+        
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"

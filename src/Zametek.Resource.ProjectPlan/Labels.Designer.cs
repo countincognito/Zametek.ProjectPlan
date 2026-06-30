@@ -70,6 +70,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Activity Allocation.
+        /// </summary>
+        public static string Label_ActivityAllocationType {
+            get {
+                return ResourceManager.GetString("Label_ActivityAllocationType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Activity Effort:.
         /// </summary>
         public static string Label_ActivityEffort {
@@ -232,7 +241,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.9.3.
+        ///   Looks up a localized string similar to 0.10.0-alpha.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -770,7 +779,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_FibonacciWeight", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Find.
         /// </summary>

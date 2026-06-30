@@ -234,10 +234,11 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 Resource = resourceModel,
                 ScheduledActivities = [.. src.ScheduledActivities.Select(x => ToScheduledActivityModel((ScheduledActivity<int>)x))],
-                ActivityAllocation = [.. src.ActivityAllocation],
+                ResourceAllocation = [.. src.ResourceAllocation],
                 CostAllocation = [.. src.CostAllocation],
                 BillingAllocation = [.. src.BillingAllocation],
                 EffortAllocation = [.. src.EffortAllocation],
+                ActivityAllocation = [.. src.ActivityAllocation],
                 StartTime = src.StartTime,
                 FinishTime = src.FinishTime
             };

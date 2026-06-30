@@ -9,13 +9,13 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        private readonly IXlsxScenarioExporter m_XlsxScenarioExporter;
+        private readonly IXlsxScenarioFileExporter m_XlsxScenarioExporter;
 
         #endregion
 
         #region Ctors
 
-        public ProjectScenarioFileExport(IXlsxScenarioExporter xlsxScenarioExporter)
+        public ProjectScenarioFileExport(IXlsxScenarioFileExporter xlsxScenarioExporter)
         {
             ArgumentNullException.ThrowIfNull(xlsxScenarioExporter);
             m_XlsxScenarioExporter = xlsxScenarioExporter;

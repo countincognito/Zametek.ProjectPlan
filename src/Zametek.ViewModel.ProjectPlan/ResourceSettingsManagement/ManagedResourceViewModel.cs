@@ -37,6 +37,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Notes = resource.Notes;
             m_IsExplicitTarget = resource.IsExplicitTarget;
             m_IsInactive = resource.IsInactive;
+            m_ActivityAllocationType = resource.ActivityAllocationType;
             m_InterActivityAllocationType = resource.InterActivityAllocationType;
             m_UnitCost = resource.UnitCost;
             m_UnitBilling = resource.UnitBilling;
@@ -184,6 +185,13 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private ActivityAllocationType m_ActivityAllocationType;
+        public ActivityAllocationType ActivityAllocationType
+        {
+            get => m_ActivityAllocationType;
+            set => this.RaiseAndSetIfChanged(ref m_ActivityAllocationType, value);
+        }
+
         private InterActivityAllocationType m_InterActivityAllocationType;
         public InterActivityAllocationType InterActivityAllocationType
         {
@@ -292,6 +300,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 Notes = Notes,
                 IsExplicitTarget = IsExplicitTarget,
                 IsInactive = IsInactive,
+                ActivityAllocationType = ActivityAllocationType,
                 InterActivityAllocationType = InterActivityAllocationType,
                 InterActivityPhases = [.. InterActivityPhases],
                 UnitCost = UnitCost,

@@ -1,4 +1,4 @@
-﻿using Zametek.Maths.Graphs;
+using Zametek.Maths.Graphs;
 
 namespace Zametek.Common.ProjectPlan
 {
@@ -6,6 +6,8 @@ namespace Zametek.Common.ProjectPlan
     public record ResourceSeriesModel
     {
         public string Title { get; init; } = string.Empty;
+
+        public ActivityAllocationType ActivityAllocationType { get; init; }
 
         public InterActivityAllocationType InterActivityAllocationType { get; init; }
 
