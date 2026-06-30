@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Zametek.Maths.Graphs\src\Zametek.Maths.Graphs.Primitives\Zametek.Maths.Graphs.Primitives.csproj" />
+    <PackageReference Include="Zametek.Maths.Graphs.Compilers" Version="3.0.1" />
   </ItemGroup>
 
 </Project>
