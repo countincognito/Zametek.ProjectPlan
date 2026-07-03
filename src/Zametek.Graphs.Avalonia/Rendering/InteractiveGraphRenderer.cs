@@ -15,35 +15,41 @@ namespace Zametek.Graphs.Avalonia
     // InteractiveArrowGraphRenderer/InteractiveVertexGraphRenderer.)
     internal static class InteractiveGraphRenderer
     {
-        private const float c_CornerRadius = 3.0f;
-        private const float c_NodeLabelFontSize = 11.0f;
-        private const float c_EdgeLabelFontSize = 12.0f;
         private const double c_Padding = 16.0;
         // Lift the label clear of the line, matching GraphEdgeViewModel.
         private const float c_LabelOffset = 9.0f;
 
-        // Matches the label TextBlocks (FontFamily="Consolas"). SKTypeface is thread-safe, but the
-        // SKFonts below are not - they are shared safely only because Render runs solely on the UI
-        // thread (it is invoked via Dispatcher.UIThread). Antialias edging + subpixel positioning keep
-        // the exported labels smooth now that text rendering no longer reads SKPaint.IsAntialias.
-        private static readonly SKTypeface s_LabelTypeface = SKTypeface.FromFamilyName("Consolas");
-        private static readonly SKFont s_EdgeLabelFont = new(s_LabelTypeface, c_EdgeLabelFontSize)
+        // Label fonts resolved from GraphAppearance, cached by (family, size) for the process lifetime.
+        // Caching (rather than per-render create/dispose) keeps each SKTypeface alive for as long as any
+        // recorded SKPicture might replay its text, and avoids rebuilding the font on every export. SKFont
+        // is not thread-safe, but Render runs solely on the UI thread (invoked via Dispatcher.UIThread),
+        // so the shared cache is safe. Antialias edging + subpixel positioning keep the exported labels
+        // smooth (text rendering no longer reads SKPaint.IsAntialias).
+        private static readonly Dictionary<(string Family, float Size), SKFont> s_FontCache = [];
+
+        private static SKFont GetLabelFont(FontFamily fontFamily, double fontSize)
         {
-            Edging = SKFontEdging.Antialias,
-            Subpixel = true,
-        };
-        private static readonly SKFont s_NodeLabelFont = new(s_LabelTypeface, c_NodeLabelFontSize)
-        {
-            Edging = SKFontEdging.Antialias,
-            Subpixel = true,
-        };
+            (string, float) key = (fontFamily.Name, (float)fontSize);
+            if (!s_FontCache.TryGetValue(key, out SKFont? font))
+            {
+                font = new SKFont(SKTypeface.FromFamilyName(key.Item1), key.Item2)
+                {
+                    Edging = SKFontEdging.Antialias,
+                    Subpixel = true,
+                };
+                s_FontCache[key] = font;
+            }
+            return font;
+        }
 
         public static SKPicture? Render(
             IReadOnlyList<GraphNodeViewModel> nodes,
-            IReadOnlyList<GraphEdgeViewModel> edges)
+            IReadOnlyList<GraphEdgeViewModel> edges,
+            GraphAppearance appearance)
         {
             ArgumentNullException.ThrowIfNull(nodes);
             ArgumentNullException.ThrowIfNull(edges);
+            ArgumentNullException.ThrowIfNull(appearance);
 
             if (nodes.Count == 0)
             {
@@ -73,21 +79,32 @@ namespace Zametek.Graphs.Avalonia
             // Shift the content origin so the bounding box starts after the margin.
             canvas.Translate((float)(c_Padding - minX), (float)(c_Padding - minY));
 
+            // Themable presentation resolved from the appearance (the colour/thickness/dash/arrow of the
+            // nodes and edges already flow through their view-model properties below).
+            SKFont nodeLabelFont = GetLabelFont(appearance.NodeLabelFontFamily, appearance.NodeLabelFontSize);
+            SKFont edgeLabelFont = GetLabelFont(appearance.EdgeLabelFontFamily, appearance.EdgeLabelFontSize);
+            float cornerRadius = (float)appearance.NodeCornerRadius;
+            SKColor nodeLabelColor = ToColor(appearance.NodeLabelBrush, SKColors.Black);
+            // The export is composited onto a white background regardless of the app theme, so use the
+            // light-background edge label brush - the theme-resolved edge.LabelBrush could be white (dark
+            // theme) and vanish on the export.
+            SKColor edgeLabelColor = ToColor(appearance.EdgeLightLabelBrush, SKColors.Black);
+
             // Edges first so the nodes sit on top, mirroring the z-order in the view.
             foreach (GraphEdgeViewModel edge in edges)
             {
-                DrawEdge(canvas, edge);
+                DrawEdge(canvas, edge, edgeLabelFont, edgeLabelColor);
             }
 
             foreach (GraphNodeViewModel node in nodes)
             {
-                DrawNode(canvas, node);
+                DrawNode(canvas, node, cornerRadius, nodeLabelFont, nodeLabelColor);
             }
 
             return recorder.EndRecording();
         }
 
-        private static void DrawEdge(SKCanvas canvas, GraphEdgeViewModel edge)
+        private static void DrawEdge(SKCanvas canvas, GraphEdgeViewModel edge, SKFont labelFont, SKColor labelColor)
         {
             SKColor color = ToColor(edge.BaseStroke, SKColors.Gray);
             float thickness = (float)edge.BaseStrokeThickness;
@@ -135,10 +152,10 @@ namespace Zametek.Graphs.Avalonia
                 canvas.DrawPath(path, arrowPaint);
             }
 
-            DrawEdgeLabel(canvas, edge);
+            DrawEdgeLabel(canvas, edge, labelFont, labelColor);
         }
 
-        private static void DrawEdgeLabel(SKCanvas canvas, GraphEdgeViewModel edge)
+        private static void DrawEdgeLabel(SKCanvas canvas, GraphEdgeViewModel edge, SKFont labelFont, SKColor labelColor)
         {
             if (!edge.ShowLabel || string.IsNullOrEmpty(edge.Label))
             {
@@ -161,15 +178,14 @@ namespace Zametek.Graphs.Avalonia
                 midY += (float)(dx / length) * c_LabelOffset;
             }
 
-            // Exports default to a light background, so a dark label reads best.
-            using var textPaint = new SKPaint { Color = SKColors.Black };
+            using var textPaint = new SKPaint { Color = labelColor };
 
-            SKFontMetrics metrics = s_EdgeLabelFont.Metrics;
+            SKFontMetrics metrics = labelFont.Metrics;
             float baseline = midY - ((metrics.Ascent + metrics.Descent) / 2.0f);
-            canvas.DrawText(edge.Label, midX, baseline, SKTextAlign.Center, s_EdgeLabelFont, textPaint);
+            canvas.DrawText(edge.Label, midX, baseline, SKTextAlign.Center, labelFont, textPaint);
         }
 
-        private static void DrawNode(SKCanvas canvas, GraphNodeViewModel node)
+        private static void DrawNode(SKCanvas canvas, GraphNodeViewModel node, float cornerRadius, SKFont labelFont, SKColor labelColor)
         {
             var rect = new SKRect(
                 (float)node.X,
@@ -184,7 +200,7 @@ namespace Zametek.Graphs.Avalonia
                 IsAntialias = true,
             })
             {
-                canvas.DrawRoundRect(rect, c_CornerRadius, c_CornerRadius, fillPaint);
+                canvas.DrawRoundRect(rect, cornerRadius, cornerRadius, fillPaint);
             }
 
             float borderThickness = (float)node.BorderThickness;
@@ -198,25 +214,25 @@ namespace Zametek.Graphs.Avalonia
             using (SKPathEffect? dash = BuildDash(node.StrokeDashArray, borderThickness))
             {
                 borderPaint.PathEffect = dash;
-                canvas.DrawRoundRect(rect, c_CornerRadius, c_CornerRadius, borderPaint);
+                canvas.DrawRoundRect(rect, cornerRadius, cornerRadius, borderPaint);
             }
 
-            DrawNodeLabel(canvas, node, rect);
+            DrawNodeLabel(canvas, node, rect, labelFont, labelColor);
         }
 
-        private static void DrawNodeLabel(SKCanvas canvas, GraphNodeViewModel node, SKRect rect)
+        private static void DrawNodeLabel(SKCanvas canvas, GraphNodeViewModel node, SKRect rect, SKFont labelFont, SKColor labelColor)
         {
             if (string.IsNullOrEmpty(node.Label))
             {
                 return;
             }
 
-            using var textPaint = new SKPaint { Color = SKColors.Black };
+            using var textPaint = new SKPaint { Color = labelColor };
 
             // The label is monospace, centred in the node just like the TextBlock. Stack any lines
             // about the node centre.
             string[] lines = node.Label.Split('\n');
-            SKFontMetrics metrics = s_NodeLabelFont.Metrics;
+            SKFontMetrics metrics = labelFont.Metrics;
             float lineHeight = metrics.Descent - metrics.Ascent;
             float blockHeight = lineHeight * lines.Length;
             float centreX = rect.MidX;
@@ -225,7 +241,7 @@ namespace Zametek.Graphs.Avalonia
             for (int i = 0; i < lines.Length; i++)
             {
                 float baseline = blockTop + (i * lineHeight) - metrics.Ascent;
-                canvas.DrawText(lines[i], centreX, baseline, SKTextAlign.Center, s_NodeLabelFont, textPaint);
+                canvas.DrawText(lines[i], centreX, baseline, SKTextAlign.Center, labelFont, textPaint);
             }
         }
 

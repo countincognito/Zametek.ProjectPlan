@@ -25,6 +25,10 @@ namespace Zametek.Graphs.Avalonia
 
         ObservableCollection<GraphEdgeViewModel> GraphEdges { get; }
 
+        // The themable appearance in effect (defaults to GraphAppearance.Default). Read by the export
+        // renderer so an appearance re-skin also shows in the copied / saved image.
+        GraphAppearance Appearance { get; }
+
         double WorkspaceWidth { get; }
 
         double WorkspaceHeight { get; }

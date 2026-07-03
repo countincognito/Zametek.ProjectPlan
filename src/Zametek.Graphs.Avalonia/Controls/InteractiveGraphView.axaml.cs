@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
@@ -39,10 +40,71 @@ namespace Zametek.Graphs.Avalonia
         private int m_FramingToken;
         private const double c_SliderDelta = 0.1;
 
+        // The template for a node's body. Node positioning, dragging, the selection ring and dimming are
+        // owned by the control, so a host can replace just the drawn body by setting this and binding
+        // against IGraphNodeViewModel. Defaults (in the constructor) to the built-in DefaultNodeTemplate,
+        // so a host that sets nothing keeps the original appearance.
+        public static readonly StyledProperty<IDataTemplate?> NodeTemplateProperty =
+            AvaloniaProperty.Register<InteractiveGraphView, IDataTemplate?>(nameof(NodeTemplate));
+
+        public IDataTemplate? NodeTemplate
+        {
+            get => GetValue(NodeTemplateProperty);
+            set => SetValue(NodeTemplateProperty, value);
+        }
+
+        // The template for an edge's drawn appearance (line, arrowhead, label). The wide invisible hit
+        // area and its tooltip are owned by the control, so a host can replace just the drawn appearance
+        // by setting this and binding against IGraphEdgeViewModel. Defaults to DefaultEdgeTemplate.
+        public static readonly StyledProperty<IDataTemplate?> EdgeTemplateProperty =
+            AvaloniaProperty.Register<InteractiveGraphView, IDataTemplate?>(nameof(EdgeTemplate));
+
+        public IDataTemplate? EdgeTemplate
+        {
+            get => GetValue(EdgeTemplateProperty);
+            set => SetValue(EdgeTemplateProperty, value);
+        }
+
         public InteractiveGraphView()
         {
             InitializeComponent();
             panLayer.RenderTransform = m_PanTransform;
+
+            // Default the body/appearance templates to the built-ins declared in the control's XAML, so a
+            // host that does not set NodeTemplate/EdgeTemplate keeps the original look. A host-supplied
+            // value (set after this constructor, e.g. from the consumer's XAML) overrides these. Setting
+            // them also mirrors the value into the body-template resource via OnPropertyChanged below.
+            if (NodeTemplate is null
+                && this.TryGetResource("GraphNodeBodyTemplate", null, out object? nodeTemplate)
+                && nodeTemplate is IDataTemplate defaultNodeTemplate)
+            {
+                NodeTemplate = defaultNodeTemplate;
+            }
+            if (EdgeTemplate is null
+                && this.TryGetResource("GraphEdgeBodyTemplate", null, out object? edgeTemplate)
+                && edgeTemplate is IDataTemplate defaultEdgeTemplate)
+            {
+                EdgeTemplate = defaultEdgeTemplate;
+            }
+        }
+
+        // Keep the body-template resources the item ContentPresenters bind to (via DynamicResource) in
+        // step with the NodeTemplate/EdgeTemplate properties. Pushing the template through a resource
+        // rather than a per-item {Binding ..., RelativeSource={AncestorType=InteractiveGraphView}} avoids
+        // the "Ancestor not found" binding-error flood that fires as every item tears down on a graph
+        // rebuild (e.g. a theme change), while still letting a host re-skin via the properties.
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == NodeTemplateProperty && NodeTemplate is not null)
+            {
+                Resources["GraphNodeBodyTemplate"] = NodeTemplate;
+            }
+            else if (change.Property == EdgeTemplateProperty && EdgeTemplate is not null)
+            {
+                Resources["GraphEdgeBodyTemplate"] = EdgeTemplate;
+            }
         }
 
         private double Zoom => zoomer.Value;
@@ -399,7 +461,7 @@ namespace Zametek.Graphs.Avalonia
                     return;
                 }
 
-                using SKPicture? picture = InteractiveGraphRenderer.Render(viewModel.GraphNodes, viewModel.GraphEdges);
+                using SKPicture? picture = InteractiveGraphRenderer.Render(viewModel.GraphNodes, viewModel.GraphEdges, viewModel.Appearance);
                 if (picture is null)
                 {
                     return;

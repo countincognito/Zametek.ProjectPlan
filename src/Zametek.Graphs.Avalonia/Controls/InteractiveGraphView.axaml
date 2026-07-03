@@ -12,6 +12,71 @@
     <g:ThemeToBackgroundConverter x:Key="themeToBackgroundConverter"/>
     <converters:EnumToBoolConverter x:Key="enumToBool"/>
     <g:HalfNegativeConverter x:Key="halfNegative"/>
+
+    <!-- Default node body. The node ContentPresenter binds its ContentTemplate to this via a
+         DynamicResource (NOT a per-item RelativeSource ancestor binding, which floods the log with
+         "Ancestor not found" as items tear down on a rebuild); the code-behind overwrites this resource
+         entry when a host sets NodeTemplate, so a re-skin still flows through. Only the body is templated:
+         node positioning, dragging, the selection ring and dimming are owned by the control (see the node
+         ItemsControl below), so a replacement need only draw the body from IGraphNodeViewModel. -->
+    <DataTemplate x:Key="GraphNodeBodyTemplate" x:DataType="g:IGraphNodeViewModel">
+      <Grid Background="Transparent">
+        <!-- Node body: fill + slack/override border, dashed for critical/dummy. -->
+        <Rectangle Fill="{Binding Path=FillBrush, Mode=OneWay}"
+                   Stroke="{Binding Path=BorderBrush, Mode=OneWay}"
+                   StrokeThickness="{Binding Path=BorderThickness, Mode=OneWay}"
+                   StrokeDashArray="{Binding Path=StrokeDashArray, Mode=OneWay}"
+                   RadiusX="{Binding Path=CornerRadius, Mode=OneWay}"
+                   RadiusY="{Binding Path=CornerRadius, Mode=OneWay}"/>
+        <TextBlock Text="{Binding Path=Label, Mode=OneWay}"
+                   FontFamily="{Binding Path=LabelFontFamily, Mode=OneWay}"
+                   FontSize="{Binding Path=LabelFontSize, Mode=OneWay}"
+                   Foreground="{Binding Path=LabelBrush, Mode=OneWay}"
+                   TextAlignment="Center"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   IsHitTestVisible="False"/>
+      </Grid>
+    </DataTemplate>
+
+    <!-- Default edge appearance. The edge ContentPresenter binds its ContentTemplate to this via a
+         DynamicResource (see the node body note above); the code-behind overwrites it when a host sets
+         EdgeTemplate. The wide invisible hit area and its tooltip are owned by the control (see the edge
+         ItemsControl below), so a replacement need only draw the line, arrowhead and label from
+         IGraphEdgeViewModel. -->
+    <DataTemplate x:Key="GraphEdgeBodyTemplate" x:DataType="g:IGraphEdgeViewModel">
+      <Canvas>
+        <Path Data="{Binding Path=EdgeGeometry, Mode=OneWay}"
+              Stroke="{Binding Path=Stroke, Mode=OneWay}"
+              StrokeThickness="{Binding Path=StrokeThickness, Mode=OneWay}"
+              StrokeDashArray="{Binding Path=StrokeDashArray, Mode=OneWay}"
+              Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"
+              IsHitTestVisible="False"/>
+        <Polygon Points="{Binding Path=ArrowPoints, Mode=OneWay}"
+                 Fill="{Binding Path=Stroke, Mode=OneWay}"
+                 Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"
+                 ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}"/>
+        <!-- Optional edge label, centred on the lifted edge midpoint. LabelX/LabelY give the anchor
+             point; the RenderTransform shifts the TextBlock by half its own rendered size so it is
+             centred on that point (matching the export renderer) rather than starting there and
+             spilling over the successor node. -->
+        <TextBlock Name="edgeLabel"
+                   Canvas.Left="{Binding Path=LabelX, Mode=OneWay}"
+                   Canvas.Top="{Binding Path=LabelY, Mode=OneWay}"
+                   Text="{Binding Path=Label, Mode=OneWay}"
+                   IsVisible="{Binding Path=ShowLabel, Mode=OneWay}"
+                   Foreground="{Binding Path=LabelBrush, Mode=OneWay}"
+                   Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"
+                   FontFamily="{Binding Path=LabelFontFamily, Mode=OneWay}"
+                   FontSize="{Binding Path=LabelFontSize, Mode=OneWay}"
+                   ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}">
+          <TextBlock.RenderTransform>
+            <TranslateTransform X="{Binding #edgeLabel.Bounds.Width, Converter={StaticResource halfNegative}}"
+                                Y="{Binding #edgeLabel.Bounds.Height, Converter={StaticResource halfNegative}}"/>
+          </TextBlock.RenderTransform>
+        </TextBlock>
+      </Canvas>
+    </DataTemplate>
   </UserControl.Resources>
 
   <DockPanel>
@@ -135,44 +200,19 @@
               </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
-              <DataTemplate x:DataType="g:GraphEdgeViewModel">
+              <DataTemplate x:DataType="g:IGraphEdgeViewModel">
                 <Canvas>
                   <!-- Invisible wide hit area so a thin edge is easy to hover for its tooltip.
                        Transparent (not null) so it is hit-test visible; the tooltip is empty for
-                       graphs (e.g. vertex) whose edges carry none. Follows the routed curve. -->
+                       graphs (e.g. vertex) whose edges carry none. Follows the routed curve. Owned by
+                       the control so a host-supplied EdgeTemplate keeps its hover tooltip. -->
                   <Path Data="{Binding Path=EdgeGeometry, Mode=OneWay}"
                         Stroke="Transparent"
                         StrokeThickness="14"
                         ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}"/>
-                  <Path Data="{Binding Path=EdgeGeometry, Mode=OneWay}"
-                        Stroke="{Binding Path=Stroke, Mode=OneWay}"
-                        StrokeThickness="{Binding Path=StrokeThickness, Mode=OneWay}"
-                        StrokeDashArray="{Binding Path=StrokeDashArray, Mode=OneWay}"
-                        Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"
-                        IsHitTestVisible="False"/>
-                  <Polygon Points="{Binding Path=ArrowPoints, Mode=OneWay}"
-                           Fill="{Binding Path=Stroke, Mode=OneWay}"
-                           Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"
-                           ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}"/>
-                  <!-- Optional edge label, centred on the lifted edge midpoint. LabelX/LabelY give
-                       the anchor point; the RenderTransform shifts the TextBlock by half its own
-                       rendered size so it is centred on that point (matching the export renderer)
-                       rather than starting there and spilling over the successor node. -->
-                  <TextBlock Name="edgeLabel"
-                             Canvas.Left="{Binding Path=LabelX, Mode=OneWay}"
-                             Canvas.Top="{Binding Path=LabelY, Mode=OneWay}"
-                             Text="{Binding Path=Label, Mode=OneWay}"
-                             IsVisible="{Binding Path=ShowLabel, Mode=OneWay}"
-                             Foreground="{Binding Path=LabelBrush, Mode=OneWay}"
-                             Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"
-                             FontFamily="Consolas"
-                             FontSize="12"
-                             ToolTip.Tip="{Binding Path=Tooltip, Mode=OneWay}">
-                    <TextBlock.RenderTransform>
-                      <TranslateTransform X="{Binding #edgeLabel.Bounds.Width, Converter={StaticResource halfNegative}}"
-                                          Y="{Binding #edgeLabel.Bounds.Height, Converter={StaticResource halfNegative}}"/>
-                    </TextBlock.RenderTransform>
-                  </TextBlock>
+                  <!-- Swappable edge appearance (defaults to DefaultEdgeTemplate). -->
+                  <ContentPresenter Content="{Binding}"
+                                    ContentTemplate="{DynamicResource GraphEdgeBodyTemplate}"/>
                 </Canvas>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
@@ -197,13 +237,16 @@
                  applies ONLY to the generated item containers, so it does both: positions every node
                  and never touches the tooltip presenter. -->
             <ItemsControl.ItemContainerTheme>
-              <ControlTheme TargetType="ContentPresenter" x:DataType="g:GraphNodeViewModel">
+              <ControlTheme TargetType="ContentPresenter" x:DataType="g:IGraphNodeViewModel">
                 <Setter Property="Canvas.Left" Value="{Binding Path=X, Mode=OneWay}"/>
                 <Setter Property="Canvas.Top" Value="{Binding Path=Y, Mode=OneWay}"/>
               </ControlTheme>
             </ItemsControl.ItemContainerTheme>
             <ItemsControl.ItemTemplate>
-              <DataTemplate x:DataType="g:GraphNodeViewModel">
+              <DataTemplate x:DataType="g:IGraphNodeViewModel">
+                <!-- Library-owned node chrome: sizing, interaction (drag), hover tooltip, dimming and
+                     the selection ring. The body is the swappable NodeTemplate (defaults to
+                     DefaultNodeTemplate); a replacement need only draw the body from IGraphNodeViewModel. -->
                 <Grid Width="{Binding Path=Width, Mode=OneWay}"
                       Height="{Binding Path=Height, Mode=OneWay}"
                       Opacity="{Binding Path=NodeOpacity, Mode=OneWay}"
@@ -213,26 +256,18 @@
                   <i:Interaction.Behaviors>
                     <g:GraphNodeDragBehavior/>
                   </i:Interaction.Behaviors>
-                  <!-- Node body: fill + slack/override border, dashed for critical/dummy. -->
-                  <Rectangle Fill="{Binding Path=FillBrush, Mode=OneWay}"
-                             Stroke="{Binding Path=BorderBrush, Mode=OneWay}"
-                             StrokeThickness="{Binding Path=BorderThickness, Mode=OneWay}"
-                             StrokeDashArray="{Binding Path=StrokeDashArray, Mode=OneWay}"
-                             RadiusX="3" RadiusY="3"/>
-                  <!-- Selection ring: sits over the body so it never hides the slack colour. -->
-                  <Rectangle Stroke="#0078D4"
+                  <ContentPresenter Content="{Binding}"
+                                    ContentTemplate="{DynamicResource GraphNodeBodyTemplate}"
+                                    HorizontalContentAlignment="Stretch"
+                                    VerticalContentAlignment="Stretch"/>
+                  <!-- Selection ring: control-owned so every node body shows selection consistently;
+                       sits over the body so it never hides the slack colour. -->
+                  <Rectangle Stroke="{Binding Path=SelectionBrush, Mode=OneWay}"
                              StrokeThickness="3"
-                             RadiusX="3" RadiusY="3"
+                             RadiusX="{Binding Path=CornerRadius, Mode=OneWay}"
+                             RadiusY="{Binding Path=CornerRadius, Mode=OneWay}"
                              IsHitTestVisible="False"
                              IsVisible="{Binding Path=IsSelected, Mode=OneWay}"/>
-                  <TextBlock Text="{Binding Path=Label, Mode=OneWay}"
-                             FontFamily="Consolas"
-                             FontSize="11"
-                             Foreground="Black"
-                             TextAlignment="Center"
-                             HorizontalAlignment="Center"
-                             VerticalAlignment="Center"
-                             IsHitTestVisible="False"/>
                 </Grid>
               </DataTemplate>
             </ItemsControl.ItemTemplate>

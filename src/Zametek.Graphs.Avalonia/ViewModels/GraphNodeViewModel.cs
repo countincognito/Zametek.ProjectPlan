@@ -10,13 +10,14 @@ namespace Zametek.Graphs.Avalonia
     // the underlying colour. Dimming is driven by opacity. (Replaces the parallel
     // ArrowGraphNodeViewModel/VertexGraphNodeViewModel, which were identical.)
     public class GraphNodeViewModel
-        : ReactiveObject
+        : ReactiveObject, IGraphNodeViewModel
     {
-        private const double c_DimmedOpacity = 0.25;
+        private readonly double m_DimmedOpacity;
 
-        public GraphNodeViewModel(GraphNodeLayoutModel layout)
+        public GraphNodeViewModel(GraphNodeLayoutModel layout, GraphAppearance appearance)
         {
             ArgumentNullException.ThrowIfNull(layout);
+            ArgumentNullException.ThrowIfNull(appearance);
             Id = layout.Id;
             m_X = layout.X;
             m_Y = layout.Y;
@@ -25,10 +26,16 @@ namespace Zametek.Graphs.Avalonia
             Label = layout.Label;
             Name = layout.Name;
             Tooltip = layout.Tooltip;
-            FillBrush = ToBrush(layout.FillColorHexCode, Colors.LightGray);
-            BorderBrush = ToBrush(layout.BorderColorHexCode, Colors.Black);
-            BorderThickness = layout.BorderThickness <= 0.0 ? 1.0 : layout.BorderThickness;
-            StrokeDashArray = layout.IsDashed ? [3.0, 2.0] : null;
+            FillBrush = ToBrush(layout.FillColorHexCode, appearance.NodeFillFallbackBrush);
+            BorderBrush = ToBrush(layout.BorderColorHexCode, appearance.NodeBorderFallbackBrush);
+            BorderThickness = layout.BorderThickness <= 0.0 ? appearance.DefaultNodeBorderThickness : layout.BorderThickness;
+            StrokeDashArray = layout.IsDashed ? [.. appearance.DashPattern] : null;
+            CornerRadius = appearance.NodeCornerRadius;
+            LabelFontFamily = appearance.NodeLabelFontFamily;
+            LabelFontSize = appearance.NodeLabelFontSize;
+            LabelBrush = appearance.NodeLabelBrush;
+            SelectionBrush = appearance.SelectionBrush;
+            m_DimmedOpacity = appearance.NodeDimmedOpacity;
         }
 
         public int Id { get; }
@@ -69,6 +76,18 @@ namespace Zametek.Graphs.Avalonia
 
         public AvaloniaList<double>? StrokeDashArray { get; }
 
+        // Themed presentation resolved from GraphAppearance (global, but exposed per node so the default
+        // node template - and any host-supplied NodeTemplate - can bind everything from this one context).
+        public double CornerRadius { get; }
+
+        public FontFamily LabelFontFamily { get; }
+
+        public double LabelFontSize { get; }
+
+        public IBrush LabelBrush { get; }
+
+        public IBrush SelectionBrush { get; }
+
         private bool m_IsSelected;
         public bool IsSelected
         {
@@ -87,16 +106,15 @@ namespace Zametek.Graphs.Avalonia
             }
         }
 
-        public double NodeOpacity => IsDimmed ? c_DimmedOpacity : 1.0;
+        public double NodeOpacity => IsDimmed ? m_DimmedOpacity : 1.0;
 
-        private static IBrush ToBrush(string? hexCode, Color fallback)
+        private static IBrush ToBrush(string? hexCode, IBrush fallback)
         {
-            Color color = fallback;
-            if (!string.IsNullOrWhiteSpace(hexCode))
+            if (string.IsNullOrWhiteSpace(hexCode))
             {
-                color = ColorHelper.HtmlHexCodeToColor(hexCode);
+                return fallback;
             }
-            return new SolidColorBrush(color);
+            return new SolidColorBrush(ColorHelper.HtmlHexCodeToColor(hexCode));
         }
     }
 }

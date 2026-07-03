@@ -9,7 +9,6 @@ trim_trailing_whitespace = true
 insert_final_newline = true
 
 [*.cs]
-indent_size = 4
 # Namespace does not match folder structure 
 dotnet_diagnostic.IDE0130.severity = none
 

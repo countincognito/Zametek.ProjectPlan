@@ -32,6 +32,11 @@ namespace Zametek.Graphs.Avalonia
         // build and the routing-mode menu; the routing-mode command swaps the whole immutable record.
         private GraphConfiguration m_Config;
 
+        // The themable appearance handed to every node/edge view-model (brushes, fonts, opacities, shape
+        // metrics). Defaults to GraphAppearance.Default (the original look); a consumer re-skins by
+        // passing an instance to the ctor. Immutable for the view-model's lifetime.
+        private readonly GraphAppearance m_Appearance;
+
         private readonly IDisposable m_RebuildSub;
 
         // Coalesces edge reroutes: starting a new one cancels the previous so only the latest wins.
@@ -67,20 +72,23 @@ namespace Zametek.Graphs.Avalonia
             IGraphHost host,
             IGraphLayoutEngine layoutEngine,
             IGraphSerializer serializer,
-            GraphConfiguration configuration)
-            : this(host, layoutEngine, serializer, configuration, edgeRouter: null)
+            GraphConfiguration configuration,
+            GraphAppearance? appearance = null)
+            : this(host, layoutEngine, serializer, configuration, edgeRouter: null, appearance)
         {
         }
 
         // Router-injecting overload: supply a custom IInteractiveEdgeRouter (e.g. a future B that keeps a
         // persistent live router and reroutes only the dragged node's incident edges) or pass null to use
-        // the default MSAGL router. Also used by the tests.
+        // the default MSAGL router. Also used by the tests. The optional GraphAppearance re-skins the
+        // node/edge presentation (null = the original look).
         public InteractiveGraphViewModel(
             IGraphHost host,
             IGraphLayoutEngine layoutEngine,
             IGraphSerializer serializer,
             GraphConfiguration configuration,
-            IInteractiveEdgeRouter? edgeRouter)
+            IInteractiveEdgeRouter? edgeRouter,
+            GraphAppearance? appearance = null)
         {
             ArgumentNullException.ThrowIfNull(host);
             ArgumentNullException.ThrowIfNull(layoutEngine);
@@ -90,6 +98,7 @@ namespace Zametek.Graphs.Avalonia
             m_LayoutEngine = layoutEngine;
             m_Serializer = serializer;
             m_Config = configuration;
+            m_Appearance = appearance ?? GraphAppearance.Default;
             // Defaulted (not injected) so the manager view-models stay simple; a future B (live
             // rerouting) can inject a persistent router behind the same interface.
             m_EdgeRouter = edgeRouter ?? new MsaglInteractiveEdgeRouter();
@@ -112,6 +121,10 @@ namespace Zametek.Graphs.Avalonia
         // whole record). Exposed so the host's data path can build the fixed SVG with the same live
         // config the interactive view uses.
         public GraphConfiguration Configuration => m_Config;
+
+        // The themable appearance in effect (defaults to GraphAppearance.Default). Read-only; the node/
+        // edge view-models resolve their presentation from it at build time.
+        public GraphAppearance Appearance => m_Appearance;
 
         public bool SupportsShowNames => m_Config.SupportsShowNames;
 
@@ -574,7 +587,7 @@ namespace Zametek.Graphs.Avalonia
             var nodeLookup = new Dictionary<int, GraphNodeViewModel>();
             foreach (GraphNodeLayoutModel nodeLayout in layout.Nodes)
             {
-                var node = new GraphNodeViewModel(nodeLayout);
+                var node = new GraphNodeViewModel(nodeLayout, m_Appearance);
 
                 // Keep a node where the user dragged it; everything else takes the fresh layout,
                 // offset by the workspace margin so there is room to drag up and to the left.
@@ -613,7 +626,8 @@ namespace Zametek.Graphs.Avalonia
                     edgeLayout.ShowLabel,
                     edgeLayout.Tooltip,
                     theme,
-                    EdgeRoutingMode));
+                    EdgeRoutingMode,
+                    m_Appearance));
 
                 AddAdjacency(adjacency, edgeLayout.SourceId, edgeLayout.TargetId);
                 AddAdjacency(adjacency, edgeLayout.TargetId, edgeLayout.SourceId);
@@ -825,7 +839,7 @@ namespace Zametek.Graphs.Avalonia
             // source.
             SKPicture? picture = null;
             Dispatcher.UIThread.Invoke(() =>
-                picture = InteractiveGraphRenderer.Render(GraphNodes, GraphEdges));
+                picture = InteractiveGraphRenderer.Render(GraphNodes, GraphEdges, m_Appearance));
 
             if (picture is not null)
             {

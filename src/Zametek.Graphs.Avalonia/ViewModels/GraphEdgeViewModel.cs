@@ -14,12 +14,8 @@ namespace Zametek.Graphs.Avalonia
     // through), defaulting to grey; selection overrides it with the highlight colour. The label is
     // used by the arrow graph (activity edges) and left empty by the vertex graph.
     public class GraphEdgeViewModel
-        : ReactiveObject, IDisposable
+        : ReactiveObject, IGraphEdgeViewModel, IDisposable
     {
-        private const double c_DimmedOpacity = 0.15;
-        private const double c_HighlightThickness = 2.5;
-        private const double c_ArrowLength = 9.0;
-        private const double c_ArrowHalfWidth = 4.5;
         // How far back along the curve (in workspace pixels) the arrowhead's direction is measured, so
         // a tiny final control leg cannot flip it sideways. ~1.5x the arrow length: long enough to
         // absorb such a leg, short enough to still follow real curvature.
@@ -30,10 +26,13 @@ namespace Zametek.Graphs.Avalonia
         private const double c_AxisFlipRatio = 1.5;
         // Lift the label clear of the line so it reads against the canvas, not the edge.
         private const double c_LabelOffset = 9.0;
-        private static readonly IBrush s_DefaultBrush = new SolidColorBrush(Colors.Gray);
-        private static readonly IBrush s_HighlightBrush = new SolidColorBrush(Color.Parse(@"#0078D4"));
-        private static readonly IBrush s_LightLabelBrush = new SolidColorBrush(Colors.Black);
-        private static readonly IBrush s_DarkLabelBrush = new SolidColorBrush(Colors.White);
+
+        // Themed presentation resolved from GraphAppearance (see the ctor).
+        private readonly IBrush m_HighlightBrush;
+        private readonly double m_HighlightThickness;
+        private readonly double m_DimmedOpacity;
+        private readonly double m_ArrowLength;
+        private readonly double m_ArrowHalfWidth;
 
         private readonly GraphNodeViewModel m_Source;
         private readonly GraphNodeViewModel m_Target;
@@ -59,21 +58,30 @@ namespace Zametek.Graphs.Avalonia
             bool showLabel,
             string? tooltip,
             GraphTheme theme,
-            GraphEdgeRoutingMode routingMode)
+            GraphEdgeRoutingMode routingMode,
+            GraphAppearance appearance)
         {
             ArgumentNullException.ThrowIfNull(source);
             ArgumentNullException.ThrowIfNull(target);
+            ArgumentNullException.ThrowIfNull(appearance);
             Id = id;
             m_Source = source;
             m_Target = target;
-            m_BaseThickness = strokeThickness <= 0.0 ? 1.0 : strokeThickness;
-            m_BaseBrush = ToBrush(foregroundColorHexCode, s_DefaultBrush);
+            m_BaseThickness = strokeThickness <= 0.0 ? appearance.DefaultEdgeStrokeThickness : strokeThickness;
+            m_BaseBrush = ToBrush(foregroundColorHexCode, appearance.EdgeDefaultBrush);
             m_RoutingMode = routingMode;
-            StrokeDashArray = isDashed ? [3.0, 2.0] : null;
+            StrokeDashArray = isDashed ? [.. appearance.DashPattern] : null;
             Label = label ?? string.Empty;
             ShowLabel = showLabel && !string.IsNullOrEmpty(label);
             Tooltip = tooltip;
-            LabelBrush = theme == GraphTheme.Dark ? s_DarkLabelBrush : s_LightLabelBrush;
+            LabelBrush = theme == GraphTheme.Dark ? appearance.EdgeDarkLabelBrush : appearance.EdgeLightLabelBrush;
+            LabelFontFamily = appearance.EdgeLabelFontFamily;
+            LabelFontSize = appearance.EdgeLabelFontSize;
+            m_HighlightBrush = appearance.SelectionBrush;
+            m_HighlightThickness = appearance.HighlightStrokeThickness;
+            m_DimmedOpacity = appearance.EdgeDimmedOpacity;
+            m_ArrowLength = appearance.ArrowLength;
+            m_ArrowHalfWidth = appearance.ArrowHalfWidth;
 
             // An endpoint moving invalidates any exact MSAGL-routed geometry (it was routed for the old
             // position), so the edge falls back to the live approximation until the next reroute.
@@ -238,15 +246,21 @@ namespace Zametek.Graphs.Avalonia
 
         public IBrush LabelBrush { get; }
 
+        // Themed edge-label font resolved from GraphAppearance, exposed so the default edge template -
+        // and any host-supplied EdgeTemplate - can bind it from this one context.
+        public FontFamily LabelFontFamily { get; }
+
+        public double LabelFontSize { get; }
+
         // Anchor point the label is centred on (by the view's RenderTransform): the curve midpoint,
         // lifted perpendicular to the chord so it sits just off the edge rather than on top of it.
         public double LabelX => LabelAnchor.X;
 
         public double LabelY => LabelAnchor.Y;
 
-        public IBrush Stroke => IsHighlighted ? s_HighlightBrush : m_BaseBrush;
+        public IBrush Stroke => IsHighlighted ? m_HighlightBrush : m_BaseBrush;
 
-        public double StrokeThickness => IsHighlighted ? c_HighlightThickness : m_BaseThickness;
+        public double StrokeThickness => IsHighlighted ? m_HighlightThickness : m_BaseThickness;
 
         // Neutral (unselected, undimmed) appearance, used when exporting the graph image so the
         // export does not depend on the current selection/highlight state.
@@ -254,7 +268,7 @@ namespace Zametek.Graphs.Avalonia
 
         public double BaseStrokeThickness => m_BaseThickness;
 
-        public double EdgeOpacity => IsDimmed ? c_DimmedOpacity : 1.0;
+        public double EdgeOpacity => IsDimmed ? m_DimmedOpacity : 1.0;
 
         private bool m_IsHighlighted;
         public bool IsHighlighted
@@ -456,16 +470,16 @@ namespace Zametek.Graphs.Avalonia
 
             double unitX = dx / length;
             double unitY = dy / length;
-            double baseX = tip.X - (unitX * c_ArrowLength);
-            double baseY = tip.Y - (unitY * c_ArrowLength);
+            double baseX = tip.X - (unitX * m_ArrowLength);
+            double baseY = tip.Y - (unitY * m_ArrowLength);
             double perpX = -unitY;
             double perpY = unitX;
 
             return
             [
                 tip,
-                new Point(baseX + (perpX * c_ArrowHalfWidth), baseY + (perpY * c_ArrowHalfWidth)),
-                new Point(baseX - (perpX * c_ArrowHalfWidth), baseY - (perpY * c_ArrowHalfWidth)),
+                new Point(baseX + (perpX * m_ArrowHalfWidth), baseY + (perpY * m_ArrowHalfWidth)),
+                new Point(baseX - (perpX * m_ArrowHalfWidth), baseY - (perpY * m_ArrowHalfWidth)),
             ];
         }
 
