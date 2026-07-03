@@ -45,7 +45,8 @@ namespace Zametek.Graphs.Avalonia
         public static SKPicture? Render(
             IReadOnlyList<GraphNodeViewModel> nodes,
             IReadOnlyList<GraphEdgeViewModel> edges,
-            GraphAppearance appearance)
+            GraphAppearance appearance,
+            GraphTheme theme)
         {
             ArgumentNullException.ThrowIfNull(nodes);
             ArgumentNullException.ThrowIfNull(edges);
@@ -76,6 +77,17 @@ namespace Zametek.Graphs.Avalonia
             using var recorder = new SKPictureRecorder();
             SKCanvas canvas = recorder.BeginRecording(new SKRect(0, 0, width, height));
 
+            // Fill the whole picture with the theme background (drawn before the origin shift so it covers
+            // the full bounds including the margin) so the copied / saved image matches the on-screen
+            // canvas - which uses these same ColorHelper backgrounds via ThemeToBackgroundConverter.
+            SKColor backgroundColor = ToSKColor(theme == GraphTheme.Dark
+                ? ColorHelper.DarkThemeBackground
+                : ColorHelper.LightThemeBackground);
+            using (var backgroundPaint = new SKPaint { Style = SKPaintStyle.Fill, Color = backgroundColor })
+            {
+                canvas.DrawRect(new SKRect(0, 0, width, height), backgroundPaint);
+            }
+
             // Shift the content origin so the bounding box starts after the margin.
             canvas.Translate((float)(c_Padding - minX), (float)(c_Padding - minY));
 
@@ -84,11 +96,13 @@ namespace Zametek.Graphs.Avalonia
             SKFont nodeLabelFont = GetLabelFont(appearance.NodeLabelFontFamily, appearance.NodeLabelFontSize);
             SKFont edgeLabelFont = GetLabelFont(appearance.EdgeLabelFontFamily, appearance.EdgeLabelFontSize);
             float cornerRadius = (float)appearance.NodeCornerRadius;
+            // Node labels sit on the (light) node fills, so they stay dark on either theme, matching the
+            // on-screen node. Edge labels sit on the themed canvas background, so pick the light/dark label
+            // brush exactly as the on-screen edge does, keeping them readable on either background.
             SKColor nodeLabelColor = ToColor(appearance.NodeLabelBrush, SKColors.Black);
-            // The export is composited onto a white background regardless of the app theme, so use the
-            // light-background edge label brush - the theme-resolved edge.LabelBrush could be white (dark
-            // theme) and vanish on the export.
-            SKColor edgeLabelColor = ToColor(appearance.EdgeLightLabelBrush, SKColors.Black);
+            SKColor edgeLabelColor = theme == GraphTheme.Dark
+                ? ToColor(appearance.EdgeDarkLabelBrush, SKColors.White)
+                : ToColor(appearance.EdgeLightLabelBrush, SKColors.Black);
 
             // Edges first so the nodes sit on top, mirroring the z-order in the view.
             foreach (GraphEdgeViewModel edge in edges)
@@ -273,10 +287,14 @@ namespace Zametek.Graphs.Avalonia
         {
             if (brush is ISolidColorBrush solid)
             {
-                Color color = solid.Color;
-                return new SKColor(color.R, color.G, color.B, color.A);
+                return ToSKColor(solid.Color);
             }
             return fallback;
+        }
+
+        private static SKColor ToSKColor(Color color)
+        {
+            return new SKColor(color.R, color.G, color.B, color.A);
         }
     }
 }

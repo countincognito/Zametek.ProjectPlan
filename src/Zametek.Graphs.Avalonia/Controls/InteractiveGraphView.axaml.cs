@@ -461,7 +461,7 @@ namespace Zametek.Graphs.Avalonia
                     return;
                 }
 
-                using SKPicture? picture = InteractiveGraphRenderer.Render(viewModel.GraphNodes, viewModel.GraphEdges, viewModel.Appearance);
+                using SKPicture? picture = InteractiveGraphRenderer.Render(viewModel.GraphNodes, viewModel.GraphEdges, viewModel.Appearance, viewModel.Theme);
                 if (picture is null)
                 {
                     return;

@@ -839,7 +839,7 @@ namespace Zametek.Graphs.Avalonia
             // source.
             SKPicture? picture = null;
             Dispatcher.UIThread.Invoke(() =>
-                picture = InteractiveGraphRenderer.Render(GraphNodes, GraphEdges, m_Appearance));
+                picture = InteractiveGraphRenderer.Render(GraphNodes, GraphEdges, m_Appearance, Theme));
 
             if (picture is not null)
             {
