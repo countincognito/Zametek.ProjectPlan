@@ -19,20 +19,27 @@ namespace Zametek.Graphs.Avalonia
         // Lift the label clear of the line, matching GraphEdgeViewModel.
         private const float c_LabelOffset = 9.0f;
 
-        // Label fonts resolved from GraphAppearance, cached by (family, size) for the process lifetime.
-        // Caching (rather than per-render create/dispose) keeps each SKTypeface alive for as long as any
-        // recorded SKPicture might replay its text, and avoids rebuilding the font on every export. SKFont
-        // is not thread-safe, but Render runs solely on the UI thread (invoked via Dispatcher.UIThread),
-        // so the shared cache is safe. Antialias edging + subpixel positioning keep the exported labels
-        // smooth (text rendering no longer reads SKPaint.IsAntialias).
-        private static readonly Dictionary<(string Family, float Size), SKFont> s_FontCache = [];
+        // Label fonts resolved from GraphAppearance, cached by (family, size, weight) for the process
+        // lifetime. Caching (rather than per-render create/dispose) keeps each SKTypeface alive for as long
+        // as any recorded SKPicture might replay its text, and avoids rebuilding the font on every export.
+        // SKFont is not thread-safe, but Render runs solely on the UI thread (invoked via Dispatcher
+        // .UIThread), so the shared cache is safe. Antialias edging + subpixel positioning keep the exported
+        // labels smooth (text rendering no longer reads SKPaint.IsAntialias).
+        private static readonly Dictionary<(string Family, float Size, int Weight), SKFont> s_FontCache = [];
 
-        private static SKFont GetLabelFont(FontFamily fontFamily, double fontSize)
+        private static SKFont GetLabelFont(FontFamily fontFamily, double fontSize, FontWeight fontWeight)
         {
-            (string, float) key = (fontFamily.Name, (float)fontSize);
+            (string, float, int) key = (fontFamily.Name, (float)fontSize, (int)fontWeight);
             if (!s_FontCache.TryGetValue(key, out SKFont? font))
             {
-                font = new SKFont(SKTypeface.FromFamilyName(key.Item1), key.Item2)
+                // Avalonia FontWeight values are the numeric weights (Normal = 400, Bold = 700), which map
+                // straight onto SKFontStyleWeight so a bold label resolves to a bold typeface.
+                SKTypeface typeface = SKTypeface.FromFamilyName(
+                    key.Item1,
+                    (SKFontStyleWeight)key.Item3,
+                    SKFontStyleWidth.Normal,
+                    SKFontStyleSlant.Upright);
+                font = new SKFont(typeface, key.Item2)
                 {
                     Edging = SKFontEdging.Antialias,
                     Subpixel = true,
@@ -95,8 +102,8 @@ namespace Zametek.Graphs.Avalonia
 
             // Themable presentation resolved from the appearance (the colour/thickness/dash/arrow of the
             // nodes and edges already flow through their view-model properties below).
-            SKFont nodeLabelFont = GetLabelFont(appearance.NodeLabelFontFamily, appearance.NodeLabelFontSize);
-            SKFont edgeLabelFont = GetLabelFont(appearance.EdgeLabelFontFamily, appearance.EdgeLabelFontSize);
+            SKFont nodeLabelFont = GetLabelFont(appearance.NodeLabelFontFamily, appearance.NodeLabelFontSize, style.NodeLabelFontWeight);
+            SKFont edgeLabelFont = GetLabelFont(appearance.EdgeLabelFontFamily, appearance.EdgeLabelFontSize, style.EdgeLabelFontWeight);
             float cornerRadius = (float)appearance.NodeCornerRadius;
             // Node labels sit on the (light) node fills, so they stay dark on either theme, matching the
             // on-screen node. Edge labels sit on the themed canvas background, so pick the light/dark label
@@ -125,6 +132,36 @@ namespace Zametek.Graphs.Avalonia
             SKColor color = ToColor(edge.BaseStroke, SKColors.Gray);
             float thickness = (float)edge.BaseStrokeThickness;
 
+            // Match the on-screen <Path>: the same contiguous bezier segments (a straight line for
+            // non-spline modes, an orthogonal path for rectilinear modes). Built once and reused for the
+            // optional glow underlay and the line itself.
+            IReadOnlyList<GraphEdgeSegment> segments = edge.EdgeSegments;
+            using var path = new SKPath();
+            path.MoveTo((float)segments[0].Start.X, (float)segments[0].Start.Y);
+            foreach (GraphEdgeSegment segment in segments)
+            {
+                path.CubicTo(
+                    (float)segment.Control1.X, (float)segment.Control1.Y,
+                    (float)segment.Control2.X, (float)segment.Control2.Y,
+                    (float)segment.End.X, (float)segment.End.Y);
+            }
+
+            // Optional soft glow beneath the line (a blurred, translucent copy), matching a template's
+            // DropShadowEffect on the edge. Drawn first so the crisp line sits on top.
+            if (style.ShowEdgeGlow && style.EdgeGlowBlurRadius > 0.0)
+            {
+                using var glowPaint = new SKPaint
+                {
+                    Style = SKPaintStyle.Stroke,
+                    Color = GlowColor(style.EdgeGlowBrush, edge.BaseStroke, style.EdgeGlowOpacity),
+                    StrokeWidth = thickness,
+                    IsAntialias = true,
+                };
+                using SKMaskFilter blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, BlurSigma(style.EdgeGlowBlurRadius));
+                glowPaint.MaskFilter = blur;
+                canvas.DrawPath(path, glowPaint);
+            }
+
             using (var linePaint = new SKPaint
             {
                 Style = SKPaintStyle.Stroke,
@@ -135,19 +172,6 @@ namespace Zametek.Graphs.Avalonia
             {
                 using SKPathEffect? dash = BuildDash(edge.StrokeDashArray, thickness);
                 linePaint.PathEffect = dash;
-
-                // Match the on-screen <Path>: the same contiguous bezier segments (a straight line for
-                // non-spline modes, an orthogonal path for rectilinear modes).
-                IReadOnlyList<GraphEdgeSegment> segments = edge.EdgeSegments;
-                using var path = new SKPath();
-                path.MoveTo((float)segments[0].Start.X, (float)segments[0].Start.Y);
-                foreach (GraphEdgeSegment segment in segments)
-                {
-                    path.CubicTo(
-                        (float)segment.Control1.X, (float)segment.Control1.Y,
-                        (float)segment.Control2.X, (float)segment.Control2.Y,
-                        (float)segment.End.X, (float)segment.End.Y);
-                }
                 canvas.DrawPath(path, linePaint);
             }
 
@@ -160,12 +184,12 @@ namespace Zametek.Graphs.Avalonia
                     Color = color,
                     IsAntialias = true,
                 };
-                using var path = new SKPath();
-                path.MoveTo((float)arrowPoints[0].X, (float)arrowPoints[0].Y);
-                path.LineTo((float)arrowPoints[1].X, (float)arrowPoints[1].Y);
-                path.LineTo((float)arrowPoints[2].X, (float)arrowPoints[2].Y);
-                path.Close();
-                canvas.DrawPath(path, arrowPaint);
+                using var arrowPath = new SKPath();
+                arrowPath.MoveTo((float)arrowPoints[0].X, (float)arrowPoints[0].Y);
+                arrowPath.LineTo((float)arrowPoints[1].X, (float)arrowPoints[1].Y);
+                arrowPath.LineTo((float)arrowPoints[2].X, (float)arrowPoints[2].Y);
+                arrowPath.Close();
+                canvas.DrawPath(arrowPath, arrowPaint);
             }
 
             DrawEdgeLabel(canvas, edge, style, labelFont, labelColor);
@@ -216,6 +240,17 @@ namespace Zametek.Graphs.Avalonia
                 {
                     canvas.DrawRoundRect(chipRect, chipRadius, chipRadius, chipPaint);
                 }
+                if (style.EdgeLabelChipBorderBrush is not null && style.EdgeLabelChipBorderThickness > 0.0)
+                {
+                    using var chipBorderPaint = new SKPaint
+                    {
+                        Style = SKPaintStyle.Stroke,
+                        Color = ToColor(style.EdgeLabelChipBorderBrush, SKColors.Transparent),
+                        StrokeWidth = (float)style.EdgeLabelChipBorderThickness,
+                        IsAntialias = true,
+                    };
+                    canvas.DrawRoundRect(chipRect, chipRadius, chipRadius, chipBorderPaint);
+                }
                 if (style.EdgeLabelChipTextBrush is not null)
                 {
                     textColor = ToColor(style.EdgeLabelChipTextBrush, labelColor);
@@ -234,19 +269,36 @@ namespace Zametek.Graphs.Avalonia
                 (float)(node.X + node.Width),
                 (float)(node.Y + node.Height));
 
-            // The fill is the per-node data brush unless the style overrides it (for templates whose fill
-            // is not data-driven, e.g. a fixed gradient the vector export cannot read).
-            SKColor fillColor = style.NodeFillOverride is not null
-                ? ToColor(style.NodeFillOverride, SKColors.LightGray)
-                : ToColor(node.FillBrush, SKColors.LightGray);
+            // Optional soft outer glow, drawn first (underneath everything) so it reads as a halo around the
+            // silhouette, matching a template's DropShadowEffect.
+            if (style.ShowNodeGlow && style.NodeGlowBlurRadius > 0.0)
+            {
+                using var glowPaint = new SKPaint
+                {
+                    Style = SKPaintStyle.Fill,
+                    Color = GlowColor(style.NodeGlowBrush, node.FillBrush, style.NodeGlowOpacity),
+                    IsAntialias = true,
+                };
+                using SKMaskFilter blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, BlurSigma(style.NodeGlowBlurRadius));
+                glowPaint.MaskFilter = blur;
+                DrawNodeShape(canvas, rect, style.NodeShape, cornerRadius, glowPaint);
+            }
 
-            using (var fillPaint = new SKPaint
+            // The fill is the per-node data brush unless the style overrides it (for templates whose fill is
+            // not data-driven). A gradient brush is honoured as a true vector gradient; otherwise it is read
+            // as a solid colour.
+            IBrush? fillBrush = style.NodeFillOverride ?? node.FillBrush;
+            using (var fillPaint = new SKPaint { Style = SKPaintStyle.Fill, IsAntialias = true })
+            using (SKShader? gradient = BuildGradientShader(fillBrush, rect))
             {
-                Style = SKPaintStyle.Fill,
-                Color = fillColor,
-                IsAntialias = true,
-            })
-            {
+                if (gradient is not null)
+                {
+                    fillPaint.Shader = gradient;
+                }
+                else
+                {
+                    fillPaint.Color = ToColor(fillBrush, SKColors.LightGray);
+                }
                 DrawNodeShape(canvas, rect, style.NodeShape, cornerRadius, fillPaint);
             }
 
@@ -268,16 +320,22 @@ namespace Zametek.Graphs.Avalonia
                 canvas.Restore();
             }
 
-            float borderThickness = (float)node.BorderThickness;
-            using (var borderPaint = new SKPaint
+            // Border: brush and thickness are overridable so a vector export can match a template's heavier
+            // or differently-coloured stroke; otherwise the per-node data values are used.
+            IBrush? borderBrush = style.NodeBorderOverride ?? node.BorderBrush;
+            float borderThickness = style.NodeBorderThicknessOverride is double overrideThickness
+                ? (float)overrideThickness
+                : (float)node.BorderThickness;
+            if (borderThickness > 0.0f)
             {
-                Style = SKPaintStyle.Stroke,
-                Color = ToColor(node.BorderBrush, SKColors.Black),
-                StrokeWidth = borderThickness,
-                IsAntialias = true,
-            })
-            using (SKPathEffect? dash = BuildDash(node.StrokeDashArray, borderThickness))
-            {
+                using var borderPaint = new SKPaint
+                {
+                    Style = SKPaintStyle.Stroke,
+                    Color = ToColor(borderBrush, SKColors.Black),
+                    StrokeWidth = borderThickness,
+                    IsAntialias = true,
+                };
+                using SKPathEffect? dash = BuildDash(node.StrokeDashArray, borderThickness);
                 borderPaint.PathEffect = dash;
                 DrawNodeShape(canvas, rect, style.NodeShape, cornerRadius, borderPaint);
             }
@@ -388,6 +446,82 @@ namespace Zametek.Graphs.Avalonia
             }
 
             return SKPathEffect.CreateDash(intervals, 0.0f);
+        }
+
+        // The glow colour: the explicit glow brush if set, otherwise the shape's own colour (fill/stroke),
+        // taken down to the requested opacity so it reads as a translucent halo.
+        private static SKColor GlowColor(IBrush? glowBrush, IBrush? fallbackBrush, double opacity)
+        {
+            SKColor color = ToColor(glowBrush ?? fallbackBrush, SKColors.Gray);
+            byte alpha = (byte)(Math.Clamp(opacity, 0.0, 1.0) * 255.0);
+            return color.WithAlpha(alpha);
+        }
+
+        // Map a DropShadowEffect-style blur radius onto a Gaussian sigma for SKMaskFilter.CreateBlur.
+        private static float BlurSigma(double blurRadius) => (float)(blurRadius / 2.0);
+
+        // Build a SkiaSharp gradient shader from an Avalonia gradient brush, positioned over the given rect
+        // (in the canvas's current, origin-shifted coordinate space, which is where the shape is drawn).
+        // Returns null for a non-gradient brush, so the caller falls back to a solid fill.
+        private static SKShader? BuildGradientShader(IBrush? brush, SKRect rect)
+        {
+            if (brush is not IGradientBrush gradient || gradient.GradientStops.Count == 0)
+            {
+                return null;
+            }
+
+            int count = gradient.GradientStops.Count;
+            var colors = new SKColor[count];
+            var positions = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                colors[i] = ToSKColor(gradient.GradientStops[i].Color);
+                positions[i] = (float)gradient.GradientStops[i].Offset;
+            }
+
+            SKShaderTileMode tileMode = gradient.SpreadMethod switch
+            {
+                GradientSpreadMethod.Reflect => SKShaderTileMode.Mirror,
+                GradientSpreadMethod.Repeat => SKShaderTileMode.Repeat,
+                _ => SKShaderTileMode.Clamp,
+            };
+
+            var size = new Size(rect.Width, rect.Height);
+
+            switch (brush)
+            {
+                case IRadialGradientBrush radial:
+                {
+                    Point centre = radial.Center.ToPixels(size);
+                    var origin = new SKPoint(rect.Left + (float)centre.X, rect.Top + (float)centre.Y);
+                    float radius = RadialRadius(radial, size);
+                    if (radius <= 0.0f)
+                    {
+                        return null;
+                    }
+                    return SKShader.CreateRadialGradient(origin, radius, colors, positions, tileMode);
+                }
+                case ILinearGradientBrush linear:
+                {
+                    Point startRel = linear.StartPoint.ToPixels(size);
+                    Point endRel = linear.EndPoint.ToPixels(size);
+                    var start = new SKPoint(rect.Left + (float)startRel.X, rect.Top + (float)startRel.Y);
+                    var end = new SKPoint(rect.Left + (float)endRel.X, rect.Top + (float)endRel.Y);
+                    return SKShader.CreateLinearGradient(start, end, colors, positions, tileMode);
+                }
+                default:
+                    return null;
+            }
+        }
+
+        // The radial gradient's radius in pixels. SkiaSharp's radial gradient is circular, so take the larger
+        // of the relative X/Y radii (the elliptical case is rare and this keeps the gradient covering the
+        // shape). Isolated so it is easy to adjust if the RelativeScalar API differs across Avalonia versions.
+        private static float RadialRadius(IRadialGradientBrush radial, Size size)
+        {
+            double radiusX = radial.RadiusX.ToValue(size.Width);
+            double radiusY = radial.RadiusY.ToValue(size.Height);
+            return (float)Math.Max(radiusX, radiusY);
         }
 
         private static SKColor ToColor(IBrush? brush, SKColor fallback)

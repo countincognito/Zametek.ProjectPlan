@@ -55,8 +55,51 @@ namespace Zametek.Graphs.Avalonia.Tests.Rendering
             }, CancellationToken.None);
         }
 
+        [Fact]
+        public async Task Vector_gradient_fill_override_renders_as_a_gradient()
+        {
+            await m_Session.Dispatch(() =>
+            {
+                // The bespoke arrow's on-screen indigo radial gradient, supplied to the vector export.
+                var style = GraphVectorExportStyle.Default with
+                {
+                    NodeShape = GraphExportNodeShape.Ellipse,
+                    NodeFillOverride = new RadialGradientBrush
+                    {
+                        GradientStops =
+                        {
+                            new GradientStop(Color.Parse(@"#6D8BFF"), 0.0),
+                            new GradientStop(Color.Parse(@"#2A3F9D"), 1.0),
+                        },
+                    },
+                };
+
+                using SKBitmap bitmap = RenderNodeBitmap(fillHexCode: @"#EAF1FB", style);
+
+                // The gradient origin is the node centre (46, 36) - the bright inner stop (#6D8BFF).
+                SKColor centre = bitmap.GetPixel(46, 36);
+                // A point nearer the rim (still well inside the ellipse) - the darker indigo.
+                SKColor rim = bitmap.GetPixel(68, 36);
+
+                // Inner stop: a bright periwinkle (near-max blue), clearly not the light data fill.
+                centre.Blue.ShouldBeGreaterThan((byte)0xD0);
+                // It is a genuine gradient, not a flat fill: the rim is measurably darker/less blue.
+                rim.Blue.ShouldBeLessThan((byte)(centre.Blue - 20));
+                rim.Red.ShouldBeLessThan(centre.Red);
+            }, CancellationToken.None);
+        }
+
         // Render a single label-less node and return the colour at its centre.
+        // Node centre: padding(16) + Width/2, padding + Height/2 = (46, 36).
         private static SKColor RenderNodeCentre(string fillHexCode, GraphVectorExportStyle style)
+        {
+            using SKBitmap bitmap = RenderNodeBitmap(fillHexCode, style);
+            return bitmap.GetPixel(46, 36);
+        }
+
+        // Render a single 60x40 label-less node at the origin and return the raster (caller disposes). The
+        // node spans (16,16)-(76,56) in the image; its centre is (46, 36).
+        private static SKBitmap RenderNodeBitmap(string fillHexCode, GraphVectorExportStyle style)
         {
             var node = new GraphNodeViewModel(
                 new GraphNodeLayoutModel
@@ -80,15 +123,13 @@ namespace Zametek.Graphs.Avalonia.Tests.Rendering
 
             int width = (int)picture.CullRect.Width;
             int height = (int)picture.CullRect.Height;
-            using var bitmap = new SKBitmap(width, height);
+            var bitmap = new SKBitmap(width, height);
             using (var canvas = new SKCanvas(bitmap))
             {
                 canvas.Clear(SKColors.White);
                 canvas.DrawPicture(picture);
             }
-
-            // Node centre: padding(16) + Width/2, padding + Height/2 = (46, 36).
-            return bitmap.GetPixel(46, 36);
+            return bitmap;
         }
     }
 }
