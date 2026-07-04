@@ -61,4 +61,5 @@
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
   </Folder>
+  <Project Path="src/Zametek.Graphs.Avalonia.TestApp/Zametek.Graphs.Avalonia.TestApp.csproj" Id="8674ff6f-edda-4ff3-a1f6-76c8c2c6e393" />
 </Solution>

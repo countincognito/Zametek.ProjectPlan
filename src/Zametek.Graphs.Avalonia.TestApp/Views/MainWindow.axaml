@@ -1,0 +1,47 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Zametek.Graphs.Avalonia.TestApp.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="680"
+        x:Class="Zametek.Graphs.Avalonia.TestApp.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Width="1000" Height="680"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Zametek.Graphs.Avalonia — Test App">
+
+    <DockPanel>
+        <!-- Toolbar: title + light/dark toggle. -->
+        <Border DockPanel.Dock="Top"
+                Padding="12,8"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0"
+                            Orientation="Vertical"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="Zametek.Graphs.Avalonia — interactive graph demo"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text="Drag nodes · click to highlight · right-click for fit / reset / routing / copy / save · scroll to zoom"
+                               FontSize="12"
+                               Opacity="0.7"/>
+                </StackPanel>
+                <Button Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Content="{Binding ThemeButtonText}"
+                        Command="{Binding ToggleThemeCommand}"/>
+            </Grid>
+        </Border>
+
+        <!-- One tab per demo graph; the tab content view is resolved by the ViewLocator from each
+             tab's view-model type. -->
+        <TabControl ItemsSource="{Binding Tabs}">
+            <TabControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:GraphTabViewModelBase">
+                    <TextBlock Text="{Binding Title}"/>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+        </TabControl>
+    </DockPanel>
+
+</Window>

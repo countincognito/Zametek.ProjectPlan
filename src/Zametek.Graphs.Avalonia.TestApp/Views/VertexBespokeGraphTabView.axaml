@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:g="using:Zametek.Graphs.Avalonia"
+             xmlns:vm="using:Zametek.Graphs.Avalonia.TestApp.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:DataType="vm:VertexBespokeGraphTabViewModel"
+             x:Class="Zametek.Graphs.Avalonia.TestApp.Views.VertexBespokeGraphTabView">
+
+    <UserControl.Resources>
+        <!-- Bespoke node body: a "material card". Unlike the arrow tab, the activity nodes carry meaning
+             (critical vs. non-critical), so the template KEEPS the data-driven FillBrush / BorderBrush and
+             adds a rounded body, a drop shadow and a left accent stripe. The three-line ES/EF · name ·
+             LS/LF label stays monospace (from the bespoke appearance) so its columns line up. -->
+        <DataTemplate x:Key="VertexBespokeNodeTemplate" x:DataType="g:IGraphNodeViewModel">
+            <Border CornerRadius="10"
+                    Background="{Binding Path=FillBrush, Mode=OneWay}"
+                    BorderBrush="{Binding Path=BorderBrush, Mode=OneWay}"
+                    BorderThickness="1.5"
+                    ClipToBounds="True">
+                <Border.Effect>
+                    <DropShadowEffect Color="#55000000" BlurRadius="12" OffsetX="0" OffsetY="3" Opacity="0.45"/>
+                </Border.Effect>
+                <Grid ColumnDefinitions="Auto,*">
+                    <Border Grid.Column="0"
+                            Width="6"
+                            Background="{Binding Path=BorderBrush, Mode=OneWay}"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Path=Label, Mode=OneWay}"
+                               FontFamily="{Binding Path=LabelFontFamily, Mode=OneWay}"
+                               FontSize="{Binding Path=LabelFontSize, Mode=OneWay}"
+                               Foreground="{Binding Path=LabelBrush, Mode=OneWay}"
+                               TextAlignment="Center"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Margin="2,2,4,2"
+                               IsHitTestVisible="False"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- Bespoke edge appearance: soft round-capped connectors, no labels (the vertex graph has none). -->
+        <DataTemplate x:Key="VertexBespokeEdgeTemplate" x:DataType="g:IGraphEdgeViewModel">
+            <Canvas>
+                <Path Data="{Binding Path=EdgeGeometry, Mode=OneWay}"
+                      Stroke="{Binding Path=Stroke, Mode=OneWay}"
+                      StrokeThickness="{Binding Path=StrokeThickness, Mode=OneWay}"
+                      StrokeDashArray="{Binding Path=StrokeDashArray, Mode=OneWay}"
+                      StrokeLineCap="Round"
+                      Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"
+                      IsHitTestVisible="False"/>
+                <Polygon Points="{Binding Path=ArrowPoints, Mode=OneWay}"
+                         Fill="{Binding Path=Stroke, Mode=OneWay}"
+                         Opacity="{Binding Path=EdgeOpacity, Mode=OneWay}"/>
+            </Canvas>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <g:InteractiveGraphView DataContext="{Binding Interactive}"
+                            NodeTemplate="{StaticResource VertexBespokeNodeTemplate}"
+                            EdgeTemplate="{StaticResource VertexBespokeEdgeTemplate}"/>
+
+</UserControl>

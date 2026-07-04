@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:g="using:Zametek.Graphs.Avalonia"
+             xmlns:vm="using:Zametek.Graphs.Avalonia.TestApp.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:DataType="vm:ArrowDefaultGraphTabViewModel"
+             x:Class="Zametek.Graphs.Avalonia.TestApp.Views.ArrowDefaultGraphTabView">
+
+    <!-- Default presentation: just host the control and point it at the tab's IInteractiveGraph. No
+         NodeTemplate/EdgeTemplate and no GraphAppearance, so it looks exactly like ProjectPlan's arrow graph. -->
+    <g:InteractiveGraphView DataContext="{Binding Interactive}"/>
+
+</UserControl>
