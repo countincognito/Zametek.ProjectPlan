@@ -29,6 +29,6 @@
   <!-- The library under demonstration. Its transitive dependencies (MSAGL, SkiaSharp, Svg.Skia,
        Xaml.Behaviors.Avalonia, Zametek.Utility) flow in through this reference. -->
   <ItemGroup>
-    <ProjectReference Include="..\Zametek.Graphs.Avalonia\Zametek.Graphs.Avalonia.csproj" />
+    <ProjectReference Include="..\..\src\Zametek.Graphs.Avalonia\Zametek.Graphs.Avalonia.csproj" />
   </ItemGroup>
 </Project>
