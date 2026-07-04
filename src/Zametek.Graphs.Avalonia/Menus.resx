@@ -123,6 +123,12 @@
   <data name="Menu_EdgeRouting" xml:space="preserve">
     <value>Edge Routing</value>
   </data>
+  <data name="Menu_ExportHighFidelity" xml:space="preserve">
+    <value>High Fidelity</value>
+  </data>
+  <data name="Menu_ExportVector" xml:space="preserve">
+    <value>Vector</value>
+  </data>
   <data name="Menu_FitToView" xml:space="preserve">
     <value>Fit to View</value>
   </data>

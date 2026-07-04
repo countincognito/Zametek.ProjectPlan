@@ -57,7 +57,12 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <g:InteractiveGraphView DataContext="{Binding Interactive}"
+    <!-- ExportMode="Raster": the built-in default export reproduces the real card templates exactly. The
+         context menu still offers both entries; the matching vector silhouette (rounded card + accent
+         stripe) is configured in code-behind via VectorExportStyle. -->
+    <g:InteractiveGraphView x:Name="GraphView"
+                            DataContext="{Binding Interactive}"
+                            ExportMode="Raster"
                             NodeTemplate="{StaticResource VertexBespokeNodeTemplate}"
                             EdgeTemplate="{StaticResource VertexBespokeEdgeTemplate}"/>
 

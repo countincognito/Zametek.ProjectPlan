@@ -55,6 +55,16 @@ namespace Zametek.Graphs.Avalonia
 
         ICommand SaveGraphImageFileCommand { get; }
 
+        // Save at an explicit export mode (Vector / Raster), passed as the command parameter. The context
+        // menu's vector / high-fidelity entries bind to this.
+        ICommand SaveGraphImageWithModeCommand { get; }
+
+        // The view's image provider, set by the attached InteractiveGraphView so the Save path can render
+        // through the control's node/edge templates and export mode. Null when no control is attached (a
+        // headless caller), in which case Save falls back to the built-in vector renderer. Only a SkiaSharp
+        // picture crosses this seam - no Avalonia view or template type reaches the view-model.
+        IGraphImageProvider? ImageProvider { get; set; }
+
         // Set the edge routing mode. The menu's radio items bind to this, passing the chosen
         // GraphEdgeRoutingMode as the command parameter.
         ICommand ChangeEdgeRoutingModeCommand { get; }

@@ -5,6 +5,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -17,7 +18,7 @@ namespace Zametek.Graphs.Avalonia
     // via their InteractiveGraphViewModel), supporting drag, click-to-select, hover tooltips,
     // unbounded pan and zoom. (Replaces the parallel InteractiveArrowGraphView/InteractiveVertexGraphView.)
     public partial class InteractiveGraphView
-        : UserControl
+        : UserControl, IGraphImageProvider
     {
         // Pan is a render-transform translation (unbounded), not a scroll offset, so nodes
         // dragged anywhere remain reachable by panning. Zoom scales the content about its origin.
@@ -65,6 +66,50 @@ namespace Zametek.Graphs.Avalonia
             set => SetValue(EdgeTemplateProperty, value);
         }
 
+        // The export mode the built-in Copy/Save use (and the DefaultMode the view-model's Save reads).
+        // Vector draws crisp vector shapes (per VectorExportStyle); Raster rasterises the real templates.
+        public static readonly StyledProperty<GraphExportMode> ExportModeProperty =
+            AvaloniaProperty.Register<InteractiveGraphView, GraphExportMode>(nameof(ExportMode), GraphExportMode.Vector);
+
+        public GraphExportMode ExportMode
+        {
+            get => GetValue(ExportModeProperty);
+            set => SetValue(ExportModeProperty, value);
+        }
+
+        // The template-independent styling for the VECTOR export (node silhouette, accent stripe, edge label
+        // chip). Lets a consumer whose interactive NodeTemplate uses a non-default shape pick a matching
+        // vector silhouette. Defaults to the original rounded-rectangle look.
+        public static readonly StyledProperty<GraphVectorExportStyle> VectorExportStyleProperty =
+            AvaloniaProperty.Register<InteractiveGraphView, GraphVectorExportStyle>(nameof(VectorExportStyle), GraphVectorExportStyle.Default);
+
+        public GraphVectorExportStyle VectorExportStyle
+        {
+            get => GetValue(VectorExportStyleProperty);
+            set => SetValue(VectorExportStyleProperty, value);
+        }
+
+        // Whether the context menu offers the vector export entries (Copy Image / Save As -> Vector).
+        public static readonly StyledProperty<bool> ShowVectorExportOptionsProperty =
+            AvaloniaProperty.Register<InteractiveGraphView, bool>(nameof(ShowVectorExportOptions), true);
+
+        public bool ShowVectorExportOptions
+        {
+            get => GetValue(ShowVectorExportOptionsProperty);
+            set => SetValue(ShowVectorExportOptionsProperty, value);
+        }
+
+        // Whether the context menu offers the high-fidelity raster export entries (Copy Image / Save As ->
+        // High Fidelity).
+        public static readonly StyledProperty<bool> ShowRasterExportOptionsProperty =
+            AvaloniaProperty.Register<InteractiveGraphView, bool>(nameof(ShowRasterExportOptions), true);
+
+        public bool ShowRasterExportOptions
+        {
+            get => GetValue(ShowRasterExportOptionsProperty);
+            set => SetValue(ShowRasterExportOptionsProperty, value);
+        }
+
         public InteractiveGraphView()
         {
             InitializeComponent();
@@ -86,6 +131,8 @@ namespace Zametek.Graphs.Avalonia
             {
                 EdgeTemplate = defaultEdgeTemplate;
             }
+
+            ApplyExportMenuVisibility();
         }
 
         // Keep the body-template resources the item ContentPresenters bind to (via DynamicResource) in
@@ -104,6 +151,37 @@ namespace Zametek.Graphs.Avalonia
             else if (change.Property == EdgeTemplateProperty && EdgeTemplate is not null)
             {
                 Resources["GraphEdgeBodyTemplate"] = EdgeTemplate;
+            }
+            else if (change.Property == ShowVectorExportOptionsProperty
+                || change.Property == ShowRasterExportOptionsProperty)
+            {
+                ApplyExportMenuVisibility();
+            }
+        }
+
+        // Show/hide the vector and high-fidelity export menu entries per ShowVectorExportOptions /
+        // ShowRasterExportOptions. Done in code (matching each entry by Tag) rather than by binding, because
+        // these are control properties and the context menu is a popup - a control-property binding would
+        // not resolve across the popup boundary.
+        private void ApplyExportMenuVisibility()
+        {
+            ContextMenu? menu = viewport?.ContextMenu;
+            if (menu is null)
+            {
+                return;
+            }
+
+            foreach (MenuItem item in menu.GetLogicalDescendants().OfType<MenuItem>())
+            {
+                switch (item.Tag as string)
+                {
+                    case "export-vector":
+                        item.IsVisible = ShowVectorExportOptions;
+                        break;
+                    case "export-raster":
+                        item.IsVisible = ShowRasterExportOptions;
+                        break;
+                }
             }
         }
 
@@ -151,6 +229,9 @@ namespace Zametek.Graphs.Avalonia
             {
                 current.ViewReset += OnViewReset;
                 current.GraphRefreshed += OnGraphRefreshed;
+                // Register as the view-model's image provider so its Save command renders through this
+                // control's templates and export mode (only a SkiaSharp picture crosses back).
+                current.ImageProvider = this;
                 m_ViewModelEventsSource = current;
             }
         }
@@ -161,6 +242,10 @@ namespace Zametek.Graphs.Avalonia
             {
                 m_ViewModelEventsSource.ViewReset -= OnViewReset;
                 m_ViewModelEventsSource.GraphRefreshed -= OnGraphRefreshed;
+                if (ReferenceEquals(m_ViewModelEventsSource.ImageProvider, this))
+                {
+                    m_ViewModelEventsSource.ImageProvider = null;
+                }
                 m_ViewModelEventsSource = null;
             }
         }
@@ -439,14 +524,41 @@ namespace Zametek.Graphs.Avalonia
             }
         }
 
+        // --- IGraphImageProvider: render the neutral graph picture for the view-model's Save path, so only a
+        // SkiaSharp picture (never a template or view object) crosses back to the view-model. Called on the
+        // UI thread (the view-model marshals its Save render through Dispatcher.UIThread). ---
+
+        public GraphExportMode DefaultMode => ExportMode;
+
+        public SKPicture? RenderPicture(GraphExportMode mode)
+        {
+            if (DataContext is not IInteractiveGraph viewModel)
+            {
+                return null;
+            }
+
+            // Raster rasterises the real node/edge templates (highest fidelity, at 2x supersample); Vector
+            // draws crisp imperative shapes per the vector export style.
+            return mode == GraphExportMode.Raster
+                ? InteractiveGraphRasterRenderer.RenderPicture(
+                    viewModel.GraphNodes, viewModel.GraphEdges, NodeTemplate, EdgeTemplate, viewModel.Theme, scale: 2.0)
+                : InteractiveGraphRenderer.Render(
+                    viewModel.GraphNodes, viewModel.GraphEdges, VectorExportStyle, viewModel.Appearance, viewModel.Theme);
+        }
+
+        // Context-menu copy entries (visibility-gated in XAML), one per export mode.
+        private async void CopyVector_Click(object? sender, RoutedEventArgs e) => await CopyImageAsync(GraphExportMode.Vector);
+
+        private async void CopyRaster_Click(object? sender, RoutedEventArgs e) => await CopyImageAsync(GraphExportMode.Raster);
+
         // Copy the whole graph (the bounding-box-cropped render, matching the Save-Image export, not the
-        // current viewport) to the clipboard as an image. Built defensively for cross-platform use: the
-        // payload offers both the native bitmap representation (preferred where the backend supports it)
-        // and the raw image/png bytes (broadly readable, e.g. on X11/Wayland), so the OS picks whichever
-        // it understands. The whole operation is best-effort - if a clipboard backend cannot accept an
-        // image it fails silently rather than crashing, and the Save-Image export remains the guaranteed
-        // path.
-        private async void CopyImage_Click(object? sender, RoutedEventArgs e)
+        // current viewport) to the clipboard as an image, in the given mode (defaults to ExportMode). Built
+        // defensively for cross-platform use: the payload offers both the native bitmap representation
+        // (preferred where the backend supports it) and the raw image/png bytes (broadly readable, e.g. on
+        // X11/Wayland), so the OS picks whichever it understands. Best-effort - if a clipboard backend
+        // cannot accept an image it fails quietly rather than crashing, and Save-Image remains the
+        // guaranteed path.
+        public async Task CopyImageAsync(GraphExportMode? mode = null)
         {
             if (DataContext is not IInteractiveGraph viewModel)
             {
@@ -461,13 +573,17 @@ namespace Zametek.Graphs.Avalonia
                     return;
                 }
 
-                using SKPicture? picture = InteractiveGraphRenderer.Render(viewModel.GraphNodes, viewModel.GraphEdges, viewModel.Appearance, viewModel.Theme);
+                GraphExportMode effectiveMode = mode ?? ExportMode;
+                using SKPicture? picture = RenderPicture(effectiveMode);
                 if (picture is null)
                 {
                     return;
                 }
 
-                byte[] png = await ImageExporter.RenderToPngAsync(picture);
+                // A raster picture already carries its pixel scale (copy 1:1); a vector picture is
+                // supersampled so the PNG stays crisp.
+                int scale = effectiveMode == GraphExportMode.Raster ? 1 : 2;
+                byte[] png = await ImageExporter.RenderToPngAsync(picture, scale, scale);
 
                 DataTransfer? dataTransfer = BuildImageDataTransfer(png);
                 if (dataTransfer is null)

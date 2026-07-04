@@ -79,6 +79,24 @@ namespace Zametek.Graphs.Avalonia {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to High Fidelity.
+        /// </summary>
+        public static string Menu_ExportHighFidelity {
+            get {
+                return ResourceManager.GetString("Menu_ExportHighFidelity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Vector.
+        /// </summary>
+        public static string Menu_ExportVector {
+            get {
+                return ResourceManager.GetString("Menu_ExportVector", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Fit to View.
         /// </summary>
         public static string Menu_FitToView {

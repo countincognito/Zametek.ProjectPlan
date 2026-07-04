@@ -103,7 +103,8 @@ namespace Zametek.Graphs.Avalonia
             // rerouting) can inject a persistent router behind the same interface.
             m_EdgeRouter = edgeRouter ?? new MsaglInteractiveEdgeRouter();
 
-            SaveGraphImageFileCommand = ReactiveCommand.CreateFromTask(SaveInteractiveImageAsync);
+            SaveGraphImageFileCommand = ReactiveCommand.CreateFromTask(() => SaveInteractiveImageAsync(DefaultExportMode));
+            SaveGraphImageWithModeCommand = ReactiveCommand.CreateFromTask<GraphExportMode>(SaveInteractiveImageAsync);
             ChangeEdgeRoutingModeCommand = ReactiveCommand.Create<GraphEdgeRoutingMode>(ChangeEdgeRoutingMode);
 
             // The host pre-throttles/schedules the trigger; we simply rebuild on each notification.
@@ -184,7 +185,21 @@ namespace Zametek.Graphs.Avalonia
 
         public bool HasViewState { get; set; }
 
+        // The view's rendering provider, set by the attached InteractiveGraphView. When present, Save
+        // renders through it (honouring the export mode and any custom templates); when null (e.g. a
+        // headless caller) it falls back to the built-in vector renderer. Only a SkiaSharp picture crosses
+        // this boundary - no Avalonia view or template type reaches the view-model.
+        public IGraphImageProvider? ImageProvider { get; set; }
+
+        // The export mode the built-in Save uses: the provider's default (the control's ExportMode), or
+        // Vector when there is no provider.
+        private GraphExportMode DefaultExportMode => ImageProvider?.DefaultMode ?? GraphExportMode.Vector;
+
         public ICommand SaveGraphImageFileCommand { get; }
+
+        // Save at an explicit export mode (the command parameter). The context menu's vector / high-fidelity
+        // entries bind to this.
+        public ICommand SaveGraphImageWithModeCommand { get; }
 
         public ICommand ChangeEdgeRoutingModeCommand { get; }
 
@@ -215,10 +230,19 @@ namespace Zametek.Graphs.Avalonia
             }
         }
 
-        public async Task SaveImageAsync(
+        // Interface entry point: save at the default export mode (the attached view's ExportMode, or Vector
+        // when headless).
+        public Task SaveImageAsync(
             string? filename,
             GraphImageSource source,
-            FixedLayoutGraphType imageType)
+            FixedLayoutGraphType imageType) =>
+            SaveImageAsync(filename, source, imageType, DefaultExportMode);
+
+        private async Task SaveImageAsync(
+            string? filename,
+            GraphImageSource source,
+            FixedLayoutGraphType imageType,
+            GraphExportMode mode)
         {
             if (string.IsNullOrWhiteSpace(filename))
             {
@@ -249,7 +273,7 @@ namespace Zametek.Graphs.Avalonia
 
                 if (isImageFormat)
                 {
-                    await SaveImageFormatAsync(filename, fileExtension, source, imageType);
+                    await SaveImageFormatAsync(filename, fileExtension, source, imageType, mode);
                 }
 
                 if (data is not null)
@@ -780,14 +804,14 @@ namespace Zametek.Graphs.Avalonia
             neighbours.Add(to);
         }
 
-        private async Task SaveInteractiveImageAsync()
+        private async Task SaveInteractiveImageAsync(GraphExportMode mode)
         {
             try
             {
                 string? filename = await m_Host.PickSaveFileAsync();
                 if (!string.IsNullOrWhiteSpace(filename))
                 {
-                    await SaveImageAsync(filename, GraphImageSource.InteractiveCanvas, FixedLayoutGraphType.None);
+                    await SaveImageAsync(filename, GraphImageSource.InteractiveCanvas, FixedLayoutGraphType.None, mode);
                 }
             }
             catch (Exception ex)
@@ -800,11 +824,12 @@ namespace Zametek.Graphs.Avalonia
             string filename,
             string fileExtension,
             GraphImageSource source,
-            FixedLayoutGraphType imageType)
+            FixedLayoutGraphType imageType,
+            GraphExportMode mode)
         {
             if (source == GraphImageSource.InteractiveCanvas)
             {
-                await SaveInteractiveCanvasImageFormatAsync(filename);
+                await SaveInteractiveCanvasImageFormatAsync(filename, mode);
                 return;
             }
             else if (source == GraphImageSource.FixedLayout)
@@ -832,20 +857,28 @@ namespace Zametek.Graphs.Avalonia
             }
         }
 
-        private async Task SaveInteractiveCanvasImageFormatAsync(string filename)
+        private async Task SaveInteractiveCanvasImageFormatAsync(string filename, GraphExportMode mode)
         {
-            // Export exactly what is on the interactive canvas (the user's dragged arrangement).
-            // The picture is vector, so SVG/PDF stay crisp while PNG/JPEG render from the same
-            // source.
+            // Render the current interactive arrangement (the user's dragged layout) in the requested mode:
+            // Vector produces a crisp vector picture; Raster (from a live control's provider) rasterises the
+            // real node/edge templates. With no provider (e.g. headless) we fall back to the vector renderer.
+            IGraphImageProvider? provider = ImageProvider;
+            GraphExportMode effectiveMode = provider is not null ? mode : GraphExportMode.Vector;
+
             SKPicture? picture = null;
             Dispatcher.UIThread.Invoke(() =>
-                picture = InteractiveGraphRenderer.Render(GraphNodes, GraphEdges, m_Appearance, Theme));
+                picture = provider is not null
+                    ? provider.RenderPicture(effectiveMode)
+                    : InteractiveGraphRenderer.Render(GraphNodes, GraphEdges, GraphVectorExportStyle.Default, m_Appearance, Theme));
 
             if (picture is not null)
             {
                 using (picture)
                 {
-                    await ImageExporter.SaveImageAsync(picture, filename, scaleX: 2, scaleY: 2);
+                    // A raster picture already carries its pixel scale (export 1:1); a vector picture is
+                    // supersampled on export so PNG/JPEG stay crisp.
+                    int scale = effectiveMode == GraphExportMode.Raster ? 1 : 2;
+                    await ImageExporter.SaveImageAsync(picture, filename, scaleX: scale, scaleY: scale);
                 }
             }
         }

@@ -166,11 +166,28 @@
           
           <Separator/>
 
-          <MenuItem Header="{x:Static g:Menus.Menu_CopyImage}"
-                    Click="CopyImage_Click"/>
+          <!-- Copy / Save each offer explicit Vector and High-Fidelity entries; which appear is gated by
+               ShowVectorExportOptions / ShowRasterExportOptions (applied in code-behind by the Tag, to
+               avoid binding a control property across the context-menu popup boundary). -->
+          <MenuItem Header="{x:Static g:Menus.Menu_CopyImage}">
+            <MenuItem Tag="export-vector"
+                      Header="{x:Static g:Menus.Menu_ExportVector}"
+                      Click="CopyVector_Click"/>
+            <MenuItem Tag="export-raster"
+                      Header="{x:Static g:Menus.Menu_ExportHighFidelity}"
+                      Click="CopyRaster_Click"/>
+          </MenuItem>
 
-          <MenuItem Header="{x:Static g:Menus.Menu_SaveAs}"
-                    Command="{Binding Path=SaveGraphImageFileCommand, Mode=OneWay}"/>
+          <MenuItem Header="{x:Static g:Menus.Menu_SaveAs}">
+            <MenuItem Tag="export-vector"
+                      Header="{x:Static g:Menus.Menu_ExportVector}"
+                      Command="{Binding Path=SaveGraphImageWithModeCommand, Mode=OneWay}"
+                      CommandParameter="{x:Static g:GraphExportMode.Vector}"/>
+            <MenuItem Tag="export-raster"
+                      Header="{x:Static g:Menus.Menu_ExportHighFidelity}"
+                      Command="{Binding Path=SaveGraphImageWithModeCommand, Mode=OneWay}"
+                      CommandParameter="{x:Static g:GraphExportMode.Raster}"/>
+          </MenuItem>
         </ContextMenu>
       </Border.ContextMenu>
 

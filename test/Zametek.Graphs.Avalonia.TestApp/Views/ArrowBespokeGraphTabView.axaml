@@ -85,7 +85,12 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <g:InteractiveGraphView DataContext="{Binding Interactive}"
+    <!-- ExportMode="Raster": the built-in default export reproduces the real neon templates exactly. The
+         context menu still offers both Vector and High-Fidelity entries; the matching vector silhouette
+         (ellipse + label chip) is configured in code-behind via VectorExportStyle. -->
+    <g:InteractiveGraphView x:Name="GraphView"
+                            DataContext="{Binding Interactive}"
+                            ExportMode="Raster"
                             NodeTemplate="{StaticResource ArrowBespokeNodeTemplate}"
                             EdgeTemplate="{StaticResource ArrowBespokeEdgeTemplate}"/>
 

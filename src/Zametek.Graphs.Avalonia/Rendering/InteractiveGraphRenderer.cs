@@ -45,11 +45,13 @@ namespace Zametek.Graphs.Avalonia
         public static SKPicture? Render(
             IReadOnlyList<GraphNodeViewModel> nodes,
             IReadOnlyList<GraphEdgeViewModel> edges,
+            GraphVectorExportStyle style,
             GraphAppearance appearance,
             GraphTheme theme)
         {
             ArgumentNullException.ThrowIfNull(nodes);
             ArgumentNullException.ThrowIfNull(edges);
+            ArgumentNullException.ThrowIfNull(style);
             ArgumentNullException.ThrowIfNull(appearance);
 
             if (nodes.Count == 0)
@@ -107,18 +109,18 @@ namespace Zametek.Graphs.Avalonia
             // Edges first so the nodes sit on top, mirroring the z-order in the view.
             foreach (GraphEdgeViewModel edge in edges)
             {
-                DrawEdge(canvas, edge, edgeLabelFont, edgeLabelColor);
+                DrawEdge(canvas, edge, style, edgeLabelFont, edgeLabelColor);
             }
 
             foreach (GraphNodeViewModel node in nodes)
             {
-                DrawNode(canvas, node, cornerRadius, nodeLabelFont, nodeLabelColor);
+                DrawNode(canvas, node, style, cornerRadius, nodeLabelFont, nodeLabelColor);
             }
 
             return recorder.EndRecording();
         }
 
-        private static void DrawEdge(SKCanvas canvas, GraphEdgeViewModel edge, SKFont labelFont, SKColor labelColor)
+        private static void DrawEdge(SKCanvas canvas, GraphEdgeViewModel edge, GraphVectorExportStyle style, SKFont labelFont, SKColor labelColor)
         {
             SKColor color = ToColor(edge.BaseStroke, SKColors.Gray);
             float thickness = (float)edge.BaseStrokeThickness;
@@ -166,10 +168,10 @@ namespace Zametek.Graphs.Avalonia
                 canvas.DrawPath(path, arrowPaint);
             }
 
-            DrawEdgeLabel(canvas, edge, labelFont, labelColor);
+            DrawEdgeLabel(canvas, edge, style, labelFont, labelColor);
         }
 
-        private static void DrawEdgeLabel(SKCanvas canvas, GraphEdgeViewModel edge, SKFont labelFont, SKColor labelColor)
+        private static void DrawEdgeLabel(SKCanvas canvas, GraphEdgeViewModel edge, GraphVectorExportStyle style, SKFont labelFont, SKColor labelColor)
         {
             if (!edge.ShowLabel || string.IsNullOrEmpty(edge.Label))
             {
@@ -192,20 +194,47 @@ namespace Zametek.Graphs.Avalonia
                 midY += (float)(dx / length) * c_LabelOffset;
             }
 
-            using var textPaint = new SKPaint { Color = labelColor };
-
             SKFontMetrics metrics = labelFont.Metrics;
             float baseline = midY - ((metrics.Ascent + metrics.Descent) / 2.0f);
+            SKColor textColor = labelColor;
+
+            // Optional chip: a filled rounded background behind the label, centred on the same anchor.
+            if (style.ShowEdgeLabelChip)
+            {
+                float textWidth = labelFont.MeasureText(edge.Label);
+                float textHeight = metrics.Descent - metrics.Ascent;
+                float halfWidth = (textWidth / 2.0f) + (float)style.EdgeLabelChipPaddingX;
+                float halfHeight = (textHeight / 2.0f) + (float)style.EdgeLabelChipPaddingY;
+                var chipRect = new SKRect(midX - halfWidth, midY - halfHeight, midX + halfWidth, midY + halfHeight);
+                float chipRadius = (float)style.EdgeLabelChipCornerRadius;
+                using (var chipPaint = new SKPaint
+                {
+                    Style = SKPaintStyle.Fill,
+                    Color = ToColor(style.EdgeLabelChipBrush, SKColors.Black),
+                    IsAntialias = true,
+                })
+                {
+                    canvas.DrawRoundRect(chipRect, chipRadius, chipRadius, chipPaint);
+                }
+                if (style.EdgeLabelChipTextBrush is not null)
+                {
+                    textColor = ToColor(style.EdgeLabelChipTextBrush, labelColor);
+                }
+            }
+
+            using var textPaint = new SKPaint { Color = textColor };
             canvas.DrawText(edge.Label, midX, baseline, SKTextAlign.Center, labelFont, textPaint);
         }
 
-        private static void DrawNode(SKCanvas canvas, GraphNodeViewModel node, float cornerRadius, SKFont labelFont, SKColor labelColor)
+        private static void DrawNode(SKCanvas canvas, GraphNodeViewModel node, GraphVectorExportStyle style, float cornerRadius, SKFont labelFont, SKColor labelColor)
         {
             var rect = new SKRect(
                 (float)node.X,
                 (float)node.Y,
                 (float)(node.X + node.Width),
                 (float)(node.Y + node.Height));
+
+            using SKPath shapePath = BuildNodeShapePath(rect, style.NodeShape, cornerRadius);
 
             using (var fillPaint = new SKPaint
             {
@@ -214,7 +243,24 @@ namespace Zametek.Graphs.Avalonia
                 IsAntialias = true,
             })
             {
-                canvas.DrawRoundRect(rect, cornerRadius, cornerRadius, fillPaint);
+                canvas.DrawPath(shapePath, fillPaint);
+            }
+
+            // Optional accent stripe down the left edge, clipped to the node shape so it follows the
+            // rounded corners / ellipse. Drawn over the fill but under the border.
+            if (style.ShowNodeAccentStripe && style.NodeAccentStripeWidth > 0.0)
+            {
+                using var stripePaint = new SKPaint
+                {
+                    Style = SKPaintStyle.Fill,
+                    Color = StripeColor(node, style),
+                    IsAntialias = true,
+                };
+                var stripeRect = new SKRect(rect.Left, rect.Top, rect.Left + (float)style.NodeAccentStripeWidth, rect.Bottom);
+                canvas.Save();
+                canvas.ClipPath(shapePath, SKClipOperation.Intersect, antialias: true);
+                canvas.DrawRect(stripeRect, stripePaint);
+                canvas.Restore();
             }
 
             float borderThickness = (float)node.BorderThickness;
@@ -228,10 +274,44 @@ namespace Zametek.Graphs.Avalonia
             using (SKPathEffect? dash = BuildDash(node.StrokeDashArray, borderThickness))
             {
                 borderPaint.PathEffect = dash;
-                canvas.DrawRoundRect(rect, cornerRadius, cornerRadius, borderPaint);
+                canvas.DrawPath(shapePath, borderPaint);
             }
 
             DrawNodeLabel(canvas, node, rect, labelFont, labelColor);
+        }
+
+        // Build the node silhouette selected by the vector export style, at the node's bounds.
+        private static SKPath BuildNodeShapePath(SKRect rect, GraphExportNodeShape shape, float cornerRadius)
+        {
+            var path = new SKPath();
+            switch (shape)
+            {
+                case GraphExportNodeShape.Ellipse:
+                    path.AddOval(rect);
+                    break;
+                case GraphExportNodeShape.Rectangle:
+                    path.AddRect(rect);
+                    break;
+                case GraphExportNodeShape.Capsule:
+                    float capsuleRadius = Math.Min(rect.Width, rect.Height) / 2.0f;
+                    path.AddRoundRect(rect, capsuleRadius, capsuleRadius);
+                    break;
+                case GraphExportNodeShape.RoundedRectangle:
+                default:
+                    path.AddRoundRect(rect, cornerRadius, cornerRadius);
+                    break;
+            }
+            return path;
+        }
+
+        private static SKColor StripeColor(GraphNodeViewModel node, GraphVectorExportStyle style)
+        {
+            return style.NodeAccentStripeSource switch
+            {
+                GraphExportStripeSource.FillColour => ToColor(node.FillBrush, SKColors.LightGray),
+                GraphExportStripeSource.Custom => ToColor(style.NodeAccentStripeBrush, SKColors.Gray),
+                _ => ToColor(node.BorderBrush, SKColors.Black),
+            };
         }
 
         private static void DrawNodeLabel(SKCanvas canvas, GraphNodeViewModel node, SKRect rect, SKFont labelFont, SKColor labelColor)
