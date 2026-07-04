@@ -234,16 +234,20 @@ namespace Zametek.Graphs.Avalonia
                 (float)(node.X + node.Width),
                 (float)(node.Y + node.Height));
 
-            using SKPath shapePath = BuildNodeShapePath(rect, style.NodeShape, cornerRadius);
+            // The fill is the per-node data brush unless the style overrides it (for templates whose fill
+            // is not data-driven, e.g. a fixed gradient the vector export cannot read).
+            SKColor fillColor = style.NodeFillOverride is not null
+                ? ToColor(style.NodeFillOverride, SKColors.LightGray)
+                : ToColor(node.FillBrush, SKColors.LightGray);
 
             using (var fillPaint = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
-                Color = ToColor(node.FillBrush, SKColors.LightGray),
+                Color = fillColor,
                 IsAntialias = true,
             })
             {
-                canvas.DrawPath(shapePath, fillPaint);
+                DrawNodeShape(canvas, rect, style.NodeShape, cornerRadius, fillPaint);
             }
 
             // Optional accent stripe down the left edge, clipped to the node shape so it follows the
@@ -257,8 +261,9 @@ namespace Zametek.Graphs.Avalonia
                     IsAntialias = true,
                 };
                 var stripeRect = new SKRect(rect.Left, rect.Top, rect.Left + (float)style.NodeAccentStripeWidth, rect.Bottom);
+                using SKPath clipPath = BuildNodeShapePath(rect, style.NodeShape, cornerRadius);
                 canvas.Save();
-                canvas.ClipPath(shapePath, SKClipOperation.Intersect, antialias: true);
+                canvas.ClipPath(clipPath, SKClipOperation.Intersect, antialias: true);
                 canvas.DrawRect(stripeRect, stripePaint);
                 canvas.Restore();
             }
@@ -274,10 +279,32 @@ namespace Zametek.Graphs.Avalonia
             using (SKPathEffect? dash = BuildDash(node.StrokeDashArray, borderThickness))
             {
                 borderPaint.PathEffect = dash;
-                canvas.DrawPath(shapePath, borderPaint);
+                DrawNodeShape(canvas, rect, style.NodeShape, cornerRadius, borderPaint);
             }
 
             DrawNodeLabel(canvas, node, rect, labelFont, labelColor);
+        }
+
+        // Draw the node silhouette with the given paint (fill or stroke), using the direct Skia primitives.
+        private static void DrawNodeShape(SKCanvas canvas, SKRect rect, GraphExportNodeShape shape, float cornerRadius, SKPaint paint)
+        {
+            switch (shape)
+            {
+                case GraphExportNodeShape.Ellipse:
+                    canvas.DrawOval(rect, paint);
+                    break;
+                case GraphExportNodeShape.Rectangle:
+                    canvas.DrawRect(rect, paint);
+                    break;
+                case GraphExportNodeShape.Capsule:
+                    float capsuleRadius = Math.Min(rect.Width, rect.Height) / 2.0f;
+                    canvas.DrawRoundRect(rect, capsuleRadius, capsuleRadius, paint);
+                    break;
+                case GraphExportNodeShape.RoundedRectangle:
+                default:
+                    canvas.DrawRoundRect(rect, cornerRadius, cornerRadius, paint);
+                    break;
+            }
         }
 
         // Build the node silhouette selected by the vector export style, at the node's bounds.

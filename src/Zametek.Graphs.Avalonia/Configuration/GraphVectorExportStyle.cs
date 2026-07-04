@@ -20,6 +20,14 @@ namespace Zametek.Graphs.Avalonia
         // The node silhouette. RoundedRectangle (with GraphAppearance.NodeCornerRadius) is the original look.
         public GraphExportNodeShape NodeShape { get; init; } = GraphExportNodeShape.RoundedRectangle;
 
+        // Optional node fill for the vector export. By default the vector export fills each node with its
+        // own data-driven FillBrush (matching a template that binds FillBrush). Set this when the on-screen
+        // template paints a fill unrelated to the data (e.g. a fixed gradient) that the data fill would not
+        // approximate - the vector export then fills every node with this solid brush instead. (Gradients
+        // are not supported here; use a representative solid colour, or GraphExportMode.Raster for an exact
+        // gradient.)
+        public IBrush? NodeFillOverride { get; init; }
+
         // Optional coloured accent bar down the left edge of the node (best with the rectangular shapes).
         public bool ShowNodeAccentStripe { get; init; }
 

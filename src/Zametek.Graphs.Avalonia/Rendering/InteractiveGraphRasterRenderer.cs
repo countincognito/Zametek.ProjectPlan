@@ -1,8 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Templates;
-using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using SkiaSharp;
@@ -13,9 +11,12 @@ namespace Zametek.Graphs.Avalonia
     // copy of just the node/edge BODIES (the swappable NodeTemplate/EdgeTemplate) at their layout
     // positions. Selection, dimming, drag and pan/zoom live in the control chrome - not the body - so the
     // replica is neutral by construction, with no need to touch or mutate the live on-screen control. The
-    // bitmap is then wrapped in an SKPicture so the shared ImageExporter can emit it as PNG/JPEG or embed it
-    // in SVG/PDF, exactly like the vector path. Whatever the real templates draw (gradients, drop shadows,
-    // arbitrary shapes) appears verbatim. Must be called on the UI thread.
+    // template visuals are materialised directly via IDataTemplate.Build (a detached ContentPresenter does
+    // not realise its templated child, so it must be built explicitly), then the tree is laid out and
+    // rendered to a RenderTargetBitmap. The bitmap is wrapped in an SKPicture so the shared ImageExporter
+    // can emit it as PNG/JPEG or embed it in SVG/PDF, exactly like the vector path. Whatever the real
+    // templates draw (gradients, drop shadows, arbitrary shapes) appears verbatim. Must be called on the UI
+    // thread.
     internal static class InteractiveGraphRasterRenderer
     {
         // The same crop margin the vector renderer uses, so both exports frame the graph identically.
@@ -54,8 +55,8 @@ namespace Zametek.Graphs.Avalonia
             double height = (maxY - minY) + (2.0 * c_Padding);
 
             // Shift every item so the bounding box starts after the margin. Node X/Y and edge geometry share
-            // one workspace coordinate space, so the same offset applies to both (nodes carry their own
-            // position; an edge body draws in absolute coordinates, so its host presenter carries the shift).
+            // one workspace coordinate space, so the same offset applies to both (a node carries its own
+            // position; an edge body draws in absolute coordinates, so its host carries the shift).
             double offsetX = c_Padding - minX;
             double offsetY = c_Padding - minY;
 
@@ -71,31 +72,29 @@ namespace Zametek.Graphs.Avalonia
             {
                 foreach (GraphEdgeViewModel edge in edges)
                 {
-                    var edgePresenter = new ContentPresenter
+                    if (edgeTemplate.Build(edge) is Control edgeVisual)
                     {
-                        Content = edge,
-                        ContentTemplate = edgeTemplate,
-                    };
-                    Canvas.SetLeft(edgePresenter, offsetX);
-                    Canvas.SetTop(edgePresenter, offsetY);
-                    content.Children.Add(edgePresenter);
+                        edgeVisual.DataContext = edge;
+                        Canvas.SetLeft(edgeVisual, offsetX);
+                        Canvas.SetTop(edgeVisual, offsetY);
+                        content.Children.Add(edgeVisual);
+                    }
                 }
             }
 
             foreach (GraphNodeViewModel node in nodes)
             {
-                var nodePresenter = new ContentPresenter
+                if (nodeTemplate.Build(node) is Control nodeVisual)
                 {
-                    Content = node,
-                    ContentTemplate = nodeTemplate,
-                    Width = node.Width,
-                    Height = node.Height,
-                    HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                    VerticalContentAlignment = VerticalAlignment.Stretch,
-                };
-                Canvas.SetLeft(nodePresenter, node.X + offsetX);
-                Canvas.SetTop(nodePresenter, node.Y + offsetY);
-                content.Children.Add(nodePresenter);
+                    nodeVisual.DataContext = node;
+                    // Size the body to the node's bounds (on screen the control chrome does this; here the
+                    // body template root is sized directly).
+                    nodeVisual.Width = node.Width;
+                    nodeVisual.Height = node.Height;
+                    Canvas.SetLeft(nodeVisual, node.X + offsetX);
+                    Canvas.SetTop(nodeVisual, node.Y + offsetY);
+                    content.Children.Add(nodeVisual);
+                }
             }
 
             // Theme background behind the content, baked into the raster so it matches the on-screen canvas.
@@ -112,8 +111,8 @@ namespace Zametek.Graphs.Avalonia
                 Child = content,
             };
 
-            // Lay the throwaway tree out so the ContentPresenters realise their templates, then render it to
-            // a bitmap at the requested supersample scale.
+            // Lay the throwaway tree out (so the built visuals measure/arrange and their bindings settle),
+            // then render it to a bitmap at the requested supersample scale.
             var size = new Size(width, height);
             root.Measure(size);
             root.Arrange(new Rect(size));
