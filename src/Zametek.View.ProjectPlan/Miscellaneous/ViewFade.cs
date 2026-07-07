@@ -13,7 +13,7 @@ namespace Zametek.View.ProjectPlan
     // reveal animates.
     internal static class ViewFade
     {
-        public static readonly TimeSpan Duration = TimeSpan.FromMilliseconds(250.0);
+        public static readonly TimeSpan Duration = TimeSpan.FromMilliseconds(400.0);
 
         // Hide the control instantly, then install the opacity transition so a later Reveal fades.
         public static void Hide(Control control)
