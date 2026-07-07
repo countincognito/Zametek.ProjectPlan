@@ -1,37 +1,11 @@
-using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ProjectPlan.CommandLine
 {
-    public class DataGridManager
-        : IDataGridManager
+    public class DataGridScrollManager
+        : IDataGridScrollManager
     {
-        public DataGridManager(ISettingService settingService)
-        {
-            ArgumentNullException.ThrowIfNull(settingService);
-            ResetActions = [];
-        }
-
-        #region IDataGridManager Members
-
-        public IList<Action> ResetActions { get; }
-
-        public DataGridModel GetDataGridModel(string name)
-        {
-            return new();
-        }
-
-        public void SetDataGridModel(DataGridModel dataGridModel)
-        {
-        }
-
-        public void SaveDataGridModels()
-        {
-        }
-
-        public void ResetDataGridModels()
-        {
-        }
+        #region IDataGridScrollManager Members
 
         public object? GetScrollItem(string name)
         {
@@ -57,11 +31,6 @@ namespace Zametek.ProjectPlan.CommandLine
             if (m_Disposed)
             {
                 return;
-            }
-
-            if (disposing)
-            {
-                ResetActions.Clear();
             }
 
             m_Disposed = true;

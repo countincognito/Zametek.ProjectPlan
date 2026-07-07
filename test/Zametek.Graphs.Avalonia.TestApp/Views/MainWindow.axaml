@@ -8,7 +8,7 @@
         x:DataType="vm:MainWindowViewModel"
         Width="1000" Height="680"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Zametek.Graphs.Avalonia — Test App">
+        Title="Zametek.Graphs.Avalonia - Test App">
 
     <DockPanel>
         <!-- Toolbar: title + light/dark toggle. -->
@@ -20,7 +20,7 @@
                 <StackPanel Grid.Column="0"
                             Orientation="Vertical"
                             VerticalAlignment="Center">
-                    <TextBlock Text="Zametek.Graphs.Avalonia — interactive graph demo"
+                    <TextBlock Text="Zametek.Graphs.Avalonia - interactive graph demo"
                                FontWeight="SemiBold"/>
                     <TextBlock Text="Drag nodes · click to highlight · right-click for fit / reset / routing / copy / save · scroll to zoom"
                                FontSize="12"

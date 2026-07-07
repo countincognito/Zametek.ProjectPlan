@@ -18,7 +18,7 @@
 		<local:ManagedResourceSortComparer x:Key="resourceNameSortComparer" SortMemberPath="Name"/>
 		<sys:Int32 x:Key="paginationPageSize">1</sys:Int32>
 		<sys:Int32 x:Key="paginationTotalCount">10000</sys:Int32>
-		<sys:Double x:Key="nameColumnMaxWidth">400</sys:Double>
+		<sys:Double x:Key="nameColumnMaxWidth">600</sys:Double>
 	</UserControl.Resources>
 
 	<DockPanel Margin="7">

@@ -162,10 +162,16 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 builder.AppendLine(activity.Name);
             }
-            builder.AppendLine($@"Id: {activity.Id}   Duration: {activity.Duration}");
-            builder.AppendLine($@"ES: {Format(activity.EarliestStartTime)}   EF: {Format(activity.EarliestFinishTime)}");
-            builder.AppendLine($@"LS: {Format(activity.LatestStartTime)}   LF: {Format(activity.LatestFinishTime)}");
-            builder.Append($@"Free slack: {Format(activity.FreeSlack)}   Total slack: {Format(activity.TotalSlack)}");
+
+            if (!activity.CanBeRemoved)
+            {
+                builder.Append($@"{Resource.ProjectPlan.Labels.Label_Id}: {activity.Id}   ");
+            }
+
+            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_Duration}: {activity.Duration}");
+            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_EarliestStartTime}: {Format(activity.EarliestStartTime)}   {Resource.ProjectPlan.Labels.Label_EarliestFinishTime}: {Format(activity.EarliestFinishTime)}");
+            builder.AppendLine($@"{Resource.ProjectPlan.Labels.Label_LatestStartTime}: {Format(activity.LatestStartTime)}   {Resource.ProjectPlan.Labels.Label_LatestFinishTime}: {Format(activity.LatestFinishTime)}");
+            builder.Append($@"{Resource.ProjectPlan.Labels.Label_FreeSlack}: {Format(activity.FreeSlack)}   {Resource.ProjectPlan.Labels.Label_TotalSlack}: {Format(activity.TotalSlack)}");
             return builder.ToString();
         }
     }

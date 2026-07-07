@@ -74,7 +74,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly IFactory m_DockFactory;
         private readonly IDockSerializer m_DockSerializer;
-        private readonly IDataGridManager m_DataGridManager;
+        private readonly IDataGridLayoutManager m_DataGridLayoutManager;
         private readonly IProjectScenarioManagerViewModel m_ProjectScenarioManagerViewModel;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IProjectFileOpen m_ProjectFileOpen;
@@ -92,7 +92,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public MainViewModel(
             IFactory dockFactory,
             IDockSerializer dockSerializer,
-            IDataGridManager dataGridManager,
+            IDataGridLayoutManager dataGridLayoutManager,
             IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
             ICoreViewModel coreViewModel,
             IProjectFileOpen projectFileOpen,
@@ -103,7 +103,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             ArgumentNullException.ThrowIfNull(dockFactory);
             ArgumentNullException.ThrowIfNull(dockSerializer);
-            ArgumentNullException.ThrowIfNull(dataGridManager);
+            ArgumentNullException.ThrowIfNull(dataGridLayoutManager);
             ArgumentNullException.ThrowIfNull(projectScenarioManagerViewModel);
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(projectFileOpen);
@@ -114,7 +114,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_Lock = new();
             m_DockFactory = dockFactory;
             m_DockSerializer = dockSerializer;
-            m_DataGridManager = dataGridManager;
+            m_DataGridLayoutManager = dataGridLayoutManager;
             m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel;
             m_CoreViewModel = coreViewModel;
             m_ProjectFileOpen = projectFileOpen;
@@ -873,7 +873,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_SettingService.DockLayout = layoutContent;
 
                 // DataGrids.
-                m_DataGridManager.SaveDataGridModels();
+                m_DataGridLayoutManager.SaveDataGridModels();
             }
         }
 
@@ -968,7 +968,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
                 // DataGrids.
-                m_DataGridManager.ResetDataGridModels();
+                m_DataGridLayoutManager.ResetDataGridModels();
             }
         }
 
@@ -1339,7 +1339,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_AutoCompile?.Dispose();
                 m_SelectedTheme?.Dispose();
                 m_BaseTheme?.Dispose();
-                m_DataGridManager?.Dispose();
+                m_DataGridLayoutManager?.Dispose();
             }
 
             m_Disposed = true;

@@ -79,7 +79,8 @@ namespace Zametek.ProjectPlan.CommandLine
                         services.AddSingleton(new Data.ProjectPlan.VersionMapper());
                         services.AddSingleton(new ProjectPlanMapper());
 
-                        services.AddSingleton<IDataGridManager, DataGridManager>();
+                        services.AddSingleton<IDataGridLayoutManager, DataGridLayoutManager>();
+                        services.AddSingleton<IDataGridScrollManager, DataGridScrollManager>();
                     })
                     .UseSerilog()
                     .Build();

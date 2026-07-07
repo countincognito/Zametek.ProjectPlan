@@ -22,7 +22,7 @@ param(
 # Build Platform must be one of the platforms in the bundle list, otherwise APPX3104.
 # Prefer x64 if present, else first listed platform. ARM/ARM64 must be upper-cased for MSBuild.
 if (-not $Platform) {
-    # @() forces array context — without it, a single-value split returns a scalar
+    # @() forces array context - without it, a single-value split returns a scalar
     # string and $bundleList[0] indexes a character instead of an element.
     $bundleList = @($BundlePlatforms -split '\|' | ForEach-Object { $_.Trim() })
     $Platform = if ($bundleList -contains 'x64') { 'x64' }

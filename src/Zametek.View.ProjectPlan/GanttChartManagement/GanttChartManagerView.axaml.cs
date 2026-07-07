@@ -20,7 +20,7 @@ namespace Zametek.View.ProjectPlan
         private const double c_DragTooltipLeftOffset = 16.0;
         private const double c_DragTooltipTopOffset = 4.0;
 
-        private readonly IDateTimeCalculator m_DateTimeCalculator;
+        private readonly IDateTimeCalculator? m_DateTimeCalculator;
 
         private bool m_IsResizeDragging;
         private int? m_ResizeActivityId;
@@ -30,6 +30,11 @@ namespace Zametek.View.ProjectPlan
 
         private static readonly AvaloniaInput.Cursor s_SizeWestEastCursor = new(StandardCursorType.SizeWestEast);
         private static readonly AvaloniaInput.Cursor s_HandCursor = new(StandardCursorType.Hand);
+
+        public GanttChartManagerView()
+        {
+            InitializeComponent();
+        }
 
         public GanttChartManagerView(IDateTimeCalculator dateTimeCalculator)
         {
@@ -111,9 +116,10 @@ namespace Zametek.View.ProjectPlan
                 plot.Refresh();
 
                 if (DataContext is IGanttChartManagerViewModel vm
-                    && m_ResizeActivityStartTime is not null)
+                    && m_ResizeActivityStartTime is not null
+                    && m_DateTimeCalculator is not null)
                 {
-                    int newDuration = CalculateNewDuration(newRightEdge, m_ResizeActivityStartTime.GetValueOrDefault(), vm);
+                    int newDuration = CalculateNewDuration(newRightEdge, m_ResizeActivityStartTime.GetValueOrDefault(), m_DateTimeCalculator, vm);
 
                     Canvas.SetLeft(dragTooltipBorder, pos.X + c_DragTooltipLeftOffset);
                     Canvas.SetTop(dragTooltipBorder, pos.Y + c_DragTooltipTopOffset);
@@ -163,7 +169,8 @@ namespace Zametek.View.ProjectPlan
                 && m_ResizeActivityId is not null
                 && m_ResizeActivityDuration is not null
                 && m_ResizeActivityStartTime is not null
-                && DataContext is IGanttChartManagerViewModel vm)
+                && DataContext is IGanttChartManagerViewModel vm
+                && m_DateTimeCalculator is not null)
             {
                 Avalonia.Point pos = e.GetPosition(plot);
                 Pixel mousePixel = new(pos.X, pos.Y);
@@ -174,7 +181,7 @@ namespace Zametek.View.ProjectPlan
                     : coords.X;
 
                 int startTimeUnit = m_ResizeActivityStartTime.GetValueOrDefault();
-                int newDuration = CalculateNewDuration(finalX, startTimeUnit, vm);
+                int newDuration = CalculateNewDuration(finalX, startTimeUnit, m_DateTimeCalculator, vm);
                 vm.SetActivityDuration(m_ResizeActivityId.GetValueOrDefault(), newDuration);
             }
 
@@ -186,18 +193,22 @@ namespace Zametek.View.ProjectPlan
             Cursor = AvaloniaInput.Cursor.Default;
         }
 
-        private int CalculateNewDuration(
+        private static int CalculateNewDuration(
             double finalX,
             int startTimeUnit,
+            IDateTimeCalculator dateTimeCalculator,
             IGanttChartManagerViewModel vm)
         {
+            ArgumentNullException.ThrowIfNull(dateTimeCalculator);
+            ArgumentNullException.ThrowIfNull(vm);
+
             int? finishTimeUnit;
 
             if (vm.ShowDates)
             {
                 // ShowDates=true: X is an OLE Automation date. Convert back to a time unit.
                 DateTime newFinishDate = DateTime.FromOADate(finalX);
-                (finishTimeUnit, _) = m_DateTimeCalculator
+                (finishTimeUnit, _) = dateTimeCalculator
                     .CalculateTimeAndDateTime(
                         vm.ProjectStart,
                         new DateTimeOffset(newFinishDate));
@@ -205,7 +216,7 @@ namespace Zametek.View.ProjectPlan
             else
             {
                 int newFinishDate = (int)Math.Round(finalX);
-                (finishTimeUnit, _) = m_DateTimeCalculator
+                (finishTimeUnit, _) = dateTimeCalculator
                     .CalculateTimeAndDateTime(
                         vm.ProjectStart,
                         newFinishDate);

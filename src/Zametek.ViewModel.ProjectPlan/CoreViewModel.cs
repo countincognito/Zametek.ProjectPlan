@@ -33,7 +33,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IGraphCompilationService m_GraphCompilationService;
         private readonly IResourceSchedulingService m_ResourceSchedulingService;
         private readonly IMetricCalculationService m_MetricCalculationService;
-        private readonly IDataGridManager m_DataGridManager;
+        private readonly IDataGridScrollManager m_DataGridScrollManager;
 
         private readonly IDisposable? m_ReadOnlyActivitiesSub;
         private readonly IDisposable? m_OrderableActivitiesSub;
@@ -60,7 +60,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IGraphCompilationService graphCompilationService,
             IResourceSchedulingService resourceSchedulingService,
             IMetricCalculationService metricCalculationService,
-            IDataGridManager dataGridManager)
+            IDataGridScrollManager dataGridScrollManager)
         {
             ArgumentNullException.ThrowIfNull(projectScenarioFileImport);
             ArgumentNullException.ThrowIfNull(projectScenarioFileExport);
@@ -70,7 +70,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(graphCompilationService);
             ArgumentNullException.ThrowIfNull(resourceSchedulingService);
             ArgumentNullException.ThrowIfNull(metricCalculationService);
-            ArgumentNullException.ThrowIfNull(dataGridManager);
+            ArgumentNullException.ThrowIfNull(dataGridScrollManager);
             m_Lock = new();
             m_TrackIsProjectScenarioUpdated = true;
             m_TrackHasStaleOutputs = true;
@@ -87,7 +87,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_GraphCompilationService = graphCompilationService;
             m_ResourceSchedulingService = resourceSchedulingService;
             m_MetricCalculationService = metricCalculationService;
-            m_DataGridManager = dataGridManager;
+            m_DataGridScrollManager = dataGridScrollManager;
 
             m_IsReadyToCompile = ReadyToCompile.No;
             m_HasStaleOutputs = false;
@@ -1115,7 +1115,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     // Drop any cached datagrid scroll positions so grids return to the top
                     // whenever a project or project scenario is loaded or reset.
-                    m_DataGridManager.ClearScrollItems();
+                    m_DataGridScrollManager.ClearScrollItems();
 
                     m_SettingService.ResetProjectScenario();
 
@@ -2102,6 +2102,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 ClearManagedActivities();
                 m_Activities?.Dispose();
                 m_DisplaySettingsViewModel?.Dispose();
+                m_DataGridScrollManager?.Dispose();
             }
 
             m_Disposed = true;

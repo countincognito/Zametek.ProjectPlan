@@ -13,12 +13,16 @@ namespace Zametek.View.ProjectPlan
             InitializeComponent();
         }
 
-        public ResourceSettingsManagerView(IDataGridManager dataGridManager)
+        public ResourceSettingsManagerView(
+            IDataGridLayoutManager dataGridLayoutManager,
+            IDataGridScrollManager dataGridScrollManager)
         {
-            ArgumentNullException.ThrowIfNull(dataGridManager);
+            ArgumentNullException.ThrowIfNull(dataGridLayoutManager);
+            ArgumentNullException.ThrowIfNull(dataGridScrollManager);
             InitializeComponent();
             BehaviorCollection behaviors = Interaction.GetBehaviors(ResourcesGrid);
-            behaviors.Add(new DataGridPersistBehavior(dataGridManager));
+            behaviors.Add(new DataGridPersistLayoutBehavior(dataGridLayoutManager));
+            behaviors.Add(new DataGridPersistScrollBehavior(dataGridScrollManager));
         }
     }
 }

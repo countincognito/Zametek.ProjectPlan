@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
+using Avalonia.Xaml.Interactivity;
 using Splat;
 using System;
 using Zametek.ViewModel.ProjectPlan;
@@ -40,7 +41,12 @@ namespace Zametek.View.ProjectPlan
 
         public Control Build(object? data)
         {
-            return BuildView(data);
+            Control view = BuildView(data);
+            // Give every dock tab a consistent quick fade-in on activation. Applied here (the single
+            // seam Dock uses to build tab content) so every tab shares the effect; a DataGrid inside a
+            // tab additionally coordinates its scroll restore under this fade (DataGridPersistScrollBehavior).
+            Interaction.GetBehaviors(view).Add(new FadeInBehavior());
+            return view;
         }
 
         public bool Match(object? data)

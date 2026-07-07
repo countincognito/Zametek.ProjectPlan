@@ -244,9 +244,14 @@ namespace Zametek.ProjectPlan
                 .As<CommitEditHandler>()
                 .SingleInstance();
 
-            s_Builder.RegisterType<DataGridManager>()
-                .As<IDataGridManager>()
-                .As<DataGridManager>()
+            s_Builder.RegisterType<DataGridLayoutManager>()
+                .As<IDataGridLayoutManager>()
+                .As<DataGridLayoutManager>()
+                .SingleInstance();
+
+            s_Builder.RegisterType<DataGridScrollManager>()
+                .As<IDataGridScrollManager>()
+                .As<DataGridScrollManager>()
                 .SingleInstance();
         }
 

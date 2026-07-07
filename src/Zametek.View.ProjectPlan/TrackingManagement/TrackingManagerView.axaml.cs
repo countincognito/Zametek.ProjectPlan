@@ -13,9 +13,12 @@ namespace Zametek.View.ProjectPlan
             InitializeComponent();
         }
 
-        public TrackingManagerView(IDataGridManager dataGridManager)
+        public TrackingManagerView(
+            IDataGridLayoutManager dataGridLayoutManager,
+            IDataGridScrollManager dataGridScrollManager)
         {
-            ArgumentNullException.ThrowIfNull(dataGridManager);
+            ArgumentNullException.ThrowIfNull(dataGridLayoutManager);
+            ArgumentNullException.ThrowIfNull(dataGridScrollManager);
             InitializeComponent();
 
             for (int i = 0; i < 15; i++)
@@ -25,11 +28,13 @@ namespace Zametek.View.ProjectPlan
             }
             {
                 BehaviorCollection behaviors = Interaction.GetBehaviors(TrackerResourcesGrid);
-                behaviors.Add(new DataGridPersistBehavior(dataGridManager));
+                behaviors.Add(new DataGridPersistLayoutBehavior(dataGridLayoutManager));
+                behaviors.Add(new DataGridPersistScrollBehavior(dataGridScrollManager));
             }
             {
                 BehaviorCollection behaviors = Interaction.GetBehaviors(TrackerActivitiesGrid);
-                behaviors.Add(new DataGridPersistBehavior(dataGridManager));
+                behaviors.Add(new DataGridPersistLayoutBehavior(dataGridLayoutManager));
+                behaviors.Add(new DataGridPersistScrollBehavior(dataGridScrollManager));
             }
         }
     }
