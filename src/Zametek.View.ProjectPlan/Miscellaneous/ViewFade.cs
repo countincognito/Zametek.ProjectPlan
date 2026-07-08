@@ -6,14 +6,13 @@ using System;
 
 namespace Zametek.View.ProjectPlan
 {
-    // Shared quick fade-in used for a consistent tab-activation effect: FadeInBehavior fades every dock
-    // tab view in (see ViewLocator), and DataGridPersistScrollBehavior fades a grid back in after its
-    // scroll restore. Hiding is instant - the opacity transition is installed only AFTER Opacity is set
-    // to 0 - so the hide never animates (which would itself flash the pre-scroll content); only the
-    // reveal animates.
+    // Shared quick fade-in used for a obscuring the pre-scroll content of a DataGrid while its scroll
+    // position is restored.
+    // Hiding is instant - the opacity transition is installed only AFTER Opacity is set to 0 - so the
+    // hide never animates (which would itself flash the pre-scroll content); only the reveal animates.
     internal static class ViewFade
     {
-        public static readonly TimeSpan Duration = TimeSpan.FromMilliseconds(400.0);
+        public static readonly TimeSpan Duration = TimeSpan.FromMilliseconds(10.0);
 
         // Hide the control instantly, then install the opacity transition so a later Reveal fades.
         public static void Hide(Control control)

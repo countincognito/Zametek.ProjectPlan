@@ -10,7 +10,19 @@
 	<Platforms>AnyCPU;x86;x64;ARM64</Platforms>
 	<StartupObject>Zametek.ProjectPlan.Program</StartupObject>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-	<SelfContained>true</SelfContained>
+	<!-- MPXJ.Net is the Java MPXJ library cross-compiled by IKVM; its OpenJDK runtime image (native
+	     jvm.dll etc. plus data files, emitted under runtimes/<rid>/native) must sit on disk, and IKVM
+	     resolves it via Assembly.Location. A default single-file publish bundles the managed assemblies
+	     (so Assembly.Location is empty) and leaves the image's data files loose, so IKVM's bootstrap (the
+	     '<Module>' initializer) throws when an MS Project file is imported. Self-extracting ALL content
+	     restores the full image on disk and a real Assembly.Location, so IKVM initialises. This supersedes
+	     IncludeNativeLibrariesForSelfExtract above (kept for clarity); it only affects single-file publish. -->
+	<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+	<!-- SelfContained and PublishSingleFile are passed explicitly on the publish/build command line (see
+	     makefile), not set here: they are shipping-critical, historically flaky as project properties, and
+	     fail silently (a mis-resolved self-contained yields a framework-dependent build that only breaks on
+	     a machine without the matching runtime). Keeping them on the command line makes them explicit and
+	     fail loudly if the RID is missing. -->
 	<PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>

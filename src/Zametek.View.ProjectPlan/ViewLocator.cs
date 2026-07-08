@@ -45,7 +45,7 @@ namespace Zametek.View.ProjectPlan
             // Give every dock tab a consistent quick fade-in on activation. Applied here (the single
             // seam Dock uses to build tab content) so every tab shares the effect; a DataGrid inside a
             // tab additionally coordinates its scroll restore under this fade (DataGridPersistScrollBehavior).
-            Interaction.GetBehaviors(view).Add(new FadeInBehavior());
+            //Interaction.GetBehaviors(view).Add(new FadeInBehavior());
             return view;
         }
 

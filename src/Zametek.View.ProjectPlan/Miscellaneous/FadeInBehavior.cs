@@ -8,12 +8,6 @@ using System;
 
 namespace Zametek.View.ProjectPlan
 {
-    // Fades a control in on activation. Applied centrally (see ViewLocator.Build) to every dock tab view,
-    // so switching tabs gives a consistent quick fade-in rather than an instant swap. The view is hidden
-    // the moment the behavior attaches - during ViewLocator.Build, before the view's first paint - and
-    // revealed with a short opacity transition once it has loaded. Grids additionally coordinate their
-    // scroll restore under this fade via DataGridPersistScrollBehavior.
-    //
     // SCOTTPLOT CAVEAT: a ScottPlot chart (AvaPlot) draws via a Skia custom draw operation that leases the
     // canvas and paints at full alpha, so Avalonia's per-node opacity never reaches it - the chart would
     // "pop" in at full opacity while the rest of its tab fades. To make it honour the fade, a chart tab's

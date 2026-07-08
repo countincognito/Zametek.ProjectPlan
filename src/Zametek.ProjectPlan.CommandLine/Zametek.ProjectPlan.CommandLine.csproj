@@ -8,7 +8,16 @@
     <AssemblyName>zpp</AssemblyName>
     <Platforms>AnyCPU;x64;x86;ARM64</Platforms>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-	<SelfContained>true</SelfContained>
+	<!-- Required for single-file publish because this exe links MPXJ.Net (the Java MPXJ library
+	     cross-compiled by IKVM, used by MicrosoftProjectFileImporter): IKVM's OpenJDK runtime image must
+	     sit on disk and is resolved via Assembly.Location, both of which a default single-file bundle
+	     breaks - the '<Module>' initializer then throws on MS Project import. Self-extracting ALL content
+	     restores the image on disk and a real Assembly.Location. Inert unless PublishSingleFile=true. See
+	     Zametek.ProjectPlan.csproj for the full explanation. -->
+	<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+	<!-- SelfContained and PublishSingleFile are passed explicitly on the publish/build command line (see
+	     makefile), not set here - shipping-critical flags kept explicit and loud. See
+	     Zametek.ProjectPlan.csproj for the rationale. -->
 	<PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 

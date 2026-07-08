@@ -23,6 +23,7 @@ namespace Zametek.View.ProjectPlan
             BehaviorCollection behaviors = Interaction.GetBehaviors(ActivitySeveritiesGrid);
             behaviors.Add(new DataGridPersistLayoutBehavior(dataGridLayoutManager));
             behaviors.Add(new DataGridPersistScrollBehavior(dataGridScrollManager));
+            behaviors.Add(new FadeInBehavior());
         }
     }
 }

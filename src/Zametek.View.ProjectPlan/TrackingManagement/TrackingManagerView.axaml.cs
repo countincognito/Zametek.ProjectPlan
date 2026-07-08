@@ -30,11 +30,13 @@ namespace Zametek.View.ProjectPlan
                 BehaviorCollection behaviors = Interaction.GetBehaviors(TrackerResourcesGrid);
                 behaviors.Add(new DataGridPersistLayoutBehavior(dataGridLayoutManager));
                 behaviors.Add(new DataGridPersistScrollBehavior(dataGridScrollManager));
+                behaviors.Add(new FadeInBehavior());
             }
             {
                 BehaviorCollection behaviors = Interaction.GetBehaviors(TrackerActivitiesGrid);
                 behaviors.Add(new DataGridPersistLayoutBehavior(dataGridLayoutManager));
                 behaviors.Add(new DataGridPersistScrollBehavior(dataGridScrollManager));
+                behaviors.Add(new FadeInBehavior());
             }
         }
     }
