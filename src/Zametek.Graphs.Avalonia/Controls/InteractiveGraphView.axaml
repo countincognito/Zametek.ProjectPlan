@@ -110,54 +110,54 @@
             SizeChanged="Graph_SizeChanged">
       <Border.ContextMenu>
         <ContextMenu>
-          <MenuItem Header="{x:Static g:Menus.Menu_FitToView}"
+          <MenuItem Header="{x:Static g:Graphs_Menus.Menu_FitToView}"
                     Click="FitToView_Click"/>
           
-          <MenuItem Header="{x:Static g:Menus.Menu_ResetGraphLayout}"
+          <MenuItem Header="{x:Static g:Graphs_Menus.Menu_ResetGraphLayout}"
                     Click="ResetLayout_Click"/>
           
           <Separator/>
           
           <!-- Only the arrow graph offers the show-names toggle; hidden otherwise. -->
-          <MenuItem Header="{x:Static g:Menus.Menu_ShowNames}"
+          <MenuItem Header="{x:Static g:Graphs_Menus.Menu_ShowNames}"
                     IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"
                     IsVisible="{Binding Path=SupportsShowNames, Mode=OneWay}"
                     ToggleType="CheckBox"/>
           
           <!-- Edge routing: radio items whose check state reflects the current mode (OneWay via the
                built-in EnumToBoolConverter) and whose click sets it through the command. -->
-          <MenuItem Header="{x:Static g:Menus.Menu_EdgeRouting}">
-            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_Spline}"
+          <MenuItem Header="{x:Static g:Graphs_Menus.Menu_EdgeRouting}">
+            <MenuItem Header="{x:Static g:Graphs_Enums.Enum_EdgeRouting_Spline}"
                       IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.Spline}, Mode=OneWay}"
                       Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
                       CommandParameter="{x:Static g:GraphEdgeRoutingMode.Spline}"
                       ToggleType="Radio"/>
-            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_SplineBundling}"
+            <MenuItem Header="{x:Static g:Graphs_Enums.Enum_EdgeRouting_SplineBundling}"
                       IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.SplineBundling}, Mode=OneWay}"
                       Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
                       CommandParameter="{x:Static g:GraphEdgeRoutingMode.SplineBundling}"
                       ToggleType="Radio"/>
-            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_StraightLine}"
+            <MenuItem Header="{x:Static g:Graphs_Enums.Enum_EdgeRouting_StraightLine}"
                       IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.StraightLine}, Mode=OneWay}"
                       Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
                       CommandParameter="{x:Static g:GraphEdgeRoutingMode.StraightLine}"
                       ToggleType="Radio"/>
-            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_SugiyamaSplines}"
+            <MenuItem Header="{x:Static g:Graphs_Enums.Enum_EdgeRouting_SugiyamaSplines}"
                       IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.SugiyamaSplines}, Mode=OneWay}"
                       Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
                       CommandParameter="{x:Static g:GraphEdgeRoutingMode.SugiyamaSplines}"
                       ToggleType="Radio"/>
-            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_Rectilinear}"
+            <MenuItem Header="{x:Static g:Graphs_Enums.Enum_EdgeRouting_Rectilinear}"
                       IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.Rectilinear}, Mode=OneWay}"
                       Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
                       CommandParameter="{x:Static g:GraphEdgeRoutingMode.Rectilinear}"
                       ToggleType="Radio"/>
-            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_RectilinearToCenter}"
+            <MenuItem Header="{x:Static g:Graphs_Enums.Enum_EdgeRouting_RectilinearToCenter}"
                       IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.RectilinearToCenter}, Mode=OneWay}"
                       Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
                       CommandParameter="{x:Static g:GraphEdgeRoutingMode.RectilinearToCenter}"
                       ToggleType="Radio"/>
-            <MenuItem Header="{x:Static g:Enums.Enum_EdgeRouting_None}"
+            <MenuItem Header="{x:Static g:Graphs_Enums.Enum_EdgeRouting_None}"
                       IsChecked="{Binding Path=EdgeRoutingMode, Converter={StaticResource enumToBool}, ConverterParameter={x:Static g:GraphEdgeRoutingMode.None}, Mode=OneWay}"
                       Command="{Binding Path=ChangeEdgeRoutingModeCommand, Mode=OneWay}"
                       CommandParameter="{x:Static g:GraphEdgeRoutingMode.None}"
@@ -169,22 +169,22 @@
           <!-- Copy / Save each offer explicit Vector and High-Fidelity entries; which appear is gated by
                ShowVectorExportOptions / ShowRasterExportOptions (applied in code-behind by the Tag, to
                avoid binding a control property across the context-menu popup boundary). -->
-          <MenuItem Header="{x:Static g:Menus.Menu_CopyImage}">
+          <MenuItem Header="{x:Static g:Graphs_Menus.Menu_CopyImage}">
             <MenuItem Tag="export-vector"
-                      Header="{x:Static g:Menus.Menu_ExportVector}"
+                      Header="{x:Static g:Graphs_Menus.Menu_ExportVector}"
                       Click="CopyVector_Click"/>
             <MenuItem Tag="export-raster"
-                      Header="{x:Static g:Menus.Menu_ExportHighFidelity}"
+                      Header="{x:Static g:Graphs_Menus.Menu_ExportHighFidelity}"
                       Click="CopyRaster_Click"/>
           </MenuItem>
 
-          <MenuItem Header="{x:Static g:Menus.Menu_SaveAs}">
+          <MenuItem Header="{x:Static g:Graphs_Menus.Menu_SaveAs}">
             <MenuItem Tag="export-vector"
-                      Header="{x:Static g:Menus.Menu_ExportVector}"
+                      Header="{x:Static g:Graphs_Menus.Menu_ExportVector}"
                       Command="{Binding Path=SaveGraphImageWithModeCommand, Mode=OneWay}"
                       CommandParameter="{x:Static g:GraphExportMode.Vector}"/>
             <MenuItem Tag="export-raster"
-                      Header="{x:Static g:Menus.Menu_ExportHighFidelity}"
+                      Header="{x:Static g:Graphs_Menus.Menu_ExportHighFidelity}"
                       Command="{Binding Path=SaveGraphImageWithModeCommand, Mode=OneWay}"
                       CommandParameter="{x:Static g:GraphExportMode.Raster}"/>
           </MenuItem>

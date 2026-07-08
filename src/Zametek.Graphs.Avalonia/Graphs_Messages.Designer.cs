@@ -22,14 +22,14 @@ namespace Zametek.Graphs.Avalonia {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Enums {
+    public class Graphs_Messages {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Enums() {
+        internal Graphs_Messages() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace Zametek.Graphs.Avalonia {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Zametek.Graphs.Avalonia.Enums", typeof(Enums).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Zametek.Graphs.Avalonia.Graphs_Messages", typeof(Graphs_Messages).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,65 +61,47 @@ namespace Zametek.Graphs.Avalonia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to None.
+        ///   Looks up a localized string similar to Copying the graph image to the clipboard failed. Use Save Image instead..
         /// </summary>
-        public static string Enum_EdgeRouting_None {
+        public static string Message_ClipboardCopyFailed {
             get {
-                return ResourceManager.GetString("Enum_EdgeRouting_None", resourceCulture);
+                return ResourceManager.GetString("Message_ClipboardCopyFailed", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Rectilinear.
+        ///   Looks up a localized string similar to Empty filename.
         /// </summary>
-        public static string Enum_EdgeRouting_Rectilinear {
+        public static string Message_EmptyFilename {
             get {
-                return ResourceManager.GetString("Enum_EdgeRouting_Rectilinear", resourceCulture);
+                return ResourceManager.GetString("Message_EmptyFilename", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Rectilinear to Center.
+        ///   Looks up a localized string similar to Unable to save file:.
         /// </summary>
-        public static string Enum_EdgeRouting_RectilinearToCenter {
+        public static string Message_UnableToSaveFile {
             get {
-                return ResourceManager.GetString("Enum_EdgeRouting_RectilinearToCenter", resourceCulture);
+                return ResourceManager.GetString("Message_UnableToSaveFile", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Spline.
+        ///   Looks up a localized string similar to Unknown EdgeDashStyle value.
         /// </summary>
-        public static string Enum_EdgeRouting_Spline {
+        public static string Message_UnknownEdgeDashStyleValue {
             get {
-                return ResourceManager.GetString("Enum_EdgeRouting_Spline", resourceCulture);
+                return ResourceManager.GetString("Message_UnknownEdgeDashStyleValue", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Spline Bundling.
+        ///   Looks up a localized string similar to Unknown NodeBorderDashStyle value.
         /// </summary>
-        public static string Enum_EdgeRouting_SplineBundling {
+        public static string Message_UnknownNodeBorderDashStyleValue {
             get {
-                return ResourceManager.GetString("Enum_EdgeRouting_SplineBundling", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Straight Line.
-        /// </summary>
-        public static string Enum_EdgeRouting_StraightLine {
-            get {
-                return ResourceManager.GetString("Enum_EdgeRouting_StraightLine", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Sugiyama Splines.
-        /// </summary>
-        public static string Enum_EdgeRouting_SugiyamaSplines {
-            get {
-                return ResourceManager.GetString("Enum_EdgeRouting_SugiyamaSplines", resourceCulture);
+                return ResourceManager.GetString("Message_UnknownNodeBorderDashStyleValue", resourceCulture);
             }
         }
     }

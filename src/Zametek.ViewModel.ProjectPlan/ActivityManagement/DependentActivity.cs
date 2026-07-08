@@ -36,7 +36,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public override object CloneObject()
         {
-            return new DependentActivity(Id, DisplayOrder, Name, Notes, TargetWorkStreams, TargetResources, Dependencies, PlanningDependencies, ResourceDependencies, Successors, TargetResourceOperator, AllocatedToResources, CanBeRemoved, HasNoCost, HasNoBilling, HasNoEffort, HasNoRisk, Duration, FreeSlack, EarliestStartTime, LatestFinishTime, MinimumFreeSlack, MinimumEarliestStartTime, MaximumLatestFinishTime, OverrideColor, ColorFormat, Trackers);
+            return new DependentActivity(Id, DisplayOrder, Name ?? string.Empty, Notes ?? string.Empty, TargetWorkStreams, TargetResources, Dependencies, PlanningDependencies, ResourceDependencies, Successors, TargetResourceOperator, AllocatedToResources, CanBeRemoved, HasNoCost, HasNoBilling, HasNoEffort, HasNoRisk, Duration, FreeSlack, EarliestStartTime, LatestFinishTime, MinimumFreeSlack, MinimumEarliestStartTime, MaximumLatestFinishTime, OverrideColor, ColorFormat, Trackers);
         }
     }
 }

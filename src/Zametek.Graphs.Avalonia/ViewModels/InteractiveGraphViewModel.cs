@@ -246,7 +246,7 @@ namespace Zametek.Graphs.Avalonia
         {
             if (string.IsNullOrWhiteSpace(filename))
             {
-                await m_Host.ReportErrorAsync(Messages.Message_EmptyFilename);
+                await m_Host.ReportErrorAsync(Graphs_Messages.Message_EmptyFilename);
                 return;
             }
 
@@ -269,7 +269,7 @@ namespace Zametek.Graphs.Avalonia
                     {
                         data = m_Serializer.BuildGraphVizData(m_Host.BuildDiagram(multiLineEdgeLabels: true));
                     })
-                    .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Messages.Message_UnableToSaveFile} {filename}"));
+                    .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Graphs_Messages.Message_UnableToSaveFile} {filename}"));
 
                 if (isImageFormat)
                 {

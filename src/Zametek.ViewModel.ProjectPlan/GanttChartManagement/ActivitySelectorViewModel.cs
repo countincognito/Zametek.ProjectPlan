@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Reactive.Concurrency;
@@ -186,7 +186,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         .Select(activity => new TargetActivityModel
                         {
                             Id = activity.Id,
-                            Name = activity.Name
+                            Name = activity.Name ?? string.Empty
                         })];
 
                 SetTargetActivities(

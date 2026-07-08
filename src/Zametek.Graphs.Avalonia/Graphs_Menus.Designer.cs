@@ -22,14 +22,14 @@ namespace Zametek.Graphs.Avalonia {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Messages {
+    public class Graphs_Menus {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Messages() {
+        internal Graphs_Menus() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace Zametek.Graphs.Avalonia {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Zametek.Graphs.Avalonia.Messages", typeof(Messages).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Zametek.Graphs.Avalonia.Graphs_Menus", typeof(Graphs_Menus).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,47 +61,74 @@ namespace Zametek.Graphs.Avalonia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Copying the graph image to the clipboard failed. Use Save Image instead..
+        ///   Looks up a localized string similar to Copy Image.
         /// </summary>
-        public static string Message_ClipboardCopyFailed {
+        public static string Menu_CopyImage {
             get {
-                return ResourceManager.GetString("Message_ClipboardCopyFailed", resourceCulture);
+                return ResourceManager.GetString("Menu_CopyImage", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Empty filename.
+        ///   Looks up a localized string similar to Edge Routing.
         /// </summary>
-        public static string Message_EmptyFilename {
+        public static string Menu_EdgeRouting {
             get {
-                return ResourceManager.GetString("Message_EmptyFilename", resourceCulture);
+                return ResourceManager.GetString("Menu_EdgeRouting", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to save file:.
+        ///   Looks up a localized string similar to High Fidelity.
         /// </summary>
-        public static string Message_UnableToSaveFile {
+        public static string Menu_ExportHighFidelity {
             get {
-                return ResourceManager.GetString("Message_UnableToSaveFile", resourceCulture);
+                return ResourceManager.GetString("Menu_ExportHighFidelity", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown EdgeDashStyle value.
+        ///   Looks up a localized string similar to Vector.
         /// </summary>
-        public static string Message_UnknownEdgeDashStyleValue {
+        public static string Menu_ExportVector {
             get {
-                return ResourceManager.GetString("Message_UnknownEdgeDashStyleValue", resourceCulture);
+                return ResourceManager.GetString("Menu_ExportVector", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown NodeBorderDashStyle value.
+        ///   Looks up a localized string similar to Fit to View.
         /// </summary>
-        public static string Message_UnknownNodeBorderDashStyleValue {
+        public static string Menu_FitToView {
             get {
-                return ResourceManager.GetString("Message_UnknownNodeBorderDashStyleValue", resourceCulture);
+                return ResourceManager.GetString("Menu_FitToView", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reset Layout.
+        /// </summary>
+        public static string Menu_ResetGraphLayout {
+            get {
+                return ResourceManager.GetString("Menu_ResetGraphLayout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save _As....
+        /// </summary>
+        public static string Menu_SaveAs {
+            get {
+                return ResourceManager.GetString("Menu_SaveAs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Names.
+        /// </summary>
+        public static string Menu_ShowNames {
+            get {
+                return ResourceManager.GetString("Menu_ShowNames", resourceCulture);
             }
         }
     }

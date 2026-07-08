@@ -588,7 +588,7 @@ namespace Zametek.Graphs.Avalonia
                 DataTransfer? dataTransfer = BuildImageDataTransfer(png);
                 if (dataTransfer is null)
                 {
-                    await viewModel.ReportErrorAsync(Messages.Message_ClipboardCopyFailed);
+                    await viewModel.ReportErrorAsync(Graphs_Messages.Message_ClipboardCopyFailed);
                     return;
                 }
 
@@ -597,7 +597,7 @@ namespace Zametek.Graphs.Avalonia
             catch
             {
                 // Best-effort: never crash the app if a clipboard backend cannot accept an image.
-                await viewModel.ReportErrorAsync(Messages.Message_ClipboardCopyFailed);
+                await viewModel.ReportErrorAsync(Graphs_Messages.Message_ClipboardCopyFailed);
             }
         }
 

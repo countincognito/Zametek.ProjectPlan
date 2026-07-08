@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Reactive.Concurrency;
@@ -119,7 +119,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Time = m_Time,
                         ResourceId = m_ResourceId,
                         ActivityId = activity.Id,
-                        ActivityName = activity.Name,
+                        ActivityName = activity.Name ?? string.Empty,
                         PercentageWorked = resourceActivityTrackerLookup.TryGetValue(activity.Id, out ResourceActivityTrackerModel? existingTracker) ? existingTracker.PercentageWorked : 0,
                     })];
 
@@ -145,7 +145,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         Time = m_Time,
                         ResourceId = m_ResourceId,
                         ActivityId = activity.Id,
-                        ActivityName = activity.Name,
+                        ActivityName = activity.Name ?? string.Empty,
                         PercentageWorked = 0
                     })];
 
@@ -197,9 +197,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    return SelectedTargetResourceActivities
-                        .Select(x => x.Id)
-                        .ToList();
+                    return [.. SelectedTargetResourceActivities.Select(x => x.Id)];
                 }
             }
         }
@@ -231,9 +229,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 {
                     // Find target view models that have been removed.
-                    List<ISelectableResourceActivityViewModel> removedViewModels = m_TargetResourceActivities
-                        .ExceptBy(targetResourceActivities.Select(x => x.ActivityId), x => x.Id)
-                        .ToList();
+                    List<ISelectableResourceActivityViewModel> removedViewModels = [.. m_TargetResourceActivities
+                        .ExceptBy(targetResourceActivities.Select(x => x.ActivityId), x => x.Id)];
 
                     // Delete the removed items from the target and selected collections.
                     foreach (ISelectableResourceActivityViewModel vm in removedViewModels)
@@ -243,9 +240,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
 
                     // Find the selected view models that have been removed.
-                    List<ISelectableResourceActivityViewModel> removedSelectedViewModels = m_SelectedTargetResourceActivities
-                        .ExceptBy(selectedTargetResourceActivities, x => x.Id)
-                        .ToList();
+                    List<ISelectableResourceActivityViewModel> removedSelectedViewModels = [.. m_SelectedTargetResourceActivities
+                        .ExceptBy(selectedTargetResourceActivities, x => x.Id)];
 
                     // Delete the removed selected items from the selected collections.
                     foreach (ISelectableResourceActivityViewModel vm in removedSelectedViewModels)
@@ -255,9 +251,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
                 {
                     // Find the target models that have been added.
-                    List<ResourceActivityTrackerModel> addedModels = targetResourceActivities
-                        .ExceptBy(m_TargetResourceActivities.Select(x => x.Id), x => x.ActivityId)
-                        .ToList();
+                    List<ResourceActivityTrackerModel> addedModels = [.. targetResourceActivities
+                        .ExceptBy(m_TargetResourceActivities.Select(x => x.Id), x => x.ActivityId)];
 
                     List<ISelectableResourceActivityViewModel> addedViewModels = [];
 

@@ -14,6 +14,10 @@
     <!--<DefineConstants>$(DefineConstants);CASCADE_DIAGNOSTICS</DefineConstants>-->
   </PropertyGroup>
 
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);IKVM0100;IKVM0101</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
 	  <PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
     <PackageReference Include="Dock.Model.ReactiveUI" Version="12.0.0.2" />

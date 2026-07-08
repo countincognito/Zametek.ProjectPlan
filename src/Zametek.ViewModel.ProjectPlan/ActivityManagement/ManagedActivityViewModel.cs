@@ -451,7 +451,7 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 //ClearErrors();
-                (IEnumerable<int>? updatedDependencies, string? errorMessage) = DependenciesStringValidationRule.Validate(value, Id);
+                (IEnumerable<int>? updatedDependencies, string? _) = DependenciesStringValidationRule.Validate(value, Id);
                 //if (errorMessage is not null)
                 //{
                 //    SetError(nameof(DependenciesString), errorMessage);
@@ -472,7 +472,7 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 //ClearErrors();
-                (IEnumerable<int>? updatedPlanningDependencies, string? errorMessage) = DependenciesStringValidationRule.Validate(value, Id);
+                (IEnumerable<int>? updatedPlanningDependencies, string? _) = DependenciesStringValidationRule.Validate(value, Id);
                 //if (errorMessage is not null)
                 //{
                 //    SetError(nameof(DependenciesString), errorMessage);
@@ -495,7 +495,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public bool CanBeRemoved => DependentActivity.CanBeRemoved;
 
-        public string Name
+        public string? Name
         {
             get => DependentActivity.Name;
             set
@@ -505,7 +505,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public string Notes
+        public string? Notes
         {
             get => DependentActivity.Notes;
             set
@@ -913,7 +913,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 Id = Id,
                 DisplayOrder = DisplayOrder,
-                Name = Name,
+                Name = Name ?? string.Empty,
                 TargetWorkStreams = [.. TargetWorkStreams],
                 TargetResources = [.. TargetResources],
                 TargetResourceOperator = TargetResourceOperator,
@@ -937,7 +937,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 MaximumLatestFinishDateTime = MaximumLatestFinishDateTime,
                 OverrideColor = OverrideColor,
                 ColorFormat = ColorFormat,
-                Notes = Notes,
+                Notes = Notes ?? string.Empty,
                 Trackers = TrackerSet.CloneTrackers(),
             };
 
@@ -963,21 +963,21 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region IEditableObject Members
 
-        private bool m_isDirty;
+        private bool m_IsDirty;
 
         public void BeginEdit()
         {
             // Bug Fix: Windows Controls call EndEdit twice; Once
             // from IEditableCollectionView, and once from BindingGroup.
             // This makes sure it only happens once after a BeginEdit.
-            m_isDirty = true;
+            m_IsDirty = true;
         }
 
         public void EndEdit()
         {
-            if (m_isDirty)
+            if (m_IsDirty)
             {
-                m_isDirty = false;
+                m_IsDirty = false;
                 UpdateActivityTargetResources();
                 UpdateActivityTargetWorkStreams();
                 TrackerSet.RefreshIndex();
@@ -992,7 +992,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void CancelEdit()
         {
-            m_isDirty = false;
+            m_IsDirty = false;
         }
 
         #endregion

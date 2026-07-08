@@ -1,4 +1,4 @@
-﻿namespace Zametek.Graphs.Avalonia
+namespace Zametek.Graphs.Avalonia
 {
     public static class GraphMLBuilder
     {
@@ -39,7 +39,7 @@
             {
                 GraphDashStyle.Normal => @"line",
                 GraphDashStyle.Dashed => @"dashed",
-                _ => throw new InvalidOperationException($@"{Messages.Message_UnknownNodeBorderDashStyleValue} ""{diagramNode.BorderDashStyle}"""),
+                _ => throw new InvalidOperationException($@"{Graphs_Messages.Message_UnknownNodeBorderDashStyleValue} ""{diagramNode.BorderDashStyle}"""),
             };
 
             var outputNode = new graphmlGraphNode
@@ -133,7 +133,7 @@
             {
                 GraphDashStyle.Normal => @"line",
                 GraphDashStyle.Dashed => @"dashed",
-                _ => throw new InvalidOperationException($@"{Messages.Message_UnknownEdgeDashStyleValue} ""{diagramEdge.DashStyle}"""),
+                _ => throw new InvalidOperationException($@"{Graphs_Messages.Message_UnknownEdgeDashStyleValue} ""{diagramEdge.DashStyle}"""),
             };
             outputEdge.data = new data
             {

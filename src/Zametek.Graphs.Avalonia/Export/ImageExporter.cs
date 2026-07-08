@@ -116,7 +116,7 @@ namespace Zametek.Graphs.Avalonia
                         using var stream = File.OpenWrite(filename);
                         WriteSvg(picture, stream, scaleX, scaleY);
                     })
-                    .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Messages.Message_UnableToSaveFile} {filename}"));
+                    .Default(_ => throw new ArgumentOutOfRangeException(nameof(filename), @$"{Graphs_Messages.Message_UnableToSaveFile} {filename}"));
             });
         }
 
