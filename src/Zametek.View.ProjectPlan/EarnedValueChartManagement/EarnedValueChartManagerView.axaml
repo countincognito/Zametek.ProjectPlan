@@ -25,30 +25,6 @@
 					   Margin="0,0,11,0"
 					   Content="{x:Static resources:Labels.Label_ResourceFilter}"/>
 
-				<!--<u:MultiComboBox IsEnabled="{Binding Path=HasResources, Mode=OneWay}"
-								 MaxHeight="200"
-								 Width="{x:Static sys:Double.NaN}"
-								 HorizontalAlignment="Stretch"
-								 VerticalAlignment="Stretch"
-								 Focusable="True"
-								 Height="25"
-								 Margin="0,0,11,0"
-								 ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}"
-								 SelectedItems="{Binding Path=ResourceSelector.SelectedTargetResources, Mode=OneWay}"
-								 DisplayMemberBinding="{Binding Path=DisplayName, Mode=OneWay}">
-					<u:MultiComboBox.SelectedItemTemplate>
-						<DataTemplate x:DataType="vm:SelectableResourceViewModel">
-							<Grid>
-								<TextBlock Text="{Binding Path=DisplayName, Mode=OneWay}"/>
-							</Grid>
-						</DataTemplate>
-					</u:MultiComboBox.SelectedItemTemplate>
-				</u:MultiComboBox>-->
-
-
-
-
-
         <u:MultiComboBox MaxHeight="200"
 								 Width="{x:Static sys:Double.NaN}"
 								 HorizontalAlignment="Stretch"
@@ -87,11 +63,6 @@
             </DataTemplate>
           </u:MultiComboBox.ItemTemplate>
         </u:MultiComboBox>
-
-
-
-
-        
 			</DockPanel>
 
 			<Grid>
