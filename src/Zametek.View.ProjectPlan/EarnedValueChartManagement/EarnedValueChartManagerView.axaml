@@ -25,7 +25,7 @@
 					   Margin="0,0,11,0"
 					   Content="{x:Static resources:Labels.Label_ResourceFilter}"/>
 
-				<u:MultiComboBox IsEnabled="{Binding Path=HasResources, Mode=OneWay}"
+				<!--<u:MultiComboBox IsEnabled="{Binding Path=HasResources, Mode=OneWay}"
 								 MaxHeight="200"
 								 Width="{x:Static sys:Double.NaN}"
 								 HorizontalAlignment="Stretch"
@@ -43,7 +43,55 @@
 							</Grid>
 						</DataTemplate>
 					</u:MultiComboBox.SelectedItemTemplate>
-				</u:MultiComboBox>
+				</u:MultiComboBox>-->
+
+
+
+
+
+        <u:MultiComboBox MaxHeight="200"
+								 Width="{x:Static sys:Double.NaN}"
+								 HorizontalAlignment="Stretch"
+								 VerticalAlignment="Stretch"
+								 Focusable="True"
+								 Height="25"
+					       Margin="0,0,11,0"
+								 ItemsSource="{Binding Path=ResourceSelector.TargetResources, Mode=OneWay}"
+								 SelectedItems="{Binding Path=ResourceSelector.SelectedTargetResources, Mode=OneWay}">
+          <u:MultiComboBox.SelectedItemTemplate>
+            <DataTemplate x:DataType="vm:SelectableResourceViewModel">
+              <Grid>
+                <TextBlock>
+                  <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0} - {1}">
+                      <Binding Path="Id" Mode="OneWay"/>
+                      <Binding Path="DisplayName" Mode="OneWay"/>
+                    </MultiBinding>
+                  </TextBlock.Text>
+                </TextBlock>
+              </Grid>
+            </DataTemplate>
+          </u:MultiComboBox.SelectedItemTemplate>
+          <u:MultiComboBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:SelectableResourceViewModel">
+              <Grid>
+                <TextBlock ToolTip.Tip="{Binding Path=DisplayName, Mode=OneWay}">
+                  <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0} - {1}">
+                      <Binding Path="Id" Mode="OneWay"/>
+                      <Binding Path="DisplayName" Mode="OneWay"/>
+                    </MultiBinding>
+                  </TextBlock.Text>
+                </TextBlock>
+              </Grid>
+            </DataTemplate>
+          </u:MultiComboBox.ItemTemplate>
+        </u:MultiComboBox>
+
+
+
+
+        
 			</DockPanel>
 
 			<Grid>

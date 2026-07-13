@@ -1,4 +1,4 @@
-﻿using Dock.Avalonia.Controls;
+using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.ReactiveUI;

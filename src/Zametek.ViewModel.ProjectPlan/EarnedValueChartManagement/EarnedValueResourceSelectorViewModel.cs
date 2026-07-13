@@ -8,8 +8,8 @@ using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
-    public class ActivitySelectorViewModel
-        : ViewModelBase, IActivitySelectorViewModel
+    public class EarnedValueResourceSelectorViewModel
+        : ViewModelBase, IResourceSelectorViewModel, IDisposable
     {
         #region Fields
 
@@ -17,8 +17,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private bool m_IsRevising;
         private readonly ICoreViewModel m_CoreViewModel;
 
-        private static readonly EqualityComparer<ISelectableActivityViewModel> s_EqualityComparer =
-            EqualityComparer<ISelectableActivityViewModel>.Create(
+        private static readonly EqualityComparer<ISelectableResourceViewModel> s_EqualityComparer =
+            EqualityComparer<ISelectableResourceViewModel>.Create(
                     (x, y) =>
                     {
                         if (x is null)
@@ -33,8 +33,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     },
                     x => x.Id);
 
-        private static readonly Comparer<ISelectableActivityViewModel> s_SortComparer =
-            Comparer<ISelectableActivityViewModel>.Create(
+        private static readonly Comparer<ISelectableResourceViewModel> s_SortComparer =
+            Comparer<ISelectableResourceViewModel>.Create(
                     (x, y) =>
                     {
                         if (x is null)
@@ -53,31 +53,31 @@ namespace Zametek.ViewModel.ProjectPlan
                         return x.Id.CompareTo(y.Id);
                     });
 
-        private readonly IDisposable? m_ReviseActivitiesSub;
-        private readonly IDisposable? m_ShowConnectionsSub;
+        private readonly IDisposable? m_ReviseResourcesSub;
+        private readonly IDisposable? m_ShowResourcesSub;
 
         #endregion
 
         #region Ctors
 
-        public ActivitySelectorViewModel(ICoreViewModel coreViewModel)
+        public EarnedValueResourceSelectorViewModel(ICoreViewModel coreViewModel)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             m_Lock = new();
             m_IsRevising = false;
             m_CoreViewModel = coreViewModel;
-            m_TargetActivities = new(s_EqualityComparer);
-            m_ReadOnlyTargetActivities = new(m_TargetActivities);
-            m_SelectedTargetActivities = new(s_EqualityComparer);
+            m_TargetResources = new(s_EqualityComparer);
+            m_ReadOnlyTargetResources = new(m_TargetResources);
+            m_SelectedTargetResources = new(s_EqualityComparer);
 
-            m_SelectedTargetActivities.CollectionChanged += SelectedTargetActivities_CollectionChanged;
+            m_SelectedTargetResources.CollectionChanged += SelectedTargetResources_CollectionChanged;
 
             // Initial set up.
-            ReviseActivities();
+            ReviseResources();
 
             // This needs to be on the current thread because all the tracker updates
             // need to be completed before a compilation can start.
-            m_ReviseActivitiesSub = this
+            m_ReviseResourcesSub = this
                 .WhenAnyValue(x => x.m_CoreViewModel.IsReadyToReviseTrackers)
                 .ObserveOn(Scheduler.CurrentThread)
                 .Subscribe(isReadyToRevise =>
@@ -90,7 +90,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             // are not mistaken for user edits and do not mark the
                             // project scenario as updated.
                             m_IsRevising = true;
-                            ReviseActivities();
+                            ReviseResources();
                         }
                         finally
                         {
@@ -99,9 +99,9 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 });
 
-            m_ShowConnectionsSub = this
+            m_ShowResourcesSub = this
                 .WhenAnyValue(
-                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections)
+                    rcm => rcm.m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseEarnedValueShowResources)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(isReadyToRevise =>
                 {
@@ -110,10 +110,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         try
                         {
                             m_IsRevising = true;
-                            ReviseActivities();
-                            SetSelectedTargetActivities(
-                                [.. m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections]);
-                            m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseGanttChartShowConnections = ReadyToRevise.No;
+                            ReviseResources();
+                            SetSelectedTargetResources(
+                                [.. m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources]);
+                            m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseEarnedValueShowResources = ReadyToRevise.No;
                         }
                         finally
                         {
@@ -127,16 +127,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Properties
 
-        private readonly ObservableUniqueCollection<ISelectableActivityViewModel> m_TargetActivities;
-        private readonly ReadOnlyObservableCollection<ISelectableActivityViewModel> m_ReadOnlyTargetActivities;
-        public ReadOnlyObservableCollection<ISelectableActivityViewModel> TargetActivities => m_ReadOnlyTargetActivities;
+        private readonly ObservableUniqueCollection<ISelectableResourceViewModel> m_TargetResources;
+        private readonly ReadOnlyObservableCollection<ISelectableResourceViewModel> m_ReadOnlyTargetResources;
+        public ReadOnlyObservableCollection<ISelectableResourceViewModel> TargetResources => m_ReadOnlyTargetResources;
 
         // Use ObservableUniqueCollection to prevent selected
         // items appearing twice in the Urse MultiComboBox.
-        private readonly ObservableUniqueCollection<ISelectableActivityViewModel> m_SelectedTargetActivities;
-        public ObservableCollection<ISelectableActivityViewModel> SelectedTargetActivities => m_SelectedTargetActivities;
+        private readonly ObservableUniqueCollection<ISelectableResourceViewModel> m_SelectedTargetResources;
+        public ObservableCollection<ISelectableResourceViewModel> SelectedTargetResources => m_SelectedTargetResources;
 
-        public string TargetActivitiesString
+        public string TargetResourcesString
         {
             get
             {
@@ -144,18 +144,18 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     return string.Join(
                         DependenciesStringValidationRule.Separator,
-                        SelectedTargetActivities.Select(x => x.DisplayName));
+                        SelectedTargetResources.Select(x => x.DisplayName));
                 }
             }
         }
 
-        public IList<int> SelectedActivityIds
+        public IList<int> SelectedResourceIds
         {
             get
             {
                 lock (m_Lock)
                 {
-                    return [.. SelectedTargetActivities.Select(x => x.Id)];
+                    return [.. SelectedTargetResources.Select(x => x.Id)];
                 }
             }
         }
@@ -164,34 +164,34 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Members
 
-        private void SelectedTargetActivities_CollectionChanged(
+        private void SelectedTargetResources_CollectionChanged(
             object? sender,
             NotifyCollectionChangedEventArgs e)
         {
-            m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.Clear();
-            m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.AddRange(SelectedActivityIds);
+            m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.Clear();
+            m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.AddRange(SelectedResourceIds);
             if (!m_IsRevising)
             {
                 m_CoreViewModel.DisplaySettingsViewModel.SetIsProjectScenarioUpdated(true);
             }
-            RaiseTargetActivitiesPropertiesChanged();
+            RaiseTargetResourcesPropertiesChanged();
         }
 
-        private void ReviseActivities()
+        private void ReviseResources()
         {
             lock (m_Lock)
             {
-                List<TargetActivityModel> newActivities =
-                    [.. m_CoreViewModel.RawActivities
-                        .Select(activity => new TargetActivityModel
+                List<TargetResourceModel> newResources =
+                    [.. m_CoreViewModel.ResourceSettings.Resources
+                        .Select(resource => new TargetResourceModel
                         {
-                            Id = activity.Id,
-                            Name = activity.Name ?? string.Empty
+                            Id = resource.Id,
+                            Name = resource.Name ?? string.Empty
                         })];
 
-                SetTargetActivities(
-                    newActivities,
-                    [.. SelectedActivityIds]);
+                SetTargetResources(
+                    newResources,
+                    [.. SelectedResourceIds]);
             }
         }
 
@@ -199,106 +199,106 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Public Members
 
-        public string GetAllocatedToActivitiesString(HashSet<int> allocatedToActivities)
+        public string GetAllocatedToResourcesString(HashSet<int> allocatedToResources)
         {
-            ArgumentNullException.ThrowIfNull(allocatedToActivities);
+            ArgumentNullException.ThrowIfNull(allocatedToResources);
             lock (m_Lock)
             {
                 return string.Join(
                     DependenciesStringValidationRule.Separator,
-                    TargetActivities.Where(x => allocatedToActivities.Contains(x.Id))
+                    TargetResources.Where(x => allocatedToResources.Contains(x.Id))
                         .OrderBy(x => x.Id)
                         .Select(x => x.DisplayName));
             }
         }
 
-        public void SetTargetActivities(
-            IEnumerable<TargetActivityModel> targetActivities,
-            HashSet<int> selectedTargetActivities)
+        public void SetTargetResources(
+            IEnumerable<TargetResourceModel> targetResources,
+            HashSet<int> selectedTargetResources)
         {
-            ArgumentNullException.ThrowIfNull(targetActivities);
-            ArgumentNullException.ThrowIfNull(selectedTargetActivities);
+            ArgumentNullException.ThrowIfNull(targetResources);
+            ArgumentNullException.ThrowIfNull(selectedTargetResources);
             lock (m_Lock)
             {
                 {
                     // Find target view models that have been removed.
-                    List<ISelectableActivityViewModel> removedViewModels = [.. m_TargetActivities.ExceptBy(targetActivities.Select(x => x.Id), x => x.Id)];
+                    List<ISelectableResourceViewModel> removedViewModels = [.. m_TargetResources.ExceptBy(targetResources.Select(x => x.Id), x => x.Id)];
 
                     // Delete the removed items from the target and selected collections.
-                    foreach (ISelectableActivityViewModel vm in removedViewModels)
+                    foreach (ISelectableResourceViewModel vm in removedViewModels)
                     {
-                        m_TargetActivities.Remove(vm);
-                        m_SelectedTargetActivities.Remove(vm);
+                        m_TargetResources.Remove(vm);
+                        m_SelectedTargetResources.Remove(vm);
                     }
 
                     // Find the selected view models that have been removed.
-                    List<ISelectableActivityViewModel> removedSelectedViewModels = [.. m_SelectedTargetActivities.ExceptBy(selectedTargetActivities, x => x.Id)];
+                    List<ISelectableResourceViewModel> removedSelectedViewModels = [.. m_SelectedTargetResources.ExceptBy(selectedTargetResources, x => x.Id)];
 
                     // Delete the removed selected items from the selected collections.
-                    foreach (ISelectableActivityViewModel vm in removedSelectedViewModels)
+                    foreach (ISelectableResourceViewModel vm in removedSelectedViewModels)
                     {
-                        m_SelectedTargetActivities.Remove(vm);
+                        m_SelectedTargetResources.Remove(vm);
                     }
                 }
                 {
                     // Find the target models that have been added.
-                    List<TargetActivityModel> addedModels = [.. targetActivities.ExceptBy(m_TargetActivities.Select(x => x.Id), x => x.Id)];
+                    List<TargetResourceModel> addedModels = [.. targetResources.ExceptBy(m_TargetResources.Select(x => x.Id), x => x.Id)];
 
-                    List<ISelectableActivityViewModel> addedViewModels = [];
+                    List<ISelectableResourceViewModel> addedViewModels = [];
 
                     // Create a collection of new view models.
-                    foreach (TargetActivityModel model in addedModels)
+                    foreach (TargetResourceModel model in addedModels)
                     {
-                        var vm = new SelectableActivityViewModel(model.Id, model.Name);
+                        var vm = new SelectableResourceViewModel(model.Id, model.Name);
 
-                        m_TargetActivities.Add(vm);
-                        if (selectedTargetActivities.Contains(model.Id))
+                        m_TargetResources.Add(vm);
+                        if (selectedTargetResources.Contains(model.Id))
                         {
-                            m_SelectedTargetActivities.Add(vm);
+                            m_SelectedTargetResources.Add(vm);
                         }
                     }
                 }
                 {
                     // Update names.
-                    Dictionary<int, TargetActivityModel> targetActivityLookup = targetActivities.ToDictionary(x => x.Id);
+                    Dictionary<int, TargetResourceModel> targetResourceLookup = targetResources.ToDictionary(x => x.Id);
 
-                    foreach (ISelectableActivityViewModel vm in m_TargetActivities)
+                    foreach (ISelectableResourceViewModel vm in m_TargetResources)
                     {
-                        if (targetActivityLookup.TryGetValue(vm.Id, out TargetActivityModel? value))
+                        if (targetResourceLookup.TryGetValue(vm.Id, out TargetResourceModel? value))
                         {
                             vm.Name = value.Name;
                         }
                     }
                 }
 
-                m_TargetActivities.Sort(s_SortComparer);
+                m_TargetResources.Sort(s_SortComparer);
             }
-            RaiseTargetActivitiesPropertiesChanged();
+            RaiseTargetResourcesPropertiesChanged();
         }
 
-        public void SetSelectedTargetActivities(HashSet<int> selectedTargetActivities)
+        public void SetSelectedTargetResources(HashSet<int> selectedTargetResources)
         {
-            ArgumentNullException.ThrowIfNull(selectedTargetActivities);
+            ArgumentNullException.ThrowIfNull(selectedTargetResources);
             lock (m_Lock)
             {
-                m_SelectedTargetActivities.Clear();
-                Dictionary<int, ISelectableActivityViewModel> targetActivityLookup = m_TargetActivities.ToDictionary(x => x.Id);
+                m_SelectedTargetResources.Clear();
+                Dictionary<int, ISelectableResourceViewModel> targetResourceLookup = m_TargetResources.ToDictionary(x => x.Id);
 
-                foreach (int selectedTargetActivityId in selectedTargetActivities)
+                foreach (int selectedTargetResourceId in selectedTargetResources)
                 {
-                    if (targetActivityLookup.TryGetValue(selectedTargetActivityId, out ISelectableActivityViewModel? vm))
+                    if (targetResourceLookup.TryGetValue(selectedTargetResourceId, out ISelectableResourceViewModel? vm))
                     {
-                        m_SelectedTargetActivities.Add(vm);
+                        m_SelectedTargetResources.Add(vm);
                     }
                 }
             }
-            RaiseTargetActivitiesPropertiesChanged();
+            RaiseTargetResourcesPropertiesChanged();
         }
 
-        public void RaiseTargetActivitiesPropertiesChanged()
+        public void RaiseTargetResourcesPropertiesChanged()
         {
-            this.RaisePropertyChanged(nameof(TargetActivities));
-            this.RaisePropertyChanged(nameof(TargetActivitiesString));
+            this.RaisePropertyChanged(nameof(TargetResources));
+            this.RaisePropertyChanged(nameof(TargetResourcesString));
         }
 
         #endregion
@@ -307,7 +307,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public override string ToString()
         {
-            return TargetActivitiesString;
+            return TargetResourcesString;
         }
 
         #endregion
@@ -325,8 +325,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                m_ReviseActivitiesSub?.Dispose();
-                m_ShowConnectionsSub?.Dispose();
+                m_ReviseResourcesSub?.Dispose();
+                m_ShowResourcesSub?.Dispose();
             }
 
             m_Disposed = true;
