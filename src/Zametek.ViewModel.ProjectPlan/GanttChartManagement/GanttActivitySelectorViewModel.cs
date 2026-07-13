@@ -168,10 +168,17 @@ namespace Zametek.ViewModel.ProjectPlan
             object? sender,
             NotifyCollectionChangedEventArgs e)
         {
-            m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.Clear();
-            m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.AddRange(SelectedActivityIds);
+            // Write the selection through to the display settings so the
+            // connections filter persists with the project scenario - but only
+            // for genuine user edits. While revising (settings-driven refreshes
+            // and seeding) the persisted list is the authority: writing back
+            // the transient selection state would clobber it (e.g. wiping a
+            // freshly remapped filter during an activity renumber, where the
+            // selector briefly empties out).
             if (!m_IsRevising)
             {
+                m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.Clear();
+                m_CoreViewModel.DisplaySettingsViewModel.GanttChartShowConnections.AddRange(SelectedActivityIds);
                 m_CoreViewModel.DisplaySettingsViewModel.SetIsProjectScenarioUpdated(true);
             }
             RaiseTargetActivitiesPropertiesChanged();

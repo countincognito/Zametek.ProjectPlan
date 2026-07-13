@@ -289,11 +289,16 @@ namespace Zametek.ViewModel.ProjectPlan
             UpdateTargetResources();
 
             // Write the selection through to the display settings so the
-            // resource filter persists with the project scenario.
-            m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.Clear();
-            m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.AddRange(ResourceSelector.SelectedResourceIds);
+            // resource filter persists with the project scenario - but only
+            // for genuine user edits. While revising (settings-driven
+            // refreshes and seeding) the persisted list is the authority:
+            // writing back the transient selection state would clobber it
+            // (e.g. wiping a freshly remapped filter during a resource
+            // renumber, where the selector briefly empties out).
             if (!m_IsRevising)
             {
+                m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.Clear();
+                m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.AddRange(ResourceSelector.SelectedResourceIds);
                 m_CoreViewModel.DisplaySettingsViewModel.SetIsProjectScenarioUpdated(true);
             }
         }
