@@ -264,13 +264,21 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartTrackedMetricXAxis)
                 .ToProperty(this, pm => pm.ScenarioChartTrackedMetricXAxis);
 
-            m_ScenarioChartTrackedMetricYAxis = this
-                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartTrackedMetricYAxis)
-                .ToProperty(this, pm => pm.ScenarioChartTrackedMetricYAxis);
+            m_ScenarioChartTrackedMetricY1Axis = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartTrackedMetricY1Axis)
+                .ToProperty(this, pm => pm.ScenarioChartTrackedMetricY1Axis);
 
-            m_ScenarioChartCurveFittingType = this
-                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartCurveFittingType)
-                .ToProperty(this, pm => pm.ScenarioChartCurveFittingType);
+            m_ScenarioChartTrackedMetricY2Axis = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartTrackedMetricY2Axis)
+                .ToProperty(this, pm => pm.ScenarioChartTrackedMetricY2Axis);
+
+            m_ScenarioChartCurveFittingTypeY1 = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartCurveFittingTypeY1)
+                .ToProperty(this, pm => pm.ScenarioChartCurveFittingTypeY1);
+
+            m_ScenarioChartCurveFittingTypeY2 = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartCurveFittingTypeY2)
+                .ToProperty(this, pm => pm.ScenarioChartCurveFittingTypeY2);
 
             m_SortUpdateSub = this
                 .WhenAnyValue(
@@ -1948,29 +1956,55 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<TrackedMetrics> m_ScenarioChartTrackedMetricYAxis;
-        public TrackedMetrics ScenarioChartTrackedMetricYAxis
+        private readonly ObservableAsPropertyHelper<TrackedMetrics> m_ScenarioChartTrackedMetricY1Axis;
+        public TrackedMetrics ScenarioChartTrackedMetricY1Axis
         {
             get
             {
-                return m_DisplaySettingsViewModel.ScenarioChartTrackedMetricYAxis;
+                return m_DisplaySettingsViewModel.ScenarioChartTrackedMetricY1Axis;
             }
             set
             {
-                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartTrackedMetricYAxis = value;
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartTrackedMetricY1Axis = value;
             }
         }
 
-        private readonly ObservableAsPropertyHelper<CurveFittingType> m_ScenarioChartCurveFittingType;
-        public CurveFittingType ScenarioChartCurveFittingType
+        private readonly ObservableAsPropertyHelper<TrackedMetrics> m_ScenarioChartTrackedMetricY2Axis;
+        public TrackedMetrics ScenarioChartTrackedMetricY2Axis
         {
             get
             {
-                return m_DisplaySettingsViewModel.ScenarioChartCurveFittingType;
+                return m_DisplaySettingsViewModel.ScenarioChartTrackedMetricY2Axis;
             }
             set
             {
-                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartCurveFittingType = value;
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartTrackedMetricY2Axis = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<CurveFittingType> m_ScenarioChartCurveFittingTypeY1;
+        public CurveFittingType ScenarioChartCurveFittingTypeY1
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ScenarioChartCurveFittingTypeY1;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartCurveFittingTypeY1 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<CurveFittingType> m_ScenarioChartCurveFittingTypeY2;
+        public CurveFittingType ScenarioChartCurveFittingTypeY2
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ScenarioChartCurveFittingTypeY2;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartCurveFittingTypeY2 = value;
             }
         }
 
@@ -2373,8 +2407,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ProjectScenarioSortDirection?.Dispose();
                 m_ScenarioChartShowNames?.Dispose();
                 m_ScenarioChartTrackedMetricXAxis?.Dispose();
-                m_ScenarioChartTrackedMetricYAxis?.Dispose();
-                m_ScenarioChartCurveFittingType?.Dispose();
+                m_ScenarioChartTrackedMetricY1Axis?.Dispose();
+                m_ScenarioChartTrackedMetricY2Axis?.Dispose();
+                m_ScenarioChartCurveFittingTypeY1?.Dispose();
+                m_ScenarioChartCurveFittingTypeY2?.Dispose();
                 m_NodeActionCommandManualTrigger?.Dispose();
             }
 

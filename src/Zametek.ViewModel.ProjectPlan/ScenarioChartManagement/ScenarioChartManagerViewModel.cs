@@ -111,7 +111,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_ScenarioChartPlotModel = new AvaPlot();
-            m_CurveFittingFormula = string.Empty;
+            m_CurveFittingFormulaY1 = string.Empty;
+            m_CurveFittingFormulaY2 = string.Empty;
 
             {
                 ReactiveCommand<Unit, Unit> saveScenarioChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveScenarioChartImageFileAsync);
@@ -121,8 +122,10 @@ namespace Zametek.ViewModel.ProjectPlan
             ResetScenarioChartCommand = ReactiveCommand.Create(ResetScenarioChart);
 
             ChangeTrackedMetricXAxisCommand = ReactiveCommand.CreateFromTask<TrackedMetrics>(ChangeTrackedMetricXAxisAsync);
-            ChangeTrackedMetricYAxisCommand = ReactiveCommand.CreateFromTask<TrackedMetrics>(ChangeTrackedMetricYAxisAsync);
-            ChangeCurveFittingTypeCommand = ReactiveCommand.CreateFromTask<CurveFittingType>(ChangeCurveFittingTypeAsync);
+            ChangeTrackedMetricY1AxisCommand = ReactiveCommand.CreateFromTask<TrackedMetrics>(ChangeTrackedMetricY1AxisAsync);
+            ChangeTrackedMetricY2AxisCommand = ReactiveCommand.CreateFromTask<TrackedMetrics>(ChangeTrackedMetricY2AxisAsync);
+            ChangeCurveFittingTypeY1Command = ReactiveCommand.CreateFromTask<CurveFittingType>(ChangeCurveFittingTypeY1Async);
+            ChangeCurveFittingTypeY2Command = ReactiveCommand.CreateFromTask<CurveFittingType>(ChangeCurveFittingTypeY2Async);
 
             m_IsBusy = this
                 .WhenAnyValue(
@@ -147,23 +150,34 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis)
                 .ToProperty(this, rcm => rcm.TrackedMetricXAxis);
 
-            m_TrackedMetricYAxis = this
-                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricYAxis)
-                .ToProperty(this, rcm => rcm.TrackedMetricYAxis);
+            m_TrackedMetricY1Axis = this
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY1Axis)
+                .ToProperty(this, rcm => rcm.TrackedMetricY1Axis);
 
-            m_CurveFittingType = this
-                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType)
-                .ToProperty(this, rcm => rcm.CurveFittingType);
+            m_TrackedMetricY2Axis = this
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY2Axis)
+                .ToProperty(this, rcm => rcm.TrackedMetricY2Axis);
+
+            m_CurveFittingTypeY1 = this
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY1)
+                .ToProperty(this, rcm => rcm.CurveFittingTypeY1);
+
+            m_CurveFittingTypeY2 = this
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2)
+                .ToProperty(this, rcm => rcm.CurveFittingTypeY2);
 
             m_BuildScenarioChartPlotModelSub = this
                 .WhenAnyValue(
                     rcm => rcm.m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
                     rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNames,
                     rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
-                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricYAxis,
-                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType,
+                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY1Axis,
+                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY2Axis,
+                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY1,
+                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
-                    rcm => rcm.m_CoreViewModel.BaseTheme)
+                    rcm => rcm.m_CoreViewModel.BaseTheme,
+                    (_, _, _, _, _, _, _, _, _) => Unit.Default)
                 .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildScenarioChartPlotModelAsync());
@@ -219,12 +233,14 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static (AvaPlot, string) BuildScenarioChartPlotModelInternal(
+        private static (AvaPlot, string, string) BuildScenarioChartPlotModelInternal(
             TrackedMetricsSetModel trackedMetricsSet,
             bool showNames,
             TrackedMetrics xMetric,
-            TrackedMetrics yMetric,
-            CurveFittingType curveFittingType,
+            TrackedMetrics y1Metric,
+            TrackedMetrics y2Metric,
+            CurveFittingType curveFittingTypeY1,
+            CurveFittingType curveFittingTypeY2,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(trackedMetricsSet);
@@ -235,14 +251,73 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (trackedMetricsSet.TrackedMetrics.Count == 0
                 || xMetric == TrackedMetrics.None
-                || yMetric == TrackedMetrics.None)
+                || (y1Metric == TrackedMetrics.None && y2Metric == TrackedMetrics.None))
             {
-                return (plotModel.SetBaseTheme(baseTheme), string.Empty);
+                return (plotModel.SetBaseTheme(baseTheme), string.Empty, string.Empty);
             }
 
             // Select the metric for the X axis.
             Func<MetricsModel, double> xMetricFunction = GetMetricFunction(xMetric);
 
+            // X Axis title.
+            IXAxis xAxis = plotModel.Plot.Axes.Bottom;
+            xAxis.Label.Text = StringConverters.TrackedMetricsValue(xMetric);
+            xAxis.Label.FontSize = PlotHelper.FontSize;
+            xAxis.Label.Bold = false;
+
+            // Each Y metric keeps a fixed side (Y1 left, Y2 right, each with
+            // its own scale) so the chart stays predictable when only one of
+            // them is active.
+
+            string curveFittingFormulaY1 = string.Empty;
+            string curveFittingFormulaY2 = string.Empty;
+
+            if (y1Metric != TrackedMetrics.None)
+            {
+                curveFittingFormulaY1 = BuildTrackedMetricSeries(
+                    plotModel,
+                    trackedMetricsSet,
+                    showNames,
+                    xMetricFunction,
+                    y1Metric,
+                    curveFittingTypeY1,
+                    plotModel.Plot.Axes.Left,
+                    Colors.Blue,
+                    MarkerShape.FilledCircle);
+            }
+
+            if (y2Metric != TrackedMetrics.None)
+            {
+                curveFittingFormulaY2 = BuildTrackedMetricSeries(
+                    plotModel,
+                    trackedMetricsSet,
+                    showNames,
+                    xMetricFunction,
+                    y2Metric,
+                    curveFittingTypeY2,
+                    plotModel.Plot.Axes.Right,
+                    Colors.Red,
+                    MarkerShape.FilledSquare);
+            }
+
+            plotModel.Plot.Axes.AutoScale();
+
+            plotModel.Plot.Axes.AutoScaleExpand();
+
+            return (plotModel.SetBaseTheme(baseTheme), curveFittingFormulaY1, curveFittingFormulaY2);
+        }
+
+        private static string BuildTrackedMetricSeries(
+            AvaPlot plotModel,
+            TrackedMetricsSetModel trackedMetricsSet,
+            bool showNames,
+            Func<MetricsModel, double> xMetricFunction,
+            TrackedMetrics yMetric,
+            CurveFittingType curveFittingType,
+            IYAxis yAxis,
+            Color markerFillColor,
+            MarkerShape markerShape)
+        {
             // Select the metric for the Y axis.
             Func<MetricsModel, double> yMetricFunction = GetMetricFunction(yMetric);
 
@@ -259,11 +334,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     Y = yMetricFunction(trackedMetrics.Metrics),
                     Size = 14.0f,
                     LineWidth = 1.5f,
-                    MarkerFillColor = Colors.Blue,
+                    MarkerFillColor = markerFillColor,
                     MarkerLineColor = Colors.WhiteSmoke,
-                    Shape = MarkerShape.FilledCircle,
+                    Shape = markerShape,
                     Annotation = trackedMetrics.Path,
                 };
+
+                marker.Axes.YAxis = yAxis;
 
                 var annotation = new Text
                 {
@@ -279,6 +356,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     //BorderWidth = 1,
                 };
 
+                annotation.Axes.YAxis = yAxis;
+
                 markers.Add(marker);
                 annotations.Add(annotation);
             }
@@ -292,31 +371,21 @@ namespace Zametek.ViewModel.ProjectPlan
                 plotModel.Plot.PlottableList.AddRange(annotations);
             }
 
-            // X Axis title.
-            IXAxis xAxis = plotModel.Plot.Axes.Bottom;
-            xAxis.Label.Text = StringConverters.TrackedMetricsValue(xMetric);
-            xAxis.Label.FontSize = PlotHelper.FontSize;
-            xAxis.Label.Bold = false;
-
             // Y Axis title.
-            IYAxis yAxis = plotModel.Plot.Axes.Left;
             yAxis.Label.Text = StringConverters.TrackedMetricsValue(yMetric);
             yAxis.Label.FontSize = PlotHelper.FontSize;
             yAxis.Label.Bold = false;
 
             // Build the curve fitting if requested.
-            string curveFittingFormula = BuildCurveFit(plotModel, markers, curveFittingType);
-            plotModel.Plot.Axes.AutoScale();
-
-            plotModel.Plot.Axes.AutoScaleExpand();
-
-            return (plotModel.SetBaseTheme(baseTheme), curveFittingFormula);
+            return BuildCurveFit(plotModel, markers, curveFittingType, yAxis, markerFillColor);
         }
 
         private static string BuildCurveFit(
             AvaPlot plotModel,
             List<AnnotatedMarker> markers,
-            CurveFittingType curveFittingType)
+            CurveFittingType curveFittingType,
+            IYAxis yAxis,
+            Color color)
         {
             string formula = string.Empty;
             double[] xs = [.. markers.Select(x => x.X)];
@@ -340,6 +409,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             line.MarkerSize = 0;
                             line.LineWidth = 2;
                             line.LinePattern = LinePattern.Dashed;
+                            line.Color = color;
+                            line.Axes.YAxis = yAxis;
                         }
                     }
                     break;
@@ -355,6 +426,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             line.MarkerSize = 0;
                             line.LineWidth = 2;
                             line.LinePattern = LinePattern.Dashed;
+                            line.Color = color;
+                            line.Axes.YAxis = yAxis;
                         }
                     }
                     break;
@@ -370,6 +443,8 @@ namespace Zametek.ViewModel.ProjectPlan
                             line.MarkerSize = 0;
                             line.LineWidth = 2;
                             line.LinePattern = LinePattern.Dashed;
+                            line.Color = color;
+                            line.Axes.YAxis = yAxis;
                         }
                     }
                     break;
@@ -387,22 +462,24 @@ namespace Zametek.ViewModel.ProjectPlan
                             line.MarkerSize = 0;
                             line.LineWidth = 2;
                             line.LinePattern = LinePattern.Dashed;
+                            line.Color = color;
+                            line.Axes.YAxis = yAxis;
                         }
                     }
                     break;
                 case CurveFittingType.PolynomialOrder2:
                     {
-                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 2);
+                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 2, yAxis, color);
                     }
                     break;
                 case CurveFittingType.PolynomialOrder3:
                     {
-                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 3);
+                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 3, yAxis, color);
                     }
                     break;
                 case CurveFittingType.PolynomialOrder4:
                     {
-                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 4);
+                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 4, yAxis, color);
                     }
                     break;
                 default:
@@ -416,7 +493,9 @@ namespace Zametek.ViewModel.ProjectPlan
             AvaPlot plotModel,
             double[] xs,
             double[] ys,
-            int order)
+            int order,
+            IYAxis yAxis,
+            Color color)
         {
             char[] superscript = { '⁰', '¹', '²', '³', '⁴' };
 
@@ -439,6 +518,8 @@ namespace Zametek.ViewModel.ProjectPlan
             line.MarkerSize = 0;
             line.LineWidth = 2;
             line.LinePattern = LinePattern.Dashed;
+            line.Color = color;
+            line.Axes.YAxis = yAxis;
 
             // Build the formula.
             StringBuilder formula = new(@"y = ");
@@ -537,11 +618,11 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private async Task ChangeTrackedMetricYAxisAsync(TrackedMetrics trackedMetric)
+        private async Task ChangeTrackedMetricY1AxisAsync(TrackedMetrics trackedMetric)
         {
             try
             {
-                TrackedMetricYAxis = trackedMetric;
+                TrackedMetricY1Axis = trackedMetric;
             }
             catch (Exception ex)
             {
@@ -552,11 +633,41 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private async Task ChangeCurveFittingTypeAsync(CurveFittingType curveFittingType)
+        private async Task ChangeTrackedMetricY2AxisAsync(TrackedMetrics trackedMetric)
         {
             try
             {
-                CurveFittingType = curveFittingType;
+                TrackedMetricY2Axis = trackedMetric;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeCurveFittingTypeY1Async(CurveFittingType curveFittingType)
+        {
+            try
+            {
+                CurveFittingTypeY1 = curveFittingType;
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+            }
+        }
+
+        private async Task ChangeCurveFittingTypeY2Async(CurveFittingType curveFittingType)
+        {
+            try
+            {
+                CurveFittingTypeY2 = curveFittingType;
             }
             catch (Exception ex)
             {
@@ -628,23 +739,43 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<TrackedMetrics> m_TrackedMetricYAxis;
-        public TrackedMetrics TrackedMetricYAxis
+        private readonly ObservableAsPropertyHelper<TrackedMetrics> m_TrackedMetricY1Axis;
+        public TrackedMetrics TrackedMetricY1Axis
         {
-            get => m_TrackedMetricYAxis.Value;
+            get => m_TrackedMetricY1Axis.Value;
             set
             {
-                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricYAxis = value;
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY1Axis = value;
             }
         }
 
-        private readonly ObservableAsPropertyHelper<CurveFittingType> m_CurveFittingType;
-        public CurveFittingType CurveFittingType
+        private readonly ObservableAsPropertyHelper<TrackedMetrics> m_TrackedMetricY2Axis;
+        public TrackedMetrics TrackedMetricY2Axis
         {
-            get => m_CurveFittingType.Value;
+            get => m_TrackedMetricY2Axis.Value;
             set
             {
-                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType = value;
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY2Axis = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<CurveFittingType> m_CurveFittingTypeY1;
+        public CurveFittingType CurveFittingTypeY1
+        {
+            get => m_CurveFittingTypeY1.Value;
+            set
+            {
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY1 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<CurveFittingType> m_CurveFittingTypeY2;
+        public CurveFittingType CurveFittingTypeY2
+        {
+            get => m_CurveFittingTypeY2.Value;
+            set
+            {
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2 = value;
             }
         }
 
@@ -654,9 +785,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand ChangeTrackedMetricXAxisCommand { get; }
 
-        public ICommand ChangeTrackedMetricYAxisCommand { get; }
+        public ICommand ChangeTrackedMetricY1AxisCommand { get; }
 
-        public ICommand ChangeCurveFittingTypeCommand { get; }
+        public ICommand ChangeTrackedMetricY2AxisCommand { get; }
+
+        public ICommand ChangeCurveFittingTypeY1Command { get; }
+
+        public ICommand ChangeCurveFittingTypeY2Command { get; }
 
         public async Task SaveScenarioChartImageFileAsync(
             string? filename,
@@ -686,15 +821,29 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private string m_CurveFittingFormula;
-        public string CurveFittingFormula
+        private string m_CurveFittingFormulaY1;
+        public string CurveFittingFormulaY1
         {
-            get => string.IsNullOrWhiteSpace(m_CurveFittingFormula) ? string.Empty : m_CurveFittingFormula;
+            get => string.IsNullOrWhiteSpace(m_CurveFittingFormulaY1) ? string.Empty : m_CurveFittingFormulaY1;
             private set
             {
                 lock (m_Lock)
                 {
-                    m_CurveFittingFormula = value;
+                    m_CurveFittingFormulaY1 = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        private string m_CurveFittingFormulaY2;
+        public string CurveFittingFormulaY2
+        {
+            get => string.IsNullOrWhiteSpace(m_CurveFittingFormulaY2) ? string.Empty : m_CurveFittingFormulaY2;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    m_CurveFittingFormulaY2 = value;
                     this.RaisePropertyChanged();
                 }
             }
@@ -704,18 +853,21 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             CascadeDiagnostics.RecordBuild($@"{nameof(ScenarioChartManagerViewModel)}.{nameof(BuildScenarioChartPlotModel)}");
             AvaPlot? plotModel = null;
-            string curveFittingFormula = string.Empty;
+            string curveFittingFormulaY1 = string.Empty;
+            string curveFittingFormulaY2 = string.Empty;
 
             lock (m_Lock)
             {
                 if (!HasCompilationErrors)
                 {
-                    (plotModel, curveFittingFormula) = BuildScenarioChartPlotModelInternal(
+                    (plotModel, curveFittingFormulaY1, curveFittingFormulaY2) = BuildScenarioChartPlotModelInternal(
                         m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
                         m_ProjectScenarioManagerViewModel.ScenarioChartShowNames,
                         m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
-                        m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricYAxis,
-                        m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingType,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY1Axis,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY2Axis,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY1,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2,
                         m_CoreViewModel.BaseTheme);
                 }
             }
@@ -723,7 +875,8 @@ namespace Zametek.ViewModel.ProjectPlan
             plotModel ??= new AvaPlot();
             plotModel.ClearContextMenu();
             ScenarioChartPlotModel = plotModel;
-            CurveFittingFormula = curveFittingFormula;
+            CurveFittingFormulaY1 = curveFittingFormulaY1;
+            CurveFittingFormulaY2 = curveFittingFormulaY2;
         }
 
         #endregion
@@ -786,8 +939,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
                 m_TrackedMetricXAxis?.Dispose();
-                m_TrackedMetricYAxis?.Dispose();
-                m_CurveFittingType?.Dispose();
+                m_TrackedMetricY1Axis?.Dispose();
+                m_TrackedMetricY2Axis?.Dispose();
+                m_CurveFittingTypeY1?.Dispose();
+                m_CurveFittingTypeY2?.Dispose();
             }
 
             m_Disposed = true;

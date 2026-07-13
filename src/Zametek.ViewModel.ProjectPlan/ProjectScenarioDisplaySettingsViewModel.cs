@@ -31,6 +31,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_SetIsProjectScenarioUpdated = setIsProjectScenarioUpdated;
             m_IsReadyToCompile = isReadyToCompile;
             m_GanttChartShowConnections = [];
+            m_EarnedValueShowResources = [];
         }
 
         #endregion
@@ -497,6 +498,23 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly List<int> m_EarnedValueShowResources;
+        public List<int> EarnedValueShowResources => m_EarnedValueShowResources;
+
+        private ReadyToRevise m_IsReadyToReviseEarnedValueShowResources;
+        public ReadyToRevise IsReadyToReviseEarnedValueShowResources
+        {
+            get => m_IsReadyToReviseEarnedValueShowResources;
+            set
+            {
+                lock (m_Lock)
+                {
+                    m_IsReadyToReviseEarnedValueShowResources = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         public void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated)
         {
             lock (m_Lock)
@@ -638,6 +656,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     EarnedValueScaleToOwnPlan = model.EarnedValueScaleToOwnPlan;
                 }
+
+                EarnedValueShowResources.Clear();
+                EarnedValueShowResources.AddRange(model.EarnedValueShowResources);
+                IsReadyToReviseEarnedValueShowResources = ReadyToRevise.Yes;
             }
         }
 
@@ -682,6 +704,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     EarnedValueShowMilestones = EarnedValueShowMilestones,
                     EarnedValueCombineResources = EarnedValueCombineResources,
                     EarnedValueScaleToOwnPlan = EarnedValueScaleToOwnPlan,
+                    EarnedValueShowResources = [.. EarnedValueShowResources],
                 };
             }
         }

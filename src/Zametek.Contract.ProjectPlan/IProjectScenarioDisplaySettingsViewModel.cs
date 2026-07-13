@@ -49,6 +49,8 @@ namespace Zametek.Contract.ProjectPlan
         bool EarnedValueShowMilestones { get; set; }
         bool EarnedValueCombineResources { get; set; }
         bool EarnedValueScaleToOwnPlan { get; set; }
+        List<int> EarnedValueShowResources { get; }
+        ReadyToRevise IsReadyToReviseEarnedValueShowResources { get; set; }
 
 
         void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated);

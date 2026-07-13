@@ -406,6 +406,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 };
             })];
 
+            // DisplaySettings.
+
+            List<int> newEarnedValueShowResources = [.. projectScenarioModel.DisplaySettings.EarnedValueShowResources.Select(showResourceId =>
+            {
+                return idUpdatesLookup.TryGetValue(showResourceId, out int mappedNewShowResourceId) ? mappedNewShowResourceId : showResourceId;
+            })];
+
             // Return the new project scenario model with the updated dependent activities and resources.
 
             projectScenarioModel = projectScenarioModel with
@@ -414,6 +421,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 ResourceSettings = projectScenarioModel.ResourceSettings with
                 {
                     Resources = newResources,
+                },
+                DisplaySettings = projectScenarioModel.DisplaySettings with
+                {
+                    EarnedValueShowResources = newEarnedValueShowResources,
                 },
             };
 

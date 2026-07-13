@@ -37,9 +37,13 @@ namespace Zametek.Contract.ProjectPlan
 
         TrackedMetrics ScenarioChartTrackedMetricXAxis { get; set; }
 
-        TrackedMetrics ScenarioChartTrackedMetricYAxis { get; set; }
+        TrackedMetrics ScenarioChartTrackedMetricY1Axis { get; set; }
 
-        CurveFittingType ScenarioChartCurveFittingType { get; set; }
+        TrackedMetrics ScenarioChartTrackedMetricY2Axis { get; set; }
+
+        CurveFittingType ScenarioChartCurveFittingTypeY1 { get; set; }
+
+        CurveFittingType ScenarioChartCurveFittingTypeY2 { get; set; }
 
         IManagedNodeViewModel Root { get; }
 

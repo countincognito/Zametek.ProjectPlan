@@ -493,11 +493,20 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Curve Fitting.
+        ///   Looks up a localized string similar to Y1 Curve Fitting.
         /// </summary>
-        public static string Menu_CurveFittingType {
+        public static string Menu_CurveFittingTypeY1 {
             get {
-                return ResourceManager.GetString("Menu_CurveFittingType", resourceCulture);
+                return ResourceManager.GetString("Menu_CurveFittingTypeY1", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Y2 Curve Fitting.
+        /// </summary>
+        public static string Menu_CurveFittingTypeY2 {
+            get {
+                return ResourceManager.GetString("Menu_CurveFittingTypeY2", resourceCulture);
             }
         }
 
@@ -871,11 +880,20 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Y Axis Metric.
+        ///   Looks up a localized string similar to Y1 Axis Metric.
         /// </summary>
-        public static string Menu_TrackedMetricYAxis {
+        public static string Menu_TrackedMetricY1Axis {
             get {
-                return ResourceManager.GetString("Menu_TrackedMetricYAxis", resourceCulture);
+                return ResourceManager.GetString("Menu_TrackedMetricY1Axis", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Y2 Axis Metric.
+        /// </summary>
+        public static string Menu_TrackedMetricY2Axis {
+            get {
+                return ResourceManager.GetString("Menu_TrackedMetricY2Axis", resourceCulture);
             }
         }
 

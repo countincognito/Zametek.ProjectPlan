@@ -716,6 +716,21 @@ namespace Zametek.Data.ProjectPlan
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial ProjectScenarioTagModel FromV0_6_0ToCurrent(v0_6_0.ProjectScenarioTagModel src);
 
+        // v0.6.0 predates the split of the scenario chart Y metric into Y1/Y2 (and the per-metric
+        // curve fitting), so the old single-Y members bridge to the Y1 members. The Y2 members are
+        // new in v0.6.1: they carry no v0.6.0 representation, so they are dropped on the way down
+        // and intentionally left at their defaults (None) on the way up.
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        [MapProperty(nameof(ProjectDisplaySettingsModel.ScenarioChartTrackedMetricY1Axis), nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartTrackedMetricYAxis))]
+        [MapProperty(nameof(ProjectDisplaySettingsModel.ScenarioChartCurveFittingTypeY1), nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartCurveFittingType))]
+        public partial v0_6_0.ProjectDisplaySettingsModel FromCurrentToV0_6_0(ProjectDisplaySettingsModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        [MapProperty(nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartTrackedMetricYAxis), nameof(ProjectDisplaySettingsModel.ScenarioChartTrackedMetricY1Axis))]
+        [MapProperty(nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartCurveFittingType), nameof(ProjectDisplaySettingsModel.ScenarioChartCurveFittingTypeY1))]
+        [MapperIgnoreTarget(nameof(ProjectDisplaySettingsModel.ScenarioChartTrackedMetricY2Axis))]
+        [MapperIgnoreTarget(nameof(ProjectDisplaySettingsModel.ScenarioChartCurveFittingTypeY2))]
+        public partial ProjectDisplaySettingsModel FromV0_6_0ToCurrent(v0_6_0.ProjectDisplaySettingsModel src);
+
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_0.AppSettingsModel FromCurrentToV0_6_0(AppSettingsModel src);
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
@@ -789,5 +804,18 @@ namespace Zametek.Data.ProjectPlan
         public partial v0_6_1.ProjectScenarioFileModel FromCurrentToV0_6_1(ProjectScenarioFileModel src);
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial ProjectScenarioFileModel FromV0_6_1ToCurrent(v0_6_1.ProjectScenarioFileModel src);
+
+        // The v0.6.1 project display settings mirror the Current model 1:1 (v0.6.1 introduced its
+        // own type so it can persist the Y1/Y2 scenario chart metrics and per-metric curve fitting).
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_1.ProjectDisplaySettingsModel FromCurrentToV0_6_1(ProjectDisplaySettingsModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial ProjectDisplaySettingsModel FromV0_6_1ToCurrent(v0_6_1.ProjectDisplaySettingsModel src);
+
+        // Upgrading from v0.6.0: the old single Y metric (and its curve fitting) becomes Y1; the Y2
+        // members default to None.
+        [MapProperty(nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartTrackedMetricYAxis), nameof(v0_6_1.ProjectDisplaySettingsModel.ScenarioChartTrackedMetricY1Axis))]
+        [MapProperty(nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartCurveFittingType), nameof(v0_6_1.ProjectDisplaySettingsModel.ScenarioChartCurveFittingTypeY1))]
+        public partial v0_6_1.ProjectDisplaySettingsModel FromV0_6_0ToV0_6_1(v0_6_0.ProjectDisplaySettingsModel src);
     }
 }

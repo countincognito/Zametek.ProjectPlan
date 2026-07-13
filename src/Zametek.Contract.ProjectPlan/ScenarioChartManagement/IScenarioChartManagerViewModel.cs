@@ -16,11 +16,17 @@ namespace Zametek.Contract.ProjectPlan
 
         TrackedMetrics TrackedMetricXAxis { get; set; }
 
-        TrackedMetrics TrackedMetricYAxis { get; set; }
+        TrackedMetrics TrackedMetricY1Axis { get; set; }
 
-        CurveFittingType CurveFittingType { get; set; }
+        TrackedMetrics TrackedMetricY2Axis { get; set; }
 
-        string CurveFittingFormula { get; }
+        CurveFittingType CurveFittingTypeY1 { get; set; }
+
+        CurveFittingType CurveFittingTypeY2 { get; set; }
+
+        string CurveFittingFormulaY1 { get; }
+
+        string CurveFittingFormulaY2 { get; }
 
         ICommand SaveScenarioChartImageFileCommand { get; }
 
@@ -28,9 +34,13 @@ namespace Zametek.Contract.ProjectPlan
 
         ICommand ChangeTrackedMetricXAxisCommand { get; }
 
-        ICommand ChangeTrackedMetricYAxisCommand { get; }
+        ICommand ChangeTrackedMetricY1AxisCommand { get; }
 
-        ICommand ChangeCurveFittingTypeCommand { get; }
+        ICommand ChangeTrackedMetricY2AxisCommand { get; }
+
+        ICommand ChangeCurveFittingTypeY1Command { get; }
+
+        ICommand ChangeCurveFittingTypeY2Command { get; }
 
         Task SaveScenarioChartImageFileAsync(string? filename, int width, int height);
 

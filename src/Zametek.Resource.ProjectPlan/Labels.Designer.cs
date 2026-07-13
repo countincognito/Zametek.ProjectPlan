@@ -358,11 +358,20 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Curve Fitting.
+        ///   Looks up a localized string similar to Y1 Curve Fitting.
         /// </summary>
-        public static string Label_CurveFitting {
+        public static string Label_CurveFittingY1 {
             get {
-                return ResourceManager.GetString("Label_CurveFitting", resourceCulture);
+                return ResourceManager.GetString("Label_CurveFittingY1", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Y2 Curve Fitting.
+        /// </summary>
+        public static string Label_CurveFittingY2 {
+            get {
+                return ResourceManager.GetString("Label_CurveFittingY2", resourceCulture);
             }
         }
         

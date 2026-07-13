@@ -17,6 +17,6 @@ namespace Zametek.Data.ProjectPlan.v0_6_1
 
         public List<v0_6_0.ProjectScenarioTagModel> Tags { get; init; } = [];
 
-        public v0_6_0.ProjectDisplaySettingsModel DisplaySettings { get; init; } = new();
+        public ProjectDisplaySettingsModel DisplaySettings { get; init; } = new();
     }
 }

@@ -106,30 +106,58 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private TrackedMetrics m_ScenarioChartTrackedMetricYAxis;
-        public TrackedMetrics ScenarioChartTrackedMetricYAxis
+        private TrackedMetrics m_ScenarioChartTrackedMetricY1Axis;
+        public TrackedMetrics ScenarioChartTrackedMetricY1Axis
         {
-            get => m_ScenarioChartTrackedMetricYAxis;
+            get => m_ScenarioChartTrackedMetricY1Axis;
             set
             {
                 lock (m_Lock)
                 {
                     SetIsProjectUpdated(isProjectUpdated: true);
-                    this.RaiseAndSetIfChanged(ref m_ScenarioChartTrackedMetricYAxis, value);
+                    this.RaiseAndSetIfChanged(ref m_ScenarioChartTrackedMetricY1Axis, value);
                 }
             }
         }
 
-        private CurveFittingType m_ScenarioChartCurveFittingType;
-        public CurveFittingType ScenarioChartCurveFittingType
+        private TrackedMetrics m_ScenarioChartTrackedMetricY2Axis;
+        public TrackedMetrics ScenarioChartTrackedMetricY2Axis
         {
-            get => m_ScenarioChartCurveFittingType;
+            get => m_ScenarioChartTrackedMetricY2Axis;
             set
             {
                 lock (m_Lock)
                 {
                     SetIsProjectUpdated(isProjectUpdated: true);
-                    this.RaiseAndSetIfChanged(ref m_ScenarioChartCurveFittingType, value);
+                    this.RaiseAndSetIfChanged(ref m_ScenarioChartTrackedMetricY2Axis, value);
+                }
+            }
+        }
+
+        private CurveFittingType m_ScenarioChartCurveFittingTypeY1;
+        public CurveFittingType ScenarioChartCurveFittingTypeY1
+        {
+            get => m_ScenarioChartCurveFittingTypeY1;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true);
+                    this.RaiseAndSetIfChanged(ref m_ScenarioChartCurveFittingTypeY1, value);
+                }
+            }
+        }
+
+        private CurveFittingType m_ScenarioChartCurveFittingTypeY2;
+        public CurveFittingType ScenarioChartCurveFittingTypeY2
+        {
+            get => m_ScenarioChartCurveFittingTypeY2;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true);
+                    this.RaiseAndSetIfChanged(ref m_ScenarioChartCurveFittingTypeY2, value);
                 }
             }
         }
@@ -156,13 +184,21 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ScenarioChartTrackedMetricXAxis = model.ScenarioChartTrackedMetricXAxis;
                 }
-                if (ScenarioChartTrackedMetricYAxis != model.ScenarioChartTrackedMetricYAxis)
+                if (ScenarioChartTrackedMetricY1Axis != model.ScenarioChartTrackedMetricY1Axis)
                 {
-                    ScenarioChartTrackedMetricYAxis = model.ScenarioChartTrackedMetricYAxis;
+                    ScenarioChartTrackedMetricY1Axis = model.ScenarioChartTrackedMetricY1Axis;
                 }
-                if (ScenarioChartCurveFittingType != model.ScenarioChartCurveFittingType)
+                if (ScenarioChartTrackedMetricY2Axis != model.ScenarioChartTrackedMetricY2Axis)
                 {
-                    ScenarioChartCurveFittingType = model.ScenarioChartCurveFittingType;
+                    ScenarioChartTrackedMetricY2Axis = model.ScenarioChartTrackedMetricY2Axis;
+                }
+                if (ScenarioChartCurveFittingTypeY1 != model.ScenarioChartCurveFittingTypeY1)
+                {
+                    ScenarioChartCurveFittingTypeY1 = model.ScenarioChartCurveFittingTypeY1;
+                }
+                if (ScenarioChartCurveFittingTypeY2 != model.ScenarioChartCurveFittingTypeY2)
+                {
+                    ScenarioChartCurveFittingTypeY2 = model.ScenarioChartCurveFittingTypeY2;
                 }
             }
         }
@@ -178,8 +214,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     ScenarioChartShowNames = ScenarioChartShowNames,
                     ScenarioChartTrackedMetricXAxis = ScenarioChartTrackedMetricXAxis,
-                    ScenarioChartTrackedMetricYAxis = ScenarioChartTrackedMetricYAxis,
-                    ScenarioChartCurveFittingType = ScenarioChartCurveFittingType,
+                    ScenarioChartTrackedMetricY1Axis = ScenarioChartTrackedMetricY1Axis,
+                    ScenarioChartTrackedMetricY2Axis = ScenarioChartTrackedMetricY2Axis,
+                    ScenarioChartCurveFittingTypeY1 = ScenarioChartCurveFittingTypeY1,
+                    ScenarioChartCurveFittingTypeY2 = ScenarioChartCurveFittingTypeY2,
                 };
             }
         }

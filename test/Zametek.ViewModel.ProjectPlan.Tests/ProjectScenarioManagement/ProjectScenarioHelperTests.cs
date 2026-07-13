@@ -51,6 +51,33 @@ namespace Zametek.ViewModel.ProjectPlan.Tests
         }
 
         [Fact]
+        public void ProjectScenarioHelper_Given_UpdateResourceIds_Then_EarnedValueShowResourcesRemapped()
+        {
+            var input = new ProjectScenarioModel
+            {
+                ResourceSettings = new ResourceSettingsModel
+                {
+                    Resources =
+                    [
+                        new ResourceModel { Id = 3 },
+                        new ResourceModel { Id = 6 },
+                        new ResourceModel { Id = 7 },
+                    ],
+                },
+                DisplaySettings = new ProjectScenarioDisplaySettingsModel
+                {
+                    EarnedValueShowResources = [3, 7],
+                },
+            };
+
+            ProjectScenarioModel remapped = ProjectScenarioHelper.UpdateResourceIds(input, [(3, 5), (6, 8)]);
+
+            // The persisted resource filter follows the renumbered resource ids;
+            // ids untouched by the map pass through unchanged.
+            remapped.DisplaySettings.EarnedValueShowResources.ShouldBe([5, 7]);
+        }
+
+        [Fact]
         public void ProjectScenarioHelper_Given_UpdateWorkStreamIds_Then_MappedToExpectedIds()
         {
             ProjectScenarioModel? input = JsonConvert.DeserializeObject<ProjectScenarioModel>(m_Fixture.Input_JsonString);

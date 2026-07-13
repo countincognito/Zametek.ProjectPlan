@@ -17,7 +17,7 @@ namespace Zametek.Data.ProjectPlan.v0_6_1
                 Nodes = project.Nodes,
                 Files = [.. project.Files.Select(mapper.FromV0_6_0ToV0_6_1)],
                 Tags = project.Tags,
-                DisplaySettings = project.DisplaySettings,
+                DisplaySettings = mapper.FromV0_6_0ToV0_6_1(project.DisplaySettings),
             };
         }
     }

@@ -261,8 +261,11 @@
   <data name="Menu_CopyNode" xml:space="preserve">
     <value>Copy</value>
   </data>
-  <data name="Menu_CurveFittingType" xml:space="preserve">
-    <value>Curve Fitting</value>
+  <data name="Menu_CurveFittingTypeY1" xml:space="preserve">
+    <value>Y1 Curve Fitting</value>
+  </data>
+  <data name="Menu_CurveFittingTypeY2" xml:space="preserve">
+    <value>Y2 Curve Fitting</value>
   </data>
   <data name="Menu_CutNode" xml:space="preserve">
     <value>Cut</value>
@@ -387,8 +390,11 @@
   <data name="Menu_TrackedMetricXAxis" xml:space="preserve">
     <value>X Axis Metric</value>
   </data>
-  <data name="Menu_TrackedMetricYAxis" xml:space="preserve">
-    <value>Y Axis Metric</value>
+  <data name="Menu_TrackedMetricY1Axis" xml:space="preserve">
+    <value>Y1 Axis Metric</value>
+  </data>
+  <data name="Menu_TrackedMetricY2Axis" xml:space="preserve">
+    <value>Y2 Axis Metric</value>
   </data>
   <data name="Menu_CombineResources" xml:space="preserve">
     <value>Combine Resources</value>
