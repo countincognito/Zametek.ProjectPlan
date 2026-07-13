@@ -878,5 +878,23 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Menu_TrackedMetricYAxis", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Combine Resources.
+        /// </summary>
+        public static string Menu_CombineResources {
+            get {
+                return ResourceManager.GetString("Menu_CombineResources", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Scale to Own Plan.
+        /// </summary>
+        public static string Menu_ScaleToOwnPlan {
+            get {
+                return ResourceManager.GetString("Menu_ScaleToOwnPlan", resourceCulture);
+            }
+        }
     }
 }

@@ -17,6 +17,14 @@ namespace Zametek.Contract.ProjectPlan
 
         bool ShowMilestones { get; set; }
 
+        bool CombineResources { get; set; }
+
+        bool ScaleToOwnPlan { get; set; }
+
+        bool HasResources { get; }
+
+        IResourceSelectorViewModel ResourceSelector { get; }
+
         ICommand ResetEarnedValueChartCommand { get; }
 
         ICommand SaveEarnedValueChartImageFileCommand { get; }

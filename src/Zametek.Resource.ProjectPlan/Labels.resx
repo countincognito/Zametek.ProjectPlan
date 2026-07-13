@@ -693,4 +693,7 @@
   <data name="Label_ActivityAllocationType" xml:space="preserve">
     <value>Activity Allocation</value>
   </data>
+  <data name="Label_ResourceFilter" xml:space="preserve">
+    <value>Resource Filter</value>
+  </data>
 </root>

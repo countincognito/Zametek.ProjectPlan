@@ -251,6 +251,27 @@ namespace Zametek.ViewModel.ProjectPlan
                 .OrderBy(x => x.EarliestFinishTime.GetValueOrDefault())
                 .ThenBy(x => x.EarliestStartTime.GetValueOrDefault())];
 
+            double totalWorkingTime = Convert.ToDouble(orderedActivities.Sum(s => s.AllocatedToResources.Count * s.Duration));
+
+            // Per-resource accumulators for breaking the same series down by
+            // resource. Each resource allocated to an activity contributes one
+            // unit of the AllocatedToResources.Count multiplier used in the
+            // aggregate calculations, so the per-resource series always sum
+            // back to the aggregate series.
+            Dictionary<int, ResourceTrackingAccumulator> resourceTrackingLookup =
+                resources.ToDictionary(x => x.Id, x => new ResourceTrackingAccumulator(x));
+
+            foreach (ActivityModel activity in orderedActivities)
+            {
+                foreach (int resourceId in activity.AllocatedToResources)
+                {
+                    if (resourceTrackingLookup.TryGetValue(resourceId, out ResourceTrackingAccumulator? accumulator))
+                    {
+                        accumulator.TotalWorkingTime += activity.Duration;
+                    }
+                }
+            }
+
             // Plan.
             List<TrackingPointModel> planPointSeries = [];
 
@@ -276,15 +297,20 @@ namespace Zametek.ViewModel.ProjectPlan
                 Progress = progressPointSeries,
                 ProgressProjection = progressProjectionPointSeries,
                 Effort = effortPointSeries,
-                EffortProjection = effortProjectionPointSeries
+                EffortProjection = effortProjectionPointSeries,
+                TotalWorkingTime = totalWorkingTime,
+                // The per-resource models share the accumulators' point lists,
+                // which are populated in place below (just like the aggregate
+                // lists above).
+                ByResource = [.. resourceTrackingLookup.Values
+                    .OrderBy(x => x.Resource.DisplayOrder)
+                    .Select(x => x.ToModel())],
             };
 
             if (!orderedActivities.Any())
             {
                 return trackingSeriesSet;
             }
-
-            double totalWorkingTime = Convert.ToDouble(orderedActivities.Sum(s => s.AllocatedToResources.Count * s.Duration));
 
             // Find the anticipated end time according to the design plan.
             int endTime = 0;
@@ -296,6 +322,11 @@ namespace Zametek.ViewModel.ProjectPlan
 
             // Always need at least one to mark the start.
             planPointSeries.Add(new TrackingPointModel());
+
+            foreach (ResourceTrackingAccumulator accumulator in resourceTrackingLookup.Values)
+            {
+                accumulator.Plan.Add(new TrackingPointModel());
+            }
 
             // Only bother calculating the plan if there is an end time.
             if (endTime > 0)
@@ -370,6 +401,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     double runningTotalSpent = 0.0;
                     Dictionary<int, TrackingPointModel> trackingPointLookup = progressTimeline[timeIndex];
 
+                    foreach (ResourceTrackingAccumulator accumulator in resourceTrackingLookup.Values)
+                    {
+                        accumulator.CurrentValue = 0.0;
+                    }
+
                     // Now cycle across each activity at this time index.
                     foreach (KeyValuePair<int, TrackingPointModel> trackingPoint in trackingPointLookup)
                     {
@@ -380,6 +416,15 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             // Remember to count the time spent for each resource used.
                             runningTotalSpent += activity.AllocatedToResources.Count * portionOfActivityDuration;
+
+                            // Attribute one unit of that count to each allocated resource.
+                            foreach (int resourceId in activity.AllocatedToResources)
+                            {
+                                if (resourceTrackingLookup.TryGetValue(resourceId, out ResourceTrackingAccumulator? accumulator))
+                                {
+                                    accumulator.CurrentValue += portionOfActivityDuration;
+                                }
+                            }
                         }
                     }
 
@@ -410,6 +455,21 @@ namespace Zametek.ViewModel.ProjectPlan
                                     Value = runningTotalSpent,
                                     ValuePercentage = percentage
                                 });
+
+                                foreach (int resourceId in activity.AllocatedToResources)
+                                {
+                                    if (resourceTrackingLookup.TryGetValue(resourceId, out ResourceTrackingAccumulator? accumulator))
+                                    {
+                                        accumulator.Plan.Add(new TrackingPointModel
+                                        {
+                                            Time = time,
+                                            ActivityId = activityId,
+                                            ActivityName = activity.Name,
+                                            Value = accumulator.CurrentValue,
+                                            ValuePercentage = totalWorkingTime == 0 ? 0.0 : 100.0 * accumulator.CurrentValue / totalWorkingTime
+                                        });
+                                    }
+                                }
                             }
                         }
                     }
@@ -444,6 +504,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     // Progress.
                     progressPointSeries.Add(new TrackingPointModel());
+
+                    foreach (ResourceTrackingAccumulator accumulator in resourceTrackingLookup.Values)
+                    {
+                        accumulator.Progress.Add(new TrackingPointModel());
+                    }
 
                     // Preprocess the activity trackers so they can be looked up
                     // quickly according to the time.
@@ -498,10 +563,24 @@ namespace Zametek.ViewModel.ProjectPlan
                         // a percentage completed entry.
                         double currentWorkingProgress = 0.0;
 
+                        foreach (ResourceTrackingAccumulator accumulator in resourceTrackingLookup.Values)
+                        {
+                            accumulator.CurrentValue = 0.0;
+                        }
+
                         foreach (ActivityModel activity in orderedActivities)
                         {
                             int percentageCompleted = runningWorkingProgresses[activity.Id];
                             currentWorkingProgress += activity.AllocatedToResources.Count * activity.Duration * (percentageCompleted / 100.0);
+
+                            // Attribute one unit of that count to each allocated resource.
+                            foreach (int resourceId in activity.AllocatedToResources)
+                            {
+                                if (resourceTrackingLookup.TryGetValue(resourceId, out ResourceTrackingAccumulator? accumulator))
+                                {
+                                    accumulator.CurrentValue += activity.Duration * (percentageCompleted / 100.0);
+                                }
+                            }
                         }
 
                         double progressPercentage = endTime == 0 ? 0.0 : 100.0 * currentWorkingProgress / totalWorkingTime;
@@ -521,6 +600,21 @@ namespace Zametek.ViewModel.ProjectPlan
                                     Value = currentWorkingProgress,
                                     ValuePercentage = progressPercentage
                                 });
+
+                                foreach (int resourceId in activity.AllocatedToResources)
+                                {
+                                    if (resourceTrackingLookup.TryGetValue(resourceId, out ResourceTrackingAccumulator? accumulator))
+                                    {
+                                        accumulator.Progress.Add(new TrackingPointModel
+                                        {
+                                            Time = time,
+                                            ActivityId = activity.Id,
+                                            ActivityName = activity.Name,
+                                            Value = accumulator.CurrentValue,
+                                            ValuePercentage = totalWorkingTime == 0 ? 0.0 : 100.0 * accumulator.CurrentValue / totalWorkingTime
+                                        });
+                                    }
+                                }
                             }
                         }
                     }
@@ -531,6 +625,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     // Effort
                     effortPointSeries.Add(new TrackingPointModel());
+
+                    foreach (ResourceTrackingAccumulator accumulator in resourceTrackingLookup.Values)
+                    {
+                        accumulator.Effort.Add(new TrackingPointModel());
+                    }
 
                     // Preprocess the resource trackers so they can be looked up
                     // quickly according to the time.
@@ -563,6 +662,8 @@ namespace Zametek.ViewModel.ProjectPlan
                         // Here we need to update the running percentage effort for each resource.
                         foreach ((ResourceModel resource, Dictionary<int, ResourceTrackerModel> resourceTrackerLookup) in resourceBehaviourLookup.Values)
                         {
+                            ResourceTrackingAccumulator? accumulator = resourceTrackingLookup.GetValueOrDefault(resource.Id);
+
                             foreach (ActivityModel activity in orderedActivities)
                             {
                                 int runningWorkingEffort = 0;
@@ -578,6 +679,13 @@ namespace Zametek.ViewModel.ProjectPlan
                                     foreach (ResourceActivityTrackerModel activityTracker in tracker.ActivityTrackers.Where(x => x.ActivityId == activityId))
                                     {
                                         runningWorkingEffort += activityTracker.PercentageWorked;
+
+                                        // Attribute the same increment to the resource that owns the tracker.
+                                        if (accumulator is not null)
+                                        {
+                                            int resourceWorkingEffort = accumulator.RunningWorkingEfforts.GetValueOrDefault(activityId);
+                                            accumulator.RunningWorkingEfforts[activityId] = resourceWorkingEffort + activityTracker.PercentageWorked;
+                                        }
                                     }
                                 }
 
@@ -593,6 +701,18 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             int percentageWorked = runningWorkingEfforts[activity.Id];
                             currentWorkingEffort += percentageWorked / 100.0;
+                        }
+
+                        foreach (ResourceTrackingAccumulator accumulator in resourceTrackingLookup.Values)
+                        {
+                            double resourceWorkingEffort = 0.0;
+
+                            foreach (int percentageWorked in accumulator.RunningWorkingEfforts.Values)
+                            {
+                                resourceWorkingEffort += percentageWorked / 100.0;
+                            }
+
+                            accumulator.CurrentValue = resourceWorkingEffort;
                         }
 
                         double effortPercentage = endTime == 0 ? 0.0 : 100.0 * currentWorkingEffort / totalWorkingTime;
@@ -616,6 +736,18 @@ namespace Zametek.ViewModel.ProjectPlan
                                         Value = currentWorkingEffort,
                                         ValuePercentage = effortPercentage
                                     });
+
+                                    if (resourceTrackingLookup.TryGetValue(resource.Id, out ResourceTrackingAccumulator? accumulator))
+                                    {
+                                        accumulator.Effort.Add(new TrackingPointModel
+                                        {
+                                            Time = time,
+                                            ActivityId = activityTracker.ActivityId,
+                                            ActivityName = activityTracker.ActivityName,
+                                            Value = accumulator.CurrentValue,
+                                            ValuePercentage = totalWorkingTime == 0 ? 0.0 : 100.0 * accumulator.CurrentValue / totalWorkingTime
+                                        });
+                                    }
                                 }
                             }
                         }
@@ -692,7 +824,132 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
+            // Per-resource projections, mirroring the aggregate projections above.
+            foreach (ResourceTrackingAccumulator accumulator in resourceTrackingLookup.Values)
+            {
+                // Plan
+                {
+                    accumulator.PlanProjection.Add(new TrackingPointModel());
+                    // Each per-resource plan series will always have at least one item.
+                    accumulator.PlanProjection.Add(accumulator.Plan.Last());
+                }
+
+                // Progress
+                {
+                    accumulator.ProgressProjection.Add(new TrackingPointModel());
+
+                    if (accumulator.Progress.Count > 1)
+                    {
+                        var projectedLinearFit = MathNet.Numerics.Fit.LineThroughOrigin(
+                            [.. accumulator.Progress.Select(p => (double)p.Time)],
+                            [.. accumulator.Progress.Select(p => p.Value)]);
+
+                        var lastTrackingPoint = accumulator.Plan.Last();
+
+                        if (projectedLinearFit > 0)
+                        {
+                            var projectedCompletion = lastTrackingPoint.Value / projectedLinearFit;
+
+                            accumulator.ProgressProjection.Add(new TrackingPointModel
+                            {
+                                ActivityId = lastTrackingPoint.ActivityId,
+                                ActivityName = lastTrackingPoint.ActivityName,
+                                Value = lastTrackingPoint.Value,
+                                ValuePercentage = lastTrackingPoint.ValuePercentage,
+                                Time = (int)Math.Ceiling(projectedCompletion)
+                            });
+                        }
+                    }
+                }
+
+                // Effort
+                if (hasResources
+                    && accumulator.Effort.Count > 1)
+                {
+                    accumulator.EffortProjection.Add(new TrackingPointModel());
+
+                    // We want to project effort out to the greater of the plan or the progress projection.
+                    var projectedCompletion = Math.Max(
+                        accumulator.ProgressProjection.Last().Time,
+                        accumulator.PlanProjection.Last().Time);
+
+                    var projectedLinearFit = MathNet.Numerics.Fit.LineThroughOrigin(
+                        [.. accumulator.Effort.Select(p => (double)p.Time)],
+                        [.. accumulator.Effort.Select(p => p.Value)]);
+
+                    var lastTrackingPoint = accumulator.Plan.Last();
+
+                    if (lastTrackingPoint.Value > 0)
+                    {
+                        var projectedFinalEffort = projectedLinearFit * projectedCompletion;
+
+                        accumulator.EffortProjection.Add(new TrackingPointModel
+                        {
+                            ActivityId = lastTrackingPoint.ActivityId,
+                            ActivityName = lastTrackingPoint.ActivityName,
+                            Value = projectedFinalEffort,
+                            ValuePercentage = totalWorkingTime == 0 ? 0.0 : 100.0 * projectedFinalEffort / totalWorkingTime,
+                            Time = projectedCompletion
+                        });
+                    }
+                }
+            }
+
             return trackingSeriesSet;
+        }
+
+        private static List<TrackingPointModel> CombineStepSeries(
+            IEnumerable<IList<TrackingPointModel>> seriesCollection,
+            double totalWorkingTime)
+        {
+            List<IList<TrackingPointModel>> series = [.. seriesCollection.Where(x => x.Count > 0)];
+
+            if (series.Count == 0)
+            {
+                return [];
+            }
+
+            List<int> times = [.. series
+                .SelectMany(s => s.Select(p => p.Time))
+                .Distinct()
+                .OrderBy(t => t)];
+
+            // Each series is a step function of cumulative values in ascending
+            // time order, so walk them in parallel and carry forward the latest
+            // value at or before each time.
+            int[] indices = new int[series.Count];
+            double[] currentValues = new double[series.Count];
+
+            List<TrackingPointModel> combined = [];
+
+            foreach (int time in times)
+            {
+                for (int i = 0; i < series.Count; i++)
+                {
+                    IList<TrackingPointModel> pointSeries = series[i];
+                    int index = indices[i];
+
+                    while (index < pointSeries.Count
+                        && pointSeries[index].Time <= time)
+                    {
+                        currentValues[i] = pointSeries[index].Value;
+                        index++;
+                    }
+
+                    indices[i] = index;
+                }
+
+                double value = currentValues.Sum();
+
+                combined.Add(new TrackingPointModel
+                {
+                    Time = time,
+                    Value = value,
+                    ValuePercentage = totalWorkingTime == 0 ? 0.0 : 100.0 * value / totalWorkingTime,
+                });
+            }
+
+            return combined;
         }
 
         #endregion
@@ -721,6 +978,176 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(resourceSettings);
 
             return CalculateTrackingSeriesSet(activities, resourceSettings, hasResources);
+        }
+
+        /// <summary>
+        /// Combines the per-resource tracking series of the given resources
+        /// into a single set. The returned set is self-contained: its
+        /// TotalWorkingTime is the sum over the selected resources and the
+        /// recorded percentages are relative to it, while its ByResource list
+        /// holds the original per-resource models (whose percentages remain
+        /// whole-project shares). The projections are re-derived from the
+        /// combined series using the same rules as the aggregate projections.
+        /// </summary>
+        public TrackingSeriesSetModel CombineResourceTrackingSeries(
+            TrackingSeriesSetModel trackingSeriesSet,
+            IEnumerable<int> resourceIds)
+        {
+            ArgumentNullException.ThrowIfNull(trackingSeriesSet);
+            ArgumentNullException.ThrowIfNull(resourceIds);
+
+            HashSet<int> resourceIdLookup = [.. resourceIds];
+
+            List<ResourceTrackingSeriesModel> selectedResources = [.. trackingSeriesSet.ByResource
+                .Where(x => resourceIdLookup.Contains(x.ResourceId))];
+
+            double totalWorkingTime = selectedResources.Sum(x => x.TotalWorkingTime);
+
+            List<TrackingPointModel> planPointSeries = CombineStepSeries(selectedResources.Select(x => x.Plan), totalWorkingTime);
+            List<TrackingPointModel> progressPointSeries = CombineStepSeries(selectedResources.Select(x => x.Progress), totalWorkingTime);
+            List<TrackingPointModel> effortPointSeries = CombineStepSeries(selectedResources.Select(x => x.Effort), totalWorkingTime);
+
+            // Re-derive the projections from the combined series, mirroring the
+            // aggregate projections in CalculateTrackingSeriesSet.
+
+            List<TrackingPointModel> planProjectionPointSeries = [];
+            List<TrackingPointModel> progressProjectionPointSeries = [];
+            List<TrackingPointModel> effortProjectionPointSeries = [];
+
+            if (planPointSeries.Count > 0)
+            {
+                // Plan
+                {
+                    planProjectionPointSeries.Add(new TrackingPointModel());
+                    planProjectionPointSeries.Add(planPointSeries.Last());
+                }
+
+                // Progress
+                {
+                    progressProjectionPointSeries.Add(new TrackingPointModel());
+
+                    if (progressPointSeries.Count > 1)
+                    {
+                        var projectedLinearFit = MathNet.Numerics.Fit.LineThroughOrigin(
+                            [.. progressPointSeries.Select(p => (double)p.Time)],
+                            [.. progressPointSeries.Select(p => p.Value)]);
+
+                        var lastTrackingPoint = planPointSeries.Last();
+
+                        if (projectedLinearFit > 0)
+                        {
+                            var projectedCompletion = lastTrackingPoint.Value / projectedLinearFit;
+
+                            progressProjectionPointSeries.Add(new TrackingPointModel
+                            {
+                                ActivityId = lastTrackingPoint.ActivityId,
+                                ActivityName = lastTrackingPoint.ActivityName,
+                                Value = lastTrackingPoint.Value,
+                                ValuePercentage = lastTrackingPoint.ValuePercentage,
+                                Time = (int)Math.Ceiling(projectedCompletion)
+                            });
+                        }
+                    }
+                }
+
+                // Effort
+                if (effortPointSeries.Count > 1)
+                {
+                    effortProjectionPointSeries.Add(new TrackingPointModel());
+
+                    // We want to project effort out to the greater of the plan or the progress projection.
+                    var projectedCompletion = Math.Max(
+                        progressProjectionPointSeries.Last().Time,
+                        planProjectionPointSeries.Last().Time);
+
+                    var projectedLinearFit = MathNet.Numerics.Fit.LineThroughOrigin(
+                        [.. effortPointSeries.Select(p => (double)p.Time)],
+                        [.. effortPointSeries.Select(p => p.Value)]);
+
+                    var lastTrackingPoint = planPointSeries.Last();
+
+                    if (lastTrackingPoint.Value > 0)
+                    {
+                        var projectedFinalEffort = projectedLinearFit * projectedCompletion;
+
+                        effortProjectionPointSeries.Add(new TrackingPointModel
+                        {
+                            ActivityId = lastTrackingPoint.ActivityId,
+                            ActivityName = lastTrackingPoint.ActivityName,
+                            Value = projectedFinalEffort,
+                            ValuePercentage = totalWorkingTime == 0 ? 0.0 : 100.0 * projectedFinalEffort / totalWorkingTime,
+                            Time = projectedCompletion
+                        });
+                    }
+                }
+            }
+
+            return new TrackingSeriesSetModel
+            {
+                Plan = planPointSeries,
+                PlanProjection = planProjectionPointSeries,
+                Progress = progressPointSeries,
+                ProgressProjection = progressProjectionPointSeries,
+                Effort = effortPointSeries,
+                EffortProjection = effortProjectionPointSeries,
+                TotalWorkingTime = totalWorkingTime,
+                ByResource = selectedResources,
+            };
+        }
+
+        #endregion
+
+        #region Private Types
+
+        /// <summary>
+        /// Mutable scratch state used to build up the tracking series for an
+        /// individual resource alongside the aggregate calculations in
+        /// CalculateTrackingSeriesSet.
+        /// </summary>
+        private sealed class ResourceTrackingAccumulator
+        {
+            public ResourceTrackingAccumulator(ResourceModel resource)
+            {
+                ArgumentNullException.ThrowIfNull(resource);
+                Resource = resource;
+            }
+
+            public ResourceModel Resource { get; }
+
+            public double TotalWorkingTime { get; set; }
+
+            // Scratch: this resource's cumulative series value at the current
+            // time index (recalculated on each pass through the timeline).
+            public double CurrentValue { get; set; }
+
+            // Running effort percentages per activity, restricted to the
+            // trackers owned by this resource.
+            public Dictionary<int, int> RunningWorkingEfforts { get; } = [];
+
+            public List<TrackingPointModel> Plan { get; } = [];
+            public List<TrackingPointModel> PlanProjection { get; } = [];
+            public List<TrackingPointModel> Progress { get; } = [];
+            public List<TrackingPointModel> ProgressProjection { get; } = [];
+            public List<TrackingPointModel> Effort { get; } = [];
+            public List<TrackingPointModel> EffortProjection { get; } = [];
+
+            public ResourceTrackingSeriesModel ToModel()
+            {
+                return new ResourceTrackingSeriesModel
+                {
+                    ResourceId = Resource.Id,
+                    ResourceName = Resource.Name,
+                    ColorFormat = Resource.ColorFormat != null ? Resource.ColorFormat with { } : ColorHelper.Preset(),
+                    DisplayOrder = Resource.DisplayOrder,
+                    TotalWorkingTime = TotalWorkingTime,
+                    Plan = Plan,
+                    PlanProjection = PlanProjection,
+                    Progress = Progress,
+                    ProgressProjection = ProgressProjection,
+                    Effort = Effort,
+                    EffortProjection = EffortProjection,
+                };
+            }
         }
 
         #endregion

@@ -64,5 +64,9 @@ namespace Zametek.Common.ProjectPlan
         public bool EarnedValueShowToday { get; init; } = default;
 
         public bool EarnedValueShowMilestones { get; init; } = default;
+
+        public bool EarnedValueCombineResources { get; init; } = default;
+
+        public bool EarnedValueScaleToOwnPlan { get; init; } = default;
     }
 }

@@ -390,4 +390,10 @@
   <data name="Menu_TrackedMetricYAxis" xml:space="preserve">
     <value>Y Axis Metric</value>
   </data>
+  <data name="Menu_CombineResources" xml:space="preserve">
+    <value>Combine Resources</value>
+  </data>
+  <data name="Menu_ScaleToOwnPlan" xml:space="preserve">
+    <value>Scale to Own Plan</value>
+  </data>
 </root>

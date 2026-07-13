@@ -13,5 +13,9 @@ namespace Zametek.Contract.ProjectPlan
             IEnumerable<ActivityModel> activities,
             ResourceSettingsModel resourceSettings,
             bool hasResources);
+
+        TrackingSeriesSetModel CombineResourceTrackingSeries(
+            TrackingSeriesSetModel trackingSeriesSet,
+            IEnumerable<int> resourceIds);
     }
 }

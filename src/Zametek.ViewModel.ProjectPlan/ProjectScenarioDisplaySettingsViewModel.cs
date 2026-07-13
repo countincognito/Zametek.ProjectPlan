@@ -469,6 +469,34 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_EarnedValueCombineResources;
+        public bool EarnedValueCombineResources
+        {
+            get => m_EarnedValueCombineResources;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaiseAndSetIfChanged(ref m_EarnedValueCombineResources, value);
+                }
+            }
+        }
+
+        private bool m_EarnedValueScaleToOwnPlan;
+        public bool EarnedValueScaleToOwnPlan
+        {
+            get => m_EarnedValueScaleToOwnPlan;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaiseAndSetIfChanged(ref m_EarnedValueScaleToOwnPlan, value);
+                }
+            }
+        }
+
         public void SetIsProjectScenarioUpdated(bool isProjectScenarioUpdated)
         {
             lock (m_Lock)
@@ -602,6 +630,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     EarnedValueShowMilestones = model.EarnedValueShowMilestones;
                 }
+                if (EarnedValueCombineResources != model.EarnedValueCombineResources)
+                {
+                    EarnedValueCombineResources = model.EarnedValueCombineResources;
+                }
+                if (EarnedValueScaleToOwnPlan != model.EarnedValueScaleToOwnPlan)
+                {
+                    EarnedValueScaleToOwnPlan = model.EarnedValueScaleToOwnPlan;
+                }
             }
         }
 
@@ -644,6 +680,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     EarnedValueShowProjections = EarnedValueShowProjections,
                     EarnedValueShowToday = EarnedValueShowToday,
                     EarnedValueShowMilestones = EarnedValueShowMilestones,
+                    EarnedValueCombineResources = EarnedValueCombineResources,
+                    EarnedValueScaleToOwnPlan = EarnedValueScaleToOwnPlan,
                 };
             }
         }

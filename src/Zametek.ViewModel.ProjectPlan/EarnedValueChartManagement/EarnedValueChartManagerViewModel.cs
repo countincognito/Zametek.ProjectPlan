@@ -80,7 +80,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDialogService m_DialogService;
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
+        private readonly IResourceSchedulingService m_ResourceSchedulingService;
 
+        private readonly HashSet<int> m_TargetResources;
+
+        private readonly IDisposable? m_ResourceSettingsSub;
         private readonly IDisposable? m_BuildEarnedValueChartPlotModelSub;
 
         private const float c_ArrowHeadWidth = 6.0f;
@@ -98,20 +102,28 @@ namespace Zametek.ViewModel.ProjectPlan
             ISettingService settingService,
             IDialogService dialogService,
             IDateTimeCalculator dateTimeCalculator,
-            IScottPlotImageExporter scottPlotImageExporter)
+            IScottPlotImageExporter scottPlotImageExporter,
+            IResourceSchedulingService resourceSchedulingService)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(scottPlotImageExporter);
+            ArgumentNullException.ThrowIfNull(resourceSchedulingService);
             m_Lock = new();
             m_CoreViewModel = coreViewModel;
             m_SettingService = settingService;
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
+            m_ResourceSchedulingService = resourceSchedulingService;
             m_EarnedValueChartPlotModel = new AvaPlot();
+            m_TargetResources = [];
+
+            ResourceSelector = new ResourceSelectorViewModel();
+            m_ResourceSettings = m_CoreViewModel.ResourceSettings;
+            RefreshResourceSelector();
 
             ResetEarnedValueChartCommand = ReactiveCommand.Create(ResetEarnedValueChart);
 
@@ -144,19 +156,43 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowMilestones)
                 .ToProperty(this, evc => evc.ShowMilestones);
 
-            m_BuildEarnedValueChartPlotModelSub = this
-                .WhenAnyValue(
-                    evc => evc.m_CoreViewModel.TrackingSeriesSet,
-                    evc => evc.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
-                    evc => evc.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
-                    evc => evc.m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode,
-                    evc => evc.ShowToday,
-                    evc => evc.ShowMilestones,
-                    evc => evc.m_CoreViewModel.ProjectStart,
-                    evc => evc.m_CoreViewModel.Today,
-                    evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections,
-                    evc => evc.m_CoreViewModel.BaseTheme,
-                    (x, _, _, _, _, _, _, _, _, _) => x)
+            m_CombineResources = this
+                .WhenAnyValue(evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueCombineResources)
+                .ToProperty(this, evc => evc.CombineResources);
+
+            m_ScaleToOwnPlan = this
+                .WhenAnyValue(evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueScaleToOwnPlan)
+                .ToProperty(this, evc => evc.ScaleToOwnPlan);
+
+            m_HasResources = this
+                .WhenAnyValue(evc => evc.m_CoreViewModel.HasResources)
+                .ToProperty(this, evc => evc.HasResources);
+
+            m_ResourceSettingsSub = this
+                .WhenAnyValue(evc => evc.m_CoreViewModel.ResourceSettings)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(x => ResourceSettings = x);
+
+            m_BuildEarnedValueChartPlotModelSub = Observable.Merge(
+                    this.WhenAnyValue(
+                        evc => evc.m_CoreViewModel.TrackingSeriesSet,
+                        evc => evc.m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
+                        evc => evc.m_CoreViewModel.DisplaySettingsViewModel.UseClassicDates,
+                        evc => evc.m_CoreViewModel.DisplaySettingsViewModel.NonWorkingDayMode,
+                        evc => evc.ShowToday,
+                        evc => evc.ShowMilestones,
+                        evc => evc.m_CoreViewModel.ProjectStart,
+                        evc => evc.m_CoreViewModel.Today,
+                        evc => evc.m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowProjections,
+                        evc => evc.m_CoreViewModel.BaseTheme,
+                        (_, _, _, _, _, _, _, _, _, _) => Unit.Default),
+                    // The resource filter and its display modes are view-side state:
+                    // changing them only replots the chart, it never recompiles.
+                    this.WhenAnyValue(
+                        evc => evc.ResourceSelector.TargetResourcesString,
+                        evc => evc.CombineResources,
+                        evc => evc.ScaleToOwnPlan,
+                        (_, _, _) => Unit.Default))
                 .MuteWhile(this.WhenAnyValue(evc => evc.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(async _ => await BuildEarnedValueChartPlotModelAsync());
@@ -187,9 +223,50 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public object? ImageBounds { get; set; }
 
+        private ResourceSettingsModel m_ResourceSettings;
+        private ResourceSettingsModel ResourceSettings
+        {
+            get => m_ResourceSettings;
+            set
+            {
+                m_ResourceSettings = value;
+                SetNewTargetResources();
+                this.RaisePropertyChanged();
+            }
+        }
+
         #endregion
 
         #region Private Methods
+
+        private void UpdateTargetResources()
+        {
+            m_TargetResources.Clear();
+            m_TargetResources.UnionWith(ResourceSelector.SelectedResourceIds);
+            this.RaisePropertyChanged(nameof(ResourceSelector));
+        }
+
+        private void SetNewTargetResources()
+        {
+            UpdateTargetResources();
+            RefreshResourceSelector();
+            UpdateTargetResources();
+        }
+
+        private void RefreshResourceSelector()
+        {
+            var selectedTargetResources = new HashSet<int>(m_TargetResources);
+
+            IEnumerable<TargetResourceModel> targetResources = ResourceSettings
+                .Resources.Select(
+                    x => new TargetResourceModel
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                    });
+
+            ResourceSelector.SetTargetResources(targetResources, selectedTargetResources);
+        }
 
         private async Task BuildEarnedValueChartPlotModelAsync()
         {
@@ -209,9 +286,118 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private static EarnedValueSeriesGroup ToSeriesGroup(
+            string? titleSuffix,
+            ColorFormatModel? colorFormat,
+            TrackingSeriesSetModel trackingSeriesSet)
+        {
+            return new EarnedValueSeriesGroup
+            {
+                TitleSuffix = titleSuffix,
+                ColorFormat = colorFormat,
+                Plan = trackingSeriesSet.Plan,
+                PlanProjection = trackingSeriesSet.PlanProjection,
+                Progress = trackingSeriesSet.Progress,
+                ProgressProjection = trackingSeriesSet.ProgressProjection,
+                Effort = trackingSeriesSet.Effort,
+                EffortProjection = trackingSeriesSet.EffortProjection,
+            };
+        }
+
+        private static List<TrackingPointModel> RescalePoints(
+            IEnumerable<TrackingPointModel> pointSeries,
+            double totalWorkingTime)
+        {
+            // The raw values are working-time numerators, so the percentages
+            // can be recomputed against whichever denominator is displayed.
+            return [.. pointSeries.Select(p => new TrackingPointModel
+            {
+                Time = p.Time,
+                ActivityId = p.ActivityId,
+                ActivityName = p.ActivityName,
+                Value = p.Value,
+                ValuePercentage = totalWorkingTime == 0 ? 0.0 : 100.0 * p.Value / totalWorkingTime,
+            })];
+        }
+
+        private (EarnedValueSeriesGroup primary, List<EarnedValueSeriesGroup> seriesGroups) GatherEarnedValueSeriesGroups()
+        {
+            TrackingSeriesSetModel trackingSeriesSet = m_CoreViewModel.TrackingSeriesSet;
+            List<int> selectedResourceIds = [.. ResourceSelector.SelectedResourceIds];
+
+            // With no resources selected the chart shows the whole-project
+            // aggregate, exactly as it always has.
+            if (!HasResources
+                || selectedResourceIds.Count == 0)
+            {
+                EarnedValueSeriesGroup aggregate = ToSeriesGroup(null, null, trackingSeriesSet);
+                return (aggregate, [aggregate]);
+            }
+
+            double wholeProjectTotal = trackingSeriesSet.TotalWorkingTime;
+
+            if (CombineResources)
+            {
+                TrackingSeriesSetModel combined = m_ResourceSchedulingService.CombineResourceTrackingSeries(
+                    trackingSeriesSet,
+                    selectedResourceIds);
+
+                // The combined set records its percentages against its own
+                // total, so only the whole-project scale needs recomputing.
+                EarnedValueSeriesGroup seriesGroup = ScaleToOwnPlan
+                    ? ToSeriesGroup(null, null, combined)
+                    : new EarnedValueSeriesGroup
+                    {
+                        Plan = RescalePoints(combined.Plan, wholeProjectTotal),
+                        PlanProjection = RescalePoints(combined.PlanProjection, wholeProjectTotal),
+                        Progress = RescalePoints(combined.Progress, wholeProjectTotal),
+                        ProgressProjection = RescalePoints(combined.ProgressProjection, wholeProjectTotal),
+                        Effort = RescalePoints(combined.Effort, wholeProjectTotal),
+                        EffortProjection = RescalePoints(combined.EffortProjection, wholeProjectTotal),
+                    };
+
+                return (seriesGroup, [seriesGroup]);
+            }
+
+            // One series group per selected resource, in display order.
+            HashSet<int> selectedResourceLookup = [.. selectedResourceIds];
+            List<EarnedValueSeriesGroup> seriesGroups = [];
+
+            foreach (ResourceTrackingSeriesModel resourceSeries in trackingSeriesSet.ByResource)
+            {
+                if (!selectedResourceLookup.Contains(resourceSeries.ResourceId))
+                {
+                    continue;
+                }
+
+                double totalWorkingTime = ScaleToOwnPlan ? resourceSeries.TotalWorkingTime : wholeProjectTotal;
+
+                seriesGroups.Add(new EarnedValueSeriesGroup
+                {
+                    TitleSuffix = string.IsNullOrWhiteSpace(resourceSeries.ResourceName)
+                        ? resourceSeries.ResourceId.ToString(CultureInfo.InvariantCulture)
+                        : resourceSeries.ResourceName,
+                    ColorFormat = resourceSeries.ColorFormat,
+                    Plan = RescalePoints(resourceSeries.Plan, totalWorkingTime),
+                    PlanProjection = RescalePoints(resourceSeries.PlanProjection, totalWorkingTime),
+                    Progress = RescalePoints(resourceSeries.Progress, totalWorkingTime),
+                    ProgressProjection = RescalePoints(resourceSeries.ProgressProjection, totalWorkingTime),
+                    Effort = RescalePoints(resourceSeries.Effort, totalWorkingTime),
+                    EffortProjection = RescalePoints(resourceSeries.EffortProjection, totalWorkingTime),
+                });
+            }
+
+            // Milestones, the projected finish and the empty-chart check stay
+            // anchored to the whole-project aggregate when showing individual
+            // resources.
+            EarnedValueSeriesGroup primary = ToSeriesGroup(null, null, trackingSeriesSet);
+            return (primary, seriesGroups);
+        }
+
         private static AvaPlot BuildEarnedValueChartPlotModelInternal(
             IDateTimeCalculator dateTimeCalculator,
-            TrackingSeriesSetModel trackingSeriesSet,
+            EarnedValueSeriesGroup primary,
+            IList<EarnedValueSeriesGroup> seriesGroups,
             bool showToday,
             bool showMilestones,
             bool showDates,
@@ -222,37 +408,34 @@ namespace Zametek.ViewModel.ProjectPlan
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
-            ArgumentNullException.ThrowIfNull(trackingSeriesSet);
+            ArgumentNullException.ThrowIfNull(primary);
+            ArgumentNullException.ThrowIfNull(seriesGroups);
             var plotModel = new AvaPlot();
             plotModel.Plot.HideGrid();
 
-            if (trackingSeriesSet.Plan.Count == 0)
+            if (primary.Plan.Count == 0)
             {
                 return plotModel.SetBaseTheme(baseTheme);
             }
 
             const double defaultMaxPercentage = 100.0;
 
-            int chartEnd = trackingSeriesSet.Plan
-                .Concat(trackingSeriesSet.Progress)
-                .Concat(trackingSeriesSet.Effort)
+            int chartEnd = seriesGroups
+                .SelectMany(x => x.Plan.Concat(x.Progress).Concat(x.Effort))
                 .Select(x => x.Time).DefaultIfEmpty().Max();
 
-            double maxPercentage = trackingSeriesSet.Plan
-                .Concat(trackingSeriesSet.Progress)
-                .Concat(trackingSeriesSet.Effort)
+            double maxPercentage = seriesGroups
+                .SelectMany(x => x.Plan.Concat(x.Progress).Concat(x.Effort))
                 .Select(x => x.ValuePercentage).DefaultIfEmpty(defaultMaxPercentage).Max();
 
             if (showProjections)
             {
-                chartEnd = Math.Max(chartEnd, trackingSeriesSet.PlanProjection
-                    .Concat(trackingSeriesSet.ProgressProjection)
-                    .Concat(trackingSeriesSet.EffortProjection)
+                chartEnd = Math.Max(chartEnd, seriesGroups
+                    .SelectMany(x => x.PlanProjection.Concat(x.ProgressProjection).Concat(x.EffortProjection))
                     .Select(x => x.Time).DefaultIfEmpty().Max());
 
-                maxPercentage = Math.Max(maxPercentage, trackingSeriesSet.PlanProjection
-                    .Concat(trackingSeriesSet.ProgressProjection)
-                    .Concat(trackingSeriesSet.EffortProjection)
+                maxPercentage = Math.Max(maxPercentage, seriesGroups
+                    .SelectMany(x => x.PlanProjection.Concat(x.ProgressProjection).Concat(x.EffortProjection))
                     .Select(x => x.ValuePercentage).DefaultIfEmpty(defaultMaxPercentage).Max());
             }
 
@@ -285,75 +468,103 @@ namespace Zametek.ViewModel.ProjectPlan
             const float mainStrokeThickness = 2;
             const float projectionStrokeThickness = 1;
 
-            AddScatterPlot(
-                title: Resource.ProjectPlan.Labels.Label_Plan,
-                stroke: mainStrokeThickness,
-                color: Colors.Blue.WithAlpha(ColorHelper.AnnotationAFull),
-                showDates,
-                projectStart,
-                dateTimeCalculator,
-                plotModel,
-                trackingSeriesSet.Plan);
+            foreach (EarnedValueSeriesGroup seriesGroup in seriesGroups)
+            {
+                // Groups without a colour of their own (the whole project, or
+                // the combined selection) use the classic per-measure colours;
+                // groups representing individual resources use the resource
+                // colour and are distinguished by line pattern instead.
+                bool useResourceStyling = seriesGroup.ColorFormat is not null;
 
-            AddScatterPlot(
-                title: Resource.ProjectPlan.Labels.Label_Progress,
-                stroke: mainStrokeThickness,
-                color: Colors.Green.WithAlpha(ColorHelper.AnnotationAFull),
-                showDates,
-                projectStart,
-                dateTimeCalculator,
-                plotModel,
-                trackingSeriesSet.Progress);
+                Color planColor = useResourceStyling
+                    ? ColorHelper.ColorFormatToScottPlotColor(seriesGroup.ColorFormat!)
+                    : Colors.Blue;
+                Color progressColor = useResourceStyling ? planColor : Colors.Green;
+                Color effortColor = useResourceStyling ? planColor : Colors.Red;
 
-            AddScatterPlot(
-                title: Resource.ProjectPlan.Labels.Label_Effort,
-                stroke: mainStrokeThickness,
-                color: Colors.Red.WithAlpha(ColorHelper.AnnotationAFull),
-                showDates,
-                projectStart,
-                dateTimeCalculator,
-                plotModel,
-                trackingSeriesSet.Effort);
+                string suffix = string.IsNullOrWhiteSpace(seriesGroup.TitleSuffix)
+                    ? string.Empty
+                    : $@" - {seriesGroup.TitleSuffix}";
+
+                AddScatterPlot(
+                    title: $@"{Resource.ProjectPlan.Labels.Label_Plan}{suffix}",
+                    stroke: mainStrokeThickness,
+                    color: planColor.WithAlpha(ColorHelper.AnnotationAFull),
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator,
+                    plotModel,
+                    seriesGroup.Plan);
+
+                AddScatterPlot(
+                    title: $@"{Resource.ProjectPlan.Labels.Label_Progress}{suffix}",
+                    stroke: mainStrokeThickness,
+                    color: progressColor.WithAlpha(ColorHelper.AnnotationAFull),
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator,
+                    plotModel,
+                    seriesGroup.Progress,
+                    pattern: useResourceStyling ? LinePattern.Dashed : null);
+
+                AddScatterPlot(
+                    title: $@"{Resource.ProjectPlan.Labels.Label_Effort}{suffix}",
+                    stroke: mainStrokeThickness,
+                    color: effortColor.WithAlpha(ColorHelper.AnnotationAFull),
+                    showDates,
+                    projectStart,
+                    dateTimeCalculator,
+                    plotModel,
+                    seriesGroup.Effort,
+                    pattern: useResourceStyling ? LinePattern.Dotted : null);
+
+                if (showProjections)
+                {
+                    // Keep the legend compact: projections for individual
+                    // resources are drawn but not listed.
+                    AddScatterPlot(
+                        title: useResourceStyling ? string.Empty : Resource.ProjectPlan.Labels.Label_PlanProjection,
+                        stroke: projectionStrokeThickness,
+                        color: planColor.WithAlpha(ColorHelper.AnnotationAMedium),
+                        showDates,
+                        projectStart,
+                        dateTimeCalculator,
+                        plotModel,
+                        seriesGroup.PlanProjection);
+
+                    AddScatterPlot(
+                        title: useResourceStyling ? string.Empty : Resource.ProjectPlan.Labels.Label_ProgressProjection,
+                        stroke: projectionStrokeThickness,
+                        color: progressColor.WithAlpha(ColorHelper.AnnotationAMedium),
+                        showDates,
+                        projectStart,
+                        dateTimeCalculator,
+                        plotModel,
+                        seriesGroup.ProgressProjection,
+                        pattern: useResourceStyling ? LinePattern.Dashed : null);
+
+                    AddScatterPlot(
+                        title: useResourceStyling ? string.Empty : Resource.ProjectPlan.Labels.Label_EffortProjection,
+                        stroke: projectionStrokeThickness,
+                        color: effortColor.WithAlpha(ColorHelper.AnnotationAMedium),
+                        showDates,
+                        projectStart,
+                        dateTimeCalculator,
+                        plotModel,
+                        seriesGroup.EffortProjection,
+                        pattern: useResourceStyling ? LinePattern.Dotted : null);
+                }
+            }
 
             if (showProjections)
             {
-                AddScatterPlot(
-                    title: Resource.ProjectPlan.Labels.Label_PlanProjection,
-                    stroke: projectionStrokeThickness,
-                    color: Colors.Blue.WithAlpha(ColorHelper.AnnotationAMedium),
-                    showDates,
-                    projectStart,
-                    dateTimeCalculator,
-                    plotModel,
-                    trackingSeriesSet.PlanProjection);
-
-                AddScatterPlot(
-                    title: Resource.ProjectPlan.Labels.Label_ProgressProjection,
-                    stroke: projectionStrokeThickness,
-                    color: Colors.Green.WithAlpha(ColorHelper.AnnotationAMedium),
-                    showDates,
-                    projectStart,
-                    dateTimeCalculator,
-                    plotModel,
-                    trackingSeriesSet.ProgressProjection);
-
                 // Find projected completion time.
                 AddProjectedFinish(
                     dateTimeCalculator,
-                    trackingSeriesSet,
+                    primary.ProgressProjection,
                     showDates,
                     projectStart,
                     plotModel);
-
-                AddScatterPlot(
-                    title: Resource.ProjectPlan.Labels.Label_EffortProjection,
-                    stroke: projectionStrokeThickness,
-                    color: Colors.Red.WithAlpha(ColorHelper.AnnotationAMedium),
-                    showDates,
-                    projectStart,
-                    dateTimeCalculator,
-                    plotModel,
-                    trackingSeriesSet.EffortProjection);
             }
 
             if (showToday)
@@ -393,7 +604,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     string label = string.IsNullOrWhiteSpace(milestone.Name) ? id : $"{milestone.Name} ({id})";
                     int startTime = milestone.EarliestStartTime.GetValueOrDefault();
 
-                    double peakPercentage = trackingSeriesSet.Plan
+                    double peakPercentage = primary.Plan
                         .Where(x => x.Time == startTime)
                         .DefaultIfEmpty()
                         .Max(x => x?.ValuePercentage ?? 0);
@@ -434,7 +645,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static void AddProjectedFinish(
             IDateTimeCalculator dateTimeCalculator,
-            TrackingSeriesSetModel trackingSeriesSet,
+            IList<TrackingPointModel> progressProjection,
             bool showDates,
             DateTimeOffset projectStart,
             AvaPlot plotModel)
@@ -442,7 +653,7 @@ namespace Zametek.ViewModel.ProjectPlan
             var projectFinishDisplay = new StringBuilder(Resource.ProjectPlan.Labels.Label_ProjectedFinish);
             projectFinishDisplay.Append(' ');
 
-            int projectedFinishTime = trackingSeriesSet.ProgressProjection.Select(x => x.Time).DefaultIfEmpty().Max();
+            int projectedFinishTime = progressProjection.Select(x => x.Time).DefaultIfEmpty().Max();
 
             if (showDates)
             {
@@ -553,7 +764,8 @@ namespace Zametek.ViewModel.ProjectPlan
             DateTimeOffset projectStart,
             IDateTimeCalculator dateTimeCalculator,
             AvaPlot plotModel,
-            IList<TrackingPointModel> pointSeries)
+            IList<TrackingPointModel> pointSeries,
+            LinePattern? pattern = null)
         {
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(plotModel);
@@ -579,6 +791,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 scatter.LineWidth = stroke;
                 scatter.Color = color;
                 scatter.MarkerSize = 0;
+
+                if (pattern is not null)
+                {
+                    scatter.LinePattern = pattern.Value;
+                }
             }
         }
 
@@ -658,6 +875,31 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_CombineResources;
+        public bool CombineResources
+        {
+            get => m_CombineResources.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.EarnedValueCombineResources = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ScaleToOwnPlan;
+        public bool ScaleToOwnPlan
+        {
+            get => m_ScaleToOwnPlan.Value;
+            set
+            {
+                lock (m_Lock) m_CoreViewModel.DisplaySettingsViewModel.EarnedValueScaleToOwnPlan = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasResources;
+        public bool HasResources => m_HasResources.Value;
+
+        public IResourceSelectorViewModel ResourceSelector { get; }
+
         public ICommand ResetEarnedValueChartCommand { get; }
 
         public ICommand SaveEarnedValueChartImageFileCommand { get; }
@@ -699,9 +941,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (!HasCompilationErrors)
                 {
+                    (EarnedValueSeriesGroup primary, List<EarnedValueSeriesGroup> seriesGroups) = GatherEarnedValueSeriesGroups();
+
                     plotModel = BuildEarnedValueChartPlotModelInternal(
                         m_DateTimeCalculator,
-                        m_CoreViewModel.TrackingSeriesSet,
+                        primary,
+                        seriesGroups,
                         ShowToday,
                         ShowMilestones,
                         m_CoreViewModel.DisplaySettingsViewModel.ShowDates,
@@ -755,6 +1000,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
+            m_ResourceSettingsSub?.Dispose();
             m_BuildEarnedValueChartPlotModelSub?.Dispose();
         }
 
@@ -780,6 +1026,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ShowProjections?.Dispose();
                 m_ShowToday?.Dispose();
                 m_ShowMilestones?.Dispose();
+                m_CombineResources?.Dispose();
+                m_ScaleToOwnPlan?.Dispose();
+                m_HasResources?.Dispose();
             }
 
             m_Disposed = true;
@@ -791,6 +1040,31 @@ namespace Zametek.ViewModel.ProjectPlan
             Dispose(true);
             // Suppress finalization.
             GC.SuppressFinalize(this);
+        }
+
+        #endregion
+
+        #region Private Types
+
+        /// <summary>
+        /// A set of tracking point series drawn as one legend group: either the
+        /// whole project, the combined selection, or an individual resource
+        /// (which carries its own colour and title suffix).
+        /// </summary>
+        private sealed record EarnedValueSeriesGroup
+        {
+            public string? TitleSuffix { get; init; }
+
+            public ColorFormatModel? ColorFormat { get; init; }
+
+            public IList<TrackingPointModel> Plan { get; init; } = [];
+            public IList<TrackingPointModel> PlanProjection { get; init; } = [];
+
+            public IList<TrackingPointModel> Progress { get; init; } = [];
+            public IList<TrackingPointModel> ProgressProjection { get; init; } = [];
+
+            public IList<TrackingPointModel> Effort { get; init; } = [];
+            public IList<TrackingPointModel> EffortProjection { get; init; } = [];
         }
 
         #endregion
