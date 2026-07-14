@@ -3,10 +3,8 @@ using ReactiveUI;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
-using System.Collections.Specialized;
 using System.Globalization;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
 using System.Windows.Input;
@@ -82,11 +80,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
         private readonly IResourceSchedulingService m_ResourceSchedulingService;
 
-        private readonly HashSet<int> m_TargetResources;
-        private bool m_IsRevising;
+        private readonly EarnedValueResourceSelectorViewModel m_ResourceSelector;
 
-        private readonly IDisposable? m_ResourceSettingsSub;
-        private readonly IDisposable? m_ShowResourcesSub;
         private readonly IDisposable? m_BuildEarnedValueChartPlotModelSub;
 
         private const float c_ArrowHeadWidth = 6.0f;
@@ -121,13 +116,9 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_ResourceSchedulingService = resourceSchedulingService;
             m_EarnedValueChartPlotModel = new AvaPlot();
-            m_TargetResources = [];
 
-            ResourceSelector = new ResourceSelectorViewModel();
-            m_ResourceSettings = m_CoreViewModel.ResourceSettings;
-            RefreshResourceSelector();
-
-            ResourceSelector.SelectedTargetResources.CollectionChanged += SelectedTargetResources_CollectionChanged;
+            m_ResourceSelector = new EarnedValueResourceSelectorViewModel(coreViewModel);
+            ResourceSelector = m_ResourceSelector;
 
             ResetEarnedValueChartCommand = ReactiveCommand.Create(ResetEarnedValueChart);
 
@@ -171,38 +162,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasResources = this
                 .WhenAnyValue(evc => evc.m_CoreViewModel.HasResources)
                 .ToProperty(this, evc => evc.HasResources);
-
-            m_ResourceSettingsSub = this
-                .WhenAnyValue(evc => evc.m_CoreViewModel.ResourceSettings)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(x => ResourceSettings = x);
-
-            m_ShowResourcesSub = this
-                .WhenAnyValue(evc => evc.m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseEarnedValueShowResources)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(isReadyToRevise =>
-                {
-                    if (isReadyToRevise == ReadyToRevise.Yes)
-                    {
-                        try
-                        {
-                            // Guard the revision so the seeded selection is not
-                            // mistaken for a user edit and does not mark the
-                            // project scenario as updated.
-                            m_IsRevising = true;
-                            m_ResourceSettings = m_CoreViewModel.ResourceSettings;
-                            m_TargetResources.Clear();
-                            m_TargetResources.UnionWith(m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources);
-                            RefreshResourceSelector();
-                            UpdateTargetResources();
-                            m_CoreViewModel.DisplaySettingsViewModel.IsReadyToReviseEarnedValueShowResources = ReadyToRevise.No;
-                        }
-                        finally
-                        {
-                            m_IsRevising = false;
-                        }
-                    }
-                });
 
             m_BuildEarnedValueChartPlotModelSub = Observable.Merge(
                     this.WhenAnyValue(
@@ -254,83 +213,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public object? ImageBounds { get; set; }
 
-        private ResourceSettingsModel m_ResourceSettings;
-        private ResourceSettingsModel ResourceSettings
-        {
-            get => m_ResourceSettings;
-            set
-            {
-                try
-                {
-                    // Guard the refresh so any resulting selection changes (e.g.
-                    // a deleted resource dropping out of the filter) are not
-                    // mistaken for user edits and do not mark the project
-                    // scenario as updated.
-                    m_IsRevising = true;
-                    m_ResourceSettings = value;
-                    SetNewTargetResources();
-                }
-                finally
-                {
-                    m_IsRevising = false;
-                }
-                this.RaisePropertyChanged();
-            }
-        }
-
         #endregion
 
         #region Private Methods
-
-        private void SelectedTargetResources_CollectionChanged(
-            object? sender,
-            NotifyCollectionChangedEventArgs e)
-        {
-            UpdateTargetResources();
-
-            // Write the selection through to the display settings so the
-            // resource filter persists with the project scenario - but only
-            // for genuine user edits. While revising (settings-driven
-            // refreshes and seeding) the persisted list is the authority:
-            // writing back the transient selection state would clobber it
-            // (e.g. wiping a freshly remapped filter during a resource
-            // renumber, where the selector briefly empties out).
-            if (!m_IsRevising)
-            {
-                m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.Clear();
-                m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources.AddRange(ResourceSelector.SelectedResourceIds);
-                m_CoreViewModel.DisplaySettingsViewModel.SetIsProjectScenarioUpdated(true);
-            }
-        }
-
-        private void UpdateTargetResources()
-        {
-            m_TargetResources.Clear();
-            m_TargetResources.UnionWith(ResourceSelector.SelectedResourceIds);
-            this.RaisePropertyChanged(nameof(ResourceSelector));
-        }
-
-        private void SetNewTargetResources()
-        {
-            UpdateTargetResources();
-            RefreshResourceSelector();
-            UpdateTargetResources();
-        }
-
-        private void RefreshResourceSelector()
-        {
-            var selectedTargetResources = new HashSet<int>(m_CoreViewModel.DisplaySettingsViewModel.EarnedValueShowResources);
-
-            IEnumerable<TargetResourceModel> targetResources = ResourceSettings
-                .Resources.Select(
-                    x => new TargetResourceModel
-                    {
-                        Id = x.Id,
-                        Name = x.Name,
-                    });
-
-            ResourceSelector.SetTargetResources(targetResources, selectedTargetResources);
-        }
 
         private async Task BuildEarnedValueChartPlotModelAsync()
         {
@@ -1064,8 +949,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public void KillSubscriptions()
         {
-            m_ResourceSettingsSub?.Dispose();
-            m_ShowResourcesSub?.Dispose();
+            m_ResourceSelector.KillSubscriptions();
             m_BuildEarnedValueChartPlotModelSub?.Dispose();
         }
 
@@ -1084,8 +968,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                //ResourceSelector.SelectedTargetResources.CollectionChanged -= SelectedTargetResources_CollectionChanged;
                 KillSubscriptions();
+                m_ResourceSelector.Dispose();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
