@@ -82,6 +82,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly EarnedValueResourceSelectorViewModel m_ResourceSelector;
 
+        // Reclaims the unmanaged Skia memory of each plot this view model replaces.
+        private readonly AvaPlotRetirer m_PlotRetirer;
+
         private readonly IDisposable? m_BuildEarnedValueChartPlotModelSub;
 
         private const float c_ArrowHeadWidth = 6.0f;
@@ -116,6 +119,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_ResourceSchedulingService = resourceSchedulingService;
             m_EarnedValueChartPlotModel = new AvaPlot();
+            m_PlotRetirer = new AvaPlotRetirer();
 
             m_ResourceSelector = new EarnedValueResourceSelectorViewModel(coreViewModel);
             ResourceSelector = m_ResourceSelector;
@@ -909,7 +913,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             plotModel ??= new AvaPlot();
             plotModel.ClearContextMenu();
+            AvaPlot outgoing = EarnedValueChartPlotModel;
             EarnedValueChartPlotModel = plotModel;
+            m_PlotRetirer.Retire(outgoing);
         }
 
         #endregion
@@ -970,6 +976,8 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 KillSubscriptions();
                 m_ResourceSelector.Dispose();
+                m_PlotRetirer.Dispose();
+                m_EarnedValueChartPlotModel.Plot.Dispose();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();

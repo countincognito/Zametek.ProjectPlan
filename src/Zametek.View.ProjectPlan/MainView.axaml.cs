@@ -44,6 +44,13 @@ namespace Zametek.View.ProjectPlan
             m_ViewModel = DataContext as IMainViewModel;
             if (m_ViewModel is not null)
             {
+                // A Loaded that arrives without a matching Unloaded must not orphan the
+                // previous subscriptions, so release them before resubscribing.
+                m_UpdateCursorSub?.Dispose();
+                m_UpdateThemeSub?.Dispose();
+                m_CompilationErrorSub?.Dispose();
+                m_ToastManager?.Uninstall();
+
                 var topLevel = GetTopLevel(this);
                 m_ToastManager = new WindowToastManager(topLevel)
                 {

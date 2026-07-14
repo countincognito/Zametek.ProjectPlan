@@ -33,6 +33,17 @@ namespace Zametek.View.ProjectPlan
 
         public void InitializePlotContainer(ContentControl plotContainer)
         {
+            // Unhook any previous container first so re-initialisation can never stack handlers.
+            if (m_PlotContainer is not null)
+            {
+                m_PlotContainer.RemoveHandler(PointerPressedEvent, PlotContainer_PointerPressed);
+                m_PlotContainer.RemoveHandler(PointerReleasedEvent, PlotContainer_PointerReleased);
+
+                m_PlotContainer.Loaded -= PlotContainer_Loaded;
+                m_PlotContainer.PointerExited -= PlotContainer_PointerExited;
+                m_PlotContainer.PointerMoved -= PlotContainer_PointerMoved;
+            }
+
             m_PlotContainer = plotContainer;
             m_DragStartPoint = null;
             m_IsDragging = false;

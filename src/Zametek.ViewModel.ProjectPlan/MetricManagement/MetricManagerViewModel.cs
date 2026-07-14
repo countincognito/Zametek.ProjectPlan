@@ -458,6 +458,31 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_TotalEffort?.Dispose();
                 m_ActivityEffort?.Dispose();
                 m_EffortEfficiency?.Dispose();
+                m_DirectBilling?.Dispose();
+                m_IndirectBilling?.Dispose();
+                m_OtherBilling?.Dispose();
+                m_TotalBilling?.Dispose();
+                m_DirectMargin?.Dispose();
+                m_IndirectMargin?.Dispose();
+                m_OtherMargin?.Dispose();
+                m_TotalMargin?.Dispose();
+                m_DirectMarginAbsolute?.Dispose();
+                m_IndirectMarginAbsolute?.Dispose();
+                m_OtherMarginAbsolute?.Dispose();
+                m_TotalMarginAbsolute?.Dispose();
+                m_DisplayDirectMargin?.Dispose();
+                m_DisplayIndirectMargin?.Dispose();
+                m_DisplayOtherMargin?.Dispose();
+                m_DisplayTotalMargin?.Dispose();
+                m_HideCost?.Dispose();
+                m_HideBilling?.Dispose();
+                m_HideMargin?.Dispose();
+                m_NetworkMetrics?.Dispose();
+                m_RisksMetrics?.Dispose();
+                m_CostsMetrics?.Dispose();
+                m_BillingsMetrics?.Dispose();
+                m_EffortsMetrics?.Dispose();
+                m_MarginsMetrics?.Dispose();
             }
 
             m_Disposed = true;

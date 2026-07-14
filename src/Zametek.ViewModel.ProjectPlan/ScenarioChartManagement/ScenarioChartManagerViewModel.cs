@@ -81,6 +81,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
 
+        // Reclaims the unmanaged Skia memory of each plot this view model replaces.
+        private readonly AvaPlotRetirer m_PlotRetirer;
+
         private readonly IDisposable? m_BuildScenarioChartPlotModelSub;
 
         private const double c_AnnotatedEllipseRadius = 5.0;
@@ -111,6 +114,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_ScenarioChartPlotModel = new AvaPlot();
+            m_PlotRetirer = new AvaPlotRetirer();
             m_CurveFittingFormulaY1 = string.Empty;
             m_CurveFittingFormulaY2 = string.Empty;
 
@@ -874,7 +878,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             plotModel ??= new AvaPlot();
             plotModel.ClearContextMenu();
+            AvaPlot outgoing = ScenarioChartPlotModel;
             ScenarioChartPlotModel = plotModel;
+            m_PlotRetirer.Retire(outgoing);
             CurveFittingFormulaY1 = curveFittingFormulaY1;
             CurveFittingFormulaY2 = curveFittingFormulaY2;
         }
@@ -935,9 +941,12 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 KillSubscriptions();
+                m_PlotRetirer.Dispose();
+                m_ScenarioChartPlotModel.Plot.Dispose();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
+                m_ShowNames?.Dispose();
                 m_TrackedMetricXAxis?.Dispose();
                 m_TrackedMetricY1Axis?.Dispose();
                 m_TrackedMetricY2Axis?.Dispose();

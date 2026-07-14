@@ -81,6 +81,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
 
+        // Reclaims the unmanaged Skia memory of each plot this view model replaces.
+        private readonly AvaPlotRetirer m_PlotRetirer;
+
         private readonly IDisposable? m_BuildResourceChartPlotModelSub;
 
         private const float c_ScatterLineWidth = 5.0f;
@@ -110,6 +113,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_ResourceChartPlotModel = new AvaPlot();
+            m_PlotRetirer = new AvaPlotRetirer();
 
             ResetResourceChartCommand = ReactiveCommand.Create(ResetResourceChart);
 
@@ -731,7 +735,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             plotModel ??= new AvaPlot();
             plotModel.ClearContextMenu();
+            AvaPlot outgoing = ResourceChartPlotModel;
             ResourceChartPlotModel = plotModel;
+            m_PlotRetirer.Retire(outgoing);
         }
 
         #endregion
@@ -790,6 +796,8 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 KillSubscriptions();
+                m_PlotRetirer.Dispose();
+                m_ResourceChartPlotModel.Plot.Dispose();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();

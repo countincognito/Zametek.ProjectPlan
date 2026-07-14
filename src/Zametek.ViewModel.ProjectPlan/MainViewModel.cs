@@ -1326,6 +1326,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 KillSubscriptions();
                 m_IsBusy?.Dispose();
+                m_IsOpening?.Dispose();
+                m_IsSaving?.Dispose();
+                m_IsSavingAs?.Dispose();
+                m_IsImporting?.Dispose();
+                m_IsExporting?.Dispose();
+                m_IsClosing?.Dispose();
                 m_IsProjectUpdated?.Dispose();
                 m_IsProjectScenarioUpdated?.Dispose();
                 m_ProjectHasChanges?.Dispose();
@@ -1336,6 +1342,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ShowDates?.Dispose();
                 m_UseClassicDates?.Dispose();
                 m_NonWorkingDayMode?.Dispose();
+                m_HideCost?.Dispose();
+                m_HideBilling?.Dispose();
+                m_DefaultShowDates?.Dispose();
+                m_DefaultUseClassicDates?.Dispose();
+                m_DefaultNonWorkingDayMode?.Dispose();
+                m_DefaultHideCost?.Dispose();
+                m_DefaultHideBilling?.Dispose();
                 m_AutoCompile?.Dispose();
                 m_SelectedTheme?.Dispose();
                 m_BaseTheme?.Dispose();

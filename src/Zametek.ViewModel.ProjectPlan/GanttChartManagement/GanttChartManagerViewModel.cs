@@ -81,6 +81,9 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
 
+        // Reclaims the unmanaged Skia memory of each plot this view model replaces.
+        private readonly AvaPlotRetirer m_PlotRetirer;
+
         private readonly IDisposable? m_BuildGanttChartPlotModelSub;
 
         private const double c_ExportLabelHeightCorrection = 1.2;
@@ -121,6 +124,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ActivitySelector = new GanttActivitySelectorViewModel(m_CoreViewModel);
 
             m_GanttChartPlotModel = new AvaPlot();
+            m_PlotRetirer = new AvaPlotRetirer();
 
             ResetGanttChartCommand = ReactiveCommand.CreateFromTask(ResetGanttChartAsync);
             ChangeGroupByModeCommand = ReactiveCommand.CreateFromTask<GroupByMode>(ChangeGroupByModeAsync);
@@ -1674,7 +1678,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
             plotModel ??= new AvaPlot();
             plotModel.ClearContextMenu();
+            AvaPlot outgoing = GanttChartPlotModel;
             GanttChartPlotModel = plotModel;
+            m_PlotRetirer.Retire(outgoing);
         }
 
         #endregion
@@ -1736,6 +1742,8 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 KillSubscriptions();
+                m_PlotRetirer.Dispose();
+                m_GanttChartPlotModel.Plot.Dispose();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
