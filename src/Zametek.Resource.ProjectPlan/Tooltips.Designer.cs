@@ -124,6 +124,24 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The unit billing assigned to newly created resources, and applied to any scheduled work not covered by a defined resource.
+        /// </summary>
+        public static string ToolTip_DefaultUnitBilling {
+            get {
+                return ResourceManager.GetString("ToolTip_DefaultUnitBilling", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The unit cost assigned to newly created resources, and applied to any scheduled work not covered by a defined resource.
+        /// </summary>
+        public static string ToolTip_DefaultUnitCost {
+            get {
+                return ResourceManager.GetString("ToolTip_DefaultUnitCost", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Dependencies.
         /// </summary>
         public static string ToolTip_Dependencies {

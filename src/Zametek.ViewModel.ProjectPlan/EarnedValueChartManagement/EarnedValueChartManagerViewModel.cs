@@ -167,6 +167,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(evc => evc.m_CoreViewModel.HasResources)
                 .ToProperty(this, evc => evc.HasResources);
 
+            m_HasSingleTrackingSeriesSet = this
+                .WhenAnyValue(
+                    evc => evc.HasResources,
+                    evc => evc.CombineResources,
+                    evc => evc.ResourceSelector.TargetResourcesString,
+                    (hasResources, combineResources, _) =>
+                        !hasResources
+                        || combineResources
+                        || ResourceSelector.SelectedResourceIds.Count <= 1)
+                .ToProperty(this, evc => evc.HasSingleTrackingSeriesSet);
+
             m_BuildEarnedValueChartPlotModelSub = Observable.Merge(
                     this.WhenAnyValue(
                         evc => evc.m_CoreViewModel.TrackingSeriesSet,
@@ -340,10 +351,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 });
             }
 
-            // Milestones, the projected finish and the empty-chart check stay
-            // anchored to the whole-project aggregate when showing individual
-            // resources.
-            EarnedValueSeriesGroup primary = ToSeriesGroup(null, null, trackingSeriesSet);
+            // With exactly one resource on display, the annotations (the
+            // milestones, the projected finish and the empty-chart check)
+            // anchor to its drawn lines, just as combine mode anchors to the
+            // combined selection. With multiple resources they fall back to
+            // the whole-project aggregate (milestones and projections are
+            // suppressed then anyway).
+            EarnedValueSeriesGroup primary = seriesGroups.Count == 1
+                ? seriesGroups[0]
+                : ToSeriesGroup(null, null, trackingSeriesSet);
             return (primary, seriesGroups);
         }
 
@@ -363,6 +379,14 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(primary);
             ArgumentNullException.ThrowIfNull(seriesGroups);
+
+            // Milestones and projections are only drawn against a single set
+            // of plan, progress and effort lines; with multiple uncombined
+            // resources on display they are suppressed.
+            bool hasSingleTrackingSeriesSet = seriesGroups.Count <= 1;
+            showProjections = showProjections && hasSingleTrackingSeriesSet;
+            showMilestones = showMilestones && hasSingleTrackingSeriesSet;
+
             var plotModel = new AvaPlot();
             plotModel.Plot.HideGrid();
 
@@ -851,6 +875,12 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasResources;
         public bool HasResources => m_HasResources.Value;
 
+        // Whether the chart displays a single set of plan, progress and
+        // effort lines: the whole-project aggregate, the combined selection,
+        // or a single selected resource.
+        private readonly ObservableAsPropertyHelper<bool> m_HasSingleTrackingSeriesSet;
+        public bool HasSingleTrackingSeriesSet => m_HasSingleTrackingSeriesSet.Value;
+
         public IResourceSelectorViewModel ResourceSelector { get; }
 
         public ICommand ResetEarnedValueChartCommand { get; }
@@ -987,6 +1017,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_CombineResources?.Dispose();
                 m_ScaleToOwnPlan?.Dispose();
                 m_HasResources?.Dispose();
+                m_HasSingleTrackingSeriesSet?.Dispose();
             }
 
             m_Disposed = true;

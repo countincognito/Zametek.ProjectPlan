@@ -73,6 +73,7 @@
 					<ContentControl.ContextMenu>
 						<ContextMenu>
 							<MenuItem Header="{x:Static resources:Menus.Menu_ShowProjections}"
+									  IsEnabled="{Binding Path=HasSingleTrackingSeriesSet, Mode=OneWay}"
 									  IsChecked="{Binding Path=ShowProjections, Mode=TwoWay}"
 									  ToggleType="CheckBox" />
 
@@ -81,6 +82,7 @@
 									  ToggleType="CheckBox" />
 
 							<MenuItem Header="{x:Static resources:Menus.Menu_ShowMilestones}"
+									  IsEnabled="{Binding Path=HasSingleTrackingSeriesSet, Mode=OneWay}"
 									  IsChecked="{Binding Path=ShowMilestones, Mode=TwoWay}"
 									  ToggleType="CheckBox" />
 

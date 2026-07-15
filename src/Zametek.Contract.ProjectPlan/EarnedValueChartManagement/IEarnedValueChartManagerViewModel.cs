@@ -23,6 +23,8 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasResources { get; }
 
+        bool HasSingleTrackingSeriesSet { get; }
+
         IResourceSelectorViewModel ResourceSelector { get; }
 
         ICommand ResetEarnedValueChartCommand { get; }
