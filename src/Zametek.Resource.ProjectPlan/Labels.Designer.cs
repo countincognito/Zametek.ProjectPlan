@@ -241,7 +241,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.10.0-alpha.
+        ///   Looks up a localized string similar to 0.10.0-beta.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -358,6 +358,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Curve Fitting.
+        /// </summary>
+        public static string Label_CurveFittingType {
+            get {
+                return ResourceManager.GetString("Label_CurveFittingType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Y1 Curve Fitting.
         /// </summary>
         public static string Label_CurveFittingY1 {
@@ -365,22 +374,13 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_CurveFittingY1", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Y2 Curve Fitting.
         /// </summary>
         public static string Label_CurveFittingY2 {
             get {
                 return ResourceManager.GetString("Label_CurveFittingY2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Curve Fitting.
-        /// </summary>
-        public static string Label_CurveFittingType {
-            get {
-                return ResourceManager.GetString("Label_CurveFittingType", resourceCulture);
             }
         }
         
@@ -1446,7 +1446,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceFilter", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Resource Name.
         /// </summary>

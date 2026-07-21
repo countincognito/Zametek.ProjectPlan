@@ -128,7 +128,7 @@ namespace Zametek.Graphs.Avalonia
             // Wrap the bitmap in a picture so the shared exporter handles every format (embedding the raster
             // into SVG/PDF). PNG-encode the Avalonia bitmap, then decode into a Skia image.
             using var stream = new MemoryStream();
-            renderBitmap.Save(stream);
+            renderBitmap.Save(stream, PngBitmapEncoderOptions.Default);
             using SKImage? image = SKImage.FromEncodedData(stream.ToArray());
             if (image is null)
             {
