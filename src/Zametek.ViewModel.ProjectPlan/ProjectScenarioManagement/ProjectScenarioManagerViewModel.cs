@@ -280,6 +280,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartCurveFittingTypeY2)
                 .ToProperty(this, pm => pm.ScenarioChartCurveFittingTypeY2);
 
+            m_ScenarioChartShowDerivativeY1 = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartShowDerivativeY1)
+                .ToProperty(this, pm => pm.ScenarioChartShowDerivativeY1);
+
+            m_ScenarioChartShowDerivativeY2 = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartShowDerivativeY2)
+                .ToProperty(this, pm => pm.ScenarioChartShowDerivativeY2);
+
+            m_ScenarioChartAbsoluteCurveFittingY1 = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartAbsoluteCurveFittingY1)
+                .ToProperty(this, pm => pm.ScenarioChartAbsoluteCurveFittingY1);
+
+            m_ScenarioChartAbsoluteCurveFittingY2 = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartAbsoluteCurveFittingY2)
+                .ToProperty(this, pm => pm.ScenarioChartAbsoluteCurveFittingY2);
+
             m_SortUpdateSub = this
                 .WhenAnyValue(
                     pm => pm.ProjectScenarioSortMode,
@@ -2008,6 +2024,58 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_ScenarioChartShowDerivativeY1;
+        public bool ScenarioChartShowDerivativeY1
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ScenarioChartShowDerivativeY1;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartShowDerivativeY1 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ScenarioChartShowDerivativeY2;
+        public bool ScenarioChartShowDerivativeY2
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ScenarioChartShowDerivativeY2;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartShowDerivativeY2 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ScenarioChartAbsoluteCurveFittingY1;
+        public bool ScenarioChartAbsoluteCurveFittingY1
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ScenarioChartAbsoluteCurveFittingY1;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartAbsoluteCurveFittingY1 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ScenarioChartAbsoluteCurveFittingY2;
+        public bool ScenarioChartAbsoluteCurveFittingY2
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ScenarioChartAbsoluteCurveFittingY2;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartAbsoluteCurveFittingY2 = value;
+            }
+        }
+
         public IManagedNodeViewModel Root { get; private set; }
 
         private readonly SourceList<IManagedNodeViewModel> m_Nodes;
@@ -2411,6 +2479,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ScenarioChartTrackedMetricY2Axis?.Dispose();
                 m_ScenarioChartCurveFittingTypeY1?.Dispose();
                 m_ScenarioChartCurveFittingTypeY2?.Dispose();
+                m_ScenarioChartShowDerivativeY1?.Dispose();
+                m_ScenarioChartShowDerivativeY2?.Dispose();
+                m_ScenarioChartAbsoluteCurveFittingY1?.Dispose();
+                m_ScenarioChartAbsoluteCurveFittingY2?.Dispose();
                 m_NodeActionCommandManualTrigger?.Dispose();
             }
 

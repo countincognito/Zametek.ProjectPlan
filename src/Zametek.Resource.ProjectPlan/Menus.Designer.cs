@@ -790,6 +790,42 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Show Y1 Derivative.
+        /// </summary>
+        public static string Menu_ShowDerivativeY1 {
+            get {
+                return ResourceManager.GetString("Menu_ShowDerivativeY1", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Y2 Derivative.
+        /// </summary>
+        public static string Menu_ShowDerivativeY2 {
+            get {
+                return ResourceManager.GetString("Menu_ShowDerivativeY2", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Y1 Absolute Curve Fitting.
+        /// </summary>
+        public static string Menu_AbsoluteCurveFittingY1 {
+            get {
+                return ResourceManager.GetString("Menu_AbsoluteCurveFittingY1", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Y2 Absolute Curve Fitting.
+        /// </summary>
+        public static string Menu_AbsoluteCurveFittingY2 {
+            get {
+                return ResourceManager.GetString("Menu_AbsoluteCurveFittingY2", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Show Group Labels.
         /// </summary>
         public static string Menu_ShowGroupLabels {

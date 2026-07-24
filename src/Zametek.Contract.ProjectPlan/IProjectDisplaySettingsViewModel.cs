@@ -15,6 +15,10 @@ namespace Zametek.Contract.ProjectPlan
         public TrackedMetrics ScenarioChartTrackedMetricY2Axis { get; set; }
         public CurveFittingType ScenarioChartCurveFittingTypeY1 { get; set; }
         public CurveFittingType ScenarioChartCurveFittingTypeY2 { get; set; }
+        public bool ScenarioChartShowDerivativeY1 { get; set; }
+        public bool ScenarioChartShowDerivativeY2 { get; set; }
+        public bool ScenarioChartAbsoluteCurveFittingY1 { get; set; }
+        public bool ScenarioChartAbsoluteCurveFittingY2 { get; set; }
 
 
         void SetValues(ProjectDisplaySettingsModel model);

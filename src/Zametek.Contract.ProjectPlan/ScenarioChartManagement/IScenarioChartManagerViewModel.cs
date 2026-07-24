@@ -24,6 +24,18 @@ namespace Zametek.Contract.ProjectPlan
 
         CurveFittingType CurveFittingTypeY2 { get; set; }
 
+        bool ShowDerivativeY1 { get; set; }
+
+        bool ShowDerivativeY2 { get; set; }
+
+        bool AbsoluteCurveFittingY1 { get; set; }
+
+        bool AbsoluteCurveFittingY2 { get; set; }
+
+        bool HasCurveFittingY1 { get; }
+
+        bool HasCurveFittingY2 { get; }
+
         string CurveFittingFormulaY1 { get; }
 
         string CurveFittingFormulaY2 { get; }

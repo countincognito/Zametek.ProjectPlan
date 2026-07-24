@@ -45,6 +45,14 @@ namespace Zametek.Contract.ProjectPlan
 
         CurveFittingType ScenarioChartCurveFittingTypeY2 { get; set; }
 
+        bool ScenarioChartShowDerivativeY1 { get; set; }
+
+        bool ScenarioChartShowDerivativeY2 { get; set; }
+
+        bool ScenarioChartAbsoluteCurveFittingY1 { get; set; }
+
+        bool ScenarioChartAbsoluteCurveFittingY2 { get; set; }
+
         IManagedNodeViewModel Root { get; }
 
         IReadOnlyList<IManagedNodeViewModel> RawNodes { get; }

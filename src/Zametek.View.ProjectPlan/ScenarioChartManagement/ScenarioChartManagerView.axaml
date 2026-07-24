@@ -526,6 +526,16 @@
 									  CommandParameter="{x:Static common:CurveFittingType.PolynomialOrder4}"
 									  ToggleType="Radio" />
             </MenuItem>
+            
+            <MenuItem Header="{x:Static resources:Menus.Menu_ShowDerivativeY1}"
+									  IsEnabled="{Binding Path=HasCurveFittingY1, Mode=OneWay}"
+									  IsChecked="{Binding Path=ShowDerivativeY1, Mode=TwoWay}"
+									  ToggleType="CheckBox" />
+
+            <MenuItem Header="{x:Static resources:Menus.Menu_AbsoluteCurveFittingY1}"
+									  IsEnabled="{Binding Path=HasCurveFittingY1, Mode=OneWay}"
+									  IsChecked="{Binding Path=AbsoluteCurveFittingY1, Mode=TwoWay}"
+									  ToggleType="CheckBox" />
 
             <Separator />
 
@@ -778,6 +788,16 @@
 									  CommandParameter="{x:Static common:CurveFittingType.PolynomialOrder4}"
 									  ToggleType="Radio" />
 						</MenuItem>
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_ShowDerivativeY2}"
+								  IsEnabled="{Binding Path=HasCurveFittingY2, Mode=OneWay}"
+								  IsChecked="{Binding Path=ShowDerivativeY2, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+						<MenuItem Header="{x:Static resources:Menus.Menu_AbsoluteCurveFittingY2}"
+								  IsEnabled="{Binding Path=HasCurveFittingY2, Mode=OneWay}"
+								  IsChecked="{Binding Path=AbsoluteCurveFittingY2, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
 
 						<Separator />
 

@@ -162,6 +162,62 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private bool m_ScenarioChartShowDerivativeY1;
+        public bool ScenarioChartShowDerivativeY1
+        {
+            get => m_ScenarioChartShowDerivativeY1;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true);
+                    this.RaiseAndSetIfChanged(ref m_ScenarioChartShowDerivativeY1, value);
+                }
+            }
+        }
+
+        private bool m_ScenarioChartShowDerivativeY2;
+        public bool ScenarioChartShowDerivativeY2
+        {
+            get => m_ScenarioChartShowDerivativeY2;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true);
+                    this.RaiseAndSetIfChanged(ref m_ScenarioChartShowDerivativeY2, value);
+                }
+            }
+        }
+
+        private bool m_ScenarioChartAbsoluteCurveFittingY1;
+        public bool ScenarioChartAbsoluteCurveFittingY1
+        {
+            get => m_ScenarioChartAbsoluteCurveFittingY1;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true);
+                    this.RaiseAndSetIfChanged(ref m_ScenarioChartAbsoluteCurveFittingY1, value);
+                }
+            }
+        }
+
+        private bool m_ScenarioChartAbsoluteCurveFittingY2;
+        public bool ScenarioChartAbsoluteCurveFittingY2
+        {
+            get => m_ScenarioChartAbsoluteCurveFittingY2;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true);
+                    this.RaiseAndSetIfChanged(ref m_ScenarioChartAbsoluteCurveFittingY2, value);
+                }
+            }
+        }
+
         public void SetValues(ProjectDisplaySettingsModel model)
         {
             lock (m_Lock)
@@ -200,6 +256,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     ScenarioChartCurveFittingTypeY2 = model.ScenarioChartCurveFittingTypeY2;
                 }
+                if (ScenarioChartShowDerivativeY1 != model.ScenarioChartShowDerivativeY1)
+                {
+                    ScenarioChartShowDerivativeY1 = model.ScenarioChartShowDerivativeY1;
+                }
+                if (ScenarioChartShowDerivativeY2 != model.ScenarioChartShowDerivativeY2)
+                {
+                    ScenarioChartShowDerivativeY2 = model.ScenarioChartShowDerivativeY2;
+                }
+                if (ScenarioChartAbsoluteCurveFittingY1 != model.ScenarioChartAbsoluteCurveFittingY1)
+                {
+                    ScenarioChartAbsoluteCurveFittingY1 = model.ScenarioChartAbsoluteCurveFittingY1;
+                }
+                if (ScenarioChartAbsoluteCurveFittingY2 != model.ScenarioChartAbsoluteCurveFittingY2)
+                {
+                    ScenarioChartAbsoluteCurveFittingY2 = model.ScenarioChartAbsoluteCurveFittingY2;
+                }
             }
         }
 
@@ -218,6 +290,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     ScenarioChartTrackedMetricY2Axis = ScenarioChartTrackedMetricY2Axis,
                     ScenarioChartCurveFittingTypeY1 = ScenarioChartCurveFittingTypeY1,
                     ScenarioChartCurveFittingTypeY2 = ScenarioChartCurveFittingTypeY2,
+                    ScenarioChartShowDerivativeY1 = ScenarioChartShowDerivativeY1,
+                    ScenarioChartShowDerivativeY2 = ScenarioChartShowDerivativeY2,
+                    ScenarioChartAbsoluteCurveFittingY1 = ScenarioChartAbsoluteCurveFittingY1,
+                    ScenarioChartAbsoluteCurveFittingY2 = ScenarioChartAbsoluteCurveFittingY2,
                 };
             }
         }

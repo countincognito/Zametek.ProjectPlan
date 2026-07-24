@@ -19,5 +19,13 @@
         public CurveFittingType ScenarioChartCurveFittingTypeY1 { get; init; } = default;
 
         public CurveFittingType ScenarioChartCurveFittingTypeY2 { get; init; } = default;
+
+        public bool ScenarioChartShowDerivativeY1 { get; init; } = default;
+
+        public bool ScenarioChartShowDerivativeY2 { get; init; } = default;
+
+        public bool ScenarioChartAbsoluteCurveFittingY1 { get; init; } = default;
+
+        public bool ScenarioChartAbsoluteCurveFittingY2 { get; init; } = default;
     }
 }

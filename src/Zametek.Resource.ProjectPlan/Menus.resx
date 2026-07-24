@@ -366,6 +366,18 @@
   <data name="Menu_ShowMilestones" xml:space="preserve">
     <value>Show Milestones</value>
   </data>
+  <data name="Menu_ShowDerivativeY1" xml:space="preserve">
+    <value>Show Y1 Derivative</value>
+  </data>
+  <data name="Menu_ShowDerivativeY2" xml:space="preserve">
+    <value>Show Y2 Derivative</value>
+  </data>
+  <data name="Menu_AbsoluteCurveFittingY1" xml:space="preserve">
+    <value>Y1 Absolute Curve Fitting</value>
+  </data>
+  <data name="Menu_AbsoluteCurveFittingY2" xml:space="preserve">
+    <value>Y2 Absolute Curve Fitting</value>
+  </data>
   <data name="Menu_ShowNames" xml:space="preserve">
     <value>Show Names</value>
   </data>

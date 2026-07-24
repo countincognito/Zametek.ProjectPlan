@@ -38,6 +38,10 @@ namespace Zametek.Data.ProjectPlan.Tests
             settings_v0_6_1.ScenarioChartTrackedMetricY2Axis.ShouldBe(TrackedMetrics.None);
             settings_v0_6_1.ScenarioChartCurveFittingTypeY1.ShouldBe(CurveFittingType.Linear);
             settings_v0_6_1.ScenarioChartCurveFittingTypeY2.ShouldBe(CurveFittingType.None);
+            settings_v0_6_1.ScenarioChartShowDerivativeY1.ShouldBeFalse();
+            settings_v0_6_1.ScenarioChartShowDerivativeY2.ShouldBeFalse();
+            settings_v0_6_1.ScenarioChartAbsoluteCurveFittingY1.ShouldBeFalse();
+            settings_v0_6_1.ScenarioChartAbsoluteCurveFittingY2.ShouldBeFalse();
         }
 
         [Fact]
@@ -75,6 +79,10 @@ namespace Zametek.Data.ProjectPlan.Tests
                 ScenarioChartTrackedMetricY2Axis = TrackedMetrics.NetworkDuration,
                 ScenarioChartCurveFittingTypeY1 = CurveFittingType.Linear,
                 ScenarioChartCurveFittingTypeY2 = CurveFittingType.PolynomialOrder2,
+                ScenarioChartShowDerivativeY1 = true,
+                ScenarioChartShowDerivativeY2 = true,
+                ScenarioChartAbsoluteCurveFittingY1 = true,
+                ScenarioChartAbsoluteCurveFittingY2 = true,
             };
 
             v0_6_0.ProjectDisplaySettingsModel downgraded = mapper.FromCurrentToV0_6_0(current);
@@ -89,9 +97,14 @@ namespace Zametek.Data.ProjectPlan.Tests
             roundTripped.ScenarioChartTrackedMetricY1Axis.ShouldBe(TrackedMetrics.CostsTotal);
             roundTripped.ScenarioChartCurveFittingTypeY1.ShouldBe(CurveFittingType.Linear);
 
-            // The Y2 members have no v0.6.0 representation, so they reset.
+            // The Y2 members and the derivative display flags have no v0.6.0
+            // representation, so they reset.
             roundTripped.ScenarioChartTrackedMetricY2Axis.ShouldBe(TrackedMetrics.None);
             roundTripped.ScenarioChartCurveFittingTypeY2.ShouldBe(CurveFittingType.None);
+            roundTripped.ScenarioChartShowDerivativeY1.ShouldBeFalse();
+            roundTripped.ScenarioChartShowDerivativeY2.ShouldBeFalse();
+            roundTripped.ScenarioChartAbsoluteCurveFittingY1.ShouldBeFalse();
+            roundTripped.ScenarioChartAbsoluteCurveFittingY2.ShouldBeFalse();
         }
 
         [Fact]
@@ -109,6 +122,10 @@ namespace Zametek.Data.ProjectPlan.Tests
                 ScenarioChartTrackedMetricY2Axis = TrackedMetrics.NetworkDuration,
                 ScenarioChartCurveFittingTypeY1 = CurveFittingType.Linear,
                 ScenarioChartCurveFittingTypeY2 = CurveFittingType.PolynomialOrder2,
+                ScenarioChartShowDerivativeY1 = true,
+                ScenarioChartShowDerivativeY2 = true,
+                ScenarioChartAbsoluteCurveFittingY1 = true,
+                ScenarioChartAbsoluteCurveFittingY2 = true,
             };
 
             ProjectDisplaySettingsModel roundTripped = mapper.FromV0_6_1ToCurrent(mapper.FromCurrentToV0_6_1(current));

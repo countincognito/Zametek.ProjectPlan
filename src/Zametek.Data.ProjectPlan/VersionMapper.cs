@@ -717,9 +717,9 @@ namespace Zametek.Data.ProjectPlan
         public partial ProjectScenarioTagModel FromV0_6_0ToCurrent(v0_6_0.ProjectScenarioTagModel src);
 
         // v0.6.0 predates the split of the scenario chart Y metric into Y1/Y2 (and the per-metric
-        // curve fitting), so the old single-Y members bridge to the Y1 members. The Y2 members are
-        // new in v0.6.1: they carry no v0.6.0 representation, so they are dropped on the way down
-        // and intentionally left at their defaults (None) on the way up.
+        // curve fitting), so the old single-Y members bridge to the Y1 members. The Y2 members and
+        // the derivative display flags are new in v0.6.1: they carry no v0.6.0 representation, so
+        // they are dropped on the way down and intentionally left at their defaults on the way up.
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         [MapProperty(nameof(ProjectDisplaySettingsModel.ScenarioChartTrackedMetricY1Axis), nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartTrackedMetricYAxis))]
         [MapProperty(nameof(ProjectDisplaySettingsModel.ScenarioChartCurveFittingTypeY1), nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartCurveFittingType))]
@@ -729,6 +729,10 @@ namespace Zametek.Data.ProjectPlan
         [MapProperty(nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartCurveFittingType), nameof(ProjectDisplaySettingsModel.ScenarioChartCurveFittingTypeY1))]
         [MapperIgnoreTarget(nameof(ProjectDisplaySettingsModel.ScenarioChartTrackedMetricY2Axis))]
         [MapperIgnoreTarget(nameof(ProjectDisplaySettingsModel.ScenarioChartCurveFittingTypeY2))]
+        [MapperIgnoreTarget(nameof(ProjectDisplaySettingsModel.ScenarioChartShowDerivativeY1))]
+        [MapperIgnoreTarget(nameof(ProjectDisplaySettingsModel.ScenarioChartShowDerivativeY2))]
+        [MapperIgnoreTarget(nameof(ProjectDisplaySettingsModel.ScenarioChartAbsoluteCurveFittingY1))]
+        [MapperIgnoreTarget(nameof(ProjectDisplaySettingsModel.ScenarioChartAbsoluteCurveFittingY2))]
         public partial ProjectDisplaySettingsModel FromV0_6_0ToCurrent(v0_6_0.ProjectDisplaySettingsModel src);
 
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
@@ -813,7 +817,7 @@ namespace Zametek.Data.ProjectPlan
         public partial ProjectDisplaySettingsModel FromV0_6_1ToCurrent(v0_6_1.ProjectDisplaySettingsModel src);
 
         // Upgrading from v0.6.0: the old single Y metric (and its curve fitting) becomes Y1; the Y2
-        // members default to None.
+        // members default to None and the derivative display flags default to false.
         [MapProperty(nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartTrackedMetricYAxis), nameof(v0_6_1.ProjectDisplaySettingsModel.ScenarioChartTrackedMetricY1Axis))]
         [MapProperty(nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartCurveFittingType), nameof(v0_6_1.ProjectDisplaySettingsModel.ScenarioChartCurveFittingTypeY1))]
         public partial v0_6_1.ProjectDisplaySettingsModel FromV0_6_0ToV0_6_1(v0_6_0.ProjectDisplaySettingsModel src);

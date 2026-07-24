@@ -11,7 +11,6 @@ using System.Text;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
-using Zametek.Utility;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -87,6 +86,14 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IDisposable? m_BuildScenarioChartPlotModelSub;
 
         private const double c_AnnotatedEllipseRadius = 5.0;
+
+        private static readonly char[] s_PolynomialSuperscripts = ['⁰', '¹', '²', '³', '⁴'];
+
+        // The raw scenario xs can be sparse, so derivative curves are sampled
+        // over at least this many evenly spaced points instead (an absolute
+        // derivative in particular folds at its zero crossings, which sparse
+        // sampling would cut off).
+        private const int c_MinimumDerivativeSamplePoints = 100;
 
         #endregion
 
@@ -170,18 +177,55 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2)
                 .ToProperty(this, rcm => rcm.CurveFittingTypeY2);
 
-            m_BuildScenarioChartPlotModelSub = this
+            m_ShowDerivativeY1 = this
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY1)
+                .ToProperty(this, rcm => rcm.ShowDerivativeY1);
+
+            m_ShowDerivativeY2 = this
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY2)
+                .ToProperty(this, rcm => rcm.ShowDerivativeY2);
+
+            m_AbsoluteCurveFittingY1 = this
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY1)
+                .ToProperty(this, rcm => rcm.AbsoluteCurveFittingY1);
+
+            m_AbsoluteCurveFittingY2 = this
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY2)
+                .ToProperty(this, rcm => rcm.AbsoluteCurveFittingY2);
+
+            // The derivative toggles only make sense while their metric has a
+            // curve fitting selected.
+            m_HasCurveFittingY1 = this
                 .WhenAnyValue(
-                    rcm => rcm.m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
-                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNames,
-                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
-                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY1Axis,
-                    rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY2Axis,
                     rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY1,
+                    fittingType => fittingType != CurveFittingType.None)
+                .ToProperty(this, rcm => rcm.HasCurveFittingY1);
+
+            m_HasCurveFittingY2 = this
+                .WhenAnyValue(
                     rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2,
-                    rcm => rcm.m_CoreViewModel.ProjectStart,
-                    rcm => rcm.m_CoreViewModel.BaseTheme,
-                    (_, _, _, _, _, _, _, _, _) => Unit.Default)
+                    fittingType => fittingType != CurveFittingType.None)
+                .ToProperty(this, rcm => rcm.HasCurveFittingY2);
+
+            // Split across two streams because WhenAnyValue cannot handle
+            // this many individual inputs.
+            m_BuildScenarioChartPlotModelSub = Observable.Merge(
+                    this.WhenAnyValue(
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNames,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY1Axis,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY2Axis,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY1,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY1,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY2,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY1,
+                        rcm => rcm.m_CoreViewModel.ProjectStart,
+                        rcm => rcm.m_CoreViewModel.BaseTheme,
+                        (_, _, _, _, _, _, _, _, _, _, _, _) => Unit.Default),
+                    this.WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY2)
+                        .Select(_ => Unit.Default))
                 .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildScenarioChartPlotModelAsync());
@@ -245,6 +289,10 @@ namespace Zametek.ViewModel.ProjectPlan
             TrackedMetrics y2Metric,
             CurveFittingType curveFittingTypeY1,
             CurveFittingType curveFittingTypeY2,
+            bool showDerivativeY1,
+            bool showDerivativeY2,
+            bool absoluteCurveFittingY1,
+            bool absoluteCurveFittingY2,
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(trackedMetricsSet);
@@ -283,8 +331,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     trackedMetricsSet,
                     showNames,
                     xMetricFunction,
+                    xMetric,
                     y1Metric,
                     curveFittingTypeY1,
+                    showDerivativeY1,
+                    absoluteCurveFittingY1,
                     plotModel.Plot.Axes.Left,
                     Colors.Blue,
                     MarkerShape.FilledCircle);
@@ -297,8 +348,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     trackedMetricsSet,
                     showNames,
                     xMetricFunction,
+                    xMetric,
                     y2Metric,
                     curveFittingTypeY2,
+                    showDerivativeY2,
+                    absoluteCurveFittingY2,
                     plotModel.Plot.Axes.Right,
                     Colors.Red,
                     MarkerShape.FilledSquare);
@@ -316,8 +370,11 @@ namespace Zametek.ViewModel.ProjectPlan
             TrackedMetricsSetModel trackedMetricsSet,
             bool showNames,
             Func<MetricsModel, double> xMetricFunction,
+            TrackedMetrics xMetric,
             TrackedMetrics yMetric,
             CurveFittingType curveFittingType,
+            bool showDerivative,
+            bool absoluteCurveFitting,
             IYAxis yAxis,
             Color markerFillColor,
             MarkerShape markerShape)
@@ -367,6 +424,30 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             markers = [.. markers.OrderBy(m => m.X).ThenBy(m => m.Y)];
+
+            // Y Axis title.
+            yAxis.Label.Text = StringConverters.TrackedMetricsValue(yMetric);
+            yAxis.Label.FontSize = PlotHelper.FontSize;
+            yAxis.Label.Bold = false;
+
+            if (showDerivative
+                && curveFittingType != CurveFittingType.None)
+            {
+                string derivativeFormula = BuildCurveFitDerivative(plotModel, markers, curveFittingType, absoluteCurveFitting, yAxis, markerFillColor);
+
+                if (!string.IsNullOrEmpty(derivativeFormula))
+                {
+                    // The raw scenario points belong to the fitted curve, not
+                    // to its derivative, so they are not drawn alongside it.
+                    string derivativeLabel = $@"d({StringConverters.TrackedMetricsValue(yMetric)}) / d({StringConverters.TrackedMetricsValue(xMetric)})";
+                    yAxis.Label.Text = absoluteCurveFitting ? $@"|{derivativeLabel}|" : derivativeLabel;
+                    return derivativeFormula;
+                }
+
+                // The fit could not be produced (e.g. too few scenarios), so
+                // fall back to the raw display rather than an empty chart.
+            }
+
             plotModel.Plot.PlottableList.AddRange(markers);
 
             if (showNames)
@@ -375,19 +456,15 @@ namespace Zametek.ViewModel.ProjectPlan
                 plotModel.Plot.PlottableList.AddRange(annotations);
             }
 
-            // Y Axis title.
-            yAxis.Label.Text = StringConverters.TrackedMetricsValue(yMetric);
-            yAxis.Label.FontSize = PlotHelper.FontSize;
-            yAxis.Label.Bold = false;
-
             // Build the curve fitting if requested.
-            return BuildCurveFit(plotModel, markers, curveFittingType, yAxis, markerFillColor);
+            return BuildCurveFit(plotModel, markers, curveFittingType, absoluteCurveFitting, yAxis, markerFillColor);
         }
 
         private static string BuildCurveFit(
             AvaPlot plotModel,
             List<AnnotatedMarker> markers,
             CurveFittingType curveFittingType,
+            bool absoluteCurveFitting,
             IYAxis yAxis,
             Color color)
         {
@@ -396,6 +473,10 @@ namespace Zametek.ViewModel.ProjectPlan
             double[] ys = [.. markers.Select(x => x.Y)];
 
             Debug.Assert(xs.Length == ys.Length);
+
+            // The fits are always computed against the raw data (as are the
+            // r² values); the absolute option only passes the fitted outputs
+            // through abs() before they are added to the chart.
 
             switch (curveFittingType)
             {
@@ -408,7 +489,15 @@ namespace Zametek.ViewModel.ProjectPlan
                             (double a, double b) = MathNet.Numerics.Fit.Line(xs, ys);
                             double[] fx = [.. xs.Select(x => a + b * x)];
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
-                            formula = $"y = {b:F3}x + {a:F3} (r²={r2:F3})";
+                            string expression = $"{b:F4}x + {a:F4}";
+
+                            if (absoluteCurveFitting)
+                            {
+                                fx = [.. fx.Select(Math.Abs)];
+                                expression = $"|{expression}|";
+                            }
+
+                            formula = $"y = {expression} (r²={r2:F4})";
                             Scatter line = plotModel.Plot.Add.ScatterLine(xs, fx);
                             line.MarkerSize = 0;
                             line.LineWidth = 2;
@@ -425,7 +514,15 @@ namespace Zametek.ViewModel.ProjectPlan
                             (double a, double r) = MathNet.Numerics.Fit.Exponential(xs, ys);
                             double[] fx = [.. xs.Select(x => a * Math.Exp(r * x))];
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
-                            formula = $"y = {a:F3}e^{r:F3}x (r²={r2:F3})";
+                            string expression = $"{a:F4}e^{r:F4}x";
+
+                            if (absoluteCurveFitting)
+                            {
+                                fx = [.. fx.Select(Math.Abs)];
+                                expression = $"|{expression}|";
+                            }
+
+                            formula = $"y = {expression} (r²={r2:F4})";
                             Scatter line = plotModel.Plot.Add.ScatterLine(xs, fx);
                             line.MarkerSize = 0;
                             line.LineWidth = 2;
@@ -442,7 +539,15 @@ namespace Zametek.ViewModel.ProjectPlan
                             (double a, double b) = MathNet.Numerics.Fit.Logarithm(xs, ys);
                             double[] fx = [.. xs.Select(x => a + b * Math.Log(x))];
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
-                            formula = $"y = {b:F3}ln(x) + {a:F3} (r²={r2:F3})";
+                            string expression = $"{b:F4}ln(x) + {a:F4}";
+
+                            if (absoluteCurveFitting)
+                            {
+                                fx = [.. fx.Select(Math.Abs)];
+                                expression = $"|{expression}|";
+                            }
+
+                            formula = $"y = {expression} (r²={r2:F4})";
                             Scatter line = plotModel.Plot.Add.ScatterLine(xs, fx);
                             line.MarkerSize = 0;
                             line.LineWidth = 2;
@@ -458,10 +563,21 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             (double a, double b) = MathNet.Numerics.Fit.Power(xs, ys);
                             double f(double x) => a * Math.Pow(x, b);
-                            Coordinates pt1 = new(xs.First(), f(xs.First()));
-                            Coordinates pt2 = new(xs.Last(), f(xs.Last()));
+                            double fxFirst = f(xs.First());
+                            double fxLast = f(xs.Last());
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => f(x)));
-                            formula = $"y = {a:F3}x^{b:F3} (r²={r2:F3})";
+                            string expression = $"{a:F4}x^{b:F4}";
+
+                            if (absoluteCurveFitting)
+                            {
+                                fxFirst = Math.Abs(fxFirst);
+                                fxLast = Math.Abs(fxLast);
+                                expression = $"|{expression}|";
+                            }
+
+                            formula = $"y = {expression} (r²={r2:F4})";
+                            Coordinates pt1 = new(xs.First(), fxFirst);
+                            Coordinates pt2 = new(xs.Last(), fxLast);
                             LinePlot line = plotModel.Plot.Add.Line(pt1, pt2);
                             line.MarkerSize = 0;
                             line.LineWidth = 2;
@@ -473,17 +589,17 @@ namespace Zametek.ViewModel.ProjectPlan
                     break;
                 case CurveFittingType.PolynomialOrder2:
                     {
-                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 2, yAxis, color);
+                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 2, absoluteCurveFitting, yAxis, color);
                     }
                     break;
                 case CurveFittingType.PolynomialOrder3:
                     {
-                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 3, yAxis, color);
+                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 3, absoluteCurveFitting, yAxis, color);
                     }
                     break;
                 case CurveFittingType.PolynomialOrder4:
                     {
-                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 4, yAxis, color);
+                        formula = BuildPolynomialCurveFit(plotModel, xs, ys, 4, absoluteCurveFitting, yAxis, color);
                     }
                     break;
                 default:
@@ -493,18 +609,173 @@ namespace Zametek.ViewModel.ProjectPlan
             return formula;
         }
 
+        private static string BuildCurveFitDerivative(
+            AvaPlot plotModel,
+            List<AnnotatedMarker> markers,
+            CurveFittingType curveFittingType,
+            bool absoluteCurveFitting,
+            IYAxis yAxis,
+            Color color)
+        {
+            string formula = string.Empty;
+            double[] xs = [.. markers.Select(x => x.X)];
+            double[] ys = [.. markers.Select(x => x.Y)];
+
+            Debug.Assert(xs.Length == ys.Length);
+
+            // As with the fits themselves, the absolute option only passes
+            // the derivative outputs through abs() before they are added to
+            // the chart.
+
+            switch (curveFittingType)
+            {
+                case CurveFittingType.None:
+                    break;
+                case CurveFittingType.Linear:
+                    {
+                        if (xs.Length >= 2)
+                        {
+                            // y = bx + a differentiates to the constant y′ = b.
+                            (double a, double b) = MathNet.Numerics.Fit.Line(xs, ys);
+                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * x));
+                            string expression = $"{b:F4}";
+                            double[] sampleXs = BuildDerivativeSampleXs(xs);
+                            double[] dfx = [.. sampleXs.Select(_ => b)];
+
+                            if (absoluteCurveFitting)
+                            {
+                                dfx = [.. dfx.Select(Math.Abs)];
+                                expression = $"|{expression}|";
+                            }
+
+                            formula = $"y′ = {expression} (r²={r2:F4})";
+                            AddCurveFitDerivativeLine(plotModel, sampleXs, dfx, yAxis, color);
+                        }
+                    }
+                    break;
+                case CurveFittingType.Exponential:
+                    {
+                        if (xs.Length >= 2)
+                        {
+                            // y = ae^rx differentiates to y′ = are^rx.
+                            (double a, double r) = MathNet.Numerics.Fit.Exponential(xs, ys);
+                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a * Math.Exp(r * x)));
+                            string expression = $"{a * r:F4}e^{r:F4}x";
+                            double[] sampleXs = BuildDerivativeSampleXs(xs);
+                            double[] dfx = [.. sampleXs.Select(x => a * r * Math.Exp(r * x))];
+
+                            if (absoluteCurveFitting)
+                            {
+                                dfx = [.. dfx.Select(Math.Abs)];
+                                expression = $"|{expression}|";
+                            }
+
+                            formula = $"y′ = {expression} (r²={r2:F4})";
+                            AddCurveFitDerivativeLine(plotModel, sampleXs, dfx, yAxis, color);
+                        }
+                    }
+                    break;
+                case CurveFittingType.Logarithmic:
+                    {
+                        if (xs.Length >= 2)
+                        {
+                            // y = b·ln(x) + a differentiates to y′ = b/x.
+                            (double a, double b) = MathNet.Numerics.Fit.Logarithm(xs, ys);
+                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * Math.Log(x)));
+                            string expression = $"{b:F4}/x";
+                            double[] sampleXs = BuildDerivativeSampleXs(xs);
+                            double[] dfx = [.. sampleXs.Select(x => b / x)];
+
+                            if (absoluteCurveFitting)
+                            {
+                                dfx = [.. dfx.Select(Math.Abs)];
+                                expression = $"|{expression}|";
+                            }
+
+                            formula = $"y′ = {expression} (r²={r2:F4})";
+                            AddCurveFitDerivativeLine(plotModel, sampleXs, dfx, yAxis, color);
+                        }
+                    }
+                    break;
+                case CurveFittingType.Power:
+                    {
+                        if (xs.Length >= 2)
+                        {
+                            // y = ax^b differentiates to y′ = abx^(b−1).
+                            (double a, double b) = MathNet.Numerics.Fit.Power(xs, ys);
+                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a * Math.Pow(x, b)));
+                            string expression = $"{a * b:F4}x^{b - 1.0:F4}";
+                            double[] sampleXs = BuildDerivativeSampleXs(xs);
+                            double[] dfx = [.. sampleXs.Select(x => a * b * Math.Pow(x, b - 1.0))];
+
+                            if (absoluteCurveFitting)
+                            {
+                                dfx = [.. dfx.Select(Math.Abs)];
+                                expression = $"|{expression}|";
+                            }
+
+                            formula = $"y′ = {expression} (r²={r2:F4})";
+                            AddCurveFitDerivativeLine(plotModel, sampleXs, dfx, yAxis, color);
+                        }
+                    }
+                    break;
+                case CurveFittingType.PolynomialOrder2:
+                    {
+                        formula = BuildPolynomialCurveFitDerivative(plotModel, xs, ys, 2, absoluteCurveFitting, yAxis, color);
+                    }
+                    break;
+                case CurveFittingType.PolynomialOrder3:
+                    {
+                        formula = BuildPolynomialCurveFitDerivative(plotModel, xs, ys, 3, absoluteCurveFitting, yAxis, color);
+                    }
+                    break;
+                case CurveFittingType.PolynomialOrder4:
+                    {
+                        formula = BuildPolynomialCurveFitDerivative(plotModel, xs, ys, 4, absoluteCurveFitting, yAxis, color);
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(curveFittingType), @$"{Resource.ProjectPlan.Messages.Message_UnknownCurveFittingType} {curveFittingType}");
+            }
+
+            return formula;
+        }
+
+        private static double[] BuildDerivativeSampleXs(double[] xs)
+        {
+            double minimum = xs.Min();
+            double maximum = xs.Max();
+            int count = Math.Max(c_MinimumDerivativeSamplePoints, xs.Length);
+            double step = (maximum - minimum) / (count - 1);
+            return [.. Enumerable.Range(0, count).Select(i => minimum + (i * step))];
+        }
+
+        private static void AddCurveFitDerivativeLine(
+            AvaPlot plotModel,
+            double[] xs,
+            double[] dfx,
+            IYAxis yAxis,
+            Color color)
+        {
+            Scatter line = plotModel.Plot.Add.ScatterLine(xs, dfx);
+            line.MarkerSize = 0;
+            line.LineWidth = 2;
+            line.LinePattern = LinePattern.Dashed;
+            line.Color = color;
+            line.Axes.YAxis = yAxis;
+        }
+
         private static string BuildPolynomialCurveFit(
             AvaPlot plotModel,
             double[] xs,
             double[] ys,
             int order,
+            bool absoluteCurveFitting,
             IYAxis yAxis,
             Color color)
         {
-            char[] superscript = { '⁰', '¹', '²', '³', '⁴' };
-
             int minimumOrder = 0;
-            int maximumOrder = superscript.Length - 1;
+            int maximumOrder = s_PolynomialSuperscripts.Length - 1;
 
             if (xs.Length != ys.Length
                 || order < minimumOrder
@@ -517,6 +788,20 @@ namespace Zametek.ViewModel.ProjectPlan
             double[] coefficients = MathNet.Numerics.Fit.Polynomial(xs, ys, order);
             double[] fx = [.. xs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, coefficients))];
 
+            // The r² describes the fit against the raw outputs.
+            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
+
+            // Build the expression.
+            var expressionBuilder = new StringBuilder();
+            AppendPolynomialTerms(expressionBuilder, coefficients);
+            string expression = expressionBuilder.ToString();
+
+            if (absoluteCurveFitting)
+            {
+                fx = [.. fx.Select(Math.Abs)];
+                expression = $"|{expression}|";
+            }
+
             // Plot the regression line.
             Scatter line = plotModel.Plot.Add.ScatterLine(xs, fx);
             line.MarkerSize = 0;
@@ -525,9 +810,64 @@ namespace Zametek.ViewModel.ProjectPlan
             line.Color = color;
             line.Axes.YAxis = yAxis;
 
-            // Build the formula.
-            StringBuilder formula = new(@"y = ");
+            return $"y = {expression} (r²={r2:F4})";
+        }
 
+        private static string BuildPolynomialCurveFitDerivative(
+            AvaPlot plotModel,
+            double[] xs,
+            double[] ys,
+            int order,
+            bool absoluteCurveFitting,
+            IYAxis yAxis,
+            Color color)
+        {
+            // Differentiating drops one order, so the fit must be at least linear.
+            int minimumOrder = 1;
+            int maximumOrder = s_PolynomialSuperscripts.Length - 1;
+
+            if (xs.Length != ys.Length
+                || order < minimumOrder
+                || order > maximumOrder
+                || xs.Length <= order)
+            {
+                return string.Empty;
+            }
+
+            double[] coefficients = MathNet.Numerics.Fit.Polynomial(xs, ys, order);
+
+            // Σcᵢxⁱ differentiates to Σi·cᵢx⁽ⁱ⁻¹⁾.
+            double[] derivativeCoefficients = new double[coefficients.Length - 1];
+
+            for (int i = 1; i < coefficients.Length; i++)
+            {
+                derivativeCoefficients[i - 1] = i * coefficients[i];
+            }
+
+            double[] sampleXs = BuildDerivativeSampleXs(xs);
+            double[] dfx = [.. sampleXs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, derivativeCoefficients))];
+
+            // Build the expression. The r² still describes the underlying fit.
+            var expressionBuilder = new StringBuilder();
+            AppendPolynomialTerms(expressionBuilder, derivativeCoefficients);
+            string expression = expressionBuilder.ToString();
+
+            if (absoluteCurveFitting)
+            {
+                dfx = [.. dfx.Select(Math.Abs)];
+                expression = $"|{expression}|";
+            }
+
+            AddCurveFitDerivativeLine(plotModel, sampleXs, dfx, yAxis, color);
+
+            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, coefficients)));
+            return $"y′ = {expression} (r²={r2:F4})";
+        }
+
+        private static void AppendPolynomialTerms(
+            StringBuilder formula,
+            double[] coefficients)
+        {
             for (int i = coefficients.Length - 1; i >= 0; i--)
             {
                 if (i < coefficients.Length - 1)
@@ -548,17 +888,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 if (i > 0)
                 {
-                    formula.Append($"{Math.Abs(coefficients[i]):F3}x{superscript[i]}");
+                    formula.Append($"{Math.Abs(coefficients[i]):F4}x{s_PolynomialSuperscripts[i]}");
                 }
                 else
                 {
-                    formula.Append($"{Math.Abs(coefficients[i]):F3}");
+                    formula.Append($"{Math.Abs(coefficients[i]):F4}");
                 }
             }
-
-            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
-            formula.Append($@" (r²={r2:F3})");
-            return formula.ToString();
         }
 
         private static Func<MetricsModel, double> GetMetricFunction(TrackedMetrics metric)
@@ -783,6 +1119,52 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private readonly ObservableAsPropertyHelper<bool> m_ShowDerivativeY1;
+        public bool ShowDerivativeY1
+        {
+            get => m_ShowDerivativeY1.Value;
+            set
+            {
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY1 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ShowDerivativeY2;
+        public bool ShowDerivativeY2
+        {
+            get => m_ShowDerivativeY2.Value;
+            set
+            {
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY2 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_AbsoluteCurveFittingY1;
+        public bool AbsoluteCurveFittingY1
+        {
+            get => m_AbsoluteCurveFittingY1.Value;
+            set
+            {
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY1 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_AbsoluteCurveFittingY2;
+        public bool AbsoluteCurveFittingY2
+        {
+            get => m_AbsoluteCurveFittingY2.Value;
+            set
+            {
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY2 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasCurveFittingY1;
+        public bool HasCurveFittingY1 => m_HasCurveFittingY1.Value;
+
+        private readonly ObservableAsPropertyHelper<bool> m_HasCurveFittingY2;
+        public bool HasCurveFittingY2 => m_HasCurveFittingY2.Value;
+
         public ICommand SaveScenarioChartImageFileCommand { get; }
 
         public ICommand ResetScenarioChartCommand { get; }
@@ -872,6 +1254,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY2Axis,
                         m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY1,
                         m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY1,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY2,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY1,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY2,
                         m_CoreViewModel.BaseTheme);
                 }
             }
@@ -952,6 +1338,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_TrackedMetricY2Axis?.Dispose();
                 m_CurveFittingTypeY1?.Dispose();
                 m_CurveFittingTypeY2?.Dispose();
+                m_ShowDerivativeY1?.Dispose();
+                m_ShowDerivativeY2?.Dispose();
+                m_AbsoluteCurveFittingY1?.Dispose();
+                m_AbsoluteCurveFittingY2?.Dispose();
+                m_HasCurveFittingY1?.Dispose();
+                m_HasCurveFittingY2?.Dispose();
             }
 
             m_Disposed = true;
