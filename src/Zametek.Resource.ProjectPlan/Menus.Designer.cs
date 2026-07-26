@@ -77,7 +77,16 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Menu_AutoCompile", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to _Clear Recently Opened....
+        /// </summary>
+        public static string Menu_ClearRecentlyOpened {
+            get {
+                return ResourceManager.GetString("Menu_ClearRecentlyOpened", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to _Close.
         /// </summary>
@@ -230,7 +239,16 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Menu_Open", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open _Recent.
+        /// </summary>
+        public static string Menu_OpenRecent {
+            get {
+                return ResourceManager.GetString("Menu_OpenRecent", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Report Issue.
         /// </summary>

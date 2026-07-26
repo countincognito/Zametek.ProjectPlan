@@ -162,6 +162,25 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
+        // The command line tool has no recently opened file menu, so the recents
+        // are inert: nothing is stored and recording is a no-op.
+
+        public override int MaxRecentProjectFilePaths => 0;
+
+        public override IReadOnlyList<string> RecentProjectFilePaths => [];
+
+        public override void RecordRecentProjectFilePath(string filename)
+        {
+        }
+
+        public override void RemoveRecentProjectFilePath(string filename)
+        {
+        }
+
+        public override void ClearRecentProjectFilePaths()
+        {
+        }
+
         #endregion
     }
 }

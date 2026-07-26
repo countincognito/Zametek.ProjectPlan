@@ -735,9 +735,14 @@ namespace Zametek.Data.ProjectPlan
         [MapperIgnoreTarget(nameof(ProjectDisplaySettingsModel.ScenarioChartAbsoluteCurveFittingY2))]
         public partial ProjectDisplaySettingsModel FromV0_6_0ToCurrent(v0_6_0.ProjectDisplaySettingsModel src);
 
+        // The recently opened project file members are new in v0.6.1: they carry no v0.6.0
+        // representation, so they are dropped on the way down and intentionally left at their
+        // defaults on the way up.
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
         public partial v0_6_0.AppSettingsModel FromCurrentToV0_6_0(AppSettingsModel src);
         [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        [MapperIgnoreTarget(nameof(AppSettingsModel.MaxRecentProjectFilePaths))]
+        [MapperIgnoreTarget(nameof(AppSettingsModel.RecentProjectFilePaths))]
         public partial AppSettingsModel FromV0_6_0ToCurrent(v0_6_0.AppSettingsModel src);
 
         [MapProperty(nameof(v0_4_4.AppSettingsModel.DefaultUseBusinessDays), nameof(v0_6_0.AppSettingsModel.DefaultNonWorkingDayMode), Use = nameof(MapUseBusinessDays))]
@@ -821,5 +826,16 @@ namespace Zametek.Data.ProjectPlan
         [MapProperty(nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartTrackedMetricYAxis), nameof(v0_6_1.ProjectDisplaySettingsModel.ScenarioChartTrackedMetricY1Axis))]
         [MapProperty(nameof(v0_6_0.ProjectDisplaySettingsModel.ScenarioChartCurveFittingType), nameof(v0_6_1.ProjectDisplaySettingsModel.ScenarioChartCurveFittingTypeY1))]
         public partial v0_6_1.ProjectDisplaySettingsModel FromV0_6_0ToV0_6_1(v0_6_0.ProjectDisplaySettingsModel src);
+
+        // The v0.6.1 app settings mirror the Current model 1:1 (v0.6.1 introduced its own type so
+        // it can persist the recently opened project files and their display cap).
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial v0_6_1.AppSettingsModel FromCurrentToV0_6_1(AppSettingsModel src);
+        [MapperRequiredMapping(RequiredMappingStrategy.Target)]
+        public partial AppSettingsModel FromV0_6_1ToCurrent(v0_6_1.AppSettingsModel src);
+
+        // Upgrading from v0.6.0: the recently opened project file members are new in v0.6.1, so
+        // they are intentionally left at their defaults (the default cap and an empty list).
+        public partial v0_6_1.AppSettingsModel FromV0_6_0ToV0_6_1(v0_6_0.AppSettingsModel src);
     }
 }

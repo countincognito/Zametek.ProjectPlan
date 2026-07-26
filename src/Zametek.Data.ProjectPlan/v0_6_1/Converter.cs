@@ -20,5 +20,15 @@ namespace Zametek.Data.ProjectPlan.v0_6_1
                 DisplaySettings = mapper.FromV0_6_0ToV0_6_1(project.DisplaySettings),
             };
         }
+
+        public static AppSettingsModel Upgrade(
+            VersionMapper mapper,
+            v0_6_0.AppSettingsModel appSettings)
+        {
+            ArgumentNullException.ThrowIfNull(mapper);
+            ArgumentNullException.ThrowIfNull(appSettings);
+
+            return mapper.FromV0_6_0ToV0_6_1(appSettings);
+        }
     }
 }

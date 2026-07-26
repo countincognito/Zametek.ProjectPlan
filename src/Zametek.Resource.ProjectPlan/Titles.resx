@@ -195,4 +195,7 @@
   <data name="Title_EditCustomCalendar" xml:space="preserve">
     <value>Edit Custom Calendar</value>
   </data>
+  <data name="Title_ClearRecentlyOpened" xml:space="preserve">
+    <value>Clear Recently Opened</value>
+  </data>
 </root>

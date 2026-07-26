@@ -58,7 +58,15 @@ namespace Zametek.Contract.ProjectPlan
 
         BaseTheme BaseTheme { get; set; }
 
+        bool HasRecentProjectFilePaths { get; }
+
+        IReadOnlyList<IRecentProjectFileMenuItemViewModel> RecentProjectFileMenuItems { get; }
+
         ICommand OpenProjectFileCommand { get; }
+
+        ICommand OpenRecentProjectFileCommand { get; }
+
+        ICommand ClearRecentProjectFilePathsCommand { get; }
 
         ICommand SaveProjectFileCommand { get; }
 
@@ -129,6 +137,10 @@ namespace Zametek.Contract.ProjectPlan
         Task OpenProjectFileAsync();
 
         Task OpenProjectFileAsync(string? filename);
+
+        Task OpenRecentProjectFileAsync(string? filename);
+
+        Task ClearRecentProjectFilePathsAsync();
 
         Task SaveProjectFileAsync();
 

@@ -124,6 +124,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ServiceProvider = serviceProvider;
             m_ProjectTitle = string.Empty;
             m_IsMainBusy = false;
+            m_RecentProjectFileMenuItems = [];
+            m_HasRecentProjectFilePaths = false;
 
             {
                 ReactiveCommand<Unit, Unit> openProjectFileCommand = ReactiveCommand.CreateFromTask(OpenProjectFileAsync);
@@ -155,6 +157,10 @@ namespace Zametek.ViewModel.ProjectPlan
                 closeProjectCommand.IsExecuting.ToProperty(this, main => main.IsClosing, out m_IsClosing);
                 CloseProjectCommand = closeProjectCommand;
             }
+
+            OpenRecentProjectFileCommand = ReactiveCommand.CreateFromTask<string>(OpenRecentProjectFileAsync);
+            ClearRecentProjectFilePathsCommand = ReactiveCommand.CreateFromTask(ClearRecentProjectFilePathsAsync);
+            RefreshRecentProjectFileMenuItems();
 
             ToggleShowDatesCommand = ReactiveCommand.Create(ToggleShowDates);
             ToggleUseClassicDatesCommand = ReactiveCommand.Create(ToggleUseClassicDates);
@@ -553,6 +559,34 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private void RefreshRecentProjectFileMenuItems()
+        {
+            IReadOnlyList<string> recentPaths = m_SettingService.RecentProjectFilePaths;
+            List<IRecentProjectFileMenuItemViewModel> menuItems = [];
+
+            foreach (string recentPath in recentPaths)
+            {
+                // Menu headers treat a single underscore as an access key marker, so
+                // underscores in the displayed path must be escaped by doubling them.
+                // The command parameter carries the unescaped path.
+                string header = recentPath.Replace(@"_", @"__");
+                menuItems.Add(new RecentProjectFileMenuItemViewModel(header, OpenRecentProjectFileCommand, recentPath));
+            }
+
+            if (menuItems.Count > 0)
+            {
+                // A "-" header is Avalonia's convention for a menu separator.
+                menuItems.Add(new RecentProjectFileMenuItemViewModel(@"-", null, null));
+                menuItems.Add(new RecentProjectFileMenuItemViewModel(
+                    Resource.ProjectPlan.Menus.Menu_ClearRecentlyOpened,
+                    ClearRecentProjectFilePathsCommand,
+                    null));
+            }
+
+            RecentProjectFileMenuItems = menuItems;
+            HasRecentProjectFilePaths = recentPaths.Count > 0;
+        }
+
         private async Task OpenProjectFileInternalAsync(string? filename)
         {
             if (!string.IsNullOrWhiteSpace(filename))
@@ -564,6 +598,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 // Now bind the project title to the filename.
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
+                m_SettingService.RecordRecentProjectFilePath(filename);
+                RefreshRecentProjectFileMenuItems();
                 m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
             }
         }
@@ -585,6 +621,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ProjectScenarioManagerViewModel.IsProjectUpdated = false;
                 m_ProjectScenarioManagerViewModel.ResetManagedNodes();
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
+                m_SettingService.RecordRecentProjectFilePath(filename);
+                RefreshRecentProjectFileMenuItems();
                 m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
             }
         }
@@ -615,6 +653,28 @@ namespace Zametek.ViewModel.ProjectPlan
             private set
             {
                 m_ProjectTitle = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private bool m_HasRecentProjectFilePaths;
+        public bool HasRecentProjectFilePaths
+        {
+            get => m_HasRecentProjectFilePaths;
+            private set
+            {
+                m_HasRecentProjectFilePaths = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        private IReadOnlyList<IRecentProjectFileMenuItemViewModel> m_RecentProjectFileMenuItems;
+        public IReadOnlyList<IRecentProjectFileMenuItemViewModel> RecentProjectFileMenuItems
+        {
+            get => m_RecentProjectFileMenuItems;
+            private set
+            {
+                m_RecentProjectFileMenuItems = value;
                 this.RaisePropertyChanged();
             }
         }
@@ -806,6 +866,10 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         public ICommand OpenProjectFileCommand { get; }
+
+        public ICommand OpenRecentProjectFileCommand { get; }
+
+        public ICommand ClearRecentProjectFilePathsCommand { get; }
 
         public ICommand SaveProjectFileCommand { get; }
 
@@ -1050,6 +1114,70 @@ namespace Zametek.ViewModel.ProjectPlan
                     string.Empty,
                     ex.Message);
                 ResetProject();
+            }
+        }
+
+        public async Task OpenRecentProjectFileAsync(string? filename)
+        {
+            try
+            {
+                if (ProjectHasChanges)
+                {
+                    bool confirmation = await m_DialogService.ShowConfirmationAsync(
+                        Resource.ProjectPlan.Titles.Title_ProjectUnsavedChanges,
+                        string.Empty,
+                        Resource.ProjectPlan.Messages.Message_ProjectUnsavedChanges);
+
+                    if (!confirmation)
+                    {
+                        return;
+                    }
+                }
+
+                await OpenProjectFileInternalAsync(filename);
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
+
+                // The file could not be opened (e.g. deleted, renamed or on a
+                // disconnected drive), so drop it from the recently opened list.
+                if (!string.IsNullOrWhiteSpace(filename))
+                {
+                    m_SettingService.RemoveRecentProjectFilePath(filename);
+                    RefreshRecentProjectFileMenuItems();
+                }
+
+                ResetProject();
+            }
+        }
+
+        public async Task ClearRecentProjectFilePathsAsync()
+        {
+            try
+            {
+                bool confirmation = await m_DialogService.ShowConfirmationAsync(
+                    Resource.ProjectPlan.Titles.Title_ClearRecentlyOpened,
+                    string.Empty,
+                    Resource.ProjectPlan.Messages.Message_ClearRecentlyOpened);
+
+                if (!confirmation)
+                {
+                    return;
+                }
+
+                m_SettingService.ClearRecentProjectFilePaths();
+                RefreshRecentProjectFileMenuItems();
+            }
+            catch (Exception ex)
+            {
+                await m_DialogService.ShowErrorAsync(
+                    Resource.ProjectPlan.Titles.Title_Error,
+                    string.Empty,
+                    ex.Message);
             }
         }
 

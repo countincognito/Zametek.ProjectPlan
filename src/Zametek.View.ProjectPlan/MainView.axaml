@@ -78,6 +78,19 @@
 						<MenuItem Header="{x:Static resources:Menus.Menu_Open}"
 								  Command="{Binding Path=OpenProjectFileCommand, Mode=OneWay}"
 								  InputGesture="Ctrl+O"/>
+						<MenuItem Name="OpenRecentMenuItem"
+								  Header="{x:Static resources:Menus.Menu_OpenRecent}"
+								  IsEnabled="{Binding Path=HasRecentProjectFilePaths, Mode=OneWay}"
+								  ItemsSource="{Binding Path=RecentProjectFileMenuItems, Mode=OneWay}">
+							<MenuItem.Styles>
+								<Style Selector="MenuItem#OpenRecentMenuItem MenuItem"
+									   x:DataType="vm:RecentProjectFileMenuItemViewModel">
+									<Setter Property="Header" Value="{Binding Path=Header, Mode=OneWay}"/>
+									<Setter Property="Command" Value="{Binding Path=Command, Mode=OneWay}"/>
+									<Setter Property="CommandParameter" Value="{Binding Path=CommandParameter, Mode=OneWay}"/>
+								</Style>
+							</MenuItem.Styles>
+						</MenuItem>
 						<Separator />
 						<MenuItem Header="{x:Static resources:Menus.Menu_Save}"
 								  Command="{Binding Path=SaveProjectFileCommand, Mode=OneWay}"

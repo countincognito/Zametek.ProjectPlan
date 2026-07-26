@@ -101,16 +101,22 @@
 
         #region AppSettingsModels
 
-        public static v0_6_0.AppSettingsModel Format(Common.ProjectPlan.AppSettingsModel appSettings)
+        public static v0_6_1.AppSettingsModel Format(Common.ProjectPlan.AppSettingsModel appSettings)
         {
             ArgumentNullException.ThrowIfNull(appSettings);
-            return m_Mapper.FromCurrentToV0_6_0(appSettings);
+            return m_Mapper.FromCurrentToV0_6_1(appSettings);
+        }
+
+        public static Common.ProjectPlan.AppSettingsModel Upgrade(v0_6_1.AppSettingsModel appSettings)
+        {
+            ArgumentNullException.ThrowIfNull(appSettings);
+            return m_Mapper.FromV0_6_1ToCurrent(appSettings);
         }
 
         public static Common.ProjectPlan.AppSettingsModel Upgrade(v0_6_0.AppSettingsModel appSettings)
         {
             ArgumentNullException.ThrowIfNull(appSettings);
-            return m_Mapper.FromV0_6_0ToCurrent(appSettings);
+            return Upgrade(v0_6_1.Converter.Upgrade(m_Mapper, appSettings));
         }
 
         public static Common.ProjectPlan.AppSettingsModel Upgrade(v0_4_4.AppSettingsModel appSettings)

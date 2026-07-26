@@ -38,6 +38,16 @@ namespace Zametek.Contract.ProjectPlan
 
         string SelectedTheme { get; set; }
 
+        int MaxRecentProjectFilePaths { get; }
+
+        IReadOnlyList<string> RecentProjectFilePaths { get; }
+
+        void RecordRecentProjectFilePath(string filename);
+
+        void RemoveRecentProjectFilePath(string filename);
+
+        void ClearRecentProjectFilePaths();
+
         bool IsTitleBoundToFilename { get; set; }
 
         void SetProjectFilePath(string filename, bool bindTitleToFilename);

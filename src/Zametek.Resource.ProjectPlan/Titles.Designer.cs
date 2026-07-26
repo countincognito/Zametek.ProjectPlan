@@ -79,6 +79,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Clear Recently Opened.
+        /// </summary>
+        public static string Title_ClearRecentlyOpened {
+            get {
+                return ResourceManager.GetString("Title_ClearRecentlyOpened", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Title_DeleteNodes {

@@ -106,7 +106,7 @@ namespace Zametek.ProjectPlan
                         Formatting = Formatting.Indented,
                         NullValueHandling = NullValueHandling.Ignore,
                     });
-                Data.ProjectPlan.v0_6_0.AppSettingsModel output = Converter.Format(m_AppSettingsModel);
+                Data.ProjectPlan.v0_6_1.AppSettingsModel output = Converter.Format(m_AppSettingsModel);
                 jsonSerializer.Serialize(writer, output, output.GetType());
             }
         }
@@ -259,6 +259,61 @@ namespace Zametek.ProjectPlan
                     m_AppSettingsModel = m_AppSettingsModel with { SelectedTheme = value };
                     SaveSettings();
                 }
+            }
+        }
+
+        public override int MaxRecentProjectFilePaths
+        {
+            get
+            {
+                return m_AppSettingsModel.MaxRecentProjectFilePaths;
+            }
+        }
+
+        public override IReadOnlyList<string> RecentProjectFilePaths
+        {
+            get
+            {
+                // Newtonsoft can materialise a null here from a hand-edited settings
+                // file, despite the non-nullable declaration.
+                List<string>? recentPaths = m_AppSettingsModel.RecentProjectFilePaths;
+                return recentPaths is null ? [] : [.. recentPaths];
+            }
+        }
+
+        public override void RecordRecentProjectFilePath(string filename)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(filename);
+            lock (m_Lock)
+            {
+                List<string> recentPaths = RecentProjectFileHelper.Record(
+                    m_AppSettingsModel.RecentProjectFilePaths,
+                    filename,
+                    m_AppSettingsModel.MaxRecentProjectFilePaths);
+                m_AppSettingsModel = m_AppSettingsModel with { RecentProjectFilePaths = recentPaths };
+                SaveSettings();
+            }
+        }
+
+        public override void RemoveRecentProjectFilePath(string filename)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(filename);
+            lock (m_Lock)
+            {
+                List<string> recentPaths = RecentProjectFileHelper.Remove(
+                    m_AppSettingsModel.RecentProjectFilePaths,
+                    filename);
+                m_AppSettingsModel = m_AppSettingsModel with { RecentProjectFilePaths = recentPaths };
+                SaveSettings();
+            }
+        }
+
+        public override void ClearRecentProjectFilePaths()
+        {
+            lock (m_Lock)
+            {
+                m_AppSettingsModel = m_AppSettingsModel with { RecentProjectFilePaths = [] };
+                SaveSettings();
             }
         }
 

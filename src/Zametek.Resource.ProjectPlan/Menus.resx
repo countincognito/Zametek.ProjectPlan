@@ -123,6 +123,9 @@
   <data name="Menu_AutoCompile" xml:space="preserve">
     <value>Auto Compile</value>
   </data>
+  <data name="Menu_ClearRecentlyOpened" xml:space="preserve">
+    <value>_Clear Recently Opened...</value>
+  </data>
   <data name="Menu_Close" xml:space="preserve">
     <value>_Close</value>
   </data>
@@ -161,6 +164,9 @@
   </data>
   <data name="Menu_Open" xml:space="preserve">
     <value>_Open...</value>
+  </data>
+  <data name="Menu_OpenRecent" xml:space="preserve">
+    <value>Open _Recent</value>
   </data>
   <data name="Menu_ReportIssue" xml:space="preserve">
     <value>Report Issue</value>

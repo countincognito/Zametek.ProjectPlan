@@ -79,6 +79,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         func = jString => Converter.Upgrade(
                             JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_0.AppSettingsModel>(jString)
                             ?? new Data.ProjectPlan.v0_6_0.AppSettingsModel());
+                    })
+                    .Case(Versions.v0_6_1, x =>
+                    {
+                        func = jString => Converter.Upgrade(
+                            JsonConvert.DeserializeObject<Data.ProjectPlan.v0_6_1.AppSettingsModel>(jString)
+                            ?? new Data.ProjectPlan.v0_6_1.AppSettingsModel());
                     });
 
                 m_AppSettingsModel = func(jsonString);
@@ -164,6 +170,16 @@ namespace Zametek.ViewModel.ProjectPlan
         public abstract bool DefaultHideBilling { get; set; }
 
         public abstract string SelectedTheme { get; set; }
+
+        public abstract int MaxRecentProjectFilePaths { get; }
+
+        public abstract IReadOnlyList<string> RecentProjectFilePaths { get; }
+
+        public abstract void RecordRecentProjectFilePath(string filename);
+
+        public abstract void RemoveRecentProjectFilePath(string filename);
+
+        public abstract void ClearRecentProjectFilePaths();
 
         public abstract string ProjectDirectory { get; protected set; }
 

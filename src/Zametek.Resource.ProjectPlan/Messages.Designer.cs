@@ -142,6 +142,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The list of recently opened files will be cleared. This action is irreversible! Do you wish to continue?.
+        /// </summary>
+        public static string Message_ClearRecentlyOpened {
+            get {
+                return ResourceManager.GetString("Message_ClearRecentlyOpened", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Copying the chart image to the clipboard failed. Use Save As instead..
         /// </summary>
         public static string Message_ClipboardCopyFailed {
