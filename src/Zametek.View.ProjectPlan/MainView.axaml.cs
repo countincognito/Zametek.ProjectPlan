@@ -95,6 +95,14 @@ namespace Zametek.View.ProjectPlan
             m_ToastManager?.Uninstall();
         }
 
+        // Exit closes the main window, which routes through the Closing handlers
+        // wired up in App.axaml.cs - so the unsaved-changes confirmation applies
+        // exactly as it does when closing via the title bar.
+        private void Exit_Click(object? sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
         private void UpdateCursor(bool show)
         {
             Cursor = show ? new Cursor(StandardCursorType.Wait) : Cursor.Default;

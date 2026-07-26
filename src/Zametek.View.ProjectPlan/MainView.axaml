@@ -105,6 +105,9 @@
 						<Separator />
 						<MenuItem Header="{x:Static resources:Menus.Menu_Close}"
 								  Command="{Binding Path=CloseProjectCommand, Mode=OneWay}"/>
+						<Separator />
+						<MenuItem Header="{x:Static resources:Menus.Menu_Exit}"
+								  Click="Exit_Click"/>
 					</MenuItem>
 
 					<MenuItem Header="{x:Static resources:Menus.Menu_Settings}">

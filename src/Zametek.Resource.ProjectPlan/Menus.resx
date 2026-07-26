@@ -141,6 +141,9 @@
   <data name="Menu_Donate" xml:space="preserve">
     <value>Donate</value>
   </data>
+  <data name="Menu_Exit" xml:space="preserve">
+    <value>E_xit</value>
+  </data>
   <data name="Menu_Export" xml:space="preserve">
     <value>_Export...</value>
   </data>

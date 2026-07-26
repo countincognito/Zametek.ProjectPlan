@@ -133,6 +133,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to E_xit.
+        /// </summary>
+        public static string Menu_Exit {
+            get {
+                return ResourceManager.GetString("Menu_Exit", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to _Export....
         /// </summary>
         public static string Menu_Export {
