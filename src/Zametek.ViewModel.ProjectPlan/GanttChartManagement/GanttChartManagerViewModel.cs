@@ -363,6 +363,17 @@ namespace Zametek.ViewModel.ProjectPlan
             double minXValue = xAxis.Min;
             double maxXValue = xAxis.Max;
 
+            if (double.IsNegativeInfinity(minXValue)
+                || double.IsPositiveInfinity(minXValue))
+            {
+                minXValue = 0;
+            }
+            if (double.IsNegativeInfinity(maxXValue)
+                || double.IsPositiveInfinity(maxXValue))
+            {
+                maxXValue = 0;
+            }
+
             var colorFormatLookup = new SlackColorFormatLookup(graphSettings.ActivitySeverities);
             string startEndFormat = showDates ? DateTimeCalculator.DateFormat : "0";
 
