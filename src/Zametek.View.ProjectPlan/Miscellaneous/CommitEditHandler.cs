@@ -11,16 +11,19 @@ namespace Zametek.View.ProjectPlan
     {
         private readonly HashSet<DataGrid> m_DataGrids;
 
+        // The effort tracking view is absent here: its timesheet grids are
+        // created from a data template (one per resource section), so they
+        // cannot be registered statically.
         public CommitEditHandler(
             ActivitiesManagerView activitiesManagerView,
-            TrackingManagerView trackingManagerView,
+            ProgressTrackingManagerView progressTrackingManagerView,
             GraphSettingsManagerView graphSettingsManagerView,
             ResourceSettingsManagerView resourceSettingsManagerView,
             WorkStreamSettingsManagerView workStreamSettingsManagerView,
             HolidaySettingsManagerView holidaySettingsManagerView)
         {
             ArgumentNullException.ThrowIfNull(activitiesManagerView);
-            ArgumentNullException.ThrowIfNull(trackingManagerView);
+            ArgumentNullException.ThrowIfNull(progressTrackingManagerView);
             ArgumentNullException.ThrowIfNull(graphSettingsManagerView);
             ArgumentNullException.ThrowIfNull(resourceSettingsManagerView);
             ArgumentNullException.ThrowIfNull(workStreamSettingsManagerView);
@@ -28,8 +31,7 @@ namespace Zametek.View.ProjectPlan
             m_DataGrids = [];
 
             m_DataGrids.Add(activitiesManagerView.ActivitiesGrid);
-            m_DataGrids.Add(trackingManagerView.TrackerResourcesGrid);
-            m_DataGrids.Add(trackingManagerView.TrackerActivitiesGrid);
+            m_DataGrids.Add(progressTrackingManagerView.TrackerActivitiesGrid);
             m_DataGrids.Add(graphSettingsManagerView.ActivitySeveritiesGrid);
             m_DataGrids.Add(resourceSettingsManagerView.ResourcesGrid);
             m_DataGrids.Add(workStreamSettingsManagerView.WorkStreamsGrid);

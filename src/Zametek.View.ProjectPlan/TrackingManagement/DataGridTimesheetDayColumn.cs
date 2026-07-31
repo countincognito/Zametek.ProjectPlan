@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Ursa.Controls;
@@ -6,12 +6,16 @@ using Zametek.Contract.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
-    public class DataGridActivityTrackingColumn
+    // One editable day column for a resource timesheet grid. The grid's
+    // DataContext is an IResourceTimesheetViewModel (which forwards the
+    // shared day titles) and each row is an IResourceTimesheetRowViewModel,
+    // whose cells drive the resource tracker write path.
+    public class DataGridTimesheetDayColumn
         : DataGridTemplateColumn
     {
         private readonly int m_Index;
 
-        public DataGridActivityTrackingColumn(int index)
+        public DataGridTimesheetDayColumn(int index)
         {
             m_Index = index;
 
@@ -48,7 +52,7 @@ namespace Zametek.View.ProjectPlan
                         TextAlignment = Avalonia.Media.TextAlignment.Left,
                         Margin = new Avalonia.Thickness(0),
                         Padding = new Avalonia.Thickness(3),
-                        [!TextBlock.TextProperty] = new ReflectionBinding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.Day{m_Index:D2}")
+                        [!TextBlock.TextProperty] = new ReflectionBinding($@"{nameof(IResourceTimesheetRowViewModel.Cells)}[{m_Index}].{nameof(ITimesheetCellViewModel.PercentageWorked)}")
                         {
                             Mode = BindingMode.OneWay,
                             StringFormat = @"{0:#0'%'}",
@@ -73,8 +77,8 @@ namespace Zametek.View.ProjectPlan
                         Margin = new Avalonia.Thickness(0),
                         Padding = new Avalonia.Thickness(0),
                         Minimum = 0,
-                        Maximum = 100,
-                        [!NumericIntUpDown.ValueProperty] = new ReflectionBinding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.Day{m_Index:D2}")
+                        Maximum = 200,
+                        [!NumericIntUpDown.ValueProperty] = new ReflectionBinding($@"{nameof(IResourceTimesheetRowViewModel.Cells)}[{m_Index}].{nameof(ITimesheetCellViewModel.PercentageWorked)}")
                         {
                             Mode = BindingMode.TwoWay,
                             UpdateSourceTrigger = UpdateSourceTrigger.LostFocus,

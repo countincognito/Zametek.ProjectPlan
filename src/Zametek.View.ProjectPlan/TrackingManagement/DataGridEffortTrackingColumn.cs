@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Ursa.Controls;
@@ -7,12 +7,12 @@ using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
-    public class DataGridResourceTrackingColumn
+    public class DataGridEffortTrackingColumn
         : DataGridTemplateColumn
     {
         private readonly int m_Index;
 
-        public DataGridResourceTrackingColumn(int index)
+        public DataGridEffortTrackingColumn(int index)
         {
             m_Index = index;
 

@@ -699,4 +699,10 @@
   <data name="Label_ResourceFilter" xml:space="preserve">
     <value>Resource Filter</value>
   </data>
+  <data name="Label_AddActivity" xml:space="preserve">
+    <value>Add Activity...</value>
+  </data>
+  <data name="Label_DayTotal" xml:space="preserve">
+    <value>Day Total</value>
+  </data>
 </root>

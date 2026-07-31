@@ -29,4 +29,12 @@
     <ProjectReference Include="..\Zametek.ViewModel.ProjectPlan\Zametek.ViewModel.ProjectPlan.csproj" />
     <ProjectReference Include="..\Zametek.Graphs.Avalonia\Zametek.Graphs.Avalonia.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Update="TrackingManagement\EffortTrackingManagerView.axaml.cs">
+      <DependentUpon>EffortTrackingManagerView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="TrackingManagement\ProgressTrackingManagerView.axaml.cs">
+      <DependentUpon>ProgressTrackingManagerView.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

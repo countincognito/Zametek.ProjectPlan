@@ -291,4 +291,7 @@
   <data name="ToolTip_DefaultUnitBilling" xml:space="preserve">
     <value>The unit billing assigned to newly created resources, and applied to any scheduled work not covered by a defined resource</value>
   </data>
+  <data name="ToolTip_AddActivity" xml:space="preserve">
+    <value>Track the resource's time against another activity</value>
+  </data>
 </root>

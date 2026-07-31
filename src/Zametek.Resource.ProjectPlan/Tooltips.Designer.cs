@@ -88,6 +88,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Track the resource's time against another activity.
+        /// </summary>
+        public static string ToolTip_AddActivity {
+            get {
+                return ResourceManager.GetString("ToolTip_AddActivity", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Allocated to Resources.
         /// </summary>
         public static string ToolTip_AllocatedToResources {

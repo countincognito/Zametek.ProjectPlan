@@ -111,9 +111,13 @@ namespace Zametek.ProjectPlan
                 .As<IActivitiesManagerViewModel>()
                 .As<ActivitiesManagerViewModel>()
                 .SingleInstance();
-            s_Builder.RegisterType<TrackingManagerViewModel>()
-                .As<ITrackingManagerViewModel>()
-                .As<TrackingManagerViewModel>()
+            s_Builder.RegisterType<EffortTrackingManagerViewModel>()
+                .As<IEffortTrackingManagerViewModel>()
+                .As<EffortTrackingManagerViewModel>()
+                .SingleInstance();
+            s_Builder.RegisterType<ProgressTrackingManagerViewModel>()
+                .As<IProgressTrackingManagerViewModel>()
+                .As<ProgressTrackingManagerViewModel>()
                 .SingleInstance();
             s_Builder.RegisterType<ArrowGraphManagerViewModel>()
                 .As<IArrowGraphManagerViewModel>()
@@ -189,7 +193,10 @@ namespace Zametek.ProjectPlan
             s_Builder.RegisterType<ActivitiesManagerView>()
                 .AsSelf()
                 .InstancePerDependency();
-            s_Builder.RegisterType<TrackingManagerView>()
+            s_Builder.RegisterType<EffortTrackingManagerView>()
+                .AsSelf()
+                .InstancePerDependency();
+            s_Builder.RegisterType<ProgressTrackingManagerView>()
                 .AsSelf()
                 .InstancePerDependency();
             s_Builder.RegisterType<ArrowGraphManagerView>()

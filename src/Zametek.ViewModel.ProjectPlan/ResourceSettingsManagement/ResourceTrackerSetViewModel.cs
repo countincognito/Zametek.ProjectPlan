@@ -170,22 +170,35 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 lock (m_Lock)
                 {
-                    int? lastTrackerIndex = LastTrackerIndex;
-                    int trackerIndex = TrackerIndex;
-                    if (lastTrackerIndex is null)
-                    {
-                        return Resource.ProjectPlan.Symbols.Symbol_Nowhere;
-                    }
-                    if (lastTrackerIndex > trackerIndex)
-                    {
-                        return Resource.ProjectPlan.Symbols.Symbol_Forwards;
-                    }
-                    if (lastTrackerIndex < trackerIndex)
-                    {
-                        return Resource.ProjectPlan.Symbols.Symbol_Backwards;
-                    }
-                    return Resource.ProjectPlan.Symbols.Symbol_InPlace;
+                    return TrackerSearchHelper.GetSearchSymbol(LastTrackerIndex, TrackerIndex);
                 }
+            }
+        }
+
+        public int? GetLastTrackerIndex(int activityId)
+        {
+            lock (m_Lock)
+            {
+                int? lastTrackerIndex = null;
+
+                foreach (KeyValuePair<int, IResourceActivitySelectorViewModel> kvp in m_ResourceActivitySelectorLookup)
+                {
+                    if (kvp.Value.SelectedResourceActivityIds.Contains(activityId)
+                        && (lastTrackerIndex is null || kvp.Key > lastTrackerIndex))
+                    {
+                        lastTrackerIndex = kvp.Key;
+                    }
+                }
+
+                return lastTrackerIndex;
+            }
+        }
+
+        public string GetSearchSymbol(int activityId)
+        {
+            lock (m_Lock)
+            {
+                return TrackerSearchHelper.GetSearchSymbol(GetLastTrackerIndex(activityId), TrackerIndex);
             }
         }
 
@@ -239,6 +252,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 this.RaisePropertyChanged(nameof(LastTrackerIndex));
                 this.RaisePropertyChanged(nameof(SearchSymbol));
             }
+        }
+
+        public IResourceActivitySelectorViewModel GetDay(int dayOffset)
+        {
+            return GetResourceActivitySelector(dayOffset);
         }
 
         public IResourceActivitySelectorViewModel Day00

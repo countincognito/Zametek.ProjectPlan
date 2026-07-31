@@ -86,7 +86,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Title_ClearRecentlyOpened", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
@@ -131,7 +131,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Title_EditResources", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Edit Work Streams.
         /// </summary>
@@ -140,7 +140,16 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Title_EditWorkStreams", resourceCulture);
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Effort Tracking.
+        /// </summary>
+        public static string Title_EffortTrackingView {
+            get {
+                return ResourceManager.GetString("Title_EffortTrackingView", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Error.
         /// </summary>
@@ -192,6 +201,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Title_Output {
             get {
                 return ResourceManager.GetString("Title_Output", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Progress Tracking.
+        /// </summary>
+        public static string Title_ProgressTrackingView {
+            get {
+                return ResourceManager.GetString("Title_ProgressTrackingView", resourceCulture);
             }
         }
         
@@ -255,15 +273,6 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Title_ScenarioUnsavedChanges {
             get {
                 return ResourceManager.GetString("Title_ScenarioUnsavedChanges", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Tracking.
-        /// </summary>
-        public static string Title_TrackingView {
-            get {
-                return ResourceManager.GetString("Title_TrackingView", resourceCulture);
             }
         }
         

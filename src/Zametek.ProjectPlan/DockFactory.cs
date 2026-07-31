@@ -16,7 +16,8 @@ namespace Zametek.ProjectPlan
 
         private readonly IDockable m_ProjectScenarioManagerViewModel;
         private readonly IDockable m_ActivitiesManagerViewModel;
-        private readonly IDockable m_TrackingManagerViewModel;
+        private readonly IDockable m_EffortTrackingManagerViewModel;
+        private readonly IDockable m_ProgressTrackingManagerViewModel;
         private readonly IDockable m_MetricManagerViewModel;
         private readonly IDockable m_OutputManagerViewModel;
         private readonly IDockable m_ArrowGraphManagerViewModel;
@@ -33,7 +34,8 @@ namespace Zametek.ProjectPlan
         public DockFactory(
             IProjectScenarioManagerViewModel projectScenarioManagerViewModel,
             IActivitiesManagerViewModel activitiesManagerViewModel,
-            ITrackingManagerViewModel trackingManagerViewModel,
+            IEffortTrackingManagerViewModel effortTrackingManagerViewModel,
+            IProgressTrackingManagerViewModel progressTrackingManagerViewModel,
             IMetricManagerViewModel metricManagerViewModel,
             IOutputManagerViewModel outputManagerViewModel,
             IArrowGraphManagerViewModel arrowGraphManagerViewModel,
@@ -49,7 +51,8 @@ namespace Zametek.ProjectPlan
         {
             m_ProjectScenarioManagerViewModel = projectScenarioManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(projectScenarioManagerViewModel));
             m_ActivitiesManagerViewModel = activitiesManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(activitiesManagerViewModel));
-            m_TrackingManagerViewModel = trackingManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(trackingManagerViewModel));
+            m_EffortTrackingManagerViewModel = effortTrackingManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(effortTrackingManagerViewModel));
+            m_ProgressTrackingManagerViewModel = progressTrackingManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(progressTrackingManagerViewModel));
             m_MetricManagerViewModel = metricManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(metricManagerViewModel));
             m_OutputManagerViewModel = outputManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(outputManagerViewModel));
             m_ArrowGraphManagerViewModel = arrowGraphManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(arrowGraphManagerViewModel));
@@ -156,9 +159,14 @@ namespace Zametek.ProjectPlan
                 m_ActivitiesManagerViewModel.CanPin = true;
             }
             {
-                m_TrackingManagerViewModel.CanClose = false;
-                m_TrackingManagerViewModel.CanFloat = true;
-                m_TrackingManagerViewModel.CanPin = true;
+                m_EffortTrackingManagerViewModel.CanClose = false;
+                m_EffortTrackingManagerViewModel.CanFloat = true;
+                m_EffortTrackingManagerViewModel.CanPin = true;
+            }
+            {
+                m_ProgressTrackingManagerViewModel.CanClose = false;
+                m_ProgressTrackingManagerViewModel.CanFloat = true;
+                m_ProgressTrackingManagerViewModel.CanPin = true;
             }
             {
                 m_MetricManagerViewModel.CanClose = false;
@@ -273,7 +281,8 @@ namespace Zametek.ProjectPlan
                                 VisibleDockables = CreateList(
                                     m_ActivitiesManagerViewModel,
                                     m_GanttChartManagerViewModel,
-                                    m_TrackingManagerViewModel,
+                                    m_EffortTrackingManagerViewModel,
+                                    m_ProgressTrackingManagerViewModel,
                                     m_ArrowGraphManagerViewModel,
                                     m_VertexGraphManagerViewModel,
                                     m_ResourceChartManagerViewModel,
@@ -358,6 +367,13 @@ namespace Zametek.ProjectPlan
         public override void InitLayout(IDockable layout)
         {
             ArgumentNullException.ThrowIfNull(layout);
+
+            // Keep the locator's root in sync with whichever layout is actually
+            // initialized: deserialized layouts never pass through CreateLayout.
+            if (layout is IRootDock rootDock)
+            {
+                m_RootDock = rootDock;
+            }
 
             ContextLocator = [];
 

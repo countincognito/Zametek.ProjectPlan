@@ -124,6 +124,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add Activity....
+        /// </summary>
+        public static string Label_AddActivity {
+            get {
+                return ResourceManager.GetString("Label_AddActivity", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Add.
         /// </summary>
         public static string Label_AddColumn {
@@ -419,7 +428,16 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_DaysShown", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Day Total.
+        /// </summary>
+        public static string Label_DayTotal {
+            get {
+                return ResourceManager.GetString("Label_DayTotal", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Default.
         /// </summary>

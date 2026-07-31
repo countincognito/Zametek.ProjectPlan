@@ -1,4 +1,3 @@
-using NPOI.SS.Formula.Functions;
 using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
@@ -35,7 +34,6 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CoreViewModel = coreViewModel;
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;
             m_DateTimeCalculator = dateTimeCalculator;
-            m_NameColumnWidth = 130;
 
             SyncTodayCommand = ReactiveCommand.Create(SyncToday);
 
@@ -77,9 +75,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .MuteWhile(this.WhenAnyValue(tm => tm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RefreshDays());
-
-            Id = Resource.ProjectPlan.Titles.Title_TrackingView;
-            Title = Resource.ProjectPlan.Titles.Title_TrackingView;
         }
 
         #endregion
@@ -133,15 +128,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void SyncToday()
         {
+            int? intValue;
+
             lock (m_Lock)
             {
-                (int? intValue, _) = m_DateTimeCalculator
+                (intValue, _) = m_DateTimeCalculator
                     .CalculateTimeAndDateTime(
                         m_CoreViewModel.ProjectStart,
                         m_CoreViewModel.Today);
-
-                TrackerIndex = intValue.GetValueOrDefault();
             }
+
+            // Setting the tracker index triggers property-change cascades
+            // across the app (some of which re-enter this view model from
+            // other threads), so it must happen outside the lock.
+            TrackerIndex = intValue.GetValueOrDefault();
         }
 
         #endregion
@@ -173,19 +173,16 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ReadOnlyObservableCollection<IManagedActivityViewModel> Activities => m_CoreViewModel.Activities;
 
+        public ObservableCollection<IManagedActivityViewModel> OrderableActivities => m_CoreViewModel.OrderableActivities;
+
         public IReadOnlyList<IManagedResourceViewModel> RawResources => m_ResourceSettingsManagerViewModel.RawResources;
 
         public ReadOnlyObservableCollection<IManagedResourceViewModel> Resources => m_ResourceSettingsManagerViewModel.Resources;
 
+        public ObservableCollection<IManagedResourceViewModel> OrderableResources => m_ResourceSettingsManagerViewModel.OrderableResources;
+
         private readonly IDateTimeCalculator m_DateTimeCalculator;
         public IDateTimeCalculator DateTimeCalculator => m_DateTimeCalculator;
-
-        private double m_NameColumnWidth;
-        public double NameColumnWidth
-        {
-            get => m_NameColumnWidth;
-            set => this.RaiseAndSetIfChanged(ref m_NameColumnWidth, value);
-        }
 
         public int TrackerIndex
         {

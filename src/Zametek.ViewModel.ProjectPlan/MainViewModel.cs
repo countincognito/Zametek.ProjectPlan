@@ -985,6 +985,21 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 }
 
+                if (m_Layout is not null)
+                {
+                    // A layout persisted by an earlier app version may lack tools
+                    // that the current version adds. Discard it in that case so the
+                    // default layout is used and the new tools actually appear.
+                    IRootDock? defaultLayout = m_DockFactory.CreateLayout();
+
+                    if (defaultLayout is not null
+                        && !DockLayoutHelper.CollectToolIds(defaultLayout).IsSubsetOf(DockLayoutHelper.CollectToolIds(m_Layout)))
+                    {
+                        Debug.WriteLine(@"[MainViewModel] Persisted dock layout is missing tools, resetting");
+                        m_Layout = defaultLayout;
+                    }
+                }
+
                 m_Layout ??= m_DockFactory.CreateLayout();
 
                 if (m_Layout is not null)

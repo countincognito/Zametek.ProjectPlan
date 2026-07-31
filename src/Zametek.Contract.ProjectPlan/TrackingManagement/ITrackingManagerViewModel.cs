@@ -24,13 +24,15 @@ namespace Zametek.Contract.ProjectPlan
 
         ReadOnlyObservableCollection<IManagedActivityViewModel> Activities { get; }
 
+        ObservableCollection<IManagedActivityViewModel> OrderableActivities { get; }
+
         IReadOnlyList<IManagedResourceViewModel> RawResources { get; }
 
         ReadOnlyObservableCollection<IManagedResourceViewModel> Resources { get; }
 
-        IDateTimeCalculator DateTimeCalculator { get; }
+        ObservableCollection<IManagedResourceViewModel> OrderableResources { get; }
 
-        double NameColumnWidth { get; set; }
+        IDateTimeCalculator DateTimeCalculator { get; }
 
         int TrackerIndex { get; set; }
 

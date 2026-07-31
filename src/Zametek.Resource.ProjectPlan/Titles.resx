@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -165,8 +165,11 @@
   <data name="Title_ResourceSettingsView" xml:space="preserve">
     <value>Resource Settings</value>
   </data>
-  <data name="Title_TrackingView" xml:space="preserve">
-    <value>Tracking</value>
+  <data name="Title_EffortTrackingView" xml:space="preserve">
+    <value>Effort Tracking</value>
+  </data>
+  <data name="Title_ProgressTrackingView" xml:space="preserve">
+    <value>Progress Tracking</value>
   </data>
   <data name="Title_ProjectUnsavedChanges" xml:space="preserve">
     <value>Project has unsaved changes</value>
