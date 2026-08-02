@@ -11,6 +11,7 @@ using System.Text;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -126,7 +127,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CurveFittingFormulaY2 = string.Empty;
 
             {
-                ReactiveCommand<Unit, Unit> saveScenarioChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveScenarioChartImageFileAsync);
+                ReactiveCommand<RxVoid, RxVoid> saveScenarioChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveScenarioChartImageFileAsync);
                 SaveScenarioChartImageFileCommand = saveScenarioChartImageFileCommand;
             }
 

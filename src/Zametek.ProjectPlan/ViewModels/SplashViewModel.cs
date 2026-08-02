@@ -1,8 +1,8 @@
 ﻿using ReactiveUI;
-using System.Reactive;
 using System.Threading;
 using System.Windows.Input;
 using Zametek.ViewModel.ProjectPlan;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace Zametek.ProjectPlan
 {
@@ -11,7 +11,7 @@ namespace Zametek.ProjectPlan
     {
         public SplashViewModel()
         {
-            ReactiveCommand<Unit, Unit> cancelCommand = ReactiveCommand.Create(Cancel);
+            ReactiveCommand<RxVoid, RxVoid> cancelCommand = ReactiveCommand.Create(Cancel);
             CancelCommand = cancelCommand;
         }
 

@@ -12,18 +12,18 @@
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
-  <!-- Package versions are kept in step with Zametek.Graphs.Avalonia (Avalonia 12.0.5,
-       ReactiveUI.Avalonia 12.0.3) so the project reference below unifies cleanly. -->
+  <!-- Package versions are kept in step with Zametek.Graphs.Avalonia so the project
+       reference below unifies cleanly. -->
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.1.0" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.0" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.0" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.0" />
+    <PackageReference Include="Avalonia" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="ReactiveUI.Avalonia" Version="12.0.3" />
+    <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.0" />
   </ItemGroup>
 
   <!-- The library under demonstration. Its transitive dependencies (MSAGL, SkiaSharp, Svg.Skia,

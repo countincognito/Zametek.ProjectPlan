@@ -14,6 +14,7 @@ using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Utility;
 using SortDirection = Zametek.Common.ProjectPlan.SortDirection;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -86,7 +87,7 @@ namespace Zametek.ViewModel.ProjectPlan
             SetNoSelectedManagedNodesCommand = ReactiveCommand.Create<PointerPressedEventArgs>(SetNoSelectedManagedNodes);
 
             {
-                ReactiveCommand<IManagedNodeViewModel, Unit> loadProjectScenarioFileCommand = ReactiveCommand.CreateFromTask<IManagedNodeViewModel>(
+                ReactiveCommand<IManagedNodeViewModel, RxVoid> loadProjectScenarioFileCommand = ReactiveCommand.CreateFromTask<IManagedNodeViewModel>(
                     LoadProjectScenarioFileAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
@@ -96,7 +97,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 LoadProjectScenarioFileCommand = loadProjectScenarioFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> loadSelectedProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(
+                ReactiveCommand<RxVoid, RxVoid> loadSelectedProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(
                     LoadSelectedProjectScenarioFileAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
@@ -106,7 +107,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 LoadSelectedProjectScenarioFileCommand = loadSelectedProjectScenarioFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> createEmptyProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(
+                ReactiveCommand<RxVoid, RxVoid> createEmptyProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(
                     CreateEmptyProjectScenarioFileAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
@@ -116,7 +117,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 CreateEmptyProjectScenarioFileCommand = createEmptyProjectScenarioFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> createEmptyProjectScenarioFolderCommand = ReactiveCommand.CreateFromTask(
+                ReactiveCommand<RxVoid, RxVoid> createEmptyProjectScenarioFolderCommand = ReactiveCommand.CreateFromTask(
                     CreateEmptyProjectScenarioFolderAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
@@ -126,7 +127,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 CreateEmptyProjectScenarioFolderCommand = createEmptyProjectScenarioFolderCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> renameProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
+                ReactiveCommand<RxVoid, RxVoid> renameProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
                     RenameProjectScenarioNodeAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
@@ -136,7 +137,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 RenameProjectScenarioNodeCommand = renameProjectScenarioNodeCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> removeProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
+                ReactiveCommand<RxVoid, RxVoid> removeProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
                     RemoveProjectScenarioNodeAsync,
                     // Observe any changes in the observable collection.
                     // Note that the property has no public setters, so we 
@@ -158,7 +159,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 RemoveProjectScenarioNodeCommand = removeProjectScenarioNodeCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> addNodeTagCommand = ReactiveCommand.CreateFromTask(
+                ReactiveCommand<RxVoid, RxVoid> addNodeTagCommand = ReactiveCommand.CreateFromTask(
                     AddNodeTagAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
@@ -167,7 +168,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 AddNodeTagCommand = addNodeTagCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> removeNodeTagCommand = ReactiveCommand.CreateFromTask(
+                ReactiveCommand<RxVoid, RxVoid> removeNodeTagCommand = ReactiveCommand.CreateFromTask(
                     RemoveNodeTagAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
@@ -176,7 +177,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 RemoveNodeTagCommand = removeNodeTagCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> cutProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
+                ReactiveCommand<RxVoid, RxVoid> cutProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
                     CutProjectScenarioNodeAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
@@ -186,7 +187,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 CutProjectScenarioNodeCommand = cutProjectScenarioNodeCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> copyProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
+                ReactiveCommand<RxVoid, RxVoid> copyProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
                     CopyProjectScenarioNodeAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
@@ -196,7 +197,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 CopyProjectScenarioNodeCommand = copyProjectScenarioNodeCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> duplicateProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
+                ReactiveCommand<RxVoid, RxVoid> duplicateProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
                     DuplicateProjectScenarioNodeAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,
@@ -206,7 +207,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 DuplicateProjectScenarioNodeCommand = duplicateProjectScenarioNodeCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> pasteProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
+                ReactiveCommand<RxVoid, RxVoid> pasteProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
                     PasteProjectScenarioNodeAsync,
                     this.WhenAnyValue(
                         pm => pm.SelectedNode,

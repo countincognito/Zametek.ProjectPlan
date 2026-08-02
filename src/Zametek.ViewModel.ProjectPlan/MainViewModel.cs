@@ -9,6 +9,7 @@ using System.Text;
 using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -128,32 +129,32 @@ namespace Zametek.ViewModel.ProjectPlan
             m_HasRecentProjectFilePaths = false;
 
             {
-                ReactiveCommand<Unit, Unit> openProjectFileCommand = ReactiveCommand.CreateFromTask(OpenProjectFileAsync);
+                ReactiveCommand<RxVoid, RxVoid> openProjectFileCommand = ReactiveCommand.CreateFromTask(OpenProjectFileAsync);
                 openProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsOpening, out m_IsOpening);
                 OpenProjectFileCommand = openProjectFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> saveProjectFileCommand = ReactiveCommand.CreateFromTask(SaveProjectFileAsync);
+                ReactiveCommand<RxVoid, RxVoid> saveProjectFileCommand = ReactiveCommand.CreateFromTask(SaveProjectFileAsync);
                 saveProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSaving, out m_IsSaving);
                 SaveProjectFileCommand = saveProjectFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> saveAsProjectFileCommand = ReactiveCommand.CreateFromTask(SaveAsProjectFileAsync);
+                ReactiveCommand<RxVoid, RxVoid> saveAsProjectFileCommand = ReactiveCommand.CreateFromTask(SaveAsProjectFileAsync);
                 saveAsProjectFileCommand.IsExecuting.ToProperty(this, main => main.IsSavingAs, out m_IsSavingAs);
                 SaveAsProjectFileCommand = saveAsProjectFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> importProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ImportProjectScenarioFileAsync);
+                ReactiveCommand<RxVoid, RxVoid> importProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ImportProjectScenarioFileAsync);
                 importProjectScenarioFileCommand.IsExecuting.ToProperty(this, main => main.IsImporting, out m_IsImporting);
                 ImportProjectScenarioFileCommand = importProjectScenarioFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> exportProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ExportProjectScenarioFileAsync);
+                ReactiveCommand<RxVoid, RxVoid> exportProjectScenarioFileCommand = ReactiveCommand.CreateFromTask(ExportProjectScenarioFileAsync);
                 exportProjectScenarioFileCommand.IsExecuting.ToProperty(this, main => main.IsExporting, out m_IsExporting);
                 ExportProjectScenarioFileCommand = exportProjectScenarioFileCommand;
             }
             {
-                ReactiveCommand<Unit, Unit> closeProjectCommand = ReactiveCommand.CreateFromTask(CloseProjectAsync);
+                ReactiveCommand<RxVoid, RxVoid> closeProjectCommand = ReactiveCommand.CreateFromTask(CloseProjectAsync);
                 closeProjectCommand.IsExecuting.ToProperty(this, main => main.IsClosing, out m_IsClosing);
                 CloseProjectCommand = closeProjectCommand;
             }

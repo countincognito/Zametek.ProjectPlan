@@ -20,8 +20,9 @@
 
   <ItemGroup>
 	  <PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
-    <PackageReference Include="Dock.Model.ReactiveUI" Version="12.0.0.2" />
-    <PackageReference Include="Dock.Serializer.Newtonsoft" Version="12.0.0.2" />
+    <PackageReference Include="Dock.Model.ReactiveUI" Version="12.1.0" />
+    <PackageReference Include="Dock.Serializer.Newtonsoft" Version="12.1.0" />
+    <PackageReference Include="DynamicData" Version="9.4.31" />
     <PackageReference Include="Ical.Net" Version="5.2.3" />
     <PackageReference Include="MPXJ.Net" Version="16.5.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />

@@ -13,6 +13,7 @@ using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -118,7 +119,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ResetResourceChartCommand = ReactiveCommand.Create(ResetResourceChart);
 
             {
-                ReactiveCommand<Unit, Unit> saveResourceChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveResourceChartImageFileAsync);
+                ReactiveCommand<RxVoid, RxVoid> saveResourceChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveResourceChartImageFileAsync);
                 SaveResourceChartImageFileCommand = saveResourceChartImageFileCommand;
             }
 

@@ -13,6 +13,7 @@ using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -131,7 +132,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ChangeAnnotationStyleCommand = ReactiveCommand.CreateFromTask<AnnotationStyle>(ChangeAnnotationStyleAsync);
 
             {
-                ReactiveCommand<Unit, Unit> saveGanttChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveGanttChartImageFileAsync);
+                ReactiveCommand<RxVoid, RxVoid> saveGanttChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveGanttChartImageFileAsync);
                 SaveGanttChartImageFileCommand = saveGanttChartImageFileCommand;
             }
 

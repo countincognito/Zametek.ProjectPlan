@@ -4,8 +4,8 @@ using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Reactive;
 using Zametek.Graphs.Avalonia;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace Zametek.Graphs.Avalonia.TestApp.ViewModels
 {
@@ -51,7 +51,7 @@ namespace Zametek.Graphs.Avalonia.TestApp.ViewModels
 
         public string ThemeButtonText => IsDark ? @"Switch to light" : @"Switch to dark";
 
-        public ReactiveCommand<Unit, Unit> ToggleThemeCommand { get; }
+        public ReactiveCommand<RxVoid, RxVoid> ToggleThemeCommand { get; }
 
         private void ToggleTheme()
         {

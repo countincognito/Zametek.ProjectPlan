@@ -11,6 +11,7 @@ using System.Windows.Input;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Maths.Graphs;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace Zametek.ViewModel.ProjectPlan
 {
@@ -127,7 +128,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ResetEarnedValueChartCommand = ReactiveCommand.Create(ResetEarnedValueChart);
 
             {
-                ReactiveCommand<Unit, Unit> saveEarnedValueChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveEarnedValueChartImageFileAsync);
+                ReactiveCommand<RxVoid, RxVoid> saveEarnedValueChartImageFileCommand = ReactiveCommand.CreateFromTask(SaveEarnedValueChartImageFileAsync);
                 SaveEarnedValueChartImageFileCommand = saveEarnedValueChartImageFileCommand;
             }
 

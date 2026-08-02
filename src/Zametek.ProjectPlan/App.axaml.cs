@@ -1,8 +1,6 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using ReactiveUI;
-using ReactiveUI.Avalonia;
 using Serilog;
 using Splat;
 using System;
@@ -20,7 +18,6 @@ namespace Zametek.ProjectPlan
     {
         public override void Initialize()
         {
-            RxSchedulers.MainThreadScheduler = AvaloniaScheduler.Instance;
             AvaloniaXamlLoader.Load(this);
         }
 

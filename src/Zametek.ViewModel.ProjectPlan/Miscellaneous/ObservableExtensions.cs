@@ -164,5 +164,26 @@ namespace Zametek.ViewModel.ProjectPlan
                 return new CompositeDisposable(gateSubscription, sourceSubscription);
             });
         }
+
+        /// <summary>
+        /// Delivers notifications on a ReactiveUI sequencer (the ReactiveUI 24
+        /// replacement for Rx schedulers, e.g. RxSchedulers.MainThreadScheduler).
+        /// ReactiveUI ships this overload in ReactiveUI.Primitives, but that
+        /// namespace cannot be imported wholesale: it redeclares core Rx operators
+        /// (Select, Where, Skip, Subscribe, ...), which makes every such call
+        /// ambiguous alongside System.Reactive.Linq. This repo-scoped overload
+        /// exposes just the one method the pipelines need.
+        /// </summary>
+        /// <typeparam name="T">The type of the source sequence.</typeparam>
+        /// <param name="source">The sequence to observe on the sequencer.</param>
+        /// <param name="sequencer">The sequencer to deliver notifications on.</param>
+        /// <returns>The observed sequence.</returns>
+        public static IObservable<T> ObserveOn<T>(
+            this IObservable<T> source,
+            ReactiveUI.Primitives.Concurrency.ISequencer sequencer)
+            where T : notnull
+        {
+            return ReactiveUI.Primitives.LinqExtensions.ObserveOn(source, sequencer);
+        }
     }
 }
