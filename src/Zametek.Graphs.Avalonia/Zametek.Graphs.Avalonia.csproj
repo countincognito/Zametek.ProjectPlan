@@ -19,6 +19,9 @@
     <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.0" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
     <PackageReference Include="Svg.Skia" Version="5.1.1" />
+    <!-- Explicit dependency: ReactiveUI 24+ no longer ships System.Reactive transitively. Examine
+         removing System.Reactive from the solution once DynamicData and Dock both go Rx-free
+         (as of 2026-08 both still hard-depend on it, so it ships regardless). -->
     <PackageReference Include="System.Reactive" Version="7.0.0" />
     <PackageReference Include="Xaml.Behaviors.Avalonia" Version="12.0.5" />
     <PackageReference Include="Zametek.Utility" Version="3.0.0" />

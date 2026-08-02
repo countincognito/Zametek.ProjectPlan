@@ -1,0 +1,57 @@
+# TODO
+
+Maintainer-internal engineering intents that should version with the code. User-facing
+bugs and feature requests belong in GitHub issues; items that would survive the
+Zametek.Graphs.Avalonia spin-out belong in [src/Zametek.Graphs.Avalonia/TODO.md](src/Zametek.Graphs.Avalonia/TODO.md).
+Date entries when added; delete them when done.
+
+- [ ] **Remove System.Reactive once DynamicData and Dock go Rx-free** *(2026-08-02)* -
+  ReactiveUI 24 no longer uses System.Reactive, but removal is pointless while
+  `Dock.Model.ReactiveUI` (>= 7.0.0) and `DynamicData` (>= 6.1.0) still hard-depend on
+  it, so the assembly ships regardless. When a NuGet update shows **both** have gone
+  Rx-free, examine migrating the solution's own Rx usage to `ReactiveUI.Primitives`.
+  Known gaps to solve at that point: no `FromEventPattern` (three uses, including the
+  effort-tracker property relay), no `Subject`/`BehaviorSubject` (Primitives has
+  different "Signal" abstractions), and no `Observable.Create` (`MuteWhile` is built on
+  it). Breadcrumbs: comments above the `System.Reactive` reference in
+  `Zametek.Graphs.Avalonia.csproj` and the Dock/DynamicData block in
+  `Zametek.ViewModel.ProjectPlan.csproj`; the `ObservableExtensions.ObserveOn(ISequencer)`
+  bridge is the seam from which to start unwinding.
+
+- [ ] **Spin out Zametek.Graphs.Avalonia into its own repository** *(2026-08-02)* - the
+  library is already framework-decoupled with its own README; the checklist lives in
+  [src/Zametek.Graphs.Avalonia/TODO.md](src/Zametek.Graphs.Avalonia/TODO.md) so it
+  travels with the folder.
+
+- [ ] **Consider renaming `TimesheetHelper`** *(2026-08-02, low priority)* - its name is
+  now slightly broader than "effort timesheet" (it hosts the shared `DayCount` constant
+  used by both tracking tabs); something like `TrackingHelper` may fit better.
+
+- [ ] **Include import/export states in the busy-cursor aggregate** *(2026-08-02,
+  consolidated from a code TODO)* - `MainView.axaml.cs` stubs out
+  `main => main.IsImporting` / `main => main.IsExporting` in the `WhenAnyValue` that
+  drives `UpdateCursor`, so the wait cursor does not show during scenario import/export.
+  Needs the corresponding properties on `IMainViewModel`/`MainViewModel`, then reinstate
+  the commented lines.
+
+- [ ] **Formal drag-and-drop from charts** *(2026-08-02, consolidated from a code
+  TODO)* - `ScottPlotUserControl.CheckPointerDrag` detects the click-vs-drag threshold
+  but only tracks state; the inline comment marks where `DragDrop.DoDragDropAsync`
+  would start a real DND operation (e.g. dragging a chart image into another app).
+
+- [ ] **Resolve the parked members in `UpdateDependentActivityModel`** *(2026-08-02)* -
+  `Dependencies`/`IsDependenciesEdited` are commented out in the model
+  (`Zametek.Common.ProjectPlan/Dependencies`), meaning dependencies cannot be edited
+  through the bulk-update path. Either support them or delete the stubs.
+
+- [ ] **Latent `NotImplementedException` stubs** *(2026-08-02)* - the headless CLI's
+  `SettingService.SetDataGridLayout` throws while its sibling members (`DockLayout`,
+  `GetDataGridLayout`) gracefully no-op; make it a no-op for consistency so a future
+  call path cannot crash the CLI. Related: `ManagedItemDataGridDropHandler.MakeCopy`
+  throws (copy-drag is unsupported; only move-reorder is used) - confirm the base
+  handler can never route a copy operation there, or implement it.
+
+- [ ] **Sweep remaining commented-out dead members** *(2026-08-02)* - leftovers from
+  earlier rounds: the `GetAllocatedToActivitiesString` block in
+  `ResourceActivitySelectorViewModel` and the `RawTargetResourceActivities` line in
+  `IResourceActivitySelectorViewModel`.

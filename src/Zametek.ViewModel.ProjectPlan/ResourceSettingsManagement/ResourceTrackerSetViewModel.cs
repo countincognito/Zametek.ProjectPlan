@@ -55,7 +55,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     x => x.m_CoreViewModel.TrackerIndex,
                     x => x.m_CoreViewModel.IsReadyToReviseTrackers)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler) // TODO check this will work.
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RefreshDays());
         }
 

@@ -20,6 +20,10 @@
 
   <ItemGroup>
 	  <PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
+    <!-- DynamicData is explicit because ReactiveUI 24+ no longer ships it transitively. DynamicData
+         and Dock.Model.ReactiveUI both still hard-depend on System.Reactive (as of 2026-08); once
+         both go Rx-free, examine removing System.Reactive from the solution entirely (the
+         ObservableExtensions.ObserveOn bridge is the seam to unwind). -->
     <PackageReference Include="Dock.Model.ReactiveUI" Version="12.1.0" />
     <PackageReference Include="Dock.Serializer.Newtonsoft" Version="12.1.0" />
     <PackageReference Include="DynamicData" Version="9.4.31" />

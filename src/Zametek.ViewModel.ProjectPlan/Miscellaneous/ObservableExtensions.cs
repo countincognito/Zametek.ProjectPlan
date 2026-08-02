@@ -174,6 +174,12 @@ namespace Zametek.ViewModel.ProjectPlan
         /// ambiguous alongside System.Reactive.Linq. This repo-scoped overload
         /// exposes just the one method the pipelines need.
         /// </summary>
+        /// <remarks>
+        /// Revisit-later marker: once DynamicData and Dock both drop their
+        /// System.Reactive dependencies (both still hard-depend on it as of
+        /// 2026-08), removing System.Reactive from the solution entirely becomes
+        /// feasible, and this bridge is the seam from which to start unwinding.
+        /// </remarks>
         /// <typeparam name="T">The type of the source sequence.</typeparam>
         /// <param name="source">The sequence to observe on the sequencer.</param>
         /// <param name="sequencer">The sequencer to deliver notifications on.</param>

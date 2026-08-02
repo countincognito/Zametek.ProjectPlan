@@ -153,12 +153,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects).
-                //m_ProjectStartSub?.Dispose();
-                //m_ResourceSettingsSub?.Dispose();
-                //m_DateTimeCalculatorSub?.Dispose();
-                //m_CompilationSub?.Dispose();
-                //ResourceSelector.Dispose();
+                // No managed state to dispose.
             }
 
             m_Disposed = true;
