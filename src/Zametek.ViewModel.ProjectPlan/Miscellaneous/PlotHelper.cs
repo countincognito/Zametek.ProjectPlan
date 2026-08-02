@@ -1,7 +1,5 @@
 using DynamicData;
 using ScottPlot;
-using ScottPlot.Avalonia;
-using ScottPlot.Interactivity;
 using Zametek.Common.ProjectPlan;
 using Zametek.Utility;
 
@@ -12,8 +10,8 @@ namespace Zametek.ViewModel.ProjectPlan
         public const int FontSize = 12;
         public const int FontOffset = FontSize + 1;
 
-        public static AvaPlot SetBaseTheme(
-            this AvaPlot plotModel,
+        public static Plot SetBaseTheme(
+            this Plot plotModel,
             BaseTheme baseTheme)
         {
             return baseTheme switch
@@ -24,52 +22,52 @@ namespace Zametek.ViewModel.ProjectPlan
             };
         }
 
-        public static AvaPlot SetLightTheme(this AvaPlot plotModel) =>
+        public static Plot SetLightTheme(this Plot plotModel) =>
             plotModel.SetTheme(
                 ColorHelper.ScottPlotLightThemeForegroundColor,
                 ColorHelper.ScottPlotLightThemeBackgroundColor);
 
-        public static AvaPlot SetDarkTheme(this AvaPlot plotModel) =>
+        public static Plot SetDarkTheme(this Plot plotModel) =>
             plotModel.SetTheme(
                 ColorHelper.ScottPlotDarkThemeForegroundColor,
                 ColorHelper.ScottPlotDarkThemeBackgroundColor);
 
-        public static AvaPlot SetTheme(
-            this AvaPlot plotModel,
+        public static Plot SetTheme(
+            this Plot plotModel,
             Color foregroundColor,
             Color backgroundColor)
         {
             // Change figure colors.
-            if (plotModel.Plot.FigureBackground.Color != Colors.Transparent)
+            if (plotModel.FigureBackground.Color != Colors.Transparent)
             {
-                plotModel.Plot.FigureBackground.Color = backgroundColor;
+                plotModel.FigureBackground.Color = backgroundColor;
             }
 
-            if (plotModel.Plot.DataBackground.Color != Colors.Transparent)
+            if (plotModel.DataBackground.Color != Colors.Transparent)
             {
-                plotModel.Plot.DataBackground.Color = backgroundColor;
+                plotModel.DataBackground.Color = backgroundColor;
             }
 
             // Change axis and grid colors.
-            plotModel.Plot.Axes.Color(foregroundColor);
+            plotModel.Axes.Color(foregroundColor);
 
-            if (plotModel.Plot.Grid.MajorLineColor != Colors.Transparent)
+            if (plotModel.Grid.MajorLineColor != Colors.Transparent)
             {
-                plotModel.Plot.Grid.MajorLineColor = foregroundColor.WithAlpha(ColorHelper.AnnotationALight);
-                plotModel.Plot.Grid.MinorLineColor = foregroundColor.WithAlpha(ColorHelper.AnnotationALight);
+                plotModel.Grid.MajorLineColor = foregroundColor.WithAlpha(ColorHelper.AnnotationALight);
+                plotModel.Grid.MinorLineColor = foregroundColor.WithAlpha(ColorHelper.AnnotationALight);
             }
 
             // Change legend colors.
-            plotModel.Plot.Legend.BackgroundColor = Colors.Transparent;
+            plotModel.Legend.BackgroundColor = Colors.Transparent;
 
-            if (plotModel.Plot.Legend.FontColor != Colors.Transparent)
+            if (plotModel.Legend.FontColor != Colors.Transparent)
             {
-                plotModel.Plot.Legend.FontColor = foregroundColor;
+                plotModel.Legend.FontColor = foregroundColor;
             }
 
-            if (plotModel.Plot.Legend.OutlineColor != Colors.Transparent)
+            if (plotModel.Legend.OutlineColor != Colors.Transparent)
             {
-                plotModel.Plot.Legend.OutlineColor = foregroundColor;
+                plotModel.Legend.OutlineColor = foregroundColor;
             }
 
             // Holiday colors.
@@ -77,7 +75,7 @@ namespace Zametek.ViewModel.ProjectPlan
             Color holidayBackgroundColor = foregroundColor;
 
             // Change plottable colors.
-            foreach (IPlottable plottable in plotModel.Plot.GetPlottables())
+            foreach (IPlottable plottable in plotModel.GetPlottables())
             {
                 plottable.TypeSwitchOn()
                     .Case<ScottPlot.Plottables.AxisLine>(x =>
@@ -167,24 +165,6 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
                         }
                     });
-            }
-
-            return plotModel;
-        }
-
-        public static AvaPlot ClearContextMenu(this AvaPlot plotModel)
-        {
-
-            plotModel.Menu?.Clear();
-
-            IUserActionResponse? contextMenuAction = plotModel
-                .UserInputProcessor
-                .UserActionResponses
-                .FirstOrDefault(x => x is ScottPlot.Interactivity.UserActionResponses.SingleClickContextMenu);
-
-            if (contextMenuAction != null)
-            {
-                plotModel.UserInputProcessor.UserActionResponses.Remove(contextMenuAction);
             }
 
             return plotModel;

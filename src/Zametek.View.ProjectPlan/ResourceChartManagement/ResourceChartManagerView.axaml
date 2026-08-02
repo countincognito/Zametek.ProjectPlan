@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+<local:ScottPlotUserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -10,16 +10,16 @@
 			       xmlns:converters="using:Avalonia.Controls.Converters"
 			       x:DataType="vm:ResourceChartManagerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Zametek.View.ProjectPlan.ResourceChartManagerView">
-	<UserControl.Resources>
+             x:Class="Zametek.View.ProjectPlan.ResourceChartManagerView"
+             Plot="{Binding Path=ResourceChartPlotModel, Mode=OneWay}">
+	<local:ScottPlotUserControl.Resources>
 		<converters:EnumToBoolConverter x:Key="enumToBool" />
-	</UserControl.Resources>
+	</local:ScottPlotUserControl.Resources>
 
 	<DockPanel Margin="7">
 		<DockPanel>
 			<!-- ScottPlot PlotView -->
 			<ContentControl x:Name="scottplot"
-							Content="{Binding ResourceChartPlotModel, Mode=OneWay}"
 							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
 				<ContentControl.ContextMenu>
 					<ContextMenu>
@@ -120,4 +120,4 @@
 			</ContentControl>
 		</DockPanel>
 	</DockPanel>
-</UserControl>
+</local:ScottPlotUserControl>

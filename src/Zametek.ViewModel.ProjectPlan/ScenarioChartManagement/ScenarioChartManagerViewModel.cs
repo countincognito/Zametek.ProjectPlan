@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
-using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
 using System.Diagnostics;
 using System.Reactive;
@@ -82,7 +81,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
 
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
-        private readonly AvaPlotRetirer m_PlotRetirer;
+        private readonly PlotRetirer m_PlotRetirer;
 
         private readonly IDisposable? m_BuildScenarioChartPlotModelSub;
 
@@ -121,8 +120,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
-            m_ScenarioChartPlotModel = new AvaPlot();
-            m_PlotRetirer = new AvaPlotRetirer();
+            m_ScenarioChartPlotModel = new Plot();
+            m_PlotRetirer = new PlotRetirer();
             m_CurveFittingFormulaY1 = string.Empty;
             m_CurveFittingFormulaY2 = string.Empty;
 
@@ -239,8 +238,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Properties
 
-        private AvaPlot m_ScenarioChartPlotModel;
-        public AvaPlot ScenarioChartPlotModel
+        private Plot m_ScenarioChartPlotModel;
+        public Plot ScenarioChartPlotModel
         {
             get
             {
@@ -282,7 +281,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static (AvaPlot, string, string) BuildScenarioChartPlotModelInternal(
+        private static (Plot, string, string) BuildScenarioChartPlotModelInternal(
             TrackedMetricsSetModel trackedMetricsSet,
             bool showNames,
             TrackedMetrics xMetric,
@@ -297,8 +296,8 @@ namespace Zametek.ViewModel.ProjectPlan
             BaseTheme baseTheme)
         {
             ArgumentNullException.ThrowIfNull(trackedMetricsSet);
-            var plotModel = new AvaPlot();
-            plotModel.Plot.HideGrid();
+            var plotModel = new Plot();
+            plotModel.HideGrid();
 
             // Now build the plot.
 
@@ -313,7 +312,7 @@ namespace Zametek.ViewModel.ProjectPlan
             Func<MetricsModel, double> xMetricFunction = GetMetricFunction(xMetric);
 
             // X Axis title.
-            IXAxis xAxis = plotModel.Plot.Axes.Bottom;
+            IXAxis xAxis = plotModel.Axes.Bottom;
             xAxis.Label.Text = StringConverters.TrackedMetricsValue(xMetric);
             xAxis.Label.FontSize = PlotHelper.FontSize;
             xAxis.Label.Bold = false;
@@ -337,7 +336,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     curveFittingTypeY1,
                     showDerivativeY1,
                     absoluteCurveFittingY1,
-                    plotModel.Plot.Axes.Left,
+                    plotModel.Axes.Left,
                     Colors.Blue,
                     MarkerShape.FilledCircle);
             }
@@ -354,20 +353,20 @@ namespace Zametek.ViewModel.ProjectPlan
                     curveFittingTypeY2,
                     showDerivativeY2,
                     absoluteCurveFittingY2,
-                    plotModel.Plot.Axes.Right,
+                    plotModel.Axes.Right,
                     Colors.Red,
                     MarkerShape.FilledSquare);
             }
 
-            plotModel.Plot.Axes.AutoScale();
+            plotModel.Axes.AutoScale();
 
-            plotModel.Plot.Axes.AutoScaleExpand();
+            plotModel.Axes.AutoScaleExpand();
 
             return (plotModel.SetBaseTheme(baseTheme), curveFittingFormulaY1, curveFittingFormulaY2);
         }
 
         private static string BuildTrackedMetricSeries(
-            AvaPlot plotModel,
+            Plot plotModel,
             TrackedMetricsSetModel trackedMetricsSet,
             bool showNames,
             Func<MetricsModel, double> xMetricFunction,
@@ -449,12 +448,12 @@ namespace Zametek.ViewModel.ProjectPlan
                 // fall back to the raw display rather than an empty chart.
             }
 
-            plotModel.Plot.PlottableList.AddRange(markers);
+            plotModel.PlottableList.AddRange(markers);
 
             if (showNames)
             {
                 annotations = [.. annotations.OrderBy(m => m.Location.X).ThenBy(m => m.Location.Y)];
-                plotModel.Plot.PlottableList.AddRange(annotations);
+                plotModel.PlottableList.AddRange(annotations);
             }
 
             // Build the curve fitting if requested.
@@ -462,7 +461,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static string BuildCurveFit(
-            AvaPlot plotModel,
+            Plot plotModel,
             List<AnnotatedMarker> markers,
             CurveFittingType curveFittingType,
             bool absoluteCurveFitting,
@@ -499,7 +498,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             formula = $"y = {expression} (r²={r2:F4})";
-                            Scatter line = plotModel.Plot.Add.ScatterLine(xs, fx);
+                            Scatter line = plotModel.Add.ScatterLine(xs, fx);
                             line.MarkerSize = 0;
                             line.LineWidth = 2;
                             line.LinePattern = LinePattern.Dashed;
@@ -524,7 +523,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             formula = $"y = {expression} (r²={r2:F4})";
-                            Scatter line = plotModel.Plot.Add.ScatterLine(xs, fx);
+                            Scatter line = plotModel.Add.ScatterLine(xs, fx);
                             line.MarkerSize = 0;
                             line.LineWidth = 2;
                             line.LinePattern = LinePattern.Dashed;
@@ -549,7 +548,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             formula = $"y = {expression} (r²={r2:F4})";
-                            Scatter line = plotModel.Plot.Add.ScatterLine(xs, fx);
+                            Scatter line = plotModel.Add.ScatterLine(xs, fx);
                             line.MarkerSize = 0;
                             line.LineWidth = 2;
                             line.LinePattern = LinePattern.Dashed;
@@ -579,7 +578,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             formula = $"y = {expression} (r²={r2:F4})";
                             Coordinates pt1 = new(xs.First(), fxFirst);
                             Coordinates pt2 = new(xs.Last(), fxLast);
-                            LinePlot line = plotModel.Plot.Add.Line(pt1, pt2);
+                            LinePlot line = plotModel.Add.Line(pt1, pt2);
                             line.MarkerSize = 0;
                             line.LineWidth = 2;
                             line.LinePattern = LinePattern.Dashed;
@@ -611,7 +610,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static string BuildCurveFitDerivative(
-            AvaPlot plotModel,
+            Plot plotModel,
             List<AnnotatedMarker> markers,
             CurveFittingType curveFittingType,
             bool absoluteCurveFitting,
@@ -752,13 +751,13 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static void AddCurveFitDerivativeLine(
-            AvaPlot plotModel,
+            Plot plotModel,
             double[] xs,
             double[] dfx,
             IYAxis yAxis,
             Color color)
         {
-            Scatter line = plotModel.Plot.Add.ScatterLine(xs, dfx);
+            Scatter line = plotModel.Add.ScatterLine(xs, dfx);
             line.MarkerSize = 0;
             line.LineWidth = 2;
             line.LinePattern = LinePattern.Dashed;
@@ -767,7 +766,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static string BuildPolynomialCurveFit(
-            AvaPlot plotModel,
+            Plot plotModel,
             double[] xs,
             double[] ys,
             int order,
@@ -804,7 +803,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             // Plot the regression line.
-            Scatter line = plotModel.Plot.Add.ScatterLine(xs, fx);
+            Scatter line = plotModel.Add.ScatterLine(xs, fx);
             line.MarkerSize = 0;
             line.LineWidth = 2;
             line.LinePattern = LinePattern.Dashed;
@@ -815,7 +814,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static string BuildPolynomialCurveFitDerivative(
-            AvaPlot plotModel,
+            Plot plotModel,
             double[] xs,
             double[] ys,
             int order,
@@ -941,7 +940,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ResetScenarioChart()
         {
-            ScenarioChartPlotModel.Plot.Axes.AutoScale();
+            ScenarioChartPlotModel.Axes.AutoScale();
         }
 
         private async Task ChangeTrackedMetricXAxisAsync(TrackedMetrics trackedMetric)
@@ -1196,7 +1195,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 try
                 {
-                    await m_ScottPlotImageExporter.SavePlotImageAsync(ScenarioChartPlotModel.Plot, filename, width, height);
+                    await m_ScottPlotImageExporter.SavePlotImageAsync(ScenarioChartPlotModel, filename, width, height);
                 }
                 catch (Exception ex)
                 {
@@ -1239,7 +1238,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public void BuildScenarioChartPlotModel()
         {
             CascadeDiagnostics.RecordBuild($@"{nameof(ScenarioChartManagerViewModel)}.{nameof(BuildScenarioChartPlotModel)}");
-            AvaPlot? plotModel = null;
+            Plot? plotModel = null;
             string curveFittingFormulaY1 = string.Empty;
             string curveFittingFormulaY2 = string.Empty;
 
@@ -1263,9 +1262,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            plotModel ??= new AvaPlot();
-            plotModel.ClearContextMenu();
-            AvaPlot outgoing = ScenarioChartPlotModel;
+            plotModel ??= new Plot();
+            Plot outgoing = ScenarioChartPlotModel;
             ScenarioChartPlotModel = plotModel;
             m_PlotRetirer.Retire(outgoing);
             CurveFittingFormulaY1 = curveFittingFormulaY1;
@@ -1291,7 +1289,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 return null;
             }
 
-            return await m_ScottPlotImageExporter.RenderPlotImageAsync(ScenarioChartPlotModel.Plot, width, height);
+            return await m_ScottPlotImageExporter.RenderPlotImageAsync(ScenarioChartPlotModel, width, height);
         }
 
         public Task ReportErrorAsync(string message)
@@ -1329,7 +1327,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 KillSubscriptions();
                 m_PlotRetirer.Dispose();
-                m_ScenarioChartPlotModel.Plot.Dispose();
+                m_ScenarioChartPlotModel.Dispose();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();

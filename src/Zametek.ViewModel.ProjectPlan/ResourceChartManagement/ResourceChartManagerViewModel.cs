@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
-using ScottPlot.Avalonia;
 using ScottPlot.DataSources;
 using ScottPlot.Plottables;
 using System.Data;
@@ -83,7 +82,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
 
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
-        private readonly AvaPlotRetirer m_PlotRetirer;
+        private readonly PlotRetirer m_PlotRetirer;
 
         private readonly IDisposable? m_BuildResourceChartPlotModelSub;
 
@@ -113,8 +112,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DialogService = dialogService;
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
-            m_ResourceChartPlotModel = new AvaPlot();
-            m_PlotRetirer = new AvaPlotRetirer();
+            m_ResourceChartPlotModel = new Plot();
+            m_PlotRetirer = new PlotRetirer();
 
             ResetResourceChartCommand = ReactiveCommand.Create(ResetResourceChart);
 
@@ -186,8 +185,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Properties
 
-        private AvaPlot m_ResourceChartPlotModel;
-        public AvaPlot ResourceChartPlotModel
+        private Plot m_ResourceChartPlotModel;
+        public Plot ResourceChartPlotModel
         {
             get
             {
@@ -229,7 +228,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static AvaPlot BuildResourceChartPlotModelInternal(
+        private static Plot BuildResourceChartPlotModelInternal(
             IDateTimeCalculator dateTimeCalculator,
             ResourceSeriesSetModel resourceSeriesSet,
             bool showDates,
@@ -246,8 +245,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
             ArgumentNullException.ThrowIfNull(resourceSeriesSet);
             ArgumentNullException.ThrowIfNull(graphCompilation);
-            var plotModel = new AvaPlot();
-            plotModel.Plot.HideGrid();
+            var plotModel = new Plot();
+            plotModel.HideGrid();
 
             // Select the type of allocation to be displayed.
 
@@ -287,12 +286,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
             BuildResourceChartXAxis(plotModel, dateTimeCalculator, finishTime, showDates, projectStart);
 
-            plotModel.Plot.Legend.OutlineWidth = 1;
-            plotModel.Plot.Legend.BackgroundColor = Colors.Transparent;
-            plotModel.Plot.Legend.ShadowColor = Colors.Transparent;
-            plotModel.Plot.Legend.ShadowOffset = new(0, 0);
+            plotModel.Legend.OutlineWidth = 1;
+            plotModel.Legend.BackgroundColor = Colors.Transparent;
+            plotModel.Legend.ShadowColor = Colors.Transparent;
+            plotModel.Legend.ShadowOffset = new(0, 0);
 
-            plotModel.Plot.ShowLegend(Edge.Right);
+            plotModel.ShowLegend(Edge.Right);
 
             var scatters = new List<Scatter>();
             var labels = new List<string>();
@@ -403,7 +402,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             scatters.Reverse();
-            plotModel.Plot.PlottableList.AddRange(scatters);
+            plotModel.PlottableList.AddRange(scatters);
 
             if (showToday)
             {
@@ -417,7 +416,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         projectStart,
                         dateTimeCalculator);
 
-                    plotModel.Plot.Add.VerticalLine(
+                    plotModel.Add.VerticalLine(
                         todayTimeX,
                         width: c_VerticalLineWidth,
                         pattern: LinePattern.Dotted);
@@ -453,11 +452,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     milestoneLines.Add(milestoneLine);
                 }
 
-                plotModel.Plot.PlottableList.AddRange(milestoneLines);
+                plotModel.PlottableList.AddRange(milestoneLines);
             }
 
             // Style the plot so the bars start on the left edge.
-            plotModel.Plot.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
+            plotModel.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
 
             IYAxis yAxis = BuildResourceChartYAxis(plotModel);
 
@@ -465,7 +464,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 [.. Enumerable.Range(0, labels.Count).Select(Convert.ToDouble)],
                 [.. Enumerable.Range(0, labels.Count).Select(x => Convert.ToString(x))]);
 
-            plotModel.Plot.Axes.AutoScale();
+            plotModel.Axes.AutoScale();
 
             return plotModel.SetBaseTheme(baseTheme);
         }
@@ -487,7 +486,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static IXAxis BuildResourceChartXAxis(
-            AvaPlot plotModel,
+            Plot plotModel,
             IDateTimeCalculator dateTimeCalculator,
             int finishTime,
             bool showDates,
@@ -496,7 +495,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(plotModel);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
 
-            IXAxis xAxis = plotModel.Plot.Axes.Bottom;
+            IXAxis xAxis = plotModel.Axes.Bottom;
 
             if (finishTime != default)
             {
@@ -506,7 +505,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (showDates)
                 {
                     // Setup the plot to display X axis tick labels using date time format.
-                    xAxis = plotModel.Plot.Axes.DateTimeTicksBottom();
+                    xAxis = plotModel.Axes.DateTimeTicksBottom();
                 }
 
                 xAxis.Min = minValue;
@@ -519,10 +518,10 @@ namespace Zametek.ViewModel.ProjectPlan
             return xAxis;
         }
 
-        private static IYAxis BuildResourceChartYAxis(AvaPlot plotModel)
+        private static IYAxis BuildResourceChartYAxis(Plot plotModel)
         {
             ArgumentNullException.ThrowIfNull(plotModel);
-            IYAxis yAxis = plotModel.Plot.Axes.Left;
+            IYAxis yAxis = plotModel.Axes.Left;
             yAxis.Min = 0.0;
             yAxis.Label.Text = Resource.ProjectPlan.Labels.Label_ResourcesAxisTitle;
             yAxis.Label.FontSize = PlotHelper.FontSize;
@@ -532,7 +531,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ResetResourceChart()
         {
-            ResourceChartPlotModel.Plot.Axes.AutoScale();
+            ResourceChartPlotModel.Axes.AutoScale();
         }
 
         private async Task ChangeAllocationModeAsync(AllocationMode allocationMode)
@@ -697,7 +696,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 try
                 {
-                    await m_ScottPlotImageExporter.SavePlotImageAsync(ResourceChartPlotModel.Plot, filename, width, height);
+                    await m_ScottPlotImageExporter.SavePlotImageAsync(ResourceChartPlotModel, filename, width, height);
                 }
                 catch (Exception ex)
                 {
@@ -712,7 +711,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public void BuildResourceChartPlotModel()
         {
             CascadeDiagnostics.RecordBuild($@"{nameof(ResourceChartManagerViewModel)}.{nameof(BuildResourceChartPlotModel)}");
-            AvaPlot? plotModel = null;
+            Plot? plotModel = null;
 
             lock (m_Lock)
             {
@@ -734,9 +733,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            plotModel ??= new AvaPlot();
-            plotModel.ClearContextMenu();
-            AvaPlot outgoing = ResourceChartPlotModel;
+            plotModel ??= new Plot();
+            Plot outgoing = ResourceChartPlotModel;
             ResourceChartPlotModel = plotModel;
             m_PlotRetirer.Retire(outgoing);
         }
@@ -760,7 +758,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 return null;
             }
 
-            return await m_ScottPlotImageExporter.RenderPlotImageAsync(ResourceChartPlotModel.Plot, width, height);
+            return await m_ScottPlotImageExporter.RenderPlotImageAsync(ResourceChartPlotModel, width, height);
         }
 
         public Task ReportErrorAsync(string message)
@@ -798,7 +796,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 KillSubscriptions();
                 m_PlotRetirer.Dispose();
-                m_ResourceChartPlotModel.Plot.Dispose();
+                m_ResourceChartPlotModel.Dispose();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();

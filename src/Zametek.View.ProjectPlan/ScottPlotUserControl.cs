@@ -7,6 +7,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.VisualTree;
 using ScottPlot;
 using ScottPlot.Avalonia;
+using ScottPlot.Interactivity;
 using ScottPlot.Plottables;
 using System.IO;
 using System.Linq;
@@ -29,6 +30,29 @@ namespace Zametek.View.ProjectPlan
         {
             m_DragStartPoint = null;
             m_IsDragging = false;
+        }
+
+        public static readonly StyledProperty<Plot?> PlotProperty =
+            AvaloniaProperty.Register<ScottPlotUserControl, Plot?>(nameof(Plot));
+
+        /// <summary>
+        /// The ScottPlot model this view presents; the chart views bind it to their
+        /// view model's plot property.
+        /// </summary>
+        public Plot? Plot
+        {
+            get => GetValue(PlotProperty);
+            set => SetValue(PlotProperty, value);
+        }
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == PlotProperty)
+            {
+                PresentPlot(change.GetNewValue<Plot?>());
+            }
         }
 
         public void InitializePlotContainer(ContentControl plotContainer)
@@ -54,6 +78,53 @@ namespace Zametek.View.ProjectPlan
             m_PlotContainer.Loaded += PlotContainer_Loaded;
             m_PlotContainer.PointerExited += PlotContainer_PointerExited;
             m_PlotContainer.PointerMoved += PlotContainer_PointerMoved;
+
+            // The Plot binding may already have delivered a value before the derived
+            // view handed over its container; present it now that there is a host.
+            PresentPlot(Plot);
+        }
+
+        // Each plot generation gets a brand-new AvaPlot host: AvaPlot.Reset disposes
+        // whatever plot the control already holds, so an outgoing view-model plot
+        // (whose disposal PlotRetirer sequences one generation behind) must never sit
+        // inside a control that gets Reset - a fresh control's only casualty is its
+        // constructor-default plot. Per-view controls are also what make dock
+        // float/re-dock safe: a control can only have one visual parent, so a control
+        // instance shared between materialised views cannot be re-hosted.
+        private void PresentPlot(Plot? plot)
+        {
+            if (m_PlotContainer is null)
+            {
+                return;
+            }
+
+            var avaPlot = new AvaPlot();
+            ClearBuiltInContextMenu(avaPlot);
+
+            if (plot is not null)
+            {
+                avaPlot.Reset(plot);
+                avaPlot.Refresh();
+            }
+
+            m_PlotContainer.Content = avaPlot;
+        }
+
+        // The AvaPlot ships its own right-click menu; the chart views attach their own
+        // ContextMenu to the container, so the built-in one must not fight it.
+        private static void ClearBuiltInContextMenu(AvaPlot avaPlot)
+        {
+            avaPlot.Menu?.Clear();
+
+            IUserActionResponse? contextMenuAction = avaPlot
+                .UserInputProcessor
+                .UserActionResponses
+                .FirstOrDefault(x => x is ScottPlot.Interactivity.UserActionResponses.SingleClickContextMenu);
+
+            if (contextMenuAction is not null)
+            {
+                avaPlot.UserInputProcessor.UserActionResponses.Remove(contextMenuAction);
+            }
         }
 
         private void PlotContainer_PointerPressed(

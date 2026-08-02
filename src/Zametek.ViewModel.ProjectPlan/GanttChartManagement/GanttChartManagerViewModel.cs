@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
-using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
 using System.Data;
 using System.Globalization;
@@ -83,7 +82,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IScottPlotImageExporter m_ScottPlotImageExporter;
 
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
-        private readonly AvaPlotRetirer m_PlotRetirer;
+        private readonly PlotRetirer m_PlotRetirer;
 
         private readonly IDisposable? m_BuildGanttChartPlotModelSub;
 
@@ -124,8 +123,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
             ActivitySelector = new GanttActivitySelectorViewModel(m_CoreViewModel);
 
-            m_GanttChartPlotModel = new AvaPlot();
-            m_PlotRetirer = new AvaPlotRetirer();
+            m_GanttChartPlotModel = new Plot();
+            m_PlotRetirer = new PlotRetirer();
 
             ResetGanttChartCommand = ReactiveCommand.CreateFromTask(ResetGanttChartAsync);
             ChangeGroupByModeCommand = ReactiveCommand.CreateFromTask<GroupByMode>(ChangeGroupByModeAsync);
@@ -254,8 +253,8 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<BoolToggle> m_BoolAccumulator;
         public BoolToggle BoolAccumulator => m_BoolAccumulator.Value;
 
-        private AvaPlot m_GanttChartPlotModel;
-        public AvaPlot GanttChartPlotModel
+        private Plot m_GanttChartPlotModel;
+        public Plot GanttChartPlotModel
         {
             get
             {
@@ -303,7 +302,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private static AvaPlot BuildGanttChartPlotModelInternal(
+        private static Plot BuildGanttChartPlotModelInternal(
             IDateTimeCalculator dateTimeCalculator,
             ResourceSeriesSetModel resourceSeriesSet,
             ResourceSettingsModel resourceSettingsSettings,
@@ -334,9 +333,9 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(workStreamSettings);
             ArgumentNullException.ThrowIfNull(graphCompilation);
 
-            var plotModel = new AvaPlot();
+            var plotModel = new Plot();
 
-            foreach (var grid in plotModel.Plot.Axes.AllGrids)
+            foreach (var grid in plotModel.Axes.AllGrids)
             {
                 grid.YAxisStyle.IsVisible = false;
             }
@@ -886,7 +885,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     dateTimeCalculator);
                 double finishTimeY = labels.Count;
 
-                Annotation annotation = plotModel.Plot.Add.Annotation(projectFinishDisplay.ToString(), Alignment.UpperRight);
+                Annotation annotation = plotModel.Add.Annotation(projectFinishDisplay.ToString(), Alignment.UpperRight);
                 annotation.LabelBackgroundColor = Colors.Transparent;
                 annotation.LabelBorderColor = Colors.Transparent;
                 annotation.LabelShadowColor = Colors.Transparent;
@@ -899,17 +898,17 @@ namespace Zametek.ViewModel.ProjectPlan
                 bar.Position = i + 1;
             }
 
-            BarPlot barPlot = plotModel.Plot.Add.Bars(bars);
+            BarPlot barPlot = plotModel.Add.Bars(bars);
             barPlot.Horizontal = true;
 
             // Non-working day shades go at the lowest level so they render behind everything.
             for (int i = 0; i < nonWorkingDayShades.Count; i++)
             {
-                plotModel.Plot.PlottableList.Insert(i, nonWorkingDayShades[i]);
+                plotModel.PlottableList.Insert(i, nonWorkingDayShades[i]);
             }
 
             // Highlights (above the bar plot).
-            plotModel.Plot.PlottableList.AddRange(highlights);
+            plotModel.PlottableList.AddRange(highlights);
 
             if (showToday)
             {
@@ -923,7 +922,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         projectStart,
                         dateTimeCalculator);
 
-                    plotModel.Plot.Add.VerticalLine(
+                    plotModel.Add.VerticalLine(
                         todayTimeX,
                         width: c_VerticalLineWidth,
                         pattern: LinePattern.Dotted);
@@ -966,15 +965,15 @@ namespace Zametek.ViewModel.ProjectPlan
                     milestoneArrows.Add(milestoneArrow);
                 }
 
-                plotModel.Plot.PlottableList.AddRange(milestoneArrows);
+                plotModel.PlottableList.AddRange(milestoneArrows);
             }
 
             // Style the plot so the bars start on the left edge.
-            plotModel.Plot.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
+            plotModel.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
 
             BuildResourceChartYAxis(plotModel, labels);
 
-            plotModel.Plot.Axes.AutoScale();
+            plotModel.Axes.AutoScale();
 
             return plotModel.SetBaseTheme(baseTheme);
         }
@@ -984,7 +983,7 @@ namespace Zametek.ViewModel.ProjectPlan
             DateTimeOffset projectStart,
             bool showDates,
             bool labelGroups,
-            AvaPlot plotModel,
+            Plot plotModel,
             double minimumXValue,
             List<Bar> bars,
             List<string> labels,
@@ -1038,7 +1037,7 @@ namespace Zametek.ViewModel.ProjectPlan
             DateTimeOffset projectStart,
             bool showDates,
             bool labelGroups,
-            AvaPlot plotModel,
+            Plot plotModel,
             List<Bar> series,
             List<string> labels,
             string itemName,
@@ -1072,11 +1071,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 LineWidth = 1,
             };
 
-            plotModel.Plot.PlottableList.Add(rp);
+            plotModel.PlottableList.Add(rp);
 
             if (labelGroups)
             {
-                Text text = plotModel.Plot.Add.Text(itemName, minimumX, maximumY);
+                Text text = plotModel.Add.Text(itemName, minimumX, maximumY);
 
                 text.OffsetY = -PlotHelper.FontOffset;
                 text.LabelBackgroundColor = Colors.Transparent;
@@ -1349,7 +1348,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static IXAxis BuildResourceChartXAxis(
-            AvaPlot plotModel,
+            Plot plotModel,
             IDateTimeCalculator dateTimeCalculator,
             int startTime,
             int finishTime,
@@ -1359,7 +1358,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(plotModel);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
 
-            IXAxis xAxis = plotModel.Plot.Axes.Bottom;
+            IXAxis xAxis = plotModel.Axes.Bottom;
 
             if (finishTime != default)
             {
@@ -1369,7 +1368,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (showDates)
                 {
                     // Setup the plot to display X axis tick labels using date time format.
-                    xAxis = plotModel.Plot.Axes.DateTimeTicksBottom();
+                    xAxis = plotModel.Axes.DateTimeTicksBottom();
                 }
 
                 xAxis.Min = minValue;
@@ -1383,13 +1382,13 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static IYAxis BuildResourceChartYAxis(
-            AvaPlot plotModel,
+            Plot plotModel,
             List<string> labels)
         {
             ArgumentNullException.ThrowIfNull(plotModel);
             ArgumentNullException.ThrowIfNull(labels);
 
-            IYAxis yAxis = plotModel.Plot.Axes.Left;
+            IYAxis yAxis = plotModel.Axes.Left;
 
             double minValue = c_YAxisMinimum;
             double maxValue = labels.Count;
@@ -1402,7 +1401,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
             double[] tickPositions = [.. Enumerable.Range(1, labels.Count).Select(Convert.ToDouble)];
             string[] tickLabels = [.. labels];
-            plotModel.Plot.Axes.Left.SetTicks(tickPositions, tickLabels);
+            plotModel.Axes.Left.SetTicks(tickPositions, tickLabels);
 
             return yAxis;
         }
@@ -1411,7 +1410,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                GanttChartPlotModel.Plot.Axes.AutoScale();
+                GanttChartPlotModel.Axes.AutoScale();
             }
             catch (Exception ex)
             {
@@ -1615,7 +1614,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 try
                 {
                     int calculatedHeight = CalculatedExportHeight(height);
-                    await m_ScottPlotImageExporter.SavePlotImageAsync(GanttChartPlotModel.Plot, filename, width, calculatedHeight);
+                    await m_ScottPlotImageExporter.SavePlotImageAsync(GanttChartPlotModel, filename, width, calculatedHeight);
                 }
                 catch (Exception ex)
                 {
@@ -1634,7 +1633,7 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             int calculatedHeight = 0;
 
-            if (GanttChartPlotModel.Plot.GetPlottables<BarPlot>().FirstOrDefault() is BarPlot barPlot)
+            if (GanttChartPlotModel.GetPlottables<BarPlot>().FirstOrDefault() is BarPlot barPlot)
             {
                 int barCount = barPlot.Bars.Count;
                 calculatedHeight = Convert.ToInt32(barPlot.Axes.YAxis.TickLabelStyle.FontSize * barCount * c_ExportLabelHeightCorrection);
@@ -1659,7 +1658,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public void BuildGanttChartPlotModel()
         {
             CascadeDiagnostics.RecordBuild($@"{nameof(GanttChartManagerViewModel)}.{nameof(BuildGanttChartPlotModel)}");
-            AvaPlot? plotModel = null;
+            Plot? plotModel = null;
 
             lock (m_Lock)
             {
@@ -1688,9 +1687,8 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_CoreViewModel.BaseTheme);
             }
 
-            plotModel ??= new AvaPlot();
-            plotModel.ClearContextMenu();
-            AvaPlot outgoing = GanttChartPlotModel;
+            plotModel ??= new Plot();
+            Plot outgoing = GanttChartPlotModel;
             GanttChartPlotModel = plotModel;
             m_PlotRetirer.Retire(outgoing);
         }
@@ -1717,7 +1715,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             int calculatedHeight = CalculatedExportHeight(height);
-            return await m_ScottPlotImageExporter.RenderPlotImageAsync(GanttChartPlotModel.Plot, width, calculatedHeight);
+            return await m_ScottPlotImageExporter.RenderPlotImageAsync(GanttChartPlotModel, width, calculatedHeight);
         }
 
         public Task ReportErrorAsync(string message)
@@ -1755,7 +1753,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 KillSubscriptions();
                 m_PlotRetirer.Dispose();
-                m_GanttChartPlotModel.Plot.Dispose();
+                m_GanttChartPlotModel.Dispose();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();

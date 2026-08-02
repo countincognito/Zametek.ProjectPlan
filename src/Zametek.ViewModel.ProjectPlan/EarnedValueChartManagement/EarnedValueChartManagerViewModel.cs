@@ -1,7 +1,6 @@
 using Avalonia;
 using ReactiveUI;
 using ScottPlot;
-using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
 using System.Globalization;
 using System.Reactive;
@@ -84,7 +83,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly EarnedValueResourceSelectorViewModel m_ResourceSelector;
 
         // Reclaims the unmanaged Skia memory of each plot this view model replaces.
-        private readonly AvaPlotRetirer m_PlotRetirer;
+        private readonly PlotRetirer m_PlotRetirer;
 
         private readonly IDisposable? m_BuildEarnedValueChartPlotModelSub;
 
@@ -119,8 +118,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_DateTimeCalculator = dateTimeCalculator;
             m_ScottPlotImageExporter = scottPlotImageExporter;
             m_ResourceSchedulingService = resourceSchedulingService;
-            m_EarnedValueChartPlotModel = new AvaPlot();
-            m_PlotRetirer = new AvaPlotRetirer();
+            m_EarnedValueChartPlotModel = new Plot();
+            m_PlotRetirer = new PlotRetirer();
 
             m_ResourceSelector = new EarnedValueResourceSelectorViewModel(coreViewModel);
             ResourceSelector = m_ResourceSelector;
@@ -211,8 +210,8 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Properties
 
-        private AvaPlot m_EarnedValueChartPlotModel;
-        public AvaPlot EarnedValueChartPlotModel
+        private Plot m_EarnedValueChartPlotModel;
+        public Plot EarnedValueChartPlotModel
         {
             get
             {
@@ -364,7 +363,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return (primary, seriesGroups);
         }
 
-        private static AvaPlot BuildEarnedValueChartPlotModelInternal(
+        private static Plot BuildEarnedValueChartPlotModelInternal(
             IDateTimeCalculator dateTimeCalculator,
             EarnedValueSeriesGroup primary,
             IList<EarnedValueSeriesGroup> seriesGroups,
@@ -388,8 +387,8 @@ namespace Zametek.ViewModel.ProjectPlan
             showProjections = showProjections && hasSingleTrackingSeriesSet;
             showMilestones = showMilestones && hasSingleTrackingSeriesSet;
 
-            var plotModel = new AvaPlot();
-            plotModel.Plot.HideGrid();
+            var plotModel = new Plot();
+            plotModel.HideGrid();
 
             if (primary.Plan.Count == 0)
             {
@@ -420,16 +419,16 @@ namespace Zametek.ViewModel.ProjectPlan
             BuildEarnedValueChartXAxis(plotModel, dateTimeCalculator, chartEnd, showDates, projectStart);
             BuildEarnedValueChartYAxis(plotModel, maxPercentage);
 
-            plotModel.Plot.Legend.OutlineWidth = 1;
-            plotModel.Plot.Legend.BackgroundColor = Colors.Transparent;
-            plotModel.Plot.Legend.ShadowColor = Colors.Transparent;
-            plotModel.Plot.Legend.ShadowOffset = new(0, 0);
+            plotModel.Legend.OutlineWidth = 1;
+            plotModel.Legend.BackgroundColor = Colors.Transparent;
+            plotModel.Legend.ShadowColor = Colors.Transparent;
+            plotModel.Legend.ShadowOffset = new(0, 0);
 
-            plotModel.Plot.ShowLegend(Edge.Right);
+            plotModel.ShowLegend(Edge.Right);
 
             if (showProjections)
             {
-                HorizontalLine line = plotModel.Plot.Add.HorizontalLine(
+                HorizontalLine line = plotModel.Add.HorizontalLine(
                     defaultMaxPercentage,
                     width: 1,
                     pattern: LinePattern.Dashed);
@@ -557,7 +556,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         projectStart,
                         dateTimeCalculator);
 
-                    plotModel.Plot.Add.VerticalLine(
+                    plotModel.Add.VerticalLine(
                         todayTimeX,
                         width: c_VerticalLineWidth,
                         pattern: LinePattern.Dotted);
@@ -610,13 +609,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     milestoneArrows.Add(milestoneArrow);
                 }
 
-                plotModel.Plot.PlottableList.AddRange(milestoneArrows);
+                plotModel.PlottableList.AddRange(milestoneArrows);
             }
 
             // Style the plot so the bars start on the left edge.
-            plotModel.Plot.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
+            plotModel.Axes.Margins(left: 0, right: 0, bottom: 0, top: 0);
 
-            plotModel.Plot.Axes.AutoScale();
+            plotModel.Axes.AutoScale();
 
             return plotModel.SetBaseTheme(baseTheme);
         }
@@ -626,7 +625,7 @@ namespace Zametek.ViewModel.ProjectPlan
             IList<TrackingPointModel> progressProjection,
             bool showDates,
             DateTimeOffset projectStart,
-            AvaPlot plotModel)
+            Plot plotModel)
         {
             var projectFinishDisplay = new StringBuilder(Resource.ProjectPlan.Labels.Label_ProjectedFinish);
             projectFinishDisplay.Append(' ');
@@ -647,7 +646,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 projectFinishDisplay.Append(projectedFinishTime);
             }
 
-            Annotation annotation = plotModel.Plot.Add.Annotation(projectFinishDisplay.ToString(), Alignment.LowerRight);
+            Annotation annotation = plotModel.Add.Annotation(projectFinishDisplay.ToString(), Alignment.LowerRight);
             annotation.LabelBackgroundColor = Colors.Transparent;
             annotation.LabelBorderColor = Colors.Transparent;
             annotation.LabelShadowColor = Colors.Transparent;
@@ -679,7 +678,7 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static IXAxis BuildEarnedValueChartXAxis(
-            AvaPlot plotModel,
+            Plot plotModel,
             IDateTimeCalculator dateTimeCalculator,
             int chartEnd,
             bool showDates,
@@ -688,7 +687,7 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(plotModel);
             ArgumentNullException.ThrowIfNull(dateTimeCalculator);
 
-            IXAxis xAxis = plotModel.Plot.Axes.Bottom;
+            IXAxis xAxis = plotModel.Axes.Bottom;
 
             if (chartEnd != default)
             {
@@ -706,7 +705,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (showDates)
                 {
                     // Setup the plot to display X axis tick labels using date time format.
-                    xAxis = plotModel.Plot.Axes.DateTimeTicksBottom();
+                    xAxis = plotModel.Axes.DateTimeTicksBottom();
                 }
 
                 xAxis.Min = minValue;
@@ -720,11 +719,11 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         private static IYAxis BuildEarnedValueChartYAxis(
-            AvaPlot plotModel,
+            Plot plotModel,
             double maximum)
         {
             ArgumentNullException.ThrowIfNull(plotModel);
-            IYAxis yAxis = plotModel.Plot.Axes.Left;
+            IYAxis yAxis = plotModel.Axes.Left;
 
             yAxis.Min = 0.0;
             yAxis.Max = maximum;
@@ -741,7 +740,7 @@ namespace Zametek.ViewModel.ProjectPlan
             bool showDates,
             DateTimeOffset projectStart,
             IDateTimeCalculator dateTimeCalculator,
-            AvaPlot plotModel,
+            Plot plotModel,
             IList<TrackingPointModel> pointSeries,
             LinePattern? pattern = null)
         {
@@ -764,7 +763,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             dateTimeCalculator));
                     dataY.Add(planPoint.ValuePercentage);
                 }
-                Scatter scatter = plotModel.Plot.Add.Scatter(dataX, dataY);
+                Scatter scatter = plotModel.Add.Scatter(dataX, dataY);
                 scatter.LegendText = title;
                 scatter.LineWidth = stroke;
                 scatter.Color = color;
@@ -779,7 +778,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ResetEarnedValueChart()
         {
-            EarnedValueChartPlotModel.Plot.Axes.AutoScale();
+            EarnedValueChartPlotModel.Axes.AutoScale();
         }
 
         private async Task SaveEarnedValueChartImageFileAsync()
@@ -904,7 +903,7 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 try
                 {
-                    await m_ScottPlotImageExporter.SavePlotImageAsync(EarnedValueChartPlotModel.Plot, filename, width, height);
+                    await m_ScottPlotImageExporter.SavePlotImageAsync(EarnedValueChartPlotModel, filename, width, height);
                 }
                 catch (Exception ex)
                 {
@@ -919,7 +918,7 @@ namespace Zametek.ViewModel.ProjectPlan
         public void BuildEarnedValueChartPlotModel()
         {
             CascadeDiagnostics.RecordBuild($@"{nameof(EarnedValueChartManagerViewModel)}.{nameof(BuildEarnedValueChartPlotModel)}");
-            AvaPlot? plotModel = null;
+            Plot? plotModel = null;
 
             lock (m_Lock)
             {
@@ -942,9 +941,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            plotModel ??= new AvaPlot();
-            plotModel.ClearContextMenu();
-            AvaPlot outgoing = EarnedValueChartPlotModel;
+            plotModel ??= new Plot();
+            Plot outgoing = EarnedValueChartPlotModel;
             EarnedValueChartPlotModel = plotModel;
             m_PlotRetirer.Retire(outgoing);
         }
@@ -968,7 +966,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 return null;
             }
 
-            return await m_ScottPlotImageExporter.RenderPlotImageAsync(EarnedValueChartPlotModel.Plot, width, height);
+            return await m_ScottPlotImageExporter.RenderPlotImageAsync(EarnedValueChartPlotModel, width, height);
         }
 
         public Task ReportErrorAsync(string message)
@@ -1008,7 +1006,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 KillSubscriptions();
                 m_ResourceSelector.Dispose();
                 m_PlotRetirer.Dispose();
-                m_EarnedValueChartPlotModel.Plot.Dispose();
+                m_EarnedValueChartPlotModel.Dispose();
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();

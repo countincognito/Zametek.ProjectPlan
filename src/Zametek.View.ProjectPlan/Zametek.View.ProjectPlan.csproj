@@ -17,6 +17,7 @@
     <PackageReference Include="Markdown.Avalonia.SyntaxHigh" Version="11.0.3" />
     <PackageReference Include="MessageBox.Avalonia" Version="12.0.0" />
 	  <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.0" />
+	  <PackageReference Include="ScottPlot.Avalonia" Version="5.1.59" />
 	  <PackageReference Include="Semi.Avalonia" Version="12.1.0.1" />
 	  <PackageReference Include="Semi.Avalonia.ColorPicker" Version="12.1.0.1" />
 	  <PackageReference Include="Semi.Avalonia.DataGrid" Version="12.1.0.1" />
