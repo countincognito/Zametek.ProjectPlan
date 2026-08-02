@@ -2,14 +2,13 @@ using Avalonia.Controls;
 using Avalonia.Xaml.Interactivity;
 using System;
 using Zametek.Contract.ProjectPlan;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
     public partial class ProgressTrackingManagerView
         : UserControl
     {
-        private int c_DayCount = 15;
-
         public ProgressTrackingManagerView()
         {
             InitializeComponent();
@@ -23,7 +22,7 @@ namespace Zametek.View.ProjectPlan
             ArgumentNullException.ThrowIfNull(dataGridScrollManager);
             InitializeComponent();
 
-            for (int i = 0; i < c_DayCount; i++)
+            for (int i = 0; i < TimesheetHelper.DayCount; i++)
             {
                 TrackerActivitiesGrid.Columns.Add(new DataGridProgressTrackingColumn(i));
             }

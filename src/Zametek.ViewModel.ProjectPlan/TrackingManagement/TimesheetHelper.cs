@@ -4,11 +4,19 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.ViewModel.ProjectPlan
 {
     /// <summary>
-    /// Pure helper logic for the effort timesheet: day load classification
-    /// and row labels.
+    /// Pure helper logic for the effort timesheet: the shared day count, day
+    /// load classification and row labels.
     /// </summary>
     public static class TimesheetHelper
     {
+        /// <summary>
+        /// The number of consecutive tracker days shown by the tracking
+        /// panels (both the effort timesheet and the progress grid). The day
+        /// columns deliberately extend past the visible edge, spreadsheet
+        /// style, and the window is stepped one day at a time via pagination.
+        /// </summary>
+        public const int DayCount = 15;
+
         /// <summary>
         /// The booked percentage that counts as exactly one full day. The
         /// classification thresholds hang off this single value so they are

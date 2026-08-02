@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Xaml.Interactivity;
+using Zametek.ViewModel.ProjectPlan;
 
 namespace Zametek.View.ProjectPlan
 {
@@ -9,10 +10,6 @@ namespace Zametek.View.ProjectPlan
     public class TimesheetDayColumnsBehavior
         : Behavior<DataGrid>
     {
-        // The number of consecutive tracker days shown by the timesheet. Must
-        // match the day count used by the effort tracking manager view model.
-        private const int c_DayCount = 15;
-
         // The static columns declared in markup: Id, Name, Find. The day
         // columns are appended after them.
         private const int c_StaticColumnCount = 3;
@@ -27,7 +24,7 @@ namespace Zametek.View.ProjectPlan
                 return;
             }
 
-            for (int i = 0; i < c_DayCount; i++)
+            for (int i = 0; i < TimesheetHelper.DayCount; i++)
             {
                 AssociatedObject.Columns.Add(new DataGridTimesheetDayColumn(i));
             }

@@ -17,10 +17,6 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
-        // The number of consecutive tracker days shown by the timesheet. Must
-        // match the day count used by the effort tracking view.
-        private const int c_DayCount = 15;
-
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IResourceSettingsManagerViewModel m_ResourceSettingsManagerViewModel;
 
@@ -129,7 +125,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_TimesheetSections = [.. resources.Select(resource => new ResourceTimesheetViewModel(
                     this,
                     resource,
-                    c_DayCount,
+                    TimesheetHelper.DayCount,
                     !m_ExpandedLookup.TryGetValue(resource.Id, out bool isExpanded) || isExpanded,
                     (resourceId, expanded) => m_ExpandedLookup[resourceId] = expanded))];
                 this.RaisePropertyChanged(nameof(TimesheetSections));
