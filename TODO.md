@@ -54,4 +54,16 @@ Date entries when added; delete them when done.
 - [ ] **Sweep remaining commented-out dead members** *(2026-08-02)* - leftovers from
   earlier rounds: the `GetAllocatedToActivitiesString` block in
   `ResourceActivitySelectorViewModel` and the `RawTargetResourceActivities` line in
-  `IResourceActivitySelectorViewModel`.
+  `IResourceActivitySelectorViewModel`. Also dead markup left by the chart
+  Plot-ownership refactor: the now-unused `xmlns:scottplot` declarations in the four
+  chart view axaml files (the AvaPlot host is created in code-behind now) and the empty
+  `<local:ScottPlotUserControl.Resources>` element in `EarnedValueChartManagerView.axaml`.
+
+- [ ] **Consider reporting the Dock float/re-dock behaviour upstream** *(2026-08-02,
+  optional)* - under Dock 12.1, dropping a floating tool back into the layout
+  materialises the destination view while the closed float window's visual tree is
+  still assembled (12.0.0.2 did not surface this). Our crash was ultimately the app's
+  own shared-control-as-Content pattern - now fixed by construction in
+  `ScottPlotUserControl` - but a minimal repro (any dockable binding a shared control
+  instance as Content) may be worth filing against Dock so the cross-window
+  materialisation ordering gets a look.
