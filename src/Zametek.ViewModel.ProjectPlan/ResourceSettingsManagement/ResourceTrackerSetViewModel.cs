@@ -127,21 +127,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private void RefreshDays()
         {
             RefreshIndex();
-            this.RaisePropertyChanged(nameof(Day00));
-            this.RaisePropertyChanged(nameof(Day01));
-            this.RaisePropertyChanged(nameof(Day02));
-            this.RaisePropertyChanged(nameof(Day03));
-            this.RaisePropertyChanged(nameof(Day04));
-            this.RaisePropertyChanged(nameof(Day05));
-            this.RaisePropertyChanged(nameof(Day06));
-            this.RaisePropertyChanged(nameof(Day07));
-            this.RaisePropertyChanged(nameof(Day08));
-            this.RaisePropertyChanged(nameof(Day09));
-            this.RaisePropertyChanged(nameof(Day10));
-            this.RaisePropertyChanged(nameof(Day11));
-            this.RaisePropertyChanged(nameof(Day12));
-            this.RaisePropertyChanged(nameof(Day13));
-            this.RaisePropertyChanged(nameof(Day14));
         }
 
         #endregion
@@ -257,81 +242,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public IResourceActivitySelectorViewModel GetDay(int dayOffset)
         {
             return GetResourceActivitySelector(dayOffset);
-        }
-
-        public IResourceActivitySelectorViewModel Day00
-        {
-            get => GetResourceActivitySelector(0);
-        }
-
-        public IResourceActivitySelectorViewModel Day01
-        {
-            get => GetResourceActivitySelector(1);
-        }
-
-        public IResourceActivitySelectorViewModel Day02
-        {
-            get => GetResourceActivitySelector(2);
-        }
-
-        public IResourceActivitySelectorViewModel Day03
-        {
-            get => GetResourceActivitySelector(3);
-        }
-
-        public IResourceActivitySelectorViewModel Day04
-        {
-            get => GetResourceActivitySelector(4);
-        }
-
-        public IResourceActivitySelectorViewModel Day05
-        {
-            get => GetResourceActivitySelector(5);
-        }
-
-        public IResourceActivitySelectorViewModel Day06
-        {
-            get => GetResourceActivitySelector(6);
-        }
-
-        public IResourceActivitySelectorViewModel Day07
-        {
-            get => GetResourceActivitySelector(7);
-        }
-
-        public IResourceActivitySelectorViewModel Day08
-        {
-            get => GetResourceActivitySelector(8);
-        }
-
-        public IResourceActivitySelectorViewModel Day09
-        {
-            get => GetResourceActivitySelector(9);
-        }
-
-        public IResourceActivitySelectorViewModel Day10
-        {
-            get => GetResourceActivitySelector(10);
-        }
-
-        public IResourceActivitySelectorViewModel Day11
-        {
-            get => GetResourceActivitySelector(11);
-        }
-
-        public IResourceActivitySelectorViewModel Day12
-        {
-            get => GetResourceActivitySelector(12);
-        }
-
-        public IResourceActivitySelectorViewModel Day13
-        {
-            get => GetResourceActivitySelector(13);
-        }
-
-        public IResourceActivitySelectorViewModel Day14
-        {
-            get => GetResourceActivitySelector(14);
         }
 
         #endregion

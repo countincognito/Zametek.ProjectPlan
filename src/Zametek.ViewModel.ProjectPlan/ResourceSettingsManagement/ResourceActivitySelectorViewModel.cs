@@ -174,23 +174,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableUniqueCollection<ISelectableResourceActivityViewModel> m_SelectedTargetResourceActivities;
         public ObservableCollection<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities => m_SelectedTargetResourceActivities;
 
-        public string? TargetResourceActivitiesString
-        {
-            get
-            {
-                lock (m_Lock)
-                {
-                    if (TargetResourceActivities.Count == 0)
-                    {
-                        return null;
-                    }
-                    return string.Join(
-                        DependenciesStringValidationRule.Separator,
-                        SelectedTargetResourceActivities.Select(x => x.DisplayName));
-                }
-            }
-        }
-
         public IList<int> SelectedResourceActivityIds
         {
             get
@@ -292,16 +275,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public void RaiseTargetResourceActivitiesPropertiesChanged()
         {
             this.RaisePropertyChanged(nameof(TargetResourceActivities));
-            this.RaisePropertyChanged(nameof(TargetResourceActivitiesString));
-        }
-
-        #endregion
-
-        #region Overrides
-
-        public override string ToString()
-        {
-            return TargetResourceActivitiesString ?? string.Empty;
         }
 
         #endregion
@@ -347,15 +320,12 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             TargetResourceActivities = new ReadOnlyObservableCollection<ISelectableResourceActivityViewModel>([]);
             SelectedTargetResourceActivities = [];
-            TargetResourceActivitiesString = null;
             SelectedResourceActivityIds = [];
         }
 
         public ReadOnlyObservableCollection<ISelectableResourceActivityViewModel> TargetResourceActivities { get; init; }
 
         public ObservableCollection<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities { get; init; }
-
-        public string? TargetResourceActivitiesString { get; init; }
 
         public IList<int> SelectedResourceActivityIds { get; init; }
 
