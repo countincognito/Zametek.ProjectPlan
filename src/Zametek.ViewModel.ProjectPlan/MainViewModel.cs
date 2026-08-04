@@ -1,6 +1,7 @@
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.ReactiveUI.Controls;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using System.Diagnostics;
 using System.Reactive;
@@ -83,6 +84,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ISettingService m_SettingService;
         private readonly IDialogService m_DialogService;
         private readonly IServiceProvider m_ServiceProvider;
+        private readonly ILogger<MainViewModel> m_Logger;
 
         private readonly IDisposable? m_ProjectTitleUpdateSub;
 
@@ -100,7 +102,8 @@ namespace Zametek.ViewModel.ProjectPlan
             IProjectFileSave projectFileSave,
             ISettingService settingService,
             IDialogService dialogService,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            ILogger<MainViewModel> logger)
         {
             ArgumentNullException.ThrowIfNull(dockFactory);
             ArgumentNullException.ThrowIfNull(dockSerializer);
@@ -112,7 +115,9 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(settingService);
             ArgumentNullException.ThrowIfNull(dialogService);
             ArgumentNullException.ThrowIfNull(serviceProvider);
+            ArgumentNullException.ThrowIfNull(logger);
             m_Lock = new();
+            m_Logger = logger;
             m_DockFactory = dockFactory;
             m_DockSerializer = dockSerializer;
             m_DataGridLayoutManager = dataGridLayoutManager;
@@ -518,6 +523,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ProjectScenarioImport(string filename)
         {
+            m_Logger.LogInformation("Importing scenario from {ImportFile}", filename);
+            long startTimestamp = Stopwatch.GetTimestamp();
+
             lock (m_Lock)
             {
                 Guid projectScenarioId = m_SettingService.ScenarioId;
@@ -525,6 +533,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 ProjectScenarioImportModel importModel = m_CoreViewModel.ImportProjectScenarioFile(filename);
                 m_CoreViewModel.ProcessProjectScenarioImport(importModel, projectScenarioId, projectScenarioTitle);
             }
+
+            m_Logger.LogInformation(
+                "Imported scenario from {ImportFile} in {ElapsedMilliseconds}ms",
+                filename,
+                (long)Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
         }
 
         private async Task ProjectScenarioExportAsync(string filename) =>
@@ -532,6 +545,9 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private void ProjectScenarioExport(string filename)
         {
+            m_Logger.LogInformation("Exporting scenario to {ExportFile}", filename);
+            long startTimestamp = Stopwatch.GetTimestamp();
+
             lock (m_Lock)
             {
                 ProjectScenarioModel projectScenarioModel = m_CoreViewModel.BuildProjectScenario();
@@ -542,6 +558,11 @@ namespace Zametek.ViewModel.ProjectPlan
                     ShowDates,
                     filename);
             }
+
+            m_Logger.LogInformation(
+                "Exported scenario to {ExportFile} in {ElapsedMilliseconds}ms",
+                filename,
+                (long)Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
         }
 
         private async Task<ProjectModel> BuildProjectAsync() => await Task.Run(BuildProject);
@@ -609,6 +630,12 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             if (!string.IsNullOrWhiteSpace(filename))
             {
+                // The single funnel for all three open entry points (menu, recent list and
+                // command-line argument), so one open produces one pair of log lines. The
+                // opening line is what survives if the load then crashes or hangs.
+                m_Logger.LogInformation("Opening project {ProjectFile}", filename);
+                long startTimestamp = Stopwatch.GetTimestamp();
+
                 ProjectModel projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(filename);
 
                 // First process the project. The load cascade (reset, scenario
@@ -621,6 +648,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_SettingService.RecordRecentProjectFilePath(filename);
                 RefreshRecentProjectFileMenuItems();
                 m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
+
+                m_Logger.LogInformation(
+                    "Opened project {ProjectFile} in {ElapsedMilliseconds}ms",
+                    filename,
+                    (long)Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
             }
         }
 
@@ -635,6 +667,9 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             else
             {
+                m_Logger.LogInformation("Saving project {ProjectFile}", filename);
+                long startTimestamp = Stopwatch.GetTimestamp();
+
                 ProjectModel projectModel = await BuildProjectAsync();
                 await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
                 m_CoreViewModel.IsProjectScenarioUpdated = false;
@@ -644,6 +679,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_SettingService.RecordRecentProjectFilePath(filename);
                 RefreshRecentProjectFileMenuItems();
                 m_ProjectScenarioManagerViewModel.IsReadyToReviseTitle = ReadyToRevise.Yes;
+
+                m_Logger.LogInformation(
+                    "Saved project {ProjectFile} in {ElapsedMilliseconds}ms",
+                    filename,
+                    (long)Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
             }
         }
 
@@ -1115,6 +1155,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             catch (Exception ex)
             {
+                m_Logger.LogError(ex, "Failed to open project");
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
@@ -1144,6 +1185,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             catch (Exception ex)
             {
+                m_Logger.LogError(ex, "Failed to open project {ProjectFile}", filename);
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
@@ -1173,6 +1215,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             catch (Exception ex)
             {
+                m_Logger.LogError(ex, "Failed to open recent project {ProjectFile}", filename);
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
@@ -1236,6 +1279,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             catch (Exception ex)
             {
+                m_Logger.LogError(ex, "Failed to save project");
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
@@ -1260,6 +1304,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             catch (Exception ex)
             {
+                m_Logger.LogError(ex, "Failed to save project under a new name");
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
@@ -1294,6 +1339,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             catch (Exception ex)
             {
+                m_Logger.LogError(ex, "Failed to import scenario");
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
@@ -1327,6 +1373,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
             catch (Exception ex)
             {
+                m_Logger.LogError(ex, "Failed to export scenario");
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
@@ -1350,10 +1397,12 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                 }
+                m_Logger.LogInformation("Closing project");
                 await Task.Run(ResetProject);
             }
             catch (Exception ex)
             {
+                m_Logger.LogError(ex, "Failed to close project");
                 await m_DialogService.ShowErrorAsync(
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,

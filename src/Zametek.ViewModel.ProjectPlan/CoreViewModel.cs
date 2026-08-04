@@ -1,5 +1,6 @@
 using DynamicData;
 using DynamicData.Binding;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -39,6 +40,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly IResourceSchedulingService m_ResourceSchedulingService;
         private readonly IMetricCalculationService m_MetricCalculationService;
         private readonly IDataGridScrollManager m_DataGridScrollManager;
+        private readonly ILogger<CoreViewModel> m_Logger;
 
         private readonly IDisposable? m_ReadOnlyActivitiesSub;
         private readonly IDisposable? m_OrderableActivitiesSub;
@@ -60,7 +62,8 @@ namespace Zametek.ViewModel.ProjectPlan
             IGraphCompilationService graphCompilationService,
             IResourceSchedulingService resourceSchedulingService,
             IMetricCalculationService metricCalculationService,
-            IDataGridScrollManager dataGridScrollManager)
+            IDataGridScrollManager dataGridScrollManager,
+            ILogger<CoreViewModel> logger)
         {
             ArgumentNullException.ThrowIfNull(projectScenarioFileImport);
             ArgumentNullException.ThrowIfNull(projectScenarioFileExport);
@@ -71,6 +74,8 @@ namespace Zametek.ViewModel.ProjectPlan
             ArgumentNullException.ThrowIfNull(resourceSchedulingService);
             ArgumentNullException.ThrowIfNull(metricCalculationService);
             ArgumentNullException.ThrowIfNull(dataGridScrollManager);
+            ArgumentNullException.ThrowIfNull(logger);
+            m_Logger = logger;
             m_Lock = new();
             m_TrackIsProjectScenarioUpdated = true;
             m_TrackHasStaleOutputs = true;
@@ -1319,6 +1324,14 @@ namespace Zametek.ViewModel.ProjectPlan
             Guid projectScenarioId,
             string projectScenarioTitle)
         {
+            // The single funnel for every scenario switch (and for the scenario loaded as
+            // part of opening a project), so the log shows which scenario was in play when
+            // anything after this point went wrong.
+            m_Logger.LogInformation(
+                "Loading scenario {ScenarioTitle} ({ScenarioId:D})",
+                projectScenarioTitle,
+                projectScenarioId);
+
             try
             {
                 BeginBulkUpdate();
@@ -1869,6 +1882,12 @@ namespace Zametek.ViewModel.ProjectPlan
         public void RunCompile()
         {
             CascadeDiagnostics.RecordStackTrace($@"{nameof(CoreViewModel)}.{nameof(RunCompile)} invoked");
+
+            // Captured under the lock but logged after it: a compile runs on the taskpool
+            // while UI bindings contend for this lock, so nothing avoidable happens inside.
+            bool compilationErrorsAppeared = false;
+            int compilationErrorCount = 0;
+
             try
             {
                 lock (m_Lock)
@@ -1887,7 +1906,10 @@ namespace Zametek.ViewModel.ProjectPlan
                     workStreams.AddRange(WorkStreamSettings.WorkStreams.Select(m_Mapper.ToWorkStream));
 
                     IGraphCompilation<int, int, int, IDependentActivity> graphCompilation = m_VertexGraphCompiler.Compile(availableResources, workStreams);
+                    bool hadCompilationErrors = HasCompilationErrors;
                     HasCompilationErrors = graphCompilation.CompilationErrors.Any();
+                    compilationErrorsAppeared = HasCompilationErrors && !hadCompilationErrors;
+                    compilationErrorCount = graphCompilation.CompilationErrors.Count();
                     GraphCompilation = graphCompilation;
 
                     IsProjectScenarioUpdated = true;
@@ -1899,6 +1921,14 @@ namespace Zametek.ViewModel.ProjectPlan
             finally
             {
                 EndBusy();
+            }
+
+            // Only the transition into a failing state is recorded. A plan is usually
+            // edited repeatedly while it will not compile, and logging every one of those
+            // compiles would bury the moment it first broke.
+            if (compilationErrorsAppeared)
+            {
+                m_Logger.LogWarning("Compilation failed with {CompilationErrorCount} error(s)", compilationErrorCount);
             }
         }
 

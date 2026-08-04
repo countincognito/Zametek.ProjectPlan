@@ -28,6 +28,7 @@
     <PackageReference Include="Dock.Serializer.Newtonsoft" Version="12.1.0" />
     <PackageReference Include="DynamicData" Version="9.4.33" />
     <PackageReference Include="Ical.Net" Version="5.2.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
     <PackageReference Include="MPXJ.Net" Version="16.5.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="NPOI" Version="[2.7.6,2.8.0)" />

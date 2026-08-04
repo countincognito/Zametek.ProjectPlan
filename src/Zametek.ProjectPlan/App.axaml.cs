@@ -7,6 +7,7 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Zametek.Contract.ProjectPlan;
 using Zametek.View.ProjectPlan;
@@ -36,10 +37,43 @@ namespace Zametek.ProjectPlan
                 .CreateLogger();
         }
 
+        // Records anything that escapes to the top of a thread or is never observed on a
+        // task. These handlers only observe - the runtime still terminates the process
+        // exactly as it would otherwise - but without them a crash leaves nothing behind
+        // except a stderr message no user ever sees. A render-thread exception, for
+        // instance, is unreachable by any try/catch we could write, so the log file is the
+        // only place its stack trace can survive.
+        private static void RegisterGlobalExceptionHandlers()
+        {
+            AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+            {
+                Log.Fatal(args.ExceptionObject as Exception, "Unhandled exception (terminating: {IsTerminating})", args.IsTerminating);
+
+                // Flush only when the process is actually going down: CloseAndFlush swaps
+                // in a silent logger, which would mute a survivable exception's successors.
+                if (args.IsTerminating)
+                {
+                    Log.CloseAndFlush();
+                }
+            };
+
+            // Raised when a faulted task is collected with nobody having awaited it. The
+            // default (swallow) behaviour is left alone by not calling SetObserved.
+            TaskScheduler.UnobservedTaskException += (_, args) =>
+            {
+                Log.Error(args.Exception, "Unobserved task exception");
+            };
+        }
+
         public override async void OnFrameworkInitializationCompleted()
         {
             Log.Logger = ConfigureSerilog();
-            Log.Information("Application starting up");
+            RegisterGlobalExceptionHandlers();
+            Log.Information(
+                "Application starting up (version {Version}, {FrameworkDescription}, {OSDescription})",
+                Resource.ProjectPlan.Labels.Label_AppVersion,
+                RuntimeInformation.FrameworkDescription,
+                RuntimeInformation.OSDescription);
 
             try
             {
@@ -77,6 +111,7 @@ namespace Zametek.ProjectPlan
                         desktopLifetime.Exit += (a, b) =>
                         {
                             mainViewModel.CloseLayout();
+                            Log.Information("Application shutting down");
                             Log.CloseAndFlush();
                         };
 

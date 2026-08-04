@@ -2,6 +2,8 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Dock.Model.Core;
 using Dock.Serializer;
+using Microsoft.Extensions.Logging;
+using Serilog.Extensions.Logging;
 using Splat;
 using Splat.Autofac;
 using System;
@@ -34,6 +36,22 @@ namespace Zametek.ProjectPlan
             s_Builder.Register(c => new AutofacServiceProvider(c.Resolve<ILifetimeScope>()))
                 .As<IServiceProvider>()
                 .InstancePerLifetimeScope();
+
+            // Logging. View-models take an ILogger<T> and so depend only on the
+            // Microsoft.Extensions.Logging abstraction, never on Serilog itself - which is
+            // what lets the headless CLI satisfy the same constructors from its generic
+            // host without any extra registration. This bridges that abstraction to the
+            // Serilog logger the app configures in App.OnFrameworkInitializationCompleted.
+            // SerilogLoggerFactory with no logger reads the static Log.Logger afresh on
+            // each write, so this registration neither depends on Serilog having been
+            // configured by the time the container is built nor keeps the logger alive
+            // past Log.CloseAndFlush() at shutdown.
+            s_Builder.Register(c => new SerilogLoggerFactory())
+                .As<ILoggerFactory>()
+                .SingleInstance();
+            s_Builder.RegisterGeneric(typeof(Logger<>))
+                .As(typeof(ILogger<>))
+                .SingleInstance();
 
             // File settings.
             string settingsFilename = SettingFileHelper.DefaultUserSettingsFileLocation();
