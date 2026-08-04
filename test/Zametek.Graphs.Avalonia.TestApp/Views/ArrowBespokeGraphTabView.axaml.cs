@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using Zametek.Graphs.Avalonia;
 
 namespace Zametek.Graphs.Avalonia.TestApp.Views
@@ -40,22 +41,22 @@ namespace Zametek.Graphs.Avalonia.TestApp.Views
 
                 // The template's DropShadowEffect glow (colour #6D8BFF, blur 16, opacity 0.75).
                 ShowNodeGlow = true,
-                NodeGlowBrush = new SolidColorBrush(Color.Parse(@"#6D8BFF")),
+                NodeGlowBrush = new ImmutableSolidColorBrush(Color.Parse(@"#6D8BFF")),
                 NodeGlowBlurRadius = 16.0,
                 NodeGlowOpacity = 0.75,
 
                 // The edge's soft glow (template DropShadowEffect colour #3B82F6, blur 7, opacity 0.4).
                 ShowEdgeGlow = true,
-                EdgeGlowBrush = new SolidColorBrush(Color.Parse(@"#3B82F6")),
+                EdgeGlowBrush = new ImmutableSolidColorBrush(Color.Parse(@"#3B82F6")),
                 EdgeGlowBlurRadius = 7.0,
                 EdgeGlowOpacity = 0.4,
 
                 // The label chip, with the same border the on-screen chip carries.
                 ShowEdgeLabelChip = true,
-                EdgeLabelChipBrush = new SolidColorBrush(Color.FromArgb(0xEE, 0x1B, 0x2A, 0x4A)),
-                EdgeLabelChipBorderBrush = new SolidColorBrush(Color.Parse(@"#3B82F6")),
+                EdgeLabelChipBrush = new ImmutableSolidColorBrush(Color.FromArgb(0xEE, 0x1B, 0x2A, 0x4A)),
+                EdgeLabelChipBorderBrush = new ImmutableSolidColorBrush(Color.Parse(@"#3B82F6")),
                 EdgeLabelChipBorderThickness = 1.0,
-                EdgeLabelChipTextBrush = new SolidColorBrush(Color.Parse(@"#EAF1FB")),
+                EdgeLabelChipTextBrush = new ImmutableSolidColorBrush(Color.Parse(@"#EAF1FB")),
                 EdgeLabelChipCornerRadius = 9.0,
             };
         }

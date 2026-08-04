@@ -1,5 +1,6 @@
 using Avalonia.Headless;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using Shouldly;
 using SkiaSharp;
 using Xunit;
@@ -46,7 +47,7 @@ namespace Zametek.Graphs.Avalonia.Tests.Rendering
                     GraphVectorExportStyle.Default with
                     {
                         NodeShape = GraphExportNodeShape.Ellipse,
-                        NodeFillOverride = new SolidColorBrush(Color.Parse(@"#2E4194")),
+                        NodeFillOverride = new ImmutableSolidColorBrush(Color.Parse(@"#2E4194")),
                     });
 
                 // The override (indigo #2E4194) wins over the light data fill.

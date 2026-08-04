@@ -28,6 +28,13 @@ Date entries when added; delete them when done.
   but only tracks state; the inline comment marks where `DragDrop.DoDragDropAsync`
   would start a real DND operation (e.g. dragging a chart image into another app).
 
+- [ ] **Add useful, lightweight logging** *(2026-08-04, hygiene)* - the Serilog file
+  currently records little beyond "Application starting up", which makes field
+  diagnosis (e.g. crash reports) harder than it should be. Add sparse, high-value
+  log points: unhandled/dispatcher exceptions with stack traces, project
+  open/close/import/export (path + outcome), scenario switches, and compile
+  failures. Keep it light - no per-edit or per-build chatter.
+
 - [ ] **Consider gating the stale-outputs border like the busy overlay**
   *(2026-08-04)* - with the edit freeze fixed, the red border flash per edit is
   purely cosmetic (roughly 0.1-0.3s of honest staleness). If it proves visually

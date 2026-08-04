@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 
 namespace Zametek.Graphs.Avalonia
 {
@@ -80,7 +81,8 @@ namespace Zametek.Graphs.Avalonia
         // Optional filled rounded background drawn behind an edge label (a "chip"), for edges that show one.
         public bool ShowEdgeLabelChip { get; init; }
 
-        public IBrush EdgeLabelChipBrush { get; init; } = new SolidColorBrush(Color.FromArgb(0xCC, 0x1B, 0x2A, 0x4A));
+        // Immutable for thread-neutrality (see the THREADING note on GraphAppearance).
+        public IBrush EdgeLabelChipBrush { get; init; } = new ImmutableSolidColorBrush(Color.FromArgb(0xCC, 0x1B, 0x2A, 0x4A));
 
         // Optional border stroked around the chip. Drawn only when the brush is set (the default chip has no
         // border, preserving the original look).

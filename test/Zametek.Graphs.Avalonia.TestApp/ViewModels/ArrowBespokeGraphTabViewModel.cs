@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using Zametek.Graphs.Avalonia;
 using Zametek.Graphs.Avalonia.TestApp.Graphs;
 
@@ -28,16 +29,16 @@ namespace Zametek.Graphs.Avalonia.TestApp.ViewModels
 
         private static GraphAppearance BespokeAppearance { get; } = GraphAppearance.Default with
         {
-            SelectionBrush = new SolidColorBrush(Color.Parse(@"#FFB703")),
+            SelectionBrush = new ImmutableSolidColorBrush(Color.Parse(@"#FFB703")),
             HighlightStrokeThickness = 3.0,
             NodeCornerRadius = 14.0,
             NodeLabelFontFamily = new FontFamily(@"Segoe UI"),
             NodeLabelFontSize = 14.0,
-            NodeLabelBrush = new SolidColorBrush(Colors.White),
+            NodeLabelBrush = new ImmutableSolidColorBrush(Colors.White),
             EdgeLabelFontFamily = new FontFamily(@"Segoe UI"),
             EdgeLabelFontSize = 12.0,
-            EdgeLightLabelBrush = new SolidColorBrush(Color.Parse(@"#EAF1FB")),
-            EdgeDarkLabelBrush = new SolidColorBrush(Color.Parse(@"#EAF1FB")),
+            EdgeLightLabelBrush = new ImmutableSolidColorBrush(Color.Parse(@"#EAF1FB")),
+            EdgeDarkLabelBrush = new ImmutableSolidColorBrush(Color.Parse(@"#EAF1FB")),
             ArrowLength = 13.0,
             ArrowHalfWidth = 6.5,
             NodeDimmedOpacity = 0.12,

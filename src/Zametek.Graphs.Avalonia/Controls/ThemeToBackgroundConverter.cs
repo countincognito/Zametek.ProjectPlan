@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using System.Globalization;
 
 namespace Zametek.Graphs.Avalonia
@@ -8,8 +9,10 @@ namespace Zametek.Graphs.Avalonia
     public class ThemeToBackgroundConverter
         : IValueConverter
     {
-        private static readonly IBrush s_LightThemeBackground = new SolidColorBrush(ColorHelper.LightThemeBackground);
-        private static readonly IBrush s_DarkThemeBackground = new SolidColorBrush(ColorHelper.DarkThemeBackground);
+        // Immutable so the statics carry no thread ownership, whichever thread first touches this
+        // type (see the THREADING note on GraphAppearance).
+        private static readonly IBrush s_LightThemeBackground = new ImmutableSolidColorBrush(ColorHelper.LightThemeBackground);
+        private static readonly IBrush s_DarkThemeBackground = new ImmutableSolidColorBrush(ColorHelper.DarkThemeBackground);
 
         #region IValueConverter Members
 

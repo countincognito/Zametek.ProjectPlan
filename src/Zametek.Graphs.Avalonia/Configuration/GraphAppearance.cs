@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 
 namespace Zametek.Graphs.Avalonia
 {
@@ -10,20 +11,31 @@ namespace Zametek.Graphs.Avalonia
     // { ... }`); passing nothing keeps the original look. Pure routing/geometry maths (arrowhead tangent
     // span, axis-flip hysteresis, edge label lift, the wide edge hit area) are deliberately NOT here -
     // they shape behaviour, not theme.
+    //
+    // THREADING: every brush below is an ImmutableSolidColorBrush, never a mutable SolidColorBrush.
+    // A mutable brush is an AvaloniaObject, and Avalonia ties an AvaloniaObject to the dispatcher of
+    // the thread that constructs it - the compositor then verifies that ownership the first time the
+    // brush is drawn. This record is constructed on whatever thread first touches it (an application
+    // that builds its view-model graph behind a splash screen constructs Default on a background
+    // thread), so a mutable default would be foreign-owned and crash the UI thread's render loop with
+    // "The calling thread cannot access this object because a different thread owns it". Immutable
+    // brushes carry no thread ownership, and as a bonus can be read off the UI thread (the exporters
+    // read brush colours). Consumers re-skinning via `Default with { ... }` should supply immutable
+    // brushes for the same reason.
     public record GraphAppearance
     {
         // The ready-made default appearance (the original hard-coded look). Re-skin via `Default with { ... }`.
         public static GraphAppearance Default { get; } = new();
 
         // Selection / highlight, shared by the node selection ring and the highlighted-edge stroke.
-        public IBrush SelectionBrush { get; init; } = new SolidColorBrush(Color.Parse(@"#0078D4"));
+        public IBrush SelectionBrush { get; init; } = new ImmutableSolidColorBrush(Color.Parse(@"#0078D4"));
 
         public double HighlightStrokeThickness { get; init; } = 2.5;
 
         // Nodes.
-        public IBrush NodeFillFallbackBrush { get; init; } = new SolidColorBrush(Colors.LightGray);
+        public IBrush NodeFillFallbackBrush { get; init; } = new ImmutableSolidColorBrush(Colors.LightGray);
 
-        public IBrush NodeBorderFallbackBrush { get; init; } = new SolidColorBrush(Colors.Black);
+        public IBrush NodeBorderFallbackBrush { get; init; } = new ImmutableSolidColorBrush(Colors.Black);
 
         public double NodeCornerRadius { get; init; } = 3.0;
 
@@ -35,18 +47,18 @@ namespace Zametek.Graphs.Avalonia
 
         public double NodeLabelFontSize { get; init; } = 11.0;
 
-        public IBrush NodeLabelBrush { get; init; } = new SolidColorBrush(Colors.Black);
+        public IBrush NodeLabelBrush { get; init; } = new ImmutableSolidColorBrush(Colors.Black);
 
         // Edges.
-        public IBrush EdgeDefaultBrush { get; init; } = new SolidColorBrush(Colors.Gray);
+        public IBrush EdgeDefaultBrush { get; init; } = new ImmutableSolidColorBrush(Colors.Gray);
 
         public double DefaultEdgeStrokeThickness { get; init; } = 1.0;
 
         public double EdgeDimmedOpacity { get; init; } = 0.15;
 
-        public IBrush EdgeLightLabelBrush { get; init; } = new SolidColorBrush(Colors.Black);
+        public IBrush EdgeLightLabelBrush { get; init; } = new ImmutableSolidColorBrush(Colors.Black);
 
-        public IBrush EdgeDarkLabelBrush { get; init; } = new SolidColorBrush(Colors.White);
+        public IBrush EdgeDarkLabelBrush { get; init; } = new ImmutableSolidColorBrush(Colors.White);
 
         public FontFamily EdgeLabelFontFamily { get; init; } = new(@"Consolas");
 

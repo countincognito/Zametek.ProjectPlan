@@ -1,5 +1,6 @@
 using Avalonia.Collections;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using ReactiveUI;
 
 namespace Zametek.Graphs.Avalonia
@@ -114,7 +115,9 @@ namespace Zametek.Graphs.Avalonia
             {
                 return fallback;
             }
-            return new SolidColorBrush(ColorHelper.HtmlHexCodeToColor(hexCode));
+            // Immutable so the brush stays renderable no matter which thread builds the view-model
+            // (see the THREADING note on GraphAppearance).
+            return new ImmutableSolidColorBrush(ColorHelper.HtmlHexCodeToColor(hexCode));
         }
     }
 }

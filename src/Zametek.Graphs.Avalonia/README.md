@@ -261,14 +261,15 @@ Pass a `GraphAppearance` to the view‑model constructor. Start from `Default` a
 
 ```csharp
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 
 var appearance = GraphAppearance.Default with
 {
-    SelectionBrush     = new SolidColorBrush(Color.Parse("#FF7A00")),
-    NodeLabelBrush     = new SolidColorBrush(Colors.White),
-    NodeLabelFontFamily = new FontFamily("Cascadia Code"),   // NOTE: FontFamily, not string
+    SelectionBrush     = new ImmutableSolidColorBrush(Color.Parse("#FF7A00")),   // NOTE: immutable, not
+    NodeLabelBrush     = new ImmutableSolidColorBrush(Colors.White),             // SolidColorBrush - see
+    NodeLabelFontFamily = new FontFamily("Cascadia Code"),                       // Threading & gotchas
     NodeCornerRadius   = 6.0,
-    EdgeDefaultBrush   = new SolidColorBrush(Color.Parse("#667085")),
+    EdgeDefaultBrush   = new ImmutableSolidColorBrush(Color.Parse("#667085")),
     DashPattern        = new double[] { 4.0, 2.0 },
 };
 
@@ -401,13 +402,13 @@ graphView.VectorExportStyle = GraphVectorExportStyle.Default with
     NodeLabelFontWeight = FontWeight.Bold,
 
     ShowNodeGlow = true,                         // soft outer halo (an SVG blur)
-    NodeGlowBrush = new SolidColorBrush(Color.Parse("#6D8BFF")),
+    NodeGlowBrush = new ImmutableSolidColorBrush(Color.Parse("#6D8BFF")),
     NodeGlowBlurRadius = 16.0,
     NodeGlowOpacity = 0.75,
 
     ShowEdgeLabelChip = true,                    // rounded background behind edge labels
-    EdgeLabelChipBorderBrush = new SolidColorBrush(Color.Parse("#3B82F6")),
-    EdgeLabelChipTextBrush = new SolidColorBrush(Color.Parse("#EAF1FB")),
+    EdgeLabelChipBorderBrush = new ImmutableSolidColorBrush(Color.Parse("#3B82F6")),
+    EdgeLabelChipTextBrush = new ImmutableSolidColorBrush(Color.Parse("#EAF1FB")),
 };
 ```
 
@@ -524,8 +525,15 @@ Provided by the control with no extra work:
 - **Layout runs off the UI thread.** Observe `IGraphHost.RebuildRequested` on a background scheduler
   (e.g. `TaskPoolScheduler.Default`) so the MSAGL pass never blocks the UI. The view‑model marshals the
   results back to the UI thread itself.
-- **Exports render on the UI thread.** Reading brush colours (an Avalonia `AvaloniaObject` property) is
-  UI‑thread affine, so copy/save must run on it - the built‑in paths already do (`Dispatcher.UIThread`).
+- **Exports render on the UI thread.** Rasterising the real templates must run on it - the built‑in
+  copy/save paths already do (`Dispatcher.UIThread`).
+- **Immutable brushes only.** Avalonia ties a mutable brush (an `AvaloniaObject`) to the dispatcher of
+  the thread that creates it, and the compositor verifies that ownership the first time the brush is
+  drawn - a brush created off the UI thread crashes the render loop with "The calling thread cannot
+  access this object because a different thread owns it". Every brush the library creates is an
+  `ImmutableSolidColorBrush`; supply immutable brushes in your `GraphAppearance` /
+  `GraphVectorExportStyle` overrides too, because your host view‑model - and with it the appearance -
+  may well be constructed off the UI thread (e.g. behind a splash screen).
 - **`FontFamily`, not `string`** for all font‑family properties (see the appearance note above).
 - **Dispose** the `InteractiveGraphViewModel` (and your `IGraphHost`) when the owning view‑model goes
   away.

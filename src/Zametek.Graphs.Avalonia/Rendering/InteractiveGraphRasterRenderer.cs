@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Media.Immutable;
 using SkiaSharp;
 
 namespace Zametek.Graphs.Avalonia
@@ -97,8 +98,10 @@ namespace Zametek.Graphs.Avalonia
                 }
             }
 
-            // Theme background behind the content, baked into the raster so it matches the on-screen canvas.
-            var background = new SolidColorBrush(theme == GraphTheme.Dark
+            // Theme background behind the content, baked into the raster so it matches the on-screen
+            // canvas. Immutable like every brush the library creates (see the THREADING note on
+            // GraphAppearance).
+            var background = new ImmutableSolidColorBrush(theme == GraphTheme.Dark
                 ? ColorHelper.DarkThemeBackground
                 : ColorHelper.LightThemeBackground);
 
