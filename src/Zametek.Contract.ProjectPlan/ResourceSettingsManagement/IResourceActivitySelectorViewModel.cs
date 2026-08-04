@@ -10,8 +10,6 @@ namespace Zametek.Contract.ProjectPlan
 
         int Time { get; }
 
-        //IReadOnlyList<ISelectableResourceActivityViewModel> RawTargetResourceActivities { get; }
-
         ReadOnlyObservableCollection<ISelectableResourceActivityViewModel> TargetResourceActivities { get; }
 
         ObservableCollection<ISelectableResourceActivityViewModel> SelectedTargetResourceActivities { get; }

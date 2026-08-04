@@ -4,10 +4,10 @@ using Zametek.Common.ProjectPlan;
 namespace Zametek.ViewModel.ProjectPlan
 {
     /// <summary>
-    /// Pure helper logic for the effort timesheet: the shared day count, day
-    /// load classification and row labels.
+    /// Pure helper logic for the tracking panels: the shared day count, plus
+    /// the effort timesheet's day-load classification and row labels.
     /// </summary>
-    public static class TimesheetHelper
+    public static class TrackingHelper
     {
         /// <summary>
         /// The number of consecutive tracker days shown by the tracking

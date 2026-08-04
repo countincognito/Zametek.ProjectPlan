@@ -35,7 +35,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CoreViewModel = coreViewModel;
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;
             m_DateTimeCalculator = dateTimeCalculator;
-            m_DayTitles = [.. Enumerable.Range(0, TimesheetHelper.DayCount)
+            m_DayTitles = [.. Enumerable.Range(0, TrackingHelper.DayCount)
                 .Select(dayOffset => new DayTitleViewModel(this, dayOffset))];
 
             SyncTodayCommand = ReactiveCommand.Create(SyncToday);

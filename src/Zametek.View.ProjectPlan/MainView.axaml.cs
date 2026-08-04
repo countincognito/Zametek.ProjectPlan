@@ -63,14 +63,11 @@ namespace Zametek.View.ProjectPlan
                     main => main.IsOpening,
                     main => main.IsSaving,
                     main => main.IsSavingAs,
-                    // TODO
-                    //main => main.IsImporting,
-                    //main => main.IsExporting,
+                    main => main.IsImporting,
+                    main => main.IsExporting,
                     main => main.IsClosing,
-                    (isBusy, isOpening, isSaving, isSavingAs, //isImporting, isExporting,
-                    isClosing) =>
-                        isBusy || isOpening || isSaving || isSavingAs //|| isImporting || isExporting
-                        || isClosing)
+                    (isBusy, isOpening, isSaving, isSavingAs, isImporting, isExporting, isClosing) =>
+                        isBusy || isOpening || isSaving || isSavingAs || isImporting || isExporting || isClosing)
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(UpdateCursor);
 

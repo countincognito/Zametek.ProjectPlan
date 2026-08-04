@@ -24,7 +24,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private int? m_Total;
         public int? Total => m_Total;
 
-        public TimesheetDayLoad Load => TimesheetHelper.Classify(m_Total);
+        public TimesheetDayLoad Load => TrackingHelper.Classify(m_Total);
 
         public string TotalDisplay => m_Total?.ToString(CultureInfo.CurrentCulture) ?? string.Empty;
 

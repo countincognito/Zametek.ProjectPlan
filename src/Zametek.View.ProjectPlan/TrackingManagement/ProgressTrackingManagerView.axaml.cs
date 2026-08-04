@@ -22,7 +22,7 @@ namespace Zametek.View.ProjectPlan
             ArgumentNullException.ThrowIfNull(dataGridScrollManager);
             InitializeComponent();
 
-            for (int i = 0; i < TimesheetHelper.DayCount; i++)
+            for (int i = 0; i < TrackingHelper.DayCount; i++)
             {
                 TrackerActivitiesGrid.Columns.Add(new DataGridProgressTrackingColumn(i));
             }

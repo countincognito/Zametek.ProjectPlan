@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			       xmlns:resources="using:Zametek.Resource.ProjectPlan"
 			       xmlns:local="using:Zametek.View.ProjectPlan"
-			       xmlns:scottplot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
 			       xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
 			       xmlns:common="using:Zametek.Common.ProjectPlan"
 			       xmlns:converters="using:Avalonia.Controls.Converters"

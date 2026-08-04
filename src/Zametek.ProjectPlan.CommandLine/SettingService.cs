@@ -62,6 +62,9 @@ namespace Zametek.ProjectPlan.CommandLine
             }
         }
 
+        // The command line tool has no data grids, so layout persistence is
+        // inert: nothing is stored and recording is a no-op.
+
         public override IList<DataGridModel> GetDataGridLayout()
         {
             return [];
@@ -69,7 +72,6 @@ namespace Zametek.ProjectPlan.CommandLine
 
         public override void SetDataGridLayout(IList<DataGridModel> models)
         {
-            throw new NotImplementedException();
         }
 
         public override bool DefaultShowDates

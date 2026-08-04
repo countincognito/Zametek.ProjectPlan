@@ -40,7 +40,7 @@ namespace Zametek.Contract.ProjectPlan
 
         /// <summary>
         /// One stable title view model per visible day column (sized by
-        /// TimesheetHelper.DayCount); grid header bindings index into it
+        /// TrackingHelper.DayCount); grid header bindings index into it
         /// (DayTitles[n].Title) and the elements re-raise as the window
         /// moves.
         /// </summary>

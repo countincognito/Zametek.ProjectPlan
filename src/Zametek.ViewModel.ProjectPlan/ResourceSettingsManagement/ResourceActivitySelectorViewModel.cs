@@ -189,19 +189,6 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Public IResourceActivitySelectorViewModel
 
-        //public string GetAllocatedToActivitiesString(HashSet<int> allocatedToActivities)
-        //{
-        //    ArgumentNullException.ThrowIfNull(allocatedToActivities);
-        //    lock (m_Lock)
-        //    {
-        //        return string.Join(
-        //            DependenciesStringValidationRule.Separator,
-        //            TargetActivities.Where(x => allocatedToActivities.Contains(x.Id))
-        //                .OrderBy(x => x.Id)
-        //                .Select(x => x.DisplayName));
-        //    }
-        //}
-
         public void SetTargetResourceActivities(
             IEnumerable<ResourceActivityTrackerModel> targetResourceActivities,
             HashSet<int> selectedTargetResourceActivities)

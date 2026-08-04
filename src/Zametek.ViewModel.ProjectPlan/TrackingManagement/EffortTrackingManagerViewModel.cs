@@ -100,7 +100,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_TimesheetSections = [.. resources.Select(resource => new ResourceTimesheetViewModel(
                     this,
                     resource,
-                    TimesheetHelper.DayCount,
+                    TrackingHelper.DayCount,
                     !m_ExpandedLookup.TryGetValue(resource.Id, out bool isExpanded) || isExpanded,
                     (resourceId, expanded) => m_ExpandedLookup[resourceId] = expanded))];
                 this.RaisePropertyChanged(nameof(TimesheetSections));

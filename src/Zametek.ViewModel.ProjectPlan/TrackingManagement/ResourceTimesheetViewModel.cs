@@ -78,7 +78,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private string BuildLabel(int activityId)
         {
             IManagedActivityViewModel? activity = m_LastActivities.FirstOrDefault(x => x.Id == activityId);
-            return TimesheetHelper.BuildActivityLabel(activityId, activity?.Name);
+            return TrackingHelper.BuildActivityLabel(activityId, activity?.Name);
         }
 
         private bool HasBookingsInLeadingDays()
@@ -126,7 +126,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Where(activity => !rowIds.Contains(activity.Id))
                 .Select(activity => new TimesheetCandidateActivityViewModel(
                     activity.Id,
-                    TimesheetHelper.BuildActivityLabel(activity.Id, activity.Name)))];
+                    TrackingHelper.BuildActivityLabel(activity.Id, activity.Name)))];
 
             this.RaisePropertyChanged(nameof(CandidateActivities));
         }

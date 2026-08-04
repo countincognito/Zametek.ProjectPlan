@@ -24,7 +24,7 @@ namespace Zametek.View.ProjectPlan
                 return;
             }
 
-            for (int i = 0; i < TimesheetHelper.DayCount; i++)
+            for (int i = 0; i < TrackingHelper.DayCount; i++)
             {
                 AssociatedObject.Columns.Add(new DataGridTimesheetDayColumn(i));
             }

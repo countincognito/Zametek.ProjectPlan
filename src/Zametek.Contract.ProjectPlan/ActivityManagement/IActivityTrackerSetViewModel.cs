@@ -24,7 +24,7 @@ namespace Zametek.Contract.ProjectPlan
 
         /// <summary>
         /// One stable day view model per visible day column (sized by
-        /// TimesheetHelper.DayCount); grid cell bindings index into it
+        /// TrackingHelper.DayCount); grid cell bindings index into it
         /// (Days[n].PercentageCompleted) and reads/writes route through this
         /// tracker set, so the window follows the current tracker index.
         /// </summary>

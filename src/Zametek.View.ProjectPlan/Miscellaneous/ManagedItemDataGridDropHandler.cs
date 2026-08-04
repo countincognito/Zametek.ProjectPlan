@@ -18,6 +18,17 @@ namespace Zametek.View.ProjectPlan
             object? targetContext,
             bool execute)
         {
+            // Only move/reorder is supported: ContextDragBehavior also offers
+            // Copy (Ctrl) and Link (Alt) drags, and accepting those would route
+            // the drop to MakeCopy, which cannot mint a meaningful duplicate of
+            // a managed item (IDs are unique). Rejecting here shows the no-drop
+            // cursor instead.
+            if (e is null
+                || !e.DragEffects.HasFlag(DragDropEffects.Move))
+            {
+                return false;
+            }
+
             // Validate that we are dragging an ItemViewModel and dropping onto an ObservableCollection
             if (sourceContext is T sourceItem
                 && dg.ItemsSource is ObservableCollection<T> items)
@@ -31,8 +42,7 @@ namespace Zametek.View.ProjectPlan
                 // If executing, perform the move
                 // targetContext is the item we are dropping onto (or null if empty/not on a row)
 
-                if (e is null
-                    || (e.Source as Control)?.DataContext is not T targetItem)
+                if ((e.Source as Control)?.DataContext is not T targetItem)
                 {
                     return false;
                 }
@@ -59,7 +69,9 @@ namespace Zametek.View.ProjectPlan
             ObservableCollection<T> parentCollection,
             T item)
         {
-            throw new NotImplementedException();
+            // Unreachable: Validate rejects every drag that is not a plain
+            // Move, so the base handler can never route a Copy drop here.
+            throw new NotSupportedException();
         }
     }
 }

@@ -23,17 +23,6 @@ Date entries when added; delete them when done.
   [src/Zametek.Graphs.Avalonia/TODO.md](src/Zametek.Graphs.Avalonia/TODO.md) so it
   travels with the folder.
 
-- [ ] **Consider renaming `TimesheetHelper`** *(2026-08-02, low priority)* - its name is
-  now slightly broader than "effort timesheet" (it hosts the shared `DayCount` constant
-  used by both tracking tabs); something like `TrackingHelper` may fit better.
-
-- [ ] **Include import/export states in the busy-cursor aggregate** *(2026-08-02,
-  consolidated from a code TODO)* - `MainView.axaml.cs` stubs out
-  `main => main.IsImporting` / `main => main.IsExporting` in the `WhenAnyValue` that
-  drives `UpdateCursor`, so the wait cursor does not show during scenario import/export.
-  Needs the corresponding properties on `IMainViewModel`/`MainViewModel`, then reinstate
-  the commented lines.
-
 - [ ] **Formal drag-and-drop from charts** *(2026-08-02, consolidated from a code
   TODO)* - `ScottPlotUserControl.CheckPointerDrag` detects the click-vs-drag threshold
   but only tracks state; the inline comment marks where `DragDrop.DoDragDropAsync`
@@ -43,21 +32,6 @@ Date entries when added; delete them when done.
   `Dependencies`/`IsDependenciesEdited` are commented out in the model
   (`Zametek.Common.ProjectPlan/Dependencies`), meaning dependencies cannot be edited
   through the bulk-update path. Either support them or delete the stubs.
-
-- [ ] **Latent `NotImplementedException` stubs** *(2026-08-02)* - the headless CLI's
-  `SettingService.SetDataGridLayout` throws while its sibling members (`DockLayout`,
-  `GetDataGridLayout`) gracefully no-op; make it a no-op for consistency so a future
-  call path cannot crash the CLI. Related: `ManagedItemDataGridDropHandler.MakeCopy`
-  throws (copy-drag is unsupported; only move-reorder is used) - confirm the base
-  handler can never route a copy operation there, or implement it.
-
-- [ ] **Sweep remaining commented-out dead members** *(2026-08-02)* - leftovers from
-  earlier rounds: the `GetAllocatedToActivitiesString` block in
-  `ResourceActivitySelectorViewModel` and the `RawTargetResourceActivities` line in
-  `IResourceActivitySelectorViewModel`. Also dead markup left by the chart
-  Plot-ownership refactor: the now-unused `xmlns:scottplot` declarations in the four
-  chart view axaml files (the AvaPlot host is created in code-behind now) and the empty
-  `<local:ScottPlotUserControl.Resources>` element in `EarnedValueChartManagerView.axaml`.
 
 - [ ] **Consider gating the stale-outputs border like the busy overlay**
   *(2026-08-04)* - with the edit freeze fixed, the red border flash per edit is

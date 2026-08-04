@@ -43,7 +43,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
-            m_Days = [.. Enumerable.Range(0, TimesheetHelper.DayCount)
+            m_Days = [.. Enumerable.Range(0, TrackingHelper.DayCount)
                 .Select(dayOffset => new ActivityTrackerDayViewModel(this, dayOffset))];
 
             SetLastTracker();
