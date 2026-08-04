@@ -7,9 +7,6 @@ namespace Zametek.Common.ProjectPlan
     {
         public int Id { get; init; } = default;
 
-        //public List<int> Dependencies { get; init; } = [];
-        //public bool IsDependenciesEdited { get; init; } = false;
-
         public string Name { get; init; } = string.Empty;
         public bool IsNameEdited { get; init; } = false;
 

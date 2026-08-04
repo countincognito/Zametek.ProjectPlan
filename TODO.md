@@ -28,11 +28,6 @@ Date entries when added; delete them when done.
   but only tracks state; the inline comment marks where `DragDrop.DoDragDropAsync`
   would start a real DND operation (e.g. dragging a chart image into another app).
 
-- [ ] **Resolve the parked members in `UpdateDependentActivityModel`** *(2026-08-02)* -
-  `Dependencies`/`IsDependenciesEdited` are commented out in the model
-  (`Zametek.Common.ProjectPlan/Dependencies`), meaning dependencies cannot be edited
-  through the bulk-update path. Either support them or delete the stubs.
-
 - [ ] **Consider gating the stale-outputs border like the busy overlay**
   *(2026-08-04)* - with the edit freeze fixed, the red border flash per edit is
   purely cosmetic (roughly 0.1-0.3s of honest staleness). If it proves visually
