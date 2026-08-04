@@ -266,6 +266,13 @@ namespace Zametek.ProjectPlan
         {
             Container = s_Builder!.Build();
             s_Resolver!.SetLifetimeScope(Container);
+
+            // Construct the main view-model graph here, on the splash screen's
+            // background thread: the first resolution runs every view-model
+            // constructor plus the initial empty-scenario reset and compile,
+            // which must not land on the UI thread when the app resolves the
+            // singleton later.
+            Container.Resolve<IMainViewModel>();
         }
     }
 }

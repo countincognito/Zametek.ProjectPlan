@@ -195,22 +195,27 @@ namespace Zametek.ViewModel.ProjectPlan
             OpenViewLicenseCommand = ReactiveCommand.CreateFromTask(OpenViewLicenseAsync);
             OpenAboutCommand = ReactiveCommand.Create(OpenAboutAsync);
 
-            // The busy chrome (the loading overlay) only appears when the busy
-            // state persists: quick auto-compiles finish well inside the delay,
-            // so they never flip the overlay on and off - which would otherwise
-            // restyle and re-lay-out large parts of the window on every edit.
-            // Clearing is immediate, and rapid busy/idle flips inside the delay
-            // window collapse to no visible change at all.
-            m_IsBusy = this
-                .WhenAnyValue(
-                    main => main.IsMainBusy,
-                    main => main.m_CoreViewModel.IsBusy,
-                    main => main.m_ProjectScenarioManagerViewModel.IsBusy,
-                    (isMainBusy, isCoreBusy, isProjectBusy) => isMainBusy || isCoreBusy || isProjectBusy)
+            // The busy chrome (the loading overlay) is immediate for long-form
+            // operations (project loads, scenario processing, layout work) but
+            // delayed for the compile signal: quick auto-compiles finish well
+            // inside the delay, so they never flip the overlay on and off -
+            // which would otherwise restyle and re-lay-out large parts of the
+            // window on every edit. Clearing is immediate, and rapid busy/idle
+            // compile flips inside the delay window collapse to no visible
+            // change at all.
+            IObservable<bool> delayedCoreBusy = this
+                .WhenAnyValue(main => main.m_CoreViewModel.IsBusy)
                 .Select(isBusy => isBusy
                     ? Observable.Timer(TimeSpan.FromMilliseconds(250)).Select(_ => true)
                     : Observable.Return(false))
-                .Switch()
+                .Switch();
+
+            m_IsBusy = this
+                .WhenAnyValue(
+                    main => main.IsMainBusy,
+                    main => main.m_ProjectScenarioManagerViewModel.IsBusy,
+                    (isMainBusy, isProjectBusy) => isMainBusy || isProjectBusy)
+                .CombineLatest(delayedCoreBusy, (isImmediateBusy, isDelayedCoreBusy) => isImmediateBusy || isDelayedCoreBusy)
                 .DistinctUntilChanged()
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .ToProperty(this, main => main.IsBusy);
@@ -606,8 +611,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ProjectModel projectModel = await m_ProjectFileOpen.OpenProjectFileAsync(filename);
 
-                // First process the project.
-                m_ProjectScenarioManagerViewModel.ProcessProject(projectModel);
+                // First process the project. The load cascade (reset, scenario
+                // processing, compile, output builds) must not run on the UI
+                // thread, which the await above would otherwise resume on.
+                await Task.Run(() => m_ProjectScenarioManagerViewModel.ProcessProject(projectModel));
 
                 // Now bind the project title to the filename.
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
@@ -1343,7 +1350,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         return;
                     }
                 }
-                ResetProject();
+                await Task.Run(ResetProject);
             }
             catch (Exception ex)
             {
@@ -1351,7 +1358,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     Resource.ProjectPlan.Titles.Title_Error,
                     string.Empty,
                     ex.Message);
-                ResetProject();
+                await Task.Run(ResetProject);
             }
         }
 

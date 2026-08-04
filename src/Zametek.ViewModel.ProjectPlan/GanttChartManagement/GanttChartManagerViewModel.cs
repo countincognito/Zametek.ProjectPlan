@@ -224,19 +224,20 @@ namespace Zametek.ViewModel.ProjectPlan
 
             m_BuildGanttChartPlotModelSub = this
                 .WhenAnyValue(
-                    rcm => rcm.m_CoreViewModel.ResourceSeriesSet,
+                    // The settled signal: one raise per compile, after every
+                    // compilation output (resource series, metrics, project
+                    // finish) is in place - so one compile means one rebuild.
+                    rcm => rcm.m_CoreViewModel.CompilationOutputRevision,
                     rcm => rcm.m_CoreViewModel.ResourceSettings,
                     rcm => rcm.m_CoreViewModel.GraphSettings,
                     rcm => rcm.m_CoreViewModel.ProjectStart,
-                    rcm => rcm.m_CoreViewModel.ProjectFinish,
-                    rcm => rcm.m_CoreViewModel.Metrics,
                     rcm => rcm.m_CoreViewModel.Today,
                     rcm => rcm.m_CoreViewModel.BaseTheme,
                     rcm => rcm.GroupByMode,
                     rcm => rcm.AnnotationStyle,
                     rcm => rcm.BoolAccumulator,
                     rcm => rcm.ActivitySelector.TargetActivitiesString,
-                    (x, _, _, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
+                    (x, _, _, _, _, _, _, _, _, _) => x) // Do this as a workaround because WhenAnyValue cannot handle this many individual inputs.
                 .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildGanttChartPlotModelAsync());

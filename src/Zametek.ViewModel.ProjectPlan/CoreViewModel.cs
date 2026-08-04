@@ -36,15 +36,10 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly IDisposable? m_ReadOnlyActivitiesSub;
         private readonly IDisposable? m_OrderableActivitiesSub;
-        private readonly IDisposable? m_NetworkMetricsSub;
         private readonly IDisposable? m_AreActivitiesUncompiledSub;
         private readonly IDisposable? m_CompileOnSettingsUpdateSub;
-        private readonly IDisposable? m_BuildArrowGraphSub;
-        private readonly IDisposable? m_BuildVertexGraphSub;
-        private readonly IDisposable? m_BuildResourceSeriesSetSub;
-        private readonly IDisposable? m_BuildTrackingSeriesSetSub;
+        private readonly IDisposable? m_BuildCascadeSub;
         private readonly IDisposable? m_BuildRiskMetricsSub;
-        private readonly IDisposable? m_BuildFinancialMetricsSub;
 
         #endregion
 
@@ -254,61 +249,29 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 });
 
-            // The internal Build* subscriptions drop (rather than conflate) emissions
-            // raised during a bulk update: the bulk update methods invoke the Build*
-            // cascade actively, in dependency order, inside the bulk update window so
-            // that all compilation outputs are settled before the gated manager view
-            // model subscriptions replay. The drop check must run at emission time
-            // (i.e. before ObserveOn), otherwise the deferred taskpool invocations
-            // would run after the bulk update window has already closed.
-            m_BuildArrowGraphSub = this
+            // One compile, one cascade: a GraphCompilation change runs the whole
+            // Build* cascade in dependency order (the same RunBuildCascade the
+            // bulk update methods invoke actively inside their muted window) and
+            // then bumps CompilationOutputRevision as the settled signal for
+            // subscribers that need every output in place. Emissions raised
+            // during a bulk update are dropped (rather than conflated): the drop
+            // check must run at emission time (i.e. before ObserveOn), otherwise
+            // the deferred taskpool invocation would run after the bulk update
+            // window has already closed.
+            m_BuildCascadeSub = this
                 .WhenAnyValue(core => core.GraphCompilation)
                 .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => BuildArrowGraph());
+                .Subscribe(_ => RunBuildCascade());
 
-            m_BuildVertexGraphSub = this
-                .WhenAnyValue(core => core.GraphCompilation)
-                .Where(_ => !IsBulkUpdating)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => BuildVertexGraph());
-
-            m_BuildResourceSeriesSetSub = this
-                .WhenAnyValue(core => core.GraphCompilation)
-                .Where(_ => !IsBulkUpdating)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => BuildResourceSeriesSet());
-
-            m_BuildTrackingSeriesSetSub = this
-                .WhenAnyValue(core => core.GraphCompilation)
-                .Where(_ => !IsBulkUpdating)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => BuildTrackingSeriesSet());
-
-            m_NetworkMetricsSub = this
-                .WhenAnyValue(
-                    core => core.GraphCompilation,
-                    core => core.HasCompilationErrors)
-                .Where(_ => !IsBulkUpdating)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => BuildNetworkMetrics());
-
+            // Risk metrics are the one output with a non-compile trigger: the
+            // activity-severity settings feed them directly, so a settings
+            // change must rebuild them without waiting for a compile.
             m_BuildRiskMetricsSub = this
-                .WhenAnyValue(
-                    core => core.GraphCompilation,
-                    core => core.GraphSettings,
-                    core => core.HasCompilationErrors)
+                .WhenAnyValue(core => core.GraphSettings)
                 .Where(_ => !IsBulkUpdating)
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => BuildRiskMetrics());
-
-            m_BuildFinancialMetricsSub = this
-                .WhenAnyValue(
-                    core => core.ResourceSeriesSet,
-                    core => core.HasCompilationErrors)
-                .Where(_ => !IsBulkUpdating)
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(_ => BuildFinancialMetrics());
         }
 
         #endregion
@@ -405,11 +368,12 @@ namespace Zametek.ViewModel.ProjectPlan
         }
 
         /// <summary>
-        /// Actively runs the Build* cascade, in dependency order, that the internal
-        /// subscriptions would otherwise perform in response to a compilation change.
-        /// Call this inside a bulk update window (after RunCompile), when those
-        /// subscriptions drop their emissions, so that all compilation outputs are
-        /// settled before the bulk update ends.
+        /// Runs the Build* cascade, in dependency order, then bumps
+        /// <see cref="CompilationOutputRevision"/> as the settled signal. The
+        /// reactive pipeline invokes this once per compilation change; the bulk
+        /// update methods invoke it actively (after RunCompile) while their
+        /// subscriptions are muted, so that all compilation outputs are settled
+        /// before the bulk update ends.
         /// </summary>
         private void RunBuildCascade()
         {
@@ -422,6 +386,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 BuildNetworkMetrics();
                 BuildRiskMetrics();
                 BuildFinancialMetrics();
+                CompilationOutputRevision++;
             }
         }
 
@@ -493,6 +458,22 @@ namespace Zametek.ViewModel.ProjectPlan
                         this.RaiseAndSetIfChanged(ref m_HasStaleOutputs, value);
                     }
                 }
+            }
+        }
+
+        private int m_CompilationOutputRevision;
+        /// <summary>
+        /// Increments once each time the full Build* output cascade has settled
+        /// after a compilation (or bulk load), so subscribers that need every
+        /// output in place can react exactly once per compile.
+        /// </summary>
+        public int CompilationOutputRevision
+        {
+            get => m_CompilationOutputRevision;
+            private set
+            {
+                m_CompilationOutputRevision = value;
+                this.RaisePropertyChanged();
             }
         }
 
@@ -2071,15 +2052,10 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             m_ReadOnlyActivitiesSub?.Dispose();
             m_OrderableActivitiesSub?.Dispose();
-            m_NetworkMetricsSub?.Dispose();
             m_AreActivitiesUncompiledSub?.Dispose();
             m_CompileOnSettingsUpdateSub?.Dispose();
-            m_BuildArrowGraphSub?.Dispose();
-            m_BuildVertexGraphSub?.Dispose();
-            m_BuildResourceSeriesSetSub?.Dispose();
-            m_BuildTrackingSeriesSetSub?.Dispose();
+            m_BuildCascadeSub?.Dispose();
             m_BuildRiskMetricsSub?.Dispose();
-            m_BuildFinancialMetricsSub?.Dispose();
         }
 
         #endregion

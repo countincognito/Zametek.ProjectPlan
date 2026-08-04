@@ -81,6 +81,13 @@ namespace Zametek.Contract.ProjectPlan
 
         IGraphCompilation<int, int, int, IDependentActivity> GraphCompilation { get; }
 
+        /// <summary>
+        /// Increments once each time the full Build* output cascade has settled
+        /// after a compilation (or bulk load), so subscribers that need every
+        /// output in place can react exactly once per compile.
+        /// </summary>
+        int CompilationOutputRevision { get; }
+
         ArrowGraphModel ArrowGraph { get; }
 
         VertexGraphModel VertexGraph { get; }

@@ -59,19 +59,6 @@ Date entries when added; delete them when done.
   chart view axaml files (the AvaPlot host is created in code-behind now) and the empty
   `<local:ScottPlotUserControl.Resources>` element in `EarnedValueChartManagerView.axaml`.
 
-- [ ] **Move the project-open cascade off the UI thread** *(2026-08-04)* - the
-  open/load path still runs the compile and several output builds (network metrics,
-  arrow graph) on the UI thread, producing the one-off stall of a second or two at
-  startup and project open. The edit path now compiles entirely on the taskpool;
-  align the load path with it. Identified during the edit-freeze investigation
-  (telemetry + dotnet-trace); `PerfTelemetry` remains available for re-measuring.
-
-- [ ] **Deduplicate the Gantt chart double rebuild** *(2026-08-04)* -
-  `BuildGanttChartPlotModel` runs roughly twice per compile because its trigger
-  fires for more than one compile-driven input (e.g. `ResourceSeriesSet` plus
-  `Metrics`); conflate so one compile yields one rebuild. Harmless now that the
-  builds are off the UI thread, but still wasted work.
-
 - [ ] **Consider gating the stale-outputs border like the busy overlay**
   *(2026-08-04)* - with the edit freeze fixed, the red border flash per edit is
   purely cosmetic (roughly 0.1-0.3s of honest staleness). If it proves visually
