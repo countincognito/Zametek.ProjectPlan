@@ -16,6 +16,12 @@ namespace Zametek.ViewModel.ProjectPlan
     {
         #region Fields
 
+        // CompilationOutputRevision is an opaque change pulse, so it wraps to
+        // zero at a deliberate boundary instead of overflowing. Any modulus >= 2
+        // keeps consecutive raises distinct, which is all the property pipeline
+        // needs (consecutive equal values would be de-duplicated downstream).
+        private const int c_CompilationOutputRevisionWrap = 1_000_000;
+
         private readonly Lock m_Lock;
         private bool m_TrackIsProjectScenarioUpdated;
         private bool m_TrackHasStaleOutputs;
@@ -386,7 +392,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 BuildNetworkMetrics();
                 BuildRiskMetrics();
                 BuildFinancialMetrics();
-                CompilationOutputRevision++;
+                CompilationOutputRevision =
+                    (CompilationOutputRevision + 1) % c_CompilationOutputRevisionWrap;
             }
         }
 
@@ -465,7 +472,10 @@ namespace Zametek.ViewModel.ProjectPlan
         /// <summary>
         /// Increments once each time the full Build* output cascade has settled
         /// after a compilation (or bulk load), so subscribers that need every
-        /// output in place can react exactly once per compile.
+        /// output in place can react exactly once per compile. The value is an
+        /// opaque change pulse that wraps to zero at
+        /// <see cref="c_CompilationOutputRevisionWrap"/> - observe changes,
+        /// never compare magnitudes.
         /// </summary>
         public int CompilationOutputRevision
         {

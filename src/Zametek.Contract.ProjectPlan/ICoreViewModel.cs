@@ -84,7 +84,10 @@ namespace Zametek.Contract.ProjectPlan
         /// <summary>
         /// Increments once each time the full Build* output cascade has settled
         /// after a compilation (or bulk load), so subscribers that need every
-        /// output in place can react exactly once per compile.
+        /// output in place can react exactly once per compile. The value is an
+        /// opaque change pulse: it wraps to zero at an implementation-defined
+        /// boundary, so observe changes only - never compare magnitudes or
+        /// treat it as a monotonic counter.
         /// </summary>
         int CompilationOutputRevision { get; }
 
