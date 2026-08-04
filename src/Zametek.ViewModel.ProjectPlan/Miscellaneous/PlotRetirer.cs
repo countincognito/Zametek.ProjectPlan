@@ -15,8 +15,8 @@ namespace Zametek.ViewModel.ProjectPlan
     /// consumer at the moment it is swapped out:
     /// <para>
     /// - The UI: the swap raises a property change that data binding processes on the UI thread,
-    ///   which may be later than the swap itself (three of the four chart rebuilds run on the
-    ///   taskpool). The view only re-hosts the new plot when that binding lands, so disposal is
+    ///   which may be later than the swap itself (the chart rebuilds run on the taskpool). The
+    ///   view only re-hosts the new plot when that binding lands, so disposal is
     ///   posted to the UI thread at Background priority, which runs only after pending binding
     ///   updates and render passes have finished with the old plot.
     /// </para>

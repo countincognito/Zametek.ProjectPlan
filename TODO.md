@@ -10,8 +10,8 @@ Date entries when added; delete them when done.
   `Dock.Model.ReactiveUI` (>= 7.0.0) and `DynamicData` (>= 6.1.0) still hard-depend on
   it, so the assembly ships regardless. When a NuGet update shows **both** have gone
   Rx-free, examine migrating the solution's own Rx usage to `ReactiveUI.Primitives`.
-  Known gaps to solve at that point: no `FromEventPattern` (three uses, including the
-  effort-tracker property relay), no `Subject`/`BehaviorSubject` (Primitives has
+  Known gaps to solve at that point: no `FromEventPattern` (two uses, the
+  collection-changed bridges in the effort tracking manager), no `Subject`/`BehaviorSubject` (Primitives has
   different "Signal" abstractions), and no `Observable.Create` (`MuteWhile` is built on
   it). Breadcrumbs: comments above the `System.Reactive` reference in
   `Zametek.Graphs.Avalonia.csproj` and the Dock/DynamicData block in
@@ -58,6 +58,32 @@ Date entries when added; delete them when done.
   Plot-ownership refactor: the now-unused `xmlns:scottplot` declarations in the four
   chart view axaml files (the AvaPlot host is created in code-behind now) and the empty
   `<local:ScottPlotUserControl.Resources>` element in `EarnedValueChartManagerView.axaml`.
+
+- [ ] **Move the project-open cascade off the UI thread** *(2026-08-04)* - the
+  open/load path still runs the compile and several output builds (network metrics,
+  arrow graph) on the UI thread, producing the one-off stall of a second or two at
+  startup and project open. The edit path now compiles entirely on the taskpool;
+  align the load path with it. Identified during the edit-freeze investigation
+  (telemetry + dotnet-trace); `PerfTelemetry` remains available for re-measuring.
+
+- [ ] **Deduplicate the Gantt chart double rebuild** *(2026-08-04)* -
+  `BuildGanttChartPlotModel` runs roughly twice per compile because its trigger
+  fires for more than one compile-driven input (e.g. `ResourceSeriesSet` plus
+  `Metrics`); conflate so one compile yields one rebuild. Harmless now that the
+  builds are off the UI thread, but still wasted work.
+
+- [ ] **Consider gating the stale-outputs border like the busy overlay**
+  *(2026-08-04)* - with the edit freeze fixed, the red border flash per edit is
+  purely cosmetic (roughly 0.1-0.3s of honest staleness). If it proves visually
+  noisy, the sustained-delay pattern used for the busy signal in `MainViewModel`
+  would suppress sub-perceptible flashes without hiding real staleness.
+
+- [ ] **Reduce UI-thread reads of locked view-model getters** *(2026-08-04)* - the
+  dotnet-trace profile of an edit burst showed several seconds of Monitor
+  contention: bindings re-reading locked getters while the background compile
+  cascade held the locks. Most of it vanished with the IsBusy fix; if input
+  hitches reappear under heavy background activity, prefer lock-free snapshots
+  (volatile fields or immutable models) for hot bound properties.
 
 - [ ] **Consider reporting the Dock float/re-dock behaviour upstream** *(2026-08-02,
   optional)* - under Dock 12.1, dropping a floating tool back into the layout

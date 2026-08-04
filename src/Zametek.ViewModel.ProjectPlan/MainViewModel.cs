@@ -195,12 +195,24 @@ namespace Zametek.ViewModel.ProjectPlan
             OpenViewLicenseCommand = ReactiveCommand.CreateFromTask(OpenViewLicenseAsync);
             OpenAboutCommand = ReactiveCommand.Create(OpenAboutAsync);
 
+            // The busy chrome (the loading overlay) only appears when the busy
+            // state persists: quick auto-compiles finish well inside the delay,
+            // so they never flip the overlay on and off - which would otherwise
+            // restyle and re-lay-out large parts of the window on every edit.
+            // Clearing is immediate, and rapid busy/idle flips inside the delay
+            // window collapse to no visible change at all.
             m_IsBusy = this
                 .WhenAnyValue(
                     main => main.IsMainBusy,
                     main => main.m_CoreViewModel.IsBusy,
                     main => main.m_ProjectScenarioManagerViewModel.IsBusy,
                     (isMainBusy, isCoreBusy, isProjectBusy) => isMainBusy || isCoreBusy || isProjectBusy)
+                .Select(isBusy => isBusy
+                    ? Observable.Timer(TimeSpan.FromMilliseconds(250)).Select(_ => true)
+                    : Observable.Return(false))
+                .Switch()
+                .DistinctUntilChanged()
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .ToProperty(this, main => main.IsBusy);
 
             m_IsProjectUpdated = this

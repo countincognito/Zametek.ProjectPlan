@@ -199,7 +199,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         evc => evc.ScaleToOwnPlan,
                         (_, _, _) => Unit.Default))
                 .MuteWhile(this.WhenAnyValue(evc => evc.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler) // Plot models have no UI-thread affinity; the property raise marshals to the UI through the binding.
                 .Subscribe(async _ => await BuildEarnedValueChartPlotModelAsync());
 
             Id = Resource.ProjectPlan.Titles.Title_EarnedValueChartView;

@@ -22,20 +22,12 @@ namespace Zametek.Contract.ProjectPlan
 
         List<ActivityTrackerModel> CloneTrackers();
 
-        int? Day00 { get; set; }
-        int? Day01 { get; set; }
-        int? Day02 { get; set; }
-        int? Day03 { get; set; }
-        int? Day04 { get; set; }
-        int? Day05 { get; set; }
-        int? Day06 { get; set; }
-        int? Day07 { get; set; }
-        int? Day08 { get; set; }
-        int? Day09 { get; set; }
-        int? Day10 { get; set; }
-        int? Day11 { get; set; }
-        int? Day12 { get; set; }
-        int? Day13 { get; set; }
-        int? Day14 { get; set; }
+        /// <summary>
+        /// One stable day view model per visible day column (sized by
+        /// TimesheetHelper.DayCount); grid cell bindings index into it
+        /// (Days[n].PercentageCompleted) and reads/writes route through this
+        /// tracker set, so the window follows the current tracker index.
+        /// </summary>
+        IReadOnlyList<IActivityTrackerDayViewModel> Days { get; }
     }
 }

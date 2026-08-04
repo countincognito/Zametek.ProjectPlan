@@ -27,11 +27,11 @@ namespace Zametek.View.ProjectPlan
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                     Margin = new Avalonia.Thickness(0),
                     Padding = new Avalonia.Thickness(0),
-                    [!TextBlock.TextProperty] = new ReflectionBinding($@"Day{m_Index:D2}Title")
+                    [!TextBlock.TextProperty] = new ReflectionBinding($@"{nameof(IResourceTimesheetViewModel.DayTitles)}[{m_Index}].{nameof(IDayTitleViewModel.Title)}")
                     {
                         Mode = BindingMode.OneWay,
                     },
-                    [!ToolTip.TipProperty] = new ReflectionBinding($@"Day{m_Index:D2}Title")
+                    [!ToolTip.TipProperty] = new ReflectionBinding($@"{nameof(IResourceTimesheetViewModel.DayTitles)}[{m_Index}].{nameof(IDayTitleViewModel.Title)}")
                     {
                         Mode = BindingMode.OneWay,
                     },

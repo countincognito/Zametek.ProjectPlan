@@ -180,21 +180,7 @@ namespace Zametek.ViewModel.ProjectPlan
             set => m_Manager.NameColumnWidth = value;
         }
 
-        public string Day00Title => m_Manager.Day00Title;
-        public string Day01Title => m_Manager.Day01Title;
-        public string Day02Title => m_Manager.Day02Title;
-        public string Day03Title => m_Manager.Day03Title;
-        public string Day04Title => m_Manager.Day04Title;
-        public string Day05Title => m_Manager.Day05Title;
-        public string Day06Title => m_Manager.Day06Title;
-        public string Day07Title => m_Manager.Day07Title;
-        public string Day08Title => m_Manager.Day08Title;
-        public string Day09Title => m_Manager.Day09Title;
-        public string Day10Title => m_Manager.Day10Title;
-        public string Day11Title => m_Manager.Day11Title;
-        public string Day12Title => m_Manager.Day12Title;
-        public string Day13Title => m_Manager.Day13Title;
-        public string Day14Title => m_Manager.Day14Title;
+        public IReadOnlyList<IDayTitleViewModel> DayTitles => m_Manager.DayTitles;
 
         public IReadOnlyList<IResourceTimesheetRowViewModel> Rows => m_Rows;
 
@@ -341,30 +327,6 @@ namespace Zametek.ViewModel.ProjectPlan
         public void RaiseNameColumnWidthChanged()
         {
             this.RaisePropertyChanged(nameof(NameColumnWidth));
-        }
-
-        /// <summary>
-        /// Invoked by the effort tracking manager when the day titles change
-        /// (window moves, date display toggles, etc.), since the section
-        /// merely forwards the manager's titles to its own grid headers.
-        /// </summary>
-        public void RaiseDayTitlesChanged()
-        {
-            this.RaisePropertyChanged(nameof(Day00Title));
-            this.RaisePropertyChanged(nameof(Day01Title));
-            this.RaisePropertyChanged(nameof(Day02Title));
-            this.RaisePropertyChanged(nameof(Day03Title));
-            this.RaisePropertyChanged(nameof(Day04Title));
-            this.RaisePropertyChanged(nameof(Day05Title));
-            this.RaisePropertyChanged(nameof(Day06Title));
-            this.RaisePropertyChanged(nameof(Day07Title));
-            this.RaisePropertyChanged(nameof(Day08Title));
-            this.RaisePropertyChanged(nameof(Day09Title));
-            this.RaisePropertyChanged(nameof(Day10Title));
-            this.RaisePropertyChanged(nameof(Day11Title));
-            this.RaisePropertyChanged(nameof(Day12Title));
-            this.RaisePropertyChanged(nameof(Day13Title));
-            this.RaisePropertyChanged(nameof(Day14Title));
         }
 
         #endregion

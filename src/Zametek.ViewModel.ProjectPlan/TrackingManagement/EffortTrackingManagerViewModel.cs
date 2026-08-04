@@ -1,6 +1,5 @@
 using ReactiveUI;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Reactive;
 using System.Reactive.Linq;
 using Zametek.Contract.ProjectPlan;
@@ -25,7 +24,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private int m_LastWindowIndex;
 
         private readonly IDisposable? m_TimesheetSub;
-        private readonly IDisposable? m_DayTitleSub;
 
         #endregion
 
@@ -67,29 +65,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .MuteWhile(this.WhenAnyValue(tm => tm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(_ => RefreshTimesheet());
-
-            // The sections' grid headers forward the day titles, so relay the
-            // base view model's title notifications to them (the titles all
-            // change together, so observing one is enough). A plain event
-            // subscription is used rather than WhenAnyValue because the
-            // latter re-reads the title getter (which takes the base lock) on
-            // whatever thread raises the notification - deadlocking against
-            // SyncToday. The relay is marshalled to the UI thread instead.
-            m_DayTitleSub = Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
-                    handler => PropertyChanged += handler,
-                    handler => PropertyChanged -= handler)
-                .Where(pattern => string.Equals(pattern.EventArgs.PropertyName, nameof(Day00Title), StringComparison.Ordinal))
-                .Select(_ => Unit.Default)
-                .ObserveOn(RxSchedulers.MainThreadScheduler)
-                .Subscribe(_ =>
-                {
-                    List<ResourceTimesheetViewModel> sections = m_TimesheetSections;
-
-                    foreach (ResourceTimesheetViewModel section in sections)
-                    {
-                        section.RaiseDayTitlesChanged();
-                    }
-                });
 
             Id = Resource.ProjectPlan.Titles.Title_EffortTrackingView;
             Title = Resource.ProjectPlan.Titles.Title_EffortTrackingView;
@@ -186,7 +161,6 @@ namespace Zametek.ViewModel.ProjectPlan
             if (disposing)
             {
                 m_TimesheetSub?.Dispose();
-                m_DayTitleSub?.Dispose();
             }
 
             m_HostDisposed = true;

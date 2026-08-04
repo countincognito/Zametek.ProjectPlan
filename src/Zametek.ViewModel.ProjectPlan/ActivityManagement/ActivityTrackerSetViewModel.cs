@@ -14,6 +14,7 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly Lock m_Lock;
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly Dictionary<int, ActivityTrackerModel> m_ActivityTrackerLookup;
+        private readonly List<ActivityTrackerDayViewModel> m_Days;
 
         private ActivityTrackerModel? m_LastTracker;
 
@@ -42,6 +43,9 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
             }
 
+            m_Days = [.. Enumerable.Range(0, TimesheetHelper.DayCount)
+                .Select(dayOffset => new ActivityTrackerDayViewModel(this, dayOffset))];
+
             SetLastTracker();
 
             SetTrackerIndexCommand = ReactiveCommand.Create<int?>(SetTrackerIndex);
@@ -50,6 +54,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(
                     x => x.m_CoreViewModel.TrackerIndex,
                     x => x.m_CoreViewModel.IsReadyToReviseTrackers)
+                // The pre-compile Yes raise happens before any tracker has
+                // changed, so only the post-compile No transition (and window
+                // moves, which occur while No) can alter what the day cells
+                // show. Skipping Yes halves the per-edit binding fan-out.
+                .Where(x => x.Item2 == ReadyToRevise.No)
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(_ => RefreshDays());
         }
@@ -60,7 +69,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private int TrackerIndex => m_CoreViewModel.TrackerIndex;
 
-        private int? GetDayPercentageCompleted(int index)
+        internal int? GetDayPercentageCompleted(int index)
         {
             lock (m_Lock)
             {
@@ -73,7 +82,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private void SetDayPercentageCompleted(
+        internal void SetDayPercentageCompleted(
             int index,
             int? value)
         {
@@ -124,21 +133,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private void RefreshDays()
         {
             RefreshIndex();
-            this.RaisePropertyChanged(nameof(Day00));
-            this.RaisePropertyChanged(nameof(Day01));
-            this.RaisePropertyChanged(nameof(Day02));
-            this.RaisePropertyChanged(nameof(Day03));
-            this.RaisePropertyChanged(nameof(Day04));
-            this.RaisePropertyChanged(nameof(Day05));
-            this.RaisePropertyChanged(nameof(Day06));
-            this.RaisePropertyChanged(nameof(Day07));
-            this.RaisePropertyChanged(nameof(Day08));
-            this.RaisePropertyChanged(nameof(Day09));
-            this.RaisePropertyChanged(nameof(Day10));
-            this.RaisePropertyChanged(nameof(Day11));
-            this.RaisePropertyChanged(nameof(Day12));
-            this.RaisePropertyChanged(nameof(Day13));
-            this.RaisePropertyChanged(nameof(Day14));
+
+            foreach (ActivityTrackerDayViewModel day in m_Days)
+            {
+                day.RefreshValue();
+            }
         }
 
         #endregion
@@ -224,170 +223,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public int? Day00
-        {
-            get => GetDayPercentageCompleted(0);
-            set
-            {
-                SetDayPercentageCompleted(0, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day01
-        {
-            get => GetDayPercentageCompleted(1);
-            set
-            {
-                SetDayPercentageCompleted(1, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day02
-        {
-            get => GetDayPercentageCompleted(2);
-            set
-            {
-                SetDayPercentageCompleted(2, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day03
-        {
-            get => GetDayPercentageCompleted(3);
-            set
-            {
-                SetDayPercentageCompleted(3, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day04
-        {
-            get => GetDayPercentageCompleted(4);
-            set
-            {
-                SetDayPercentageCompleted(4, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day05
-        {
-            get => GetDayPercentageCompleted(5);
-            set
-            {
-                SetDayPercentageCompleted(5, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day06
-        {
-            get => GetDayPercentageCompleted(6);
-            set
-            {
-                SetDayPercentageCompleted(6, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day07
-        {
-            get => GetDayPercentageCompleted(7);
-            set
-            {
-                SetDayPercentageCompleted(7, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day08
-        {
-            get => GetDayPercentageCompleted(8);
-            set
-            {
-                SetDayPercentageCompleted(8, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day09
-        {
-            get => GetDayPercentageCompleted(9);
-            set
-            {
-                SetDayPercentageCompleted(9, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day10
-        {
-            get => GetDayPercentageCompleted(10);
-            set
-            {
-                SetDayPercentageCompleted(10, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day11
-        {
-            get => GetDayPercentageCompleted(11);
-            set
-            {
-                SetDayPercentageCompleted(11, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day12
-        {
-            get => GetDayPercentageCompleted(12);
-            set
-            {
-                SetDayPercentageCompleted(12, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day13
-        {
-            get => GetDayPercentageCompleted(13);
-            set
-            {
-                SetDayPercentageCompleted(13, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
-
-        public int? Day14
-        {
-            get => GetDayPercentageCompleted(14);
-            set
-            {
-                SetDayPercentageCompleted(14, value);
-                this.RaisePropertyChanged();
-                RefreshIndex();
-            }
-        }
+        public IReadOnlyList<IActivityTrackerDayViewModel> Days => m_Days;
 
         #endregion
 

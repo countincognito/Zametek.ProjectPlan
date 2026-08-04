@@ -20,10 +20,9 @@ namespace Zametek.Contract.ProjectPlan
 
         /// <summary>
         /// Returns the activity selector for the day at the given offset from
-        /// the current tracker index - the same selectors the Day00-Day14
-        /// properties expose, addressable by index. While the owning resource
-        /// is being edited, a selector is created on demand for days that have
-        /// no bookings yet; otherwise an inert empty selector is returned.
+        /// the current tracker index. While the owning resource is being
+        /// edited, a selector is created on demand for days that have no
+        /// bookings yet; otherwise an inert empty selector is returned.
         /// </summary>
         IResourceActivitySelectorViewModel GetDay(int dayOffset);
 

@@ -38,26 +38,13 @@ namespace Zametek.Contract.ProjectPlan
 
         int? PageIndex { get; set; }
 
-        string Day00Title { get; }
-        string Day01Title { get; }
-        string Day02Title { get; }
-        string Day03Title { get; }
-        string Day04Title { get; }
-        string Day05Title { get; }
-        string Day06Title { get; }
-        string Day07Title { get; }
-        string Day08Title { get; }
-        string Day09Title { get; }
-        string Day10Title { get; }
-        string Day11Title { get; }
-        string Day12Title { get; }
-        string Day13Title { get; }
-        string Day14Title { get; }
-        //string Day15Title { get; }
-        //string Day16Title { get; }
-        //string Day17Title { get; }
-        //string Day18Title { get; }
-        //string Day19Title { get; }
+        /// <summary>
+        /// One stable title view model per visible day column (sized by
+        /// TimesheetHelper.DayCount); grid header bindings index into it
+        /// (DayTitles[n].Title) and the elements re-raise as the window
+        /// moves.
+        /// </summary>
+        IReadOnlyList<IDayTitleViewModel> DayTitles { get; }
 
         ICommand SyncTodayCommand { get; }
     }

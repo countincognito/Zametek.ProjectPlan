@@ -3,7 +3,6 @@ using DynamicData.Binding;
 using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -234,9 +233,14 @@ namespace Zametek.ViewModel.ProjectPlan
                     }
                 });
 
+            // Compile off the arming thread: the settings-apply subscriptions
+            // arm IsReadyToCompile on the UI thread, and the compile must
+            // never run there. The selector revisions still complete first,
+            // because they run inline during the IsReadyToReviseTrackers
+            // raise, which every arm site performs before this one.
             m_CompileOnSettingsUpdateSub = this
                 .WhenAnyValue(core => core.IsReadyToCompile)
-                .ObserveOn(Scheduler.CurrentThread)
+                .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(isReady =>
                 {
                     CascadeDiagnostics.RecordMarker($@"CompileOnSettingsUpdateSub fired: isReady={isReady} IsBusy={IsBusy}");

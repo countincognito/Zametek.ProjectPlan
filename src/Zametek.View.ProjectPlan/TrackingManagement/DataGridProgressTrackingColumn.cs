@@ -23,11 +23,11 @@ namespace Zametek.View.ProjectPlan
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                     Margin = new Avalonia.Thickness(0),
                     Padding = new Avalonia.Thickness(0),
-                    [!TextBlock.TextProperty] = new ReflectionBinding($@"Day{m_Index:D2}Title")
+                    [!TextBlock.TextProperty] = new ReflectionBinding($@"{nameof(ITrackingManagerViewModel.DayTitles)}[{m_Index}].{nameof(IDayTitleViewModel.Title)}")
                     {
                         Mode = BindingMode.OneWay,
                     },
-                    [!ToolTip.TipProperty] = new ReflectionBinding($@"Day{m_Index:D2}Title")
+                    [!ToolTip.TipProperty] = new ReflectionBinding($@"{nameof(ITrackingManagerViewModel.DayTitles)}[{m_Index}].{nameof(IDayTitleViewModel.Title)}")
                     {
                         Mode = BindingMode.OneWay,
                     },
@@ -48,7 +48,7 @@ namespace Zametek.View.ProjectPlan
                         TextAlignment = Avalonia.Media.TextAlignment.Left,
                         Margin = new Avalonia.Thickness(0),
                         Padding = new Avalonia.Thickness(3),
-                        [!TextBlock.TextProperty] = new ReflectionBinding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.Day{m_Index:D2}")
+                        [!TextBlock.TextProperty] = new ReflectionBinding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.{nameof(IActivityTrackerSetViewModel.Days)}[{m_Index}].{nameof(IActivityTrackerDayViewModel.PercentageCompleted)}")
                         {
                             Mode = BindingMode.OneWay,
                             StringFormat = @"{0:#0'%'}",
@@ -74,7 +74,7 @@ namespace Zametek.View.ProjectPlan
                         Padding = new Avalonia.Thickness(0),
                         Minimum = 0,
                         Maximum = 100,
-                        [!NumericIntUpDown.ValueProperty] = new ReflectionBinding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.Day{m_Index:D2}")
+                        [!NumericIntUpDown.ValueProperty] = new ReflectionBinding($@"{nameof(IManagedActivityViewModel.TrackerSet)}.{nameof(IActivityTrackerSetViewModel.Days)}[{m_Index}].{nameof(IActivityTrackerDayViewModel.PercentageCompleted)}")
                         {
                             Mode = BindingMode.TwoWay,
                             UpdateSourceTrigger = UpdateSourceTrigger.LostFocus,

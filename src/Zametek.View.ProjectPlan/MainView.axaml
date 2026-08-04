@@ -69,8 +69,7 @@
 				</MultiBinding>
 			</Classes.error>
 
-			<DockPanel Margin="7"
-					   IsEnabled="{Binding Path=!IsBusy, Mode=OneWay}">
+			<DockPanel Margin="7">
 				<Menu DockPanel.Dock="Top"
 					  HorizontalAlignment="Left"
 					  Padding="0">

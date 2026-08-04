@@ -28,21 +28,12 @@ namespace Zametek.Contract.ProjectPlan
         /// </summary>
         double NameColumnWidth { get; set; }
 
-        string Day00Title { get; }
-        string Day01Title { get; }
-        string Day02Title { get; }
-        string Day03Title { get; }
-        string Day04Title { get; }
-        string Day05Title { get; }
-        string Day06Title { get; }
-        string Day07Title { get; }
-        string Day08Title { get; }
-        string Day09Title { get; }
-        string Day10Title { get; }
-        string Day11Title { get; }
-        string Day12Title { get; }
-        string Day13Title { get; }
-        string Day14Title { get; }
+        /// <summary>
+        /// The shared day column titles, re-exposed from the effort tracking
+        /// manager (the same instances for every section), so the grid
+        /// headers can index into them (DayTitles[n].Title).
+        /// </summary>
+        IReadOnlyList<IDayTitleViewModel> DayTitles { get; }
 
         IReadOnlyList<IResourceTimesheetRowViewModel> Rows { get; }
 

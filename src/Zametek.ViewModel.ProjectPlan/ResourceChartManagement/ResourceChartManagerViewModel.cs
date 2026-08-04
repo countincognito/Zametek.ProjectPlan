@@ -1,5 +1,4 @@
 using Avalonia;
-using Avalonia.Threading;
 using ReactiveUI;
 using ScottPlot;
 using ScottPlot.DataSources;
@@ -211,13 +210,15 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                await Dispatcher.UIThread.InvokeAsync(() =>
+                // Plot models are plain ScottPlot objects with no UI-thread
+                // affinity, so build on the subscription's taskpool thread; the
+                // property raise marshals to the UI through the binding, and
+                // PlotRetirer keeps the outgoing plot alive until the UI has
+                // moved on.
+                lock (m_Lock)
                 {
-                    lock (m_Lock)
-                    {
-                        BuildResourceChartPlotModel();
-                    }
-                });
+                    BuildResourceChartPlotModel();
+                }
             }
             catch (Exception ex)
             {

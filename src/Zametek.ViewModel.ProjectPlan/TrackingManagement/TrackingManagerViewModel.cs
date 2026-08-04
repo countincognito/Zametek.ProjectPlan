@@ -15,6 +15,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ICoreViewModel m_CoreViewModel;
         private readonly IResourceSettingsManagerViewModel m_ResourceSettingsManagerViewModel;
+        private readonly List<DayTitleViewModel> m_DayTitles;
 
         private readonly IDisposable? m_ColumnTitleSub;
 
@@ -34,6 +35,8 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CoreViewModel = coreViewModel;
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel;
             m_DateTimeCalculator = dateTimeCalculator;
+            m_DayTitles = [.. Enumerable.Range(0, TimesheetHelper.DayCount)
+                .Select(dayOffset => new DayTitleViewModel(this, dayOffset))];
 
             SyncTodayCommand = ReactiveCommand.Create(SyncToday);
 
@@ -81,7 +84,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
         #region Private Methods
 
-        private string GetDayTitle(int index)
+        internal string GetDayTitle(int index)
         {
             lock (m_Lock)
             {
@@ -104,26 +107,11 @@ namespace Zametek.ViewModel.ProjectPlan
             CascadeDiagnostics.RecordBuild($@"{nameof(TrackingManagerViewModel)}.{nameof(RefreshDays)}");
             this.RaisePropertyChanged(nameof(TrackerIndex));
             this.RaisePropertyChanged(nameof(PageIndex));
-            this.RaisePropertyChanged(nameof(Day00Title));
-            this.RaisePropertyChanged(nameof(Day01Title));
-            this.RaisePropertyChanged(nameof(Day02Title));
-            this.RaisePropertyChanged(nameof(Day03Title));
-            this.RaisePropertyChanged(nameof(Day04Title));
-            this.RaisePropertyChanged(nameof(Day05Title));
-            this.RaisePropertyChanged(nameof(Day06Title));
-            this.RaisePropertyChanged(nameof(Day07Title));
-            this.RaisePropertyChanged(nameof(Day08Title));
-            this.RaisePropertyChanged(nameof(Day09Title));
-            this.RaisePropertyChanged(nameof(Day10Title));
-            this.RaisePropertyChanged(nameof(Day11Title));
-            this.RaisePropertyChanged(nameof(Day12Title));
-            this.RaisePropertyChanged(nameof(Day13Title));
-            this.RaisePropertyChanged(nameof(Day14Title));
-            //this.RaisePropertyChanged(nameof(Day15Title));
-            //this.RaisePropertyChanged(nameof(Day16Title));
-            //this.RaisePropertyChanged(nameof(Day17Title));
-            //this.RaisePropertyChanged(nameof(Day18Title));
-            //this.RaisePropertyChanged(nameof(Day19Title));
+
+            foreach (DayTitleViewModel dayTitle in m_DayTitles)
+            {
+                dayTitle.RefreshTitle();
+            }
         }
 
         private void SyncToday()
@@ -216,21 +204,7 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        public string Day00Title => GetDayTitle(0);
-        public string Day01Title => GetDayTitle(1);
-        public string Day02Title => GetDayTitle(2);
-        public string Day03Title => GetDayTitle(3);
-        public string Day04Title => GetDayTitle(4);
-        public string Day05Title => GetDayTitle(5);
-        public string Day06Title => GetDayTitle(6);
-        public string Day07Title => GetDayTitle(7);
-        public string Day08Title => GetDayTitle(8);
-        public string Day09Title => GetDayTitle(9);
-        public string Day10Title => GetDayTitle(10);
-        public string Day11Title => GetDayTitle(11);
-        public string Day12Title => GetDayTitle(12);
-        public string Day13Title => GetDayTitle(13);
-        public string Day14Title => GetDayTitle(14);
+        public IReadOnlyList<IDayTitleViewModel> DayTitles => m_DayTitles;
 
         public ICommand SyncTodayCommand { get; }
 
