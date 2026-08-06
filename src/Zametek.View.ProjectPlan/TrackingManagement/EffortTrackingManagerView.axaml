@@ -77,7 +77,7 @@
 													   FontWeight="Bold"
 													   Padding="3"
 													   VerticalAlignment="Center"/>
-											<TextBlock Text="{Binding Path=Resource.Id, Mode=OneWay}"
+											<TextBlock Text="{Binding Path=Resource.Id, Mode=OneWay, StringFormat='({0})'}"
 													   Opacity="0.6"
 													   Padding="3"
 													   VerticalAlignment="Center"/>
