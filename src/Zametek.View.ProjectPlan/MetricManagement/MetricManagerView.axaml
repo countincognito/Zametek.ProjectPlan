@@ -18,7 +18,7 @@
 			<Grid Margin="7">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="100"/>
+					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -71,7 +71,7 @@
 			<Grid Margin="7">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="100"/>
+					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -124,7 +124,7 @@
 			<Grid Margin="7">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="100"/>
+					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -177,7 +177,7 @@
 			<Grid Margin="7">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="100"/>
+					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -231,7 +231,7 @@
 				  IsVisible="{Binding Path=!HideCost, Mode=OneWay}">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="100"/>
+					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -285,7 +285,7 @@
 				  IsVisible="{Binding Path=!HideBilling, Mode=OneWay}">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="100"/>
+					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -339,7 +339,7 @@
 				  IsVisible="{Binding Path=!HideMargin, Mode=OneWay}">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="100"/>
+					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
