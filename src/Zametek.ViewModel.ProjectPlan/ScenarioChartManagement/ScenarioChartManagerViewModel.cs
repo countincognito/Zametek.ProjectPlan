@@ -88,11 +88,12 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static readonly char[] s_PolynomialSuperscripts = ['⁰', '¹', '²', '³', '⁴'];
 
-        // The raw scenario xs can be sparse, so derivative curves are sampled
-        // over at least this many evenly spaced points instead (an absolute
-        // derivative in particular folds at its zero crossings, which sparse
-        // sampling would cut off).
-        private const int c_MinimumDerivativeSamplePoints = 100;
+        // The raw scenario xs can be sparse, so fitted curves and their
+        // derivatives are sampled over at least this many evenly spaced
+        // points instead (a curve would otherwise render as a few straight
+        // segments, and an absolute fit or derivative folds at its zero
+        // crossings, which sparse sampling would cut off).
+        private const int c_MinimumSamplePoints = 100;
 
         #endregion
 
@@ -476,7 +477,8 @@ namespace Zametek.ViewModel.ProjectPlan
             Debug.Assert(xs.Length == ys.Length);
 
             // The fits are always computed against the raw data (as are the
-            // r² values); the absolute option only passes the fitted outputs
+            // r² values); the plotted curves are then sampled over an even
+            // grid, and the absolute option only passes those sampled outputs
             // through abs() before they are added to the chart.
 
             switch (curveFittingType)
@@ -488,9 +490,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         if (xs.Length >= 2)
                         {
                             (double a, double b) = MathNet.Numerics.Fit.Line(xs, ys);
-                            double[] fx = [.. xs.Select(x => a + b * x)];
-                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
+                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * x));
                             string expression = $"{b:F4}x + {a:F4}";
+                            double[] sampleXs = BuildSampleXs(xs);
+                            double[] fx = [.. sampleXs.Select(x => a + b * x)];
 
                             if (absoluteCurveFitting)
                             {
@@ -499,12 +502,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             formula = $"y = {expression} (r²={r2:F4})";
-                            Scatter line = plotModel.Add.ScatterLine(xs, fx);
-                            line.MarkerSize = 0;
-                            line.LineWidth = 2;
-                            line.LinePattern = LinePattern.Dashed;
-                            line.Color = color;
-                            line.Axes.YAxis = yAxis;
+                            AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
                         }
                     }
                     break;
@@ -513,9 +511,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         if (xs.Length >= 2)
                         {
                             (double a, double r) = MathNet.Numerics.Fit.Exponential(xs, ys);
-                            double[] fx = [.. xs.Select(x => a * Math.Exp(r * x))];
-                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
+                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a * Math.Exp(r * x)));
                             string expression = $"{a:F4}e^{r:F4}x";
+                            double[] sampleXs = BuildSampleXs(xs);
+                            double[] fx = [.. sampleXs.Select(x => a * Math.Exp(r * x))];
 
                             if (absoluteCurveFitting)
                             {
@@ -524,12 +523,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             formula = $"y = {expression} (r²={r2:F4})";
-                            Scatter line = plotModel.Add.ScatterLine(xs, fx);
-                            line.MarkerSize = 0;
-                            line.LineWidth = 2;
-                            line.LinePattern = LinePattern.Dashed;
-                            line.Color = color;
-                            line.Axes.YAxis = yAxis;
+                            AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
                         }
                     }
                     break;
@@ -538,9 +532,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         if (xs.Length >= 2)
                         {
                             (double a, double b) = MathNet.Numerics.Fit.Logarithm(xs, ys);
-                            double[] fx = [.. xs.Select(x => a + b * Math.Log(x))];
-                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
+                            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * Math.Log(x)));
                             string expression = $"{b:F4}ln(x) + {a:F4}";
+                            double[] sampleXs = BuildSampleXs(xs);
+                            double[] fx = [.. sampleXs.Select(x => a + b * Math.Log(x))];
 
                             if (absoluteCurveFitting)
                             {
@@ -549,12 +544,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             formula = $"y = {expression} (r²={r2:F4})";
-                            Scatter line = plotModel.Add.ScatterLine(xs, fx);
-                            line.MarkerSize = 0;
-                            line.LineWidth = 2;
-                            line.LinePattern = LinePattern.Dashed;
-                            line.Color = color;
-                            line.Axes.YAxis = yAxis;
+                            AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
                         }
                     }
                     break;
@@ -564,27 +554,19 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             (double a, double b) = MathNet.Numerics.Fit.Power(xs, ys);
                             double f(double x) => a * Math.Pow(x, b);
-                            double fxFirst = f(xs.First());
-                            double fxLast = f(xs.Last());
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => f(x)));
                             string expression = $"{a:F4}x^{b:F4}";
+                            double[] sampleXs = BuildSampleXs(xs);
+                            double[] fx = [.. sampleXs.Select(x => f(x))];
 
                             if (absoluteCurveFitting)
                             {
-                                fxFirst = Math.Abs(fxFirst);
-                                fxLast = Math.Abs(fxLast);
+                                fx = [.. fx.Select(Math.Abs)];
                                 expression = $"|{expression}|";
                             }
 
                             formula = $"y = {expression} (r²={r2:F4})";
-                            Coordinates pt1 = new(xs.First(), fxFirst);
-                            Coordinates pt2 = new(xs.Last(), fxLast);
-                            LinePlot line = plotModel.Add.Line(pt1, pt2);
-                            line.MarkerSize = 0;
-                            line.LineWidth = 2;
-                            line.LinePattern = LinePattern.Dashed;
-                            line.Color = color;
-                            line.Axes.YAxis = yAxis;
+                            AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
                         }
                     }
                     break;
@@ -640,7 +622,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             (double a, double b) = MathNet.Numerics.Fit.Line(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * x));
                             string expression = $"{b:F4}";
-                            double[] sampleXs = BuildDerivativeSampleXs(xs);
+                            double[] sampleXs = BuildSampleXs(xs);
                             double[] dfx = [.. sampleXs.Select(_ => b)];
 
                             if (absoluteCurveFitting)
@@ -650,7 +632,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             formula = $"y′ = {expression} (r²={r2:F4})";
-                            AddCurveFitDerivativeLine(plotModel, sampleXs, dfx, yAxis, color);
+                            AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
                         }
                     }
                     break;
@@ -662,7 +644,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             (double a, double r) = MathNet.Numerics.Fit.Exponential(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a * Math.Exp(r * x)));
                             string expression = $"{a * r:F4}e^{r:F4}x";
-                            double[] sampleXs = BuildDerivativeSampleXs(xs);
+                            double[] sampleXs = BuildSampleXs(xs);
                             double[] dfx = [.. sampleXs.Select(x => a * r * Math.Exp(r * x))];
 
                             if (absoluteCurveFitting)
@@ -672,7 +654,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             formula = $"y′ = {expression} (r²={r2:F4})";
-                            AddCurveFitDerivativeLine(plotModel, sampleXs, dfx, yAxis, color);
+                            AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
                         }
                     }
                     break;
@@ -684,7 +666,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             (double a, double b) = MathNet.Numerics.Fit.Logarithm(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a + b * Math.Log(x)));
                             string expression = $"{b:F4}/x";
-                            double[] sampleXs = BuildDerivativeSampleXs(xs);
+                            double[] sampleXs = BuildSampleXs(xs);
                             double[] dfx = [.. sampleXs.Select(x => b / x)];
 
                             if (absoluteCurveFitting)
@@ -694,7 +676,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             formula = $"y′ = {expression} (r²={r2:F4})";
-                            AddCurveFitDerivativeLine(plotModel, sampleXs, dfx, yAxis, color);
+                            AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
                         }
                     }
                     break;
@@ -706,7 +688,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             (double a, double b) = MathNet.Numerics.Fit.Power(xs, ys);
                             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => a * Math.Pow(x, b)));
                             string expression = $"{a * b:F4}x^{b - 1.0:F4}";
-                            double[] sampleXs = BuildDerivativeSampleXs(xs);
+                            double[] sampleXs = BuildSampleXs(xs);
                             double[] dfx = [.. sampleXs.Select(x => a * b * Math.Pow(x, b - 1.0))];
 
                             if (absoluteCurveFitting)
@@ -716,7 +698,7 @@ namespace Zametek.ViewModel.ProjectPlan
                             }
 
                             formula = $"y′ = {expression} (r²={r2:F4})";
-                            AddCurveFitDerivativeLine(plotModel, sampleXs, dfx, yAxis, color);
+                            AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
                         }
                     }
                     break;
@@ -742,23 +724,23 @@ namespace Zametek.ViewModel.ProjectPlan
             return formula;
         }
 
-        private static double[] BuildDerivativeSampleXs(double[] xs)
+        private static double[] BuildSampleXs(double[] xs)
         {
             double minimum = xs.Min();
             double maximum = xs.Max();
-            int count = Math.Max(c_MinimumDerivativeSamplePoints, xs.Length);
+            int count = Math.Max(c_MinimumSamplePoints, xs.Length);
             double step = (maximum - minimum) / (count - 1);
             return [.. Enumerable.Range(0, count).Select(i => minimum + (i * step))];
         }
 
-        private static void AddCurveFitDerivativeLine(
+        private static void AddCurveFitLine(
             Plot plotModel,
             double[] xs,
-            double[] dfx,
+            double[] fx,
             IYAxis yAxis,
             Color color)
         {
-            Scatter line = plotModel.Add.ScatterLine(xs, dfx);
+            Scatter line = plotModel.Add.ScatterLine(xs, fx);
             line.MarkerSize = 0;
             line.LineWidth = 2;
             line.LinePattern = LinePattern.Dashed;
@@ -787,15 +769,17 @@ namespace Zametek.ViewModel.ProjectPlan
             }
 
             double[] coefficients = MathNet.Numerics.Fit.Polynomial(xs, ys, order);
-            double[] fx = [.. xs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, coefficients))];
 
             // The r² describes the fit against the raw outputs.
-            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, fx);
+            double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, coefficients)));
 
             // Build the expression.
             var expressionBuilder = new StringBuilder();
             AppendPolynomialTerms(expressionBuilder, coefficients);
             string expression = expressionBuilder.ToString();
+
+            double[] sampleXs = BuildSampleXs(xs);
+            double[] fx = [.. sampleXs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, coefficients))];
 
             if (absoluteCurveFitting)
             {
@@ -803,13 +787,8 @@ namespace Zametek.ViewModel.ProjectPlan
                 expression = $"|{expression}|";
             }
 
-            // Plot the regression line.
-            Scatter line = plotModel.Add.ScatterLine(xs, fx);
-            line.MarkerSize = 0;
-            line.LineWidth = 2;
-            line.LinePattern = LinePattern.Dashed;
-            line.Color = color;
-            line.Axes.YAxis = yAxis;
+            // Plot the regression curve.
+            AddCurveFitLine(plotModel, sampleXs, fx, yAxis, color);
 
             return $"y = {expression} (r²={r2:F4})";
         }
@@ -845,7 +824,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 derivativeCoefficients[i - 1] = i * coefficients[i];
             }
 
-            double[] sampleXs = BuildDerivativeSampleXs(xs);
+            double[] sampleXs = BuildSampleXs(xs);
             double[] dfx = [.. sampleXs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, derivativeCoefficients))];
 
             // Build the expression. The r² still describes the underlying fit.
@@ -859,7 +838,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 expression = $"|{expression}|";
             }
 
-            AddCurveFitDerivativeLine(plotModel, sampleXs, dfx, yAxis, color);
+            AddCurveFitLine(plotModel, sampleXs, dfx, yAxis, color);
 
             double r2 = MathNet.Numerics.GoodnessOfFit.RSquared(ys, xs.Select(x => MathNet.Numerics.Polynomial.Evaluate(x, coefficients)));
             return $"y′ = {expression} (r²={r2:F4})";
