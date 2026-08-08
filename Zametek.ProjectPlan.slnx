@@ -62,6 +62,9 @@
     <Project Path="test/Zametek.Graphs.Avalonia.Tests/Zametek.Graphs.Avalonia.Tests.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>
+    <Project Path="test/Zametek.ProjectPlan.CommandLine.Tests/Zametek.ProjectPlan.CommandLine.Tests.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
     <Project Path="test/Zametek.ViewModel.ProjectPlan.Tests/Zametek.ViewModel.ProjectPlan.Tests.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
     </Project>

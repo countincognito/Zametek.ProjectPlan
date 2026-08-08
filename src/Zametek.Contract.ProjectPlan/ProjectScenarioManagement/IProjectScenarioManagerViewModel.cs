@@ -111,6 +111,8 @@ namespace Zametek.Contract.ProjectPlan
 
         IManagedNodeViewModel? GetNodeParent(Guid nodeId);
 
+        void BuildTrackedMetrics();
+
         ProjectModel BuildProject();
     }
 }

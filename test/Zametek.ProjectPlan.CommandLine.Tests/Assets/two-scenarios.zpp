@@ -1,0 +1,464 @@
+{
+  "Version": "v0.6.1",
+  "Id": "3f9dcadc-5dd0-4d51-92b1-4c9dcbf4a1aa",
+  "Root": "b0a4f078-4de5-4d3b-a2be-b9e2f2a4b6f1",
+  "Current": "8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5",
+  "Nodes": [
+    {
+      "Id": "8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5",
+      "ParentId": "b0a4f078-4de5-4d3b-a2be-b9e2f2a4b6f1",
+      "NodeType": 0,
+      "Name": "Alpha",
+      "CreatedOn": "0001-01-01T00:00:00+00:00",
+      "IsTracked": true,
+      "ModifiedOn": "2026-08-07T14:38:27.7788015+01:00"
+    },
+    {
+      "Id": "17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4",
+      "ParentId": "b0a4f078-4de5-4d3b-a2be-b9e2f2a4b6f1",
+      "NodeType": 0,
+      "Name": "Beta",
+      "CreatedOn": "0001-01-01T00:00:00+00:00",
+      "IsTracked": false,
+      "ModifiedOn": "0001-01-01T00:00:00+00:00"
+    }
+  ],
+  "Files": [
+    {
+      "NodeId": "8f4d2f43-4c1b-4f16-9df8-40e1a2b3c4d5",
+      "Scenario": {
+        "ProjectStart": "2024-01-01T00:00:00+00:00",
+        "Today": "2024-01-01T00:00:00+00:00",
+        "DependentActivities": [
+          {
+            "Activity": {
+              "Id": 1,
+              "DisplayOrder": 0,
+              "Name": "Task A",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [
+                1
+              ],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 5,
+              "FreeSlack": 0,
+              "EarliestStartTime": 0,
+              "LatestFinishTime": 5,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": []
+          }
+        ],
+        "GraphSettings": {
+          "ActivitySeverities": [
+            {
+              "SlackLimit": 0,
+              "CriticalityWeight": 4.0,
+              "FibonacciWeight": 4.23606797749979,
+              "ColorFormat": {
+                "A": 255,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              }
+            },
+            {
+              "SlackLimit": 10,
+              "CriticalityWeight": 3.0,
+              "FibonacciWeight": 2.618033988749895,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 0,
+                "B": 0
+              }
+            },
+            {
+              "SlackLimit": 25,
+              "CriticalityWeight": 2.0,
+              "FibonacciWeight": 1.618033988749895,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 215,
+                "B": 0
+              }
+            },
+            {
+              "SlackLimit": 2147483647,
+              "CriticalityWeight": 1.0,
+              "FibonacciWeight": 1.0,
+              "ColorFormat": {
+                "A": 255,
+                "R": 0,
+                "G": 128,
+                "B": 0
+              }
+            }
+          ],
+          "EdgeTypeFormats": [
+            {
+              "EdgeType": 0,
+              "EdgeDashStyle": 0,
+              "EdgeWeightStyle": 0
+            },
+            {
+              "EdgeType": 1,
+              "EdgeDashStyle": 0,
+              "EdgeWeightStyle": 1
+            },
+            {
+              "EdgeType": 2,
+              "EdgeDashStyle": 1,
+              "EdgeWeightStyle": 0
+            },
+            {
+              "EdgeType": 3,
+              "EdgeDashStyle": 1,
+              "EdgeWeightStyle": 1
+            }
+          ],
+          "NodeTypeFormats": [
+            {
+              "NodeType": 0,
+              "NodeBorderDashStyle": 0,
+              "NodeBorderWeightStyle": 0
+            },
+            {
+              "NodeType": 1,
+              "NodeBorderDashStyle": 0,
+              "NodeBorderWeightStyle": 1
+            },
+            {
+              "NodeType": 2,
+              "NodeBorderDashStyle": 1,
+              "NodeBorderWeightStyle": 0
+            },
+            {
+              "NodeType": 3,
+              "NodeBorderDashStyle": 1,
+              "NodeBorderWeightStyle": 0
+            }
+          ]
+        },
+        "ResourceSettings": {
+          "Resources": [],
+          "DefaultUnitCost": 0.0,
+          "DefaultUnitBilling": 0.0,
+          "AreDisabled": false
+        },
+        "WorkStreamSettings": {
+          "WorkStreams": []
+        },
+        "HolidaySettings": {
+          "Holidays": []
+        },
+        "Metrics": {
+          "Risks": {
+            "Criticality": 1.0,
+            "Fibonacci": 1.0,
+            "Activity": 1.0,
+            "ActivityStdDevCorrection": 1.0,
+            "GeometricCriticality": 1.0,
+            "GeometricFibonacci": 1.0,
+            "GeometricActivity": 1.0
+          },
+          "Costs": {
+            "Direct": 0.0,
+            "Indirect": 0.0,
+            "Other": 0.0,
+            "Total": 0.0
+          },
+          "Billings": {
+            "Direct": 0.0,
+            "Indirect": 0.0,
+            "Other": 0.0,
+            "Total": 0.0
+          },
+          "Margins": {
+            "Direct": 0.0,
+            "Indirect": 0.0,
+            "Other": 0.0,
+            "Total": 0.0,
+            "DirectAbsolute": 0.0,
+            "IndirectAbsolute": 0.0,
+            "OtherAbsolute": 0.0,
+            "TotalAbsolute": 0.0
+          },
+          "Efforts": {
+            "Direct": 5.0,
+            "Indirect": 0.0,
+            "Other": 0.0,
+            "Total": 5.0,
+            "Activity": 5.0,
+            "Efficiency": 1.0
+          },
+          "Network": {
+            "CyclomaticComplexity": 1,
+            "Duration": 5,
+            "DurationManMonths": 0.1643835616438356
+          }
+        },
+        "DisplaySettings": {
+          "ShowDates": false,
+          "UseClassicDates": false,
+          "NonWorkingDayMode": 0,
+          "HideCost": false,
+          "HideBilling": false,
+          "ArrowGraphShowNames": false,
+          "VertexGraphShowNames": false,
+          "ArrowGraphEdgeRoutingMode": 0,
+          "VertexGraphEdgeRoutingMode": 0,
+          "GanttChartGroupByMode": 0,
+          "GanttChartAnnotationStyle": 0,
+          "GanttChartShowGroupLabels": false,
+          "GanttChartShowProjectFinish": false,
+          "GanttChartShowTracking": false,
+          "GanttChartShowToday": false,
+          "GanttChartShowMilestones": false,
+          "GanttChartShowSlack": false,
+          "GanttChartShowNonWorkingDays": false,
+          "GanttChartShowConnections": [],
+          "ResourceChartAllocationMode": 0,
+          "ResourceChartScheduleMode": 0,
+          "ResourceChartDisplayStyle": 0,
+          "ResourceChartShowToday": false,
+          "ResourceChartShowMilestones": false,
+          "EarnedValueShowProjections": false,
+          "EarnedValueShowToday": false,
+          "EarnedValueShowMilestones": false,
+          "EarnedValueCombineResources": false,
+          "EarnedValueScaleToOwnPlan": false,
+          "EarnedValueShowResources": []
+        },
+        "ArrowGraphLayout": {
+          "Nodes": []
+        },
+        "VertexGraphLayout": {
+          "Nodes": []
+        }
+      }
+    },
+    {
+      "NodeId": "17c3e2d9-95a4-4b47-b7ff-51f0a1b2c3d4",
+      "Scenario": {
+        "ProjectStart": "2024-01-01T00:00:00+00:00",
+        "Today": "2024-01-01T00:00:00+00:00",
+        "DependentActivities": [
+          {
+            "Activity": {
+              "Id": 1,
+              "DisplayOrder": 0,
+              "Name": "Task B",
+              "Notes": "",
+              "TargetWorkStreams": [],
+              "TargetResources": [],
+              "TargetResourceOperator": 0,
+              "AllocatedToResources": [],
+              "CanBeRemoved": false,
+              "HasNoCost": false,
+              "HasNoBilling": false,
+              "HasNoEffort": false,
+              "HasNoRisk": false,
+              "Duration": 10,
+              "OverrideColor": false,
+              "ColorFormat": {
+                "A": 0,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              },
+              "Trackers": []
+            },
+            "Dependencies": [],
+            "PlanningDependencies": [],
+            "ResourceDependencies": [],
+            "Successors": []
+          }
+        ],
+        "GraphSettings": {
+          "ActivitySeverities": [
+            {
+              "SlackLimit": 0,
+              "CriticalityWeight": 4.0,
+              "FibonacciWeight": 4.23606797749979,
+              "ColorFormat": {
+                "A": 255,
+                "R": 0,
+                "G": 0,
+                "B": 0
+              }
+            },
+            {
+              "SlackLimit": 10,
+              "CriticalityWeight": 3.0,
+              "FibonacciWeight": 2.618033988749895,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 0,
+                "B": 0
+              }
+            },
+            {
+              "SlackLimit": 25,
+              "CriticalityWeight": 2.0,
+              "FibonacciWeight": 1.618033988749895,
+              "ColorFormat": {
+                "A": 255,
+                "R": 255,
+                "G": 215,
+                "B": 0
+              }
+            },
+            {
+              "SlackLimit": 2147483647,
+              "CriticalityWeight": 1.0,
+              "FibonacciWeight": 1.0,
+              "ColorFormat": {
+                "A": 255,
+                "R": 0,
+                "G": 128,
+                "B": 0
+              }
+            }
+          ],
+          "EdgeTypeFormats": [
+            {
+              "EdgeType": 0,
+              "EdgeDashStyle": 0,
+              "EdgeWeightStyle": 0
+            },
+            {
+              "EdgeType": 1,
+              "EdgeDashStyle": 0,
+              "EdgeWeightStyle": 1
+            },
+            {
+              "EdgeType": 2,
+              "EdgeDashStyle": 1,
+              "EdgeWeightStyle": 0
+            },
+            {
+              "EdgeType": 3,
+              "EdgeDashStyle": 1,
+              "EdgeWeightStyle": 1
+            }
+          ],
+          "NodeTypeFormats": [
+            {
+              "NodeType": 0,
+              "NodeBorderDashStyle": 0,
+              "NodeBorderWeightStyle": 0
+            },
+            {
+              "NodeType": 1,
+              "NodeBorderDashStyle": 0,
+              "NodeBorderWeightStyle": 1
+            },
+            {
+              "NodeType": 2,
+              "NodeBorderDashStyle": 1,
+              "NodeBorderWeightStyle": 0
+            },
+            {
+              "NodeType": 3,
+              "NodeBorderDashStyle": 1,
+              "NodeBorderWeightStyle": 0
+            }
+          ]
+        },
+        "ResourceSettings": {
+          "Resources": [],
+          "DefaultUnitCost": 0.0,
+          "DefaultUnitBilling": 0.0,
+          "AreDisabled": false
+        },
+        "WorkStreamSettings": {
+          "WorkStreams": []
+        },
+        "HolidaySettings": {
+          "Holidays": []
+        },
+        "Metrics": {
+          "Risks": {},
+          "Costs": {},
+          "Billings": {},
+          "Margins": {},
+          "Efforts": {},
+          "Network": {}
+        },
+        "DisplaySettings": {
+          "ShowDates": false,
+          "UseClassicDates": false,
+          "NonWorkingDayMode": 0,
+          "HideCost": false,
+          "HideBilling": false,
+          "ArrowGraphShowNames": false,
+          "VertexGraphShowNames": false,
+          "ArrowGraphEdgeRoutingMode": 0,
+          "VertexGraphEdgeRoutingMode": 0,
+          "GanttChartGroupByMode": 0,
+          "GanttChartAnnotationStyle": 0,
+          "GanttChartShowGroupLabels": false,
+          "GanttChartShowProjectFinish": false,
+          "GanttChartShowTracking": false,
+          "GanttChartShowToday": false,
+          "GanttChartShowMilestones": false,
+          "GanttChartShowSlack": false,
+          "GanttChartShowNonWorkingDays": false,
+          "GanttChartShowConnections": [],
+          "ResourceChartAllocationMode": 0,
+          "ResourceChartScheduleMode": 0,
+          "ResourceChartDisplayStyle": 0,
+          "ResourceChartShowToday": false,
+          "ResourceChartShowMilestones": false,
+          "EarnedValueShowProjections": false,
+          "EarnedValueShowToday": false,
+          "EarnedValueShowMilestones": false,
+          "EarnedValueCombineResources": false,
+          "EarnedValueScaleToOwnPlan": false,
+          "EarnedValueShowResources": []
+        },
+        "ArrowGraphLayout": {
+          "Nodes": []
+        },
+        "VertexGraphLayout": {
+          "Nodes": []
+        }
+      }
+    }
+  ],
+  "Tags": [],
+  "DisplaySettings": {
+    "ProjectScenarioSortMode": 0,
+    "ProjectScenarioSortDirection": 0,
+    "ScenarioChartShowNames": false,
+    "ScenarioChartTrackedMetricXAxis": 0,
+    "ScenarioChartTrackedMetricY1Axis": 0,
+    "ScenarioChartTrackedMetricY2Axis": 0,
+    "ScenarioChartCurveFittingTypeY1": 0,
+    "ScenarioChartCurveFittingTypeY2": 0,
+    "ScenarioChartShowDerivativeY1": false,
+    "ScenarioChartShowDerivativeY2": false,
+    "ScenarioChartAbsoluteCurveFittingY1": false,
+    "ScenarioChartAbsoluteCurveFittingY2": false
+  }
+}

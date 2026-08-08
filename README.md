@@ -76,6 +76,87 @@ sudo apt-get install libsm6
 sudo apt-get install libgtk-3-dev
 ```
 
+### Using the makefile
+
+The repository root contains a `makefile` that wraps the most common build, publish, and verification commands. It requires GNU Make, so on Windows run it from a shell that provides `make` (for example Git Bash with make installed, or WSL). Running `make` on its own prints the available targets along with the accepted `ARCH` and `OS` values:
+
+```
+make
+```
+
+The targets:
+
+| Target | Effect |
+| ------ | ------ |
+| `build` | Compile the desktop app and the CLI as self-contained binaries (`build-desktop` / `build-cli` for one at a time) |
+| `publish` | Produce self-contained, single-file distribution builds of both (`publish-desktop` / `publish-cli` individually) |
+| `clean` | Clean the solution |
+| `hooks` | Install the pre-commit hooks manually (see the Git hooks section above) |
+| `format` | Apply code style fixes to the solution filter |
+| `format-check` | Verify code style without modifying files |
+| `lint` | Release build of the solution filter, as a compilation check |
+| `test` | Run all test suites in Release |
+
+Unlike the plain SDK commands above, the `build` and `publish` targets compile for an explicit OS and architecture. They are parameterised by variables that can be overridden on the command line: `ARCH` (`x64`, `x86`, `arm64`; default `x64`), `OS` (`win`, `linux`, `osx`; default `win`) and `CONFIGURATION` (default `Release`). For example:
+
+```
+make publish-cli OS=linux ARCH=arm64
+```
+
+Published output lands in `src/<project>/bin/<configuration>/net10.0/<os>-<arch>/publish/` - for example, the default `make publish-cli` writes a self-contained `zpp.exe` to `src/Zametek.ProjectPlan.CommandLine/bin/Release/net10.0/win-x64/publish/`.
+
+## Command line tool (zpp)
+
+The solution also ships a headless command line tool, `zpp` (the `Zametek.ProjectPlan.CommandLine` project), which opens or imports a project, compiles it, and produces any combination of outputs without launching the desktop app - useful for scripting, CI pipelines, and batch processing. Build it with the standard SDK commands above, or produce a self-contained single-file build with `make publish-cli`.
+
+### Usage
+
+Compile a project and print its metrics:
+
+```
+zpp -i plan.zpp
+```
+
+Produce chart and graph images (sizes are `<width>:<height>` in pixels):
+
+```
+zpp -i plan.zpp --gantt-directory out --gantt-size 1200:800 --gantt-format png --arrow-directory out --arrow-format svg --scenario-chart-directory out --scenario-chart-size 1200:800
+```
+
+Work with scenarios:
+
+```
+zpp -i plan.zpp --list-scenarios
+zpp -i plan.zpp --scenario "Iteration 2" -o plan-iter2.zpp
+```
+
+`--scenario` accepts a name or an id - either the full id shown by `--list-scenarios` or, git-style, any unique prefix of it that is at least four hex characters long (an exact name match wins over an id prefix, the same way a git ref beats an abbreviated commit hash).
+
+Emit machine-readable metrics (stdout carries only the JSON document, so it pipes cleanly):
+
+```
+zpp -i plan.zpp --metrics-format json
+```
+
+Import from Microsoft Project or Excel, and convert to a project file:
+
+```
+zpp -m plan.mpp -o plan.zpp
+```
+
+Run `zpp --help` for the full option list. Chart and graph exports honour the display settings saved in the project file (the theme excepted - pass `--base-theme Dark` for dark output). Diagnostic logging goes to stderr, never stdout: warnings and errors always show, and `--verbose` adds informational lifecycle output.
+
+### Exit codes
+
+The exit codes are a contract for scripts and CI gates, pinned by the `Zametek.ProjectPlan.CommandLine.Tests` suite:
+
+| Code | Meaning |
+| ---- | ------- |
+| 0 | Success |
+| 1 | Runtime failure (bad paths, unreadable files, unexpected errors) |
+| 2 | Bad usage (invalid options or combinations) |
+| 3 | The project compiled with errors |
+
 ## Attributions
 
 Application icon using [Project management icons created by Flat Icons - Flaticon](https://www.flaticon.com/free-icons/project-management).

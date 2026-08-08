@@ -13,6 +13,14 @@ namespace Zametek.ProjectPlan.CommandLine
 
 
 
+        [Option('s', "scenario", HelpText = "Scenario to load, by name or id - the full id or a unique prefix of at least 4 hex characters (defaults to the project's current scenario; only valid with --input)")]
+        public string? Scenario { get; set; } = default;
+
+        [Option('l', "list-scenarios", HelpText = "List the input project's scenarios, then exit (only valid with --input)")]
+        public bool ListScenarios { get; set; } = default;
+
+
+
         [Option('o', "output", HelpText = "Output file path")]
         public string? OutputFilename { get; set; } = default;
 
@@ -23,6 +31,12 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option('t', "base-theme", Default = BaseTheme.Light, Required = false, HelpText = "Output theme (Light|Dark)")]
         public BaseTheme BaseTheme { get; set; } = BaseTheme.Light;
+
+        [Option('v', "verbose", HelpText = "Show informational log output on stderr (warnings and errors always show)")]
+        public bool Verbose { get; set; } = default;
+
+        [Option("metrics-format", Default = MetricsExport.Markdown, HelpText = "Metrics output format (Markdown|Table|Json)")]
+        public MetricsExport MetricsFormat { get; set; } = default;
 
 
 
@@ -72,5 +86,16 @@ namespace Zametek.ProjectPlan.CommandLine
 
         [Option("ev-size", Min = 2, Max = 2, Separator = ':', HelpText = "Earned-Value chart dimensions in pixels (<width>:<height>)")]
         public IEnumerable<int> EVSize { get; set; } = [];
+
+
+
+        [Option("scenario-chart-directory", HelpText = "Scenario chart output file directory")]
+        public string? ScenarioChartDirectory { get; set; } = default;
+
+        [Option("scenario-chart-format", Default = PlotExport.Jpeg, HelpText = "Scenario chart format (Jpeg|Png|Bmp|Webp|Svg)")]
+        public PlotExport ScenarioChartFormat { get; set; } = default;
+
+        [Option("scenario-chart-size", Min = 2, Max = 2, Separator = ':', HelpText = "Scenario chart dimensions in pixels (<width>:<height>)")]
+        public IEnumerable<int> ScenarioChartSize { get; set; } = [];
     }
 }

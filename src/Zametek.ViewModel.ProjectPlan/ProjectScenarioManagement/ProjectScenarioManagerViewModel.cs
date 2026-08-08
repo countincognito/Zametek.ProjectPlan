@@ -1793,7 +1793,10 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private void BuildTrackedMetrics()
+        // Public because headless hosts (the CLI) kill the reactive subscriptions
+        // that would otherwise invoke this, and drive each build step explicitly
+        // instead - the same pattern as the Build* methods on ICoreViewModel.
+        public void BuildTrackedMetrics()
         {
             CascadeDiagnostics.RecordBuild($@"{nameof(ProjectScenarioManagerViewModel)}.{nameof(BuildTrackedMetrics)}");
             lock (m_Lock)

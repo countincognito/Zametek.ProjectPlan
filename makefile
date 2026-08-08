@@ -1,4 +1,4 @@
-.PHONY: build run help hooks format format-check lint test
+.PHONY: help clean build-desktop build-cli build publish-desktop publish-cli publish hooks format format-check lint test
 .DEFAULT_GOAL := help
 
 ARCH := x64
