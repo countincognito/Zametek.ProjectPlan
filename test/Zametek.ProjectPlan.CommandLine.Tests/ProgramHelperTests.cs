@@ -236,6 +236,21 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         }
 
         [Fact]
+        public void OptionLongName_Given_OptionProperty_Then_ReturnsAttributeLongName()
+        {
+            Program.OptionLongName(nameof(Options.GanttDirectory)).ShouldBe(@"--gantt-directory");
+            Program.OptionLongName(nameof(Options.ListScenarios)).ShouldBe(@"--list-scenarios");
+            Program.OptionLongName(nameof(Options.InputFilename)).ShouldBe(@"--input");
+        }
+
+        [Fact]
+        public void OptionLongName_Given_NonOptionProperty_Then_Throws()
+        {
+            Should.Throw<InvalidOperationException>(
+                () => Program.OptionLongName(@"NotAProperty"));
+        }
+
+        [Fact]
         public void ValidateOptions_Given_InputAndImport_Then_UsageException()
         {
             Should.Throw<Program.UsageException>(

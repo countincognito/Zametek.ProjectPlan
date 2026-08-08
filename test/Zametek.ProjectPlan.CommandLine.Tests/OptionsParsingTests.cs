@@ -1,5 +1,6 @@
 using CommandLine;
 using Shouldly;
+using System.Reflection;
 using Xunit;
 
 namespace Zametek.ProjectPlan.CommandLine.Tests
@@ -106,6 +107,20 @@ namespace Zametek.ProjectPlan.CommandLine.Tests
         public void Parse_Given_UnknownOption_Then_Fails()
         {
             Parse(@"-i", @"a.zpp", @"--nonsense").ShouldBeOfType<NotParsed<Options>>();
+        }
+
+        [Fact]
+        public void Options_Given_EveryOptionProperty_Then_HasLongName()
+        {
+            // Program.OptionLongName resolves message text from these attributes,
+            // so every option must carry a long name.
+            foreach (PropertyInfo property in typeof(Options).GetProperties())
+            {
+                OptionAttribute? attribute = property.GetCustomAttribute<OptionAttribute>();
+
+                attribute.ShouldNotBeNull();
+                attribute.LongName.ShouldNotBeNullOrWhiteSpace($@"{property.Name} has no long option name");
+            }
         }
     }
 }

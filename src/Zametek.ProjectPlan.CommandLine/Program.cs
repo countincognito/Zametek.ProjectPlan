@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using ReactiveUI.Builder;
 using Serilog;
 using Serilog.Events;
+using System.Reflection;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 using Zametek.Graphs.Avalonia;
@@ -496,33 +497,57 @@ namespace Zametek.ProjectPlan.CommandLine
             return viewModel;
         }
 
+        // Error messages name options by their long form, resolved via
+        // OptionLongName from the Option attributes on the Options class, so a
+        // renamed option can never leave a stale name behind in a message.
         // This and the helpers below are internal rather than private so the test
         // assembly (see InternalsVisibleTo in the csproj) can exercise them
         // directly, without spinning up the whole host.
         internal static void ValidateOptions(Options options)
         {
+            string input = OptionLongName(nameof(Options.InputFilename));
+            string import = OptionLongName(nameof(Options.ImportFilename));
+            string scenario = OptionLongName(nameof(Options.Scenario));
+            string listScenarios = OptionLongName(nameof(Options.ListScenarios));
+
             if (options.InputFilename is not null
                 && options.ImportFilename is not null)
             {
-                throw new UsageException(@"Specify either --input or --import, but not both.");
+                throw new UsageException($@"Specify either {input} or {import}, but not both.");
             }
 
             if (options.InputFilename is null
                 && (options.Scenario is not null || options.ListScenarios))
             {
-                throw new UsageException(@"--scenario and --list-scenarios are only valid with --input.");
+                throw new UsageException($@"{scenario} and {listScenarios} are only valid with {input}.");
             }
 
             if (options.Scenario is not null
                 && options.ListScenarios)
             {
-                throw new UsageException(@"Specify either --scenario or --list-scenarios, but not both.");
+                throw new UsageException($@"Specify either {scenario} or {listScenarios}, but not both.");
             }
 
-            RequireSize(options.GanttDirectory, options.GanttSize, @"--gantt-directory", @"--gantt-size");
-            RequireSize(options.ResourceDirectory, options.ResourceSize, @"--resource-directory", @"--resource-size");
-            RequireSize(options.EVDirectory, options.EVSize, @"--ev-directory", @"--ev-size");
-            RequireSize(options.ScenarioChartDirectory, options.ScenarioChartSize, @"--scenario-chart-directory", @"--scenario-chart-size");
+            RequireSize(
+                options.GanttDirectory,
+                options.GanttSize,
+                OptionLongName(nameof(Options.GanttDirectory)),
+                OptionLongName(nameof(Options.GanttSize)));
+            RequireSize(
+                options.ResourceDirectory,
+                options.ResourceSize,
+                OptionLongName(nameof(Options.ResourceDirectory)),
+                OptionLongName(nameof(Options.ResourceSize)));
+            RequireSize(
+                options.EVDirectory,
+                options.EVSize,
+                OptionLongName(nameof(Options.EVDirectory)),
+                OptionLongName(nameof(Options.EVSize)));
+            RequireSize(
+                options.ScenarioChartDirectory,
+                options.ScenarioChartSize,
+                OptionLongName(nameof(Options.ScenarioChartDirectory)),
+                OptionLongName(nameof(Options.ScenarioChartSize)));
 
             // All export directories are checked up front so that a bad path fails
             // the run before any file has been written.
@@ -547,6 +572,22 @@ namespace Zametek.ProjectPlan.CommandLine
             {
                 throw new UsageException($@"{sizeOption} is required when {directoryOption} is specified.");
             }
+        }
+
+        // Resolves an option's display name ("--long-name") from the Option
+        // attribute on the named Options property, so messages track the attribute
+        // text. Callers pass nameof(Options.X), which keeps the property end
+        // rename-safe as well. Throws (rather than degrading) when the property is
+        // not an option, so a refactor that breaks the link fails loudly in tests.
+        internal static string OptionLongName(string optionPropertyName)
+        {
+            OptionAttribute? attribute = typeof(Options)
+                .GetProperty(optionPropertyName)?
+                .GetCustomAttribute<OptionAttribute>();
+
+            return attribute is null
+                ? throw new InvalidOperationException($@"{optionPropertyName} is not an option property on {nameof(Options)}")
+                : $@"--{attribute.LongName}";
         }
 
         private static void RequireDirectory(string? directory)
@@ -625,11 +666,11 @@ namespace Zametek.ProjectPlan.CommandLine
 
             if (matches.Count == 0)
             {
-                throw new InvalidOperationException($@"No scenario matches '{selector}' - use --list-scenarios to see what the project contains");
+                throw new InvalidOperationException($@"No scenario matches '{selector}' - use {OptionLongName(nameof(Options.ListScenarios))} to see what the project contains");
             }
             if (matches.Count > 1)
             {
-                throw new InvalidOperationException($@"'{selector}' matches {matches.Count} scenarios - use --list-scenarios and select one by id");
+                throw new InvalidOperationException($@"'{selector}' matches {matches.Count} scenarios - use {OptionLongName(nameof(Options.ListScenarios))} and select one by id");
             }
 
             Guid scenarioId = matches[0].Id;
