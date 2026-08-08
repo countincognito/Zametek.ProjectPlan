@@ -14,11 +14,12 @@
 	<ScrollViewer VerticalScrollBarVisibility="Auto"
 				  HorizontalScrollBarVisibility="Disabled">
 		<WrapPanel Margin="7"
+				   Grid.IsSharedSizeScope="True"
 				   Orientation="Horizontal">
 			<Grid Margin="7">
 				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricLabel"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricValue"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -70,8 +71,8 @@
 
 			<Grid Margin="7">
 				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricLabel"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricValue"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -123,8 +124,8 @@
 
 			<Grid Margin="7">
 				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricLabel"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricValue"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -176,8 +177,8 @@
 
 			<Grid Margin="7">
 				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricLabel"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricValue"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -230,8 +231,8 @@
 			<Grid Margin="7"
 				  IsVisible="{Binding Path=!HideCost, Mode=OneWay}">
 				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricLabel"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricValue"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -284,8 +285,8 @@
 			<Grid Margin="7"
 				  IsVisible="{Binding Path=!HideBilling, Mode=OneWay}">
 				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricLabel"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricValue"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -338,8 +339,8 @@
 			<Grid Margin="7"
 				  IsVisible="{Binding Path=!HideMargin, Mode=OneWay}">
 				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="135"/>
-					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricLabel"/>
+					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricValue"/>
 				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
