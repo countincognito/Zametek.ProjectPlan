@@ -18,6 +18,8 @@ You should only spend money on projectplan.net if you can afford to and if you w
 
 For user documentation, see the [project wiki](https://github.com/countincognito/Zametek.ProjectPlan/wiki).
 
+For anyone interested in the internals - or contributing to them - [ARCHITECTURE.md](ARCHITECTURE.md) describes the reactive update architecture: how edits propagate through the compile pipeline, how bulk updates (project loads, imports, resets) are suppressed and replayed, and the threading rules that keep it all deadlock-free.
+
 ## Building from source
 
 ### Prerequisites
