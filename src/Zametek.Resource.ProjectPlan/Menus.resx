@@ -387,8 +387,11 @@
   <data name="Menu_AbsoluteCurveFittingY2" xml:space="preserve">
     <value>Y2 Absolute Curve Fitting</value>
   </data>
-  <data name="Menu_ShowNames" xml:space="preserve">
-    <value>Show Names</value>
+  <data name="Menu_ShowNamesY1" xml:space="preserve">
+    <value>Show Y1 Names</value>
+  </data>
+  <data name="Menu_ShowNamesY2" xml:space="preserve">
+    <value>Show Y2 Names</value>
   </data>
   <data name="Menu_ShowNonWorkingDays" xml:space="preserve">
     <value>Show Non-Working Days</value>

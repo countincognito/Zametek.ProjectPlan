@@ -33,8 +33,6 @@ namespace Zametek.Contract.ProjectPlan
 
         SortDirection ProjectScenarioSortDirection { get; set; }
 
-        bool ScenarioChartShowNames { get; set; }
-
         TrackedMetrics ScenarioChartTrackedMetricXAxis { get; set; }
 
         TrackedMetrics ScenarioChartTrackedMetricY1Axis { get; set; }
@@ -44,6 +42,10 @@ namespace Zametek.Contract.ProjectPlan
         CurveFittingType ScenarioChartCurveFittingTypeY1 { get; set; }
 
         CurveFittingType ScenarioChartCurveFittingTypeY2 { get; set; }
+
+        bool ScenarioChartShowNamesY1 { get; set; }
+
+        bool ScenarioChartShowNamesY2 { get; set; }
 
         bool ScenarioChartShowDerivativeY1 { get; set; }
 

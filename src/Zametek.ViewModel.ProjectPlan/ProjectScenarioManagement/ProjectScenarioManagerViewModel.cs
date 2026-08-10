@@ -257,10 +257,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ProjectScenarioSortDirection)
                 .ToProperty(this, pm => pm.ProjectScenarioSortDirection);
 
-            m_ScenarioChartShowNames = this
-                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartShowNames)
-                .ToProperty(this, pm => pm.ScenarioChartShowNames);
-
             m_ScenarioChartTrackedMetricXAxis = this
                 .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartTrackedMetricXAxis)
                 .ToProperty(this, pm => pm.ScenarioChartTrackedMetricXAxis);
@@ -280,6 +276,14 @@ namespace Zametek.ViewModel.ProjectPlan
             m_ScenarioChartCurveFittingTypeY2 = this
                 .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartCurveFittingTypeY2)
                 .ToProperty(this, pm => pm.ScenarioChartCurveFittingTypeY2);
+
+            m_ScenarioChartShowNamesY1 = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartShowNamesY1)
+                .ToProperty(this, pm => pm.ScenarioChartShowNamesY1);
+
+            m_ScenarioChartShowNamesY2 = this
+                .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartShowNamesY2)
+                .ToProperty(this, pm => pm.ScenarioChartShowNamesY2);
 
             m_ScenarioChartShowDerivativeY1 = this
                 .WhenAnyValue(pm => pm.DisplaySettingsViewModel.ScenarioChartShowDerivativeY1)
@@ -1950,19 +1954,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private readonly ObservableAsPropertyHelper<bool> m_ScenarioChartShowNames;
-        public bool ScenarioChartShowNames
-        {
-            get
-            {
-                return m_DisplaySettingsViewModel.ScenarioChartShowNames;
-            }
-            set
-            {
-                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartShowNames = value;
-            }
-        }
-
         private readonly ObservableAsPropertyHelper<TrackedMetrics> m_ScenarioChartTrackedMetricXAxis;
         public TrackedMetrics ScenarioChartTrackedMetricXAxis
         {
@@ -2025,6 +2016,32 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartCurveFittingTypeY2 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ScenarioChartShowNamesY1;
+        public bool ScenarioChartShowNamesY1
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ScenarioChartShowNamesY1;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartShowNamesY1 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ScenarioChartShowNamesY2;
+        public bool ScenarioChartShowNamesY2
+        {
+            get
+            {
+                return m_DisplaySettingsViewModel.ScenarioChartShowNamesY2;
+            }
+            set
+            {
+                lock (m_Lock) m_DisplaySettingsViewModel.ScenarioChartShowNamesY2 = value;
             }
         }
 
@@ -2477,12 +2494,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_ProjectHasChanges?.Dispose();
                 m_ProjectScenarioSortMode?.Dispose();
                 m_ProjectScenarioSortDirection?.Dispose();
-                m_ScenarioChartShowNames?.Dispose();
                 m_ScenarioChartTrackedMetricXAxis?.Dispose();
                 m_ScenarioChartTrackedMetricY1Axis?.Dispose();
                 m_ScenarioChartTrackedMetricY2Axis?.Dispose();
                 m_ScenarioChartCurveFittingTypeY1?.Dispose();
                 m_ScenarioChartCurveFittingTypeY2?.Dispose();
+                m_ScenarioChartShowNamesY1?.Dispose();
+                m_ScenarioChartShowNamesY2?.Dispose();
                 m_ScenarioChartShowDerivativeY1?.Dispose();
                 m_ScenarioChartShowDerivativeY2?.Dispose();
                 m_ScenarioChartAbsoluteCurveFittingY1?.Dispose();

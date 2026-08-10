@@ -871,11 +871,20 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Show Names.
+        ///   Looks up a localized string similar to Show Y1 Names.
         /// </summary>
-        public static string Menu_ShowNames {
+        public static string Menu_ShowNamesY1 {
             get {
-                return ResourceManager.GetString("Menu_ShowNames", resourceCulture);
+                return ResourceManager.GetString("Menu_ShowNamesY1", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Y2 Names.
+        /// </summary>
+        public static string Menu_ShowNamesY2 {
+            get {
+                return ResourceManager.GetString("Menu_ShowNamesY2", resourceCulture);
             }
         }
 

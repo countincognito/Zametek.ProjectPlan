@@ -1,4 +1,4 @@
-﻿using Zametek.Common.ProjectPlan;
+using Zametek.Common.ProjectPlan;
 
 namespace Zametek.Contract.ProjectPlan
 {
@@ -9,12 +9,13 @@ namespace Zametek.Contract.ProjectPlan
         public SortDirection ProjectScenarioSortDirection { get; set; }
 
 
-        public bool ScenarioChartShowNames { get; set; }
         public TrackedMetrics ScenarioChartTrackedMetricXAxis { get; set; }
         public TrackedMetrics ScenarioChartTrackedMetricY1Axis { get; set; }
         public TrackedMetrics ScenarioChartTrackedMetricY2Axis { get; set; }
         public CurveFittingType ScenarioChartCurveFittingTypeY1 { get; set; }
         public CurveFittingType ScenarioChartCurveFittingTypeY2 { get; set; }
+        public bool ScenarioChartShowNamesY1 { get; set; }
+        public bool ScenarioChartShowNamesY2 { get; set; }
         public bool ScenarioChartShowDerivativeY1 { get; set; }
         public bool ScenarioChartShowDerivativeY2 { get; set; }
         public bool ScenarioChartAbsoluteCurveFittingY1 { get; set; }

@@ -153,10 +153,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 .WhenAnyValue(rcm => rcm.m_CoreViewModel.HasCompilationErrors)
                 .ToProperty(this, rcm => rcm.HasCompilationErrors);
 
-            m_ShowNames = this
-                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNames)
-                .ToProperty(this, agm => agm.ShowNames);
-
             m_TrackedMetricXAxis = this
                 .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis)
                 .ToProperty(this, rcm => rcm.TrackedMetricXAxis);
@@ -176,6 +172,14 @@ namespace Zametek.ViewModel.ProjectPlan
             m_CurveFittingTypeY2 = this
                 .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2)
                 .ToProperty(this, rcm => rcm.CurveFittingTypeY2);
+
+            m_ShowNamesY1 = this
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNamesY1)
+                .ToProperty(this, rcm => rcm.ShowNamesY1);
+
+            m_ShowNamesY2 = this
+                .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNamesY2)
+                .ToProperty(this, rcm => rcm.ShowNamesY2);
 
             m_ShowDerivativeY1 = this
                 .WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY1)
@@ -212,7 +216,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_BuildScenarioChartPlotModelSub = Observable.Merge(
                     this.WhenAnyValue(
                         rcm => rcm.m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
-                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNames,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNamesY1,
                         rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
                         rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY1Axis,
                         rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY2Axis,
@@ -224,8 +228,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         rcm => rcm.m_CoreViewModel.ProjectStart,
                         rcm => rcm.m_CoreViewModel.BaseTheme,
                         (_, _, _, _, _, _, _, _, _, _, _, _) => Unit.Default),
-                    this.WhenAnyValue(rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY2)
-                        .Select(_ => Unit.Default))
+                    this.WhenAnyValue(
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartShowNamesY2,
+                        rcm => rcm.m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY2,
+                        (_, _) => Unit.Default))
                 .MuteWhile(this.WhenAnyValue(rcm => rcm.m_CoreViewModel.IsBulkUpdating)) // Conflate redundant notifications while a project scenario is loaded/reset.
                 .ObserveOn(RxSchedulers.TaskpoolScheduler)
                 .Subscribe(async _ => await BuildScenarioChartPlotModelAsync());
@@ -285,12 +291,13 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private static (Plot, string, string) BuildScenarioChartPlotModelInternal(
             TrackedMetricsSetModel trackedMetricsSet,
-            bool showNames,
             TrackedMetrics xMetric,
             TrackedMetrics y1Metric,
             TrackedMetrics y2Metric,
             CurveFittingType curveFittingTypeY1,
             CurveFittingType curveFittingTypeY2,
+            bool showNamesY1,
+            bool showNamesY2,
             bool showDerivativeY1,
             bool showDerivativeY2,
             bool absoluteCurveFittingY1,
@@ -331,11 +338,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 curveFittingFormulaY1 = BuildTrackedMetricSeries(
                     plotModel,
                     trackedMetricsSet,
-                    showNames,
                     xMetricFunction,
                     xMetric,
                     y1Metric,
                     curveFittingTypeY1,
+                    showNamesY1,
                     showDerivativeY1,
                     absoluteCurveFittingY1,
                     plotModel.Axes.Left,
@@ -348,11 +355,11 @@ namespace Zametek.ViewModel.ProjectPlan
                 curveFittingFormulaY2 = BuildTrackedMetricSeries(
                     plotModel,
                     trackedMetricsSet,
-                    showNames,
                     xMetricFunction,
                     xMetric,
                     y2Metric,
                     curveFittingTypeY2,
+                    showNamesY2,
                     showDerivativeY2,
                     absoluteCurveFittingY2,
                     plotModel.Axes.Right,
@@ -370,11 +377,11 @@ namespace Zametek.ViewModel.ProjectPlan
         private static string BuildTrackedMetricSeries(
             Plot plotModel,
             TrackedMetricsSetModel trackedMetricsSet,
-            bool showNames,
             Func<MetricsModel, double> xMetricFunction,
             TrackedMetrics xMetric,
             TrackedMetrics yMetric,
             CurveFittingType curveFittingType,
+            bool showNames,
             bool showDerivative,
             bool absoluteCurveFitting,
             IYAxis yAxis,
@@ -1039,16 +1046,6 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<bool> m_HasCompilationErrors;
         public bool HasCompilationErrors => m_HasCompilationErrors.Value;
 
-        private readonly ObservableAsPropertyHelper<bool> m_ShowNames;
-        public bool ShowNames
-        {
-            get => m_ShowNames.Value;
-            set
-            {
-                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartShowNames = value;
-            }
-        }
-
         private readonly ObservableAsPropertyHelper<TrackedMetrics> m_TrackedMetricXAxis;
         public TrackedMetrics TrackedMetricXAxis
         {
@@ -1096,6 +1093,26 @@ namespace Zametek.ViewModel.ProjectPlan
             set
             {
                 lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ShowNamesY1;
+        public bool ShowNamesY1
+        {
+            get => m_ShowNamesY1.Value;
+            set
+            {
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartShowNamesY1 = value;
+            }
+        }
+
+        private readonly ObservableAsPropertyHelper<bool> m_ShowNamesY2;
+        public bool ShowNamesY2
+        {
+            get => m_ShowNamesY2.Value;
+            set
+            {
+                lock (m_Lock) m_ProjectScenarioManagerViewModel.ScenarioChartShowNamesY2 = value;
             }
         }
 
@@ -1228,12 +1245,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     (plotModel, curveFittingFormulaY1, curveFittingFormulaY2) = BuildScenarioChartPlotModelInternal(
                         m_ProjectScenarioManagerViewModel.TrackedMetricsSet,
-                        m_ProjectScenarioManagerViewModel.ScenarioChartShowNames,
                         m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricXAxis,
                         m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY1Axis,
                         m_ProjectScenarioManagerViewModel.ScenarioChartTrackedMetricY2Axis,
                         m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY1,
                         m_ProjectScenarioManagerViewModel.ScenarioChartCurveFittingTypeY2,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartShowNamesY1,
+                        m_ProjectScenarioManagerViewModel.ScenarioChartShowNamesY2,
                         m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY1,
                         m_ProjectScenarioManagerViewModel.ScenarioChartShowDerivativeY2,
                         m_ProjectScenarioManagerViewModel.ScenarioChartAbsoluteCurveFittingY1,
@@ -1311,12 +1329,13 @@ namespace Zametek.ViewModel.ProjectPlan
                 m_IsBusy?.Dispose();
                 m_HasStaleOutputs?.Dispose();
                 m_HasCompilationErrors?.Dispose();
-                m_ShowNames?.Dispose();
                 m_TrackedMetricXAxis?.Dispose();
                 m_TrackedMetricY1Axis?.Dispose();
                 m_TrackedMetricY2Axis?.Dispose();
                 m_CurveFittingTypeY1?.Dispose();
                 m_CurveFittingTypeY2?.Dispose();
+                m_ShowNamesY1?.Dispose();
+                m_ShowNamesY2?.Dispose();
                 m_ShowDerivativeY1?.Dispose();
                 m_ShowDerivativeY2?.Dispose();
                 m_AbsoluteCurveFittingY1?.Dispose();

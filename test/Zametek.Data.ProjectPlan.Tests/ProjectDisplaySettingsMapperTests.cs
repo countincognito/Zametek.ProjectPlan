@@ -8,8 +8,9 @@ namespace Zametek.Data.ProjectPlan.Tests
     /// Tests for the version mapping of the project display settings around the
     /// v0.6.1 split of the scenario chart Y metric into Y1/Y2 (with per-metric
     /// curve fitting). v0.6.0 stays frozen with the old single-Y member names,
-    /// so the mapper must bridge YAxis to Y1Axis (and CurveFittingType to
-    /// CurveFittingTypeY1) in both directions, defaulting the Y2 members.
+    /// so the mapper must bridge YAxis to Y1Axis (and CurveFittingType and
+    /// ShowNames to their Y1 counterparts) in both directions, defaulting the
+    /// Y2 members.
     /// </summary>
     public class ProjectDisplaySettingsMapperTests
     {
@@ -32,12 +33,13 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             settings_v0_6_1.ProjectScenarioSortMode.ShouldBe(SortMode.Name);
             settings_v0_6_1.ProjectScenarioSortDirection.ShouldBe(Zametek.Common.ProjectPlan.SortDirection.Descending);
-            settings_v0_6_1.ScenarioChartShowNames.ShouldBeTrue();
             settings_v0_6_1.ScenarioChartTrackedMetricXAxis.ShouldBe(TrackedMetrics.NetworkDuration);
             settings_v0_6_1.ScenarioChartTrackedMetricY1Axis.ShouldBe(TrackedMetrics.CostsTotal);
             settings_v0_6_1.ScenarioChartTrackedMetricY2Axis.ShouldBe(TrackedMetrics.None);
             settings_v0_6_1.ScenarioChartCurveFittingTypeY1.ShouldBe(CurveFittingType.Linear);
             settings_v0_6_1.ScenarioChartCurveFittingTypeY2.ShouldBe(CurveFittingType.None);
+            settings_v0_6_1.ScenarioChartShowNamesY1.ShouldBeTrue();
+            settings_v0_6_1.ScenarioChartShowNamesY2.ShouldBeFalse();
             settings_v0_6_1.ScenarioChartShowDerivativeY1.ShouldBeFalse();
             settings_v0_6_1.ScenarioChartShowDerivativeY2.ShouldBeFalse();
             settings_v0_6_1.ScenarioChartAbsoluteCurveFittingY1.ShouldBeFalse();
@@ -73,12 +75,13 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             var current = new ProjectDisplaySettingsModel
             {
-                ScenarioChartShowNames = true,
                 ScenarioChartTrackedMetricXAxis = TrackedMetrics.RisksCriticality,
                 ScenarioChartTrackedMetricY1Axis = TrackedMetrics.CostsTotal,
                 ScenarioChartTrackedMetricY2Axis = TrackedMetrics.NetworkDuration,
                 ScenarioChartCurveFittingTypeY1 = CurveFittingType.Linear,
                 ScenarioChartCurveFittingTypeY2 = CurveFittingType.PolynomialOrder2,
+                ScenarioChartShowNamesY1 = true,
+                ScenarioChartShowNamesY2 = true,
                 ScenarioChartShowDerivativeY1 = true,
                 ScenarioChartShowDerivativeY2 = true,
                 ScenarioChartAbsoluteCurveFittingY1 = true,
@@ -87,18 +90,20 @@ namespace Zametek.Data.ProjectPlan.Tests
 
             v0_6_0.ProjectDisplaySettingsModel downgraded = mapper.FromCurrentToV0_6_0(current);
 
+            downgraded.ScenarioChartShowNames.ShouldBeTrue();
             downgraded.ScenarioChartTrackedMetricYAxis.ShouldBe(TrackedMetrics.CostsTotal);
             downgraded.ScenarioChartCurveFittingType.ShouldBe(CurveFittingType.Linear);
 
             ProjectDisplaySettingsModel roundTripped = mapper.FromV0_6_0ToCurrent(downgraded);
 
-            roundTripped.ScenarioChartShowNames.ShouldBeTrue();
+            roundTripped.ScenarioChartShowNamesY1.ShouldBeTrue();
             roundTripped.ScenarioChartTrackedMetricXAxis.ShouldBe(TrackedMetrics.RisksCriticality);
             roundTripped.ScenarioChartTrackedMetricY1Axis.ShouldBe(TrackedMetrics.CostsTotal);
             roundTripped.ScenarioChartCurveFittingTypeY1.ShouldBe(CurveFittingType.Linear);
 
             // The Y2 members and the derivative display flags have no v0.6.0
             // representation, so they reset.
+            roundTripped.ScenarioChartShowNamesY2.ShouldBeFalse();
             roundTripped.ScenarioChartTrackedMetricY2Axis.ShouldBe(TrackedMetrics.None);
             roundTripped.ScenarioChartCurveFittingTypeY2.ShouldBe(CurveFittingType.None);
             roundTripped.ScenarioChartShowDerivativeY1.ShouldBeFalse();
@@ -116,12 +121,13 @@ namespace Zametek.Data.ProjectPlan.Tests
             {
                 ProjectScenarioSortMode = SortMode.ModifiedOn,
                 ProjectScenarioSortDirection = Zametek.Common.ProjectPlan.SortDirection.Descending,
-                ScenarioChartShowNames = true,
                 ScenarioChartTrackedMetricXAxis = TrackedMetrics.RisksCriticality,
                 ScenarioChartTrackedMetricY1Axis = TrackedMetrics.CostsTotal,
                 ScenarioChartTrackedMetricY2Axis = TrackedMetrics.NetworkDuration,
                 ScenarioChartCurveFittingTypeY1 = CurveFittingType.Linear,
                 ScenarioChartCurveFittingTypeY2 = CurveFittingType.PolynomialOrder2,
+                ScenarioChartShowNamesY1 = true,
+                ScenarioChartShowNamesY2 = true,
                 ScenarioChartShowDerivativeY1 = true,
                 ScenarioChartShowDerivativeY2 = true,
                 ScenarioChartAbsoluteCurveFittingY1 = true,

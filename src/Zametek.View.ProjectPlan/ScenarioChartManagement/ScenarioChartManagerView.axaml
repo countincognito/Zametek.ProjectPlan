@@ -68,12 +68,6 @@
 							Bounds="{Binding Path=ImageBounds, Mode=OneWayToSource}">
 				<ContentControl.ContextMenu>
 					<ContextMenu>
-						<MenuItem Header="{x:Static resources:Menus.Menu_ShowNames}"
-								  IsChecked="{Binding Path=ShowNames, Mode=TwoWay}"
-								  ToggleType="CheckBox" />
-
-						<Separator />
-
 						<MenuItem Header="{x:Static resources:Menus.Menu_TrackedMetricXAxis}">
 							<MenuItem Header="{x:Static resources:Enums.Enum_TrackedMetric_None}"
 									  IsChecked="{Binding Path=TrackedMetricXAxis, Converter={StaticResource enumToBool}, ConverterParameter={x:Static common:TrackedMetrics.None}, Mode=OneWay}"
@@ -525,7 +519,11 @@
 									  CommandParameter="{x:Static common:CurveFittingType.PolynomialOrder4}"
 									  ToggleType="Radio" />
             </MenuItem>
-            
+
+            <MenuItem Header="{x:Static resources:Menus.Menu_ShowNamesY1}"
+								  IsChecked="{Binding Path=ShowNamesY1, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
             <MenuItem Header="{x:Static resources:Menus.Menu_ShowDerivativeY1}"
 									  IsEnabled="{Binding Path=HasCurveFittingY1, Mode=OneWay}"
 									  IsChecked="{Binding Path=ShowDerivativeY1, Mode=TwoWay}"
@@ -788,7 +786,11 @@
 									  ToggleType="Radio" />
 						</MenuItem>
 
-						<MenuItem Header="{x:Static resources:Menus.Menu_ShowDerivativeY2}"
+            <MenuItem Header="{x:Static resources:Menus.Menu_ShowNamesY2}"
+								  IsChecked="{Binding Path=ShowNamesY2, Mode=TwoWay}"
+								  ToggleType="CheckBox" />
+
+            <MenuItem Header="{x:Static resources:Menus.Menu_ShowDerivativeY2}"
 								  IsEnabled="{Binding Path=HasCurveFittingY2, Mode=OneWay}"
 								  IsChecked="{Binding Path=ShowDerivativeY2, Mode=TwoWay}"
 								  ToggleType="CheckBox" />

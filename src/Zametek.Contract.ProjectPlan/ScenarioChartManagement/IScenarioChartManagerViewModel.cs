@@ -12,8 +12,6 @@ namespace Zametek.Contract.ProjectPlan
 
         bool HasCompilationErrors { get; }
 
-        bool ShowNames { get; set; }
-
         TrackedMetrics TrackedMetricXAxis { get; set; }
 
         TrackedMetrics TrackedMetricY1Axis { get; set; }
@@ -23,6 +21,10 @@ namespace Zametek.Contract.ProjectPlan
         CurveFittingType CurveFittingTypeY1 { get; set; }
 
         CurveFittingType CurveFittingTypeY2 { get; set; }
+
+        bool ShowNamesY1 { get; set; }
+
+        bool ShowNamesY2 { get; set; }
 
         bool ShowDerivativeY1 { get; set; }
 

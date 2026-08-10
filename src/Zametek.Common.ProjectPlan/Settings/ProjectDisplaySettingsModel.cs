@@ -1,4 +1,4 @@
-﻿namespace Zametek.Common.ProjectPlan
+namespace Zametek.Common.ProjectPlan
 {
     [Serializable]
     public record ProjectDisplaySettingsModel
@@ -7,8 +7,6 @@
 
         public SortDirection ProjectScenarioSortDirection { get; init; } = default;
 
-
-        public bool ScenarioChartShowNames { get; init; } = default;
 
         public TrackedMetrics ScenarioChartTrackedMetricXAxis { get; init; } = default;
 
@@ -19,6 +17,10 @@
         public CurveFittingType ScenarioChartCurveFittingTypeY1 { get; init; } = default;
 
         public CurveFittingType ScenarioChartCurveFittingTypeY2 { get; init; } = default;
+
+        public bool ScenarioChartShowNamesY1 { get; init; } = default;
+
+        public bool ScenarioChartShowNamesY2 { get; init; } = default;
 
         public bool ScenarioChartShowDerivativeY1 { get; init; } = default;
 

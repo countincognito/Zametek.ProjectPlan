@@ -1,4 +1,4 @@
-﻿using ReactiveUI;
+using ReactiveUI;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
 
@@ -78,20 +78,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private bool m_ScenarioChartShowNames;
-        public bool ScenarioChartShowNames
-        {
-            get => m_ScenarioChartShowNames;
-            set
-            {
-                lock (m_Lock)
-                {
-                    SetIsProjectUpdated(isProjectUpdated: true);
-                    this.RaiseAndSetIfChanged(ref m_ScenarioChartShowNames, value);
-                }
-            }
-        }
-
         private TrackedMetrics m_ScenarioChartTrackedMetricXAxis;
         public TrackedMetrics ScenarioChartTrackedMetricXAxis
         {
@@ -158,6 +144,34 @@ namespace Zametek.ViewModel.ProjectPlan
                 {
                     SetIsProjectUpdated(isProjectUpdated: true);
                     this.RaiseAndSetIfChanged(ref m_ScenarioChartCurveFittingTypeY2, value);
+                }
+            }
+        }
+
+        private bool m_ScenarioChartShowNamesY1;
+        public bool ScenarioChartShowNamesY1
+        {
+            get => m_ScenarioChartShowNamesY1;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true);
+                    this.RaiseAndSetIfChanged(ref m_ScenarioChartShowNamesY1, value);
+                }
+            }
+        }
+
+        private bool m_ScenarioChartShowNamesY2;
+        public bool ScenarioChartShowNamesY2
+        {
+            get => m_ScenarioChartShowNamesY2;
+            set
+            {
+                lock (m_Lock)
+                {
+                    SetIsProjectUpdated(isProjectUpdated: true);
+                    this.RaiseAndSetIfChanged(ref m_ScenarioChartShowNamesY2, value);
                 }
             }
         }
@@ -232,10 +246,6 @@ namespace Zametek.ViewModel.ProjectPlan
                 }
 
 
-                if (ScenarioChartShowNames != model.ScenarioChartShowNames)
-                {
-                    ScenarioChartShowNames = model.ScenarioChartShowNames;
-                }
                 if (ScenarioChartTrackedMetricXAxis != model.ScenarioChartTrackedMetricXAxis)
                 {
                     ScenarioChartTrackedMetricXAxis = model.ScenarioChartTrackedMetricXAxis;
@@ -255,6 +265,14 @@ namespace Zametek.ViewModel.ProjectPlan
                 if (ScenarioChartCurveFittingTypeY2 != model.ScenarioChartCurveFittingTypeY2)
                 {
                     ScenarioChartCurveFittingTypeY2 = model.ScenarioChartCurveFittingTypeY2;
+                }
+                if (ScenarioChartShowNamesY1 != model.ScenarioChartShowNamesY1)
+                {
+                    ScenarioChartShowNamesY1 = model.ScenarioChartShowNamesY1;
+                }
+                if (ScenarioChartShowNamesY2 != model.ScenarioChartShowNamesY2)
+                {
+                    ScenarioChartShowNamesY2 = model.ScenarioChartShowNamesY2;
                 }
                 if (ScenarioChartShowDerivativeY1 != model.ScenarioChartShowDerivativeY1)
                 {
@@ -284,12 +302,13 @@ namespace Zametek.ViewModel.ProjectPlan
                     ProjectScenarioSortMode = ProjectScenarioSortMode,
                     ProjectScenarioSortDirection = ProjectScenarioSortDirection,
 
-                    ScenarioChartShowNames = ScenarioChartShowNames,
                     ScenarioChartTrackedMetricXAxis = ScenarioChartTrackedMetricXAxis,
                     ScenarioChartTrackedMetricY1Axis = ScenarioChartTrackedMetricY1Axis,
                     ScenarioChartTrackedMetricY2Axis = ScenarioChartTrackedMetricY2Axis,
                     ScenarioChartCurveFittingTypeY1 = ScenarioChartCurveFittingTypeY1,
                     ScenarioChartCurveFittingTypeY2 = ScenarioChartCurveFittingTypeY2,
+                    ScenarioChartShowNamesY1 = ScenarioChartShowNamesY1,
+                    ScenarioChartShowNamesY2 = ScenarioChartShowNamesY2,
                     ScenarioChartShowDerivativeY1 = ScenarioChartShowDerivativeY1,
                     ScenarioChartShowDerivativeY2 = ScenarioChartShowDerivativeY2,
                     ScenarioChartAbsoluteCurveFittingY1 = ScenarioChartAbsoluteCurveFittingY1,
