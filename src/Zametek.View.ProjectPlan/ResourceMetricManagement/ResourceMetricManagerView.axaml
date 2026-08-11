@@ -1,0 +1,437 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:resources="using:Zametek.Resource.ProjectPlan"
+			 xmlns:local="using:Zametek.View.ProjectPlan"
+			 xmlns:vm="using:Zametek.ViewModel.ProjectPlan"
+			 x:DataType="vm:ResourceMetricManagerViewModel"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="300"
+             x:Class="Zametek.View.ProjectPlan.ResourceMetricManagerView">
+	<DockPanel Margin="7"
+			   Background="Transparent">
+		<DataGrid Name="ResourceMetricsGrid"
+				  Background="Transparent"
+				  FrozenColumnCount="2"
+				  AutoGenerateColumns="False"
+				  RowHeight="30"
+				  IsReadOnly="True"
+				  ItemsSource="{Binding Path=ResourceMetrics, Mode=OneWay}"
+				  SelectionMode="Extended"
+				  CanUserResizeColumns="True"
+				  CanUserSortColumns="False"
+				  GridLinesVisibility="All"
+				  CanUserReorderColumns="True">
+			<DataGrid.Columns>
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										Width="55">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_Id}"
+									   ToolTip.Tip="{x:Static resources:ToolTips.ToolTip_Id}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=ResourceId, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										Width="150">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_Name}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=ResourceName, Mode=OneWay}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										IsVisible="{Binding Path=!HideCost, Mode=OneWay}"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_DirectCost}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Costs.Direct, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										IsVisible="{Binding Path=!HideCost, Mode=OneWay}"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_IndirectCost}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Costs.Indirect, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										IsVisible="{Binding Path=!HideCost, Mode=OneWay}"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_OtherCost}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Costs.Other, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										IsVisible="{Binding Path=!HideCost, Mode=OneWay}"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_TotalCost}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Costs.Total, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										IsVisible="{Binding Path=!HideBilling, Mode=OneWay}"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_DirectBilling}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Billings.Direct, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										IsVisible="{Binding Path=!HideBilling, Mode=OneWay}"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_IndirectBilling}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Billings.Indirect, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										IsVisible="{Binding Path=!HideBilling, Mode=OneWay}"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_OtherBilling}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Billings.Other, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										IsVisible="{Binding Path=!HideBilling, Mode=OneWay}"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_TotalBilling}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Billings.Total, Mode=OneWay, StringFormat=\{0:N2\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_DirectEffort}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Efforts.Direct, Mode=OneWay, StringFormat=\{0:N0\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_IndirectEffort}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Efforts.Indirect, Mode=OneWay, StringFormat=\{0:N0\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_OtherEffort}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Efforts.Other, Mode=OneWay, StringFormat=\{0:N0\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_TotalEffort}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Efforts.Total, Mode=OneWay, StringFormat=\{0:N0\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_ActivityEffort}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Efforts.Activity, Mode=OneWay, StringFormat=\{0:N0\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+
+				<DataGridTemplateColumn CanUserResize="True"
+										CanUserReorder="True"
+										CanUserSort="False"
+										IsReadOnly="True"
+										Width="95">
+					<DataGridTemplateColumn.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock VerticalAlignment="Center"
+									   Margin="0"
+									   Padding="3"
+									   Text="{x:Static resources:Labels.Label_EffortEfficiency}"/>
+						</DataTemplate>
+					</DataGridTemplateColumn.HeaderTemplate>
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Grid VerticalAlignment="Stretch">
+								<TextBlock VerticalAlignment="Center"
+										   Margin="0"
+										   Padding="3"
+										   Text="{Binding Path=Efforts.Efficiency, Mode=OneWay, StringFormat=\{0:P1\}}"/>
+							</Grid>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+			</DataGrid.Columns>
+		</DataGrid>
+	</DockPanel>
+</UserControl>

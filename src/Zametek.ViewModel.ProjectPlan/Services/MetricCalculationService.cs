@@ -134,7 +134,7 @@ namespace Zametek.ViewModel.ProjectPlan
             return risksModel;
         }
 
-        public (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts)
+        public (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts, List<ResourceMetricsModel> resourceMetrics)
             BuildFinancialMetrics(
             ResourceSeriesSetModel resourceSeriesSet,
             bool hasCompilationErrors)
@@ -145,6 +145,7 @@ namespace Zametek.ViewModel.ProjectPlan
             var billingsModel = new BillingsModel();
             var marginsModel = new MarginsModel();
             var effortsModel = new EffortsModel();
+            var resourceMetricsModels = new List<ResourceMetricsModel>();
 
             List<ResourceSeriesModel> combinedResourceSeriesModels = resourceSeriesSet.Combined;
 
@@ -152,14 +153,40 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 if (!hasCompilationErrors)
                 {
-                    costsModel = MetricsHelper.CalculateProjectCosts(combinedResourceSeriesModels);
-                    billingsModel = MetricsHelper.CalculateProjectBillings(combinedResourceSeriesModels);
+                    // Calculate the financial metrics per resource series first, then
+                    // fold the project-level metrics from the per-resource results.
+                    // The entries are ordered the same way the resource settings grid
+                    // displays its rows (descending display order, ties broken by
+                    // descending id), so the list order is the display order; the
+                    // implicit/spare series (display order and id both default) sort
+                    // to the bottom.
+                    foreach (ResourceSeriesModel resourceSeriesModel in combinedResourceSeriesModels
+                        .OrderByDescending(static x => x.DisplayOrder)
+                        .ThenByDescending(static x => x.ResourceSchedule.Resource.Id))
+                    {
+                        int resourceId = resourceSeriesModel.ResourceSchedule.Resource.Id;
+                        ResourceCostsModel resourceCosts = MetricsHelper.CalculateResourceCosts(resourceSeriesModel);
+                        ResourceBillingsModel resourceBillings = MetricsHelper.CalculateResourceBillings(resourceSeriesModel);
+
+                        resourceMetricsModels.Add(new ResourceMetricsModel
+                        {
+                            ResourceId = resourceId == default ? null : resourceId,
+                            ResourceName = resourceSeriesModel.Title,
+                            Costs = resourceCosts,
+                            Billings = resourceBillings,
+                            Margins = MetricsHelper.CalculateResourceMargins(resourceCosts, resourceBillings),
+                            Efforts = MetricsHelper.CalculateResourceEfforts(resourceSeriesModel),
+                        });
+                    }
+
+                    costsModel = MetricsHelper.SumResourceCosts(resourceMetricsModels.Select(static x => x.Costs));
+                    billingsModel = MetricsHelper.SumResourceBillings(resourceMetricsModels.Select(static x => x.Billings));
                     marginsModel = MetricsHelper.CalculateProjectMargins(costsModel, billingsModel);
-                    effortsModel = MetricsHelper.CalculateProjectEfforts(combinedResourceSeriesModels);
+                    effortsModel = MetricsHelper.SumResourceEfforts(resourceMetricsModels.Select(static x => x.Efforts));
                 }
             }
 
-            return (costsModel, billingsModel, marginsModel, effortsModel);
+            return (costsModel, billingsModel, marginsModel, effortsModel, resourceMetricsModels);
         }
 
         #endregion

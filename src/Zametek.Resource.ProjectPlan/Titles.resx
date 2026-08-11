@@ -159,6 +159,9 @@
   <data name="Title_ResourceChartView" xml:space="preserve">
     <value>Resource Chart</value>
   </data>
+  <data name="Title_ResourceMetrics" xml:space="preserve">
+    <value>Resource Metrics</value>
+  </data>
   <data name="Title_ScenarioChartView" xml:space="preserve">
     <value>Scenario Chart</value>
   </data>

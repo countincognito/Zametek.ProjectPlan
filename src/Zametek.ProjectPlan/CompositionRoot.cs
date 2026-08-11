@@ -161,6 +161,10 @@ namespace Zametek.ProjectPlan
                 .As<IMetricManagerViewModel>()
                 .As<MetricManagerViewModel>()
                 .SingleInstance();
+            s_Builder.RegisterType<ResourceMetricManagerViewModel>()
+                .As<IResourceMetricManagerViewModel>()
+                .As<ResourceMetricManagerViewModel>()
+                .SingleInstance();
             s_Builder.RegisterType<OutputManagerViewModel>()
                 .As<IOutputManagerViewModel>()
                 .As<OutputManagerViewModel>()
@@ -233,6 +237,9 @@ namespace Zametek.ProjectPlan
                 .AsSelf()
                 .InstancePerDependency();
             s_Builder.RegisterType<MetricManagerView>()
+                .AsSelf()
+                .InstancePerDependency();
+            s_Builder.RegisterType<ResourceMetricManagerView>()
                 .AsSelf()
                 .InstancePerDependency();
             s_Builder.RegisterType<OutputManagerView>()

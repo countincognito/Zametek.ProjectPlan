@@ -19,6 +19,8 @@
 
         public MetricsModel Metrics { get; init; } = new();
 
+        public List<ResourceMetricsModel> ResourceMetrics { get; init; } = [];
+
         public ProjectScenarioDisplaySettingsModel DisplaySettings { get; init; } = new();
 
         public GraphLayoutModel ArrowGraphLayout { get; init; } = new();

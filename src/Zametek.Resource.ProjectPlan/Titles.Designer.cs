@@ -250,6 +250,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Resource Metrics.
+        /// </summary>
+        public static string Title_ResourceMetrics {
+            get {
+                return ResourceManager.GetString("Title_ResourceMetrics", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Resource Settings.
         /// </summary>
         public static string Title_ResourceSettingsView {

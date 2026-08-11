@@ -69,6 +69,8 @@ namespace Zametek.Contract.ProjectPlan
 
         NetworkModel NetworkMetrics { get; }
 
+        List<ResourceMetricsModel> ResourceMetrics { get; }
+
         bool HasActivities { get; }
 
         bool HasResources { get; }

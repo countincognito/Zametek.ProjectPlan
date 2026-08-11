@@ -28,6 +28,7 @@ namespace Zametek.ProjectPlan
         private readonly IDockable m_ScenarioChartManagerViewModel;
         private readonly IDockable m_GraphSettingsManagerViewModel;
         private readonly IDockable m_ResourceSettingsManagerViewModel;
+        private readonly IDockable m_ResourceMetricManagerViewModel;
         private readonly IDockable m_WorkStreamSettingsManagerViewModel;
         private readonly IDockable m_HolidaySettingsManagerViewModel;
 
@@ -46,6 +47,7 @@ namespace Zametek.ProjectPlan
             IScenarioChartManagerViewModel scenarioChartManagerViewModel,
             IGraphSettingsManagerViewModel graphSettingsManagerViewModel,
             IResourceSettingsManagerViewModel resourceSettingsManagerViewModel,
+            IResourceMetricManagerViewModel resourceMetricManagerViewModel,
             IWorkStreamSettingsManagerViewModel workStreamSettingsManagerViewModel,
             IHolidaySettingsManagerViewModel holidaySettingsManagerViewModel)
         {
@@ -63,6 +65,7 @@ namespace Zametek.ProjectPlan
             m_ScenarioChartManagerViewModel = scenarioChartManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(scenarioChartManagerViewModel));
             m_GraphSettingsManagerViewModel = graphSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(graphSettingsManagerViewModel));
             m_ResourceSettingsManagerViewModel = resourceSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(resourceSettingsManagerViewModel));
+            m_ResourceMetricManagerViewModel = resourceMetricManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(resourceMetricManagerViewModel));
             m_WorkStreamSettingsManagerViewModel = workStreamSettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(workStreamSettingsManagerViewModel));
             m_HolidaySettingsManagerViewModel = holidaySettingsManagerViewModel as IDockable ?? throw new ArgumentNullException(nameof(holidaySettingsManagerViewModel));
 
@@ -219,6 +222,11 @@ namespace Zametek.ProjectPlan
                 m_ResourceSettingsManagerViewModel.CanPin = true;
             }
             {
+                m_ResourceMetricManagerViewModel.CanClose = false;
+                m_ResourceMetricManagerViewModel.CanFloat = true;
+                m_ResourceMetricManagerViewModel.CanPin = true;
+            }
+            {
                 m_WorkStreamSettingsManagerViewModel.CanClose = false;
                 m_WorkStreamSettingsManagerViewModel.CanFloat = true;
                 m_WorkStreamSettingsManagerViewModel.CanPin = true;
@@ -338,6 +346,7 @@ namespace Zametek.ProjectPlan
                                 IsCollapsable = false,
                                 VisibleDockables = CreateList(
                                     m_ResourceSettingsManagerViewModel,
+                                    m_ResourceMetricManagerViewModel,
                                     m_GraphSettingsManagerViewModel,
                                     m_WorkStreamSettingsManagerViewModel,
                                     m_HolidaySettingsManagerViewModel),

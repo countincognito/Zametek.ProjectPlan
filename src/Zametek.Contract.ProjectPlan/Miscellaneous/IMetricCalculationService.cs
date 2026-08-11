@@ -17,7 +17,7 @@ namespace Zametek.Contract.ProjectPlan
             bool hasCompilationErrors,
             IEnumerable<ActivitySeverityModel> activitySeverities);
 
-        (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts)
+        (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts, List<ResourceMetricsModel> resourceMetrics)
             BuildFinancialMetrics(
             ResourceSeriesSetModel resourceSeriesSet,
             bool hasCompilationErrors);

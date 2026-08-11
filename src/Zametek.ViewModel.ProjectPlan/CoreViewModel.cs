@@ -110,6 +110,7 @@ namespace Zametek.ViewModel.ProjectPlan
             m_MarginMetrics = new();
             m_EffortMetrics = new();
             m_NetworkMetrics = new();
+            m_ResourceMetrics = [];
 
             DisplaySettingsViewModel.ShowDates = m_SettingService.DefaultShowDates;
             DisplaySettingsViewModel.UseClassicDates = m_SettingService.DefaultUseClassicDates;
@@ -884,6 +885,30 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
+        private List<ResourceMetricsModel> m_ResourceMetrics;
+        public List<ResourceMetricsModel> ResourceMetrics
+        {
+            get => m_ResourceMetrics;
+            private set
+            {
+                lock (m_Lock)
+                {
+                    // List identity is not value identity: compare the sequences
+                    // (the entries are records, so they compare by value) so that
+                    // a loaded list matching the compiled one does not raise a
+                    // change or mark the scenario as updated.
+                    if (m_ResourceMetrics == value
+                        || m_ResourceMetrics.SequenceEqual(value))
+                    {
+                        return;
+                    }
+                    m_ResourceMetrics = value;
+                    SetIsProjectScenarioUpdated(isProjectScenarioUpdated: true, trackStaleOutputs: false);
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
         private readonly ObservableAsPropertyHelper<bool> m_HasActivities;
         public bool HasActivities => m_HasActivities.Value;
 
@@ -1052,6 +1077,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         WorkStreamSettings = m_SettingService.DefaultWorkStreamSettings,
                         HolidaySettings = m_SettingService.DefaultHolidaySettings,
                         Metrics = new(),
+                        ResourceMetrics = [],
                         DisplaySettings = new ProjectScenarioDisplaySettingsModel
                         {
                             ShowDates = m_SettingService.DefaultShowDates,
@@ -1120,6 +1146,7 @@ namespace Zametek.ViewModel.ProjectPlan
                     m_SettingService.ResetProjectScenario();
 
                     Metrics = new();
+                    ResourceMetrics = [];
 
                     HasCompilationErrors = false;
                     GraphCompilation = new GraphCompilation<int, int, int, DependentActivity>([], [], []);
@@ -1409,6 +1436,15 @@ namespace Zametek.ViewModel.ProjectPlan
                     // trigger a project plan updated event if it is different from the compiled metrics.
                     Metrics = projectScenarioModel.Metrics;
 
+                    // Files saved before the per-resource metrics existed carry an empty
+                    // list, so only restore a stored list that actually has content -
+                    // otherwise keep the values the compile above just produced, so the
+                    // panel is populated on the first open of an older file.
+                    if (projectScenarioModel.ResourceMetrics.Count != 0)
+                    {
+                        ResourceMetrics = projectScenarioModel.ResourceMetrics;
+                    }
+
                     m_TrackIsProjectScenarioUpdated = true;
                     IsProjectScenarioUpdated = false;
                     m_TrackHasStaleOutputs = true;
@@ -1451,6 +1487,7 @@ namespace Zametek.ViewModel.ProjectPlan
                         WorkStreamSettings = WorkStreamSettings.CloneObject(),
                         HolidaySettings = HolidaySettings.CloneObject(),
                         Metrics = Metrics.CloneObject(),
+                        ResourceMetrics = [.. ResourceMetrics],
                         DisplaySettings = DisplaySettingsViewModel.GetValues(),
                         ArrowGraphLayout = ArrowGraphLayout.CloneObject(),
                         VertexGraphLayout = VertexGraphLayout.CloneObject(),
@@ -2071,7 +2108,7 @@ namespace Zametek.ViewModel.ProjectPlan
             CascadeDiagnostics.RecordBuild($@"{nameof(CoreViewModel)}.{nameof(BuildFinancialMetrics)}");
             lock (m_Lock)
             {
-                (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts) =
+                (CostsModel costs, BillingsModel billings, MarginsModel margins, EffortsModel efforts, List<ResourceMetricsModel> resourceMetrics) =
                     m_MetricCalculationService.BuildFinancialMetrics(
                         ResourceSeriesSet,
                         HasCompilationErrors);
@@ -2080,6 +2117,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 BillingMetrics = billings;
                 MarginMetrics = margins;
                 EffortMetrics = efforts;
+                ResourceMetrics = resourceMetrics;
                 this.RaisePropertyChanged(nameof(Metrics));
             }
         }
