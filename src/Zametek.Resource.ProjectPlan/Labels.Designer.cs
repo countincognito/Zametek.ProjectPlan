@@ -1466,6 +1466,132 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Activity Effort.
+        /// </summary>
+        public static string Label_ResourceMetricActivityEffort {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricActivityEffort", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Direct Billing.
+        /// </summary>
+        public static string Label_ResourceMetricDirectBilling {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricDirectBilling", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Direct Cost.
+        /// </summary>
+        public static string Label_ResourceMetricDirectCost {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricDirectCost", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Direct Effort.
+        /// </summary>
+        public static string Label_ResourceMetricDirectEffort {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricDirectEffort", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Efficiency.
+        /// </summary>
+        public static string Label_ResourceMetricEffortEfficiency {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricEffortEfficiency", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Indirect Billing.
+        /// </summary>
+        public static string Label_ResourceMetricIndirectBilling {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricIndirectBilling", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Indirect Cost.
+        /// </summary>
+        public static string Label_ResourceMetricIndirectCost {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricIndirectCost", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Indirect Effort.
+        /// </summary>
+        public static string Label_ResourceMetricIndirectEffort {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricIndirectEffort", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Other Billing.
+        /// </summary>
+        public static string Label_ResourceMetricOtherBilling {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricOtherBilling", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Other Cost.
+        /// </summary>
+        public static string Label_ResourceMetricOtherCost {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricOtherCost", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Other Effort.
+        /// </summary>
+        public static string Label_ResourceMetricOtherEffort {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricOtherEffort", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Total Billing.
+        /// </summary>
+        public static string Label_ResourceMetricTotalBilling {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricTotalBilling", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Total Cost.
+        /// </summary>
+        public static string Label_ResourceMetricTotalCost {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricTotalCost", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Total Effort.
+        /// </summary>
+        public static string Label_ResourceMetricTotalEffort {
+            get {
+                return ResourceManager.GetString("Label_ResourceMetricTotalEffort", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Resource Name.
         /// </summary>
         public static string Label_ResourceName {

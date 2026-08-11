@@ -402,6 +402,48 @@
   <data name="Label_ResourceDependencies" xml:space="preserve">
     <value>Resource Dependencies</value>
   </data>
+  <data name="Label_ResourceMetricActivityEffort" xml:space="preserve">
+    <value>Activity Effort</value>
+  </data>
+  <data name="Label_ResourceMetricDirectBilling" xml:space="preserve">
+    <value>Direct Billing</value>
+  </data>
+  <data name="Label_ResourceMetricDirectCost" xml:space="preserve">
+    <value>Direct Cost</value>
+  </data>
+  <data name="Label_ResourceMetricDirectEffort" xml:space="preserve">
+    <value>Direct Effort</value>
+  </data>
+  <data name="Label_ResourceMetricEffortEfficiency" xml:space="preserve">
+    <value>Efficiency</value>
+  </data>
+  <data name="Label_ResourceMetricIndirectBilling" xml:space="preserve">
+    <value>Indirect Billing</value>
+  </data>
+  <data name="Label_ResourceMetricIndirectCost" xml:space="preserve">
+    <value>Indirect Cost</value>
+  </data>
+  <data name="Label_ResourceMetricIndirectEffort" xml:space="preserve">
+    <value>Indirect Effort</value>
+  </data>
+  <data name="Label_ResourceMetricOtherBilling" xml:space="preserve">
+    <value>Other Billing</value>
+  </data>
+  <data name="Label_ResourceMetricOtherCost" xml:space="preserve">
+    <value>Other Cost</value>
+  </data>
+  <data name="Label_ResourceMetricOtherEffort" xml:space="preserve">
+    <value>Other Effort</value>
+  </data>
+  <data name="Label_ResourceMetricTotalBilling" xml:space="preserve">
+    <value>Total Billing</value>
+  </data>
+  <data name="Label_ResourceMetricTotalCost" xml:space="preserve">
+    <value>Total Cost</value>
+  </data>
+  <data name="Label_ResourceMetricTotalEffort" xml:space="preserve">
+    <value>Total Effort</value>
+  </data>
   <data name="Label_ResourceName" xml:space="preserve">
     <value>Resource Name</value>
   </data>

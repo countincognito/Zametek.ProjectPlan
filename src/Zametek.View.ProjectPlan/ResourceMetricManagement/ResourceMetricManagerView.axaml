@@ -22,6 +22,12 @@
 				  CanUserSortColumns="False"
 				  GridLinesVisibility="All"
 				  CanUserReorderColumns="True">
+			<DataGrid.ContextMenu>
+				<ContextMenu>
+					<MenuItem Header="{x:Static resources:Menus.Menu_CopyTable}"
+							  Click="CopyTable_Click" />
+				</ContextMenu>
+			</DataGrid.ContextMenu>
 			<DataGrid.Columns>
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
@@ -85,7 +91,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_DirectCost}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricDirectCost}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -111,7 +117,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_IndirectCost}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricIndirectCost}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -137,7 +143,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_OtherCost}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricOtherCost}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -163,7 +169,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_TotalCost}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricTotalCost}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -189,7 +195,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_DirectBilling}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricDirectBilling}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -215,7 +221,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_IndirectBilling}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricIndirectBilling}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -241,7 +247,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_OtherBilling}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricOtherBilling}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -267,7 +273,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_TotalBilling}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricTotalBilling}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -292,7 +298,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_DirectEffort}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricDirectEffort}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -317,7 +323,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_IndirectEffort}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricIndirectEffort}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -342,7 +348,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_OtherEffort}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricOtherEffort}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -367,7 +373,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_TotalEffort}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricTotalEffort}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -392,7 +398,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_ActivityEffort}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricActivityEffort}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
@@ -417,7 +423,7 @@
 							<TextBlock VerticalAlignment="Center"
 									   Margin="0"
 									   Padding="3"
-									   Text="{x:Static resources:Labels.Label_EffortEfficiency}"/>
+									   Text="{x:Static resources:Labels.Label_ResourceMetricEffortEfficiency}"/>
 						</DataTemplate>
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>

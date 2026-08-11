@@ -14,15 +14,20 @@ namespace Zametek.ViewModel.ProjectPlan
         #region Fields
 
         private readonly ICoreViewModel m_CoreViewModel;
+        private readonly IDialogService m_DialogService;
 
         #endregion
 
         #region Ctors
 
-        public ResourceMetricManagerViewModel(ICoreViewModel coreViewModel)
+        public ResourceMetricManagerViewModel(
+            ICoreViewModel coreViewModel,
+            IDialogService dialogService)
         {
             ArgumentNullException.ThrowIfNull(coreViewModel);
+            ArgumentNullException.ThrowIfNull(dialogService);
             m_CoreViewModel = coreViewModel;
+            m_DialogService = dialogService;
 
             m_IsBusy = this
                 .WhenAnyValue(rm => rm.m_CoreViewModel.IsBusy)
@@ -73,6 +78,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         private readonly ObservableAsPropertyHelper<List<ResourceMetricsModel>> m_ResourceMetrics;
         public List<ResourceMetricsModel> ResourceMetrics => m_ResourceMetrics.Value;
+
+        public Task ReportErrorAsync(string message)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(message);
+            return m_DialogService.ShowErrorAsync(
+                Resource.ProjectPlan.Titles.Title_Error,
+                string.Empty,
+                message);
+        }
 
         #endregion
 

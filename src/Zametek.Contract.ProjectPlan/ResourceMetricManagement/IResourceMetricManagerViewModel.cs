@@ -16,5 +16,7 @@ namespace Zametek.Contract.ProjectPlan
         bool HideBilling { get; }
 
         List<ResourceMetricsModel> ResourceMetrics { get; }
+
+        Task ReportErrorAsync(string message);
     }
 }

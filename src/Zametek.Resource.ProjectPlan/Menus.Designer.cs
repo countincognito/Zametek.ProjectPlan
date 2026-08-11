@@ -304,6 +304,15 @@ namespace Zametek.Resource.ProjectPlan {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Copy Table.
+        /// </summary>
+        public static string Menu_CopyTable {
+            get {
+                return ResourceManager.GetString("Menu_CopyTable", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Save _As....
         /// </summary>
         public static string Menu_SaveAs {

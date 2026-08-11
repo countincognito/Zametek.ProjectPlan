@@ -183,6 +183,9 @@
   <data name="Menu_CopyImage" xml:space="preserve">
     <value>Copy Image</value>
   </data>
+  <data name="Menu_CopyTable" xml:space="preserve">
+    <value>Copy Table</value>
+  </data>
   <data name="Menu_SaveAs" xml:space="preserve">
     <value>Save _As...</value>
   </data>
