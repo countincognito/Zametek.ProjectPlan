@@ -62,6 +62,13 @@ namespace Zametek.View.ProjectPlan
 
         public void ResetDataGridModels()
         {
+            // Drop every stored model first, so entries for grids that are not
+            // currently materialised (or whose stored layout no longer loads)
+            // do not survive a reset - they fall back to markup defaults on next
+            // use. The reset actions then re-apply the live grids' original
+            // layouts, and their layout-updated saves repopulate the store.
+            m_DataGridModels.Clear();
+
             foreach (Action action in ResetActions)
             {
                 action();

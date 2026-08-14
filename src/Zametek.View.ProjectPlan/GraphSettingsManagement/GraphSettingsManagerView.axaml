@@ -102,24 +102,6 @@
 			</Interaction.Behaviors>
 
 			<DataGrid.Columns>
-				<!--This needs to be added due to an issue with Avalonia not allowing editing in the first column-->
-				<DataGridTemplateColumn CanUserResize="False"
-										CanUserReorder="False"
-										CanUserSort="False"
-										Width="1">
-					<DataGridTemplateColumn.HeaderTemplate>
-						<DataTemplate>
-							<Grid/>
-						</DataTemplate>
-					</DataGridTemplateColumn.HeaderTemplate>
-
-					<DataGridTemplateColumn.CellTemplate>
-						<DataTemplate>
-							<Grid/>
-						</DataTemplate>
-					</DataGridTemplateColumn.CellTemplate>
-				</DataGridTemplateColumn>
-
 				<DataGridTemplateColumn CanUserResize="True"
 										CanUserReorder="True"
 										CanUserSort="True"

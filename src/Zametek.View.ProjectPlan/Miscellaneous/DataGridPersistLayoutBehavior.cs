@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using Avalonia.Xaml.Interactivity;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Zametek.Common.ProjectPlan;
@@ -36,7 +37,6 @@ namespace Zametek.View.ProjectPlan
             m_OriginalGridModelModel = new();
             m_HeaderTextCache = [];
             m_IsInitialized = false;
-            m_DataGridManager.ResetActions.Add(ResetDataGridModel);
         }
 
         // DataGridTemplateColumns set only a HeaderTemplate (a DataTemplate containing a
@@ -131,6 +131,16 @@ namespace Zametek.View.ProjectPlan
                 if (m_DataGrid is not null
                     && m_DataGrid.Columns.Count != 0)
                 {
+                    int liveColumnCount = m_DataGrid.Columns.Count;
+
+                    // A persisted layout whose column count differs from the live grid
+                    // was saved by a different version of the grid (columns added or
+                    // removed since). Its display indices describe a permutation of the
+                    // wrong size - applying them would scramble the order or throw - and
+                    // its position indices no longer line up. Salvage only the
+                    // name-matched widths and leave the markup display order.
+                    bool schemaMatches = dataGridModel.Columns.Count == liveColumnCount;
+
                     // Match persisted columns by their display header name first. Only names
                     // that are non-empty and unambiguous (appear once) are usable as keys.
                     Dictionary<string, DataGridColumnModel> nameMap = dataGridModel
@@ -153,7 +163,7 @@ namespace Zametek.View.ProjectPlan
                     // with a later position fallback.
                     HashSet<int> consumed = [];
 
-                    for (int i = 0; i < m_DataGrid.Columns.Count; i++)
+                    for (int i = 0; i < liveColumnCount; i++)
                     {
                         DataGridColumn column = m_DataGrid.Columns[i];
                         string headerText = GetColumnHeaderText(column);
@@ -161,14 +171,16 @@ namespace Zametek.View.ProjectPlan
                         DataGridColumnModel? dataGridColumnModel = null;
 
                         // Prefer a unique name match; otherwise fall back to the position
-                        // index. consumed.Add guards against applying a persisted column twice.
+                        // index (only meaningful while the schema still matches).
+                        // consumed.Add guards against applying a persisted column twice.
                         if (!string.IsNullOrWhiteSpace(headerText)
                             && nameMap.TryGetValue(headerText, out DataGridColumnModel? byName)
                             && consumed.Add(byName.PositionIndex))
                         {
                             dataGridColumnModel = byName;
                         }
-                        else if (positionMap.TryGetValue(i, out DataGridColumnModel? byPosition)
+                        else if (schemaMatches
+                            && positionMap.TryGetValue(i, out DataGridColumnModel? byPosition)
                             && consumed.Add(byPosition.PositionIndex))
                         {
                             dataGridColumnModel = byPosition;
@@ -176,8 +188,20 @@ namespace Zametek.View.ProjectPlan
 
                         if (dataGridColumnModel is not null)
                         {
-                            column.DisplayIndex = dataGridColumnModel.DisplayIndex;
-                            column.Width = new DataGridLength(dataGridColumnModel.PixelWidth, DataGridLengthUnitType.Pixel);
+                            // Range-check even when the schema matches: a hand-edited or
+                            // corrupt layout file must degrade to defaults, not throw.
+                            if (schemaMatches
+                                && dataGridColumnModel.DisplayIndex >= 0
+                                && dataGridColumnModel.DisplayIndex < liveColumnCount)
+                            {
+                                column.DisplayIndex = dataGridColumnModel.DisplayIndex;
+                            }
+
+                            if (double.IsFinite(dataGridColumnModel.PixelWidth)
+                                && dataGridColumnModel.PixelWidth > 0)
+                            {
+                                column.Width = new DataGridLength(dataGridColumnModel.PixelWidth, DataGridLengthUnitType.Pixel);
+                            }
                         }
                     }
                 }
@@ -213,6 +237,12 @@ namespace Zametek.View.ProjectPlan
                 m_IsInitialized = true;
             }
 
+            // Register the reset action only while attached (and unregister on
+            // detach): dock tabs re-materialise their views, so a
+            // constructor-registered action would accumulate per materialisation
+            // and keep disposed behaviors (and their grids) alive.
+            m_DataGridManager.ResetActions.Add(ResetDataGridModel);
+
             // Load settings once the control is ready
             m_DataGrid.Initialized += OnInitialized;
 
@@ -228,6 +258,7 @@ namespace Zametek.View.ProjectPlan
 
         protected override void OnDetaching()
         {
+            m_DataGridManager.ResetActions.Remove(ResetDataGridModel);
             if (m_DataGrid is not null)
             {
                 m_DataGrid.Initialized -= OnInitialized;
@@ -244,11 +275,21 @@ namespace Zametek.View.ProjectPlan
         {
             lock (m_Lock)
             {
-                DataGridModel dataGridModel = m_DataGridManager.GetDataGridModel(m_GridName);
-
-                if (dataGridModel is not null)
+                try
                 {
-                    LoadDataGridModel(dataGridModel);
+                    DataGridModel dataGridModel = m_DataGridManager.GetDataGridModel(m_GridName);
+
+                    if (dataGridModel is not null)
+                    {
+                        LoadDataGridModel(dataGridModel);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // A bad persisted layout must never take down view materialisation:
+                    // fall back to the markup defaults. The next layout save overwrites
+                    // the offending entry with the live layout, so this self-heals.
+                    Debug.WriteLine($"[{nameof(DataGridPersistLayoutBehavior)}] Failed to restore layout for '{m_GridName}', using defaults: {ex.Message}");
                 }
             }
         }
