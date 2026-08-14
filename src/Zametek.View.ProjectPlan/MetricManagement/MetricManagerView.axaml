@@ -38,7 +38,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_ActivityRisk}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_ActivityRisk}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
 									 VerticalAlignment="Center"
 									 Margin="7,0,0,0"
@@ -48,7 +48,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-					                 Text="{x:Static resources:Labels.Label_ActivityRiskWithStdDevCorrection}"/>
+					                 Text="{Binding Source={x:Static resources:Labels.Label_ActivityRiskWithStdDevCorrection}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="1"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -58,7 +58,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_CriticalityRisk}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_CriticalityRisk}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="2"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -68,7 +68,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_FibonacciRisk}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_FibonacciRisk}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="3"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -91,7 +91,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_CyclomaticComplexity}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_CyclomaticComplexity}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -101,7 +101,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_GeometricActivityRisk}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_GeometricActivityRisk}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="1"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -111,7 +111,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_GeometricCriticalityRisk}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_GeometricCriticalityRisk}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="2"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -121,7 +121,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_GeometricFibonacciRisk}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_GeometricFibonacciRisk}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="3"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -144,7 +144,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_ActivityEffort}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_ActivityEffort}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -154,7 +154,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_DurationManMonths}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_DurationManMonths}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="1"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -164,7 +164,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_ProjectFinish}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_ProjectFinish}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="2"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -174,7 +174,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_EffortEfficiency}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_EffortEfficiency}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="3"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -197,7 +197,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_DirectEffort}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_DirectEffort}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -207,7 +207,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
 					                 VerticalAlignment="Center"
 								     HorizontalAlignment="Right"
-							    	 Text="{x:Static resources:Labels.Label_IndirectEffort}"/>
+							    	 Text="{Binding Source={x:Static resources:Labels.Label_IndirectEffort}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="1"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -217,7 +217,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
 					                 VerticalAlignment="Center"
 								     HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_OtherEffort}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_OtherEffort}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="2"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -227,7 +227,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_TotalEffort}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_TotalEffort}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="3"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -251,7 +251,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_DirectCost}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_DirectCost}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -261,7 +261,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
 					                 VerticalAlignment="Center"
 								     HorizontalAlignment="Right"
-							    	 Text="{x:Static resources:Labels.Label_IndirectCost}"/>
+							    	 Text="{Binding Source={x:Static resources:Labels.Label_IndirectCost}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="1"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -271,7 +271,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
 					                 VerticalAlignment="Center"
 								     HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_OtherCost}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_OtherCost}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="2"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -281,7 +281,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_TotalCost}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_TotalCost}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="3"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -305,7 +305,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_DirectBilling}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_DirectBilling}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -315,7 +315,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
 					                 VerticalAlignment="Center"
 								     HorizontalAlignment="Right"
-							    	 Text="{x:Static resources:Labels.Label_IndirectBilling}"/>
+							    	 Text="{Binding Source={x:Static resources:Labels.Label_IndirectBilling}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="1"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -325,7 +325,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
 					                 VerticalAlignment="Center"
 								     HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_OtherBilling}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_OtherBilling}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="2"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -335,7 +335,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_TotalBilling}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_TotalBilling}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="3"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -359,7 +359,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="0"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_DirectMargin}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_DirectMargin}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="0"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -375,7 +375,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="1"
 					                 VerticalAlignment="Center"
 								     HorizontalAlignment="Right"
-							    	 Text="{x:Static resources:Labels.Label_IndirectMargin}"/>
+							    	 Text="{Binding Source={x:Static resources:Labels.Label_IndirectMargin}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="1"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -391,7 +391,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="2"
 					                 VerticalAlignment="Center"
 								     HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_OtherMargin}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_OtherMargin}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="2"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"
@@ -407,7 +407,7 @@
 				<SelectableTextBlock Grid.Column="0" Grid.Row="3"
 					                 VerticalAlignment="Center"
 					                 HorizontalAlignment="Right"
-								     Text="{x:Static resources:Labels.Label_TotalMargin}"/>
+								     Text="{Binding Source={x:Static resources:Labels.Label_TotalMargin}, StringFormat=\{0\}:}"/>
 				<SelectableTextBlock Grid.Column="1" Grid.Row="3"
 						             VerticalAlignment="Center"
 						             Margin="7,0,0,0"

@@ -79,7 +79,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Activity Effort:.
+        ///   Looks up a localized string similar to Activity Effort.
         /// </summary>
         public static string Label_ActivityEffort {
             get {
@@ -106,7 +106,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Activity Risk:.
+        ///   Looks up a localized string similar to Activity Risk.
         /// </summary>
         public static string Label_ActivityRisk {
             get {
@@ -115,7 +115,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Activity (Std Dev) Risk:.
+        ///   Looks up a localized string similar to Activity (Std Dev) Risk.
         /// </summary>
         public static string Label_ActivityRiskWithStdDevCorrection {
             get {
@@ -349,7 +349,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Criticality Risk:.
+        ///   Looks up a localized string similar to Criticality Risk.
         /// </summary>
         public static string Label_CriticalityRisk {
             get {
@@ -403,7 +403,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cyclomatic Complexity:.
+        ///   Looks up a localized string similar to Cyclomatic Complexity.
         /// </summary>
         public static string Label_CyclomaticComplexity {
             get {
@@ -556,7 +556,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Direct Billing:.
+        ///   Looks up a localized string similar to Direct Billing.
         /// </summary>
         public static string Label_DirectBilling {
             get {
@@ -565,7 +565,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Direct Cost:.
+        ///   Looks up a localized string similar to Direct Cost.
         /// </summary>
         public static string Label_DirectCost {
             get {
@@ -574,7 +574,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Direct Effort:.
+        ///   Looks up a localized string similar to Direct Effort.
         /// </summary>
         public static string Label_DirectEffort {
             get {
@@ -583,7 +583,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Direct Margin:.
+        ///   Looks up a localized string similar to Direct Margin.
         /// </summary>
         public static string Label_DirectMargin {
             get {
@@ -691,7 +691,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Duration (months):.
+        ///   Looks up a localized string similar to Duration (months).
         /// </summary>
         public static string Label_DurationManMonths {
             get {
@@ -763,7 +763,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Efficiency:.
+        ///   Looks up a localized string similar to Efficiency.
         /// </summary>
         public static string Label_EffortEfficiency {
             get {
@@ -799,7 +799,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Fibonacci Risk:.
+        ///   Looks up a localized string similar to Fibonacci Risk.
         /// </summary>
         public static string Label_FibonacciRisk {
             get {
@@ -871,7 +871,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Geometric (Act.) Risk:.
+        ///   Looks up a localized string similar to Geometric (Act.) Risk.
         /// </summary>
         public static string Label_GeometricActivityRisk {
             get {
@@ -880,7 +880,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Geometric (Crit.) Risk:.
+        ///   Looks up a localized string similar to Geometric (Crit.) Risk.
         /// </summary>
         public static string Label_GeometricCriticalityRisk {
             get {
@@ -889,7 +889,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Geometric (Fib.) Risk:.
+        ///   Looks up a localized string similar to Geometric (Fib.) Risk.
         /// </summary>
         public static string Label_GeometricFibonacciRisk {
             get {
@@ -988,7 +988,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Indirect Billing:.
+        ///   Looks up a localized string similar to Indirect Billing.
         /// </summary>
         public static string Label_IndirectBilling {
             get {
@@ -997,7 +997,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Indirect Cost:.
+        ///   Looks up a localized string similar to Indirect Cost.
         /// </summary>
         public static string Label_IndirectCost {
             get {
@@ -1006,7 +1006,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Indirect Effort:.
+        ///   Looks up a localized string similar to Indirect Effort.
         /// </summary>
         public static string Label_IndirectEffort {
             get {
@@ -1015,7 +1015,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Indirect Margin:.
+        ///   Looks up a localized string similar to Indirect Margin.
         /// </summary>
         public static string Label_IndirectMargin {
             get {
@@ -1268,7 +1268,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Other Billing:.
+        ///   Looks up a localized string similar to Other Billing.
         /// </summary>
         public static string Label_OtherBilling {
             get {
@@ -1277,7 +1277,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Other Cost:.
+        ///   Looks up a localized string similar to Other Cost.
         /// </summary>
         public static string Label_OtherCost {
             get {
@@ -1286,7 +1286,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Other Effort:.
+        ///   Looks up a localized string similar to Other Effort.
         /// </summary>
         public static string Label_OtherEffort {
             get {
@@ -1295,7 +1295,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Other Margin:.
+        ///   Looks up a localized string similar to Other Margin.
         /// </summary>
         public static string Label_OtherMargin {
             get {
@@ -1421,7 +1421,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project Finish:.
+        ///   Looks up a localized string similar to Project Finish.
         /// </summary>
         public static string Label_ProjectFinish {
             get {
@@ -1871,7 +1871,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Total Billing:.
+        ///   Looks up a localized string similar to Total Billing.
         /// </summary>
         public static string Label_TotalBilling {
             get {
@@ -1880,7 +1880,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Total Cost:.
+        ///   Looks up a localized string similar to Total Cost.
         /// </summary>
         public static string Label_TotalCost {
             get {
@@ -1889,7 +1889,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Total Effort:.
+        ///   Looks up a localized string similar to Total Effort.
         /// </summary>
         public static string Label_TotalEffort {
             get {
@@ -1898,7 +1898,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Total Margin:.
+        ///   Looks up a localized string similar to Total Margin.
         /// </summary>
         public static string Label_TotalMargin {
             get {

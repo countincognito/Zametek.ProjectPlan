@@ -124,10 +124,10 @@
     <value>Activity Name</value>
   </data>
   <data name="Label_ActivityRisk" xml:space="preserve">
-    <value>Activity Risk:</value>
+    <value>Activity Risk</value>
   </data>
   <data name="Label_ActivityRiskWithStdDevCorrection" xml:space="preserve">
-    <value>Activity (Std Dev) Risk:</value>
+    <value>Activity (Std Dev) Risk</value>
   </data>
   <data name="Label_AddColumn" xml:space="preserve">
     <value>Add</value>
@@ -196,13 +196,13 @@
     <value>Copyright (c) 2026</value>
   </data>
   <data name="Label_CriticalityRisk" xml:space="preserve">
-    <value>Criticality Risk:</value>
+    <value>Criticality Risk</value>
   </data>
   <data name="Label_CriticalityWeight" xml:space="preserve">
     <value>Criticality Weight</value>
   </data>
   <data name="Label_CyclomaticComplexity" xml:space="preserve">
-    <value>Cyclomatic Complexity:</value>
+    <value>Cyclomatic Complexity</value>
   </data>
   <data name="Label_Day" xml:space="preserve">
     <value>Day</value>
@@ -241,7 +241,7 @@
     <value>Dependencies</value>
   </data>
   <data name="Label_DirectCost" xml:space="preserve">
-    <value>Direct Cost:</value>
+    <value>Direct Cost</value>
   </data>
   <data name="Label_DisableResources" xml:space="preserve">
     <value>Disable Resources</value>
@@ -253,7 +253,7 @@
     <value>Duration</value>
   </data>
   <data name="Label_DurationManMonths" xml:space="preserve">
-    <value>Duration (months):</value>
+    <value>Duration (months)</value>
   </data>
   <data name="Label_EarliestFinishTime" xml:space="preserve">
     <value>EFT</value>
@@ -262,7 +262,7 @@
     <value>EST</value>
   </data>
   <data name="Label_EffortEfficiency" xml:space="preserve">
-    <value>Efficiency:</value>
+    <value>Efficiency</value>
   </data>
   <data name="Label_Effort" xml:space="preserve">
     <value>Effort</value>
@@ -274,7 +274,7 @@
     <value>End</value>
   </data>
   <data name="Label_FibonacciRisk" xml:space="preserve">
-    <value>Fibonacci Risk:</value>
+    <value>Fibonacci Risk</value>
   </data>
   <data name="Label_FibonacciWeight" xml:space="preserve">
     <value>Fibonacci Weight</value>
@@ -289,13 +289,13 @@
     <value>Scheduled Activities</value>
   </data>
   <data name="Label_GeometricActivityRisk" xml:space="preserve">
-    <value>Geometric (Act.) Risk:</value>
+    <value>Geometric (Act.) Risk</value>
   </data>
   <data name="Label_GeometricCriticalityRisk" xml:space="preserve">
-    <value>Geometric (Crit.) Risk:</value>
+    <value>Geometric (Crit.) Risk</value>
   </data>
   <data name="Label_GeometricFibonacciRisk" xml:space="preserve">
-    <value>Geometric (Fib.) Risk:</value>
+    <value>Geometric (Fib.) Risk</value>
   </data>
   <data name="Label_GroupByMode" xml:space="preserve">
     <value>Group by</value>
@@ -307,7 +307,7 @@
     <value>ID</value>
   </data>
   <data name="Label_IndirectCost" xml:space="preserve">
-    <value>Indirect Cost:</value>
+    <value>Indirect Cost</value>
   </data>
   <data name="Label_InterActivityAllocationType" xml:space="preserve">
     <value>Inter-activity Allocation</value>
@@ -376,7 +376,7 @@
     <value>Notes</value>
   </data>
   <data name="Label_OtherCost" xml:space="preserve">
-    <value>Other Cost:</value>
+    <value>Other Cost</value>
   </data>
   <data name="Label_PercentageAxisTitle" xml:space="preserve">
     <value>Percentage (%)</value>
@@ -397,7 +397,7 @@
     <value>Project Completion</value>
   </data>
   <data name="Label_ProjectFinish" xml:space="preserve">
-    <value>Project Finish:</value>
+    <value>Project Finish</value>
   </data>
   <data name="Label_ProjectStart" xml:space="preserve">
     <value>Project Start:</value>
@@ -484,7 +484,7 @@
     <value>To:</value>
   </data>
   <data name="Label_TotalCost" xml:space="preserve">
-    <value>Total Cost:</value>
+    <value>Total Cost</value>
   </data>
   <data name="Label_TotalSlack" xml:space="preserve">
     <value>TS</value>
@@ -520,19 +520,19 @@
     <value>Completed</value>
   </data>
   <data name="Label_ActivityEffort" xml:space="preserve">
-    <value>Activity Effort:</value>
+    <value>Activity Effort</value>
   </data>
   <data name="Label_DirectEffort" xml:space="preserve">
-    <value>Direct Effort:</value>
+    <value>Direct Effort</value>
   </data>
   <data name="Label_IndirectEffort" xml:space="preserve">
-    <value>Indirect Effort:</value>
+    <value>Indirect Effort</value>
   </data>
   <data name="Label_OtherEffort" xml:space="preserve">
-    <value>Other Effort:</value>
+    <value>Other Effort</value>
   </data>
   <data name="Label_TotalEffort" xml:space="preserve">
-    <value>Total Effort:</value>
+    <value>Total Effort</value>
   </data>
   <data name="Label_CancelSplashScreen" xml:space="preserve">
     <value>Cancel</value>
@@ -607,28 +607,28 @@
     <value>Ignore Risk</value>
   </data>
   <data name="Label_DirectBilling" xml:space="preserve">
-    <value>Direct Billing:</value>
+    <value>Direct Billing</value>
   </data>
   <data name="Label_IndirectBilling" xml:space="preserve">
-    <value>Indirect Billing:</value>
+    <value>Indirect Billing</value>
   </data>
   <data name="Label_OtherBilling" xml:space="preserve">
-    <value>Other Billing:</value>
+    <value>Other Billing</value>
   </data>
   <data name="Label_TotalBilling" xml:space="preserve">
-    <value>Total Billing:</value>
+    <value>Total Billing</value>
   </data>
   <data name="Label_TotalMargin" xml:space="preserve">
-    <value>Total Margin:</value>
+    <value>Total Margin</value>
   </data>
   <data name="Label_OtherMargin" xml:space="preserve">
-    <value>Other Margin:</value>
+    <value>Other Margin</value>
   </data>
   <data name="Label_IndirectMargin" xml:space="preserve">
-    <value>Indirect Margin:</value>
+    <value>Indirect Margin</value>
   </data>
   <data name="Label_DirectMargin" xml:space="preserve">
-    <value>Direct Margin:</value>
+    <value>Direct Margin</value>
   </data>
   <data name="Label_DirectMarginPercent" xml:space="preserve">
     <value>Direct Margin %</value>

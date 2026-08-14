@@ -23,8 +23,8 @@ namespace Zametek.View.ProjectPlan
         // copied "table" is a two-column Metric|Value list built from the
         // view-model in panel block order, with the hidden (cost/billing/margin)
         // blocks omitted as rows. Values are raw, so each margin line splits
-        // into an absolute row and a ratio row. The panel's labels are form
-        // labels with trailing colons, which the copy trims.
+        // into an absolute row and a ratio row. The labels carry no punctuation:
+        // the panel appends its trailing colons in the markup via StringFormat.
         private async Task CopyTableToClipboardAsync()
         {
             if (DataContext is not IMetricManagerViewModel vm)
@@ -35,7 +35,7 @@ namespace Zametek.View.ProjectPlan
             List<IReadOnlyList<object?>> rows = [];
 
             void AddRow(string label, object? value) =>
-                rows.Add([label.TrimEnd(':', ' '), value]);
+                rows.Add([label, value]);
 
             AddRow(Resource.ProjectPlan.Labels.Label_ActivityRisk, vm.ActivityRisk);
             AddRow(Resource.ProjectPlan.Labels.Label_ActivityRiskWithStdDevCorrection, vm.ActivityRiskWithStdDevCorrection);
