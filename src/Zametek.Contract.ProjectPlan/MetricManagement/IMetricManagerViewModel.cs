@@ -88,5 +88,7 @@
         double? ActivityEffort { get; }
 
         double? EffortEfficiency { get; }
+
+        Task ReportErrorAsync(string message);
     }
 }

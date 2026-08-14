@@ -15,7 +15,14 @@
 				  HorizontalScrollBarVisibility="Disabled">
 		<WrapPanel Margin="7"
 				   Grid.IsSharedSizeScope="True"
+				   Background="Transparent"
 				   Orientation="Horizontal">
+			<WrapPanel.ContextMenu>
+				<ContextMenu>
+					<MenuItem Header="{x:Static resources:Menus.Menu_CopyTable}"
+							  Click="CopyTable_Click" />
+				</ContextMenu>
+			</WrapPanel.ContextMenu>
 			<Grid Margin="7">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto" SharedSizeGroup="MetricLabel"/>

@@ -29,5 +29,7 @@ namespace Zametek.Contract.ProjectPlan
         ICommand RemoveManagedActivitySeveritiesCommand { get; }
 
         ICommand DuplicateManagedActivitySeverityCommand { get; }
+
+        Task ReportErrorAsync(string message);
     }
 }

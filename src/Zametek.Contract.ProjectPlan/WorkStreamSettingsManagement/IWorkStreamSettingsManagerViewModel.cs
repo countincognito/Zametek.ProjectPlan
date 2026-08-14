@@ -35,5 +35,7 @@ namespace Zametek.Contract.ProjectPlan
         ICommand EditManagedWorkStreamsCommand { get; }
 
         ICommand RenumberWorkStreamsCommand { get; }
+
+        Task ReportErrorAsync(string message);
     }
 }

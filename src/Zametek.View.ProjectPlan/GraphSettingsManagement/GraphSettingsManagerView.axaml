@@ -87,6 +87,11 @@
 
 							<MenuItem Header="{x:Static resources:Menus.Menu_DeleteManagedActivitySeverities}"
 									  Command="{Binding Path=$parent[DataGrid].DataContext.RemoveManagedActivitySeveritiesCommand, Mode=OneWay}" />
+
+							<Separator />
+
+							<MenuItem Header="{x:Static resources:Menus.Menu_CopyTable}"
+									  Click="CopyTable_Click" />
 						</ContextMenu>
 					</Setter>
 				</Style>

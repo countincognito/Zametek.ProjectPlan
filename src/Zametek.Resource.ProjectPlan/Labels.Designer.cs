@@ -590,6 +590,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_DirectMargin", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Direct Margin %.
+        /// </summary>
+        public static string Label_DirectMarginPercent {
+            get {
+                return ResourceManager.GetString("Label_DirectMarginPercent", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Disable Resources.
@@ -1013,6 +1022,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_IndirectMargin", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Indirect Margin %.
+        /// </summary>
+        public static string Label_IndirectMarginPercent {
+            get {
+                return ResourceManager.GetString("Label_IndirectMarginPercent", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Insert.
@@ -1137,6 +1155,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_Max {
             get {
                 return ResourceManager.GetString("Label_Max", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Metric.
+        /// </summary>
+        public static string Label_Metric {
+            get {
+                return ResourceManager.GetString("Label_Metric", resourceCulture);
             }
         }
         
@@ -1273,6 +1300,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_OtherMargin {
             get {
                 return ResourceManager.GetString("Label_OtherMargin", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Other Margin %.
+        /// </summary>
+        public static string Label_OtherMarginPercent {
+            get {
+                return ResourceManager.GetString("Label_OtherMarginPercent", resourceCulture);
             }
         }
         
@@ -1869,6 +1905,15 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_TotalMargin", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Total Margin %.
+        /// </summary>
+        public static string Label_TotalMarginPercent {
+            get {
+                return ResourceManager.GetString("Label_TotalMarginPercent", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to TS.
@@ -1921,6 +1966,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_UnknownNode {
             get {
                 return ResourceManager.GetString("Label_UnknownNode", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Value.
+        /// </summary>
+        public static string Label_Value {
+            get {
+                return ResourceManager.GetString("Label_Value", resourceCulture);
             }
         }
         

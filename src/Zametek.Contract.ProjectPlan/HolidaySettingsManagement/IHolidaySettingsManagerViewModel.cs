@@ -30,5 +30,7 @@ namespace Zametek.Contract.ProjectPlan
         ICommand DuplicateManagedHolidayCommand { get; }
 
         ICommand EditManagedHolidayCommand { get; }
+
+        Task ReportErrorAsync(string message);
     }
 }

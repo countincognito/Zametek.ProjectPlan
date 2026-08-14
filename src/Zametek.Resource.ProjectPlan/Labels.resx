@@ -348,6 +348,12 @@
   <data name="Label_Max" xml:space="preserve">
     <value>Max</value>
   </data>
+  <data name="Label_Metric" xml:space="preserve">
+    <value>Metric</value>
+  </data>
+  <data name="Label_Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
   <data name="Label_MaximumLatestFinishTime" xml:space="preserve">
     <value>Maximum LFT</value>
   </data>
@@ -623,6 +629,18 @@
   </data>
   <data name="Label_DirectMargin" xml:space="preserve">
     <value>Direct Margin:</value>
+  </data>
+  <data name="Label_DirectMarginPercent" xml:space="preserve">
+    <value>Direct Margin %</value>
+  </data>
+  <data name="Label_IndirectMarginPercent" xml:space="preserve">
+    <value>Indirect Margin %</value>
+  </data>
+  <data name="Label_OtherMarginPercent" xml:space="preserve">
+    <value>Other Margin %</value>
+  </data>
+  <data name="Label_TotalMarginPercent" xml:space="preserve">
+    <value>Total Margin %</value>
   </data>
   <data name="Label_ShowMilestones" xml:space="preserve">
     <value>Show Milestones</value>

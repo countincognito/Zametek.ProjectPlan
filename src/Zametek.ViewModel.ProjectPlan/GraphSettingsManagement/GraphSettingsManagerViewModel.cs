@@ -423,6 +423,15 @@ namespace Zametek.ViewModel.ProjectPlan
 
         public ICommand DuplicateManagedActivitySeverityCommand { get; }
 
+        public Task ReportErrorAsync(string message)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(message);
+            return m_DialogService.ShowErrorAsync(
+                Resource.ProjectPlan.Titles.Title_Error,
+                string.Empty,
+                message);
+        }
+
         #endregion
 
         #region IDisposable Members

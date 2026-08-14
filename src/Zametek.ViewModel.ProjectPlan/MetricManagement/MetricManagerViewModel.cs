@@ -409,6 +409,15 @@ namespace Zametek.ViewModel.ProjectPlan
         private readonly ObservableAsPropertyHelper<double?> m_EffortEfficiency;
         public double? EffortEfficiency => m_EffortEfficiency.Value;
 
+        public Task ReportErrorAsync(string message)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(message);
+            return m_DialogService.ShowErrorAsync(
+                Resource.ProjectPlan.Titles.Title_Error,
+                string.Empty,
+                message);
+        }
+
         #endregion
 
         #region IKillSubscriptions Members
