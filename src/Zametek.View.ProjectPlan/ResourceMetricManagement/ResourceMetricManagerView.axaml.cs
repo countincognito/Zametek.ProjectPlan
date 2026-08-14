@@ -1,11 +1,8 @@
 using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Xaml.Interactivity;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Zametek.Common.ProjectPlan;
 using Zametek.Contract.ProjectPlan;
@@ -62,10 +59,6 @@ namespace Zametek.View.ProjectPlan
             await CopyTableToClipboardAsync();
         }
 
-        // Copy the table as tab-separated text: a header row followed by one row per
-        // resource, columns in their current display (drag) order with hidden columns
-        // (e.g. the cost or billing groups) omitted - so the copy matches the visible
-        // grid shape while carrying raw, invariant-culture values.
         private async Task CopyTableToClipboardAsync()
         {
             if (DataContext is not IResourceMetricManagerViewModel vm)
@@ -73,56 +66,11 @@ namespace Zametek.View.ProjectPlan
                 return;
             }
 
-            try
-            {
-                List<(int DisplayIndex, string Header, Func<ResourceMetricsModel, object?> Value)> visibleColumns = [];
-
-                int columnCount = Math.Min(ResourceMetricsGrid.Columns.Count, s_CopyColumnDefinitions.Count);
-
-                for (int i = 0; i < columnCount; i++)
-                {
-                    DataGridColumn column = ResourceMetricsGrid.Columns[i];
-
-                    if (!column.IsVisible)
-                    {
-                        continue;
-                    }
-
-                    (string header, Func<ResourceMetricsModel, object?> value) = s_CopyColumnDefinitions[i];
-                    visibleColumns.Add((column.DisplayIndex, header, value));
-                }
-
-                visibleColumns.Sort(static (a, b) => a.DisplayIndex.CompareTo(b.DisplayIndex));
-
-                List<string> lines =
-                [
-                    string.Join(DataGridHelper.Tab, visibleColumns.Select(static x => DataGridHelper.EscapeCellText(x.Header))),
-                ];
-
-                foreach (ResourceMetricsModel resourceMetrics in vm.ResourceMetrics)
-                {
-                    lines.Add(string.Join(DataGridHelper.Tab, visibleColumns.Select(x => DataGridHelper.FormatCellValue(x.Value(resourceMetrics)))));
-                }
-
-                string tableText = string.Join(Environment.NewLine, lines);
-
-                IClipboard? clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-                if (clipboard is null)
-                {
-                    return;
-                }
-
-                var item = new DataTransferItem();
-                item.SetText(tableText);
-                var dataTransfer = new DataTransfer();
-                dataTransfer.Add(item);
-                await clipboard.SetDataAsync(dataTransfer);
-            }
-            catch
-            {
-                // Best-effort: never crash if a clipboard backend cannot accept the text.
-                await vm.ReportErrorAsync(Resource.ProjectPlan.Messages.Message_ClipboardCopyFailed);
-            }
+            await DataGridHelper.CopyTableToClipboardAsync(
+                ResourceMetricsGrid,
+                s_CopyColumnDefinitions,
+                vm.ResourceMetrics,
+                vm.ReportErrorAsync);
         }
     }
 }

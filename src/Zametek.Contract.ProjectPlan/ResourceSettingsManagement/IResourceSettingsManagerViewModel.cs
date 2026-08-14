@@ -42,5 +42,7 @@ namespace Zametek.Contract.ProjectPlan
         ICommand EditManagedResourcesCommand { get; }
 
         ICommand RenumberResourcesCommand { get; }
+
+        Task ReportErrorAsync(string message);
     }
 }

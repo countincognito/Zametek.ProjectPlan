@@ -43,5 +43,7 @@ namespace Zametek.Contract.ProjectPlan
         ICommand RenumberActivitiesCommand { get; }
 
         ICommand AddMilestoneCommand { get; }
+
+        Task ReportErrorAsync(string message);
     }
 }

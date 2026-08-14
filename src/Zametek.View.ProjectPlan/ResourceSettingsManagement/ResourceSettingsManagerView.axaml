@@ -66,6 +66,11 @@
             <MenuItem Header="{x:Static resources:Menus.Menu_DisableResources}"
 								  IsChecked="{Binding Path=DisableResources, Mode=TwoWay}"
 								  ToggleType="CheckBox" />
+
+            <Separator />
+
+            <MenuItem Header="{x:Static resources:Menus.Menu_CopyTable}"
+                  Click="CopyTable_Click" />
           </ContextMenu>
         </Setter>
       </Style>
