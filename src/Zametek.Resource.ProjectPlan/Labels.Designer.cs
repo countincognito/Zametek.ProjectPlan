@@ -250,7 +250,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.10.0-rc.1.
+        ///   Looks up a localized string similar to 0.10.0-rc.2.
         /// </summary>
         public static string Label_AppVersion {
             get {
@@ -590,7 +590,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_DirectMargin", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Direct Margin %.
         /// </summary>
@@ -1022,7 +1022,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_IndirectMargin", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Indirect Margin %.
         /// </summary>
@@ -1157,15 +1157,6 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_Max", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Metric.
-        /// </summary>
-        public static string Label_Metric {
-            get {
-                return ResourceManager.GetString("Label_Metric", resourceCulture);
-            }
-        }
         
         /// <summary>
         ///   Looks up a localized string similar to Maximum LFT.
@@ -1173,6 +1164,15 @@ namespace Zametek.Resource.ProjectPlan {
         public static string Label_MaximumLatestFinishTime {
             get {
                 return ResourceManager.GetString("Label_MaximumLatestFinishTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Metric.
+        /// </summary>
+        public static string Label_Metric {
+            get {
+                return ResourceManager.GetString("Label_Metric", resourceCulture);
             }
         }
         
@@ -1302,7 +1302,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_OtherMargin", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Other Margin %.
         /// </summary>
@@ -1509,7 +1509,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricActivityEffort", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Direct Billing.
         /// </summary>
@@ -1518,7 +1518,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricDirectBilling", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Direct Cost.
         /// </summary>
@@ -1527,7 +1527,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricDirectCost", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Direct Effort.
         /// </summary>
@@ -1536,7 +1536,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricDirectEffort", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Efficiency.
         /// </summary>
@@ -1545,7 +1545,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricEffortEfficiency", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Indirect Billing.
         /// </summary>
@@ -1554,7 +1554,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricIndirectBilling", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Indirect Cost.
         /// </summary>
@@ -1563,7 +1563,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricIndirectCost", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Indirect Effort.
         /// </summary>
@@ -1572,7 +1572,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricIndirectEffort", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Other Billing.
         /// </summary>
@@ -1581,7 +1581,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricOtherBilling", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Other Cost.
         /// </summary>
@@ -1590,7 +1590,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricOtherCost", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Other Effort.
         /// </summary>
@@ -1599,7 +1599,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricOtherEffort", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Total Billing.
         /// </summary>
@@ -1608,7 +1608,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricTotalBilling", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Total Cost.
         /// </summary>
@@ -1617,7 +1617,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricTotalCost", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Total Effort.
         /// </summary>
@@ -1626,7 +1626,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_ResourceMetricTotalEffort", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Resource Name.
         /// </summary>
@@ -1905,7 +1905,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_TotalMargin", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Total Margin %.
         /// </summary>
@@ -1968,7 +1968,7 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Label_UnknownNode", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Value.
         /// </summary>

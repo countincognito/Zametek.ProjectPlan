@@ -30,24 +30,66 @@ namespace Zametek.ViewModel.ProjectPlan
     internal static class CascadeDiagnostics
     {
         private static readonly ConcurrentDictionary<string, int> s_Counts = new();
+        private static int s_Sequence;
 
+        /// <summary>
+        /// Builds the line prefix: a global sequence number and the managed
+        /// thread id ahead of the wall-clock time. The sequence number gives a
+        /// total order over all diagnostic calls - cross-thread ordering of
+        /// racing writes cannot be reconstructed from millisecond timestamps
+        /// alone - and the thread id shows which side of a race each line
+        /// came from.
+        /// </summary>
+        private static string Stamp() =>
+            $"[CascadeDiagnostics] #{Interlocked.Increment(ref s_Sequence):D6} T{Environment.CurrentManagedThreadId:D3} {DateTime.Now:HH:mm:ss.fff}";
+
+        /// <summary>
+        /// Records one invocation of a (re)build step, with a running call
+        /// count per name. Use it on Build*/Refresh* cascade entry points to
+        /// spot redundant or duplicated rebuilds - the count is the point.
+        /// </summary>
         [Conditional("CASCADE_DIAGNOSTICS")]
         public static void RecordBuild(string name)
         {
             int count = s_Counts.AddOrUpdate(name, 1, (_, current) => current + 1);
-            Debug.WriteLine($"[CascadeDiagnostics] {DateTime.Now:HH:mm:ss.fff} {name} call #{count}");
+            Debug.WriteLine($"{Stamp()} {name} call #{count}");
         }
 
+        /// <summary>
+        /// Records a section boundary (banner-decorated with =====) marking
+        /// the start or end of a phase, e.g. a bulk update or the save
+        /// milestones. Markers act as headings when scanning a long trace;
+        /// the individual observations between them belong in
+        /// <see cref="RecordEvent"/>.
+        /// </summary>
         [Conditional("CASCADE_DIAGNOSTICS")]
         public static void RecordMarker(string message)
         {
-            Debug.WriteLine($"[CascadeDiagnostics] {DateTime.Now:HH:mm:ss.fff} ===== {message} =====");
+            Debug.WriteLine($"{Stamp()} ===== {message} =====");
         }
 
+        /// <summary>
+        /// Records a single plain observation - a data point such as a
+        /// property write with its old and new values. This is the workhorse
+        /// for tracing cross-thread ordering; use <see cref="RecordMarker"/>
+        /// for the phase boundaries around these lines.
+        /// </summary>
+        [Conditional("CASCADE_DIAGNOSTICS")]
+        public static void RecordEvent(string message)
+        {
+            Debug.WriteLine($"{Stamp()} {message}");
+        }
+
+        /// <summary>
+        /// Records a message together with the full stack trace of the
+        /// caller, for provenance: not just that a transition happened but
+        /// which code path triggered it. Expensive and noisy, so reserve it
+        /// for rare transitions (e.g. flag edges), not per-item events.
+        /// </summary>
         [Conditional("CASCADE_DIAGNOSTICS")]
         public static void RecordStackTrace(string message)
         {
-            Debug.WriteLine($"[CascadeDiagnostics] {DateTime.Now:HH:mm:ss.fff} {message}{Environment.NewLine}{Environment.StackTrace}");
+            Debug.WriteLine($"{Stamp()} {message}{Environment.NewLine}{Environment.StackTrace}");
         }
     }
 }

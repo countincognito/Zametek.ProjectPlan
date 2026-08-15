@@ -452,6 +452,10 @@ namespace Zametek.ViewModel.ProjectPlan
                         {
                             CascadeDiagnostics.RecordStackTrace($@"{nameof(IsProjectScenarioUpdated)} transitioned to true");
                         }
+                        else if (!value && m_IsProjectScenarioUpdated)
+                        {
+                            CascadeDiagnostics.RecordStackTrace($@"{nameof(IsProjectScenarioUpdated)} transitioned to false");
+                        }
                         this.RaiseAndSetIfChanged(ref m_IsProjectScenarioUpdated, value);
                     }
                 }

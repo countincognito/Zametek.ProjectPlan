@@ -2176,6 +2176,7 @@ namespace Zametek.ViewModel.ProjectPlan
 
                     foreach (IManagedNodeViewModel managedNode in RawFlattenedNodes)
                     {
+                        CascadeDiagnostics.RecordEvent($@"ResetManagedNodes: clearing node '{managedNode.Name}' (was {managedNode.IsUpdated})");
                         managedNode.IsUpdated = false;
                     }
                 }

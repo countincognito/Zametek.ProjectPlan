@@ -672,9 +672,17 @@ namespace Zametek.ViewModel.ProjectPlan
 
                 ProjectModel projectModel = await BuildProjectAsync();
                 await m_ProjectFileSave.SaveProjectFileAsync(projectModel, filename);
-                m_CoreViewModel.IsProjectScenarioUpdated = false;
-                m_ProjectScenarioManagerViewModel.IsProjectUpdated = false;
+                // Clear the node markers BEFORE the scenario flag: the nodes'
+                // IsUpdated latch subscriptions observe the flag, so clearing
+                // the flag first would interleave their (async) delivery with
+                // the reset - the ordering half of the stale-asterisk race the
+                // latch-only stream in ManagedNodeViewModel closes.
+                CascadeDiagnostics.RecordMarker(@"Save: file written; ResetManagedNodes begin");
                 m_ProjectScenarioManagerViewModel.ResetManagedNodes();
+                CascadeDiagnostics.RecordMarker(@"Save: ResetManagedNodes end; clearing IsProjectScenarioUpdated");
+                m_CoreViewModel.IsProjectScenarioUpdated = false;
+                CascadeDiagnostics.RecordMarker(@"Save: clearing IsProjectUpdated");
+                m_ProjectScenarioManagerViewModel.IsProjectUpdated = false;
                 m_SettingService.SetProjectFilePath(filename, bindTitleToFilename: true);
                 m_SettingService.RecordRecentProjectFilePath(filename);
                 RefreshRecentProjectFileMenuItems();

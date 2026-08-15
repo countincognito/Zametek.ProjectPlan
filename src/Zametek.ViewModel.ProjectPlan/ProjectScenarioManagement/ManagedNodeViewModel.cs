@@ -94,26 +94,33 @@ namespace Zametek.ViewModel.ProjectPlan
                 .Bind(out m_ReadOnlyChildren)
                 .Subscribe();
 
+            // The scenario-updated flag only LATCHES the node marker: a true
+            // transition marks the active scenario's node, and nothing here
+            // ever clears it - un-marking is exclusively ResetManagedNodes'
+            // job (on save, load and reset). Filtering the false ticks out is
+            // what makes that split race-free: re-emitting the current marker
+            // on a false tick used to queue a stale 'true' across the async
+            // hop, which could land after the reset's clear and resurrect the
+            // asterisk (caught live in the cascade diagnostics, 2026-08-15).
+            // Delivery is marshalled to the main thread so the write (and the
+            // DisplayName recompute it raises) stays off the pool threads
+            // that raise the flag.
             m_IsUpdatedSub = this
-                .WhenAnyValue(
-                    x => x.m_CoreViewModel.IsProjectScenarioUpdated,
-                    (isProjectScenarioUpdated) =>
+                .WhenAnyValue(x => x.m_CoreViewModel.IsProjectScenarioUpdated)
+                .Where(isProjectScenarioUpdated => isProjectScenarioUpdated)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
+                .Subscribe(_ =>
+                {
+                    bool isActiveScenarioNode = !IsFolder
+                        && m_ProjectScenarioNodeModel.Id == m_SettingService.ScenarioId;
+
+                    CascadeDiagnostics.RecordEvent($@"IsUpdatedSub latch: node '{Name}' activeScenarioNode={isActiveScenarioNode} (current={IsUpdated})");
+
+                    if (isActiveScenarioNode)
                     {
-                        bool isUpdated = IsUpdated;
-
-                        if (isProjectScenarioUpdated && !IsFolder)
-                        {
-                            Guid projectScenarioId = m_SettingService.ScenarioId;
-                            if (m_ProjectScenarioNodeModel.Id == projectScenarioId)
-                            {
-                                isUpdated = true;
-                            }
-                        }
-
-                        return isUpdated;
-                    })
-                .ObserveOn(RxSchedulers.TaskpoolScheduler)
-                .Subscribe(isUpdated => IsUpdated = isUpdated);
+                        IsUpdated = true;
+                    }
+                });
 
             m_DisplayName = this
                 .WhenAnyValue(
@@ -247,6 +254,7 @@ namespace Zametek.ViewModel.ProjectPlan
             get => m_IsUpdated;
             set
             {
+                CascadeDiagnostics.RecordEvent($@"IsUpdated write: node '{Name}' {m_IsUpdated} -> {value}");
                 m_IsUpdated = value;
                 this.RaisePropertyChanged();
             }
