@@ -221,6 +221,7 @@
 											     exist when the behavior attaches and appends the day columns. -->
 											<Interaction.Behaviors>
 												<local:TimesheetDayColumnsBehavior/>
+												<local:DataGridCommitEditBehavior/>
 											</Interaction.Behaviors>
 										</DataGrid>
 

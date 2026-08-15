@@ -1,4 +1,3 @@
-using Avalonia.Controls;
 using Avalonia.Threading;
 using System;
 using System.Collections.Generic;
@@ -9,34 +8,14 @@ namespace Zametek.View.ProjectPlan
     public class CommitEditHandler
         : ICommitEditHandler
     {
-        private readonly HashSet<DataGrid> m_DataGrids;
-
-        // The effort tracking view is absent here: its timesheet grids are
-        // created from a data template (one per resource section), so they
-        // cannot be registered statically.
-        public CommitEditHandler(
-            ActivitiesManagerView activitiesManagerView,
-            ProgressTrackingManagerView progressTrackingManagerView,
-            GraphSettingsManagerView graphSettingsManagerView,
-            ResourceSettingsManagerView resourceSettingsManagerView,
-            WorkStreamSettingsManagerView workStreamSettingsManagerView,
-            HolidaySettingsManagerView holidaySettingsManagerView)
-        {
-            ArgumentNullException.ThrowIfNull(activitiesManagerView);
-            ArgumentNullException.ThrowIfNull(progressTrackingManagerView);
-            ArgumentNullException.ThrowIfNull(graphSettingsManagerView);
-            ArgumentNullException.ThrowIfNull(resourceSettingsManagerView);
-            ArgumentNullException.ThrowIfNull(workStreamSettingsManagerView);
-            ArgumentNullException.ThrowIfNull(holidaySettingsManagerView);
-            m_DataGrids = [];
-
-            m_DataGrids.Add(activitiesManagerView.ActivitiesGrid);
-            m_DataGrids.Add(progressTrackingManagerView.TrackerActivitiesGrid);
-            m_DataGrids.Add(graphSettingsManagerView.ActivitySeveritiesGrid);
-            m_DataGrids.Add(resourceSettingsManagerView.ResourcesGrid);
-            m_DataGrids.Add(workStreamSettingsManagerView.WorkStreamsGrid);
-            m_DataGrids.Add(holidaySettingsManagerView.HolidaysGrid);
-        }
+        // Live grids register a commit action while they are attached to the
+        // visual tree (DataGridCommitEditBehavior), so the handler always
+        // addresses the grids actually on screen - docked or floated - and
+        // the template-built effort timesheet grids as well. Constructor
+        // injection of the views themselves would only pin throwaway copies:
+        // docked views are transient, so instances resolved here would never
+        // be the ones the dock materialises.
+        public IList<Action> CommitActions { get; } = [];
 
         // This is to handle the commitment of all datagrids when changing
         // project scenarios. It helps prevent thread locking if a datagrid
@@ -45,9 +24,13 @@ namespace Zametek.View.ProjectPlan
         {
             Dispatcher.UIThread.Invoke(() =>
             {
-                foreach (DataGrid dataGrid in m_DataGrids)
+                // Snapshot, so a commit that re-enters grid code cannot
+                // invalidate the enumeration by adjusting the registrations.
+                List<Action> commitActions = [.. CommitActions];
+
+                foreach (Action commitAction in commitActions)
                 {
-                    dataGrid.CommitEdit();
+                    commitAction();
                 }
             });
         }

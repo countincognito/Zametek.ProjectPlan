@@ -29,14 +29,17 @@ namespace Zametek.View.ProjectPlan
 
         public WorkStreamSettingsManagerView(
             IDataGridLayoutManager dataGridLayoutManager,
-            IDataGridScrollManager dataGridScrollManager)
+            IDataGridScrollManager dataGridScrollManager,
+            ICommitEditHandler commitEditHandler)
         {
             ArgumentNullException.ThrowIfNull(dataGridLayoutManager);
             ArgumentNullException.ThrowIfNull(dataGridScrollManager);
+            ArgumentNullException.ThrowIfNull(commitEditHandler);
             InitializeComponent();
             BehaviorCollection behaviors = Interaction.GetBehaviors(WorkStreamsGrid);
             behaviors.Add(new DataGridPersistLayoutBehavior(dataGridLayoutManager));
             behaviors.Add(new DataGridPersistScrollBehavior(dataGridScrollManager));
+            behaviors.Add(new DataGridCommitEditBehavior(commitEditHandler));
             behaviors.Add(new FadeInBehavior());
         }
 
