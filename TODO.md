@@ -1,63 +1,13 @@
 # TODO
 
-Maintainer-internal engineering intents that should version with the code. User-facing
-bugs and feature requests belong in GitHub issues; items that would survive the
-Zametek.Graphs.Avalonia spin-out belong in [src/Zametek.Graphs.Avalonia/TODO.md](src/Zametek.Graphs.Avalonia/TODO.md).
-Date entries when added; delete them when done.
+Maintainer-internal engineering intents that should version with the code. User-facing bugs and feature requests belong in GitHub issues; items that would survive the Zametek.Graphs.Avalonia spin-out belong in [src/Zametek.Graphs.Avalonia/TODO.md](src/Zametek.Graphs.Avalonia/TODO.md). Date entries when added; delete them when done.
 
-- [ ] **Remove System.Reactive once DynamicData and Dock go Rx-free** *(2026-08-02,
-  last checked 2026-08-15)* - ReactiveUI 24 no longer uses System.Reactive, but removal
-  is pointless while other packages still hard-depend on it, so the assembly ships
-  regardless. As of the last check, Dock is mid-split: 12.1.0.1 introduced the suffixed
-  System.Reactive lane (`Dock.Model.ReactiveUI.Reactive`, paired with
-  `ReactiveUI.Reactive`) and documents the unsuffixed family as the
-  ReactiveUI.Primitives lane (`docfx/articles/dock-reactiveui.md` in the Dock repo);
-  the shipped unsuffixed `Dock.Model.ReactiveUI` 12.1.0.1 still declares
-  `System.Reactive` 7.0.0, but Dock master has already removed the reference, so the
-  next unsuffixed release should flip the Dock gate. `DynamicData` is the remaining
-  hard blocker in released packages (9.4.33 and 9.5.0-preview.15 both declare
-  `System.Reactive` 6.1.0; no suffixed twin exists), but its direction is confirmed:
-  PR [reactivemarbles/DynamicData#1116](https://github.com/reactivemarbles/DynamicData/pull/1116)
-  migrates DynamicData to ReactiveUI.Primitives, and the maintainer plans to ship it
-  in a 10.0.0-preview (package naming - a suffixed convention like ReactiveUI/Dock vs
-  explicit dual names - was still undecided when checked), so the Rx-free DynamicData
-  arrives as a MAJOR (10.x) bump, previews first. Watch: confirm the next unsuffixed
-  Dock release drops `System.Reactive`, then watch for a stable DynamicData 10.x
-  without it. Bump caution: this solution is
-  deliberately in the unsuffixed/Primitives lane - never adopt a `.Reactive`-suffixed
-  package, the two families have distinct type identities and must not be mixed. Once
-  both gates pass, examine migrating the solution's own Rx usage to
-  `ReactiveUI.Primitives`. Known gaps to solve at that point: no `FromEventPattern`
-  (two uses, the collection-changed bridges in the effort tracking manager), no
-  `Subject`/`BehaviorSubject` (Primitives has different "Signal" abstractions), and no
-  `Observable.Create` (`MuteWhile` is built on it). Breadcrumbs: comments above the
-  `System.Reactive` reference in `Zametek.Graphs.Avalonia.csproj` and the
-  Dock/DynamicData block in `Zametek.ViewModel.ProjectPlan.csproj`; the
-  `ObservableExtensions.ObserveOn(ISequencer)` bridge is the seam from which to start
-  unwinding.
+- [ ] **Remove System.Reactive once DynamicData and Dock go Rx-free** *(2026-08-02, last checked 2026-08-15)* - ReactiveUI 24 no longer uses System.Reactive, but removal is pointless while other packages still hard-depend on it, so the assembly ships regardless. As of the last check, Dock is mid-split: 12.1.0.1 introduced the suffixed System.Reactive lane (`Dock.Model.ReactiveUI.Reactive`, paired with `ReactiveUI.Reactive`) and documents the unsuffixed family as the ReactiveUI.Primitives lane (`docfx/articles/dock-reactiveui.md` in the Dock repo); the shipped unsuffixed `Dock.Model.ReactiveUI` 12.1.0.1 still declares `System.Reactive` 7.0.0, but Dock master has already removed the reference, so the next unsuffixed release should flip the Dock gate. `DynamicData` is the remaining hard blocker in released packages (9.4.33 and 9.5.0-preview.15 both declare `System.Reactive` 6.1.0; no suffixed twin exists), but its direction is confirmed: PR [reactivemarbles/DynamicData#1116](https://github.com/reactivemarbles/DynamicData/pull/1116) migrates DynamicData to ReactiveUI.Primitives, and the maintainer plans to ship it in a 10.0.0-preview (package naming - a suffixed convention like ReactiveUI/Dock vs explicit dual names - was still undecided when checked), so the Rx-free DynamicData arrives as a MAJOR (10.x) bump, previews first. Watch: confirm the next unsuffixed Dock release drops `System.Reactive`, then watch for a stable DynamicData 10.x without it. Bump caution: this solution is deliberately in the unsuffixed/Primitives lane - never adopt a `.Reactive`-suffixed package, the two families have distinct type identities and must not be mixed. Once both gates pass, examine migrating the solution's own Rx usage to `ReactiveUI.Primitives`. Known gaps to solve at that point: no `FromEventPattern` (two uses, the collection-changed bridges in the effort tracking manager), no `Subject`/`BehaviorSubject` (Primitives has different "Signal" abstractions), and no `Observable.Create` (`MuteWhile` is built on it). Breadcrumbs: comments above the `System.Reactive` reference in `Zametek.Graphs.Avalonia.csproj` and the Dock/DynamicData block in `Zametek.ViewModel.ProjectPlan.csproj`; the `ObservableExtensions.ObserveOn(ISequencer)` bridge is the seam from which to start unwinding.
 
-- [ ] **Spin out Zametek.Graphs.Avalonia into its own repository** *(2026-08-02)* - the
-  library is already framework-decoupled with its own README; the checklist lives in
-  [src/Zametek.Graphs.Avalonia/TODO.md](src/Zametek.Graphs.Avalonia/TODO.md) so it
-  travels with the folder.
+- [ ] **Spin out Zametek.Graphs.Avalonia into its own repository** *(2026-08-02)* - the library is already framework-decoupled with its own README; the checklist lives in [src/Zametek.Graphs.Avalonia/TODO.md](src/Zametek.Graphs.Avalonia/TODO.md) so it travels with the folder.
 
-- [ ] **Formal drag-and-drop from charts** *(2026-08-02, consolidated from a code
-  TODO)* - `ScottPlotUserControl.CheckPointerDrag` detects the click-vs-drag threshold
-  but only tracks state; the inline comment marks where `DragDrop.DoDragDropAsync`
-  would start a real DND operation (e.g. dragging a chart image into another app).
+- [ ] **Formal drag-and-drop from charts** *(2026-08-02, consolidated from a code TODO)* - `ScottPlotUserControl.CheckPointerDrag` detects the click-vs-drag threshold but only tracks state; the inline comment marks where `DragDrop.DoDragDropAsync` would start a real DND operation (e.g. dragging a chart image into another app).
 
-- [ ] **Reduce UI-thread reads of locked view-model getters** *(2026-08-04)* - the
-  dotnet-trace profile of an edit burst showed several seconds of Monitor
-  contention: bindings re-reading locked getters while the background compile
-  cascade held the locks. Most of it vanished with the IsBusy fix; if input
-  hitches reappear under heavy background activity, prefer lock-free snapshots
-  (volatile fields or immutable models) for hot bound properties.
+- [ ] **Reduce UI-thread reads of locked view-model getters** *(2026-08-04)* - the dotnet-trace profile of an edit burst showed several seconds of Monitor contention: bindings re-reading locked getters while the background compile cascade held the locks. Most of it vanished with the IsBusy fix; if input hitches reappear under heavy background activity, prefer lock-free snapshots (volatile fields or immutable models) for hot bound properties.
 
-- [ ] **Consider reporting the Dock float/re-dock behaviour upstream** *(2026-08-02,
-  optional)* - under Dock 12.1, dropping a floating tool back into the layout
-  materialises the destination view while the closed float window's visual tree is
-  still assembled (12.0.0.2 did not surface this). Our crash was ultimately the app's
-  own shared-control-as-Content pattern - now fixed by construction in
-  `ScottPlotUserControl` - but a minimal repro (any dockable binding a shared control
-  instance as Content) may be worth filing against Dock so the cross-window
-  materialisation ordering gets a look.
+- [ ] **Consider reporting the Dock float/re-dock behaviour upstream** *(2026-08-02, optional)* - under Dock 12.1, dropping a floating tool back into the layout materialises the destination view while the closed float window's visual tree is still assembled (12.0.0.2 did not surface this). Our crash was ultimately the app's own shared-control-as-Content pattern - now fixed by construction in `ScottPlotUserControl` - but a minimal repro (any dockable binding a shared control instance as Content) may be worth filing against Dock so the cross-window materialisation ordering gets a look.
