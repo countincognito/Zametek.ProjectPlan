@@ -5,18 +5,36 @@ bugs and feature requests belong in GitHub issues; items that would survive the
 Zametek.Graphs.Avalonia spin-out belong in [src/Zametek.Graphs.Avalonia/TODO.md](src/Zametek.Graphs.Avalonia/TODO.md).
 Date entries when added; delete them when done.
 
-- [ ] **Remove System.Reactive once DynamicData and Dock go Rx-free** *(2026-08-02)* -
-  ReactiveUI 24 no longer uses System.Reactive, but removal is pointless while
-  `Dock.Model.ReactiveUI` (>= 7.0.0) and `DynamicData` (>= 6.1.0) still hard-depend on
-  it, so the assembly ships regardless. When a NuGet update shows **both** have gone
-  Rx-free, examine migrating the solution's own Rx usage to `ReactiveUI.Primitives`.
-  Known gaps to solve at that point: no `FromEventPattern` (two uses, the
-  collection-changed bridges in the effort tracking manager), no `Subject`/`BehaviorSubject` (Primitives has
-  different "Signal" abstractions), and no `Observable.Create` (`MuteWhile` is built on
-  it). Breadcrumbs: comments above the `System.Reactive` reference in
-  `Zametek.Graphs.Avalonia.csproj` and the Dock/DynamicData block in
-  `Zametek.ViewModel.ProjectPlan.csproj`; the `ObservableExtensions.ObserveOn(ISequencer)`
-  bridge is the seam from which to start unwinding.
+- [ ] **Remove System.Reactive once DynamicData and Dock go Rx-free** *(2026-08-02,
+  last checked 2026-08-15)* - ReactiveUI 24 no longer uses System.Reactive, but removal
+  is pointless while other packages still hard-depend on it, so the assembly ships
+  regardless. As of the last check, Dock is mid-split: 12.1.0.1 introduced the suffixed
+  System.Reactive lane (`Dock.Model.ReactiveUI.Reactive`, paired with
+  `ReactiveUI.Reactive`) and documents the unsuffixed family as the
+  ReactiveUI.Primitives lane (`docfx/articles/dock-reactiveui.md` in the Dock repo);
+  the shipped unsuffixed `Dock.Model.ReactiveUI` 12.1.0.1 still declares
+  `System.Reactive` 7.0.0, but Dock master has already removed the reference, so the
+  next unsuffixed release should flip the Dock gate. `DynamicData` is the remaining
+  hard blocker in released packages (9.4.33 and 9.5.0-preview.15 both declare
+  `System.Reactive` 6.1.0; no suffixed twin exists), but its direction is confirmed:
+  PR [reactivemarbles/DynamicData#1116](https://github.com/reactivemarbles/DynamicData/pull/1116)
+  migrates DynamicData to ReactiveUI.Primitives, and the maintainer plans to ship it
+  in a 10.0.0-preview (package naming - a suffixed convention like ReactiveUI/Dock vs
+  explicit dual names - was still undecided when checked), so the Rx-free DynamicData
+  arrives as a MAJOR (10.x) bump, previews first. Watch: confirm the next unsuffixed
+  Dock release drops `System.Reactive`, then watch for a stable DynamicData 10.x
+  without it. Bump caution: this solution is
+  deliberately in the unsuffixed/Primitives lane - never adopt a `.Reactive`-suffixed
+  package, the two families have distinct type identities and must not be mixed. Once
+  both gates pass, examine migrating the solution's own Rx usage to
+  `ReactiveUI.Primitives`. Known gaps to solve at that point: no `FromEventPattern`
+  (two uses, the collection-changed bridges in the effort tracking manager), no
+  `Subject`/`BehaviorSubject` (Primitives has different "Signal" abstractions), and no
+  `Observable.Create` (`MuteWhile` is built on it). Breadcrumbs: comments above the
+  `System.Reactive` reference in `Zametek.Graphs.Avalonia.csproj` and the
+  Dock/DynamicData block in `Zametek.ViewModel.ProjectPlan.csproj`; the
+  `ObservableExtensions.ObserveOn(ISequencer)` bridge is the seam from which to start
+  unwinding.
 
 - [ ] **Spin out Zametek.Graphs.Avalonia into its own repository** *(2026-08-02)* - the
   library is already framework-decoupled with its own README; the checklist lives in
