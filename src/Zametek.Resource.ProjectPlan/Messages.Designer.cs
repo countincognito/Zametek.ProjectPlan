@@ -122,7 +122,16 @@ namespace Zametek.Resource.ProjectPlan {
                 return ResourceManager.GetString("Message_CannotGetProjectScenarioFileWhenProjectScenarioIsNull", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Cut nodes cannot be pasted into themselves or their own subfolders.
+        /// </summary>
+        public static string Message_CannotPasteCutNodesIntoOwnSubtree {
+            get {
+                return ResourceManager.GetString("Message_CannotPasteCutNodesIntoOwnSubtree", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Cannot set a project scenario on a folder node:.
         /// </summary>
@@ -259,7 +268,7 @@ namespace Zametek.Resource.ProjectPlan {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do you wish to delete these scenarios?.
+        ///   Looks up a localized string similar to Do you wish to delete the {0} selected node(s)?.
         /// </summary>
         public static string Message_DoYouWishToDeleteTheseScenarios {
             get {

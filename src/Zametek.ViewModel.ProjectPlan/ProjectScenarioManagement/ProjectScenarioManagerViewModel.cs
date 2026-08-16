@@ -179,9 +179,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ReactiveCommand<RxVoid, RxVoid> cutProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
                     CutProjectScenarioNodeAsync,
-                    this.WhenAnyValue(
-                        pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder)
+                    // Folders are valid cut sources (their subtrees move with
+                    // them), so any non-empty selection enables the command.
+                    SelectedNodes
+                        .ToObservableChangeSet()
+                        .ToCollection()
+                        .Select(items => items.Count != 0)
                         .Merge(m_NodeActionCommandManualTrigger),
                     RxSchedulers.MainThreadScheduler);
                 CutProjectScenarioNodeCommand = cutProjectScenarioNodeCommand;
@@ -189,9 +192,12 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ReactiveCommand<RxVoid, RxVoid> copyProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
                     CopyProjectScenarioNodeAsync,
-                    this.WhenAnyValue(
-                        pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder)
+                    // Folders are valid copy sources (their subtrees are cloned
+                    // with them), so any non-empty selection enables the command.
+                    SelectedNodes
+                        .ToObservableChangeSet()
+                        .ToCollection()
+                        .Select(items => items.Count != 0)
                         .Merge(m_NodeActionCommandManualTrigger),
                     RxSchedulers.MainThreadScheduler);
                 CopyProjectScenarioNodeCommand = copyProjectScenarioNodeCommand;
@@ -199,9 +205,10 @@ namespace Zametek.ViewModel.ProjectPlan
             {
                 ReactiveCommand<RxVoid, RxVoid> duplicateProjectScenarioNodeCommand = ReactiveCommand.CreateFromTask(
                     DuplicateProjectScenarioNodeAsync,
-                    this.WhenAnyValue(
-                        pm => pm.SelectedNode,
-                        (IManagedNodeViewModel? selectedNode) => selectedNode is not null && !selectedNode.IsFolder)
+                    SelectedNodes
+                        .ToObservableChangeSet()
+                        .ToCollection()
+                        .Select(items => items.Count != 0)
                         .Merge(m_NodeActionCommandManualTrigger),
                     RxSchedulers.MainThreadScheduler);
                 DuplicateProjectScenarioNodeCommand = duplicateProjectScenarioNodeCommand;
@@ -533,36 +540,6 @@ namespace Zametek.ViewModel.ProjectPlan
             }
         }
 
-        private HashSet<IManagedNodeViewModel> FindNestedNodes(Guid nodeId)
-        {
-            try
-            {
-                lock (m_Lock)
-                {
-                    BeginBusy();
-                    var result = new HashSet<IManagedNodeViewModel>();
-
-                    if (m_ManagedNodeLookup.TryGetValue(nodeId, out IManagedNodeViewModel? managedNode))
-                    {
-                        result.Add(managedNode);
-                        foreach (IManagedNodeViewModel childNode in managedNode.RawChildren)
-                        {
-                            foreach (IManagedNodeViewModel nestedChild in FindNestedNodes(childNode.Id))
-                            {
-                                result.Add(nestedChild);
-                            }
-                        }
-                    }
-
-                    return result;
-                }
-            }
-            finally
-            {
-                EndBusy();
-            }
-        }
-
         private HashSet<IManagedNodeViewModel> FindNestedNodes(IEnumerable<Guid> nodeIds)
         {
             try
@@ -570,26 +547,22 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     BeginBusy();
-                    Dictionary<Guid, IManagedNodeViewModel> foundNodes = [];
 
-                    foreach (Guid nodeId in nodeIds)
+                    // Traversal is delegated to the unit-tested helper over the
+                    // node models; the ids are then mapped back to the live
+                    // view models.
+                    List<ProjectScenarioNodeModel> allNodes = [.. m_ManagedNodeLookup.Values.Select(x => x.Node)];
+                    HashSet<IManagedNodeViewModel> result = [];
+
+                    foreach (Guid nodeId in ProjectScenarioNodeHelper.CollectSubtreeIds(allNodes, nodeIds))
                     {
-                        HashSet<IManagedNodeViewModel> nestedNodes = [];
-
-                        if (!foundNodes.TryGetValue(nodeId, out IManagedNodeViewModel? existingNode))
+                        if (m_ManagedNodeLookup.TryGetValue(nodeId, out IManagedNodeViewModel? managedNode))
                         {
-                            nestedNodes = FindNestedNodes(nodeId);
-                        }
-
-                        foreach (IManagedNodeViewModel nestedNode in nestedNodes)
-                        {
-                            if (!foundNodes.ContainsKey(nestedNode.Id))
-                            {
-                                foundNodes[nestedNode.Id] = nestedNode;
-                            }
+                            result.Add(managedNode);
                         }
                     }
-                    return [.. foundNodes.Values];
+
+                    return result;
                 }
             }
             finally
@@ -727,16 +700,7 @@ namespace Zametek.ViewModel.ProjectPlan
             string suggestedName,
             HashSet<string> existingNames)
         {
-            int count = 0;
-            string newName = suggestedName;
-
-            while (existingNames.Contains(newName))
-            {
-                count++;
-                newName = $@"{suggestedName}-{count}";
-            }
-
-            return newName;
+            return ProjectScenarioNodeHelper.SuggestNodeName(suggestedName, existingNames);
         }
 
         private string SuggestNodeName(
@@ -1281,7 +1245,7 @@ namespace Zametek.ViewModel.ProjectPlan
                 bool confirmation = await m_DialogService.ShowConfirmationAsync(
                     Resource.ProjectPlan.Titles.Title_DeleteNodes,
                     string.Empty,
-                    string.Format(Resource.ProjectPlan.Messages.Message_DoYouWishToDeleteTheseScenarios));
+                    string.Format(Resource.ProjectPlan.Messages.Message_DoYouWishToDeleteTheseScenarios, managedNodes.Count));
 
                 if (!confirmation)
                 {
@@ -1401,19 +1365,28 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                IManagedNodeViewModel? managedNode = SelectedNode;
+                // Snapshot the selection first: BuildProject can disturb it.
+                List<Guid> selectedIds = [.. SelectedNodes.Select(x => x.Id)];
                 BuildProject(); // Use this to persist changes before loading a new scenario.
-                SelectedNode = managedNode;
 
-                if (managedNode is null
-                    || managedNode.IsFolder)
+                if (selectedIds.Count == 0)
                 {
                     return;
                 }
 
                 lock (m_Lock)
                 {
-                    m_NodeAction.SetCut([managedNode.Id]);
+                    // Reduce the selection to its top-most nodes so a folder
+                    // and its descendants can never be cut twice over.
+                    List<ProjectScenarioNodeModel> allNodes = [.. m_ManagedNodeLookup.Values.Select(x => x.Node)];
+                    List<Guid> topMostIds = ProjectScenarioNodeHelper.SelectTopMostNodes(allNodes, selectedIds);
+
+                    if (topMostIds.Count == 0)
+                    {
+                        return;
+                    }
+
+                    m_NodeAction.SetCut(topMostIds);
                 }
             }
             catch (Exception ex)
@@ -1433,19 +1406,28 @@ namespace Zametek.ViewModel.ProjectPlan
         {
             try
             {
-                IManagedNodeViewModel? managedNode = SelectedNode;
+                // Snapshot the selection first: BuildProject can disturb it.
+                List<Guid> selectedIds = [.. SelectedNodes.Select(x => x.Id)];
                 BuildProject(); // Use this to persist changes before loading a new scenario.
-                SelectedNode = managedNode;
 
-                if (managedNode is null
-                    || managedNode.IsFolder)
+                if (selectedIds.Count == 0)
                 {
                     return;
                 }
 
                 lock (m_Lock)
                 {
-                    m_NodeAction.SetCopy([managedNode.Id]);
+                    // Reduce the selection to its top-most nodes so a folder
+                    // and its descendants can never be copied twice over.
+                    List<ProjectScenarioNodeModel> allNodes = [.. m_ManagedNodeLookup.Values.Select(x => x.Node)];
+                    List<Guid> topMostIds = ProjectScenarioNodeHelper.SelectTopMostNodes(allNodes, selectedIds);
+
+                    if (topMostIds.Count == 0)
+                    {
+                        return;
+                    }
+
+                    m_NodeAction.SetCopy(topMostIds);
                 }
             }
             catch (Exception ex)
@@ -1509,70 +1491,103 @@ namespace Zametek.ViewModel.ProjectPlan
                 lock (m_Lock)
                 {
                     BeginBusy();
+
+                    if (m_NodeAction.NodeIds.Count == 0)
+                    {
+                        return;
+                    }
+
+                    List<ProjectScenarioNodeModel> allNodes = [.. m_ManagedNodeLookup.Values.Select(x => x.Node)];
+                    List<Guid> sourceIds = ProjectScenarioNodeHelper.SelectTopMostNodes(allNodes, [.. m_NodeAction.NodeIds]);
+
+                    if (sourceIds.Count == 0)
+                    {
+                        return;
+                    }
+
+                    NodeAction action = m_NodeAction.Action;
+
+                    // Pasting cut nodes into themselves or their own subtrees
+                    // would remove the freshly pasted clones along with the
+                    // originals, so block it outright (the error surfaces via
+                    // the calling command's dialog).
+                    if (action == NodeAction.Cut
+                        && ProjectScenarioNodeHelper.IsWithinSubtree(allNodes, destinationParentId, sourceIds))
+                    {
+                        throw new InvalidOperationException(Resource.ProjectPlan.Messages.Message_CannotPasteCutNodesIntoOwnSubtree);
+                    }
+
                     DateTimeOffset localNow = m_DateTimeCalculator.GetLocalNow();
 
-                    foreach (Guid nodeId in m_NodeAction.NodeIds)
-                    {
-                        if (m_ManagedNodeLookup.TryGetValue(nodeId, out IManagedNodeViewModel? managedNode)
-                            && !managedNode.IsFolder
-                            && managedNode.Scenario is not null)
+                    Dictionary<Guid, ProjectScenarioModel> scenarioLookup = m_FileScenarioLookup
+                        .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Scenario);
+
+                    List<ProjectScenarioTagModel> tagModels = [.. m_NodeTagLookup
+                        .SelectMany(kvp => kvp.Value.Select(label => new ProjectScenarioTagModel
                         {
-                            HashSet<string> existingNames = ExistingNodeNames(destinationParentId);
-                            string newName = SuggestNodeName(managedNode.Name, existingNames);
+                            NodeId = kvp.Key,
+                            Label = label,
+                        }))];
 
-                            var projectScenarioNode = new ProjectScenarioNodeModel
+                    // Timestamps follow the Windows Explorer file rules: clones
+                    // always keep their source's ModifiedOn; a cut (move) keeps
+                    // the original CreatedOn too, while a copy gets a fresh one.
+                    NodeCloneResult cloneResult = ProjectScenarioNodeHelper.CloneSubtrees(
+                        allNodes,
+                        scenarioLookup,
+                        tagModels,
+                        sourceIds,
+                        destinationParentId,
+                        ExistingNodeNames(destinationParentId),
+                        Guid.NewGuid,
+                        localNow,
+                        preserveCreatedOn: action == NodeAction.Cut);
+
+                    // The clones carry their own copies of the source nodes'
+                    // tags; the tag lookup must be populated before the nodes
+                    // materialise so their labels appear immediately.
+                    AddTagLabels(cloneResult.Tags);
+                    AddScenarioFiles(cloneResult.Files);
+                    AddManagedNodes(cloneResult.Nodes);
+
+                    // Post paste action.
+                    switch (action)
+                    {
+                        case NodeAction.Cut:
                             {
-                                Id = Guid.NewGuid(),
-                                ParentId = destinationParentId,
-                                NodeType = ProjectScenarioNodeType.File,
-                                Name = newName,
-                                CreatedOn = localNow,
-                                ModifiedOn = localNow,
-                                IsTracked = managedNode.IsTracked,
-                            };
-
-                            var projectScenarioFile = new ProjectScenarioFileModel
-                            {
-                                NodeId = projectScenarioNode.Id,
-                                Scenario = managedNode.Scenario.CloneObject(),
-                            };
-
-                            AddTagLabels([]); // Don't really need this, but for consistency.
-                            AddScenarioFiles([projectScenarioFile]);
-                            AddManagedNodes([projectScenarioNode]);
-
-                            // Post paste action.
-                            NodeAction action = m_NodeAction.Action;
-                            switch (action)
-                            {
-                                case NodeAction.Cut:
+                                // If the loaded scenario is among the moved nodes
+                                // (at any depth), reload its clone so the move
+                                // never orphans it.
+                                if (cloneResult.IdMap.TryGetValue(m_SettingService.ScenarioId, out Guid newCurrentId))
+                                {
+                                    IManagedNodeViewModel? newNode = GetNode(newCurrentId);
+                                    if (newNode is not null)
                                     {
-                                        // If the loaded scenario is being moved, then we need to make sure
-                                        // to reload it once it has reached its destination.
-                                        if (nodeId == m_SettingService.ScenarioId)
-                                        {
-                                            IManagedNodeViewModel? newNode = GetNode(projectScenarioFile.NodeId);
-                                            if (newNode is not null)
-                                            {
-                                                LoadProjectScenarioFileInternal(newNode);
-                                            }
-                                        }
-
-                                        RemoveProjectScenarioNodeInternal([nodeId]);
+                                        LoadProjectScenarioFileInternal(newNode);
                                     }
-                                    break;
-                                case NodeAction.Copy:
-                                    break;
-                                default:
-                                    throw new ArgumentOutOfRangeException(nameof(action));
-                            }
+                                }
 
-                            IsProjectUpdated = true;
-                            IsReadyToReviseTitle = ReadyToRevise.Yes;
-                            IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
-                        }
+                                RemoveProjectScenarioNodeInternal(sourceIds);
+                            }
+                            break;
+                        case NodeAction.Copy:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(action));
                     }
+
+                    IsProjectUpdated = true;
+                    IsReadyToReviseTitle = ReadyToRevise.Yes;
+                    IsReadyToReviseTrackedMetrics = ReadyToRevise.Yes;
                 }
+
+                // DynamicData places the pasted nodes at their sorted positions
+                // (pinned by NodeSortPipelineTests), but the tree view does not
+                // reliably present mid-list insertions until a reorder pass -
+                // so finish the paste with the same re-sort the sort menu
+                // triggers. Invoked outside the lock so the UI thread can never
+                // deadlock against it.
+                Dispatcher.UIThread.Invoke(ChangeSortInternal);
             }
             finally
             {

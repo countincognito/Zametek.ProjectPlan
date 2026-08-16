@@ -258,8 +258,11 @@
   <data name="Message_CannotGetProjectScenarioFileWhenProjectScenarioIsNull" xml:space="preserve">
     <value>Cannot get a project scenario file when project scenario is null:</value>
   </data>
+  <data name="Message_CannotPasteCutNodesIntoOwnSubtree" xml:space="preserve">
+    <value>Cut nodes cannot be pasted into themselves or their own subfolders</value>
+  </data>
   <data name="Message_DoYouWishToDeleteTheseScenarios" xml:space="preserve">
-    <value>Do you wish to delete these scenarios?</value>
+    <value>Do you wish to delete the {0} selected node(s)?</value>
   </data>
   <data name="Message_NameAlreadyExists" xml:space="preserve">
     <value>Name already exists</value>
