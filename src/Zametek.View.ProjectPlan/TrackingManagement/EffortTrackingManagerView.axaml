@@ -246,7 +246,7 @@
 														<Border Width="115"
 																Margin="2,0"
 																CornerRadius="8"
-																Background="{Binding Path=Load, Mode=OneWay, Converter={x:Static local:TimesheetConverters.DayLoadToBackground}}">
+																Background="{Binding Path=Load, Mode=OneWay, Converter={x:Static local:TrackingConverters.DayLoadToBackground}}">
 															<TextBlock Text="{Binding Path=TotalDisplay, Mode=OneWay}"
 																	   TextAlignment="Center"
 																	   Padding="3"

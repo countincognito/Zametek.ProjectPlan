@@ -1,26 +1,27 @@
 namespace Zametek.Common.ProjectPlan
 {
     /// <summary>
-    /// Classifies a resource's total booked percentage on a single day of the
-    /// effort timesheet.
+    /// Classifies a tracked percentage against a full 100%: a resource's
+    /// total booked percentage on a single day of the effort timesheet, or
+    /// an activity's completion.
     /// </summary>
     [Serializable]
     public enum TimesheetDayLoad
     {
         /// <summary>
-        /// No bookings at all (distinct from an explicit zero).
+        /// No value at all (distinct from an explicit zero).
         /// </summary>
         None,
         /// <summary>
-        /// Booked below a full day (including an explicit zero).
+        /// Below the full 100% (including an explicit zero).
         /// </summary>
         Under,
         /// <summary>
-        /// Booked at exactly a full day.
+        /// At exactly the full 100%.
         /// </summary>
         Full,
         /// <summary>
-        /// Booked beyond a full day.
+        /// Beyond the full 100%.
         /// </summary>
         Over,
     }

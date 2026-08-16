@@ -1306,7 +1306,8 @@
 					</DataGridTemplateColumn.HeaderTemplate>
 					<DataGridTemplateColumn.CellTemplate>
 						<DataTemplate>
-							<Grid VerticalAlignment="Stretch">
+							<Grid VerticalAlignment="Stretch"
+								  Background="{Binding Path=TrackerSet.LastTrackerValue, Mode=OneWay, Converter={x:Static local:TrackingConverters.PercentageToBackground}}">
 								<TextBlock VerticalAlignment="Center"
 										   TextAlignment="Center"
 										   Margin="0"

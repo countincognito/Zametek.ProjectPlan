@@ -153,7 +153,8 @@
                           DockPanel.Dock="Right"
                           Padding="2"
                           HorizontalAlignment="Center"
-                          VerticalAlignment="Stretch">                    
+                          VerticalAlignment="Stretch"
+                          Background="{Binding Path=TrackerSet.LastTrackerValue, Mode=OneWay, Converter={x:Static local:TrackingConverters.PercentageToBackground}}">                    
                     <TextBlock VerticalAlignment="Center"
                                TextAlignment="Right"
                                Margin="0"

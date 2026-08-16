@@ -25,9 +25,10 @@ namespace Zametek.ViewModel.ProjectPlan
         public const int c_FullDayPercentage = 100;
 
         /// <summary>
-        /// Classifies a resource's total booked percentage on a single day.
-        /// Null means no bookings at all (distinct from an explicit zero,
-        /// which counts as under-booked).
+        /// Classifies a tracked percentage against a full 100%: a resource's
+        /// total booked percentage on a single day, or an activity's
+        /// completion. Null means no value at all (distinct from an explicit
+        /// zero, which counts as under).
         /// </summary>
         public static TimesheetDayLoad Classify(int? totalPercentage)
         {
